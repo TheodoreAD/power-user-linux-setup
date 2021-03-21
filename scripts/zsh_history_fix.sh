@@ -4,7 +4,7 @@
 #
 # Fixes a corrupt .zsh_history file
 
-mv ~/.zsh_history ~/.zsh_history_bad
-strings ~/.zsh_history_bad > ~/.zsh_history
-fc -R ~/.zsh_history
-rm ~/.zsh_history_bad
+mv "${HOME}/.zsh_history" "${HOME}/.zsh_history_bad"
+strings "${HOME}/.zsh_history_bad" > "${HOME}/.zsh_history"
+fc -R "${HOME}/.zsh_history"
+rm "${HOME}/.zsh_history_bad"
