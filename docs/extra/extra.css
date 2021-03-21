@@ -3,7 +3,7 @@
 /* https://github.com/squidfunk/mkdocs-material/blob/master/src/assets/stylesheets/base/_typeset.scss */
 
 .md-typeset {
-  font-size: 1.4em;
+  font-size: 1.40em;
   line-height: 1.40em;
 }
 
@@ -121,9 +121,10 @@ html .md-typeset details > :first-child {
   margin-bottom: 0.50em;
 }
 
-/* task list - center icon vertically */
+/* task list - fix checkbox icon vertical alignment */
 .md-typeset .task-list-item [type="checkbox"] {
-  top: 0.25rem;
+  top: 0;
+  /*top: 0.25rem;*/
 }
 
 /* Headings have non-relative font sizes */
@@ -137,7 +138,7 @@ html .md-typeset details > :first-child {
 }
 
 .md-typeset h1 + * {
-  margin-top: 2.50rem;
+  margin-top: 1.50rem;
 }
 
 .md-typeset h1 + h2,
@@ -148,11 +149,11 @@ html .md-typeset details > :first-child {
 }
 
 .md-typeset h2 {
-  margin-top: 3.50rem;
+  margin-top: 1.75rem;
 }
 
 .md-typeset h1 + h2 {
-  margin-top: 2.00rem;
+  margin-top: 1.50rem;
 }
 
 /* The h2 + h3 needs to be here to override existing style */
@@ -164,11 +165,11 @@ html .md-typeset details > :first-child {
 }
 
 .md-typeset h3 {
-  margin-top: 3.50rem;
+  margin-top: 1.75rem;
 }
 
 .md-typeset h2 + h3 {
-  margin-top: 2.00rem;
+  margin-top: 1.50rem;
 }
 
 .md-typeset h3 + h4,
@@ -179,7 +180,7 @@ html .md-typeset details > :first-child {
 }
 
 .md-typeset h4 {
-  margin-top: 2.50rem;
+  margin-top: 1.75rem;
 }
 
 .md-typeset h3 + h4 {
@@ -194,11 +195,11 @@ html .md-typeset details > :first-child {
 }
 
 .md-typeset h5 {
-  margin-top: 2.50rem;
+  margin-top: 1.50rem;
 }
 
 .md-typeset h4 + h5 {
-  margin-top: 1.50rem;
+  margin-top: 1.25rem;
 }
 
 .md-typeset h5 + h6,
@@ -209,16 +210,16 @@ html .md-typeset details > :first-child {
 }
 
 .md-typeset h6 {
-  margin-top: 2.50rem;
-}
-
-.md-typeset h5 + h6 {
   margin-top: 1.50rem;
 }
 
+.md-typeset h5 + h6 {
+  margin-top: 1.25rem;
+}
+
 .md-typeset code {
-  color: rgba(235,90,70, 1.00);
-  background: rgba(236, 236, 236, 0.30);
+  /*color: rgba(235,90,70, 1.00);*/
+  /*background: rgba(236, 236, 236, 0.30);*/
   box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.10);
   padding-top: 0.05em;
   padding-bottom: 0.05em;
