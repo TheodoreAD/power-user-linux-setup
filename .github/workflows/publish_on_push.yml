@@ -1,0 +1,21 @@
+# https://squidfunk.github.io/mkdocs-material/publishing-your-site/
+
+name: Deploy docs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - master
+      - main
+      - initial_version
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - run: pip install -r requirements-docs.txt
+      - run: mkdocs gh-deploy --force
