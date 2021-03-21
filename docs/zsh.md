@@ -1,6 +1,7 @@
 # Zsh and Oh My Zsh
 
 <http://www.bash2zsh.com/zsh_refcard/refcard.pdf>
+
 <http://grml.org/zsh/zsh-lovers.html>
 
 Install Zsh and change default shell:
