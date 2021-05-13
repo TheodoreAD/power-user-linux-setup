@@ -103,10 +103,22 @@ install_gnome_extension_from_git_root "https://github.com/Tudmotu/gnome-shell-ex
 # TODO: description
 install_gnome_extension_from_git_root "https://github.com/daniellandau/switcher.git" "switcher@landau.fi"
 # TODO: description
+# TODO: new installation mode with bazel
 install_gnome_extension_from_git_root "https://github.com/gTile/gTile.git" "gTile@vibou"
 
-
+repo_url="https://github.com/UshakovVasilii/gnome-shell-extension-freon.git"
+temp_repo_dir="/tmp/${repo_name}"
+extension_key="freon@UshakovVasilii_Github.yahoo.com"
+repo_name=$(get_uri_last_token_without_extension ${repo_url})
+git clone "${repo_url}" "${temp_repo_dir}"
+glib-compile-schemas "${temp_repo_dir}/${extension_key}/schemas/"
+rm -v -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
+cp -v -r "${temp_repo_dir}/${extension_key}" "${GNOME_EXTENSIONS_DIR}"
+enable_gnome_extension "${extension_key}"
+rm -v -rf "${temp_repo_dir}"
 ```
+
+For the weather extension, see <https://home.openweathermap.org/api_keys>.
 
 !!! WARNING
     This causes some scaled windows to display as if unscaled.
@@ -120,7 +132,11 @@ To use extensions right away, press ++alt+f2++ , ++r++ , ++enter++ .
     gnome-shell --replace
     ```
 
+To verify state of all extensions:
 
+```shell
+gnome-extensions list | xargs -I{} gnome-extensions info {}
+```
 
 ## Superseded
 
