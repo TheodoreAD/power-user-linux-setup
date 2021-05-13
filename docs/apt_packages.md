@@ -4,6 +4,17 @@
 
 Install these as the very first step, many of them are dependencies.
 
+!!! WARNING
+    After the apt commands you might get a list of packages that are considered
+    to no longer be required, followed by the following advice:
+
+    ```
+    Use 'sudo apt autoremove' to remove them.
+    ```
+
+    Do NOT run this unless you know exactly what the involved packages do.
+
+
 ```shell
 PACKAGES=(
   # build
@@ -14,11 +25,17 @@ PACKAGES=(
   manpages-dev man-db manpages-posix-dev
   # network
   wget curl libpcap-dev libnet1-dev rpcbind openssh-client openssh-server nmap
+  # iproute2 is installed by default, but the docs aren't
+  iproute2-doc
   # includes older utilities, iproute2 is the newer alternative:
   #     arp, hostname, ifconfig, netstat, rarp, route,
   #     plipconfig, slattach, mii-tool, iptunnel, ipmaddr
   net-tools
   traceroute iftop hping3 vnstat iptraf dstat
+  # network fs mounting
+  cifs-utils
+  # system diagnostics
+  lm-sensors
   # docker requirements
   apt-transport-https ca-certificates software-properties-common
   # pyenv requirements
@@ -28,8 +45,8 @@ PACKAGES=(
   python-openssl
   # TODO: find what requires these
   libgdbm-dev libnss3-dev
-  # python utilities
-  python3-distutils
+  # python dev
+  python3-distutils python3-pip python3-venv
   # security
   keychain
   # system monitor
@@ -59,7 +76,8 @@ PACKAGES=(
 )
 
 sudo apt update
-sudo apt install -y --allow-downgrades ${PACKAGES[@]}
+sudo apt full-upgrade -y
+sudo apt install -y ${PACKAGES[@]}
 
 # bat, alternative to cat
 mkdir -p "${HOME}/.local/bin"
@@ -80,7 +98,7 @@ ln -s "/usr/bin/batcat" "${HOME}/.local/bin/bat"
 
 ```shell
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
-  | sudo tee -a /etc/apt/sources.list.d/google-cloud-sdk.list
+  | sudo tee -a "/etc/apt/sources.list.d/google-cloud-sdk.list"
 curl "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
   | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
 sudo apt update

@@ -1,5 +1,11 @@
 # Python
 
+## Setup tools
+
+```shell
+/usr/bin/python3 -m pip install --upgrade pip setuptools wheel
+```
+
 ## pip configuration
 
 If you're using a private pypi server, assign its URL to `PIP_INTERNAL_INDEX_URL`
@@ -29,6 +35,10 @@ EOF
 
 ## pyenv
 
+`pyenv` handles Python version and virtual environment management.
+
+<https://github.com/pyenv/pyenv>
+
 ```shell
 curl -sS -L "https://pyenv.run" | bash
 tee -a "${HOME}/.zshrc" >/dev/null <<EOF
@@ -45,43 +55,34 @@ source "${HOME}/.zshrc"
 Install Python, create and set a global virtual environment:
 
 ```shell
+# TODO: read from prompt
 PYENV_VENV_VERSION="3.9.1"
 echo pyenv install "${PYENV_VENV_VERSION}"
 echo pyenv virtualenv "${PYENV_VENV_VERSION}" "global-${PYENV_VENV_VERSION//.}"
 echo pyenv global "global-${PYENV_VENV_VERSION//.}"
 ```
 
-## System Python 3 additions
+### pipx
 
-### Setup tools
+`pipx` enables running Python tools from isolated environments.
 
-```shell
-sudo apt install -y python3-venv python3-pip
-/usr/bin/python3 -m pip install --upgrade pip setuptools wheel
-```
+<https://github.com/pipxproject/pipx>
 
-### Task management
-
-`invoke` is a Python-based better alternative to `make`.
-`dotenv` is used together with `invoke` for `.env` file local dev workflows.
-
-Installed globally to avoid installing for every env.
+/usr/bin/python3 -m pip install --upgrade --user pipx
 
 ```shell
-/usr/bin/python3 -m pip install --upgrade --user invoke python-dotenv
-```
+tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
-A hack in case the system bin location is not on the path, which is unlikely.
-
-```shell
-PYENV_VENV_VERSION="3.9.1"
-INVOKE_ENABLED_ENV_NAME="my-actual-env-name-391"
-sudo ln -s \
-  "${HOME}/.pyenv/versions/3.9.1/envs/${INVOKE_ENABLED_ENV_NAME}/bin/invoke" \
-  "/usr/bin/invoke"
+# pipx
+eval "\$(register-python-argcomplete pipx)"
+EOF
 ```
 
 ## Poetry
+
+`poetry` handles package dependency management.
+
+<https://github.com/python-poetry/poetry>
 
 ```shell
 URL="https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py"
@@ -103,6 +104,50 @@ plugins(
     poetry
     ...
     )
+```
+
+## System-wide tools
+
+### invoke and dotenv
+
+`invoke` is a Python-based better alternative to `make`.
+`dotenv` is used together with `invoke` for `.env` file local dev workflows.
+
+<https://github.com/pyinvoke/invoke>
+<https://github.com/theskumar/python-dotenv>
+
+We install `dotenv` side-by-side so that the `invoke`-run `tasks.py`
+can import `dotenv` and read `.env` files.
+
+```shell
+pipx install invoke
+pipx inject invoke --include-apps "python-dotenv[cli]"
+```
+
+### pipdeptree
+
+`pipdeptree` handles package dependency introspection.
+
+```shell
+pipx install pipdeptree
+```
+
+### Nox
+
+`Nox` 
+
+<https://github.com/theacodes/nox>
+
+```shell
+pipx install nox
+```
+
+### mkdocs including material theme
+
+`mkdocs` handles documentation site generation and serving.
+
+```shell
+pipx install mkdocs-material --include-deps
 ```
 
 ## Nuitka

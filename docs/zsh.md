@@ -52,7 +52,6 @@ EOF
 sed -i \
   "s/plugins=(git)/${ZSH_PLUGINS}/" \
   "${HOME}/.zshrc"
-tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
 ```
 

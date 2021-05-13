@@ -1,10 +1,6 @@
 # Installation steps
 
-
-
-
-
-This is intended for and has been tested on Ubuntu 19.10 eoan ermine.
+This is intended for and has been tested on Ubuntu 20.04 focal fossa.
 
 ```shell
 # disabled -u for unset variables due to weird behavior 
@@ -250,17 +246,21 @@ rm "${HYPERFINE_DEB}"
 
 Problem
 
-The problem is that with the "Ibus" input method, "Ctrl-shift-u"
+The problem is that with the "Ibus" input method, ++ctrl+shift+u++
 is by default configured to the "Unicode Code Point" shortcut.
 
-You can try this: Type ctrl-shift-u, then an (underlined) u appears.
+You can try this: Type ++ctrl+shift+u++, then an (underlined) u appears.
 If you then type a unicode code point number in hex
 (e.g. 21, the ASCII/unicode CP for !) and press enter,
 it is replaced with the corresponding character.
 
 This shortcut can be changed or disabled using the ibus-setup utility:
-Run ibus-setup from the terminal (or open IBus Preferences).
-Go to "Emoji".
-Next to "Unicode code point:", click on the three dots (i.e. ...).
-In the dialog, click "Delete", then "OK".
-Close the IBus Preferences window.
+
+```mermaid
+graph TD
+    a1[Run 'ibus-setup'] --> b[Go to 'Emoji']
+    a2[Open IBus Preferences] -.-> b
+    b --> c(Go to 'Unicode code point:' <br />Click on the three dots, i.e. ...)
+    c --> d[In the dialog, click 'Delete', then 'OK']
+    d --> e[Close the IBus Preferences window]
+```
