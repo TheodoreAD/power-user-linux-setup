@@ -52,6 +52,21 @@ Follow the [guide](git.md).
 
 Follow the [guide](docker.md).
 
+## Networking
+
+Set up DNS with Cloudflare IPs.
+
+```shell
+sudo tee "/etc/resolvconf/resolv.conf.d/tail" >/dev/null <<EOF
+nameserver 1.1.1.1
+nameserver 1.0.0.1
+EOF
+sudo resolvconf -u
+# verify changes
+systemd-resolve --status
+```
+
+
 ## Browsing
 
 ### Google Chrome

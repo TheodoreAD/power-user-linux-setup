@@ -2,6 +2,10 @@
 
 ## Setup tools
 
+!!! WARNING
+    Use this only if you intend to use the system wide python,
+    which is NOT recommended.
+
 ```shell
 /usr/bin/python3 -m pip install --upgrade "pip~=20.3" setuptools wheel
 ```
@@ -46,10 +50,17 @@ tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 # pyenv
 export PATH="\${HOME}/.pyenv/bin:\$PATH"
 eval "\$(pyenv init -)"
+eval "\$(pyenv init --path)"
 eval "\$(pyenv virtualenv-init -)"
 EOF
 # to enable right away
 source "${HOME}/.zshrc"
+```
+
+To update `pyenv`, run:
+
+```shell
+pyenv update
 ```
 
 Install Python, create and set a global virtual environment:
@@ -60,22 +71,6 @@ PYENV_VENV_VERSION="3.9.1"
 echo pyenv install "${PYENV_VENV_VERSION}"
 echo pyenv virtualenv "${PYENV_VENV_VERSION}" "global-${PYENV_VENV_VERSION//.}"
 echo pyenv global "global-${PYENV_VENV_VERSION//.}"
-```
-
-### pipx
-
-`pipx` enables running Python tools from isolated environments.
-
-<https://github.com/pipxproject/pipx>
-
-/usr/bin/python3 -m pip install --upgrade --user pipx
-
-```shell
-tee -a "${HOME}/.zshrc" >/dev/null <<EOF
-
-# pipx
-eval "\$(register-python-argcomplete pipx)"
-EOF
 ```
 
 ## Poetry
@@ -97,7 +92,7 @@ poetry completions zsh >"${ZSH}/plugins/poetry/_poetry"
 !!! TODO
     Make this commented out in the original zsh setup, use `sed` to uncomment here.
 
-Enable plugin in ~/.zshrc plugins:
+Enable plugin in ~/.zshrc plugins if not already previously performed:
 
 ```shell
 plugins(
@@ -106,11 +101,26 @@ plugins(
     )
 ```
 
+## pipx
+
+`pipx` enables running Python tools from isolated environments.
+
+<https://github.com/pipxproject/pipx>
+
+```shell
+/usr/bin/python3 -m pip install --upgrade --user pipx
+tee -a "${HOME}/.zshrc" >/dev/null <<EOF
+
+# pipx
+eval "\$(register-python-argcomplete pipx)"
+EOF
+```
+
 ## System-wide tools
 
 ### invoke and dotenv
 
-`invoke` is a Python-based better alternative to `make`.
+`invoke` is a Python-based alternative to `make` focused on task management.
 `dotenv` is used together with `invoke` for `.env` file local dev workflows.
 
 <https://github.com/pyinvoke/invoke>
@@ -134,7 +144,7 @@ pipx install pipdeptree
 
 ### Nox
 
-`Nox` 
+`Nox` automates testing in multiple Python environments.
 
 <https://github.com/theacodes/nox>
 
@@ -144,13 +154,16 @@ pipx install nox
 
 ### mkdocs including material theme
 
-`mkdocs` handles documentation site generation and serving.
+`mkdocs` generates and serves documentation sites based on markdown files.
 
 ```shell
 pipx install mkdocs-material --include-deps
 ```
 
 ## Nuitka
+
+!!! WARNING
+    Experimental
 
 !!! TODO
     Research system python version dependency

@@ -32,6 +32,7 @@ PACKAGES=(
   #     plipconfig, slattach, mii-tool, iptunnel, ipmaddr
   net-tools
   traceroute iftop hping3 vnstat iptraf dstat
+  resolvconf
   # network fs mounting
   cifs-utils
   # system diagnostics
