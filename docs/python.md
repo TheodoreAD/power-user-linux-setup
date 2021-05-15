@@ -3,7 +3,7 @@
 ## Setup tools
 
 ```shell
-/usr/bin/python3 -m pip install --upgrade pip setuptools wheel
+/usr/bin/python3 -m pip install --upgrade "pip~=20.3" setuptools wheel
 ```
 
 ## pip configuration

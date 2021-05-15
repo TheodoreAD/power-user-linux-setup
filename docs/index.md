@@ -48,6 +48,10 @@ Follow the [guide](ssh.md).
 
 Follow the [guide](git.md).
 
+## Docker
+
+Follow the [guide](docker.md).
+
 ## Browsing
 
 ### Google Chrome
@@ -68,7 +72,7 @@ rm "/tmp/${CHROME_DEB}"
 ```shell
 SIDEKICK_DEB="$(mktemp)"
 SIDEKICK_URL="https://api.meetsidekick.com/downloads/df/linux/deb"
-wget -o "${SIDEKICK_DEB}" "${SIDEKICK_URL}"
+curl -sS -L -o "${SIDEKICK_DEB}" "${SIDEKICK_URL}"
 sudo dpkg -i "${SIDEKICK_DEB}"
 rm -f "${SIDEKICK_DEB}"
 ```
@@ -76,6 +80,10 @@ rm -f "${SIDEKICK_DEB}"
 ## Communication
 
 ### Franz
+
+!!! WARNING
+    Skip this if using Sidekick (recommended).
+
 
 ```shell
 # TODO: get latest version automatically
