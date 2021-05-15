@@ -69,7 +69,7 @@ NERD_FONT_URLS=(
   "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono"
 )
 for url in "${NERD_FONT_URLS[@]}"; do
-  install_font_from_zip_url url
+  install_font_from_zip_url ${url}
 done
 
 fc-cache -v -f
