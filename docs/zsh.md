@@ -52,7 +52,6 @@ EOF
 sed -i \
   "s/plugins=(git)/${ZSH_PLUGINS}/" \
   "${HOME}/.zshrc"
-
 ```
 
 !!! TODO
@@ -106,6 +105,8 @@ EOF
 Key bindings, aliases, completions, path:
 
 ```shell
+tee -a "${HOME}/.zshrc" >/dev/null <<EOF
+
 # key bindings for navigating the command line
 # home
 bindkey "^[[H" beginning-of-line
