@@ -27,6 +27,11 @@ function copy_fonts() {
   )"
 }
 
+function get_uri_last_token_without_extension() {
+  repo_url=${1}
+  printf ${repo_url} | rev | cut -d '/' -f 1 | rev | cut -d '.' -f 1
+}
+
 function install_font_from_zip_url() {
   font_url="${1}"
   font_archive_name="$(get_uri_last_token_without_extension ${font_url})"

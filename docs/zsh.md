@@ -15,6 +15,9 @@ Log out and login back again to use your new default shell.
 
 Install Oh My Zsh and set up themes and plugins:
 
+!!! TODO
+    fix basic zsh settings not being saved, e.g. HISTSIZE 
+
 ```shell
 sh -c "$(curl -sS -Lf https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone --depth=1 \
@@ -100,7 +103,6 @@ export DIRENV_LOG_FORMAT=""
 eval "\$(direnv hook zsh)"
 EOF
 ```
-
 
 Key bindings, aliases, completions, path:
 
