@@ -45,11 +45,11 @@ EXTENSIONS_TO_ENABLE=(
   #workspace-indicator \
 )
 
-for ext in "${EXTENSIONS_TO_INSTALL[@]} ${EXTENSIONS_TO_INSTALL_AND_ENABLE[@]}"; do
+for ext in ${EXTENSIONS_TO_INSTALL[@]} ${EXTENSIONS_TO_INSTALL_AND_ENABLE[@]}; do
   sudo apt install -y --allow-downgrades "${ext}"
 done
 
-for ext in "${EXTENSIONS_TO_INSTALL_AND_ENABLE[@]} ${EXTENSIONS_TO_ENABLE[@]}"; do
+for ext in ${EXTENSIONS_TO_INSTALL_AND_ENABLE[@]} ${EXTENSIONS_TO_ENABLE[@]}; do
   gnome-extensions enable "${ext}"
 done
 
