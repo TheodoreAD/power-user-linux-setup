@@ -4,6 +4,8 @@
 
 <http://grml.org/zsh/zsh-lovers.html>
 
+<http://zsh.sourceforge.net/Doc/Release/Shell-Builtin-Commands.html>
+
 Install Zsh and change default shell:
 
 ```shell
@@ -17,6 +19,9 @@ Install Oh My Zsh and set up themes and plugins:
 
 !!! TODO
     fix basic zsh settings not being saved, e.g. HISTSIZE 
+
+!!! TODO
+    investigate powerlevel10k not installing sometimes
 
 ```shell
 sh -c "$(curl -sS -Lf https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
@@ -163,7 +168,7 @@ sed -i \
 # init completions
 tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
-autoload -U compinit && compinit
+autoload -Uz compinit && compinit
 EOF
 
 source "${HOME}/.zshrc"
@@ -193,3 +198,22 @@ p10k configure
     <https://github.com/athityakumar/colorls>
 
     <https://linuxize.com/post/how-to-install-ruby-on-ubuntu-18-04/>
+
+!!! TODO
+    ```shell
+    # The following lines were added by compinstall
+
+    zstyle ':completion:*' completer _complete _ignored
+    zstyle :compinstall filename '/home/tdumitrescu/.zshrc'
+    
+    autoload -Uz compinit
+    compinit
+    # End of lines added by compinstall
+    # Lines configured by zsh-newuser-install
+    HISTFILE=~/.histfile
+    HISTSIZE=100000
+    SAVEHIST=100000
+    setopt autocd beep nomatch notify
+    bindkey -e
+    # End of lines configured by zsh-newuser-install
+    ```
