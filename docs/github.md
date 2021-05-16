@@ -44,11 +44,17 @@
     rm "${GH_DEB}"
     ```
 
-
 Completions:
 
 ```shell
 # requires .zshrc to contain: autoload -U compinit && compinit
 gh completion -s zsh \
   | sudo tee "/usr/local/share/zsh/site-functions/_gh" >/dev/null
+```
+
+Connect:
+
+```shell
+# select github.com, SSH, select key, perform auth, allow gh CLI to access github.com
+gh auth login
 ```

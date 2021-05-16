@@ -1,5 +1,8 @@
 # SSH
 
+!!! TODO
+    Get data from files isntead of hardcoding here.
+
 ```shell
 # one email per key, it will also be used as in the key file name
 SSH_ID_EMAILS=(
@@ -102,6 +105,11 @@ eval \$(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --conf
 [ -f "\${HOME}/.keychain/\${HOSTNAME}-sh" ] && source "\${HOME}/.keychain/\${HOSTNAME}-sh"
 EOF
 ```
+
+!!! WARNING
+    Everything from here on out is experimental.
+    
+    It is advised to stop here unless you're trying things out.
 
 ## Add keys to version control platforms
 

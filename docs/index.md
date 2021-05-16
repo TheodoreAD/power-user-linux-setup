@@ -44,9 +44,15 @@ Follow the [guide](golang.md).
 
 Follow the [guide](ssh.md).
 
-## Git
+## Source control
+
+### Git
 
 Follow the [guide](git.md).
+
+### Github
+
+Follow the [guide](github.md).
 
 ## Docker
 
@@ -72,11 +78,11 @@ systemd-resolve --status
 ### Google Chrome
 
 ```shell
-CHROME_DEB="google-chrome-stable_current_amd64.deb"
-CHROME_URL="https://dl.google.com/linux/direct/${CHROME_DEB}"
-curl -sS -L -o "/tmp/${CHROME_DEB}" "${CHROME_URL}"
-sudo dpkg -i "/tmp/${CHROME_DEB}"
-rm "/tmp/${CHROME_DEB}"
+CHROME_DEB="$(mktemp)"
+CHROME_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
+curl -sS -L -o "${CHROME_DEB}" "${CHROME_URL}"
+sudo dpkg -i "${CHROME_DEB}"
+rm -v -f "${CHROME_DEB}"
 ```
 
 ### Sidekick
@@ -89,7 +95,7 @@ SIDEKICK_DEB="$(mktemp)"
 SIDEKICK_URL="https://api.meetsidekick.com/downloads/df/linux/deb"
 curl -sS -L -o "${SIDEKICK_DEB}" "${SIDEKICK_URL}"
 sudo dpkg -i "${SIDEKICK_DEB}"
-rm -f "${SIDEKICK_DEB}"
+rm -v -f "${SIDEKICK_DEB}"
 ```
 
 ## Communication
@@ -102,11 +108,11 @@ rm -f "${SIDEKICK_DEB}"
 
 ```shell
 # TODO: get latest version automatically
-FRANZ_DEB="franz_5.4.1_amd64.deb"
-FRANZ_URL="https://github.com/meetfranz/franz/releases/download/v5.4.1/${FRANZ_DEB}"
-curl -sS -L -o "/tmp/${FRANZ_DEB}" "${FRANZ_URL}"
-sudo dpkg -i "/tmp/${FRANZ_DEB}"
-rm "/tmp/${FRANZ_DEB}"
+FRANZ_DEB="$(mktemp)"
+FRANZ_URL="https://github.com/meetfranz/franz/releases/download/v5.4.1/franz_5.4.1_amd64.deb"
+curl -sS -L -o "${FRANZ_DEB}" "${FRANZ_URL}"
+sudo dpkg -i "${FRANZ_DEB}"
+rm -v -f "${FRANZ_DEB}"
 ```
 
 ### Slack
