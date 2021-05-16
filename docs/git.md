@@ -2,6 +2,9 @@
 
 Multi-email config
 
+!!! TODO
+    Get data from files instead of hardcoding here.
+
 ```shell
 # Disable global user name and email in favor of project-specific ones
 git config --global --unset user.name
@@ -9,8 +12,8 @@ git config --global --unset user.email
 # set up project directories and configure per-directory identities
 PROJECTS_ROOT="${HOME}/projects"
 mkdir -p "${PROJECTS_ROOT}"
-!!! TODO
-    Sescription of array components
+# no spaces allowed after the comma delimiters
+# projects_directory,git_commit_name,git_commit_email
 PROJECTS=(
   github.com-personal,"Teodor Dumitrescu","teodor.dumitrescu@gmail.com"
 )
