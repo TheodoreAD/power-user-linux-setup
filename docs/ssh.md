@@ -1,7 +1,7 @@
 # SSH
 
 !!! TODO
-    Get data from files isntead of hardcoding here.
+    Get data from files instead of hardcoding here.
 
 ```shell
 # one email per key, it will also be used as in the key file name
