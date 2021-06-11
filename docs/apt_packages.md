@@ -49,7 +49,7 @@ PACKAGES=(
   # python dev
   python3-distutils python3-pip python3-venv
   # security
-  keychain
+  keychain gnupg
   # system monitor
   htop gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0
   # terminal
@@ -70,10 +70,10 @@ PACKAGES=(
   # WARNING: superseded by xidle
   # xautolock
   xidle
-  # WARNING: very old version, even in 20.04, better to install from release
-  # gh
   # typo helper
   thefuck
+  # clipboard
+  gpaste
 )
 
 sudo apt update
@@ -98,9 +98,10 @@ ln -s "/usr/bin/batcat" "${HOME}/.local/bin/bat"
     Add post-install auth instructions.
 
 ```shell
+
 echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
   | sudo tee -a "/etc/apt/sources.list.d/google-cloud-sdk.list"
-curl "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
+curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
   | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
 sudo apt update
 sudo apt install -y google-cloud-sdk
@@ -164,4 +165,11 @@ GOOGLE_UPDATE_PACKAGES=(
   kubectl
 )
 sudo apt install -y --only-upgrade ${GOOGLE_UPDATE_PACKAGES[@]}
+```
+
+To fix GPG key expiration, run:
+
+```shell
+curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
+  | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
 ```

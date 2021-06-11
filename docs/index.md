@@ -98,6 +98,15 @@ sudo dpkg -i "${SIDEKICK_DEB}"
 rm -v -f "${SIDEKICK_DEB}"
 ```
 
+If Google Chrome is installed, run this to eliminate the duplicate repo
+introduced by Sidekick:
+
+```shell
+sudo sed -i \
+  's~deb \[arch=amd64\] http://dl.google.com/linux/chrome/deb/ stable main~# &~' \
+  /etc/apt/sources.list.d/sidekick-browser.list
+```
+
 ## Communication
 
 ### Franz

@@ -49,8 +49,8 @@ tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
 # pyenv
 export PATH="\${HOME}/.pyenv/bin:\$PATH"
-eval "\$(pyenv init -)"
 eval "\$(pyenv init --path)"
+eval "\$(pyenv init -)"
 eval "\$(pyenv virtualenv-init -)"
 EOF
 # to enable right away

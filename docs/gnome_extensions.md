@@ -1,6 +1,13 @@
 # GNOME extensions
 
 ```shell
+curl -sS -L https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
+sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
+echo "deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8" \
+  | sudo tee /etc/apt/sources.list.d/bazel.list
+sudo apt update
+sudo apt install -y bazel
+
 EXTENSIONS_TO_INSTALL=(
   gnome-tweaks
   gnome-shell-extensions
@@ -13,6 +20,8 @@ EXTENSIONS_TO_INSTALL_AND_ENABLE=(
   gnome-shell-extension-remove-dropdown-arrows
   gnome-shell-extension-system-monitor
   gnome-shell-extension-show-ip
+  gnome-shell-extensions-gpaste
+  gnome-shell-extension-arc-menu
 )
 
 EXTENSIONS_TO_ENABLE=(
@@ -71,18 +80,19 @@ function get_uri_last_token_without_extension__alt() {
 function install_gnome_extension_from_git_nested() {
   repo_url=${1}
   extension_key=${2}
-  repo_name=$(get_uri_last_token_without_extension ${repo_url})
-  git clone "${repo_url}" "/tmp/${repo_name}"
+  temp_repo_dir="$(mktemp -d)"
+  git clone "${repo_url}" "${temp_repo_dir}"
   rm -v -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
-  cp -v -r "/tmp/${repo_name}/${extension_key}" "${GNOME_EXTENSIONS_DIR}"
+  cp -v -r "${temp_repo_dir}/${extension_key}" "${GNOME_EXTENSIONS_DIR}"
+  rm -v -rf "${temp_repo_dir}"
   enable_gnome_extension ${extension_key}
 }
 
 function install_gnome_extension_from_git_root() {
   repo_url=${1}
   extension_key=${2}
-  repo_name=$(get_uri_last_token_without_extension ${repo_url})
-  rm -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
+  rm -v -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
+  # not clear, though unlikely, if .git being in the install dir is a problem
   git clone "${repo_url}" "${GNOME_EXTENSIONS_DIR}/${extension_key}"
   enable_gnome_extension "${extension_key}"
 }
@@ -102,20 +112,34 @@ install_gnome_extension_from_git_nested "https://github.com/kazysmaster/gnome-sh
 install_gnome_extension_from_git_root "https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git" "clipboard-indicator@tudmotu.com"
 # TODO: description
 install_gnome_extension_from_git_root "https://github.com/daniellandau/switcher.git" "switcher@landau.fi"
-# TODO: description
-# TODO: new installation mode with bazel
-install_gnome_extension_from_git_root "https://github.com/gTile/gTile.git" "gTile@vibou"
 
-repo_url="https://github.com/UshakovVasilii/gnome-shell-extension-freon.git"
-temp_repo_dir="/tmp/${repo_name}"
-extension_key="freon@UshakovVasilii_Github.yahoo.com"
-repo_name=$(get_uri_last_token_without_extension ${repo_url})
-git clone "${repo_url}" "${temp_repo_dir}"
-glib-compile-schemas "${temp_repo_dir}/${extension_key}/schemas/"
-rm -v -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
-cp -v -r "${temp_repo_dir}/${extension_key}" "${GNOME_EXTENSIONS_DIR}"
-enable_gnome_extension "${extension_key}"
-rm -v -rf "${temp_repo_dir}"
+function install_gnome_shell_extension_freon() {
+    repo_url="https://github.com/UshakovVasilii/gnome-shell-extension-freon.git"
+    extension_key="freon@UshakovVasilii_Github.yahoo.com"
+    temp_repo_dir="$(mktemp -d)"
+    git clone "${repo_url}" "${temp_repo_dir}"
+    glib-compile-schemas "${temp_repo_dir}/${extension_key}/schemas/"
+    rm -v -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
+    cp -v -r "${temp_repo_dir}/${extension_key}" "${GNOME_EXTENSIONS_DIR}"
+    rm -v -rf "${temp_repo_dir}"
+    enable_gnome_extension "${extension_key}"
+}
+# TODO: description
+install_gnome_shell_extension_freon
+
+function install_gnome_shell_extension_gtile() {
+    repo_url="https://github.com/gTile/gTile.git"
+    extension_key="gTile@vibou"
+    temp_repo_dir="$(mktemp -d)"
+    git clone "${repo_url}" "${temp_repo_dir}"
+    bazel run :install-extension "${temp_repo_dir}"
+    rm -v -rf "${GNOME_EXTENSIONS_DIR}/${extension_key}"
+    cp -v -r "${temp_repo_dir}/${extension_key}" "${GNOME_EXTENSIONS_DIR}"
+    rm -v -rf "${temp_repo_dir}"
+    enable_gnome_extension "${extension_key}"
+}
+# TODO: description
+install_gnome_shell_extension_gtile
 ```
 
 For the weather extension, see <https://home.openweathermap.org/api_keys>.
@@ -221,5 +245,25 @@ gnome-shell-extension-tilix-shortcut
 gnome-shell-extension-top-icons-plus
 gnome-shell-extension-trash
 gnome-shell-extension-workspaces-to-dock
-gnome-shell-extensions-gpaste
+
+gnome-shell-extension-appindicator
+gnome-shell-extension-caffeine
+gnome-shell-extension-desktop-icons
+gnome-shell-extension-draw-on-your-screen
+gnome-shell-extension-gamemode
+gnome-shell-extension-hijra
+gnome-shell-extension-prefs
+gnome-shell-extension-ubuntu-dock
+gnome-shell-extension-xrdesktop
 ```
+
+
+To get all the extensions in apt:
+
+```shell
+apt search gnome-shell-extension --names-only | grep 'gnome.*\w/\w' | cut -d'/' -f1
+```
+
+
+!!! TODO:
+    Enable NetSpeed.
