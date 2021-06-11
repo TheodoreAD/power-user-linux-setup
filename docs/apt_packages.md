@@ -23,6 +23,8 @@ PACKAGES=(
   git
   # man pages
   manpages-dev man-db manpages-posix-dev
+  # editor
+  vim
   # network
   wget curl libpcap-dev libnet1-dev rpcbind openssh-client openssh-server nmap
   # iproute2 is installed by default, but the docs aren't
