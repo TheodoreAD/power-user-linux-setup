@@ -46,11 +46,6 @@
 
 Config:
 
-!!! todo:
-    See why editor isn't respected. Creating an issue should open the editor. See:
-    
-    https://github.com/cli/cli/issues/308
-
 ```shell
 gh config set pager "less --quit-if-one-screen"
 gh config set editor "code --wait"
