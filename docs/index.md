@@ -112,7 +112,7 @@ sudo sed -i \
 ### Franz
 
 !!! WARNING
-    Skip this if using Sidekick (recommended).
+    Skip this if using the Sidekick browser (recommended).
 
 
 ```shell
