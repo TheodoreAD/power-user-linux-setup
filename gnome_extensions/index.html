@@ -1,0 +1,547 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Teodor Dumitrescu &lt;teodor.dumitrescu@gmail.com&gt;" name="author"/>
+<link href="https://TheodoreAD.github.io/power-user-linux-setup/gnome_extensions/" rel="canonical"/>
+<link href="../assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.2.1, mkdocs-material-7.1.10" name="generator"/>
+<title>GNOME extensions - Power User Linux Setup</title>
+<link href="../assets/stylesheets/main.1fe995fd.min.css" rel="stylesheet"/>
+<link href="../assets/stylesheets/palette.f1a3b89f.min.css" rel="stylesheet"/>
+<meta content="#2094f3" name="theme-color"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+<link href="../extra/extra.css" rel="stylesheet"/>
+</head>
+<body data-md-color-accent="orange" data-md-color-primary="blue" data-md-color-scheme="slate" dir="ltr">
+<script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#gnome-extensions">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="Power User Linux Setup" class="md-header__button md-logo" data-md-component="logo" href=".." title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              GNOME extensions
+            
+          </span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" data-md-state="active" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</label>
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+</button>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md-header__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Power User Linux Setup" class="md-nav__button md-logo" data-md-component="logo" href=".." title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+    Power User Linux Setup
+  </label>
+<div class="md-nav__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="..">
+        Installation steps
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../apt_packages/">
+        Apt packages
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../docker/">
+        Docker
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../fonts/">
+        Fonts
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../games/">
+        Games
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../git/">
+        Git
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../github/">
+        GitHub
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          GNOME extensions
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="./">
+        GNOME extensions
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#superseded">
+    Superseded
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#not-yet-evaluated">
+    Not yet evaluated
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../golang/">
+        Golang
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../kubernetes/">
+        Kuberentes
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../locale/">
+        Locale
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../python/">
+        Python
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ssh/">
+        SSH
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../zsh/">
+        Zsh and Oh My Zsh
+      </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#superseded">
+    Superseded
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#not-yet-evaluated">
+    Not yet evaluated
+  </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<a class="md-content__button md-icon" href="https://github.com/TheodoreAD/power-user-linux-setup/edit/master/docs/gnome_extensions.md" title="Edit this page">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+</a>
+<h1 id="gnome-extensions">GNOME extensions<a class="headerlink" href="#gnome-extensions" title="Permanent link">¶</a></h1>
+<div class="highlight"><pre><span></span><code>curl -sS -L https://bazel.build/bazel-release.pub.gpg <span class="p">|</span> gpg --dearmor &gt; bazel.gpg
+sudo mv bazel.gpg /etc/apt/trusted.gpg.d/
+<span class="nb">echo</span> <span class="s2">"deb [arch=amd64] https://storage.googleapis.com/bazel-apt stable jdk1.8"</span> <span class="se">\</span>
+  <span class="p">|</span> sudo tee /etc/apt/sources.list.d/bazel.list
+sudo apt update
+sudo apt install -y bazel
+
+<span class="nv">EXTENSIONS_TO_INSTALL</span><span class="o">=(</span>
+  gnome-tweaks
+  gnome-shell-extensions
+<span class="o">)</span>
+
+<span class="nv">EXTENSIONS_TO_INSTALL_AND_ENABLE</span><span class="o">=(</span>
+  gnome-shell-extension-dash-to-panel
+  gnome-shell-extension-disconnect-wifi
+  gnome-shell-extension-weather
+  gnome-shell-extension-remove-dropdown-arrows
+  gnome-shell-extension-system-monitor
+  gnome-shell-extension-show-ip
+  gnome-shell-extensions-gpaste
+  gnome-shell-extension-arc-menu
+<span class="o">)</span>
+
+<span class="nv">EXTENSIONS_TO_ENABLE</span><span class="o">=(</span>
+  <span class="c1"># from gnome-shell-extensions</span>
+  <span class="c1"># Lets you reach an application using gnome 2.x style menu on the panel.</span>
+  <span class="c1">#apps-menu \</span>
+  <span class="c1"># Lets you manage your workspaces more easily, assigning a specific workspace to</span>
+  <span class="c1"># each application as soon as it creates a window, in a manner configurable with a</span>
+  <span class="c1"># GSettings key.</span>
+  auto-move-windows
+  <span class="c1"># Shows a status menu for rapid unmount and power off of external storage devices</span>
+  <span class="c1"># (i.e. pendrives)</span>
+  drive-menu
+  <span class="c1"># Changes application icons to always launch a new instance when activated.</span>
+  <span class="c1">#launch-new-instance \</span>
+  <span class="c1"># An alternative algorithm for layouting the thumbnails in the windows overview, that</span>
+  <span class="c1"># more closely reflects the actual positions and sizes.</span>
+  native-window-placement
+  <span class="c1"># Shows a status Indicator for navigating to Places.</span>
+  places-menu
+  <span class="c1"># Adds a shortcut for resizing the focus window to a size that is suitable for GNOME Software screenshots</span>
+  <span class="c1">#screenshot-window-sizer \</span>
+  <span class="c1"># Loads a shell theme from ~/.themes//gnome-shell.</span>
+  <span class="c1">#user-theme \</span>
+  <span class="c1"># Adds a bottom panel with a traditional window list.</span>
+  <span class="c1">#window-list \</span>
+  <span class="c1"># Allow keyboard selection of windows and workspaces in overlay mode.</span>
+  <span class="c1">#windowsNavigator \</span>
+  <span class="c1"># Adds a simple workspace switcher to the top bar.</span>
+  <span class="c1">#workspace-indicator \</span>
+<span class="o">)</span>
+
+<span class="k">for</span> ext <span class="k">in</span> <span class="si">${</span><span class="nv">EXTENSIONS_TO_INSTALL</span><span class="p">[@]</span><span class="si">}</span> <span class="si">${</span><span class="nv">EXTENSIONS_TO_INSTALL_AND_ENABLE</span><span class="p">[@]</span><span class="si">}</span><span class="p">;</span> <span class="k">do</span>
+  sudo apt install -y --allow-downgrades <span class="s2">"</span><span class="si">${</span><span class="nv">ext</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">done</span>
+
+<span class="k">for</span> ext <span class="k">in</span> <span class="si">${</span><span class="nv">EXTENSIONS_TO_INSTALL_AND_ENABLE</span><span class="p">[@]</span><span class="si">}</span> <span class="si">${</span><span class="nv">EXTENSIONS_TO_ENABLE</span><span class="p">[@]</span><span class="si">}</span><span class="p">;</span> <span class="k">do</span>
+  gnome-extensions <span class="nb">enable</span> <span class="s2">"</span><span class="si">${</span><span class="nv">ext</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">done</span>
+
+<span class="nv">GNOME_EXTENSIONS_DIR</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/share/gnome-shell/extensions"</span>
+mkdir -p <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">"</span>
+
+<span class="k">function</span> get_uri_last_token_without_extension<span class="o">()</span> <span class="o">{</span>
+  <span class="nv">repo_url</span><span class="o">=</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span>
+  <span class="nb">printf</span> <span class="si">${</span><span class="nv">repo_url</span><span class="si">}</span> <span class="p">|</span> rev <span class="p">|</span> cut -d <span class="s1">'/'</span> -f <span class="m">1</span> <span class="p">|</span> rev <span class="p">|</span> cut -d <span class="s1">'.'</span> -f <span class="m">1</span>
+<span class="o">}</span>
+
+<span class="k">function</span> get_uri_last_token_without_extension__alt<span class="o">()</span> <span class="o">{</span>
+  <span class="c1"># alternate version which doesn't end in newline</span>
+  <span class="nv">repo_url</span><span class="o">=</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span>
+  <span class="nv">last_token</span><span class="o">=</span><span class="si">${</span><span class="nv">repo_url</span><span class="p">##*/</span><span class="si">}</span>
+  <span class="nb">printf</span> <span class="si">${</span><span class="nv">last_token</span><span class="p">/%.*/</span><span class="si">}</span>
+<span class="o">}</span>
+
+<span class="k">function</span> install_gnome_extension_from_git_nested<span class="o">()</span> <span class="o">{</span>
+  <span class="nv">repo_url</span><span class="o">=</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span>
+  <span class="nv">extension_key</span><span class="o">=</span><span class="si">${</span><span class="nv">2</span><span class="si">}</span>
+  <span class="nv">temp_repo_dir</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp -d<span class="k">)</span><span class="s2">"</span>
+  git clone <span class="s2">"</span><span class="si">${</span><span class="nv">repo_url</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+  rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+  cp -v -r <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">"</span>
+  rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+  enable_gnome_extension <span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span>
+<span class="o">}</span>
+
+<span class="k">function</span> install_gnome_extension_from_git_root<span class="o">()</span> <span class="o">{</span>
+  <span class="nv">repo_url</span><span class="o">=</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span>
+  <span class="nv">extension_key</span><span class="o">=</span><span class="si">${</span><span class="nv">2</span><span class="si">}</span>
+  rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+  <span class="c1"># not clear, though unlikely, if .git being in the install dir is a problem</span>
+  git clone <span class="s2">"</span><span class="si">${</span><span class="nv">repo_url</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+  enable_gnome_extension <span class="s2">"</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+<span class="o">}</span>
+
+<span class="k">function</span> enable_gnome_extension<span class="o">()</span> <span class="o">{</span>
+  <span class="nv">extension_key</span><span class="o">=</span><span class="si">${</span><span class="nv">1</span><span class="si">}</span>
+  gnome-extensions <span class="nb">enable</span> <span class="s2">"</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+<span class="o">}</span>
+
+<span class="c1"># TODO: description</span>
+install_gnome_extension_from_git_nested <span class="s2">"https://github.com/petres/gnome-shell-extension-extensions.git"</span> <span class="s2">"extensions@abteil.org"</span>
+<span class="c1"># TODO: description</span>
+install_gnome_extension_from_git_nested <span class="s2">"https://github.com/kgshank/gse-sound-output-device-chooser.git"</span> <span class="s2">"sound-output-device-chooser@kgshank.net"</span>
+<span class="c1"># TODO: description</span>
+install_gnome_extension_from_git_nested <span class="s2">"https://github.com/kazysmaster/gnome-shell-extension-lockkeys.git"</span> <span class="s2">"lockkeys@vaina.lt"</span>
+<span class="c1"># TODO: description</span>
+install_gnome_extension_from_git_root <span class="s2">"https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator.git"</span> <span class="s2">"clipboard-indicator@tudmotu.com"</span>
+<span class="c1"># TODO: description</span>
+install_gnome_extension_from_git_root <span class="s2">"https://github.com/daniellandau/switcher.git"</span> <span class="s2">"switcher@landau.fi"</span>
+
+<span class="k">function</span> install_gnome_shell_extension_freon<span class="o">()</span> <span class="o">{</span>
+    <span class="nv">repo_url</span><span class="o">=</span><span class="s2">"https://github.com/UshakovVasilii/gnome-shell-extension-freon.git"</span>
+    <span class="nv">extension_key</span><span class="o">=</span><span class="s2">"freon@UshakovVasilii_Github.yahoo.com"</span>
+    <span class="nv">temp_repo_dir</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp -d<span class="k">)</span><span class="s2">"</span>
+    git clone <span class="s2">"</span><span class="si">${</span><span class="nv">repo_url</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+    glib-compile-schemas <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">/schemas/"</span>
+    rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+    cp -v -r <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">"</span>
+    rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+    enable_gnome_extension <span class="s2">"</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+<span class="o">}</span>
+<span class="c1"># TODO: description</span>
+install_gnome_shell_extension_freon
+
+<span class="k">function</span> install_gnome_shell_extension_gtile<span class="o">()</span> <span class="o">{</span>
+    <span class="nv">repo_url</span><span class="o">=</span><span class="s2">"https://github.com/gTile/gTile.git"</span>
+    <span class="nv">extension_key</span><span class="o">=</span><span class="s2">"gTile@vibou"</span>
+    <span class="nv">temp_repo_dir</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp -d<span class="k">)</span><span class="s2">"</span>
+    git clone <span class="s2">"</span><span class="si">${</span><span class="nv">repo_url</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+    bazel run :install-extension <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+    rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+    cp -v -r <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">/</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">GNOME_EXTENSIONS_DIR</span><span class="si">}</span><span class="s2">"</span>
+    rm -v -rf <span class="s2">"</span><span class="si">${</span><span class="nv">temp_repo_dir</span><span class="si">}</span><span class="s2">"</span>
+    enable_gnome_extension <span class="s2">"</span><span class="si">${</span><span class="nv">extension_key</span><span class="si">}</span><span class="s2">"</span>
+<span class="o">}</span>
+<span class="c1"># TODO: description</span>
+install_gnome_shell_extension_gtile
+</code></pre></div>
+<p>For the weather extension, see <a href="https://home.openweathermap.org/api_keys">https://home.openweathermap.org/api_keys</a>.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This causes some scaled windows to display as if unscaled.</p>
+</div>
+<p>To use extensions right away, press <span class="keys"><kbd class="key-alt">Alt</kbd><span>＋</span><kbd class="key-f2">F2</kbd></span> , <span class="keys"><kbd class="key-r">R</kbd></span> , <span class="keys"><kbd class="key-enter">Enter</kbd></span> .</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Supposedly this is the command line equivalent, avoid since it can crash the system:</p>
+<div class="highlight"><pre><span></span><code>gnome-shell --replace
+</code></pre></div>
+</div>
+<p>To verify state of all extensions:</p>
+<div class="highlight"><pre><span></span><code>gnome-extensions list <span class="p">|</span> xargs -I<span class="o">{}</span> gnome-extensions info <span class="o">{}</span>
+</code></pre></div>
+<h2 id="superseded">Superseded<a class="headerlink" href="#superseded" title="Permanent link">¶</a></h2>
+<p>Extensions that are no longer used in favor of a better alternative.
+Left as a backup and for reference.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># TODO: description</span>
+<span class="c1">#curl -sS -L -O https://extensions.gnome.org/extension-data/world_clock_liteailin.nemui.v9.shell-extension.zip</span>
+
+install_gnome_extension_from_git_root <span class="s2">"https://github.com/jwendell/gnome-shell-extension-timezone.git"</span> <span class="s2">"timezone@jwendell"</span>
+<span class="c1"># set the path to people.json in the extension settings</span>
+<span class="nv">TIMEZONE_EXTENSION_DIR</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.config/gnome-shell-extension-timezone"</span>
+mkdir -p <span class="s2">"</span><span class="nv">$TIMEZONE_EXTENSION_DIR</span><span class="s2">"</span>
+<span class="c1"># include "avatar": "&lt;url&gt;/avatar.jpg" in the list of attributes below</span>
+<span class="c1"># or "gravatar" with email registered at gravatar.com or libravatar.org</span>
+tee -a <span class="s2">"</span><span class="nv">$TIMEZONE_EXTENSION_DIR</span><span class="s2">/people.json"</span> &gt; /dev/null <span class="s">&lt;&lt;EOF</span>
+<span class="s">[</span>
+<span class="s">  {</span>
+<span class="s">    "name": "Jim",</span>
+<span class="s">    "city": "NYC",</span>
+<span class="s">    "tz": "America/New_York"</span>
+<span class="s">  },</span>
+<span class="s">  {</span>
+<span class="s">    "name": "Hans",</span>
+<span class="s">    "city": "Berlin",</span>
+<span class="s">    "tz": "Europe/Berlin"</span>
+<span class="s">  },</span>
+<span class="s">  {</span>
+<span class="s">    "name": "Chris",</span>
+<span class="s">    "city": "San Jose",</span>
+<span class="s">    "tz": "America/Los_Angeles"</span>
+<span class="s">  },</span>
+<span class="s">  {</span>
+<span class="s">    "name": "Singh",</span>
+<span class="s">    "city": "Bangalore",</span>
+<span class="s">    "tz": "Asia/Kolkata"</span>
+<span class="s">  }</span>
+<span class="s">]</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<p>Disabled in favor of <code>gnome-shell-extension-system-monitor</code>:</p>
+<div class="highlight"><pre><span></span><code><span class="nv">REPO_URL</span><span class="o">=</span><span class="s2">"https://github.com/hedayaty/NetSpeed.git"</span>
+<span class="nv">REPO_NAME</span><span class="o">=</span><span class="k">$(</span>get_uri_last_token_without_extension <span class="si">${</span><span class="nv">REPO_URL</span><span class="si">}</span><span class="k">)</span>
+git clone <span class="s2">"</span><span class="si">${</span><span class="nv">REPO_URL</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"/tmp/</span><span class="si">${</span><span class="nv">REPO_NAME</span><span class="si">}</span><span class="s2">"</span>
+<span class="nb">cd</span> <span class="s2">"/tmp/</span><span class="si">${</span><span class="nv">REPO_NAME</span><span class="si">}</span><span class="s2">"</span> <span class="o">&amp;&amp;</span> make <span class="o">&amp;&amp;</span> make <span class="nb">enable</span>
+rm -rf <span class="s2">"/tmp/</span><span class="si">${</span><span class="nv">REPO_NAME</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h2 id="not-yet-evaluated">Not yet evaluated<a class="headerlink" href="#not-yet-evaluated" title="Permanent link">¶</a></h2>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Evaluate and decide to keep or discard.</p>
+</div>
+<div class="highlight"><pre><span></span><code>gnome-shell-extension-autohidetopbar
+gnome-shell-extension-bluetooth-quick-connect
+gnome-shell-extension-dashtodock
+gnome-shell-extension-easyscreencast
+gnome-shell-extension-gsconnect-browsers
+gnome-shell-extension-gsconnect
+gnome-shell-extension-hard-disk-led
+gnome-shell-extension-hide-activities
+gnome-shell-extension-hide-veth
+gnome-shell-extension-impatience
+gnome-shell-extension-kimpanel
+gnome-shell-extension-log-out-button
+gnome-shell-extension-move-clock
+gnome-shell-extension-multi-monitors
+gnome-shell-extension-no-annoyance
+gnome-shell-extension-onboard
+gnome-shell-extension-pixelsaver
+gnome-shell-extension-redshift
+gnome-shell-extension-shortcuts
+gnome-shell-extension-suspend-button
+gnome-shell-extension-tilix-dropdown
+gnome-shell-extension-tilix-shortcut
+gnome-shell-extension-top-icons-plus
+gnome-shell-extension-trash
+gnome-shell-extension-workspaces-to-dock
+
+gnome-shell-extension-appindicator
+gnome-shell-extension-caffeine
+gnome-shell-extension-desktop-icons
+gnome-shell-extension-draw-on-your-screen
+gnome-shell-extension-gamemode
+gnome-shell-extension-hijra
+gnome-shell-extension-prefs
+gnome-shell-extension-ubuntu-dock
+gnome-shell-extension-xrdesktop
+</code></pre></div>
+<p>To get all the extensions in apt:</p>
+<div class="highlight"><pre><span></span><code>apt search gnome-shell-extension --names-only <span class="p">|</span> grep <span class="s1">'gnome.*\w/\w'</span> <span class="p">|</span> cut -d<span class="s1">'/'</span> -f1
+</code></pre></div>
+<p>!!! TODO:
+    Enable NetSpeed.</p>
+</article>
+</div>
+</div>
+</main>
+<footer class="md-footer">
+<nav aria-label="Footer" class="md-footer__inner md-grid">
+<a aria-label="Previous: GitHub" class="md-footer__link md-footer__link--prev" href="../github/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              GitHub
+            </div>
+</div>
+</a>
+<a aria-label="Next: Golang" class="md-footer__link md-footer__link--next" href="../golang/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              Golang
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
+</div>
+</a>
+</nav>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+          Material for MkDocs
+        </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.477d984a.min.js", "version": null}</script>
+<script src="../assets/javascripts/bundle.ddd52ceb.min.js"></script>
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</body>
+</html>

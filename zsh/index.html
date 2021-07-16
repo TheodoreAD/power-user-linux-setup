@@ -1,0 +1,445 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Teodor Dumitrescu &lt;teodor.dumitrescu@gmail.com&gt;" name="author"/>
+<link href="https://TheodoreAD.github.io/power-user-linux-setup/zsh/" rel="canonical"/>
+<link href="../assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.2.1, mkdocs-material-7.1.10" name="generator"/>
+<title>Zsh and Oh My Zsh - Power User Linux Setup</title>
+<link href="../assets/stylesheets/main.1fe995fd.min.css" rel="stylesheet"/>
+<link href="../assets/stylesheets/palette.f1a3b89f.min.css" rel="stylesheet"/>
+<meta content="#2094f3" name="theme-color"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+<link href="../extra/extra.css" rel="stylesheet"/>
+</head>
+<body data-md-color-accent="orange" data-md-color-primary="blue" data-md-color-scheme="slate" dir="ltr">
+<script>function __prefix(e){return new URL("..",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#zsh-and-oh-my-zsh">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="Power User Linux Setup" class="md-header__button md-logo" data-md-component="logo" href=".." title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              Zsh and Oh My Zsh
+            
+          </span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" data-md-state="active" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</label>
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+</button>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md-header__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Power User Linux Setup" class="md-nav__button md-logo" data-md-component="logo" href=".." title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+    Power User Linux Setup
+  </label>
+<div class="md-nav__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="..">
+        Installation steps
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../apt_packages/">
+        Apt packages
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../docker/">
+        Docker
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../fonts/">
+        Fonts
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../games/">
+        Games
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../git/">
+        Git
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../github/">
+        GitHub
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../gnome_extensions/">
+        GNOME extensions
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../golang/">
+        Golang
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../kubernetes/">
+        Kuberentes
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../locale/">
+        Locale
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../python/">
+        Python
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="../ssh/">
+        SSH
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<a class="md-nav__link md-nav__link--active" href="./">
+        Zsh and Oh My Zsh
+      </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<a class="md-content__button md-icon" href="https://github.com/TheodoreAD/power-user-linux-setup/edit/master/docs/zsh.md" title="Edit this page">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+</a>
+<h1 id="zsh-and-oh-my-zsh">Zsh and Oh My Zsh<a class="headerlink" href="#zsh-and-oh-my-zsh" title="Permanent link">¶</a></h1>
+<p><a href="http://www.bash2zsh.com/zsh_refcard/refcard.pdf">http://www.bash2zsh.com/zsh_refcard/refcard.pdf</a></p>
+<p><a href="http://grml.org/zsh/zsh-lovers.html">http://grml.org/zsh/zsh-lovers.html</a></p>
+<p><a href="http://zsh.sourceforge.net/Doc/Release/Shell-Builtin-Commands.html">http://zsh.sourceforge.net/Doc/Release/Shell-Builtin-Commands.html</a></p>
+<p>Install Zsh and change default shell:</p>
+<div class="highlight"><pre><span></span><code>sudo apt install -y zsh
+chsh -s <span class="k">$(</span>which zsh<span class="k">)</span>
+</code></pre></div>
+<p>Log out and login back again to use your new default shell.</p>
+<p>Install Oh My Zsh and set up themes and plugins:</p>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>fix basic zsh settings not being saved, e.g. HISTSIZE </p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>investigate powerlevel10k not installing sometimes</p>
+</div>
+<div class="highlight"><pre><span></span><code>sh -c <span class="s2">"</span><span class="k">$(</span>curl -sS -Lf https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh<span class="k">)</span><span class="s2">"</span>
+git clone --depth<span class="o">=</span><span class="m">1</span> <span class="se">\</span>
+  <span class="s2">"https://github.com/romkatv/powerlevel10k.git"</span> <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">ZSH</span><span class="si">}</span><span class="s2">/themes/powerlevel10k"</span>
+sed -i <span class="se">\</span>
+  <span class="s1">'s:ZSH_THEME="robbyrussell":ZSH_THEME="powerlevel10k/powerlevel10k":'</span> <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span>
+<span class="c1"># disable P10k pyenv prompt token, it becomes duplicate of virtualenv (bug?)</span>
+sed -i <span class="se">\</span>
+  <span class="s2">"s/    pyenv/    # pyenv/"</span> <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.p10k.zsh"</span>
+<span class="c1"># set plugins, the more the slower the prompt</span>
+<span class="nv">ZSH_PLUGINS</span><span class="o">=</span><span class="k">$(</span>
+  cat <span class="s">&lt;&lt;EOF</span>
+<span class="s">plugins=( \n\</span>
+<span class="s">    command-not-found \n\</span>
+<span class="s">    dirhistory \n\</span>
+<span class="s">    docker \n\</span>
+<span class="s">    docker-compose \n\</span>
+<span class="s">    encode64 \n\</span>
+<span class="s">    git \n\</span>
+<span class="s">    helm \n\</span>
+<span class="s">    history \n\</span>
+<span class="s">    jsontools \n\</span>
+<span class="s">    kubectl \n\</span>
+<span class="s">    poetry \n\</span>
+<span class="s">    rsync \n\</span>
+<span class="s">    thefuck \n\</span>
+<span class="s">    urltools \n\</span>
+<span class="s">    web-search \n\</span>
+<span class="s">)</span>
+<span class="s">EOF</span>
+<span class="k">)</span>
+sed -i <span class="se">\</span>
+  <span class="s2">"s/plugins=(git)/</span><span class="si">${</span><span class="nv">ZSH_PLUGINS</span><span class="si">}</span><span class="s2">/"</span> <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span>
+</code></pre></div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Research other useful plugins</p>
+<p>Maybe:</p>
+<ul>
+<li>pip</li>
+<li>pyenv</li>
+<li>pylint</li>
+<li>python</li>
+<li>redis-Compilation</li>
+<li>sudo</li>
+<li>tmux</li>
+<li>tmuxinator</li>
+<li>vscode</li>
+</ul>
+<p>Desired:</p>
+<ul>
+<li>
+<p>catimg</p>
+<p><a href="https://github.com/posva/catimg">https://github.com/posva/catimg</a></p>
+<p>requires convert from imagemagick, package is very large use C version from original repo</p>
+<p><a href="https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/catimg">https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/catimg</a></p>
+</li>
+<li>
+<p>git-extras</p>
+<p><a href="https://github.com/tj/git-extras">https://github.com/tj/git-extras</a></p>
+<p><a href="https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git-extras">https://github.com/ohmyzsh/ohmyzsh/tree/master/plugins/git-extras</a></p>
+<p>compatibility issue</p>
+</li>
+<li>
+<p><a href="https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md">https://github.com/zsh-users/zsh-syntax-highlighting/blob/master/INSTALL.md</a></p>
+</li>
+</ul>
+</div>
+<p>Install <a href="https://direnv.net/">direnv</a>:</p>
+<div class="highlight"><pre><span></span><code>tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+
+<span class="s"># Add hooks for direnv to allow auto processing for .envrc files</span>
+<span class="s">export DIRENV_LOG_FORMAT=""</span>
+<span class="s">eval "\$(direnv hook zsh)"</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<p>Key bindings, aliases, completions, path:</p>
+<div class="highlight"><pre><span></span><code>tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+
+<span class="s"># key bindings for navigating the command line</span>
+<span class="s"># home</span>
+<span class="s">bindkey "^[[H" beginning-of-line</span>
+<span class="s"># end</span>
+<span class="s">bindkey "^[[F" end-of-line</span>
+<span class="s"># ctrl + right arrow</span>
+<span class="s">bindkey "^[[1;5C" forward-word</span>
+<span class="s"># ctrl + left arrow</span>
+<span class="s">bindkey "^[[1;5D" backward-word</span>
+<span class="s"># ctrl + backspace</span>
+<span class="s">bindkey "^H" backward-delete-word</span>
+<span class="s"># ctrl + delete</span>
+<span class="s">bindkey "^[[3;5~" delete-word</span>
+<span class="s"># esc '</span>
+<span class="s">bindkey "^[;" quote-line</span>
+<span class="s"># ctrl + alt + ' (at the end of the region)</span>
+<span class="s">bindkey "^[\x27" quote-region</span>
+<span class="s"># ctrl + o</span>
+<span class="s">bindkey "^O" up-case-word</span>
+<span class="s"># ctrl + l</span>
+<span class="s">bindkey "^L" down-case-word</span>
+<span class="s">EOF</span>
+
+<span class="c1"># Terminal copy-paste with xclip</span>
+tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+
+<span class="s"># used to pipe into the clipboard, e.g. ps -e | xcc</span>
+<span class="s">alias xcc="xclip -rmlastnl -selection clipboard -filter | xclip -rmlastnl -selection primary"</span>
+<span class="s"># used to copy the current line, e.g. xc "abcd efgh"</span>
+<span class="s">function xc() { echo -n "\$*" | xcc ; }</span>
+<span class="s"># used to paste into stdout</span>
+<span class="s">alias xv="xclip -o"</span>
+<span class="s">EOF</span>
+
+<span class="c1"># Aliases not covered by oh my zsh plugins</span>
+tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+
+<span class="s"># Common command aliases</span>
+<span class="s"># redirect following and silent except for errors</span>
+<span class="s">alias curl='curl -sS -L'</span>
+<span class="s"># sort keys in JSON output</span>
+<span class="s">alias jq='jq -S'</span>
+<span class="s">EOF</span>
+
+<span class="c1"># add user binaries directory to PATH</span>
+<span class="c1"># https://unix.stackexchange.com/questions/36871/where-should-a-local-executable-be-placed</span>
+mkdir -p <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/bin"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin"</span>
+sed -i <span class="se">\</span>
+  <span class="s1">'s%# export PATH=$HOME/bin:/usr/local/bin:$PATH%export PATH="${HOME}/bin:${HOME}/.local/bin:/usr/local/bin:${PATH}"%'</span> <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span>
+
+<span class="c1"># init completions</span>
+tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+
+<span class="s">autoload -Uz compinit &amp;&amp; compinit</span>
+<span class="s">EOF</span>
+
+<span class="nb">source</span> <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span>
+</code></pre></div>
+<p>After the first run, configure the Oh My Zsh theme:</p>
+<div class="highlight"><pre><span></span><code>p10k configure
+</code></pre></div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Investigate <a href="https://github.com/zsh-users/zsh-completions">https://github.com/zsh-users/zsh-completions</a></p>
+<div class="highlight"><pre><span></span><code>git clone https://github.com/zsh-users/zsh-completions <span class="si">${</span><span class="nv">ZSH_CUSTOM</span><span class="p">:=~/.oh-my-zsh/custom</span><span class="si">}</span>/plugins/zsh-completions
+</code></pre></div>
+<p>plugins=(… zsh-completions)</p>
+<p>must be placed before <code>compinit</code></p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>install colorls</p>
+<p><a href="https://github.com/athityakumar/colorls">https://github.com/athityakumar/colorls</a></p>
+<p><a href="https://linuxize.com/post/how-to-install-ruby-on-ubuntu-18-04/">https://linuxize.com/post/how-to-install-ruby-on-ubuntu-18-04/</a></p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># The following lines were added by compinstall</span>
+
+zstyle <span class="s1">':completion:*'</span> completer _complete _ignored
+zstyle :compinstall filename <span class="s1">'/home/tdumitrescu/.zshrc'</span>
+
+autoload -Uz compinit
+compinit
+<span class="c1"># End of lines added by compinstall</span>
+<span class="c1"># Lines configured by zsh-newuser-install</span>
+<span class="nv">HISTFILE</span><span class="o">=</span>~/.histfile
+<span class="nv">HISTSIZE</span><span class="o">=</span><span class="m">100000</span>
+<span class="nv">SAVEHIST</span><span class="o">=</span><span class="m">100000</span>
+setopt autocd beep nomatch notify
+bindkey -e
+<span class="c1"># End of lines configured by zsh-newuser-install</span>
+</code></pre></div>
+</div>
+</article>
+</div>
+</div>
+</main>
+<footer class="md-footer">
+<nav aria-label="Footer" class="md-footer__inner md-grid">
+<a aria-label="Previous: SSH" class="md-footer__link md-footer__link--prev" href="../ssh/" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              SSH
+            </div>
+</div>
+</a>
+</nav>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+          Material for MkDocs
+        </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": "..", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "../assets/javascripts/workers/search.477d984a.min.js", "version": null}</script>
+<script src="../assets/javascripts/bundle.ddd52ceb.min.js"></script>
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</body>
+</html>

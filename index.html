@@ -1,0 +1,944 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Teodor Dumitrescu &lt;teodor.dumitrescu@gmail.com&gt;" name="author"/>
+<link href="https://TheodoreAD.github.io/power-user-linux-setup/" rel="canonical"/>
+<link href="assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.2.1, mkdocs-material-7.1.10" name="generator"/>
+<title>Power User Linux Setup</title>
+<link href="assets/stylesheets/main.1fe995fd.min.css" rel="stylesheet"/>
+<link href="assets/stylesheets/palette.f1a3b89f.min.css" rel="stylesheet"/>
+<meta content="#2094f3" name="theme-color"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+<link href="extra/extra.css" rel="stylesheet"/>
+</head>
+<body data-md-color-accent="orange" data-md-color-primary="blue" data-md-color-scheme="slate" dir="ltr">
+<script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#installation-steps">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="Power User Linux Setup" class="md-header__button md-logo" data-md-component="logo" href="." title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              Installation steps
+            
+          </span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" data-md-state="active" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</label>
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+</button>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md-header__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Power User Linux Setup" class="md-nav__button md-logo" data-md-component="logo" href="." title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+    Power User Linux Setup
+  </label>
+<div class="md-nav__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup/" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          Installation steps
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href=".">
+        Installation steps
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#apt-packages-tools-and-prerequisites">
+    Apt Packages - tools and prerequisites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gnome-extensions">
+    Gnome extensions
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fonts">
+    Fonts
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#zsh-oh-my-zsh-powerlevel10k">
+    Zsh + Oh My Zsh + PowerLevel10k
+  </a>
+<nav aria-label="Zsh + Oh My Zsh + PowerLevel10k" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#nyancat-for-terminal-an-absolute-must">
+    NyanCat for terminal, an absolute must
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#python-tools">
+    Python tools
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#golang">
+    Golang
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ssh">
+    SSH
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#source-control">
+    Source control
+  </a>
+<nav aria-label="Source control" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#git">
+    Git
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#github">
+    Github
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#docker">
+    Docker
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#networking">
+    Networking
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#browsing">
+    Browsing
+  </a>
+<nav aria-label="Browsing" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#google-chrome">
+    Google Chrome
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sidekick">
+    Sidekick
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#communication">
+    Communication
+  </a>
+<nav aria-label="Communication" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#franz">
+    Franz
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#slack">
+    Slack
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#software-development">
+    Software Development
+  </a>
+<nav aria-label="Software Development" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#visual-studio-code">
+    Visual Studio Code
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#pycharm-professional">
+    Pycharm Professional
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#notepad">
+    Notepad++
+  </a>
+<nav aria-label="Notepad++" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#alternative-notepadqq">
+    Alternative - Notepadqq
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#media">
+    Media
+  </a>
+<nav aria-label="Media" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#spotify">
+    Spotify
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#file-management">
+    File management
+  </a>
+<nav aria-label="File management" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#double-commander">
+    Double Commander
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#email">
+    Email
+  </a>
+<nav aria-label="Email" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#evolution">
+    Evolution
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thunderbird">
+    Thunderbird
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#autostart">
+    Autostart
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ui">
+    UI
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#benchmarking">
+    Benchmarking
+  </a>
+<nav aria-label="Benchmarking" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#hyperfine">
+    Hyperfine
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fix-crlf">
+    Fix CRLF
+  </a>
+<nav aria-label="Fix CRLF" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#disable-ctr-shift-u-system-shortcut">
+    Disable Ctr-Shift-U system shortcut
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="apt_packages/">
+        Apt packages
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="docker/">
+        Docker
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="fonts/">
+        Fonts
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="games/">
+        Games
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="git/">
+        Git
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="github/">
+        GitHub
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="gnome_extensions/">
+        GNOME extensions
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="golang/">
+        Golang
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="kubernetes/">
+        Kuberentes
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="locale/">
+        Locale
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="python/">
+        Python
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="ssh/">
+        SSH
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="zsh/">
+        Zsh and Oh My Zsh
+      </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#apt-packages-tools-and-prerequisites">
+    Apt Packages - tools and prerequisites
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gnome-extensions">
+    Gnome extensions
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fonts">
+    Fonts
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#zsh-oh-my-zsh-powerlevel10k">
+    Zsh + Oh My Zsh + PowerLevel10k
+  </a>
+<nav aria-label="Zsh + Oh My Zsh + PowerLevel10k" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#nyancat-for-terminal-an-absolute-must">
+    NyanCat for terminal, an absolute must
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#python-tools">
+    Python tools
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#golang">
+    Golang
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ssh">
+    SSH
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#source-control">
+    Source control
+  </a>
+<nav aria-label="Source control" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#git">
+    Git
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#github">
+    Github
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#docker">
+    Docker
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#networking">
+    Networking
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#browsing">
+    Browsing
+  </a>
+<nav aria-label="Browsing" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#google-chrome">
+    Google Chrome
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#sidekick">
+    Sidekick
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#communication">
+    Communication
+  </a>
+<nav aria-label="Communication" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#franz">
+    Franz
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#slack">
+    Slack
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#software-development">
+    Software Development
+  </a>
+<nav aria-label="Software Development" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#visual-studio-code">
+    Visual Studio Code
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#pycharm-professional">
+    Pycharm Professional
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#notepad">
+    Notepad++
+  </a>
+<nav aria-label="Notepad++" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#alternative-notepadqq">
+    Alternative - Notepadqq
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#media">
+    Media
+  </a>
+<nav aria-label="Media" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#spotify">
+    Spotify
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#file-management">
+    File management
+  </a>
+<nav aria-label="File management" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#double-commander">
+    Double Commander
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#email">
+    Email
+  </a>
+<nav aria-label="Email" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#evolution">
+    Evolution
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#thunderbird">
+    Thunderbird
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#autostart">
+    Autostart
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#ui">
+    UI
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#benchmarking">
+    Benchmarking
+  </a>
+<nav aria-label="Benchmarking" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#hyperfine">
+    Hyperfine
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#fix-crlf">
+    Fix CRLF
+  </a>
+<nav aria-label="Fix CRLF" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#disable-ctr-shift-u-system-shortcut">
+    Disable Ctr-Shift-U system shortcut
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<a class="md-content__button md-icon" href="https://github.com/TheodoreAD/power-user-linux-setup/edit/master/docs/index.md" title="Edit this page">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+</a>
+<h1 id="installation-steps">Installation steps<a class="headerlink" href="#installation-steps" title="Permanent link">¶</a></h1>
+<p>This is intended for and has been tested on Ubuntu 20.04 focal fossa.</p>
+<div class="highlight"><pre><span></span><code><span class="c1"># disabled -u for unset variables due to weird behavior </span>
+<span class="nb">set</span> -ex -o pipefail
+</code></pre></div>
+<h2 id="apt-packages-tools-and-prerequisites">Apt Packages - tools and prerequisites<a class="headerlink" href="#apt-packages-tools-and-prerequisites" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="apt_packages/">guide</a>.</p>
+<h2 id="gnome-extensions">Gnome extensions<a class="headerlink" href="#gnome-extensions" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="gnome_extensions/">guide</a>.</p>
+<h2 id="fonts">Fonts<a class="headerlink" href="#fonts" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="fonts/">guide</a>.</p>
+<h2 id="zsh-oh-my-zsh-powerlevel10k">Zsh + Oh My Zsh + PowerLevel10k<a class="headerlink" href="#zsh-oh-my-zsh-powerlevel10k" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="zsh/">guide</a>.</p>
+<h3 id="nyancat-for-terminal-an-absolute-must">NyanCat for terminal, an absolute must<a class="headerlink" href="#nyancat-for-terminal-an-absolute-must" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">NYANCAT_INSTALL_DIR</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.nyancat"</span>
+git clone <span class="s2">"https://github.com/klange/nyancat.git"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">NYANCAT_INSTALL_DIR</span><span class="si">}</span><span class="s2">"</span>
+make -C <span class="s2">"</span><span class="si">${</span><span class="nv">NYANCAT_INSTALL_DIR</span><span class="si">}</span><span class="s2">"</span>
+ln -s -f <span class="s2">"</span><span class="si">${</span><span class="nv">NYANCAT_INSTALL_DIR</span><span class="si">}</span><span class="s2">/src/nyancat"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin/nyancat"</span>
+</code></pre></div>
+<h2 id="python-tools">Python tools<a class="headerlink" href="#python-tools" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="python/">guide</a>.</p>
+<h2 id="golang">Golang<a class="headerlink" href="#golang" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="golang/">guide</a>.</p>
+<h2 id="ssh">SSH<a class="headerlink" href="#ssh" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="ssh/">guide</a>.</p>
+<h2 id="source-control">Source control<a class="headerlink" href="#source-control" title="Permanent link">¶</a></h2>
+<h3 id="git">Git<a class="headerlink" href="#git" title="Permanent link">¶</a></h3>
+<p>Follow the <a href="git/">guide</a>.</p>
+<h3 id="github">Github<a class="headerlink" href="#github" title="Permanent link">¶</a></h3>
+<p>Follow the <a href="github/">guide</a>.</p>
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">¶</a></h2>
+<p>Follow the <a href="docker/">guide</a>.</p>
+<h2 id="networking">Networking<a class="headerlink" href="#networking" title="Permanent link">¶</a></h2>
+<p>Set up DNS with Cloudflare IPs.</p>
+<div class="highlight"><pre><span></span><code>sudo tee <span class="s2">"/etc/resolvconf/resolv.conf.d/tail"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+<span class="s">nameserver 1.1.1.1</span>
+<span class="s">nameserver 1.0.0.1</span>
+<span class="s">EOF</span>
+sudo resolvconf -u
+<span class="c1"># verify changes</span>
+systemd-resolve --status
+</code></pre></div>
+<h2 id="browsing">Browsing<a class="headerlink" href="#browsing" title="Permanent link">¶</a></h2>
+<h3 id="google-chrome">Google Chrome<a class="headerlink" href="#google-chrome" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">CHROME_DEB</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">"</span>
+<span class="nv">CHROME_URL</span><span class="o">=</span><span class="s2">"https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"</span>
+curl -sS -L -o <span class="s2">"</span><span class="si">${</span><span class="nv">CHROME_DEB</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">CHROME_URL</span><span class="si">}</span><span class="s2">"</span>
+sudo dpkg -i <span class="s2">"</span><span class="si">${</span><span class="nv">CHROME_DEB</span><span class="si">}</span><span class="s2">"</span>
+rm -v -f <span class="s2">"</span><span class="si">${</span><span class="nv">CHROME_DEB</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h3 id="sidekick">Sidekick<a class="headerlink" href="#sidekick" title="Permanent link">¶</a></h3>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Resolve repo conflict with Chrome warnings.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="nv">SIDEKICK_DEB</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">"</span>
+<span class="nv">SIDEKICK_URL</span><span class="o">=</span><span class="s2">"https://api.meetsidekick.com/downloads/df/linux/deb"</span>
+curl -sS -L -o <span class="s2">"</span><span class="si">${</span><span class="nv">SIDEKICK_DEB</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">SIDEKICK_URL</span><span class="si">}</span><span class="s2">"</span>
+sudo dpkg -i <span class="s2">"</span><span class="si">${</span><span class="nv">SIDEKICK_DEB</span><span class="si">}</span><span class="s2">"</span>
+rm -v -f <span class="s2">"</span><span class="si">${</span><span class="nv">SIDEKICK_DEB</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<p>If Google Chrome is installed, run this to eliminate the duplicate repo
+introduced by Sidekick:</p>
+<div class="highlight"><pre><span></span><code>sudo sed -i <span class="se">\</span>
+  <span class="s1">'s~deb \[arch=amd64\] http://dl.google.com/linux/chrome/deb/ stable main~# &amp;~'</span> <span class="se">\</span>
+  /etc/apt/sources.list.d/sidekick-browser.list
+</code></pre></div>
+<h2 id="communication">Communication<a class="headerlink" href="#communication" title="Permanent link">¶</a></h2>
+<h3 id="franz">Franz<a class="headerlink" href="#franz" title="Permanent link">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Skip this if using the Sidekick browser (recommended).</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># TODO: get latest version automatically</span>
+<span class="nv">FRANZ_DEB</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">"</span>
+<span class="nv">FRANZ_URL</span><span class="o">=</span><span class="s2">"https://github.com/meetfranz/franz/releases/download/v5.4.1/franz_5.4.1_amd64.deb"</span>
+curl -sS -L -o <span class="s2">"</span><span class="si">${</span><span class="nv">FRANZ_DEB</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">FRANZ_URL</span><span class="si">}</span><span class="s2">"</span>
+sudo dpkg -i <span class="s2">"</span><span class="si">${</span><span class="nv">FRANZ_DEB</span><span class="si">}</span><span class="s2">"</span>
+rm -v -f <span class="s2">"</span><span class="si">${</span><span class="nv">FRANZ_DEB</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h3 id="slack">Slack<a class="headerlink" href="#slack" title="Permanent link">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>No longer used in favor of Franz / Sidekick.</p>
+</div>
+<div class="highlight"><pre><span></span><code>sudo snap install --classic slack
+</code></pre></div>
+<h2 id="software-development">Software Development<a class="headerlink" href="#software-development" title="Permanent link">¶</a></h2>
+<h3 id="visual-studio-code">Visual Studio Code<a class="headerlink" href="#visual-studio-code" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo snap install --classic code
+</code></pre></div>
+<h3 id="pycharm-professional">Pycharm Professional<a class="headerlink" href="#pycharm-professional" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo snap install --classic pycharm-professional
+</code></pre></div>
+<h3 id="notepad">Notepad++<a class="headerlink" href="#notepad" title="Permanent link">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Not working properly.</p>
+</div>
+<div class="highlight"><pre><span></span><code>sudo snap install notepad-plus-plus
+</code></pre></div>
+<h4 id="alternative-notepadqq">Alternative - Notepadqq<a class="headerlink" href="#alternative-notepadqq" title="Permanent link">¶</a></h4>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Untested.</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>install, test, document</p>
+</div>
+<div class="highlight"><pre><span></span><code>sudo snap install notepadqq
+</code></pre></div>
+<h2 id="media">Media<a class="headerlink" href="#media" title="Permanent link">¶</a></h2>
+<h3 id="spotify">Spotify<a class="headerlink" href="#spotify" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo snap install spotify
+</code></pre></div>
+<h2 id="file-management">File management<a class="headerlink" href="#file-management" title="Permanent link">¶</a></h2>
+<h3 id="double-commander">Double Commander<a class="headerlink" href="#double-commander" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code>sudo apt install -y doublecmd-gtk
+</code></pre></div>
+<h2 id="email">Email<a class="headerlink" href="#email" title="Permanent link">¶</a></h2>
+<h3 id="evolution">Evolution<a class="headerlink" href="#evolution" title="Permanent link">¶</a></h3>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>install, test, document</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>VERY OLD</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># !!! repo doesn't work, needs to be specified with older ubuntu release name !!!</span>
+<span class="c1"># sudo add-apt-repository ppa:fta/gnome3</span>
+<span class="c1"># sudo apt update</span>
+<span class="c1"># sudo apt install -y evolution</span>
+</code></pre></div>
+<h3 id="thunderbird">Thunderbird<a class="headerlink" href="#thunderbird" title="Permanent link">¶</a></h3>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>configure, document</p>
+</div>
+<h2 id="autostart">Autostart<a class="headerlink" href="#autostart" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="nv">USER_AUTOSTART_DIR</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.config/autostart"</span>
+<span class="nv">APT_AUTOSTART_APPS</span><span class="o">=(</span> <span class="se">\</span>
+  <span class="c1"># doublecmd \</span>
+  terminator <span class="se">\</span>
+  google-chrome <span class="se">\</span>
+  sidekick-browser <span class="se">\</span>
+<span class="o">)</span>
+<span class="k">for</span> app <span class="k">in</span> <span class="s2">"</span><span class="si">${</span><span class="nv">APT_AUTOSTART_APPS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span> <span class="k">do</span>
+  cp -v <span class="s2">"/usr/share/applications/</span><span class="si">${</span><span class="nv">app</span><span class="si">}</span><span class="s2">.desktop"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">USER_AUTOSTART_DIR</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">done</span>
+<span class="nv">SNAP_AUTOSTART_APPS</span><span class="o">=(</span> <span class="se">\</span>
+    pycharm-professional_pycharm-professional <span class="se">\</span>
+    spotify_spotify <span class="se">\</span>
+<span class="o">)</span>
+<span class="k">for</span> app <span class="k">in</span> <span class="s2">"</span><span class="si">${</span><span class="nv">SNAP_AUTOSTART_APPS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span> <span class="k">do</span>
+  cp -v <span class="s2">"/var/lib/snapd/desktop/applications/</span><span class="si">${</span><span class="nv">app</span><span class="si">}</span><span class="s2">.desktop"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">USER_AUTOSTART_DIR</span><span class="si">}</span><span class="s2">"</span>
+<span class="k">done</span>
+</code></pre></div>
+<p>Sample <code>.desktop</code> file creation:</p>
+<div class="highlight"><pre><span></span><code>tee -a <span class="si">${</span><span class="nv">HOME</span><span class="si">}</span>/.config/autostart/cisco_anyconnect.desktop &gt; /dev/null <span class="s">&lt;&lt;EOF</span>
+<span class="s">[Desktop Entry]</span>
+<span class="s">Type=Application</span>
+<span class="s">Name=Cisco Anyconnect Secure Mobility Client</span>
+<span class="s">Comment=Connect to a private network using the Cisco Anyconnect Secure Mobility Client</span>
+<span class="s">Exec=/opt/cisco/anyconnect/bin/vpnui</span>
+<span class="s">Icon=cisco-anyconnect</span>
+<span class="s">Terminal=false</span>
+<span class="s">Encoding=UTF-8</span>
+<span class="s">StartupNotify=true</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<h2 id="ui">UI<a class="headerlink" href="#ui" title="Permanent link">¶</a></h2>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Add favorite apps to task bar and remove default ones</p>
+</div>
+<h2 id="benchmarking">Benchmarking<a class="headerlink" href="#benchmarking" title="Permanent link">¶</a></h2>
+<h3 id="hyperfine">Hyperfine<a class="headerlink" href="#hyperfine" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><span class="nv">HYPERFINE_DEB</span><span class="o">=</span><span class="s2">"</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">"</span>
+<span class="nv">HYPERFINE_REPO_URL</span><span class="o">=</span><span class="s2">"https://api.github.com/repos/sharkdp/hyperfine/releases/latest"</span>
+<span class="nv">HYPERFINE_URL</span><span class="o">=</span><span class="k">$(</span>
+  curl -sSL <span class="s2">"</span><span class="si">${</span><span class="nv">HYPERFINE_REPO_URL</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+    <span class="p">|</span> grep <span class="s1">'browser_download_url.*hyperfine_.*amd64\.deb'</span> <span class="se">\</span>
+    <span class="p">|</span> sed -E <span class="s1">'s/.*"([^"]+)"\s*$/\1/'</span> <span class="se">\</span>
+<span class="k">)</span>
+curl -sS -L -o <span class="s2">"</span><span class="si">${</span><span class="nv">HYPERFINE_DEB</span><span class="si">}</span><span class="s2">"</span> <span class="s2">"</span><span class="si">${</span><span class="nv">HYPERFINE_URL</span><span class="si">}</span><span class="s2">"</span>
+sudo dpkg -i <span class="s2">"</span><span class="si">${</span><span class="nv">HYPERFINE_DEB</span><span class="si">}</span><span class="s2">"</span>
+rm <span class="s2">"</span><span class="si">${</span><span class="nv">HYPERFINE_DEB</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h2 id="fix-crlf">Fix CRLF<a class="headerlink" href="#fix-crlf" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><span class="c1"># find . -type f | xargs file -k -- | grep CRLF | wc -l</span>
+<span class="c1"># find . -type f | xargs dos2unix</span>
+<span class="c1"># chmod go-w -R *</span>
+<span class="c1"># sudo find . -type f | xargs chmod a-x</span>
+</code></pre></div>
+<h3 id="disable-ctr-shift-u-system-shortcut">Disable Ctr-Shift-U system shortcut<a class="headerlink" href="#disable-ctr-shift-u-system-shortcut" title="Permanent link">¶</a></h3>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>test</p>
+</div>
+<p><a href="https://superuser.com/questions/358749/how-to-disable-ctrlshiftu-in-ubuntu-linux">https://superuser.com/questions/358749/how-to-disable-ctrlshiftu-in-ubuntu-linux</a></p>
+<p>Problem</p>
+<p>The problem is that with the “Ibus” input method, <span class="keys"><kbd class="key-control">Ctrl</kbd><span>＋</span><kbd class="key-shift">Shift</kbd><span>＋</span><kbd class="key-u">U</kbd></span>
+is by default configured to the “Unicode Code Point” shortcut.</p>
+<p>You can try this: Type <span class="keys"><kbd class="key-control">Ctrl</kbd><span>＋</span><kbd class="key-shift">Shift</kbd><span>＋</span><kbd class="key-u">U</kbd></span>, then an (underlined) u appears.
+If you then type a unicode code point number in hex
+(e.g. 21, the ASCII/unicode CP for !) and press enter,
+it is replaced with the corresponding character.</p>
+<p>This shortcut can be changed or disabled using the ibus-setup utility:</p>
+<div class="mermaid">graph TD
+    a1[Run 'ibus-setup'] --&gt; b[Go to 'Emoji']
+    a2[Open IBus Preferences] -.-&gt; b
+    b --&gt; c(Go to 'Unicode code point:' &lt;br /&gt;Click on the three dots, i.e. ...)
+    c --&gt; d[In the dialog, click 'Delete', then 'OK']
+    d --&gt; e[Close the IBus Preferences window]</div>
+</article>
+</div>
+</div>
+</main>
+<footer class="md-footer">
+<nav aria-label="Footer" class="md-footer__inner md-grid">
+<a aria-label="Next: Apt packages" class="md-footer__link md-footer__link--next" href="apt_packages/" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              Apt packages
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
+</div>
+</a>
+</nav>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+        
+        Made with
+        <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+          Material for MkDocs
+        </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": ".", "features": [], "translations": {"clipboard.copy": "Copy to clipboard", "clipboard.copied": "Copied to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.placeholder": "Type to start searching", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "search": "assets/javascripts/workers/search.477d984a.min.js", "version": null}</script>
+<script src="assets/javascripts/bundle.ddd52ceb.min.js"></script>
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+<script>mermaid.initialize({
+    theme: "dark"
+});</script></body>
+</html>
