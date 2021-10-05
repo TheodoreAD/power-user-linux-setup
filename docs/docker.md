@@ -6,7 +6,7 @@ Add the repository:
 # update your existing list of packages
 sudo apt update
 # add the GPG key for the official Docker repository to your system
-curl -sS -Lf "https://download.docker.com/linux/ubuntu/gpg" | sudo apt-key add -
+curl -sS -L -f "https://download.docker.com/linux/ubuntu/gpg" | sudo apt-key add -
 # add the Docker repository to APT sources
 sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 # update the package database with the Docker packages from the newly added repo

@@ -37,14 +37,13 @@ PACKAGES=(
   resolvconf
   # network fs mounting
   cifs-utils
-  # system diagnostics
-  lm-sensors
   # docker requirements
   apt-transport-https ca-certificates software-properties-common
   # pyenv requirements
   # https://github.com/pyenv/pyenv/wiki/Common-build-problems
   libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm
-  libncurses5-dev libncursesw5-dev xz-utils tk-dev libffi-dev liblzma-dev
+  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
+  # TODO: find what requires this
   python-openssl
   # TODO: find what requires these
   libgdbm-dev libnss3-dev
@@ -52,14 +51,17 @@ PACKAGES=(
   python3-distutils python3-pip python3-venv
   # security
   keychain gnupg
+  # hardware diagnostics
+  lm-sensors
   # system monitor
-  htop gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0
+  htop ncdu
+  gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0
   # terminal
   terminator tmux tree xclip
   # converters
   html2text bat jq
   # linting
-  yamllint
+  shellcheck
   # environment variable management
   direnv
   # windows compatiblity
@@ -75,7 +77,8 @@ PACKAGES=(
   # typo helper
   thefuck
   # clipboard
-  gpaste
+  # disabled for now due to curious disk leak
+  # gpaste
 )
 
 sudo apt update
@@ -179,8 +182,26 @@ curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
 ## Terraform
 
 ```shell
-curl -fsSL https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
+curl -sS -L -f https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 sudo apt update
 sudo apt install terraform
+```
+
+## Dive (Docker image inspection)
+
+```shell
+REPO="wagoodman/dive"
+VERSION=$(
+  curl "https://api.github.com/repos/${REPO}/releases/latest" \
+    | grep '"tag_name"' \
+    | sed -E 's/.*"([^"]+)".*/\1/' \
+    | cut -c2-
+)
+FILE_NAME="dive_${VERSION}_linux_amd64.deb"
+URL="https://github.com/${REPO}/releases/download/v${VERSION}/${FILE_NAME}"
+DEB_PATH="/tmp/${FILE_NAME}"
+curl -sS -L -o "${DEB_PATH}" "${URL}"
+sudo apt install "./${DEB_PATH}"
+rm "${DEB_PATH}"
 ```

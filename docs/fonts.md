@@ -38,7 +38,7 @@ function install_font_from_zip_url() {
   font_temp_dir="/tmp/${font_archive_name}"
   font_temp_zip_path="${font_temp_dir}/${font_archive_name}.zip"
   mkdir -p "${font_temp_dir}"
-  curl -sS -Lo "${font_temp_zip_path}" "${font_url}"
+  curl -sS -L -o "${font_temp_zip_path}" "${font_url}"
   # -j prevents director creation, i.e. all files end up in unzip root
   unzip -j -o "${font_temp_zip_path}" -d "${font_temp_dir}"
   # install .otf fonts, if found, else .ttf

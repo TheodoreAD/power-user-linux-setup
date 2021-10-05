@@ -24,7 +24,7 @@ Install Oh My Zsh and set up themes and plugins:
     investigate powerlevel10k not installing sometimes
 
 ```shell
-sh -c "$(curl -sS -Lf https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+sh -c "$(curl -sS -L -f https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
 git clone --depth=1 \
   "https://github.com/romkatv/powerlevel10k.git" \
   "${ZSH}/themes/powerlevel10k"
@@ -156,6 +156,8 @@ tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 alias curl='curl -sS -L'
 # sort keys in JSON output
 alias jq='jq -S'
+alias pyjsonlint='python -m json.tool'
+alias pyjsonlint-no-stdout='pyjsonlint >/dev/null'
 EOF
 
 # add user binaries directory to PATH

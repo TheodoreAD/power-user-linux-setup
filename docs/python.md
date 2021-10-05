@@ -45,10 +45,10 @@ EOF
 
 ```shell
 curl -sS -L "https://pyenv.run" | bash
+ln -s "${HOME}/.pyenv/bin/pyenv" "${HOME}/.local/bin/pyenv"
 tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
 # pyenv
-export PATH="\${HOME}/.pyenv/bin:\$PATH"
 eval "\$(pyenv init --path)"
 eval "\$(pyenv init -)"
 eval "\$(pyenv virtualenv-init -)"
@@ -87,6 +87,9 @@ ln -s "${HOME}/.poetry/bin/poetry" "${HOME}/.local/bin/poetry"
 # Add plugin to Oh-My-Zsh
 mkdir -p "${ZSH}/plugins/poetry"
 poetry completions zsh >"${ZSH}/plugins/poetry/_poetry"
+
+poetry config virtualenvs.create false
+poetry config virtualenvs.in-project true 
 ```
 
 !!! TODO
@@ -158,6 +161,13 @@ pipx install nox
 
 ```shell
 pipx install mkdocs-material --include-deps
+pipx inject mkdocs-material mkdocs-mermaid2-plugin
+```
+
+### yamllint
+
+```shell
+pipx install yamllint
 ```
 
 ## Nuitka

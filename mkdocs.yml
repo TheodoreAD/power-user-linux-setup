@@ -26,6 +26,8 @@ site_dir: site
 remote_branch: gh-pages
 remote_name: origin
 
+use_directory_urls: false
+
 # pip install mkdocs-bootstrap386
 # https://gitlab.com/lramage94/mkdocs-bootstrap386
 # ISSUE: doesn't renfer most elements
@@ -211,8 +213,8 @@ markdown_extensions:
               align: top
               height: 20px
               width: 20px
-#          image_path: https://assets-cdn.github.com/images/icons/emoji/unicode/
-#          non_standard_image_path: https://assets-cdn.github.com/images/icons/emoji/
+          # image_path: https://assets-cdn.github.com/images/icons/emoji/unicode/
+          # non_standard_image_path: https://assets-cdn.github.com/images/icons/emoji/
 
 plugins:
   - search
@@ -229,4 +231,4 @@ extra_css:
   # Custom CSS, file should be in /docs/ or the custom documents directory
   - extra/extra.css
 extra_javascript:
-    - https://unpkg.com/mermaid/dist/mermaid.min.js
+  - https://unpkg.com/mermaid/dist/mermaid.min.js

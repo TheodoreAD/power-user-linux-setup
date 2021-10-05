@@ -20,7 +20,7 @@ EXTENSIONS_TO_INSTALL_AND_ENABLE=(
   gnome-shell-extension-remove-dropdown-arrows
   gnome-shell-extension-system-monitor
   gnome-shell-extension-show-ip
-  gnome-shell-extensions-gpaste
+  # gnome-shell-extensions-gpaste
   gnome-shell-extension-arc-menu
 )
 
