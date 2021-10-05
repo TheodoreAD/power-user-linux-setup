@@ -7,6 +7,21 @@ This is intended for and has been tested on Ubuntu 20.04 focal fossa.
 set -ex -o pipefail
 ```
 
+## Grub
+
+This is very useful to prevent graphic driver issues, since the OS makes
+assumptions and changes to video resolution before loading the GUI these days.
+
+This basically removes `quiet` and `splash` while adding `nomodeset`.
+The only downside is cosmetic, i.e. no splash screen and verbose output.
+
+```shell
+sudo sed -i \
+  's~GRUB_CMDLINE_LINUX_DEFAULT=*~GRUB_CMDLINE_LINUX_DEFAULT="nomodeset"~' \
+  /etc/default/grub
+sudo update-grub
+```
+
 ## Apt Packages - tools and prerequisites
 
 Follow the [guide](apt_packages.md).
@@ -257,7 +272,7 @@ EOF
 HYPERFINE_DEB="$(mktemp)"
 HYPERFINE_REPO_URL="https://api.github.com/repos/sharkdp/hyperfine/releases/latest"
 HYPERFINE_URL=$(
-  curl -sSL "${HYPERFINE_REPO_URL}" \
+  curl -sS -L "${HYPERFINE_REPO_URL}" \
     | grep 'browser_download_url.*hyperfine_.*amd64\.deb' \
     | sed -E 's/.*"([^"]+)"\s*$/\1/' \
 )
