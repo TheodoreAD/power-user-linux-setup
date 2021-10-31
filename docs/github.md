@@ -22,7 +22,7 @@
           | cut -c2-
       )
       URL="https://github.com/cli/cli/releases/download/v${VERSION}/gh_${VERSION}_linux_amd64.tar.gz"
-      curl -sSL "${URL}" | tar vxz -C "/tmp"
+      curl -sSL "${URL}" | tar -v -xz --directory "/tmp"
       SETUP_DIR="/tmp/gh_${VERSION}_linux_amd64"
       sudo cp "${SETUP_DIR}/bin/gh" "/usr/local/bin/"
       gzip -k "${SETUP_DIR}/share/man/man1/"*
