@@ -17,7 +17,7 @@ The only downside is cosmetic, i.e. no splash screen and verbose output.
 
 ```shell
 sudo sed -i \
-  's~GRUB_CMDLINE_LINUX_DEFAULT=*~GRUB_CMDLINE_LINUX_DEFAULT="nomodeset"~' \
+  's~GRUB_CMDLINE_LINUX_DEFAULT=.*~GRUB_CMDLINE_LINUX_DEFAULT="nomodeset"~' \
   /etc/default/grub
 sudo update-grub
 ```
