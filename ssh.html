@@ -1,0 +1,530 @@
+
+<!DOCTYPE html>
+
+<html class="no-js" lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta content="width=device-width,initial-scale=1" name="viewport"/>
+<meta content="Teodor Dumitrescu &lt;teodor.dumitrescu@gmail.com&gt;" name="author"/>
+<link href="https://TheodoreAD.github.io/power-user-linux-setup/ssh.html" rel="canonical"/>
+<link href="assets/images/favicon.png" rel="icon"/>
+<meta content="mkdocs-1.3.0, mkdocs-material-7.3.6" name="generator"/>
+<title>SSH - Power User Linux Setup</title>
+<link href="assets/stylesheets/main.a57b2b03.min.css" rel="stylesheet"/>
+<link href="assets/stylesheets/palette.3f5d1f46.min.css" rel="stylesheet"/>
+<meta content="#2094f3" name="theme-color"/>
+<link crossorigin="" href="https://fonts.gstatic.com" rel="preconnect"/>
+<link href="https://fonts.googleapis.com/css?family=Roboto:300,400,400i,700%7CRoboto+Mono&amp;display=fallback" rel="stylesheet"/>
+<style>:root{--md-text-font-family:"Roboto";--md-code-font-family:"Roboto Mono"}</style>
+<link href="extra/extra.css" rel="stylesheet"/>
+</head>
+<body data-md-color-accent="orange" data-md-color-primary="blue" data-md-color-scheme="slate" dir="ltr">
+<script>function __prefix(e){return new URL(".",location).pathname+"."+e}function __get(e,t=localStorage){return JSON.parse(t.getItem(__prefix(e)))}</script>
+<input autocomplete="off" class="md-toggle" data-md-toggle="drawer" id="__drawer" type="checkbox"/>
+<input autocomplete="off" class="md-toggle" data-md-toggle="search" id="__search" type="checkbox"/>
+<label class="md-overlay" for="__drawer"></label>
+<div data-md-component="skip">
+<a class="md-skip" href="#ssh">
+          Skip to content
+        </a>
+</div>
+<div data-md-component="announce">
+</div>
+<header class="md-header" data-md-component="header">
+<nav aria-label="Header" class="md-header__inner md-grid">
+<a aria-label="Power User Linux Setup" class="md-header__button md-logo" data-md-component="logo" href="index.html" title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+<label class="md-header__button md-icon" for="__drawer">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2z"></path></svg>
+</label>
+<div class="md-header__title" data-md-component="header-title">
+<div class="md-header__ellipsis">
+<div class="md-header__topic">
+<span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+</div>
+<div class="md-header__topic" data-md-component="header-topic">
+<span class="md-ellipsis">
+            
+              SSH
+            
+          </span>
+</div>
+</div>
+</div>
+<label class="md-header__button md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+</label>
+<div class="md-search" data-md-component="search" role="dialog">
+<label class="md-search__overlay" for="__search"></label>
+<div class="md-search__inner" role="search">
+<form class="md-search__form" name="search">
+<input aria-label="Search" autocapitalize="off" autocomplete="off" autocorrect="off" class="md-search__input" data-md-component="search-query" name="query" placeholder="Search" required="" spellcheck="false" type="text"/>
+<label class="md-search__icon md-icon" for="__search">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5z"></path></svg>
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</label>
+<nav aria-label="Search" class="md-search__options">
+<button aria-label="Clear" class="md-search__icon md-icon" tabindex="-1" type="reset">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41z"></path></svg>
+</button>
+</nav>
+</form>
+<div class="md-search__output">
+<div class="md-search__scrollwrap" data-md-scrollfix="">
+<div class="md-search-result" data-md-component="search-result">
+<div class="md-search-result__meta">
+            Initializing search
+          </div>
+<ol class="md-search-result__list"></ol>
+</div>
+</div>
+</div>
+</div>
+</div>
+<div class="md-header__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+</nav>
+</header>
+<div class="md-container" data-md-component="container">
+<main class="md-main" data-md-component="main">
+<div class="md-main__inner md-grid">
+<div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Navigation" class="md-nav md-nav--primary" data-md-level="0">
+<label class="md-nav__title" for="__drawer">
+<a aria-label="Power User Linux Setup" class="md-nav__button md-logo" data-md-component="logo" href="index.html" title="Power User Linux Setup">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54z"></path></svg>
+</a>
+    Power User Linux Setup
+  </label>
+<div class="md-nav__source">
+<a class="md-source" data-md-component="source" href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository">
+<div class="md-source__icon md-icon">
+<svg viewbox="0 0 448 512" xmlns="http://www.w3.org/2000/svg"><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"></path></svg>
+</div>
+<div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+</div>
+<ul class="md-nav__list" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="index.html">
+        Installation steps
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="apt_packages.html">
+        Apt packages
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="docker.html">
+        Docker
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="fonts.html">
+        Fonts
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="games.html">
+        Games
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="git.html">
+        Git
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="github.html">
+        GitHub
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="gnome_extensions.html">
+        GNOME extensions
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="golang.html">
+        Golang
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="js.html">
+        TODO: install nvm, node, yarn
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="kubernetes.html">
+        Kuberentes
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="locale.html">
+        Locale
+      </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="python.html">
+        Python
+      </a>
+</li>
+<li class="md-nav__item md-nav__item--active">
+<input class="md-nav__toggle md-toggle" data-md-toggle="toc" id="__toc" type="checkbox"/>
+<label class="md-nav__link md-nav__link--active" for="__toc">
+          SSH
+          <span class="md-nav__icon md-icon"></span>
+</label>
+<a class="md-nav__link md-nav__link--active" href="ssh.html">
+        SSH
+      </a>
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#add-keys-to-version-control-platforms">
+    Add keys to version control platforms
+  </a>
+<nav aria-label="Add keys to version control platforms" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#github">
+    GitHub
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gitlab">
+    GitLab
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bitbucket">
+    BitBucket
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="zsh.html">
+        Zsh and Oh My Zsh
+      </a>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc">
+<div class="md-sidebar__scrollwrap">
+<div class="md-sidebar__inner">
+<nav aria-label="Table of contents" class="md-nav md-nav--secondary">
+<label class="md-nav__title" for="__toc">
+<span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+<ul class="md-nav__list" data-md-component="toc" data-md-scrollfix="">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#add-keys-to-version-control-platforms">
+    Add keys to version control platforms
+  </a>
+<nav aria-label="Add keys to version control platforms" class="md-nav">
+<ul class="md-nav__list">
+<li class="md-nav__item">
+<a class="md-nav__link" href="#github">
+    GitHub
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#gitlab">
+    GitLab
+  </a>
+</li>
+<li class="md-nav__item">
+<a class="md-nav__link" href="#bitbucket">
+    BitBucket
+  </a>
+</li>
+</ul>
+</nav>
+</li>
+</ul>
+</nav>
+</div>
+</div>
+</div>
+<div class="md-content" data-md-component="content">
+<article class="md-content__inner md-typeset">
+<a class="md-content__button md-icon" href="https://github.com/TheodoreAD/power-user-linux-setup/edit/master/docs/ssh.md" title="Edit this page">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25z"></path></svg>
+</a>
+<h1 id="ssh">SSH<a class="headerlink" href="#ssh" title="Permanent link">¶</a></h1>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Get data from files instead of hardcoding here.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># one email per key, it will also be used as in the key file name</span>
+<span class="nv">SSH_ID_EMAILS</span><span class="o">=(</span>
+  teodor.dumitrescu@gmail.com
+<span class="o">)</span>
+
+<span class="nv">NODE_NAME</span><span class="o">=</span><span class="k">$(</span>uname -n<span class="k">)</span>
+
+<span class="c1"># create key(s)</span>
+<span class="c1"># enter and re-enter the password for each key</span>
+<span class="k">for</span> ssh_id_email <span class="k">in</span> <span class="s2">"</span><span class="si">${</span><span class="nv">SSH_ID_EMAILS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span> <span class="k">do</span>
+  <span class="nb">echo</span> <span class="s2">"Key for </span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">:"</span>
+  ssh-keygen <span class="se">\</span>
+    -t rsa -b <span class="m">4096</span> <span class="se">\</span>
+    -C <span class="s2">"</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+    -f <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa"</span>
+<span class="k">done</span>
+
+<span class="c1"># Troubleshooting</span>
+<span class="c1"># if files have the wrong permissions:</span>
+<span class="c1">#sudo chmod 600 "${HOME}/.ssh/${ssh_id_email}__${NODE_NAME}_rsa"</span>
+<span class="c1">#sudo chmod 644 "${HOME}/.ssh/${ssh_id_email}__${NODE_NAME}_rsa.pub"</span>
+<span class="c1"># to change comment:</span>
+<span class="c1">#ssh-keygen -f ~/.ssh/keyfilename -o -c -C "new comment"</span>
+<span class="c1"># Command options explained:</span>
+<span class="c1"># -f: private key file</span>
+<span class="c1"># -o: convert the private key from PEM to the new OpenSSH format</span>
+<span class="c1"># -c: change the comment in the private and public key files</span>
+<span class="c1"># -C: comment text</span>
+
+<span class="c1"># no spaces allowed after the comma delimiters</span>
+<span class="c1"># user_name,host,id_email</span>
+<span class="nv">SSH_HOSTS_TO_ID_EMAILS_MAP</span><span class="o">=(</span>
+  git,github.com,teodor.dumitrescu@gmail.com
+<span class="o">)</span>
+
+<span class="k">function</span> get_ssh_config_hosts<span class="o">()</span> <span class="o">{</span>
+  <span class="k">for</span> kvp <span class="k">in</span> <span class="s2">"</span><span class="si">${</span><span class="nv">SSH_HOSTS_TO_ID_EMAILS_MAP</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span> <span class="k">do</span>
+    <span class="nv">user_name</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="si">${</span><span class="nv">kvp</span><span class="si">}</span> <span class="p">|</span> cut -d <span class="s1">','</span> -f <span class="m">1</span><span class="k">)</span>
+    <span class="nv">host</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="si">${</span><span class="nv">kvp</span><span class="si">}</span> <span class="p">|</span> cut -d <span class="s1">','</span> -f <span class="m">2</span><span class="k">)</span>
+    <span class="nv">ssh_id_email</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="si">${</span><span class="nv">kvp</span><span class="si">}</span> <span class="p">|</span> cut -d <span class="s1">','</span> -f <span class="m">3</span><span class="k">)</span>
+    <span class="nb">echo</span> <span class="s2">"Host </span><span class="si">${</span><span class="nv">host</span><span class="si">}</span><span class="s2">"</span>
+    <span class="nb">echo</span> <span class="s2">"  IdentityFile </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa"</span>
+    <span class="nb">echo</span> <span class="s2">"  User </span><span class="si">${</span><span class="nv">user_name</span><span class="si">}</span><span class="s2">\n"</span>
+  <span class="k">done</span>
+<span class="o">}</span>
+
+<span class="c1"># config for automatic mapping of hosts with identities</span>
+mkdir -p <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh"</span>
+tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/config"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+<span class="s"># Specify HostName if there are more than one github.com accounts</span>
+<span class="s"># you will need to do "git clone git@host_name:user_name/repo_name.git"</span>
+<span class="s"># instead of "git clone git@github.com:user_name/repo_name.git"</span>
+
+<span class="s">$(get_ssh_config_hosts)</span>
+
+<span class="s"># keep this at the end</span>
+<span class="s">Host *</span>
+<span class="s">  # add keys automatically to ssh-agent, ignore for old versions of ssh</span>
+<span class="s">  IgnoreUnknown AddKeysToAgent</span>
+<span class="s">  AddKeysToAgent yes</span>
+<span class="s">  # required for MacOS keychain, not relevant to Ubuntu but good to know</span>
+<span class="s">  #IgnoreUnknown UseKeychain</span>
+<span class="s">  #UseKeychain yes</span>
+<span class="s">  # define the order in which to try auth methods</span>
+<span class="s">  PreferredAuthentications publickey,keyboard-interactive,password,hostbased,gssapi-with-mic</span>
+<span class="s">  # enable to prevent the use of keys for undefined servers</span>
+<span class="s">  IdentitiesOnly yes</span>
+<span class="s">  # enable for large uncompressed data transfers only</span>
+<span class="s">  #Compression yes</span>
+<span class="s">  # send a null packet to the other side every 300 seconds</span>
+<span class="s">  #  and abort if there's no response after 3 tries</span>
+<span class="s">  ServerAliveInterval 300</span>
+<span class="s">  ServerAliveCountMax 3</span>
+<span class="s">EOF</span>
+
+<span class="k">function</span> forward_ssh_ids<span class="o">()</span> <span class="o">{</span>
+  <span class="k">for</span> kvp <span class="k">in</span> <span class="s2">"</span><span class="si">${</span><span class="nv">SSH_HOSTS_TO_ID_EMAILS_MAP</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span> <span class="k">do</span>
+    <span class="nv">user_name</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="si">${</span><span class="nv">kvp</span><span class="si">}</span> <span class="p">|</span> cut -d <span class="s1">','</span> -f <span class="m">1</span><span class="k">)</span>
+    <span class="k">if</span> <span class="o">[</span> <span class="s2">"</span><span class="si">${</span><span class="nv">user_name</span><span class="si">}</span><span class="s2">"</span> !<span class="o">=</span> <span class="s2">"git"</span> <span class="o">]</span><span class="p">;</span> <span class="k">then</span>
+      <span class="nv">host</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="si">${</span><span class="nv">kvp</span><span class="si">}</span> <span class="p">|</span> cut -d <span class="s1">','</span> -f <span class="m">2</span><span class="k">)</span>
+      <span class="nv">ssh_id_email</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span> <span class="si">${</span><span class="nv">kvp</span><span class="si">}</span> <span class="p">|</span> cut -d <span class="s1">','</span> -f <span class="m">3</span><span class="k">)</span>
+      ssh-copy-id -f <span class="se">\</span>
+        -i <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa.pub"</span> <span class="se">\</span>
+        <span class="s2">"</span><span class="si">${</span><span class="nv">user_name</span><span class="si">}</span><span class="s2">@</span><span class="si">${</span><span class="nv">host</span><span class="si">}</span><span class="s2">"</span>
+    <span class="k">fi</span>
+  <span class="k">done</span>
+<span class="o">}</span>
+
+<span class="c1"># Put your public key e.g. ~/.ssh/id_rsa.pub in the remote computer's</span>
+<span class="c1"># authorized_keys file, creating the .ssh directory and authorized_keys file</span>
+<span class="c1"># with the right permissions if necessary.</span>
+forward_ssh_ids
+
+<span class="c1"># Add the ssh keys to the agent</span>
+ssh-add <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/"</span>*<span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span>_rsa
+
+<span class="c1"># Write keychain loading script to login shell run commands file</span>
+tee -a <span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zprofile"</span> &gt;/dev/null <span class="s">&lt;&lt;EOF</span>
+
+<span class="s"># load keychain</span>
+<span class="s">eval \$(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --confhost)</span>
+<span class="s">[ -z "\{$HOSTNAME}" ] &amp;&amp; HOSTNAME=\$(uname -n)</span>
+<span class="s">[ -f "\${HOME}/.keychain/\${HOSTNAME}-sh" ] &amp;&amp; source "\${HOME}/.keychain/\${HOSTNAME}-sh"</span>
+<span class="s">EOF</span>
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Everything from here on out is experimental.</p>
+<p>It is advised to stop here unless you’re trying things out.</p>
+</div>
+<h2 id="add-keys-to-version-control-platforms">Add keys to version control platforms<a class="headerlink" href="#add-keys-to-version-control-platforms" title="Permanent link">¶</a></h2>
+<h3 id="github">GitHub<a class="headerlink" href="#github" title="Permanent link">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This is already part of the <a href="github.html">GitHub</a> section.</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># select github.com, SSH, select key, perform auth, allow gh CLI to access github.com</span>
+gh auth login
+</code></pre></div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Username and password access has been deprecated</p>
+</div>
+<div class="highlight"><pre><span></span><code><span class="c1"># &lt;https://unix.stackexchange.com/questions/136894/command-line-method-or-programmatically-add-ssh-key-to-github-com-user-account&gt;</span>
+<span class="nv">GITHUB_EMAIL</span><span class="o">=</span><span class="s2">"teodor.dumitrescu@gmail.com"</span>
+<span class="nv">GITHUB_RSA_FILE</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">GITHUB_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa.pub"</span>
+<span class="nv">GITHUB_REQUEST_PAYLOAD</span><span class="o">=</span><span class="s2">"{\"title\":\"</span><span class="si">${</span><span class="nv">GITHUB_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">\",\"key\":\"</span><span class="k">$(</span>cat <span class="si">${</span><span class="nv">GITHUB_RSA_FILE</span><span class="si">}</span><span class="k">)</span><span class="s2">\"}"</span>
+<span class="nv">GITHUB_RESPONSE_FILE</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">GITHUB_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_github_response"</span>
+<span class="nv">GITHUB_KEYS_URL</span><span class="o">=</span><span class="s2">"https://api.github.com/user/keys"</span>
+curl -sS -L <span class="se">\</span>
+  -u <span class="s2">"</span><span class="si">${</span><span class="nv">GITHUB_EMAIL</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  -d <span class="s2">"</span><span class="si">${</span><span class="nv">GITHUB_REQUEST_PAYLOAD</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">GITHUB_KEYS_URL</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  &gt;<span class="s2">"</span><span class="si">${</span><span class="nv">GITHUB_RESPONSE_FILE</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h3 id="gitlab">GitLab<a class="headerlink" href="#gitlab" title="Permanent link">¶</a></h3>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Implement.</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Find API call</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>See how to use password auth.</p>
+</div>
+<p><a href="https://docs.gitlab.com/ee/api/deploy_keys.html">https://docs.gitlab.com/ee/api/deploy_keys.html</a></p>
+<div class="highlight"><pre><span></span><code><span class="nb">echo</span> <span class="s2">"Please input your API token. This can be found at https://gitlab.com/profile/account."</span>
+<span class="nb">read</span> GITHUB_API_TOKEN
+
+<span class="nv">GITLAB_EMAIL</span><span class="o">=</span><span class="s2">"teodor.dumitrescu@gmail.com"</span>
+<span class="nv">GITLAB_RSA_FILE</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">GITLAB_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa.pub"</span>
+<span class="nv">GITLAB_REQUEST_PAYLOAD</span><span class="o">=</span><span class="s2">"{\"title\":\"</span><span class="si">${</span><span class="nv">GITLAB_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">\",\"key\":\"</span><span class="k">$(</span>cat <span class="si">${</span><span class="nv">GITLAB_RSA_FILE</span><span class="si">}</span><span class="k">)</span><span class="s2">\"}"</span>
+<span class="nv">GITLAB_RESPONSE_FILE</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">GITLAB_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_github_response"</span>
+<span class="nv">GITLAB_KEYS_URL</span><span class="o">=</span><span class="s2">"https://gitlab.com/api/v4/user/deploy_keys"</span>
+
+<span class="c1"># post ssh key</span>
+curl <span class="se">\</span>
+  -H <span class="s2">"PRIVATE-TOKEN: </span><span class="si">${</span><span class="nv">GITHUB_API_TOKEN</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s2">"</span><span class="si">${</span><span class="nv">GITLAB_REQUEST_PAYLOAD</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">GITLAB_KEYS_URL</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  &gt;<span class="s2">"</span><span class="si">${</span><span class="nv">GITLAB_RESPONSE_FILE</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h3 id="bitbucket">BitBucket<a class="headerlink" href="#bitbucket" title="Permanent link">¶</a></h3>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Implement</p>
+</div>
+<p><a href="https://docs.atlassian.com/bitbucket-server/rest/4.1.0/bitbucket-ssh-rest.html">https://docs.atlassian.com/bitbucket-server/rest/4.1.0/bitbucket-ssh-rest.html</a></p>
+<p><a href="https://community.atlassian.com/t5/Bitbucket-articles/Upload-SSH-personal-and-SSH-access-keys-in-Bitbucket-Server/ba-p/834274">https://community.atlassian.com/t5/Bitbucket-articles/Upload-SSH-personal-and-SSH-access-keys-in-Bitbucket-Server/ba-p/834274</a></p>
+<div class="highlight"><pre><span></span><code><span class="nv">BITBUCKET_EMAIL</span><span class="o">=</span>
+<span class="nv">BITBUCKET_SERVER</span><span class="o">=</span>
+<span class="nv">BITBUCKET_RSA_FILE</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">BITBUCKET_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa.pub"</span>
+<span class="nv">BITBUCKET_REQUEST_PAYLOAD</span><span class="o">=</span><span class="s2">"{\"title\":\"</span><span class="si">${</span><span class="nv">BITBUCKET_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">\",\"key\":\"</span><span class="k">$(</span>cat <span class="si">${</span><span class="nv">BITBUCKET_RSA_FILE</span><span class="si">}</span><span class="k">)</span><span class="s2">\"}"</span>
+<span class="nv">BITBUCKET_RESPONSE_FILE</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">BITBUCKET_EMAIL</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_github_response"</span>
+<span class="nv">BITBUCKET_KEYS_URL</span><span class="o">=</span><span class="s2">"https://</span><span class="si">${</span><span class="nv">BITBUCKET_SERVER</span><span class="si">}</span><span class="s2">/rest/ssh/1.0/keys?user=</span><span class="si">${</span><span class="nv">BITBUCKET_EMAIL</span><span class="si">}</span><span class="s2">"</span>
+curl -sS -L <span class="se">\</span>
+  -u <span class="s2">"</span><span class="si">${</span><span class="nv">BITBUCKET_EMAIL</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  -H <span class="s2">"Content-Type: application/json"</span> <span class="se">\</span>
+  -d <span class="s2">"</span><span class="si">${</span><span class="nv">BITBUCKET_REQUEST_PAYLOAD</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  -X POST <span class="se">\</span>
+  <span class="s2">"</span><span class="si">${</span><span class="nv">BITBUCKET_KEYS_URL</span><span class="si">}</span><span class="s2">"</span> <span class="se">\</span>
+  &gt;<span class="s2">"</span><span class="si">${</span><span class="nv">BITBUCKET_RESPONSE_FILE</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+</article>
+</div>
+</div>
+</main>
+<footer class="md-footer">
+<nav aria-label="Footer" class="md-footer__inner md-grid">
+<a aria-label="Previous: Python" class="md-footer__link md-footer__link--prev" href="python.html" rel="prev">
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12z"></path></svg>
+</div>
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Previous
+              </span>
+              Python
+            </div>
+</div>
+</a>
+<a aria-label="Next: Zsh and Oh My Zsh" class="md-footer__link md-footer__link--next" href="zsh.html" rel="next">
+<div class="md-footer__title">
+<div class="md-ellipsis">
+<span class="md-footer__direction">
+                Next
+              </span>
+              Zsh and Oh My Zsh
+            </div>
+</div>
+<div class="md-footer__button md-icon">
+<svg viewbox="0 0 24 24" xmlns="http://www.w3.org/2000/svg"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4z"></path></svg>
+</div>
+</a>
+</nav>
+<div class="md-footer-meta md-typeset">
+<div class="md-footer-meta__inner md-grid">
+<div class="md-footer-copyright">
+        
+        
+          Made with
+          <a href="https://squidfunk.github.io/mkdocs-material/" rel="noopener" target="_blank">
+            Material for MkDocs
+          </a>
+</div>
+</div>
+</div>
+</footer>
+</div>
+<div class="md-dialog" data-md-component="dialog">
+<div class="md-dialog__inner md-typeset"></div>
+</div>
+<script id="__config" type="application/json">{"base": ".", "features": [], "search": "assets/javascripts/workers/search.fcfe8b6d.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}, "version": null}</script>
+<script src="assets/javascripts/bundle.b1047164.min.js"></script>
+<script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+</body>
+</html>
