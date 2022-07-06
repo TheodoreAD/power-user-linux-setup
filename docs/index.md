@@ -22,9 +22,30 @@ sudo sed -i \
 sudo update-grub
 ```
 
+## Swap
+
+Reference article:
+[Part 1](https://haydenjames.io/linux-performance-almost-always-add-swap-space/)
+[Part 2](https://haydenjames.io/linux-performance-almost-always-add-swap-part2-zram/)
+
+
 ## Apt Packages - tools and prerequisites
 
 Follow the [guide](apt_packages.md).
+
+## Networking
+
+Set up DNS with Cloudflare IPs.
+
+```shell
+sudo tee "/etc/resolvconf/resolv.conf.d/tail" >/dev/null <<EOF
+nameserver 1.1.1.1
+nameserver 1.0.0.1
+EOF
+sudo resolvconf -u
+# verify changes
+systemd-resolve --status
+```
 
 ## Gnome extensions
 
@@ -33,6 +54,15 @@ Follow the [guide](gnome_extensions.md).
 ## Fonts
 
 Follow the [guide](fonts.md).
+
+## Terminal
+
+We recommend using `terminator`, which should have replaced the native terminal
+and be available via the ++Ctrl+Alt+T++ shortcut.
+
+To set the color of the title bar from red to something less tiring,
+right click anywhere in the terminal, choose `Preferences`,
+and change the color from the swatch on the bottom.
 
 ## Zsh + Oh My Zsh + PowerLevel10k
 
@@ -55,6 +85,23 @@ Follow the [guide](python.md).
 
 Follow the [guide](golang.md).
 
+## Scala
+
+```shell
+SCALA_CLI_SETUP="$(mktemp)"
+curl -sS -L -f "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" \
+  | gzip -d > "${SCALA_CLI_SETUP}"
+chmod +x "${SCALA_CLI_SETUP}"
+"${SCALA_CLI_SETUP}" setup
+rm "${SCALA_CLI_SETUP}"
+
+# TODO: put java home in .zshrc
+# get java home, enter for the Metals extension in VS Code in settings 
+cs java -XshowSettings:properties -version 2>&1 | grep "java.home" | sed 's/.*= *//'
+
+
+```
+
 ## SSH
 
 Follow the [guide](ssh.md).
@@ -72,21 +119,6 @@ Follow the [guide](github.md).
 ## Docker
 
 Follow the [guide](docker.md).
-
-## Networking
-
-Set up DNS with Cloudflare IPs.
-
-```shell
-sudo tee "/etc/resolvconf/resolv.conf.d/tail" >/dev/null <<EOF
-nameserver 1.1.1.1
-nameserver 1.0.0.1
-EOF
-sudo resolvconf -u
-# verify changes
-systemd-resolve --status
-```
-
 
 ## Browsing
 

@@ -13,17 +13,10 @@ sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubun
 sudo apt update
 ```
 
-!!! WARNING
-    The latest release doesn't work for 19.10 eoan, 19.04 disco works, use the following instead:
-    
-    ```shell
-    sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu disco stable"
-    ```
-
 Make sure you are about to install from the Docker repo
 instead of the default Ubuntu repo, namely `docker-ce` shouldn't be installed,
 the candidate for installation should be from the Docker repository
-for Ubuntu 19.10 (eoan):
+for Ubuntu 20.04 (focal):
 
 ```shell
 apt-cache policy docker-ce

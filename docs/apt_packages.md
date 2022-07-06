@@ -57,7 +57,9 @@ PACKAGES=(
   htop ncdu
   gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0
   # terminal
-  terminator tmux tree xclip
+  terminator tmux xclip
+  # file management and search
+  tree fd-find ripgrep
   # converters
   html2text bat jq
   # linting
@@ -85,9 +87,14 @@ sudo apt update
 sudo apt full-upgrade -y
 sudo apt install -y ${PACKAGES[@]}
 
-# bat, alternative to cat
+# TODO: see if this is still an issue
+# to solve apt clash due to rust packaging error
+# sudo apt install -o Dpkg::Options::="--force-overwrite" bat ripgrep
+
+# symlinks for programs with already claimed binary names
 mkdir -p "${HOME}/.local/bin"
-ln -s "/usr/bin/batcat" "${HOME}/.local/bin/bat"
+ln -s "$(which batcat)" "${HOME}/.local/bin/bat"
+ln -s "$(which fdfind)" "${HOME}/.local/bin/fd"
 ```
 
 !!! TODO
@@ -185,23 +192,22 @@ curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
 curl -sS -L -f https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
 sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
 sudo apt update
-sudo apt install terraform
+sudo apt install -y terraform
 ```
 
 ## Dive (Docker image inspection)
 
 ```shell
-REPO="wagoodman/dive"
-VERSION=$(
-  curl "https://api.github.com/repos/${REPO}/releases/latest" \
+DIVE_REPO="wagoodman/dive"
+DIVE_VERSION=$(
+  curl "https://api.github.com/repos/${DIVE_REPO}/releases/latest" \
     | grep '"tag_name"' \
     | sed -E 's/.*"([^"]+)".*/\1/' \
     | cut -c2-
 )
-FILE_NAME="dive_${VERSION}_linux_amd64.deb"
-URL="https://github.com/${REPO}/releases/download/v${VERSION}/${FILE_NAME}"
-DEB_PATH="/tmp/${FILE_NAME}"
-curl -sS -L -o "${DEB_PATH}" "${URL}"
-sudo apt install "./${DEB_PATH}"
-rm "${DEB_PATH}"
+DIVE_URL="https://github.com/${DIVE_REPO}/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
+DIVE_DEB="$(mktemp)"
+curl -sS -L -o "${DIVE_DEB}" "${DIVE_URL}"
+sudo dpkg -i "${DIVE_DEB}"
+rm "${DIVE_DEB}"
 ```

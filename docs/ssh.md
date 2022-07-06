@@ -73,6 +73,10 @@ Host *
   IdentitiesOnly yes
   # enable for large uncompressed data transfers only
   #Compression yes
+  # send a null packet to the other side every 300 seconds
+  #  and abort if there's no response after 3 tries
+  ServerAliveInterval 300
+  ServerAliveCountMax 3
 EOF
 
 function forward_ssh_ids() {
@@ -114,6 +118,9 @@ EOF
 ## Add keys to version control platforms
 
 ### GitHub
+
+!!! WARNING
+    This is already part of the [GitHub](github.md) section.
 
 ```shell
 # select github.com, SSH, select key, perform auth, allow gh CLI to access github.com

@@ -70,8 +70,8 @@ function get_uri_last_token_without_extension() {
   printf ${repo_url} | rev | cut -d '/' -f 1 | rev | cut -d '.' -f 1
 }
 
+# alternate version which doesn't end in newline
 function get_uri_last_token_without_extension__alt() {
-  # alternate version which doesn't end in newline
   repo_url=${1}
   last_token=${repo_url##*/}
   printf ${last_token/%.*/}
