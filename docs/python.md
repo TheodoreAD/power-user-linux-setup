@@ -49,7 +49,6 @@ ln -s "${HOME}/.pyenv/bin/pyenv" "${HOME}/.local/bin/pyenv"
 tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
 # pyenv
-eval "\$(pyenv init --path)"
 eval "\$(pyenv init -)"
 eval "\$(pyenv virtualenv-init -)"
 EOF
@@ -67,7 +66,7 @@ Install Python, create and set a global virtual environment:
 
 ```shell
 # TODO: read from prompt
-PYENV_VENV_VERSION="3.9.1"
+PYENV_VENV_VERSION="3.10.5"
 echo pyenv install "${PYENV_VENV_VERSION}"
 echo pyenv virtualenv "${PYENV_VENV_VERSION}" "global-${PYENV_VENV_VERSION//.}"
 echo pyenv global "global-${PYENV_VENV_VERSION//.}"
@@ -80,11 +79,11 @@ echo pyenv global "global-${PYENV_VENV_VERSION//.}"
 <https://github.com/python-poetry/poetry>
 
 ```shell
-URL="https://raw.githubusercontent.com/python-poetry/poetry/master/get-poetry.py"
-curl -sS -L "${URL}" | python - --no-modify-path
-ln -s "${HOME}/.poetry/bin/poetry" "${HOME}/.local/bin/poetry"
+POETRY_VERSION="1.1.13"
+curl -sS -L "https://install.python-poetry.org" | "/usr/bin/python3" - --version ${POETRY_VERSION} --force
 
 # Add plugin to Oh-My-Zsh
+# The poetry docs mention using ZSH_CUSTOM instead of ZSH, however the ZSH path contains poetry.plugin.zsh
 mkdir -p "${ZSH}/plugins/poetry"
 poetry completions zsh >"${ZSH}/plugins/poetry/_poetry"
 
@@ -137,13 +136,11 @@ pipx install invoke
 pipx inject invoke --include-apps "python-dotenv[cli]"
 ```
 
-### pipdeptree
+### twine
 
-`pipdeptree` handles package dependency introspection.
+Twine is a utility for publishing Python packages on PyPI.
 
-```shell
-pipx install pipdeptree
-```
+
 
 ### Nox
 
