@@ -180,11 +180,10 @@ CODENAME=$(grep UBUNTU_CODENAME /etc/os-release | cut -d '=' -f 2)
 if [[ "${CODENAME}" == "" ]]; then
   CODENAME=$(lsb_release -c -s)
 fi
-wget -O - "http://nuitka.net/deb/archive.key.gpg" | sudo apt-key add -
-echo "deb http://nuitka.net/deb/stable/${CODENAME} ${CODENAME} main" \
-  | sudo tee "/etc/apt/sources.list.d/nuitka.list" >/dev/null
+curl -sS -L -f "http://nuitka.net/deb/archive.key.gpg" | sudo apt-key add -
+sudo add-apt-repository -y "deb http://nuitka.net/deb/stable/${CODENAME} ${CODENAME} main"
 sudo apt update
-sudo apt install nuitka
+sudo apt install -y nuitka
 ```
 
 !!! WARNING

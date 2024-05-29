@@ -1,5 +1,11 @@
 # GNOME extensions
 
+!!! WARNING
+    Untested for 24.04
+
+!!! TODO
+    Review entire section
+
 ```shell
 curl -sS -L https://bazel.build/bazel-release.pub.gpg | gpg --dearmor > bazel.gpg
 sudo mv bazel.gpg /etc/apt/trusted.gpg.d/

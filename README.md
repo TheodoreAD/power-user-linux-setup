@@ -16,7 +16,7 @@ Hardware specs:
 
 The intent is to make everything distribution-agnostic, however that lofty goal is far away.
 
-Currently everything has been tested with `Ubuntu 20.04 focal fossa` and parts rely on `apt` and `snap`.
+Currently everything has been tested with `Ubuntu 24.04 noble numbat` and parts rely on `apt` and `snap`.
 
 ***
 

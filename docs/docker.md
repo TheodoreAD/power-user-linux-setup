@@ -8,7 +8,7 @@ sudo apt update
 # add the GPG key for the official Docker repository to your system
 curl -sS -L -f "https://download.docker.com/linux/ubuntu/gpg" | sudo apt-key add -
 # add the Docker repository to APT sources
-sudo add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+sudo add-apt-repository -y "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 # update the package database with the Docker packages from the newly added repo
 sudo apt update
 ```
@@ -101,4 +101,21 @@ Check the your storage driver is `overlay2` and cgroup driver is `systemd`:
 
 ```shell
 docker info
+```
+
+## Dive (Docker image inspection)
+
+```shell
+DIVE_REPO="wagoodman/dive"
+DIVE_VERSION=$(
+  curl "https://api.github.com/repos/${DIVE_REPO}/releases/latest" \
+    | grep '"tag_name"' \
+    | sed -E 's/.*"([^"]+)".*/\1/' \
+    | cut -c2-
+)
+DIVE_URL="https://github.com/${DIVE_REPO}/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
+DIVE_DEB="$(mktemp)"
+curl -sS -L -o "${DIVE_DEB}" "${DIVE_URL}"
+sudo dpkg -i "${DIVE_DEB}"
+rm "${DIVE_DEB}"
 ```
