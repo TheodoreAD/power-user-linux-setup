@@ -1,15 +1,5 @@
 # Python
 
-## Setup tools
-
-!!! WARNING
-    Use this only if you intend to use the system wide python,
-    which is NOT recommended.
-
-```shell
-/usr/bin/python3 -m pip install --upgrade "pip~=20.3" setuptools wheel
-```
-
 ## pip configuration
 
 If you're using a private pypi server, assign its URL to `PIP_INTERNAL_INDEX_URL`
@@ -41,7 +31,7 @@ EOF
 
 `pyenv` handles Python version and virtual environment management.
 
-<https://github.com/pyenv/pyenv>
+<https://github.com/pyenv/pyenv-installer?tab=readme-ov-file#installation--update--uninstallation>
 
 ```shell
 curl -sS -L "https://pyenv.run" | bash
@@ -62,31 +52,50 @@ To update `pyenv`, run:
 pyenv update
 ```
 
-Install Python, create and set a global virtual environment:
+Install Python via pyenv in user home, create and set a global virtual environment to avoid polluting the system Python:
+
+!!! TODO
+    Read version from prompt.
 
 ```shell
-# TODO: read from prompt
-PYENV_VENV_VERSION="3.10.5"
-echo pyenv install "${PYENV_VENV_VERSION}"
-echo pyenv virtualenv "${PYENV_VENV_VERSION}" "global-${PYENV_VENV_VERSION//.}"
-echo pyenv global "global-${PYENV_VENV_VERSION//.}"
+PYENV_VENV_VERSION="3.11.9"
+pyenv install "${PYENV_VENV_VERSION}"
+pyenv virtualenv "${PYENV_VENV_VERSION}" "global-${PYENV_VENV_VERSION//.}"
+pyenv global "global-${PYENV_VENV_VERSION//.}"
+```
+
+## pipx
+
+`pipx` enables running Python tools from isolated environments.
+
+<https://github.com/pypa/pipx?tab=readme-ov-file#install-pipx>
+
+!!! WARNING
+    This assumes you have the global pyenv virtualenv indicated above active.
+
+```shell
+"$(pyenv which python)" -m pip install --upgrade pipx
+ln -s "$(pyenv which pipx)" "${HOME}/.local/bin/pipx"
+tee -a "${HOME}/.zshrc" >/dev/null <<EOF
+
+# pipx
+eval "\$(register-python-argcomplete pipx)"
+EOF
 ```
 
 ## Poetry
 
 `poetry` handles package dependency management.
 
-<https://github.com/python-poetry/poetry>
+<https://python-poetry.org/docs/#installing-with-pipx>
+<https://python-poetry.org/docs/#zsh>
 
 ```shell
-POETRY_VERSION="1.1.13"
-curl -sS -L "https://install.python-poetry.org" | "/usr/bin/python3" - --version ${POETRY_VERSION} --force
-
+pipx install poetry
 # Add plugin to Oh-My-Zsh
-# The poetry docs mention using ZSH_CUSTOM instead of ZSH, however the ZSH path contains poetry.plugin.zsh
-mkdir -p "${ZSH}/plugins/poetry"
+# The poetry docs mention using $ZSH_CUSTOM instead of $ZSH, however the $ZSH-based path contains poetry.plugin.zsh
 poetry completions zsh >"${ZSH}/plugins/poetry/_poetry"
-
+# configure poetry to not create virtual envs, we handle those with pyenv
 poetry config virtualenvs.create false
 poetry config virtualenvs.in-project true 
 ```
@@ -101,21 +110,6 @@ plugins(
     poetry
     ...
     )
-```
-
-## pipx
-
-`pipx` enables running Python tools from isolated environments.
-
-<https://github.com/pipxproject/pipx>
-
-```shell
-/usr/bin/python3 -m pip install --upgrade --user pipx
-tee -a "${HOME}/.zshrc" >/dev/null <<EOF
-
-# pipx
-eval "\$(register-python-argcomplete pipx)"
-EOF
 ```
 
 ## System-wide tools
@@ -140,9 +134,22 @@ pipx inject invoke --include-apps "python-dotenv[cli]"
 
 Twine is a utility for publishing Python packages on PyPI.
 
+<https://twine.readthedocs.io/en/stable/#installation>
 
+```shell
+pipx install twine
+```
+
+!!! TODO
+    See how to use keyring to publish to PyPI.
 
 ### Nox
+
+!!! WARNING
+    Optional.
+
+!!! TODO
+    See if we want this in the project env, the same as pytest.
 
 `Nox` automates testing in multiple Python environments.
 
@@ -154,11 +161,16 @@ pipx install nox
 
 ### mkdocs including material theme
 
+!!! WARNING
+    Optional.
+
+!!! TODO
+    See if we want this in the project env.
+
 `mkdocs` generates and serves documentation sites based on markdown files.
 
 ```shell
 pipx install mkdocs-material --include-deps
-pipx inject mkdocs-material mkdocs-mermaid2-plugin
 ```
 
 ### yamllint
@@ -170,10 +182,13 @@ pipx install yamllint
 ## Nuitka
 
 !!! WARNING
-    Experimental
+    Optional.
+
+!!! WARNING
+    Experimental.
 
 !!! TODO
-    Research system python version dependency
+    Research system python version dependency.
 
 ```shell
 CODENAME=$(grep UBUNTU_CODENAME /etc/os-release | cut -d '=' -f 2)

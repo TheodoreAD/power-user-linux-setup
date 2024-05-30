@@ -2,6 +2,9 @@
 
 This is intended for and has been tested on Ubuntu 24.04 noble numbat.
 
+!!! IMPORTANT
+    Paste the code copied from this guide in the terminal using ++Ctrl+Shift+V++.
+
 !!! TODO
     Put all scripts into shell files and include them via mkdocs snippet.
     Inlcude the following for all to ensure they fail fast:
@@ -14,10 +17,10 @@ This is intended for and has been tested on Ubuntu 24.04 noble numbat.
 ## Grub
 
 !!! WARNING
-    Optional.
+    Perform only if you gave problems booting due to graphics drivers.
 
-This is very useful to prevent graphic driver issues, since the OS makes
-assumptions and changes to video resolution before loading the GUI these days.
+This is useful to prevent graphic driver issues, since the OS makes
+assumptions and changes to video resolution before loading the GUI.
 
 This basically removes `quiet` and `splash` while adding `nomodeset`.
 The only downside is cosmetic, i.e. no splash screen and verbose output.
@@ -30,6 +33,9 @@ sudo update-grub
 ```
 
 ## Swap
+
+!!! INFO
+    Nothing to do here yet, only pending research.
 
 Reference articles:
 [Part 1](https://haydenjames.io/linux-performance-almost-always-add-swap-space/)
@@ -66,10 +72,6 @@ tee ${HOME}/.config/terminator/config > /dev/null <<EOF
 EOF
 ```
 
-## Zsh + Oh My Zsh + PowerLevel10k
-
-Follow the [guide](zsh.md).
-
 ### NyanCat for terminal, an absolute must
 
 !!! TODO
@@ -82,15 +84,29 @@ make -C "${NYANCAT_INSTALL_DIR}"
 ln -s -f "${NYANCAT_INSTALL_DIR}/src/nyancat" "${HOME}/.local/bin/nyancat"
 ```
 
-## Python tools
+## Shell: Zsh + Oh My Zsh + PowerLevel10k
+
+Follow the [guide](zsh.md).
+
+## Languages and tool chains
+
+!!! WARNING
+    Every language is optional based on your project needs and inclinations.
+
+### Python
 
 Follow the [guide](python.md).
 
-## Golang
+### Golang
 
 Follow the [guide](golang.md).
 
-## Scala
+### Java
+
+!!! TODO
+    Implement.
+
+#### Scala
 
 ```shell
 SCALA_CLI_SETUP="$(mktemp)"
@@ -104,6 +120,10 @@ rm "${SCALA_CLI_SETUP}"
 # get java home, enter for the Metals extension in VS Code in settings 
 cs java -XshowSettings:properties -version 2>&1 | grep "java.home" | sed 's/.*= *//'
 ```
+
+### Rust
+
+<https://www.rust-lang.org/tools/install>
 
 ## SSH
 
@@ -141,7 +161,7 @@ rm -v -f "${CHROME_DEB}"
 
 # curl -sS -L -f https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
 curl -sS -L -f https://packages.microsoft.com/keys/microsoft.asc \
-| sudo gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg
+  | sudo gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg
 sudo add-apt-repository -y "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main"
 sudo apt update
 sudo apt install -y microsoft-edge-stable

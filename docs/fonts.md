@@ -39,7 +39,7 @@ function install_font_from_zip_url() {
   font_temp_zip_path="${font_temp_dir}/${font_archive_name}.zip"
   mkdir -p "${font_temp_dir}"
   curl -sS -L -o "${font_temp_zip_path}" "${font_url}"
-  # -j prevents director creation, i.e. all files end up in unzip root
+  # -j prevents directory creation, i.e. all files end up in unzip root
   unzip -j -o "${font_temp_zip_path}" -d "${font_temp_dir}"
   # install .otf fonts, if found, else .ttf
   otf_output=$(copy_fonts "*.otf")
@@ -62,11 +62,11 @@ NERD_FONT_URLS=(
   "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/SourceCodePro.zip"
   "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/JetBrainsMono.zip"
   "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Meslo.zip"
-  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/RobotoMono"
-  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode"
-  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraMono"
-  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Ubuntu"
-  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono"
+  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/RobotoMono.zip"
+  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraCode.zip"
+  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/FiraMono.zip"
+  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/Ubuntu.zip"
+  "https://github.com/ryanoasis/nerd-fonts/releases/latest/download/UbuntuMono.zip"
 )
 for url in "${NERD_FONT_URLS[@]}"; do
   install_font_from_zip_url ${url}
@@ -74,3 +74,11 @@ done
 
 fc-cache -v -f
 ```
+
+!!! WARNING
+
+    If the following command fails, wait a few minutes and run it again:
+
+    ```shell
+    fc-cache -v -f
+    ```
