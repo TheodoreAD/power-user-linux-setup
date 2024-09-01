@@ -53,10 +53,9 @@ PACKAGES+=(libgdbm-dev libnss3-dev)
 PACKAGES+=(python3-pip python3-venv)
 # security
 PACKAGES+=(keychain gnupg)
-# hardware diagnostics
-PACKAGES+=(lm-sensors)
-# system monitor
-# TODO: see if these are useful: gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0
+# hardware diagnostics, system monitor
+PACKAGES+=(lm-sensors gir1.2-gtop-2.0)
+# TODO: see if these are useful, they were required by gnome-shell-extension-system-monitor: gir1.2-nm-1.0 gir1.2-clutter-1.0
 PACKAGES+=(htop ncdu)
 # terminal
 PACKAGES+=(terminator tmux xclip)

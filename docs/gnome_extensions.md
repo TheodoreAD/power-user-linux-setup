@@ -1,7 +1,66 @@
 # GNOME extensions
 
+Sadly, GNOME extensions are now to be installed via browser extension.
+
+Chrome is required.
+
+Install the browser extension:
+
+<https://chromewebstore.google.com/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep>
+
+Install the native host connector for the browser extension:
+
+<https://gnome.pages.gitlab.gnome.org/gnome-browser-integration/pages/installation-guide.html>
+
+
+```shell
+sudo apt update
+sudo apt install -y gnome-browser-connector
+```
+
+
+<https://extensions.gnome.org/extension/1160/dash-to-panel/>
+
+<https://github.com/home-sweet-gnome/dash-to-panel>
+
+
+<https://extensions.gnome.org/extension/779/clipboard-indicator/>
+
+<https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator>
+
+
+<https://extensions.gnome.org/extension/28/gtile/>
+
+<https://github.com/gTile>
+
+
+<https://extensions.gnome.org/extension/1460/vitals/>
+
+<https://github.com/corecoding/Vitals>
+
+
+??? not clear if this is up-to-date or not
+
+<https://extensions.gnome.org/extension/841/freon/>
+
+<https://github.com/UshakovVasilii/gnome-shell-extension-freon>
+
+
+<https://extensions.gnome.org/extension/36/lock-keys/>
+
+<https://github.com/kazysmaster/gnome-shell-extension-lockkeys>
+
+
+<https://extensions.gnome.org/extension/973/switcher/>
+
+<https://github.com/daniellandau/switcher>
+
+
+
 !!! WARNING
-    Untested for 24.04
+    Everything below is untested for 24.04
+
+    Do NOT use
 
 !!! TODO
     Review entire section
