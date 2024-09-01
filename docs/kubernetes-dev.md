@@ -5,31 +5,38 @@
 <https://kubernetes.io/docs/tasks/tools/install-kubectl-linux/#install-using-native-package-management>
 
 ```shell
-K8S_GPG_FILE="/usr/share/keyrings/kubernetes-archive-keyring.gpg"
-K8S_GPG_URL="https://packages.cloud.google.com/apt/doc/apt-key.gpg"
-curl -sS -L "${K8S_GPG_URL}" | sudo apt-key add -
-# xenial is the repo that receives updates
-echo "deb [signed-by=${K8S_GPG_FILE}] https://apt.kubernetes.io/ kubernetes-xenial main" \
-  | sudo tee "/etc/apt/sources.list.d/kubernetes.list"
-# alternatively
-# sudo apt-add-repository "deb http://apt.kubernetes.io/ kubernetes-xenial main"
+# add the official GPG key to the keyring and ensure it has the right permissions
+VERSION=1.30
+KEY_FILE=/etc/apt/keyrings/kubernetes-apt-keyring.gpg
+curl -sS -L https://pkgs.k8s.io/core:/stable:/v${VERSION}/deb/Release.key \
+  | sudo gpg --dearmor -o ${KEY_FILE}
+sudo chmod a+r ${KEY_FILE}
+# add the repository to Apt sources
+REPO_URL=https://pkgs.k8s.io/core:/stable:/v${VERSION}/deb/
+LIST_NAME=kubernetes
+echo "deb [signed-by=${KEY_FILE}] ${REPO_URL} /" \
+  | sudo tee /etc/apt/sources.list.d/${LIST_NAME}.list > /dev/null
 sudo apt update
 sudo apt install -y kubectl
 ```
 
 ## Helm
 
-<https://helm.sh/docs/intro/install/>
+<https://helm.sh/docs/intro/install/#from-apt-debianubuntu>
 
 ```shell
-curl -sS -L "https://baltocdn.com/helm/signing.asc" | sudo apt-key add -
-echo -sS -L "deb https://baltocdn.com/helm/stable/debian/ all main" \
-  | sudo tee "/etc/apt/sources.list.d/helm-stable-debian.list"
+KEY_FILE=/usr/share/keyrings/helm.gpg
+curl https://baltocdn.com/helm/signing.asc \
+  | sudo gpg --dearmor -o ${KEY_FILE}
+ARCH=$(dpkg --print-architecture)
+REPO_URL=https://baltocdn.com/helm/stable/debian/
+LIST_NAME=helm-stable-debian
+echo "deb [arch=${ARCH} signed-by=${KEY_FILE}] ${REPO_URL} all main" \
+  | sudo tee /etc/apt/sources.list.d/${LIST_NAME}.list > /dev/null
 sudo apt update
 sudo apt install -y helm
-# alternatively
-# curl -sS -L "https://raw.githubusercontent.com/helm/helm/master/scripts/get-helm-3" | bash
-helm repo add stable "https://kubernetes-charts.storage.googleapis.com"
+# configure
+helm repo add stable "https://charts.helm.sh/stable"
 helm repo add bitnami "https://charts.bitnami.com/bitnami"
 helm repo update
 ```

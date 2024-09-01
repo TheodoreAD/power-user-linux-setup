@@ -18,6 +18,9 @@ netplan status
 !!! WARNING
     Not working properly.
 
+!!! TODO
+    Get more context and arrive at a working AND permanent solution.
+
 <https://wiki.archlinux.org/title/systemd-resolved>
 <https://man7.org/linux/man-pages/man5/resolved.conf.d.5.html>
 

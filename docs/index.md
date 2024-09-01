@@ -5,6 +5,12 @@ This is intended for and has been tested on Ubuntu 24.04 noble numbat.
 !!! IMPORTANT
     Paste the code copied from this guide in the terminal using ++Ctrl+Shift+V++.
 
+!!! IMPORTANT
+    Do everything below in order, otherwise things will break.
+
+!!! IMPORTANT
+    Do NOT run the commands twice. Some will not produce undesired effects, but others will create problems.
+
 !!! TODO
     Put all scripts into shell files and include them via mkdocs snippet.
     Inlcude the following for all to ensure they fail fast:
@@ -45,9 +51,46 @@ Reference articles:
 
 Follow the [guide](apt_packages.md).
 
+### Set up Keyring for subsequent apt packages
+
+!!! WARNING
+    You MUST do this before continuing, otherwise scripts are likely to fail.
+
+To ensure keyring dir is created and has the right permissions:
+
+```shell
+KEYRING_DIR=/etc/apt/keyrings
+sudo install -m 0755 -d ${KEYRING_DIR}
+```
+
+All the keyring-using `apt` installations are updated to respect the deprecation of the insecure
+keyring management methods `apt-key add`, `apt-key adv`, and `apt-add-repository`.
+
+This is a painful departure from a simple process to understanding the new system,
+which is both more secure and more complex to use.
+
+A comprehensive article on the topic can be found here:
+
+<https://www.digitalocean.com/community/tutorials/how-to-handle-apt-key-and-add-apt-repository-deprecation-using-gpg-to-add-external-repositories-on-ubuntu-22-04>
+
+!!! WARNING
+    The assertion below doesn't match some of the installation guides from major vendors
+
+On `/usr/share/keyrings` vs `/etc/apt/keyrings`:
+
+> if it is a key from a maintainer and it should be eventually updated by him (at the latest if you install a package called `REPONAME-archive-keyring`) then it must be placed at `/usr/share/keyrings`, if no mater what, only you as the "local admin" should be able touch the key, you must place it at `/etc/apt/keyrings`
+
+Source:
+
+<https://askubuntu.com/questions/1437207/what-is-the-right-place-to-put-keyrings-for-repositories>
+
 ## Networking
 
 Follow the [guide](networking.md).
+
+## Browsers
+
+Follow the [guide](browsers.md).
 
 ## Gnome extensions
 
@@ -125,7 +168,13 @@ cs java -XshowSettings:properties -version 2>&1 | grep "java.home" | sed 's/.*= 
 
 <https://www.rust-lang.org/tools/install>
 
+!!! TODO
+    Implement.
+
 ## SSH
+
+!!! WARNING
+    You MUST do this before the GitHub setup to set up access via SSH key.
 
 Follow the [guide](ssh.md).
 
@@ -143,36 +192,12 @@ Follow the [guide](github.md).
 
 Follow the [guide](docker.md).
 
-## Browsing
-
-### Google Chrome
-
-```shell
-CHROME_DEB="$(mktemp)"
-CHROME_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-curl -sS -L -o "${CHROME_DEB}" "${CHROME_URL}"
-sudo dpkg -i "${CHROME_DEB}"
-rm -v -f "${CHROME_DEB}"
-```
-
-### Microsoft Edge
-
-```shell
-
-# curl -sS -L -f https://packages.microsoft.com/keys/microsoft.asc | sudo apt-key add -
-curl -sS -L -f https://packages.microsoft.com/keys/microsoft.asc \
-  | sudo gpg --dearmor -o /etc/apt/keyrings/microsoft.gpg
-sudo add-apt-repository -y "deb [arch=amd64] https://packages.microsoft.com/repos/edge stable main"
-sudo apt update
-sudo apt install -y microsoft-edge-stable
-```
-
 ## Communication
 
 ### Slack
 
 !!! WARNING
-    Optional.
+    Optional. Install only if the web version has issues for you.
 
 ```shell
 sudo snap install --classic slack
@@ -180,7 +205,10 @@ sudo snap install --classic slack
 
 ## Teams
 
-Use this from the browser. Do not install anything, all versions are outdated and Microsoft advises to use the web app.
+Use the web version.
+
+Do NOT install any version you may find online.
+All versions are outdated and Microsoft advises to use the web app.
 
 ## Software Development
 

@@ -1,5 +1,8 @@
 # Games
 
+!!! WARNING
+    Optional.
+
 ## 32-bit
 
 ```shell

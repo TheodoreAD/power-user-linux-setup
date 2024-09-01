@@ -2,11 +2,31 @@
 
 ## Terraform
 
+<https://developer.hashicorp.com/terraform/tutorials/aws-get-started/install-cli#install-terraform>
+
 ```shell
-curl -sS -L -f https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
+# add the official GPG key to the keyring and ensure it has the right permissions
+KEY_FILE=/etc/apt/keyrings/hashicorp-archive-keyring.gpg
+curl -sS -L https://apt.releases.hashicorp.com/gpg \
+  | sudo gpg --dearmor -o ${KEY_FILE}
+sudo chmod a+r ${KEY_FILE}
+# add the repository to Apt sources
+OS_CODENAME=$(. /etc/os-release && echo "${VERSION_CODENAME}")
+REPO_URL=https://apt.releases.hashicorp.com
+LIST_NAME=hashicorp
+echo "deb [signed-by=${KEY_FILE}] ${REPO_URL} ${OS_CODENAME} main" \
+  | sudo tee /etc/apt/sources.list.d/${LIST_NAME}.list > /dev/null
 sudo apt update
 sudo apt install -y terraform
+```
+
+!!! TODO
+    See if this script doesn't cause problems with zsh.
+
+If you want to enable autocompletion:
+
+```shell
+terraform -install-autocomplete
 ```
 
 ## Google Cloud SDK and CLI
@@ -14,15 +34,20 @@ sudo apt install -y terraform
 !!! WARNING
     This is optional, do not install unless you're planning to work with Google Cloud.
 
-!!! TODO
-    Add post-install auth instructions.
+<https://cloud.google.com/sdk/docs/install#deb>
 
 ```shell
 
-echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
-  | sudo tee -a "/etc/apt/sources.list.d/google-cloud-sdk.list"
-curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
-  | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
+# add the official GPG key to the keyring and ensure it has the right permissions
+KEY_FILE=/usr/share/keyrings/cloud.google.gpg
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+  | sudo gpg --dearmor -o ${KEY_FILE}
+sudo chmod a+r ${KEY_FILE}
+# add the repository to Apt sources
+REPO_URL=https://packages.cloud.google.com/apt
+LIST_NAME=google-cloud-sdk
+echo "deb [signed-by=${KEY_FILE}] ${REPO_URL} main" \
+  | sudo tee /etc/apt/sources.list.d/${LIST_NAME}.list > /dev/null
 sudo apt update
 sudo apt install -y google-cloud-sdk
 GOOGLE_INSTALL_PACKAGES=(
@@ -90,6 +115,16 @@ sudo apt install -y --only-upgrade ${GOOGLE_UPDATE_PACKAGES[@]}
 To fix GPG key expiration, run:
 
 ```shell
-curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
-  | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
+KEY_FILE=/usr/share/keyrings/cloud.google.gpg
+curl https://packages.cloud.google.com/apt/doc/apt-key.gpg \
+  | sudo gpg --dearmor -o ${KEY_FILE}
+```
+
+!!! TODO
+    Add auth instructions.
+
+To configure:
+
+```shell
+gcloud init
 ```

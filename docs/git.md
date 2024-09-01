@@ -2,21 +2,39 @@
 
 Multi-email config
 
-!!! TODO
-    Get data from files instead of hardcoding here.
+Create a `${HOME}/git-projects.txt` file with your personal and/or work profiles.
+Rules:
+- each line in the file will be used by the script to create one directory
+- line format is `projects_directory,git_commit_name,git_commit_email`
+- no spaces allowed before or after the comma delimiters
+- no quotes allowed, no commas allowed inside names
+
+!!! INFO
+    You should have a directory for each profile,
+    so that when you clone projects in each directory
+    git automatically uses the right name, email
+    and any other custom settings might be required.
+
+!!! WARNING
+    If you use the example below for creating the file
+    you must change your name and email for each context,
+    i.e. personal GitHub or work GitHub.
 
 ```shell
+tee "${HOME}/git-projects.txt" >/dev/null <<EOF
+github.com-personal,John Smith,john.smith@gmail.com
+github.com-work,John Smith,john.smith@work.com
+gitlab.com-personal,John Smith,john.smith@gmail.com
+EOF
+```
+
 # Disable global user name and email in favor of project-specific ones
 git config --global --unset user.name
 git config --global --unset user.email
 # set up project directories and configure per-directory identities
 PROJECTS_ROOT="${HOME}/projects"
 mkdir -p "${PROJECTS_ROOT}"
-# no spaces allowed after the comma delimiters
-# projects_directory,git_commit_name,git_commit_email
-PROJECTS=(
-  github.com-personal,"Teodor Dumitrescu","teodor.dumitrescu@gmail.com"
-)
+IFS=$'\r\n' GLOBIGNORE='*' eval 'PROJECTS=($(<${HOME}/git-projects.txt))'
 for project in "${PROJECTS[@]}"; do
   project_dir=$(echo ${project} | cut -d ',' -f 1)
   user_name=$(echo ${project} | cut -d ',' -f 2)
@@ -24,10 +42,11 @@ for project in "${PROJECTS[@]}"; do
   project_dir_full="${PROJECTS_ROOT}/${project_dir}"
   mkdir -p "${project_dir_full}"
   git config --global \
-    includeIf.gitdir:"${project_dir_full}/".path \
-    \""${project_dir_full}/.gitconfig"\"
-  git config --file "${project_dir_full}/.gitconfig" user.name \""${user_name}"\"
-  git config --file "${project_dir_full}/.gitconfig" user.email \""${user_email}"\"
+    includeIf.gitdir:"${project_dir_full}/".path "${project_dir_full}/.gitconfig"
+  git config --file "${project_dir_full}/.gitconfig" \
+    user.name "${user_name}"
+  git config --file "${project_dir_full}/.gitconfig" \
+    user.email "${user_email}"
 done
 ```
 
@@ -55,16 +74,18 @@ git config --global core.preloadindex true
 Enable PyCharm as the default diff and merge tools, use with git difftool and git mergetool:
 
 ```shell
-PYCHARM_PATH="$(which pycharm-professional)"
-git config --global diff.tool pycharm-professional
+# change this to pycharm-community if you are using that
+PYCHARM_BIN=pycharm-professional
+PYCHARM_PATH="$(which ${PYCHARM_BIN})"
+git config --global diff.tool ${PYCHARM_BIN}
 git config --global difftool.prompt false
-git config --global difftool.pycharm-professional.cmd \
+git config --global difftool.${PYCHARM_BIN}.cmd \
   \""${PYCHARM_PATH}"\"' diff "$LOCAL" "$REMOTE"'
-git config --global merge.tool pycharm-professional
+git config --global merge.tool ${PYCHARM_BIN}
 git config --global mergetool.prompt false
-git config --global mergetool.pycharm-professional.cmd \
+git config --global mergetool.${PYCHARM_BIN}.cmd \
   \""${PYCHARM_PATH}"\"' merge "$LOCAL" "$REMOTE" "$BASE" "$MERGED"'
-git config --global mergetool.pycharm-professional.keepBackup false
+git config --global mergetool.${PYCHARM_BIN}.keepBackup false
 ```
 
 !!! TODO

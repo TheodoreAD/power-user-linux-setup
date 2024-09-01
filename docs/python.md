@@ -125,8 +125,11 @@ plugins(
 We install `dotenv` side-by-side so that the `invoke`-run `tasks.py`
 can import `dotenv` and read `.env` files.
 
+!!! TODO
+    solve issues forcing versions lower than 2 to avoid compatibilty issues
+
 ```shell
-pipx install invoke
+pipx install invoke==1.7.3
 pipx inject invoke --include-apps "python-dotenv[cli]"
 ```
 
@@ -188,27 +191,7 @@ pipx install yamllint
     Experimental.
 
 !!! TODO
-    Research system python version dependency.
-
-```shell
-CODENAME=$(grep UBUNTU_CODENAME /etc/os-release | cut -d '=' -f 2)
-if [[ "${CODENAME}" == "" ]]; then
-  CODENAME=$(lsb_release -c -s)
-fi
-curl -sS -L -f "http://nuitka.net/deb/archive.key.gpg" | sudo apt-key add -
-sudo add-apt-repository -y "deb http://nuitka.net/deb/stable/${CODENAME} ${CODENAME} main"
-sudo apt update
-sudo apt install -y nuitka
-```
-
-!!! WARNING
-    only use if not using pyenv, otherwise make a dedicated pyenv virtualenv
-
-```shell
-if [[ ! -f "/usr/bin/nuitka" ]]; then
-  sudo ln -s /usr/bin/nuitka3 /usr/bin/nuitka
-fi
-```
+    Intall via pyenv and pipx.
 
 !!! TODO
     test

@@ -12,8 +12,7 @@ Install these as the very first step, many of them are dependencies.
     Use 'sudo apt autoremove' to remove them.
     ```
 
-    Do NOT run this unless you know exactly what the involved packages do.
-
+    Do NOT run this unless you know EXACTLY what the involved packages do.
 
 ```shell
 PACKAGES=()
@@ -75,6 +74,8 @@ PACKAGES+=(dos2unix)
 PACKAGES+=(font-manager)
 # idle state management
 PACKAGES+=(xidle)
+# screenshot and annotation
+PACKAGES+=(flameshot)
 # typo helper
 # TODO: see why thefuck isn't working
 # clipboard
@@ -93,3 +94,6 @@ mkdir -p "${HOME}/.local/bin"
 ln -s "$(which batcat)" "${HOME}/.local/bin/bat"
 ln -s "$(which fdfind)" "${HOME}/.local/bin/fd"
 ```
+
+!!! TODO
+    Configure flameshot and other installed software above.
