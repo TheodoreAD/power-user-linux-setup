@@ -188,6 +188,10 @@ Follow the [guide](git.md).
 
 Follow the [guide](github.md).
 
+### GitLab
+
+Follow the [guide](gitlab.md).
+
 ## Docker
 
 Follow the [guide](docker.md).
@@ -255,6 +259,16 @@ sudo apt install -y doublecmd-gtk
 !!! TODO
     Add config
 
+## System monitor
+
+### Glances
+
+<https://github.com/nicolargo/glances>
+
+```shell
+pipx install glances
+```
+
 ## Benchmarking
 
 ### Hyperfine
@@ -272,7 +286,7 @@ sudo dpkg -i "${HYPERFINE_DEB}"
 rm "${HYPERFINE_DEB}"
 ```
 
-### Disable Ctr-Shift-U system shortcut
+## Disable Ctr-Shift-U system shortcut
 
 <https://superuser.com/questions/358749/how-to-disable-ctrlshiftu-in-ubuntu-linux>
 

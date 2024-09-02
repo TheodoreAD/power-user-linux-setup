@@ -33,9 +33,8 @@
     GH_DEB="$(mktemp)"
     VERSION=$(
       curl "https://api.github.com/repos/cli/cli/releases/latest" \
-        | grep '"tag_name"' \
-        | sed -E 's/.*"([^"]+)".*/\1/' \
-        | cut -c2-
+        | tr '\n' ' ' \
+        | sed 's/.*"tag_name":\s*"v\([^"]*\)".*/\1/'
     )
     GH_URL="https://github.com/cli/cli/releases/download/v${VERSION}/gh_${VERSION}_linux_amd64.deb"
     curl -sS -L -o "${GH_DEB}" "${GH_URL}"
@@ -48,9 +47,8 @@
     ```shell
     VERSION=$(
       curl "https://api.github.com/repos/cli/cli/releases/latest" \
-        | grep '"tag_name"' \
-        | sed -E 's/.*"([^"]+)".*/\1/' \
-        | cut -c2-
+        |  tr '\n' ' ' \
+        | sed 's/.*"tag_name":\s*"v\([^"]*\)".*/\1/'
     )
     URL="https://github.com/cli/cli/releases/download/v${VERSION}/gh_${VERSION}_linux_amd64.tar.gz"
     curl -sSL "${URL}" | tar -v -xz --directory "/tmp"

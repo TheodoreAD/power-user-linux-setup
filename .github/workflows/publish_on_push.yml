@@ -7,7 +7,6 @@ on:
     branches:
       - master
       - main
-      - initial_version
 
 jobs:
   deploy:
