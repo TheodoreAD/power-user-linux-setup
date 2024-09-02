@@ -79,7 +79,8 @@ ln -s "$(pyenv which pipx)" "${HOME}/.local/bin/pipx"
 tee -a "${HOME}/.zshrc" >/dev/null <<EOF
 
 # pipx
-eval "\$(register-python-argcomplete pipx)"
+argcomplete_dir="$(pyenv root)/versions/$(pyenv whence register-python-argcomplete | head -n1)/bin/"
+eval "$(${argcomplete_dir}/register-python-argcomplete pipx)"
 EOF
 ```
 
