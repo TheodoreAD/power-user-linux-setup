@@ -1,4 +1,4 @@
-# Kuberentes Server Setuon on bare metal
+# Kuberentes Server Setup on bare metal
 
 !!! WARNING
     Kubernetes may cause: headaches, fits of rage, binge eating, back pain and container orchestration.

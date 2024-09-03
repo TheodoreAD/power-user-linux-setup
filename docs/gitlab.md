@@ -1,5 +1,7 @@
 # GitLab
 
+## glab, the GitLab CLI tool
+
 https://gitlab.com/gitlab-org/cli#installation
 
 ```shell
