@@ -20,49 +20,51 @@ sudo apt install -y gnome-browser-connector
 ```
 
 Install:
+
 - Dash to Panel
-  - https://extensions.gnome.org/extension/1160/dash-to-panel/
-  - https://github.com/home-sweet-gnome/dash-to-panel
+    - https://extensions.gnome.org/extension/1160/dash-to-panel/
+    - https://github.com/home-sweet-gnome/dash-to-panel
 - Extension List
-  - https://extensions.gnome.org/extension/3088/extension-list/
-  - https://github.com/tuberry/extension-list
+    - https://extensions.gnome.org/extension/3088/extension-list/
+    - https://github.com/tuberry/extension-list
 - Clipboard Indicator
-  - https://extensions.gnome.org/extension/779/clipboard-indicator/
-  - https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator
+    - https://extensions.gnome.org/extension/779/clipboard-indicator/
+    - https://github.com/Tudmotu/gnome-shell-extension-clipboard-indicator
 - GTile
-  - https://extensions.gnome.org/extension/28/gtile/
-  - https://github.com/gTile
+    - https://extensions.gnome.org/extension/28/gtile/
+    - https://github.com/gTile
 - Top Hat
-  - https://extensions.gnome.org/extension/5219/tophat/
-  - https://github.com/fflewddur/tophat
+    - https://extensions.gnome.org/extension/5219/tophat/
+    - https://github.com/fflewddur/tophat
 - Vitals
-  - https://extensions.gnome.org/extension/1460/vitals/
-  - https://github.com/corecoding/Vitals
+    - https://extensions.gnome.org/extension/1460/vitals/
+    - https://github.com/corecoding/Vitals
 - Lock Keys
-  - https://extensions.gnome.org/extension/36/lock-keys/
-  - https://github.com/kazysmaster/gnome-shell-extension-lockkeys
+    - https://extensions.gnome.org/extension/36/lock-keys/
+    - https://github.com/kazysmaster/gnome-shell-extension-lockkeys
 - Switcher
-  - https://extensions.gnome.org/extension/973/switcher/
-  - https://github.com/daniellandau/switcher
+    - https://extensions.gnome.org/extension/973/switcher/
+    - https://github.com/daniellandau/switcher
 
 Not tested yet:
+
 - System Monitor Next
-  - https://extensions.gnome.org/extension/3010/system-monitor-next/
-  - https://github.com/mgalgs/gnome-shell-system-monitor-applet
+    - https://extensions.gnome.org/extension/3010/system-monitor-next/
+    - https://github.com/mgalgs/gnome-shell-system-monitor-applet
 - Freon ??? is this up-to-date ???
-  - https://extensions.gnome.org/extension/841/freon/
-  - https://github.com/UshakovVasilii/gnome-shell-extension-freon
+    - https://extensions.gnome.org/extension/841/freon/
+    - https://github.com/UshakovVasilii/gnome-shell-extension-freon
 - Removable Drive Menu ??? is this working ???
-  - https://extensions.gnome.org/extension/7/removable-drive-menu/
+    - https://extensions.gnome.org/extension/7/removable-drive-menu/
 - Smart Auto Move
-  - https://extensions.gnome.org/extension/4736/smart-auto-move/
-  - https://github.com/khimaros/smart-auto-move
+    - https://extensions.gnome.org/extension/4736/smart-auto-move/
+    - https://github.com/khimaros/smart-auto-move
 - Auto Move Windows ??? is this deprecated ???
-  - https://extensions.gnome.org/extension/16/auto-move-windows/
-  - https://gitlab.gnome.org/GNOME/gnome-shell-extensions
+    - https://extensions.gnome.org/extension/16/auto-move-windows/
+    - https://gitlab.gnome.org/GNOME/gnome-shell-extensions
 - Light Dict
-  - https://extensions.gnome.org/extension/2959/light-dict/
-  - https://github.com/tuberry/light-dict
+    - https://extensions.gnome.org/extension/2959/light-dict/
+    - https://github.com/tuberry/light-dict
 
 ## Ubuntu 20.04
 

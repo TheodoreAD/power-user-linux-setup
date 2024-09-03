@@ -1,9 +1,13 @@
 # Git
 
-Multi-email config
+## Multi-email config
+
+### Config file
 
 Create a `${HOME}/git-projects.txt` file with your personal and/or work profiles.
+
 Rules:
+
 - each line in the file will be used by the script to create one directory
 - line format is `projects_directory,git_commit_name,git_commit_email`
 - no spaces allowed before or after the comma delimiters
@@ -20,6 +24,8 @@ Rules:
     you must change your name and email for each context,
     i.e. personal GitHub or work GitHub.
 
+To create the file via command line:
+
 ```shell
 tee "${HOME}/git-projects.txt" >/dev/null <<EOF
 github.com-personal,John Smith,john.smith@gmail.com
@@ -28,6 +34,9 @@ gitlab.com-personal,John Smith,john.smith@gmail.com
 EOF
 ```
 
+### Directory structure and per-directory configuration
+
+```shell
 # Disable global user name and email in favor of project-specific ones
 git config --global --unset user.name
 git config --global --unset user.email
@@ -50,7 +59,9 @@ for project in "${PROJECTS[@]}"; do
 done
 ```
 
-## Configuration
+## Global configuration
+
+### Essentials
 
 ```shell
 # Make git aware of executable permissions
@@ -69,7 +80,7 @@ git config --global log.decorate auto
 git config --global core.preloadindex true
 ```
 
-## Pycharm
+### Diffs and merge conflict resolution with Pycharm
 
 Enable PyCharm as the default diff and merge tools, use with git difftool and git mergetool:
 
@@ -87,6 +98,11 @@ git config --global mergetool.${PYCHARM_BIN}.cmd \
   \""${PYCHARM_PATH}"\"' merge "$LOCAL" "$REMOTE" "$BASE" "$MERGED"'
 git config --global mergetool.${PYCHARM_BIN}.keepBackup false
 ```
+
+### Experimental
+
+!!! WARNING
+    Optional. Don't use unless you understand the effects.
 
 !!! TODO
     See if this is desirable.

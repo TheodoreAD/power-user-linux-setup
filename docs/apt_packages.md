@@ -1,8 +1,7 @@
 # Apt packages
 
-# Basic pack
-
-Install these as the very first step, many of them are dependencies.
+!!! IMPORTANT
+    Install these before anything else in this guide, many of them are dependencies.
 
 !!! WARNING
     After the apt commands you might get a list of packages that are considered

@@ -3,7 +3,7 @@
 This is intended for and has been tested on Ubuntu 24.04 noble numbat.
 
 !!! IMPORTANT
-    Paste the code copied from this guide in the terminal using ++Ctrl+Shift+V++.
+    Paste the code copied from this guide in the terminal using ++ctrl+shift+v++.
 
 !!! IMPORTANT
     Do everything below in order, otherwise things will break.
