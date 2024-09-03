@@ -1,14 +1,14 @@
 # GitHub
 
+## gh, the GitHub CLI tool
+
 <https://github.com/cli/cli/blob/trunk/docs/install_linux.md>
 
 !!! WARNING
     Do NOT use `snap`: <https://github.com/cli/cli/blob/trunk/docs/install_linux.md#snap-do-not-use>
 
-## gh (GitHub CLI tool)
-
 !!! INFO
-    Use the apt version unless you prefer updating manually.
+    Use the apt version, unless you prefer updating manually.
 
 === "apt"
 

@@ -1,10 +1,11 @@
 # Shell: Zsh + Oh My Zsh + PowerLevel10k
 
 !!! TODO
-  Research:
-  <http://www.bash2zsh.com/zsh_refcard/refcard.pdf>
-  <http://grml.org/zsh/zsh-lovers.html>
-  <http://zsh.sourceforge.net/Doc/Release/Shell-Builtin-Commands.html>
+     Research:
+
+    - <http://www.bash2zsh.com/zsh_refcard/refcard.pdf>
+    - <http://grml.org/zsh/zsh-lovers.html>
+    - <http://zsh.sourceforge.net/Doc/Release/Shell-Builtin-Commands.html>
 
 Install Zsh and log out, when you login back again zsh will be your new default shell:
 

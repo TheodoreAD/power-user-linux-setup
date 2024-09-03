@@ -1,7 +1,11 @@
 # SSH
 
+## Emails config file
+
 Create a `${HOME}/ssh-emails.txt` file with your personal and/or work emails.
+
 Rules:
+
 - each line in the file will be used by the script to create one SSH key
 - the machine (node) name and the email will be used in the key file name
 - line format is `email`
@@ -23,8 +27,12 @@ john.smith@work.com
 EOF
 ```
 
+## Hosts config file
+
 Create a `${HOME}/ssh-hosts.txt` file with your personal and/or work SSH hosts and user details.
+
 Rules:
+
 - each line in the file will be used by the script to create one SSH key
 - the machine (node) name and the email will be used in the key file name
 - line format is `user_name,host_alias,host_name,id_email`
@@ -61,7 +69,7 @@ jsmith,10.11.12.13,john.smith@work.com
 EOF
 ```
 
-Create the SSH key(s) and config file, forward keys if any required, and set up the keychain:
+## SSH key(s) and config file creation, key forwarding, keychain setup
 
 ```shell
 IFS=$'\r\n' GLOBIGNORE='*' eval 'SSH_ID_EMAILS=($(<${HOME}/ssh-emails.txt))'
