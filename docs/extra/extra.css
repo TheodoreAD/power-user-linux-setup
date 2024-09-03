@@ -1,0 +1,239 @@
+/* TODO: shrink admonition block top margin for code blocks */
+
+/* https://github.com/squidfunk/mkdocs-material/blob/master/src/assets/stylesheets/base/_typeset.scss */
+
+.md-typeset {
+  font-size: 1.40em;
+  line-height: 1.40em;
+}
+
+/* For reference - these should be used with great care, they will almost always have side effects */
+/* .md-typeset div,
+.md-typeset span,
+.md-typeset p,
+.md-typeset a,
+.md-typeset ul, .md-typeset ol, .md-typeset dl, .md-typeset li, .md-typeset dd, .md-typeset dt,
+.md-typeset code, .md-typeset pre,
+.md-typeset blockquote, .md-typeset address,
+.md-typeset table, .md-typeset tr, .md-typeset td
+{
+font-size: 0.90em;
+} */
+
+/* Reduce margins from 1em */
+.md-typeset p,
+.md-typeset ul,
+.md-typeset ol,
+.md-typeset blockquote {
+  margin-top: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.md-typeset ul li,
+.md-typeset ol li {
+  margin-bottom: 0.20rem;
+}
+
+/* https://github.com/squidfunk/mkdocs-material/blob/master/src/assets/stylesheets/extensions/_admonition.scss */
+.md-typeset .admonition,
+.md-typeset details {
+  font-size: 0.95em;
+  margin-top: 1.50rem;
+  margin-bottom: 1.50rem;
+}
+
+html .md-typeset .admonition > :last-child,
+html .md-typeset details > :last-child {
+  /* margin-top: 0.75rem; */
+  margin-bottom: 0.75rem;
+}
+
+html .md-typeset .admonition > :first-child,
+html .md-typeset details > :first-child {
+  /* margin-top: 0.75rem; */
+  margin-bottom: 0.00rem;
+}
+
+/* admonition title - reduce height, center text vertically */
+.md-typeset .admonition > .admonition-title,
+.md-typeset details > .admonition-title,
+.md-typeset details > summary,
+.md-typeset .admonition > summary {
+  padding-top: 0.40rem;
+  padding-bottom: 0.20rem;
+}
+
+/* admonition title - center icon vertically */
+.md-typeset ::before {
+  top: 0.30rem;
+}
+
+/* required due to reduced admonition title height */
+.md-typeset summary::after {
+  top: 0.35rem;
+}
+
+/* superfences - reduce title height */
+.md-typeset .superfences-tabs > label {
+  padding: 0.50rem 1.25rem;
+}
+
+/* table margins - reduce height */
+.md-typeset .md-typeset__table {
+  margin: 0.25rem 0.0rem 0.0rem 0.0rem;
+}
+
+/* tables - reduce row height and padding */
+.md-typeset table:not([class]) {
+  font-size: 0.90em;
+}
+
+.md-typeset table:not([class]) th {
+  padding: 0.60rem 0.80rem;
+}
+
+/* tables - hide empty header */
+.md-typeset table:not([class]) th:empty {
+  /* this retains a minimum column width */
+  /* padding: 0.0rem; */
+  /* this wraps the content */
+  display: none;
+}
+
+.md-typeset table:not([class]) td {
+  padding: 0.35rem 0.80rem;
+  border-right-style: solid;
+  border-right-width: 1px;
+  border-right-color: rgba(128, 128, 128, 0.2);
+}
+
+/* to prevent overflow when table is being used */
+.md-typeset__scrollwrap {
+  margin: 0.75rem 0.0rem 0.75rem 0.0rem;
+}
+
+/* Found in the auto-generated css classes, fixes 1.6em text size */
+/* .md-typeset .highlight is an inline style and should inherit */
+.md-typeset .codehilitetable,
+.md-typeset .highlighttable {
+  font-size: 1.00em;
+  margin-top: 0.50em;
+  margin-bottom: 0.50em;
+}
+
+/* task list - fix checkbox icon vertical alignment */
+.md-typeset .task-list-item [type="checkbox"] {
+  top: 0;
+  /*top: 0.25rem;*/
+}
+
+/* Headings have non-relative font sizes */
+.md-typeset h1 {
+  font-size: 1.80em;
+  line-height: 1.00;
+  /* H1 should be the first item in a document, no margin-top */
+  margin-top: 0.00rem;
+  /* Allows having less spacing after in case H2 follows */
+  margin-bottom: 0.00rem;
+}
+
+.md-typeset h1 + * {
+  margin-top: 1.50rem;
+}
+
+.md-typeset h1 + h2,
+.md-typeset h2 {
+  font-size: 1.60em;
+  line-height: 1.00;
+  margin-bottom: 1.25rem;
+}
+
+.md-typeset h2 {
+  margin-top: 1.75rem;
+}
+
+.md-typeset h1 + h2 {
+  margin-top: 1.50rem;
+}
+
+/* The h2 + h3 needs to be here to override existing style */
+.md-typeset h2 + h3,
+.md-typeset h3 {
+  font-size: 1.40em;
+  line-height: 1.00;
+  margin-bottom: 1.25rem;
+}
+
+.md-typeset h3 {
+  margin-top: 1.75rem;
+}
+
+.md-typeset h2 + h3 {
+  margin-top: 1.50rem;
+}
+
+.md-typeset h3 + h4,
+.md-typeset h4 {
+  font-size: 1.25em;
+  line-height: 1.00;
+  margin-bottom: 1.00rem;
+}
+
+.md-typeset h4 {
+  margin-top: 1.75rem;
+}
+
+.md-typeset h3 + h4 {
+  margin-top: 1.50rem;
+}
+
+.md-typeset h4 + h5,
+.md-typeset h5 {
+  font-size: 1.10em;
+  line-height: 1.00;
+  margin-bottom: 1.00rem;
+}
+
+.md-typeset h5 {
+  margin-top: 1.50rem;
+}
+
+.md-typeset h4 + h5 {
+  margin-top: 1.25rem;
+}
+
+.md-typeset h5 + h6,
+.md-typeset h6 {
+  font-size: 1.10em;
+  line-height: 1.00;
+  margin-bottom: 1.00rem;
+}
+
+.md-typeset h6 {
+  margin-top: 1.50rem;
+}
+
+.md-typeset h5 + h6 {
+  margin-top: 1.25rem;
+}
+
+.md-typeset code {
+  /*color: rgba(235,90,70, 1.00);*/
+  /*background: rgba(236, 236, 236, 0.30);*/
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.10);
+  padding-top: 0.05em;
+  padding-bottom: 0.05em;
+  padding-right: 0.25em;
+  padding-left: 0.25em;
+}
+
+/* blockquotes - avoid first heading large top margin */
+.md-typeset blockquote > h1:first-child,
+.md-typeset blockquote > h2:first-child,
+.md-typeset blockquote > h3:first-child,
+.md-typeset blockquote > h4:first-child,
+.md-typeset blockquote > h5:first-child,
+.md-typeset blockquote > h6:first-child {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+}
