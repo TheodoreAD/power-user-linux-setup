@@ -1,0 +1,234 @@
+# https://github.com/facelessuser/PyMdown/blob/master/mkdocs.yml
+# TODO: include everything relevant from here
+
+# https://facelessuser.github.io/pymdown-extensions/usage_notes/
+# TODO: include everything relevant from here
+
+# https://github.com/mkdocs/mkdocs/wiki/MkDocs-Recipes
+# TODO: include everything relevant from here
+
+# TODO: figure out how CI works, implement, document
+#https://github.com/mhausenblas/mkdocs-deploy-gh-pages
+
+# https://www.mkdocs.org/user-guide/configuration/
+
+site_name: Power User Linux Setup
+site_url: https://TheodoreAD.github.io/power-user-linux-setup
+site_author: Teodor Dumitrescu <teodor.dumitrescu@gmail.com>
+repo_url: https://github.com/TheodoreAD/power-user-linux-setup
+repo_name: TheodoreAD/power-user-linux-setup
+# edit_uri setting for GitHub and GitLab
+# TODO: make the edit icon smaller, the rest of the content is now smaller
+edit_uri: edit/master/docs
+docs_dir: docs
+site_dir: site
+# gh-deploy command settings
+remote_branch: gh-pages
+remote_name: origin
+
+use_directory_urls: false
+
+# pip install mkdocs-bootstrap386
+# https://gitlab.com/lramage94/mkdocs-bootstrap386
+# ISSUE: doesn't renfer most elements
+# theme:
+#   name: 'bootstrap386'
+
+# pip install mkdocs-windmill
+# https://gristlabs.github.io/mkdocs-windmill/##installation
+# ISSUE: doesn't render pymdownx extensions
+# theme:
+#   name: 'windmill'
+
+# ISSUE: mermaid conflict with readthedocs theme due to opacity: 0.2 in .section element
+# ISSUE: doesn't render grouped code blocks
+# theme:
+#   name: 'readthedocs'
+
+# https://squidfunk.github.io/mkdocs-material/getting-started/
+# pip install mkdocs-material
+theme:
+  name: material
+  # Material theme favicon doesn't use the stock mkdocs favicon workflow
+  # Default: assets/images/favicon.png
+  # https://icons8.com/icon/set/heli/all
+#  favicon: 'img/favicon.ico'
+#  logo: 'img/logo.svg'
+  # TODO: research what language does
+  language: en
+  # TODO: check out other color combinations
+  palette:
+    scheme: slate
+    # From here https://github.com/squidfunk/mkdocs-material/blob/master/src/assets/stylesheets/application-palette.scss#L65
+    primary: blue
+    # from here https://github.com/squidfunk/mkdocs-material/blob/master/src/assets/stylesheets/application-palette.scss#L229
+    accent: orange
+  font:
+    text: Roboto
+    code: Roboto Mono
+  # TODO: research what this does
+  # feature:
+  #   tabs: 'true'
+
+# To use a different favicon, create an img subdirectory in your docs_dir
+# and copy your custom favicon.ico file to that directory.
+# Material theme uses a different way of settings this
+# site_favicon: 'img/favicon.ico'
+
+# If nothing is specified, navigation will be implicitly created using
+# capitalized direcotry names and the H1 of each file, sorted alphanumerically
+# used to be done using 'pages', now deprecated, new syntax is 'nav'
+#nav:
+#  - Home: 'install.md'
+
+markdown_extensions:
+  # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/
+  # see link above for all available extensions
+
+  # https://squidfunk.github.io/mkdocs-material/extensions/admonition/
+  # add block-styled side content, e.g. summaries, notes, hints or warnings
+  - markdown.extensions.admonition:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/details/
+  # support collapsible blocks, might not compatible with IE and Edge
+  - pymdownx.details:
+
+  # https://python-markdown.github.io/extensions/toc/
+  - markdown.extensions.toc:
+      # https://squidfunk.github.io/mkdocs-material/extensions/permalinks/
+      # inserts anchor at end of each headline to provide link to a subpart of the document
+      permalink: true
+      # keep at 1 for H1 in document to be the title when specified in mkdocs.yml
+      # if set to 2 pushes H1 to H2, if set to 3 pushes H1 to H3
+      # baselevel: 1
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/tabbed/
+  - pymdownx.tabbed:
+
+  # https://squidfunk.github.io/mkdocs-material/extensions/footnotes/
+  - markdown.extensions.footnotes:
+
+  # https://python-markdown.github.io/extensions/abbreviations/
+  - markdown.extensions.abbr:
+
+  # https://python-markdown.github.io/extensions/definition_lists/
+  - markdown.extensions.def_list:
+
+  # http://bwmarrin.github.io/MkDocsPlus/fontawesome/
+  # https://github.com/mkdocs/mkdocs/issues/909#issuecomment-214936194
+  # TODO: make this work
+  # - markdown.extensions.fontawesome_markdown:
+
+  # https://python-markdown.github.io/extensions/smarty/
+  - markdown.extensions.smarty:
+
+  # https://python-markdown.github.io/extensions/attr_list/
+  # define attributes on the various HTML elements in Markdown’s output
+  # DEPENDENCY: allows modifying style for progress bars
+  - markdown.extensions.attr_list:
+
+  # https://python-markdown.github.io/extensions/tables/
+  # Tested and was not necessary for tables to render
+  # - markdown.extensions.tables:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/keys/
+  - pymdownx.keys:
+      separator: "\uff0b"
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/caret/
+  # https://facelessuser.github.io/pymdown-extensions/extensions/tilde/
+  # NOTICE - replaces basic Markdown ~text~ strikethrough with ~~text~~
+  - pymdownx.tilde:
+  - pymdownx.caret:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/mark/
+  - pymdownx.mark:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/smartsymbols/
+  - pymdownx.smartsymbols:
+
+  #  https://facelessuser.github.io/pymdown-extensions/extensions/tasklist/
+  - pymdownx.tasklist:
+      # custom_checkbox: true
+      clickable_checkbox: true
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/magiclink/
+  # TODO: add corresponding section in documentation
+  - pymdownx.magiclink:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/superfences/
+  # Nest fences under blockquotes, lists, diagrams or other block elements and custom fences
+  # Create tabbed fenced code blocks
+  # Specify custom fences for flowcharts, sequence diagrams, or other custom blocks
+  - pymdownx.superfences:
+    # Mermaid integration from https://github.com/squidfunk/mkdocs-material/issues/693#issuecomment-411885426
+      custom_fences:
+        - name: mermaid
+          class: mermaid
+          format: !!python/name:pymdownx.superfences.fence_div_format
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/highlight/
+  - pymdownx.highlight:
+      # CONFLICT: disabled default due to conflict with clipboard.js
+      # css_class: 'highlight'
+      # this used to have to be enabled no it should be disabled, see why
+      # css_class: 'codehilite'
+      # https://github.com/squidfunk/mkdocs-material/issues/138#issuecomment-276567696
+      # Code highlighting, includes php fix so code is not required to start with <? or <?php
+      extend_pygments_lang:
+        - name: php
+          lang: php
+          options:
+            startinline: true
+        - name: pycon3
+          lang: pycon
+          options:
+            python3: true
+
+  # https://squidfunk.github.io/mkdocs-material/extensions/codehilite/
+  # syntax highlighting, grouped code blocks, highlighted lines in code blocks
+  # TODO: see if this is useful with pymdownx.highlight enabled
+#  - markdown.extensions.codehilite:
+#     guess_lang: false
+#     linenums: true
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/inlinehilite/
+  # inline code highlighting
+  - pymdownx.inlinehilite:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/progressbar/
+  # TODO: figure out why this isn't working
+  # alternative
+  # https://github.com/fehmicansaglam/progressed.io
+  - pymdownx.progressbar:
+
+  # https://facelessuser.github.io/pymdown-extensions/extensions/emoji/
+  # this makes all emoji show up properly
+  - pymdownx.emoji:
+      emoji_index: !!python/name:materialx.emoji.twemoji
+      emoji_generator: !!python/name:materialx.emoji.to_svg
+      alt: short
+      options:
+          attributes:
+              align: top
+              height: 20px
+              width: 20px
+          # image_path: https://assets-cdn.github.com/images/icons/emoji/unicode/
+          # non_standard_image_path: https://assets-cdn.github.com/images/icons/emoji/
+
+plugins:
+  - search
+  - mermaid2:
+      arguments:
+        theme: 'dark'
+
+# https://cdnjs.com/libraries/mermaid
+extra_css:
+  # the .css file is no longer used after 7.0.11, used here for readthedocs fix
+  #  - https://unpkg.com/mermaid@7.0.11/dist/mermaid.css
+  # using version 7.0.11 so the fix for readthedocs below can be applied
+  #  - 'mermaid-fix.css'
+  # Custom CSS, file should be in /docs/ or the custom documents directory
+  - extra/extra.css
+extra_javascript:
+  - https://unpkg.com/mermaid/dist/mermaid.min.js
