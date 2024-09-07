@@ -1,0 +1,7 @@
+/** Section styling */
+.section {
+    stroke: none; 
+  /* below commented out because it conflicts with the readthedocs theme */
+  /*  opacity: 0.2; */
+    opacity: 1.0;
+  }
