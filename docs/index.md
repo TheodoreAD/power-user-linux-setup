@@ -330,10 +330,12 @@ graph TD
 
 ```shell
 USER_AUTOSTART_DIR="${HOME}/.config/autostart"
+mkdir -p ${USER_AUTOSTART_DIR}
 APT_AUTOSTART_APPS=( \
-  # doublecmd \
+  doublecmd \
   terminator \
-  google-chrome \
+  # google-chrome \
+  org.flameshot.Flameshot.desktop \
 )
 for app in "${APT_AUTOSTART_APPS[@]}"; do
   cp -v "/usr/share/applications/${app}.desktop" "${USER_AUTOSTART_DIR}"
@@ -363,7 +365,21 @@ StartupNotify=true
 EOF
 ```
 
+## Keyboard shortcuts
+
+!!! WARNING
+    Optional.
+
+See the [guide](shortcuts.md).
+
 ## UI
 
 !!! TODO
     Add favorite apps to task bar and remove default ones
+
+## Input devices
+
+!!! WARNING
+    Optional.
+
+See the [guide](input_devices.md).

@@ -45,6 +45,9 @@ Install:
 - Switcher
     - https://extensions.gnome.org/extension/973/switcher/
     - https://github.com/daniellandau/switcher
+- Arc Menu
+  - https://extensions.gnome.org/extension/3628/arcmenu/
+  - https://gitlab.com/arcmenu/ArcMenu
 
 Not tested yet:
 
