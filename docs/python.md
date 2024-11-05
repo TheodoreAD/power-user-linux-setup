@@ -140,7 +140,7 @@ can import `dotenv` and read `.env` files.
 
 ```shell
 pipx install invoke==1.7.3
-pipx inject invoke --include-apps "python-dotenv[cli]"
+pipx inject --include-apps invoke 'python-dotenv[cli]'
 ```
 
 ### twine
