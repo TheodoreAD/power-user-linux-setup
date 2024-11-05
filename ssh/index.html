@@ -1,0 +1,956 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/ssh/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-8.5.10">
+    
+    
+      
+        <title>SSH - Power User Linux Setup</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.975780f9.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#ssh" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              SSH
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+            </label>
+          
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Power User Linux Setup
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Installation steps
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../apt_packages/" class="md-nav__link">
+        Apt packages
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../browsers/" class="md-nav__link">
+        Browsers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cloud/" class="md-nav__link">
+        Cloud
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        Docker
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extras/" class="md-nav__link">
+        Extras
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fonts/" class="md-nav__link">
+        Fonts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../games/" class="md-nav__link">
+        Games
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../git/" class="md-nav__link">
+        Git
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/" class="md-nav__link">
+        GitHub
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitlab/" class="md-nav__link">
+        GitLab
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gnome_extensions/" class="md-nav__link">
+        GNOME extensions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../golang/" class="md-nav__link">
+        Golang
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../input_devices/" class="md-nav__link">
+        Input devices
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../js/" class="md-nav__link">
+        Javascript
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes-dev/" class="md-nav__link">
+        Kuberentes for local development
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes-server/" class="md-nav__link">
+        Kuberentes Server Setup on bare metal
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../locale/" class="md-nav__link">
+        Locale
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../networking/" class="md-nav__link">
+        Networking
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../python/" class="md-nav__link">
+        Python
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        Shortcuts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          SSH
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        SSH
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#emails-config-file" class="md-nav__link">
+    Emails config file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hosts-config-file" class="md-nav__link">
+    Hosts config file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-keys-and-config-file-creation-key-forwarding-keychain-setup" class="md-nav__link">
+    SSH key(s) and config file creation, key forwarding, keychain setup
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zsh/" class="md-nav__link">
+        Shell: Zsh + Oh My Zsh + PowerLevel10k
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#emails-config-file" class="md-nav__link">
+    Emails config file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#hosts-config-file" class="md-nav__link">
+    Hosts config file
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ssh-keys-and-config-file-creation-key-forwarding-keychain-setup" class="md-nav__link">
+    SSH key(s) and config file creation, key forwarding, keychain setup
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/TheodoreAD/power-user-linux-setup/edit/master/docs/ssh.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<h1 id="ssh">SSH<a class="headerlink" href="#ssh" title="Permanent link">¶</a></h1>
+<h2 id="emails-config-file">Emails config file<a class="headerlink" href="#emails-config-file" title="Permanent link">¶</a></h2>
+<p>Create a <code>${HOME}/ssh-emails.txt</code> file with your personal and/or work emails.</p>
+<p>Rules:</p>
+<ul>
+<li>each line in the file will be used by the script to create one SSH key</li>
+<li>the machine (node) name and the email will be used in the key file name</li>
+<li>line format is <code>email</code></li>
+<li>no spaces allowed before or after the email</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>You should have an SSH key for each email,
+so that when you have a security change
+you only lose access to the resources tied to one email.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you use the example below for creating the file
+you must change your name for each email.</p>
+</div>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a>tee<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/ssh-emails.txt"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a><span class="s">john.smith@gmail.com</span>
+<a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a><span class="s">john.smith@work.com</span>
+<a href="#__codelineno-0-4" id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="s">EOF</span>
+</code></pre></div>
+<h2 id="hosts-config-file">Hosts config file<a class="headerlink" href="#hosts-config-file" title="Permanent link">¶</a></h2>
+<p>Create a <code>${HOME}/ssh-hosts.txt</code> file with your personal and/or work SSH hosts and user details.</p>
+<p>Rules:</p>
+<ul>
+<li>each line in the file will be used by the script to create one SSH key</li>
+<li>the machine (node) name and the email will be used in the key file name</li>
+<li>line format is <code>user_name,host_alias,host_name,id_email</code></li>
+<li>no spaces allowed before or after the comma delimiters</li>
+</ul>
+<div class="admonition info">
+<p class="admonition-title">Info</p>
+<p>You need an entry for each host you intend to access.</p>
+<p>For git hosts, leave the host alias identical to the host name
+if you are using a single key for the platform, such as github.com.</p>
+<p>Specify an alias under Host and the address under HostName
+if there is more than one account for a platform such as github.com.</p>
+<p>You will need to use <code>git clone git@host_alias:user_name/repo_name.git</code>
+instead of <code>git clone git@github.com:user_name/repo_name.git</code>.</p>
+<p>For hosts intended for terminal access, you should use an alias
+to connect without having to remember IP adresses.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>If you use the example below for creating the file
+you must change your name for each email.</p>
+<p>The user name and IP address below are also just an example,
+if you don’t plan to connect to any severs via terminal
+simply remove the line.</p>
+</div>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-1-1" id="__codelineno-1-1" name="__codelineno-1-1"></a>tee<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/ssh-hosts.txt"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-1-2" id="__codelineno-1-2" name="__codelineno-1-2"></a><span class="s">git,github.com,github.com,john.smith@gmail.com</span>
+<a href="#__codelineno-1-3" id="__codelineno-1-3" name="__codelineno-1-3"></a><span class="s">git,gitlab.com,gitlab.com,john.smith@gmail.com</span>
+<a href="#__codelineno-1-4" id="__codelineno-1-4" name="__codelineno-1-4"></a><span class="s">jsmith,10.11.12.13,john.smith@work.com</span>
+<a href="#__codelineno-1-5" id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="s">EOF</span>
+</code></pre></div>
+<h2 id="ssh-keys-and-config-file-creation-key-forwarding-keychain-setup">SSH key(s) and config file creation, key forwarding, keychain setup<a class="headerlink" href="#ssh-keys-and-config-file-creation-key-forwarding-keychain-setup" title="Permanent link">¶</a></h2>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-2-1" id="__codelineno-2-1" name="__codelineno-2-1"></a><span class="nv">IFS</span><span class="o">=</span><span class="s1">$'\r\n'</span><span class="w"> </span><span class="nv">GLOBIGNORE</span><span class="o">=</span><span class="s1">'*'</span><span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="s1">'SSH_ID_EMAILS=($(&lt;${HOME}/ssh-emails.txt))'</span>
+<a href="#__codelineno-2-2" id="__codelineno-2-2" name="__codelineno-2-2"></a><span class="nv">NODE_NAME</span><span class="o">=</span><span class="k">$(</span>uname<span class="w"> </span>-n<span class="k">)</span>
+<a href="#__codelineno-2-3" id="__codelineno-2-3" name="__codelineno-2-3"></a><span class="c1"># create key(s)</span>
+<a href="#__codelineno-2-4" id="__codelineno-2-4" name="__codelineno-2-4"></a><span class="c1"># enter and re-enter the password for each key</span>
+<a href="#__codelineno-2-5" id="__codelineno-2-5" name="__codelineno-2-5"></a><span class="k">for</span><span class="w"> </span>ssh_id_email<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">SSH_ID_EMAILS</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a href="#__codelineno-2-6" id="__codelineno-2-6" name="__codelineno-2-6"></a><span class="w">  </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Key for </span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">:"</span>
+<a href="#__codelineno-2-7" id="__codelineno-2-7" name="__codelineno-2-7"></a><span class="w">  </span>ssh-keygen<span class="w"> </span><span class="se">\</span>
+<a href="#__codelineno-2-8" id="__codelineno-2-8" name="__codelineno-2-8"></a><span class="w">    </span>-t<span class="w"> </span>rsa<span class="w"> </span>-b<span class="w"> </span><span class="m">4096</span><span class="w"> </span><span class="se">\</span>
+<a href="#__codelineno-2-9" id="__codelineno-2-9" name="__codelineno-2-9"></a><span class="w">    </span>-C<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="se">\</span>
+<a href="#__codelineno-2-10" id="__codelineno-2-10" name="__codelineno-2-10"></a><span class="w">    </span>-f<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa"</span>
+<a href="#__codelineno-2-11" id="__codelineno-2-11" name="__codelineno-2-11"></a><span class="k">done</span>
+<a href="#__codelineno-2-12" id="__codelineno-2-12" name="__codelineno-2-12"></a>
+<a href="#__codelineno-2-13" id="__codelineno-2-13" name="__codelineno-2-13"></a><span class="c1"># Troubleshooting</span>
+<a href="#__codelineno-2-14" id="__codelineno-2-14" name="__codelineno-2-14"></a><span class="c1"># if files have the wrong permissions:</span>
+<a href="#__codelineno-2-15" id="__codelineno-2-15" name="__codelineno-2-15"></a><span class="c1">#sudo chmod 600 "${HOME}/.ssh/${ssh_id_email}__${NODE_NAME}_rsa"</span>
+<a href="#__codelineno-2-16" id="__codelineno-2-16" name="__codelineno-2-16"></a><span class="c1">#sudo chmod 644 "${HOME}/.ssh/${ssh_id_email}__${NODE_NAME}_rsa.pub"</span>
+<a href="#__codelineno-2-17" id="__codelineno-2-17" name="__codelineno-2-17"></a><span class="c1"># to change comment:</span>
+<a href="#__codelineno-2-18" id="__codelineno-2-18" name="__codelineno-2-18"></a><span class="c1">#ssh-keygen -f ~/.ssh/keyfilename -o -c -C "new comment"</span>
+<a href="#__codelineno-2-19" id="__codelineno-2-19" name="__codelineno-2-19"></a><span class="c1"># Command options explained:</span>
+<a href="#__codelineno-2-20" id="__codelineno-2-20" name="__codelineno-2-20"></a><span class="c1"># -f: private key file</span>
+<a href="#__codelineno-2-21" id="__codelineno-2-21" name="__codelineno-2-21"></a><span class="c1"># -o: convert the private key from PEM to the new OpenSSH format</span>
+<a href="#__codelineno-2-22" id="__codelineno-2-22" name="__codelineno-2-22"></a><span class="c1"># -c: change the comment in the private and public key files</span>
+<a href="#__codelineno-2-23" id="__codelineno-2-23" name="__codelineno-2-23"></a><span class="c1"># -C: comment text</span>
+<a href="#__codelineno-2-24" id="__codelineno-2-24" name="__codelineno-2-24"></a>
+<a href="#__codelineno-2-25" id="__codelineno-2-25" name="__codelineno-2-25"></a><span class="nv">IFS</span><span class="o">=</span><span class="s1">$'\r\n'</span><span class="w"> </span><span class="nv">GLOBIGNORE</span><span class="o">=</span><span class="s1">'*'</span><span class="w"> </span><span class="nb">eval</span><span class="w"> </span><span class="s1">'SSH_HOSTS_TO_ID_EMAILS_MAP=($(&lt;${HOME}/ssh-hosts.txt))'</span>
+<a href="#__codelineno-2-26" id="__codelineno-2-26" name="__codelineno-2-26"></a>
+<a href="#__codelineno-2-27" id="__codelineno-2-27" name="__codelineno-2-27"></a><span class="k">function</span><span class="w"> </span>get_ssh_config_hosts<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a href="#__codelineno-2-28" id="__codelineno-2-28" name="__codelineno-2-28"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>kvp<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">SSH_HOSTS_TO_ID_EMAILS_MAP</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a href="#__codelineno-2-29" id="__codelineno-2-29" name="__codelineno-2-29"></a><span class="w">    </span><span class="nv">user_name</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<a href="#__codelineno-2-30" id="__codelineno-2-30" name="__codelineno-2-30"></a><span class="w">    </span><span class="nv">host_alias</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">2</span><span class="k">)</span>
+<a href="#__codelineno-2-31" id="__codelineno-2-31" name="__codelineno-2-31"></a><span class="w">    </span><span class="nv">host_name</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">3</span><span class="k">)</span>
+<a href="#__codelineno-2-32" id="__codelineno-2-32" name="__codelineno-2-32"></a><span class="w">    </span><span class="nv">ssh_id_email</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">4</span><span class="k">)</span>
+<a href="#__codelineno-2-33" id="__codelineno-2-33" name="__codelineno-2-33"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"Host </span><span class="si">${</span><span class="nv">host_alias</span><span class="si">}</span><span class="s2">"</span>
+<a href="#__codelineno-2-34" id="__codelineno-2-34" name="__codelineno-2-34"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  HostName </span><span class="si">${</span><span class="nv">host_name</span><span class="si">}</span><span class="s2">"</span>
+<a href="#__codelineno-2-35" id="__codelineno-2-35" name="__codelineno-2-35"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  IdentityFile </span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa"</span>
+<a href="#__codelineno-2-36" id="__codelineno-2-36" name="__codelineno-2-36"></a><span class="w">    </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"  User </span><span class="si">${</span><span class="nv">user_name</span><span class="si">}</span><span class="s2">\n"</span>
+<a href="#__codelineno-2-37" id="__codelineno-2-37" name="__codelineno-2-37"></a><span class="w">  </span><span class="k">done</span>
+<a href="#__codelineno-2-38" id="__codelineno-2-38" name="__codelineno-2-38"></a><span class="o">}</span>
+<a href="#__codelineno-2-39" id="__codelineno-2-39" name="__codelineno-2-39"></a>
+<a href="#__codelineno-2-40" id="__codelineno-2-40" name="__codelineno-2-40"></a><span class="c1"># config for automatic mapping of hosts with identities</span>
+<a href="#__codelineno-2-41" id="__codelineno-2-41" name="__codelineno-2-41"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh"</span>
+<a href="#__codelineno-2-42" id="__codelineno-2-42" name="__codelineno-2-42"></a>tee<span class="w"> </span>-a<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/config"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-2-43" id="__codelineno-2-43" name="__codelineno-2-43"></a><span class="s">$(get_ssh_config_hosts)</span>
+<a href="#__codelineno-2-44" id="__codelineno-2-44" name="__codelineno-2-44"></a>
+<a href="#__codelineno-2-45" id="__codelineno-2-45" name="__codelineno-2-45"></a><span class="s"># keep this at the end</span>
+<a href="#__codelineno-2-46" id="__codelineno-2-46" name="__codelineno-2-46"></a><span class="s">Host *</span>
+<a href="#__codelineno-2-47" id="__codelineno-2-47" name="__codelineno-2-47"></a><span class="s">  # add keys automatically to ssh-agent, ignore for old versions of ssh</span>
+<a href="#__codelineno-2-48" id="__codelineno-2-48" name="__codelineno-2-48"></a><span class="s">  IgnoreUnknown AddKeysToAgent</span>
+<a href="#__codelineno-2-49" id="__codelineno-2-49" name="__codelineno-2-49"></a><span class="s">  AddKeysToAgent yes</span>
+<a href="#__codelineno-2-50" id="__codelineno-2-50" name="__codelineno-2-50"></a><span class="s">  # required for MacOS keychain, not relevant to Ubuntu but good to know</span>
+<a href="#__codelineno-2-51" id="__codelineno-2-51" name="__codelineno-2-51"></a><span class="s">  #IgnoreUnknown UseKeychain</span>
+<a href="#__codelineno-2-52" id="__codelineno-2-52" name="__codelineno-2-52"></a><span class="s">  #UseKeychain yes</span>
+<a href="#__codelineno-2-53" id="__codelineno-2-53" name="__codelineno-2-53"></a><span class="s">  # define the order in which to try auth methods</span>
+<a href="#__codelineno-2-54" id="__codelineno-2-54" name="__codelineno-2-54"></a><span class="s">  PreferredAuthentications publickey,keyboard-interactive,password,hostbased,gssapi-with-mic</span>
+<a href="#__codelineno-2-55" id="__codelineno-2-55" name="__codelineno-2-55"></a><span class="s">  # enable to prevent the use of keys for undefined servers</span>
+<a href="#__codelineno-2-56" id="__codelineno-2-56" name="__codelineno-2-56"></a><span class="s">  IdentitiesOnly yes</span>
+<a href="#__codelineno-2-57" id="__codelineno-2-57" name="__codelineno-2-57"></a><span class="s">  # enable for large uncompressed data transfers only</span>
+<a href="#__codelineno-2-58" id="__codelineno-2-58" name="__codelineno-2-58"></a><span class="s">  #Compression yes</span>
+<a href="#__codelineno-2-59" id="__codelineno-2-59" name="__codelineno-2-59"></a><span class="s">  # send a null packet to the other side every 300 seconds</span>
+<a href="#__codelineno-2-60" id="__codelineno-2-60" name="__codelineno-2-60"></a><span class="s">  # and abort if there's no response after 3 tries</span>
+<a href="#__codelineno-2-61" id="__codelineno-2-61" name="__codelineno-2-61"></a><span class="s">  ServerAliveInterval 300</span>
+<a href="#__codelineno-2-62" id="__codelineno-2-62" name="__codelineno-2-62"></a><span class="s">  ServerAliveCountMax 3</span>
+<a href="#__codelineno-2-63" id="__codelineno-2-63" name="__codelineno-2-63"></a><span class="s">EOF</span>
+<a href="#__codelineno-2-64" id="__codelineno-2-64" name="__codelineno-2-64"></a>
+<a href="#__codelineno-2-65" id="__codelineno-2-65" name="__codelineno-2-65"></a><span class="c1"># this function ignores git hosts, it is meant for terminal connections to servers</span>
+<a href="#__codelineno-2-66" id="__codelineno-2-66" name="__codelineno-2-66"></a><span class="k">function</span><span class="w"> </span>forward_ssh_ids<span class="o">()</span><span class="w"> </span><span class="o">{</span>
+<a href="#__codelineno-2-67" id="__codelineno-2-67" name="__codelineno-2-67"></a><span class="w">  </span><span class="k">for</span><span class="w"> </span>kvp<span class="w"> </span><span class="k">in</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">SSH_HOSTS_TO_ID_EMAILS_MAP</span><span class="p">[@]</span><span class="si">}</span><span class="s2">"</span><span class="p">;</span><span class="w"> </span><span class="k">do</span>
+<a href="#__codelineno-2-68" id="__codelineno-2-68" name="__codelineno-2-68"></a><span class="w">    </span><span class="nv">user_name</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">1</span><span class="k">)</span>
+<a href="#__codelineno-2-69" id="__codelineno-2-69" name="__codelineno-2-69"></a><span class="w">    </span><span class="k">if</span><span class="w"> </span><span class="o">[</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">user_name</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span>!<span class="o">=</span><span class="w"> </span><span class="s2">"git"</span><span class="w"> </span><span class="o">]</span><span class="p">;</span><span class="w"> </span><span class="k">then</span>
+<a href="#__codelineno-2-70" id="__codelineno-2-70" name="__codelineno-2-70"></a><span class="w">      </span><span class="nv">host</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">2</span><span class="k">)</span>
+<a href="#__codelineno-2-71" id="__codelineno-2-71" name="__codelineno-2-71"></a><span class="w">      </span><span class="nv">ssh_id_email</span><span class="o">=</span><span class="k">$(</span><span class="nb">echo</span><span class="w"> </span><span class="si">${</span><span class="nv">kvp</span><span class="si">}</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>cut<span class="w"> </span>-d<span class="w"> </span><span class="s1">','</span><span class="w"> </span>-f<span class="w"> </span><span class="m">3</span><span class="k">)</span>
+<a href="#__codelineno-2-72" id="__codelineno-2-72" name="__codelineno-2-72"></a><span class="w">      </span>ssh-copy-id<span class="w"> </span>-f<span class="w"> </span><span class="se">\</span>
+<a href="#__codelineno-2-73" id="__codelineno-2-73" name="__codelineno-2-73"></a><span class="w">        </span>-i<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/</span><span class="si">${</span><span class="nv">ssh_id_email</span><span class="si">}</span><span class="s2">__</span><span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span><span class="s2">_rsa.pub"</span><span class="w"> </span><span class="se">\</span>
+<a href="#__codelineno-2-74" id="__codelineno-2-74" name="__codelineno-2-74"></a><span class="w">        </span><span class="s2">"</span><span class="si">${</span><span class="nv">user_name</span><span class="si">}</span><span class="s2">@</span><span class="si">${</span><span class="nv">host</span><span class="si">}</span><span class="s2">"</span>
+<a href="#__codelineno-2-75" id="__codelineno-2-75" name="__codelineno-2-75"></a><span class="w">    </span><span class="k">fi</span>
+<a href="#__codelineno-2-76" id="__codelineno-2-76" name="__codelineno-2-76"></a><span class="w">  </span><span class="k">done</span>
+<a href="#__codelineno-2-77" id="__codelineno-2-77" name="__codelineno-2-77"></a><span class="o">}</span>
+<a href="#__codelineno-2-78" id="__codelineno-2-78" name="__codelineno-2-78"></a>
+<a href="#__codelineno-2-79" id="__codelineno-2-79" name="__codelineno-2-79"></a><span class="c1"># Put your public key e.g. ~/.ssh/id_rsa.pub in the remote computer's</span>
+<a href="#__codelineno-2-80" id="__codelineno-2-80" name="__codelineno-2-80"></a><span class="c1"># authorized_keys file, creating the .ssh directory and authorized_keys file</span>
+<a href="#__codelineno-2-81" id="__codelineno-2-81" name="__codelineno-2-81"></a><span class="c1"># with the right permissions if necessary.</span>
+<a href="#__codelineno-2-82" id="__codelineno-2-82" name="__codelineno-2-82"></a>forward_ssh_ids
+<a href="#__codelineno-2-83" id="__codelineno-2-83" name="__codelineno-2-83"></a>
+<a href="#__codelineno-2-84" id="__codelineno-2-84" name="__codelineno-2-84"></a><span class="c1"># Add the ssh keys to the agent</span>
+<a href="#__codelineno-2-85" id="__codelineno-2-85" name="__codelineno-2-85"></a>ssh-add<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.ssh/"</span>*<span class="si">${</span><span class="nv">NODE_NAME</span><span class="si">}</span>_rsa
+<a href="#__codelineno-2-86" id="__codelineno-2-86" name="__codelineno-2-86"></a>
+<a href="#__codelineno-2-87" id="__codelineno-2-87" name="__codelineno-2-87"></a><span class="c1"># Write keychain loading script to login shell run commands file</span>
+<a href="#__codelineno-2-88" id="__codelineno-2-88" name="__codelineno-2-88"></a>tee<span class="w"> </span>-a<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zprofile"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-2-89" id="__codelineno-2-89" name="__codelineno-2-89"></a>
+<a href="#__codelineno-2-90" id="__codelineno-2-90" name="__codelineno-2-90"></a><span class="s"># load keychain</span>
+<a href="#__codelineno-2-91" id="__codelineno-2-91" name="__codelineno-2-91"></a><span class="s">eval \$(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --confhost)</span>
+<a href="#__codelineno-2-92" id="__codelineno-2-92" name="__codelineno-2-92"></a><span class="s">[ -z "\{$HOSTNAME}" ] &amp;&amp; HOSTNAME=\$(uname -n)</span>
+<a href="#__codelineno-2-93" id="__codelineno-2-93" name="__codelineno-2-93"></a><span class="s">[ -f "\${HOME}/.keychain/\${HOSTNAME}-sh" ] &amp;&amp; source "\${HOME}/.keychain/\${HOSTNAME}-sh"</span>
+<a href="#__codelineno-2-94" id="__codelineno-2-94" name="__codelineno-2-94"></a><span class="s">EOF</span>
+</code></pre></div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../shortcuts/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Shortcuts" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Shortcuts
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../zsh/" class="md-footer__link md-footer__link--next" aria-label="Next: Shell: Zsh + Oh My Zsh + PowerLevel10k" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Shell: Zsh + Oh My Zsh + PowerLevel10k
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "navigation.expand", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      
+        <script src="https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js"></script>
+      
+        <script src="../javascripts/tablesort.js"></script>
+      
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+      
+    
+    
+  </body>
+</html>

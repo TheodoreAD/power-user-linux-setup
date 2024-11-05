@@ -1,0 +1,1090 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/python/">
+      
+      <link rel="icon" href="../assets/images/favicon.png">
+      <meta name="generator" content="mkdocs-1.6.1, mkdocs-material-8.5.10">
+    
+    
+      
+        <title>Python - Power User Linux Setup</title>
+      
+    
+    
+      <link rel="stylesheet" href="../assets/stylesheets/main.975780f9.min.css">
+      
+        
+        <link rel="stylesheet" href="../assets/stylesheets/palette.2505c338.min.css">
+        
+      
+      
+
+    
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,700,700i%7CRoboto+Mono:400,400i,700,700i&display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="../stylesheets/extra.css">
+    
+    <script>__md_scope=new URL("..",location),__md_hash=e=>[...e].reduce((e,_)=>(e<<5)-e+_.charCodeAt(0),0),__md_get=(e,_=localStorage,t=__md_scope)=>JSON.parse(_.getItem(t.pathname+"."+e)),__md_set=(e,_,t=localStorage,a=__md_scope)=>{try{t.setItem(a.pathname+"."+e,JSON.stringify(_))}catch(e){}}</script>
+    
+      
+
+    
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&"object"==typeof palette.color)for(var key of Object.keys(palette.color))document.body.setAttribute("data-md-color-"+key,palette.color[key])</script>
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#python" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href=".." title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer">
+      <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M3 6h18v2H3V6m0 5h18v2H3v-2m0 5h18v2H3v-2Z"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Python
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      <form class="md-header__option" data-md-component="palette">
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-label="Switch to light mode"  type="radio" name="__palette" id="__palette_1">
+          
+            <label class="md-header__button md-icon" title="Switch to light mode" for="__palette_2" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 18c-.89 0-1.74-.2-2.5-.55C11.56 16.5 13 14.42 13 12c0-2.42-1.44-4.5-3.5-5.45C10.26 6.2 11.11 6 12 6a6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+            </label>
+          
+        
+          
+          
+          
+          <input class="md-option" data-md-color-media="" data-md-color-scheme="default" data-md-color-primary="indigo" data-md-color-accent="indigo"  aria-label="Switch to dark mode"  type="radio" name="__palette" id="__palette_2">
+          
+            <label class="md-header__button md-icon" title="Switch to dark mode" for="__palette_1" hidden>
+              <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a4 4 0 0 0-4 4 4 4 0 0 0 4 4 4 4 0 0 0 4-4 4 4 0 0 0-4-4m0 10a6 6 0 0 1-6-6 6 6 0 0 1 6-6 6 6 0 0 1 6 6 6 6 0 0 1-6 6m8-9.31V4h-4.69L12 .69 8.69 4H4v4.69L.69 12 4 15.31V20h4.69L12 23.31 15.31 20H20v-4.69L23.31 12 20 8.69Z"/></svg>
+            </label>
+          
+        
+      </form>
+    
+    
+    
+      <label class="md-header__button md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+      </label>
+      <div class="md-search" data-md-component="search" role="dialog">
+  <label class="md-search__overlay" for="__search"></label>
+  <div class="md-search__inner" role="search">
+    <form class="md-search__form" name="search">
+      <input type="text" class="md-search__input" name="query" aria-label="Search" placeholder="Search" autocapitalize="off" autocorrect="off" autocomplete="off" spellcheck="false" data-md-component="search-query" required>
+      <label class="md-search__icon md-icon" for="__search">
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M9.5 3A6.5 6.5 0 0 1 16 9.5c0 1.61-.59 3.09-1.56 4.23l.27.27h.79l5 5-1.5 1.5-5-5v-.79l-.27-.27A6.516 6.516 0 0 1 9.5 16 6.5 6.5 0 0 1 3 9.5 6.5 6.5 0 0 1 9.5 3m0 2C7 5 5 7 5 9.5S7 14 9.5 14 14 12 14 9.5 12 5 9.5 5Z"/></svg>
+        <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+      </label>
+      <nav class="md-search__options" aria-label="Search">
+        
+          <a href="javascript:void(0)" class="md-search__icon md-icon" title="Share" aria-label="Share" data-clipboard data-clipboard-text="" data-md-component="search-share" tabindex="-1">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M18 16.08c-.76 0-1.44.3-1.96.77L8.91 12.7c.05-.23.09-.46.09-.7 0-.24-.04-.47-.09-.7l7.05-4.11c.54.5 1.25.81 2.04.81a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3c0 .24.04.47.09.7L8.04 9.81C7.5 9.31 6.79 9 6 9a3 3 0 0 0-3 3 3 3 0 0 0 3 3c.79 0 1.5-.31 2.04-.81l7.12 4.15c-.05.21-.08.43-.08.66 0 1.61 1.31 2.91 2.92 2.91 1.61 0 2.92-1.3 2.92-2.91A2.92 2.92 0 0 0 18 16.08Z"/></svg>
+          </a>
+        
+        <button type="reset" class="md-search__icon md-icon" title="Clear" aria-label="Clear" tabindex="-1">
+          <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M19 6.41 17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12 19 6.41Z"/></svg>
+        </button>
+      </nav>
+      
+        <div class="md-search__suggest" data-md-component="search-suggest"></div>
+      
+    </form>
+    <div class="md-search__output">
+      <div class="md-search__scrollwrap" data-md-scrollfix>
+        <div class="md-search-result" data-md-component="search-result">
+          <div class="md-search-result__meta">
+            Initializing search
+          </div>
+          <ol class="md-search-result__list"></ol>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+    
+    
+      <div class="md-header__source">
+        <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+      </div>
+    
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href=".." title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M12 8a3 3 0 0 0 3-3 3 3 0 0 0-3-3 3 3 0 0 0-3 3 3 3 0 0 0 3 3m0 3.54C9.64 9.35 6.5 8 3 8v11c3.5 0 6.64 1.35 9 3.54 2.36-2.19 5.5-3.54 9-3.54V8c-3.5 0-6.64 1.35-9 3.54Z"/></svg>
+
+    </a>
+    Power User Linux Setup
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 6.2.1 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2022 Fonticons, Inc.--><path d="M439.55 236.05 244 40.45a28.87 28.87 0 0 0-40.81 0l-40.66 40.63 51.52 51.52c27.06-9.14 52.68 16.77 43.39 43.68l49.66 49.66c34.23-11.8 61.18 31 35.47 56.69-26.49 26.49-70.21-2.87-56-37.34L240.22 199v121.85c25.3 12.54 22.26 41.85 9.08 55a34.34 34.34 0 0 1-48.55 0c-17.57-17.6-11.07-46.91 11.25-56v-123c-20.8-8.51-24.6-30.74-18.64-45L142.57 101 8.45 235.14a28.86 28.86 0 0 0 0 40.81l195.61 195.6a28.86 28.86 0 0 0 40.8 0l194.69-194.69a28.86 28.86 0 0 0 0-40.81z"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href=".." class="md-nav__link">
+        Installation steps
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../apt_packages/" class="md-nav__link">
+        Apt packages
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../browsers/" class="md-nav__link">
+        Browsers
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../cloud/" class="md-nav__link">
+        Cloud
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../docker/" class="md-nav__link">
+        Docker
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../extras/" class="md-nav__link">
+        Extras
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../fonts/" class="md-nav__link">
+        Fonts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../games/" class="md-nav__link">
+        Games
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../git/" class="md-nav__link">
+        Git
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../github/" class="md-nav__link">
+        GitHub
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gitlab/" class="md-nav__link">
+        GitLab
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../gnome_extensions/" class="md-nav__link">
+        GNOME extensions
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../golang/" class="md-nav__link">
+        Golang
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../input_devices/" class="md-nav__link">
+        Input devices
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../js/" class="md-nav__link">
+        Javascript
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes-dev/" class="md-nav__link">
+        Kuberentes for local development
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../kubernetes-server/" class="md-nav__link">
+        Kuberentes Server Setup on bare metal
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../locale/" class="md-nav__link">
+        Locale
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../networking/" class="md-nav__link">
+        Networking
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+    
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      <input class="md-nav__toggle md-toggle" data-md-toggle="toc" type="checkbox" id="__toc">
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          Python
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="./" class="md-nav__link md-nav__link--active">
+        Python
+      </a>
+      
+        
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pip-configuration" class="md-nav__link">
+    pip configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pyenv" class="md-nav__link">
+    pyenv
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipx" class="md-nav__link">
+    pipx
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poetry" class="md-nav__link">
+    Poetry
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-wide-tools" class="md-nav__link">
+    System-wide tools
+  </a>
+  
+    <nav class="md-nav" aria-label="System-wide tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invoke-and-dotenv" class="md-nav__link">
+    invoke and dotenv
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#twine" class="md-nav__link">
+    twine
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nox" class="md-nav__link">
+    Nox
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mkdocs-including-material-theme" class="md-nav__link">
+    mkdocs including material theme
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yamllint" class="md-nav__link">
+    yamllint
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nuitka" class="md-nav__link">
+    Nuitka
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../shortcuts/" class="md-nav__link">
+        Shortcuts
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../ssh/" class="md-nav__link">
+        SSH
+      </a>
+    </li>
+  
+
+    
+      
+      
+      
+
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="../zsh/" class="md-nav__link">
+        Shell: Zsh + Oh My Zsh + PowerLevel10k
+      </a>
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+<nav class="md-nav md-nav--secondary" aria-label="Table of contents">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      Table of contents
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#pip-configuration" class="md-nav__link">
+    pip configuration
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pyenv" class="md-nav__link">
+    pyenv
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#pipx" class="md-nav__link">
+    pipx
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#poetry" class="md-nav__link">
+    Poetry
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#system-wide-tools" class="md-nav__link">
+    System-wide tools
+  </a>
+  
+    <nav class="md-nav" aria-label="System-wide tools">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#invoke-and-dotenv" class="md-nav__link">
+    invoke and dotenv
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#twine" class="md-nav__link">
+    twine
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#nox" class="md-nav__link">
+    Nox
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#mkdocs-including-material-theme" class="md-nav__link">
+    mkdocs including material theme
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#yamllint" class="md-nav__link">
+    yamllint
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#nuitka" class="md-nav__link">
+    Nuitka
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              <article class="md-content__inner md-typeset">
+                
+                  
+
+  <a href="https://github.com/TheodoreAD/power-user-linux-setup/edit/master/docs/python.md" title="Edit this page" class="md-content__button md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20.71 7.04c.39-.39.39-1.04 0-1.41l-2.34-2.34c-.37-.39-1.02-.39-1.41 0l-1.84 1.83 3.75 3.75M3 17.25V21h3.75L17.81 9.93l-3.75-3.75L3 17.25Z"/></svg>
+  </a>
+
+
+<h1 id="python">Python<a class="headerlink" href="#python" title="Permanent link">¶</a></h1>
+<h2 id="pip-configuration">pip configuration<a class="headerlink" href="#pip-configuration" title="Permanent link">¶</a></h2>
+<p>If you’re using a private pypi server, assign its URL to <code>PIP_INTERNAL_INDEX_URL</code>
+and uncomment the <code>index-url</code> lines.</p>
+<p>If using and/or building wheels, uncomment the <code>[wheel]</code> section.</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-0-1" id="__codelineno-0-1" name="__codelineno-0-1"></a><span class="nv">PIP_INTERNAL_INDEX_URL</span><span class="o">=</span>
+<a href="#__codelineno-0-2" id="__codelineno-0-2" name="__codelineno-0-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.config/pip"</span>
+<a href="#__codelineno-0-3" id="__codelineno-0-3" name="__codelineno-0-3"></a>tee<span class="w"> </span>-a<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.config/pip/pip.conf"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-0-4" id="__codelineno-0-4" name="__codelineno-0-4"></a><span class="s">[global]</span>
+<a href="#__codelineno-0-5" id="__codelineno-0-5" name="__codelineno-0-5"></a><span class="s"># index-url = ${PIP_INTERNAL_INDEX_URL}</span>
+<a href="#__codelineno-0-6" id="__codelineno-0-6" name="__codelineno-0-6"></a><span class="s"># extra-index-url = https://pypi.org/simple</span>
+<a href="#__codelineno-0-7" id="__codelineno-0-7" name="__codelineno-0-7"></a><span class="s">no-cache-dir = true</span>
+<a href="#__codelineno-0-8" id="__codelineno-0-8" name="__codelineno-0-8"></a><span class="s">disable-pip-version-check = true</span>
+<a href="#__codelineno-0-9" id="__codelineno-0-9" name="__codelineno-0-9"></a>
+<a href="#__codelineno-0-10" id="__codelineno-0-10" name="__codelineno-0-10"></a><span class="s">[install]</span>
+<a href="#__codelineno-0-11" id="__codelineno-0-11" name="__codelineno-0-11"></a><span class="s">progress-bar = off</span>
+<a href="#__codelineno-0-12" id="__codelineno-0-12" name="__codelineno-0-12"></a>
+<a href="#__codelineno-0-13" id="__codelineno-0-13" name="__codelineno-0-13"></a><span class="s"># [wheel]</span>
+<a href="#__codelineno-0-14" id="__codelineno-0-14" name="__codelineno-0-14"></a><span class="s"># wheel-dir = /tmp/wheelhouse</span>
+<a href="#__codelineno-0-15" id="__codelineno-0-15" name="__codelineno-0-15"></a><span class="s"># find-links = /tmp/wheelhouse</span>
+<a href="#__codelineno-0-16" id="__codelineno-0-16" name="__codelineno-0-16"></a>
+<a href="#__codelineno-0-17" id="__codelineno-0-17" name="__codelineno-0-17"></a><span class="s">EOF</span>
+</code></pre></div>
+<h2 id="pyenv">pyenv<a class="headerlink" href="#pyenv" title="Permanent link">¶</a></h2>
+<p><code>pyenv</code> handles Python version and virtual environment management.</p>
+<p><a href="https://github.com/pyenv/pyenv-installer?tab=readme-ov-file#installation--update--uninstallation">https://github.com/pyenv/pyenv-installer?tab=readme-ov-file#installation--update--uninstallation</a></p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-1-1" id="__codelineno-1-1" name="__codelineno-1-1"></a>curl<span class="w"> </span>-sS<span class="w"> </span>-L<span class="w"> </span><span class="s2">"https://pyenv.run"</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>bash
+<a href="#__codelineno-1-2" id="__codelineno-1-2" name="__codelineno-1-2"></a>ln<span class="w"> </span>-s<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.pyenv/bin/pyenv"</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin/pyenv"</span>
+<a href="#__codelineno-1-3" id="__codelineno-1-3" name="__codelineno-1-3"></a>tee<span class="w"> </span>-a<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-1-4" id="__codelineno-1-4" name="__codelineno-1-4"></a>
+<a href="#__codelineno-1-5" id="__codelineno-1-5" name="__codelineno-1-5"></a><span class="s"># pyenv</span>
+<a href="#__codelineno-1-6" id="__codelineno-1-6" name="__codelineno-1-6"></a><span class="s">eval "\$(pyenv init -)"</span>
+<a href="#__codelineno-1-7" id="__codelineno-1-7" name="__codelineno-1-7"></a><span class="s">eval "\$(pyenv virtualenv-init -)"</span>
+<a href="#__codelineno-1-8" id="__codelineno-1-8" name="__codelineno-1-8"></a><span class="s">EOF</span>
+<a href="#__codelineno-1-9" id="__codelineno-1-9" name="__codelineno-1-9"></a><span class="c1"># to enable right away</span>
+<a href="#__codelineno-1-10" id="__codelineno-1-10" name="__codelineno-1-10"></a><span class="nb">source</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span>
+</code></pre></div>
+<p>To update <code>pyenv</code>, run:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-2-1" id="__codelineno-2-1" name="__codelineno-2-1"></a>pyenv<span class="w"> </span>update
+</code></pre></div>
+<p>Install Python via pyenv in user home, create and set a global virtual environment to avoid polluting the system Python:</p>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Read version from prompt.</p>
+</div>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-3-1" id="__codelineno-3-1" name="__codelineno-3-1"></a><span class="nv">PYENV_VENV_VERSION</span><span class="o">=</span><span class="s2">"3.11.9"</span>
+<a href="#__codelineno-3-2" id="__codelineno-3-2" name="__codelineno-3-2"></a>pyenv<span class="w"> </span>install<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">PYENV_VENV_VERSION</span><span class="si">}</span><span class="s2">"</span>
+<a href="#__codelineno-3-3" id="__codelineno-3-3" name="__codelineno-3-3"></a>pyenv<span class="w"> </span>virtualenv<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">PYENV_VENV_VERSION</span><span class="si">}</span><span class="s2">"</span><span class="w"> </span><span class="s2">"global-</span><span class="si">${</span><span class="nv">PYENV_VENV_VERSION</span><span class="p">//.</span><span class="si">}</span><span class="s2">"</span>
+<a href="#__codelineno-3-4" id="__codelineno-3-4" name="__codelineno-3-4"></a>pyenv<span class="w"> </span>global<span class="w"> </span><span class="s2">"global-</span><span class="si">${</span><span class="nv">PYENV_VENV_VERSION</span><span class="p">//.</span><span class="si">}</span><span class="s2">"</span>
+</code></pre></div>
+<h2 id="pipx">pipx<a class="headerlink" href="#pipx" title="Permanent link">¶</a></h2>
+<p><code>pipx</code> enables running Python tools from isolated environments.</p>
+<p><a href="https://github.com/pypa/pipx?tab=readme-ov-file#install-pipx">https://github.com/pypa/pipx?tab=readme-ov-file#install-pipx</a></p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>This assumes you have the global pyenv virtualenv indicated above active.</p>
+</div>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-4-1" id="__codelineno-4-1" name="__codelineno-4-1"></a><span class="s2">"</span><span class="k">$(</span>pyenv<span class="w"> </span>which<span class="w"> </span>python<span class="k">)</span><span class="s2">"</span><span class="w"> </span>-m<span class="w"> </span>pip<span class="w"> </span>install<span class="w"> </span>--upgrade<span class="w"> </span>pipx
+<a href="#__codelineno-4-2" id="__codelineno-4-2" name="__codelineno-4-2"></a>ln<span class="w"> </span>-s<span class="w"> </span><span class="s2">"</span><span class="k">$(</span>pyenv<span class="w"> </span>which<span class="w"> </span>pipx<span class="k">)</span><span class="s2">"</span><span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin/pipx"</span>
+<a href="#__codelineno-4-3" id="__codelineno-4-3" name="__codelineno-4-3"></a>tee<span class="w"> </span>-a<span class="w"> </span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.zshrc"</span><span class="w"> </span>&gt;/dev/null<span class="w"> </span><span class="s">&lt;&lt;EOF</span>
+<a href="#__codelineno-4-4" id="__codelineno-4-4" name="__codelineno-4-4"></a>
+<a href="#__codelineno-4-5" id="__codelineno-4-5" name="__codelineno-4-5"></a><span class="s"># pipx</span>
+<a href="#__codelineno-4-6" id="__codelineno-4-6" name="__codelineno-4-6"></a><span class="s">argcomplete_dir="$(pyenv root)/versions/$(pyenv whence register-python-argcomplete | head -n1)/bin/"</span>
+<a href="#__codelineno-4-7" id="__codelineno-4-7" name="__codelineno-4-7"></a><span class="s">eval "$(${argcomplete_dir}/register-python-argcomplete pipx)"</span>
+<a href="#__codelineno-4-8" id="__codelineno-4-8" name="__codelineno-4-8"></a><span class="s">EOF</span>
+</code></pre></div>
+<h2 id="poetry">Poetry<a class="headerlink" href="#poetry" title="Permanent link">¶</a></h2>
+<p><code>poetry</code> handles package dependency management.</p>
+<p><a href="https://python-poetry.org/docs/#installing-with-pipx">https://python-poetry.org/docs/#installing-with-pipx</a>
+<a href="https://python-poetry.org/docs/#zsh">https://python-poetry.org/docs/#zsh</a></p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-5-1" id="__codelineno-5-1" name="__codelineno-5-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>poetry
+<a href="#__codelineno-5-2" id="__codelineno-5-2" name="__codelineno-5-2"></a><span class="c1"># Add plugin to Oh-My-Zsh</span>
+<a href="#__codelineno-5-3" id="__codelineno-5-3" name="__codelineno-5-3"></a><span class="c1"># The poetry docs mention using $ZSH_CUSTOM instead of $ZSH, however the $ZSH-based path contains poetry.plugin.zsh</span>
+<a href="#__codelineno-5-4" id="__codelineno-5-4" name="__codelineno-5-4"></a>poetry<span class="w"> </span>completions<span class="w"> </span>zsh<span class="w"> </span>&gt;<span class="s2">"</span><span class="si">${</span><span class="nv">ZSH</span><span class="si">}</span><span class="s2">/plugins/poetry/_poetry"</span>
+<a href="#__codelineno-5-5" id="__codelineno-5-5" name="__codelineno-5-5"></a><span class="c1"># configure poetry to not create virtual envs, we handle those with pyenv</span>
+<a href="#__codelineno-5-6" id="__codelineno-5-6" name="__codelineno-5-6"></a>poetry<span class="w"> </span>config<span class="w"> </span>virtualenvs.create<span class="w"> </span><span class="nb">false</span>
+<a href="#__codelineno-5-7" id="__codelineno-5-7" name="__codelineno-5-7"></a>poetry<span class="w"> </span>config<span class="w"> </span>virtualenvs.in-project<span class="w"> </span><span class="nb">true</span><span class="w"> </span>
+</code></pre></div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Make this commented out in the original zsh setup, use <code>sed</code> to uncomment here.</p>
+</div>
+<p>Enable plugin in ~/.zshrc plugins if not already previously performed:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-6-1" id="__codelineno-6-1" name="__codelineno-6-1"></a>plugins<span class="o">(</span>
+<a href="#__codelineno-6-2" id="__codelineno-6-2" name="__codelineno-6-2"></a><span class="w">    </span>poetry
+<a href="#__codelineno-6-3" id="__codelineno-6-3" name="__codelineno-6-3"></a><span class="w">    </span>...
+<a href="#__codelineno-6-4" id="__codelineno-6-4" name="__codelineno-6-4"></a><span class="w">    </span><span class="o">)</span>
+</code></pre></div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Solve this deprecation issue:</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-7-1" id="__codelineno-7-1" name="__codelineno-7-1"></a>Warning:<span class="w"> </span>poetry-plugin-export<span class="w"> </span>will<span class="w"> </span>not<span class="w"> </span>be<span class="w"> </span>installed<span class="w"> </span>by<span class="w"> </span>default<span class="w"> </span><span class="k">in</span><span class="w"> </span>a<span class="w"> </span>future<span class="w"> </span>version<span class="w"> </span>of<span class="w"> </span>Poetry.
+<a href="#__codelineno-7-2" id="__codelineno-7-2" name="__codelineno-7-2"></a>In<span class="w"> </span>order<span class="w"> </span>to<span class="w"> </span>avoid<span class="w"> </span>a<span class="w"> </span>breaking<span class="w"> </span>change<span class="w"> </span>and<span class="w"> </span>make<span class="w"> </span>your<span class="w"> </span>automation<span class="w"> </span>forward-compatible,<span class="w"> </span>please<span class="w"> </span>install<span class="w"> </span>poetry-plugin-export<span class="w"> </span>explicitly.<span class="w"> </span>See<span class="w"> </span>https://python-poetry.org/docs/plugins/#using-plugins<span class="w"> </span><span class="k">for</span><span class="w"> </span>details<span class="w"> </span>on<span class="w"> </span>how<span class="w"> </span>to<span class="w"> </span>install<span class="w"> </span>a<span class="w"> </span>plugin.
+<a href="#__codelineno-7-3" id="__codelineno-7-3" name="__codelineno-7-3"></a>To<span class="w"> </span>disable<span class="w"> </span>this<span class="w"> </span>warning<span class="w"> </span>run<span class="w"> </span><span class="s1">'poetry config warnings.export false'</span>.
+</code></pre></div>
+</div>
+<h2 id="system-wide-tools">System-wide tools<a class="headerlink" href="#system-wide-tools" title="Permanent link">¶</a></h2>
+<h3 id="invoke-and-dotenv">invoke and dotenv<a class="headerlink" href="#invoke-and-dotenv" title="Permanent link">¶</a></h3>
+<p><code>invoke</code> is a Python-based alternative to <code>make</code> focused on task management.
+<code>dotenv</code> is used together with <code>invoke</code> for <code>.env</code> file local dev workflows.</p>
+<p><a href="https://github.com/pyinvoke/invoke">https://github.com/pyinvoke/invoke</a>
+<a href="https://github.com/theskumar/python-dotenv">https://github.com/theskumar/python-dotenv</a></p>
+<p>We install <code>dotenv</code> side-by-side so that the <code>invoke</code>-run <code>tasks.py</code>
+can import <code>dotenv</code> and read <code>.env</code> files.</p>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>solve issues forcing versions lower than 2 to avoid compatibilty issues</p>
+</div>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-8-1" id="__codelineno-8-1" name="__codelineno-8-1"></a>pipx<span class="w"> </span>install<span class="w"> </span><span class="nv">invoke</span><span class="o">==</span><span class="m">1</span>.7.3
+<a href="#__codelineno-8-2" id="__codelineno-8-2" name="__codelineno-8-2"></a>pipx<span class="w"> </span>inject<span class="w"> </span>--include-apps<span class="w"> </span>invoke<span class="w"> </span><span class="s1">'python-dotenv[cli]'</span>
+</code></pre></div>
+<h3 id="twine">twine<a class="headerlink" href="#twine" title="Permanent link">¶</a></h3>
+<p>Twine is a utility for publishing Python packages on PyPI.</p>
+<p><a href="https://twine.readthedocs.io/en/stable/#installation">https://twine.readthedocs.io/en/stable/#installation</a></p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-9-1" id="__codelineno-9-1" name="__codelineno-9-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>twine
+</code></pre></div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>See how to use keyring to publish to PyPI.</p>
+</div>
+<h3 id="nox">Nox<a class="headerlink" href="#nox" title="Permanent link">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Optional.</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>See if we want this in the project env, the same as pytest.</p>
+</div>
+<p><code>Nox</code> automates testing in multiple Python environments.</p>
+<p><a href="https://github.com/theacodes/nox">https://github.com/theacodes/nox</a></p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-10-1" id="__codelineno-10-1" name="__codelineno-10-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>nox
+</code></pre></div>
+<h3 id="mkdocs-including-material-theme">mkdocs including material theme<a class="headerlink" href="#mkdocs-including-material-theme" title="Permanent link">¶</a></h3>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Optional.</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>See if we want this in the project env.</p>
+</div>
+<p><code>mkdocs</code> generates and serves documentation sites based on markdown files.</p>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-11-1" id="__codelineno-11-1" name="__codelineno-11-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>mkdocs-material<span class="w"> </span>--include-deps
+</code></pre></div>
+<h3 id="yamllint">yamllint<a class="headerlink" href="#yamllint" title="Permanent link">¶</a></h3>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-12-1" id="__codelineno-12-1" name="__codelineno-12-1"></a>pipx<span class="w"> </span>install<span class="w"> </span>yamllint
+</code></pre></div>
+<h2 id="nuitka">Nuitka<a class="headerlink" href="#nuitka" title="Permanent link">¶</a></h2>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Optional.</p>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Experimental.</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>Intall via pyenv and pipx.</p>
+</div>
+<div class="admonition todo">
+<p class="admonition-title">Todo</p>
+<p>test</p>
+</div>
+<div class="highlight"><pre><span></span><code><a href="#__codelineno-13-1" id="__codelineno-13-1" name="__codelineno-13-1"></a>python<span class="w"> </span>-m<span class="w"> </span>nuitka<span class="w"> </span>--module<span class="w"> </span>invoke<span class="w"> </span>--include-package<span class="o">=</span>invoke
+</code></pre></div>
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+        </div>
+        
+          <a href="#" class="md-top md-icon" data-md-component="top" hidden>
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13 20h-2V8l-5.5 5.5-1.42-1.42L12 4.16l7.92 7.92-1.42 1.42L13 8v12Z"/></svg>
+            Back to top
+          </a>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+    <nav class="md-footer__inner md-grid" aria-label="Footer" >
+      
+        
+        <a href="../networking/" class="md-footer__link md-footer__link--prev" aria-label="Previous: Networking" rel="prev">
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M20 11v2H8l5.5 5.5-1.42 1.42L4.16 12l7.92-7.92L13.5 5.5 8 11h12Z"/></svg>
+          </div>
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              Networking
+            </div>
+          </div>
+        </a>
+      
+      
+        
+        <a href="../shortcuts/" class="md-footer__link md-footer__link--next" aria-label="Next: Shortcuts" rel="next">
+          <div class="md-footer__title">
+            <div class="md-ellipsis">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              Shortcuts
+            </div>
+          </div>
+          <div class="md-footer__button md-icon">
+            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M4 11v2h12l-5.5 5.5 1.42 1.42L19.84 12l-7.92-7.92L10.5 5.5 16 11H4Z"/></svg>
+          </div>
+        </a>
+      
+    </nav>
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://squidfunk.github.io/mkdocs-material/" target="_blank" rel="noopener">
+      Material for MkDocs
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    <script id="__config" type="application/json">{"base": "..", "features": ["navigation.tracking", "navigation.expand", "navigation.indexes", "navigation.top", "search.suggest", "search.highlight", "search.share"], "search": "../assets/javascripts/workers/search.16e2a7d4.min.js", "translations": {"clipboard.copied": "Copied to clipboard", "clipboard.copy": "Copy to clipboard", "search.config.lang": "en", "search.config.pipeline": "trimmer, stopWordFilter", "search.config.separator": "[\\s\\-]+", "search.placeholder": "Search", "search.result.more.one": "1 more on this page", "search.result.more.other": "# more on this page", "search.result.none": "No matching documents", "search.result.one": "1 matching document", "search.result.other": "# matching documents", "search.result.placeholder": "Type to start searching", "search.result.term.missing": "Missing", "select.version.title": "Select version"}}</script>
+    
+    
+      <script src="../assets/javascripts/bundle.5a2dcb6a.min.js"></script>
+      
+        <script src="https://unpkg.com/tablesort@5.3.0/dist/tablesort.min.js"></script>
+      
+        <script src="../javascripts/tablesort.js"></script>
+      
+        <script src="https://unpkg.com/mermaid/dist/mermaid.min.js"></script>
+      
+    
+    
+  </body>
+</html>
