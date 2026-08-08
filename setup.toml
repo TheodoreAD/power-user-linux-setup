@@ -261,6 +261,11 @@ description = "Provides add-apt-repository — prerequisite for all apt-repo set
 method      = "apt"
 tags        = ["apt", "setup"]
 
+[packages.unzip]
+description = "Prerequisite for dprint's install.sh (unzips its release archive) and deb-github assets that ship as a .zip wrapping a .deb (e.g. flameshot)"
+method      = "apt"
+tags        = ["apt", "setup"]
+
 [packages.lm-sensors]
 description = "Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command"
 method      = "apt"
