@@ -802,6 +802,11 @@ normal; no HTTPS/token workaround needed. The dialog blocks on user input, so if
 machine to enter the passphrase it will time out rather than hang forever.
 """
 
+[packages.zsh]
+description = "The zsh shell itself — Oh My Zsh and every zsh-method config entry need it installed first"
+method      = "apt"
+tags        = ["shell", "zsh"]
+
 [packages.zsh-path]
 description = "User PATH entries — ~/.local/bin prepended so user tools shadow system tools"
 method      = "zsh"
