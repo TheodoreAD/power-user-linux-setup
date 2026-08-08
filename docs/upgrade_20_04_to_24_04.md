@@ -903,6 +903,29 @@ guide review — recorded here for completeness; substantially expanded in a fol
 - Tag catalog and exclusion recipes also updated in `docs/index.md` and `setup.toml`'s own header
   comment to match.
 
+### docs/dev-container.md
+
+Status: **planned, not yet implemented** — explored 2026-08-08 (separate session, not part of the
+original 24.04 guide review — recorded here for completeness, same pattern as the rust.md/wsl.md
+entries above). Existing doc already covered building a custom Docker image from `setup.toml` via
+`PULSE_EXCLUDE_TAGS`; explored an additional distribution path instead — layering PULSE's curated
+CLI tooling onto whatever base image a consumer already uses via `devcontainer.json`'s
+`postCreateCommand` (live git clone of this repo + normal `inv` tasks), rather than a maintained
+custom image, so nobody is forced onto this machine's base image or has to trust a prebuilt image.
+"Up to date" without floating an untested `master`/`HEAD` reference: pin to a `stable` git tag that
+CI only force-moves forward once a build/smoke-test passes.
+
+Full design — a new `bootstrap-devcontainer.sh` entrypoint, a `tasks/devcontainer.py` namespace
+(`CONTAINER_EXCLUDE_TAGS` constant, `render-docs`, `check`), a self-hosting
+`.devcontainer/devcontainer.json`, and a `devcontainer.yml` CI pipeline (matrix smoke-test via the
+`devcontainers/ci` action, force-move `stable` on green, auto-regenerate the doc's tag table) — is
+written up but not yet built: see `plans/2026-08-08-devcontainer-pipeline.md`.
+
+Also added in this session: a top-level `plans/` directory as a repo convention for saving these
+standalone design docs (dated filenames, git-tracked, outside `docs_dir` so it never gets swept
+into the published GitHub Pages site) instead of only living in Claude Code's local plan-mode
+scratch files.
+
 ### Docs site — mkdocs-material → zensical
 
 Status: ✓ **done 2026-08-08** — migrated during the `initial_version` → `master` git landing effort
