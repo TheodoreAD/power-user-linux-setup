@@ -24,13 +24,25 @@ The `setup.toml` config/tag system is fully documented in the repo — don't re-
   section directly and ignore tags (`node.install`, `docker.configure`, `fonts.*`) or ignore tags
   but not `enabled` (`zsh.configure`'s `zshrc`/`zshenv`/`zprofile` writer).
 
-Only 5 tags actually gate anything: `gui`, `desktop`, `gnome`, `workstation`, `corporate`.
-Everything else in the tag catalog is organizational only. Building an environment profile
-(headless, dev container, WSL) by setting `PULSE_EXCLUDE_TAGS` alone is not sufficient — check
-the docs/index.md table for what each task actually respects before assuming.
+Only 7 tags actually gate anything: `gui`, `desktop`, `gnome`, `workstation`, `corporate`, `ide`,
+`windows-native`. Everything else in the tag catalog is organizational only. Building an
+environment profile (headless, dev container, WSL) by setting `PULSE_EXCLUDE_TAGS` alone is not
+sufficient — check the docs/index.md table for what each task actually respects before assuming.
 
 ## WSL support
 
-`tasks/wsl.py` (`inv wsl.check`) and `docs/wsl.md` already cover running this repo's setup under
-WSL2 — distro/apt check, systemd, DNS, Docker Desktop-vs-native, WSLg, fonts. If asked about WSL
-support again, extend that module rather than re-researching from scratch.
+`tasks/wsl.py` (`inv wsl.check` diagnostic, `inv wsl.fix` for the fixable subset —
+`systemd`/`generateResolvConf` in `/etc/wsl.conf`) and `docs/wsl.md` already cover running this
+repo's setup under WSL2 — distro/apt check, systemd, DNS, Docker Desktop-vs-native, WSLg, fonts.
+`util.require_systemd()`/`util.require_apt()` (`tasks/util.py`) make the systemd- and apt-dependent
+install tasks fail fast with an actionable message instead of partway through a raw error; these
+are generic capability checks, not WSL-specific branching. If asked about WSL support again, extend
+that module rather than re-researching from scratch.
+
+## Git workflow
+
+Direct, focused commits straight to `master` are the normal way to land changes here — the owner
+has bypass permissions on the PR-required branch protection rule specifically for this. Open a PR
+instead only when either (a) someone other than the owner is contributing, or (b) a batch of
+related commits is worth bundling behind a PR description for reviewability. Don't default to
+"always open a PR" — ask if unsure which case applies, don't assume the stricter workflow.
