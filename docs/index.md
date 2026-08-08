@@ -1,351 +1,202 @@
-# Installation steps
+# PULSE — Power User Linux Setup
 
-This is intended for and has been tested on Ubuntu 20.04 focal fossa.
+**PULSE** (Power User Linux Setup) is an opinionated, reproducible workstation setup for Ubuntu 24.04, driven by a single `setup.toml` and [`invoke`](https://www.pyinvoke.org/) tasks.
+
+## Configuration management
+
+PULSE owns config files through named sentinel blocks rather than overwriting whole files. Any snippet written to a shared config file is wrapped in a PULSE block:
+
+```
+# ╔═══════════════════════════════ PULSE::<name> ════════════════════════════╗
+...config content...
+# ╚═══════════════════════════════ PULSE::<name> ════════════════════════════╝
+```
+
+78 characters wide, name centered, box-drawing corners. `╔`/`╗` open the block, `╚`/`╝` close it. `<name>` is the `[packages.<name>]` key from `setup.toml`.
+
+**Why:** config files like `~/.zshrc` or `/etc/sysctl.conf` are shared — multiple tools and the user write to them. Overwriting the file on each run would destroy manual edits. Sentinels let each PULSE-managed entry own its own region of the file independently.
+
+**Idempotency:** on re-run the block is found by its opening marker and replaced in place if the content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.
+
+### Managed files
+
+| File | Managed by | Content |
+|---|---|---|
+| `~/.zshrc` | `inv zsh.configure` | completions, aliases, hooks — from `zshrc` fields in `setup.toml` |
+| `~/.zshenv` | `inv zsh.configure` | environment variables, PATH — from `zshenv` fields in `setup.toml` |
+| `~/.zprofile` | `inv zsh.configure` | login-shell config — from `zprofile` fields in `setup.toml` |
+| `~/.config/curlrc` | `inv system.curlrc` | curl defaults (silent, follow redirects) |
+| `/etc/sysctl.conf` | `inv system.disable-ipv6` | IPv6 disable keys |
+| `/etc/systemd/journald.conf.d/size.conf` | `inv system.journal-size` | `SystemMaxUse` drop-in |
+| `/etc/apt/apt.conf.d/99-pulse` | `inv apt.configure` | Disable dpkg progress bars |
+| `~/.local/bin/askpass-zenity` | `inv tools.install` | Zenity GUI askpass helper — enables `sudo -A` without a TTY |
+| `~/.claude/CLAUDE.md` | `inv tools.install` | Global Claude Code instructions (use `sudo -A` for all sudo calls) |
+
+### Adding a new block
+
+Declare `zshrc`, `zshenv`, or `zprofile` on any package entry in `setup.toml`:
+
+```toml
+[packages.mytool]
+method = "apt"
+zshrc  = """
+export MYTOOL_HOME="${HOME}/.local/share/mytool"
+eval "$(mytool init zsh)"
+"""
+```
+
+Run `inv zsh.configure` — the block is written on first run and updated in place on subsequent runs. For non-shell config files, call `util.ensure_block(path, name, content)` or `util.ensure_block_text(text, name, content)` (returns new text without writing, for files that require `sudo`).
+
+---
+
+## Quick start
 
 ```shell
-# disabled -u for unset variables due to weird behavior 
-set -ex -o pipefail
+git clone <this repo>
+cd power-user-linux-setup
+./bootstrap.sh        # installs uv + invoke
+inv setup             # runs all phases below
 ```
 
-## Grub
+`inv setup` does not cover everything — see **Manual steps** below for what still requires human input.
 
-This is very useful to prevent graphic driver issues, since the OS makes
-assumptions and changes to video resolution before loading the GUI these days.
+### Environment variables
 
-This basically removes `quiet` and `splash` while adding `nomodeset`.
-The only downside is cosmetic, i.e. no splash screen and verbose output.
+| Variable | Effect |
+|---|---|
+| `PULSE_DRY_RUN=1` | Print installed/missing status for every item without making any changes. Works across all install tasks. |
+| `PULSE_EXCLUDE_TAGS=<tag>[,<tag>]` | Skip packages whose `tags` list contains any of the given labels. Defined tags: `gui`, `desktop`, `workstation`, `corporate`. |
 
 ```shell
-sudo sed -i \
-  's~GRUB_CMDLINE_LINUX_DEFAULT=.*~GRUB_CMDLINE_LINUX_DEFAULT="nomodeset"~' \
-  /etc/default/grub
-sudo update-grub
+# Check what's missing before running setup
+PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
+
+# Headless / container install — no GUI or hardware-specific packages
+PULSE_EXCLUDE_TAGS=gui,workstation inv apt.repos apt.base
 ```
 
-## Swap
+## Setup phases
 
-Reference article:
-[Part 1](https://haydenjames.io/linux-performance-almost-always-add-swap-space/)
-[Part 2](https://haydenjames.io/linux-performance-almost-always-add-swap-part2-zram/)
+One interruption: a single logout at the end. An optional reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural reboot — nothing depends on it being immediate.
 
+### Phase 1 — System config
 
-## Apt Packages - tools and prerequisites
-
-Follow the [guide](apt_packages.md).
-
-## Networking
-
-Set up DNS with Cloudflare IPs.
+All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No reboot needed.
 
 ```shell
-sudo tee "/etc/resolvconf/resolv.conf.d/tail" >/dev/null <<EOF
-nameserver 1.1.1.1
-nameserver 1.0.0.1
-EOF
-sudo resolvconf -u
-# verify changes
-systemd-resolve --status
+inv system.locale
+inv system.curlrc
+inv system.dns
+inv system.disable-ipv6          # optional — sysctl -p applies immediately
+inv system.journal-size          # optional — restarts journald
+inv system.initramfs-compression # optional — deferred to next reboot
 ```
 
-## Gnome extensions
+GRUB (`nomodeset`) is manual and hardware-specific — see [troubleshooting.md](troubleshooting.md). If applied, it also defers to next reboot.
 
-Follow the [guide](gnome_extensions.md).
-
-## Fonts
-
-Follow the [guide](fonts.md).
-
-## Terminal
-
-We recommend using `terminator`, which should have replaced the native terminal
-and be available via the ++Ctrl+Alt+T++ shortcut.
-
-To set the color of the title bar from red to something less tiring,
-right click anywhere in the terminal, choose `Preferences`,
-and change the color from the swatch on the bottom.
-
-## Zsh + Oh My Zsh + PowerLevel10k
-
-Follow the [guide](zsh.md).
-
-### NyanCat for terminal, an absolute must
+### Phase 2 — Packages and tools
 
 ```shell
-NYANCAT_INSTALL_DIR="${HOME}/.nyancat"
-git clone "https://github.com/klange/nyancat.git" "${NYANCAT_INSTALL_DIR}"
-make -C "${NYANCAT_INSTALL_DIR}"
-ln -s -f "${NYANCAT_INSTALL_DIR}/src/nyancat" "${HOME}/.local/bin/nyancat"
+inv apt.configure      # write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)
+inv apt.repos          # register external repo GPG keys + sources, then install their packages
+inv apt.base           # install from Ubuntu default repos
+inv apt.deb            # install .deb packages from GitHub releases or direct URLs
+inv tools.install      # install tools via scripts, binaries, archives; also writes askpass-zenity
+inv python.tools
+inv node.install
 ```
 
-## Python tools
+`inv apt.configure` writes a drop-in that suppresses dpkg's progress bar output — run it once before any other apt tasks.
 
-Follow the [guide](python.md).
+`inv apt.repos` is a two-phase command: Phase 1 registers all GPG keys and sources files, then runs `apt update` once; Phase 2 installs the packages. The two phases are bundled because the packages can't be installed without the repo. If a GPG key URL or sources write fails, that repo is skipped with a `WARNING:` message rather than aborting the whole run.
 
-## Golang
+After `inv tools.install` + `inv zsh.configure`, all new shell sessions have `SUDO_ASKPASS` set to `~/.local/bin/askpass-zenity`. Any sudo call via `sudo -A` (used by the task scripts when `SUDO_ASKPASS` is present) opens a Zenity GUI dialog for the password instead of requiring a terminal prompt.
 
-Follow the [guide](golang.md).
-
-## Scala
+### Phase 3 — Shell config
 
 ```shell
-SCALA_CLI_SETUP="$(mktemp)"
-curl -sS -L -f "https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz" \
-  | gzip -d > "${SCALA_CLI_SETUP}"
-chmod +x "${SCALA_CLI_SETUP}"
-"${SCALA_CLI_SETUP}" setup
-rm "${SCALA_CLI_SETUP}"
-
-# TODO: put java home in .zshrc
-# get java home, enter for the Metals extension in VS Code in settings 
-cs java -XshowSettings:properties -version 2>&1 | grep "java.home" | sed 's/.*= *//'
-
-
+inv zsh.omz-configure
+inv zsh.configure
+inv zsh.p10k-configure    # copies config/p10k.zsh to ~/.p10k.zsh if not already present
 ```
 
-## SSH
+`zsh.p10k-configure` installs the repo's opinionated baseline (lean style, Nerd Fonts icons, transient prompt, instant prompt) and is a no-op if `~/.p10k.zsh` already exists — manual customizations are never overwritten.
 
-Follow the [guide](ssh.md).
+To redo or fix the prompt: delete `~/.p10k.zsh` and run `inv zsh.p10k-configure` to restore the baseline, or run `p10k configure` to go through the interactive wizard. To update the baseline itself, copy your `~/.p10k.zsh` to `config/p10k.zsh`.
 
-## Source control
+Phases 1–3 run automatically via `inv setup`.
 
-### Git
+### Phase 4 — Desktop *(before logout)*
 
-Follow the [guide](git.md).
+`inv setup` also runs `fonts.install` and `fonts.configure`, which:
 
-### Github
+- Download all Nerd Font families to `~/.local/share/fonts/`
+- Set **CaskaydiaCove Nerd Font Mono 12** as the system monospace, GNOME Terminal profile font, VS Code editor and terminal font, and Terminator terminal font
 
-Follow the [guide](github.md).
+GNOME extensions require manual installation — see [gnome_extensions.md](gnome_extensions.md).
 
-## Docker
+> **Logout and log back in.**
+> Covers: docker group, locale full effect, GNOME extension activation, font cache.
+> If GRUB or initramfs were changed, reboot instead of logout — one restart covers both.
 
-Follow the [guide](docker.md).
-
-## Browsing
-
-### Google Chrome
+### Phase 5 — Authentication *(interactive, last)*
 
 ```shell
-CHROME_DEB="$(mktemp)"
-CHROME_URL="https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
-curl -sS -L -o "${CHROME_DEB}" "${CHROME_URL}"
-sudo dpkg -i "${CHROME_DEB}"
-rm -v -f "${CHROME_DEB}"
+gh auth login             # GitHub CLI — opens browser
+ssh-keygen -t ed25519     # or follow ssh.md for full setup
 ```
 
-### Sidekick
+For gcloud: see [gcloud.md](gcloud.md).
 
-!!! TODO
-    Resolve repo conflict with Chrome warnings.
+## Manual steps
+
+These cannot be automated — they require hardware knowledge, a browser, or interactive auth:
+
+| Step | Notes |
+|---|---|
+| GRUB `nomodeset` | Only needed on machines with GPU driver conflicts at boot — see [troubleshooting.md](troubleshooting.md) |
+| SSH key generation | `ssh-keygen -t ed25519` — see [ssh.md](ssh.md) |
+| GitHub auth | `gh auth login` |
+| GNOME extensions | Requires browser extension + GNOME Extension Manager — see [gnome_extensions.md](gnome_extensions.md) |
+| PyCharm font | `inv ide.pycharm-configure` — run after installing PyCharm via Toolbox (see [ide.md](ide.md)) |
+| p10k prompt | `p10k configure` — interactive wizard to rebuild `~/.p10k.zsh` from scratch; use when the baseline doesn't suit you or the prompt is broken |
+| JetBrains IDEs | Run `jetbrains-toolbox` after install to configure and download IDEs |
+| Scala | Optional — see [scala.md](scala.md) |
+
+## Maintenance
+
+### Updating deb-github packages
+
+Packages installed via `deb-github` (e.g. wezterm nightly) are not updated by `apt upgrade`.
+To upgrade all of them to the latest release:
 
 ```shell
-SIDEKICK_DEB="$(mktemp)"
-SIDEKICK_URL="https://api.meetsidekick.com/downloads/df/linux/deb"
-curl -sS -L -o "${SIDEKICK_DEB}" "${SIDEKICK_URL}"
-sudo dpkg -i "${SIDEKICK_DEB}"
-rm -v -f "${SIDEKICK_DEB}"
+inv apt.upgrade-debs
 ```
 
-If Google Chrome is installed, run this to eliminate the duplicate repo
-introduced by Sidekick:
+This re-downloads and reinstalls each `deb-github` package. `dpkg` handles version comparison —
+reinstalling the same version is safe. For packages using `tag = "nightly"`, this always fetches
+the latest nightly build.
 
-```shell
-sudo sed -i \
-  's~deb \[arch=amd64\] http://dl.google.com/linux/chrome/deb/ stable main~# &~' \
-  /etc/apt/sources.list.d/sidekick-browser.list
-```
+---
 
-## Communication
+## Reference docs
 
-### Franz
-
-!!! WARNING
-    Skip this if using the Sidekick browser (recommended).
-
-
-```shell
-# TODO: get latest version automatically
-FRANZ_DEB="$(mktemp)"
-FRANZ_URL="https://github.com/meetfranz/franz/releases/download/v5.4.1/franz_5.4.1_amd64.deb"
-curl -sS -L -o "${FRANZ_DEB}" "${FRANZ_URL}"
-sudo dpkg -i "${FRANZ_DEB}"
-rm -v -f "${FRANZ_DEB}"
-```
-
-### Slack
-
-!!! WARNING
-    No longer used in favor of Franz / Sidekick.
-
-```shell
-sudo snap install --classic slack
-```
-
-## Software Development
-
-### Visual Studio Code
-
-```shell
-sudo snap install --classic code
-```
-
-### Pycharm Professional
-
-```shell
-sudo snap install --classic pycharm-professional
-```
-
-### Notepad++
-
-!!! WARNING
-    Not working properly.
-
-```shell
-sudo snap install notepad-plus-plus
-```
-
-#### Alternative - Notepadqq
-
-!!! WARNING
-    Untested.
-
-!!! TODO
-    install, test, document
-
-```shell
-sudo snap install notepadqq
-```
-
-## Media
-
-### Spotify
-
-```shell
-sudo snap install spotify
-```
-
-## File management
-
-### Double Commander
-
-```shell
-sudo apt install -y doublecmd-gtk
-```
-
-## Email
-
-### Evolution
-
-!!! TODO
-    install, test, document
-
-!!! WARNING
-    VERY OLD
-
-```shell
-# !!! repo doesn't work, needs to be specified with older ubuntu release name !!!
-# sudo add-apt-repository ppa:fta/gnome3
-# sudo apt update
-# sudo apt install -y evolution
-```
-
-### Thunderbird
-
-!!! TODO
-    configure, document
-
-## Autostart
-
-```shell
-USER_AUTOSTART_DIR="${HOME}/.config/autostart"
-APT_AUTOSTART_APPS=( \
-  # doublecmd \
-  terminator \
-  google-chrome \
-  sidekick-browser \
-)
-for app in "${APT_AUTOSTART_APPS[@]}"; do
-  cp -v "/usr/share/applications/${app}.desktop" "${USER_AUTOSTART_DIR}"
-done
-SNAP_AUTOSTART_APPS=( \
-    pycharm-professional_pycharm-professional \
-    spotify_spotify \
-)
-for app in "${SNAP_AUTOSTART_APPS[@]}"; do
-  cp -v "/var/lib/snapd/desktop/applications/${app}.desktop" "${USER_AUTOSTART_DIR}"
-done
-```
-
-Sample `.desktop` file creation:
-
-```shell
-tee -a ${HOME}/.config/autostart/cisco_anyconnect.desktop > /dev/null <<EOF
-[Desktop Entry]
-Type=Application
-Name=Cisco Anyconnect Secure Mobility Client
-Comment=Connect to a private network using the Cisco Anyconnect Secure Mobility Client
-Exec=/opt/cisco/anyconnect/bin/vpnui
-Icon=cisco-anyconnect
-Terminal=false
-Encoding=UTF-8
-StartupNotify=true
-EOF
-```
-
-## UI
-
-!!! TODO
-    Add favorite apps to task bar and remove default ones
-
-## Benchmarking
-
-### Hyperfine
-
-```shell
-HYPERFINE_DEB="$(mktemp)"
-HYPERFINE_REPO_URL="https://api.github.com/repos/sharkdp/hyperfine/releases/latest"
-HYPERFINE_URL=$(
-  curl -sS -L "${HYPERFINE_REPO_URL}" \
-    | grep 'browser_download_url.*hyperfine_.*amd64\.deb' \
-    | sed -E 's/.*"([^"]+)"\s*$/\1/' \
-)
-curl -sS -L -o "${HYPERFINE_DEB}" "${HYPERFINE_URL}"
-sudo dpkg -i "${HYPERFINE_DEB}"
-rm "${HYPERFINE_DEB}"
-```
-
-## Fix CRLF
-
-```shell
-# find . -type f | xargs file -k -- | grep CRLF | wc -l
-# find . -type f | xargs dos2unix
-# chmod go-w -R *
-# sudo find . -type f | xargs chmod a-x
-```
-
-### Disable Ctr-Shift-U system shortcut
-
-!!! TODO
-    test
-
-<https://superuser.com/questions/358749/how-to-disable-ctrlshiftu-in-ubuntu-linux>
-
-Problem
-
-The problem is that with the "Ibus" input method, ++ctrl+shift+u++
-is by default configured to the "Unicode Code Point" shortcut.
-
-You can try this: Type ++ctrl+shift+u++, then an (underlined) u appears.
-If you then type a unicode code point number in hex
-(e.g. 21, the ASCII/unicode CP for !) and press enter,
-it is replaced with the corresponding character.
-
-This shortcut can be changed or disabled using the ibus-setup utility:
-
-```mermaid
-graph TD
-    a1[Run 'ibus-setup'] --> b[Go to 'Emoji']
-    a2[Open IBus Preferences] -.-> b
-    b --> c(Go to 'Unicode code point:' <br />Click on the three dots, i.e. ...)
-    c --> d[In the dialog, click 'Delete', then 'OK']
-    d --> e[Close the IBus Preferences window]
-```
+| Topic | Doc |
+|---|---|
+| Zsh, OMZ, plugins, aliases | [zsh.md](zsh.md) |
+| SSH keys and config | [ssh.md](ssh.md) |
+| Git configuration | [git.md](git.md) |
+| GitHub CLI | [github.md](github.md) |
+| Docker | [docker.md](docker.md) |
+| Kubernetes tools | [kubernetes.md](kubernetes.md) |
+| Python (uv, virtualenvs) | [python.md](python.md) |
+| Go | [golang.md](golang.md) |
+| IDEs, terminal emulators | [ide.md](ide.md) |
+| Scala | [scala.md](scala.md) |
+| Networking and DNS | [networking.md](networking.md) |
+| Fonts | [fonts.md](fonts.md) |
+| GNOME extensions | [gnome_extensions.md](gnome_extensions.md) |
+| Dev container / Dockerfile | [dev-container.md](dev-container.md) |
+| AI tools (local LLMs, agents, assistants) | [ai.md](ai.md) |
+| Troubleshooting | [troubleshooting.md](troubleshooting.md) |

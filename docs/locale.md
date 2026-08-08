@@ -1,46 +1,24 @@
 # Locale
 
-!!! WARNING
-    Work in progress.
-
-!!! TODO
-    Implement. Make settings stick after reboot. Test.
-
-## Attempt 1
-
-To generate uniform locale settings:
+## Setup
 
 ```shell
-export LANGUAGE=en_US.UTF-8
-export LANG=en_US.UTF-8
-export LC_ALL=en_US.UTF-8
-locale-gen en_US.UTF-8
+inv system.locale
 ```
 
-To configure dpkg:
+Runs `sudo localectl set-locale LANG=en_US.UTF-8`, writes to `/etc/locale.conf` (systemd-integrated, persists across reboots), and is idempotent. Also runs as part of `inv setup`. `en_US.UTF-8` is pre-generated on Ubuntu 24.04 — `locale-gen` is not needed.
+
+## Verify
 
 ```shell
-dpkg-reconfigure locales
+locale
 ```
 
-## Attempt 2
+All categories should show `en_US.UTF-8`.
 
-```shell
-sudo tee "/etc/default/locale" >/dev/null <<EOF
-LANG=en_US.UTF-8
-LANGUAGE=en_US.UTF-8
-LC_CTYPE="en_US.UTF-8"
-LC_NUMERIC="en_US.UTF-8"
-LC_TIME="en_US.UTF-8"
-LC_COLLATE="en_US.UTF-8"
-LC_MONETARY="en_US.UTF-8"
-LC_MESSAGES="en_US.UTF-8"
-LC_PAPER="en_US.UTF-8"
-LC_NAME="en_US.UTF-8"
-LC_ADDRESS="en_US.UTF-8"
-LC_TELEPHONE="en_US.UTF-8"
-LC_MEASUREMENT="en_US.UTF-8"
-LC_IDENTIFICATION="en_US.UTF-8"
-LC_ALL=en_US.UTF-8
-EOF
-```
+## Pitfalls
+
+- **Do not set `LC_ALL`** — it overrides all individual `LC_*` categories with no escape hatch, breaking intentional per-category overrides
+- **Do not set every `LC_*` individually** — they all inherit from `LANG`; over-specifying creates maintenance burden with no benefit
+- **Do not use `export LANG=...` in a shell profile** — session-only, does not survive reboot
+- **A `C` or `POSIX` locale will break things** — Python throws Unicode errors, git and compiler output may be garbled

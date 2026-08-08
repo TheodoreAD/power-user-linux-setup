@@ -135,3 +135,6 @@ dmypy.json
 
 # direnv
 .envrc
+
+# Downloaded vendor reference docs (large binaries, not needed by other contributors)
+docs/reference/

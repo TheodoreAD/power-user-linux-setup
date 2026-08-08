@@ -1,0 +1,62 @@
+# Personal identity data — DO NOT commit this file.
+# Copy to ~/.config/pulse/identity.toml and fill in your details.
+#
+# Used by:
+#   inv git.configure  — per-directory git identities (~/projects/<directory>/.gitconfig)
+#   inv ssh.keys       — create one ed25519 key per unique email
+#   inv ssh.configure  — write ~/.ssh/config
+#   inv ssh.forward    — ssh-copy-id to non-git server hosts
+#   inv ssh.add        — ssh-add all keys for this machine
+
+# One entry per ~/projects/ subdirectory.
+# Each directory gets its own .gitconfig with user.name and user.email.
+# git automatically picks the right identity based on where the repo lives.
+
+[[git_profiles]]
+directory = "github.com-personal"
+name      = "Jane Smith"
+email     = "jane.smith@gmail.com"
+
+[[git_profiles]]
+directory = "github.com-work"
+name      = "Jane Smith"
+email     = "jane.smith@work.com"
+
+[[git_profiles]]
+directory = "gitlab.com-personal"
+name      = "Jane Smith"
+email     = "jane.smith@gmail.com"
+
+# One entry per host you connect to.
+# One ed25519 key is created per unique email — not per host.
+# Set user = "git" for code hosting platforms (GitHub, GitLab).
+# Set user to your login name for terminal/server access.
+#
+# For multiple accounts on the same platform, use a distinct alias
+# and set hostname to the real address. Clone via the alias:
+#   git clone git@github-work:user/repo.git
+
+[[ssh_hosts]]
+user     = "git"
+alias    = "github.com"
+hostname = "github.com"
+email    = "jane.smith@gmail.com"
+
+[[ssh_hosts]]
+user     = "git"
+alias    = "github-work"
+hostname = "github.com"
+email    = "jane.smith@work.com"
+
+[[ssh_hosts]]
+user     = "git"
+alias    = "gitlab.com"
+hostname = "gitlab.com"
+email    = "jane.smith@gmail.com"
+
+# Server hosts — inv ssh.forward will run ssh-copy-id for these.
+[[ssh_hosts]]
+user     = "jsmith"
+alias    = "myserver"
+hostname = "10.11.12.13"
+email    = "jane.smith@work.com"
