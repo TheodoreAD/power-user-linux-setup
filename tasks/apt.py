@@ -151,6 +151,12 @@ def repos(c):
             _status_repo(name, cfg)
         return
 
+    # lsb_release (package lsb-release) isn't guaranteed present on a fresh/minimal install, and
+    # this runs before apt.base — which is where setup.toml's other apt packages get installed —
+    # ever gets a chance to. Not declared as a [packages.*] entry for that reason: it wouldn't
+    # install in time to help here anyway, so it's just ensured directly.
+    if not util.command_exists("lsb_release"):
+        c.run(f"{util.SUDO} apt install -y lsb-release")
     codename = c.run("lsb_release -cs", hide=True).stdout.strip()
 
     # Phase 1: register all repos, then one apt update.

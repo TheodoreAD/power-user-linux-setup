@@ -266,6 +266,16 @@ description = "Prerequisite for dprint's install.sh (unzips its release archive)
 method      = "apt"
 tags        = ["apt", "setup"]
 
+[packages.fontconfig]
+description = "Provides fc-cache — fonts.install rebuilds the font cache with it after installing any new font files"
+method      = "apt"
+tags        = ["apt", "setup"]
+
+[packages.zenity]
+description = "Runtime dependency of the askpass-zenity wrapper script (GUI password/passphrase dialog for sudo -A / SSH_ASKPASS)"
+method      = "apt"
+tags        = ["shell", "system"]
+
 [packages.lm-sensors]
 description = "Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command"
 method      = "apt"
