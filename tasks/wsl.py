@@ -295,9 +295,9 @@ def fix(c):
 
 @task
 def install(c, wslg="auto", docker=False):
-    """Run the docs/wsl.md recommended install sequence in one shot: check, fix, apt/tools/
-    language/zsh setup with WSL-appropriate tags excluded, then system.locale/system.dns only
-    if systemd/DNS are actually live yet.
+    """Run the docs/wsl.md recommended install sequence in one shot: check, fix, system.locale/
+    system.dns (only if systemd/DNS are actually live yet), then apt/tools/language/zsh setup
+    with WSL-appropriate tags excluded.
 
     This exists instead of pasting the multi-line sequence from docs/wsl.md into a terminal:
     that sequence is a series of separate `inv` invocations, so if one of them hangs (e.g. a
@@ -325,6 +325,26 @@ def install(c, wslg="auto", docker=False):
             "skipped until you `wsl.exe --shutdown` (from Windows) and reopen, then re-run "
             "`inv wsl.install`. Continuing with the rest of the install now."
         )
+
+    # Fix locale/DNS *before* anything network-dependent below (apt, tools.install, node, zsh's
+    # oh-my-zsh clone, ...): if this is a re-run after a restart and generateResolvConf=false is
+    # already live, DNS is broken (stale resolv.conf, see _resolv_conf_symlinked_to_stub) until
+    # this runs — doing it last meant every one of those steps hit the same DNS failure first.
+    if _systemd_running():
+        system.locale(c)
+    else:
+        print("[wsl.install] systemd not live yet — skipping system.locale (restart WSL and re-run)")
+
+    if _systemd_running() and not _resolv_conf_wsl_active():
+        if not _resolv_conf_symlinked_to_stub():
+            if util.DRY_RUN:
+                print("[wsl.install] /etc/resolv.conf: MISSING symlink to stub-resolv.conf")
+            else:
+                c.run(f"{util.SUDO} ln -sf {_STUB_RESOLV_CONF} {_RESOLV_CONF}")
+                print(f"[wsl.install] relinked /etc/resolv.conf -> {_STUB_RESOLV_CONF}")
+        system.dns(c)
+    else:
+        print("[wsl.install] systemd/DNS not both live yet — skipping system.dns (restart WSL and re-run)")
 
     if wslg == "auto":
         use_wslg = _wslg_available()
@@ -360,22 +380,6 @@ def install(c, wslg="auto", docker=False):
     zsh.omz_configure(c)
     zsh.configure(c)
     zsh.p10k_configure(c)
-
-    if _systemd_running():
-        system.locale(c)
-    else:
-        print("[wsl.install] systemd not live yet — skipping system.locale (restart WSL and re-run)")
-
-    if _systemd_running() and not _resolv_conf_wsl_active():
-        if not _resolv_conf_symlinked_to_stub():
-            if util.DRY_RUN:
-                print("[wsl.install] /etc/resolv.conf: MISSING symlink to stub-resolv.conf")
-            else:
-                c.run(f"{util.SUDO} ln -sf {_STUB_RESOLV_CONF} {_RESOLV_CONF}")
-                print(f"[wsl.install] relinked /etc/resolv.conf -> {_STUB_RESOLV_CONF}")
-        system.dns(c)
-    else:
-        print("[wsl.install] systemd/DNS not both live yet — skipping system.dns (restart WSL and re-run)")
 
     if docker:
         print("[wsl.install] --docker: run `inv docker.configure` once systemd is confirmed live (`inv wsl.check`).")
