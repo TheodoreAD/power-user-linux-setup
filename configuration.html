@@ -10,13 +10,13 @@
         <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
       
       
-        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/troubleshooting.html">
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/configuration.html">
       
       
-        <link rel="prev" href="./zensical.html">
+        <link rel="prev" href="./index.html">
       
       
-        <link rel="next" href="./upgrade_20_04_to_24_04.html">
+        <link rel="next" href="./zsh.html">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Troubleshooting - Power User Linux Setup</title>
+        <title>How it works - Power User Linux Setup</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#troubleshooting" class="md-skip">
+        <a href="#how-it-works" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Troubleshooting
+              How it works
             
           </span>
         </div>
@@ -203,9 +203,11 @@
   
   
   
+    
   
-    <li class="md-tabs__item">
-      <a href="./configuration.html" class="md-tabs__link">
+  
+    <li class="md-tabs__item md-tabs__item--active">
+      <a href="configuration.html" class="md-tabs__link">
         
   
   How it works
@@ -389,8 +391,6 @@
   
   
   
-    
-  
   
     
       
@@ -411,7 +411,7 @@
     
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="./apt_packages.html" class="md-tabs__link">
           
   
@@ -498,10 +498,36 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="./configuration.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="configuration.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -516,6 +542,149 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#configuration-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Configuration management
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Configuration management">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#managed-files" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Managed files
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#adding-a-new-block" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Adding a new block
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tags-enabled-and-which-tasks-actually-respect-either" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tags, <code>enabled</code>, and which tasks actually respect either
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#setup-phases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Setup phases
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Setup phases">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#phase-1-system-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Phase 1 — System config
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-2-packages-and-tools" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Phase 2 — Packages and tools
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-3-shell-config" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Phase 3 — Shell config
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-4-desktop-before-logout" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Phase 4 — Desktop <em>(before logout)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#phase-5-authentication-interactive-last" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Phase 5 — Authentication <em>(interactive, last)</em>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1544,10 +1713,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1567,22 +1734,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   
@@ -1599,7 +1763,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1721,36 +1885,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Troubleshooting
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="troubleshooting.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
         
   
   
@@ -1765,193 +1903,6 @@
   
 
       </a>
-      
-        
-
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Hardware sensors — fan and voltage monitoring on Gigabyte Z390
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Hardware sensors — fan and voltage monitoring on Gigabyte Z390">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-works-out-of-the-box" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        What works out of the box
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#what-doesnt-work-fans-and-voltages" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        What doesn&rsquo;t work: fans and voltages
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fix-requires-reboot" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix (requires reboot)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#decision-2026-06-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Decision (2026-06-09)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#grub-gpu-driver-conflicts-at-boot-nomodeset" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#fix-crlf-line-endings" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix CRLF line endings
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ibus-ctrlshiftu-shortcut-conflict" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        IBus Ctrl+Shift+U shortcut conflict
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hdmi-audio-nvidia" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        HDMI audio (NVidia)
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="HDMI audio (NVidia)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Problem
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#root-cause" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Root cause
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#investigation-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Investigation steps
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#making-it-permanent" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Making it permanent
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2032,22 +1983,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390" class="md-nav__link">
+  <a href="#configuration-management" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Hardware sensors — fan and voltage monitoring on Gigabyte Z390
+        Configuration management
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Hardware sensors — fan and voltage monitoring on Gigabyte Z390">
+    <nav class="md-nav" aria-label="Configuration management">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-works-out-of-the-box" class="md-nav__link">
+  <a href="#managed-files" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What works out of the box
+        Managed files
       </span>
     </span>
   </a>
@@ -2055,32 +2006,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#what-doesnt-work-fans-and-voltages" class="md-nav__link">
+  <a href="#adding-a-new-block" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What doesn&rsquo;t work: fans and voltages
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fix-requires-reboot" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix (requires reboot)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#decision-2026-06-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Decision (2026-06-09)
+        Adding a new block
       </span>
     </span>
   </a>
@@ -2093,10 +2022,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grub-gpu-driver-conflicts-at-boot-nomodeset" class="md-nav__link">
+  <a href="#tags-enabled-and-which-tasks-actually-respect-either" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)
+        Tags, <code>enabled</code>, and which tasks actually respect either
       </span>
     </span>
   </a>
@@ -2104,44 +2033,22 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fix-crlf-line-endings" class="md-nav__link">
+  <a href="#setup-phases" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Fix CRLF line endings
+        Setup phases
       </span>
     </span>
   </a>
   
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ibus-ctrlshiftu-shortcut-conflict" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        IBus Ctrl+Shift+U shortcut conflict
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hdmi-audio-nvidia" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        HDMI audio (NVidia)
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="HDMI audio (NVidia)">
+    <nav class="md-nav" aria-label="Setup phases">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
+  <a href="#phase-1-system-config" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Problem
+        Phase 1 — System config
       </span>
     </span>
   </a>
@@ -2149,10 +2056,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#root-cause" class="md-nav__link">
+  <a href="#phase-2-packages-and-tools" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Root cause
+        Phase 2 — Packages and tools
       </span>
     </span>
   </a>
@@ -2160,10 +2067,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#investigation-steps" class="md-nav__link">
+  <a href="#phase-3-shell-config" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Investigation steps
+        Phase 3 — Shell config
       </span>
     </span>
   </a>
@@ -2171,10 +2078,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fix" class="md-nav__link">
+  <a href="#phase-4-desktop-before-logout" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Fix
+        Phase 4 — Desktop <em>(before logout)</em>
       </span>
     </span>
   </a>
@@ -2182,10 +2089,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#making-it-permanent" class="md-nav__link">
+  <a href="#phase-5-authentication-interactive-last" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Making it permanent
+        Phase 5 — Authentication <em>(interactive, last)</em>
       </span>
     </span>
   </a>
@@ -2215,65 +2122,6 @@
   
 
 
-  <nav class="md-path" aria-label="Navigation" >
-    <ol class="md-path__list">
-      
-        
-  
-  
-    <li class="md-path__item">
-      <a href="./index.html" class="md-path__link">
-        
-  
-  <span class="md-ellipsis">
-    Home
-  </span>
-
-      </a>
-    </li>
-  
-
-      
-      
-        
-  
-  
-    
-    
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-        
-      
-    
-    
-    
-    
-      <li class="md-path__item">
-        <a href="./apt_packages.html" class="md-path__link">
-          
-  
-  <span class="md-ellipsis">
-    Reference
-  </span>
-
-        </a>
-      </li>
-    
-  
-
-      
-    </ol>
-  </nav>
-
               
               <article class="md-content__inner md-typeset">
                 
@@ -2282,158 +2130,220 @@
   
 
 
-<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
-<h2 id="hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390">Hardware sensors — fan and voltage monitoring on Gigabyte Z390<a class="headerlink" href="#hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390" title="Permanent link">&para;</a></h2>
-<p><strong>Board:</strong> Gigabyte Z390 GAMING X · <strong>Chip:</strong> ITE IT8628E at I/O port 0xa40</p>
-<h3 id="what-works-out-of-the-box">What works out of the box<a class="headerlink" href="#what-works-out-of-the-box" title="Permanent link">&para;</a></h3>
-<p>Temperature data is available via two hwmon drivers loaded automatically:
-- <code>gigabyte_wmi</code> (hwmon2) — 6 system temps from BIOS WMI (VRM, PCH, etc.)
-- <code>coretemp</code> (hwmon3) — 7 readings: CPU Package + 6 individual cores</p>
-<p><code>sensors</code> shows all of these. Vitals reads from <code>/sys/class/hwmon/</code> and displays them.</p>
-<h3 id="what-doesnt-work-fans-and-voltages">What doesn&rsquo;t work: fans and voltages<a class="headerlink" href="#what-doesnt-work-fans-and-voltages" title="Permanent link">&para;</a></h3>
-<p>The IT8628E SuperIO chip that reads fan headers and voltage rails is present at ISA
-port 0xa40, but the BIOS registers those ports in the ACPI namespace, blocking the
-<code>it87</code> kernel driver from claiming them:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># it87 finds the chip but can&#39;t register the port:
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>it87: Found IT8628E chip at 0xa40, revision 1
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>modprobe: ERROR: could not insert &#39;it87&#39;: Device or resource busy
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a># Other drivers also fail:
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>modprobe nct6775  → No such device
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>modprobe nct6683  → No such device
+<h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
+<p>The mechanics behind <code>inv setup</code>: how PULSE writes shared config files without clobbering manual
+edits, how <code>tags</code>/<code>enabled</code>/<code>PULSE_EXCLUDE_TAGS</code> decide what gets installed, and what each setup
+phase actually runs. Start at <a href="index.html">index.md</a> if you just want to run the thing — this page
+is for when you need to change what it does, build a new environment profile, or debug why a
+package was (or wasn&rsquo;t) picked up.</p>
+<h2 id="configuration-management">Configuration management<a class="headerlink" href="#configuration-management" title="Permanent link">&para;</a></h2>
+<p>PULSE owns config files through named sentinel blocks rather than overwriting whole files. Any snippet written to a shared config file is wrapped in a PULSE block:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># ╔═══════════════════════════════ PULSE::&lt;name&gt; ════════════════════════════╗
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>...config content...
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a># ╚═══════════════════════════════ PULSE::&lt;name&gt; ════════════════════════════╝
 </span></code></pre></div>
-<p><code>sensors-detect</code> does not find the chip because the ACPI port conflict prevents
-<code>it87</code> from loading even during detection.</p>
-<h3 id="fix-requires-reboot">Fix (requires reboot)<a class="headerlink" href="#fix-requires-reboot" title="Permanent link">&para;</a></h3>
-<p>Add <code>acpi_enforce_resources=lax</code> to the GRUB kernel command line. This tells the
-kernel to allow hwmon drivers to claim I/O ports even if ACPI has registered them —
-safe on desktop boards, standard fix for this class of SuperIO conflict.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="s1">&#39;s/GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash&quot;/GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash acpi_enforce_resources=lax&quot;/&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>/etc/default/grub
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>sudo<span class="w"> </span>update-grub
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># reboot</span>
+<p>78 characters wide, name centered, box-drawing corners. <code>╔</code>/<code>╗</code> open the block, <code>╚</code>/<code>╝</code> close it. <code>&lt;name&gt;</code> is the <code>[packages.&lt;name&gt;]</code> key from <code>setup.toml</code>.</p>
+<p><strong>Why:</strong> config files like <code>~/.zshrc</code> or <code>/etc/sysctl.conf</code> are shared — multiple tools and the user write to them. Overwriting the file on each run would destroy manual edits. Sentinels let each PULSE-managed entry own its own region of the file independently.</p>
+<p><strong>Idempotency:</strong> on re-run the block is found by its opening marker and replaced in place if the content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.</p>
+<h3 id="managed-files">Managed files<a class="headerlink" href="#managed-files" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>File</th>
+<th>Managed by</th>
+<th>Content</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>~/.zshrc</code></td>
+<td><code>inv zsh.configure</code></td>
+<td>completions, aliases, hooks — from <code>zshrc</code> fields in <code>setup.toml</code></td>
+</tr>
+<tr>
+<td><code>~/.zshenv</code></td>
+<td><code>inv zsh.configure</code></td>
+<td>environment variables, PATH — from <code>zshenv</code> fields in <code>setup.toml</code></td>
+</tr>
+<tr>
+<td><code>~/.zprofile</code></td>
+<td><code>inv zsh.configure</code></td>
+<td>login-shell config — from <code>zprofile</code> fields in <code>setup.toml</code></td>
+</tr>
+<tr>
+<td><code>~/.config/curlrc</code></td>
+<td><code>inv system.curlrc</code></td>
+<td>curl defaults (silent, follow redirects)</td>
+</tr>
+<tr>
+<td><code>/etc/sysctl.conf</code></td>
+<td><code>inv system.disable-ipv6</code></td>
+<td>IPv6 disable keys</td>
+</tr>
+<tr>
+<td><code>/etc/systemd/journald.conf.d/size.conf</code></td>
+<td><code>inv system.journal-size</code></td>
+<td><code>SystemMaxUse</code> drop-in</td>
+</tr>
+<tr>
+<td><code>/etc/apt/apt.conf.d/99-pulse</code></td>
+<td><code>inv apt.configure</code></td>
+<td>Disable dpkg progress bars</td>
+</tr>
+<tr>
+<td><code>~/.local/bin/askpass-zenity</code></td>
+<td><code>inv tools.install</code></td>
+<td>Zenity GUI askpass helper — enables <code>sudo -A</code> without a TTY</td>
+</tr>
+<tr>
+<td><code>~/.claude/CLAUDE.md</code></td>
+<td><code>inv tools.install</code></td>
+<td>Global Claude Code instructions (use <code>sudo -A</code> for all sudo calls)</td>
+</tr>
+</tbody>
+</table>
+<h3 id="adding-a-new-block">Adding a new block<a class="headerlink" href="#adding-a-new-block" title="Permanent link">&para;</a></h3>
+<p>Declare <code>zshrc</code>, <code>zshenv</code>, or <code>zprofile</code> on any package entry in <code>setup.toml</code>:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[packages.mytool]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;apt&quot;</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">zshrc</span><span class="w">  </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s2">export MYTOOL_HOME=&quot;${HOME}/.local/share/mytool&quot;</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s2">eval &quot;$(mytool init zsh)&quot;</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s2">&quot;&quot;&quot;</span>
 </span></code></pre></div>
-<p>After reboot, load the driver and make it persistent:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>modprobe<span class="w"> </span>it87
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sensors<span class="w">   </span><span class="c1"># should now show fan RPM and voltages from it8628-isa-0a40</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># If sensors still needs a label mapping, run: sudo sensors-detect</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;it87&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/modules-load.d/it87.conf
-</span></code></pre></div>
-<h3 id="decision-2026-06-09">Decision (2026-06-09)<a class="headerlink" href="#decision-2026-06-09" title="Permanent link">&para;</a></h3>
-<p>Not applied. <code>acpi_enforce_resources=lax</code> is a GRUB change and the payoff (fans +
-voltages in Vitals) was judged not worth the reboot and boot-parameter risk for now.
-Vitals is configured to show temperatures only. Revisit if fan monitoring becomes
-important (e.g. before overclocking or in a hot environment).</p>
+<p>Run <code>inv zsh.configure</code> — the block is written on first run and updated in place on subsequent runs. For non-shell config files, call <code>util.ensure_block(path, name, content)</code> or <code>util.ensure_block_text(text, name, content)</code> (returns new text without writing, for files that require <code>sudo</code>).</p>
 <hr />
-<h2 id="grub-gpu-driver-conflicts-at-boot-nomodeset">GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)<a class="headerlink" href="#grub-gpu-driver-conflicts-at-boot-nomodeset" title="Permanent link">&para;</a></h2>
-<p>Some machines (particularly with older NVIDIA or AMD discrete GPUs) show a blank screen or freeze during boot because the kernel tries to take over framebuffer mode before GPU drivers are loaded. The fix is <code>nomodeset</code>, which tells the kernel not to set video modes — the GPU driver handles it instead.</p>
-<p><strong>Only apply this if you are experiencing boot issues.</strong> On most modern hardware with Ubuntu 24.04 it is not needed.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="s1">&#39;s~GRUB_CMDLINE_LINUX_DEFAULT=.*~GRUB_CMDLINE_LINUX_DEFAULT=&quot;nomodeset&quot;~&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>/etc/default/grub
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>sudo<span class="w"> </span>update-grub
+<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either<a class="headerlink" href="#tags-enabled-and-which-tasks-actually-respect-either" title="Permanent link">&para;</a></h2>
+<p>Every <code>[packages.*]</code> entry has two independent, unrelated ways to be skipped:</p>
+<ul>
+<li><strong><code>enabled = false</code></strong> — a permanent, environment-independent switch baked into <code>setup.toml</code>. Used for things that are evaluated-but-not-wanted (e.g. <code>freon</code>, superseded by <code>vitals</code>) or opt-in extras (e.g. <code>glab</code>, <code>atuin</code>).</li>
+<li><strong><code>tags = [...]</code> + <code>PULSE_EXCLUDE_TAGS</code></strong> — a runtime filter layered on top, for building environment-specific profiles (headless, container, WSL) without editing <code>setup.toml</code> per environment. See <a href="index.html#quick-start">index.md&rsquo;s Quick start</a> for a live example.</li>
+</ul>
+<p><strong>Both are only checked by <code>util.packages_by_method(method)</code></strong> (<code>tasks/util.py</code>) — the dispatcher every <em>generic</em> install-method task loops over: <code>apt</code>, <code>apt-repo</code>, <code>deb-github</code>, <code>deb-url</code>, <code>archive</code>, <code>uv-tool</code>, <code>script</code>, <code>binary</code>, <code>git-clone</code>, <code>wrapper-script</code>, <code>gnome-extension</code>, <code>apparmor-profile</code>. An entry needs to pass <strong>both</strong> checks (<code>enabled != false</code> <em>and</em> no tag in <code>PULSE_EXCLUDE_TAGS</code>) to be picked up by any of these.</p>
+<p><strong>Several core tasks bypass <code>packages_by_method</code> entirely</strong> and read one hardcoded <code>[packages.&lt;name&gt;]</code> section directly — for these, <code>enabled</code> and <code>tags</code> do nothing at all; the only way to skip them is to not invoke the <code>inv</code> task:</p>
+<table>
+<thead>
+<tr>
+<th>Task</th>
+<th>Reads directly</th>
+<th>Tag/enabled-aware?</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>node.install</code></td>
+<td><code>packages["node"]</code></td>
+<td>No — always runs <code>[packages.node]</code> regardless of <code>enabled</code> or tags</td>
+</tr>
+<tr>
+<td><code>docker.configure</code></td>
+<td>live <code>docker</code> command + <code>packages.docker</code>&rsquo;s literal defaults</td>
+<td>No — gated only by whether the <code>docker</code> binary exists on <code>$PATH</code>, plus a <code>dockerd</code> presence check: if <code>docker</code> exists without a local <code>dockerd</code> (e.g. Docker Desktop&rsquo;s WSL integration), it skips cleanly instead of failing on <code>systemctl restart docker</code></td>
+</tr>
+<tr>
+<td><code>fonts.install</code> / <code>fonts.configure</code></td>
+<td><code>settings.fonts</code> (not <code>packages.*</code> at all)</td>
+<td>N/A — not a package entry, no tags possible</td>
+</tr>
+<tr>
+<td><code>zsh.configure</code></td>
+<td><strong>every</strong> entry in <code>packages.*</code> that has a <code>zshrc</code>/<code>zshenv</code>/<code>zprofile</code> field</td>
+<td><code>enabled</code> only — <strong>tags are ignored</strong>. A <code>gui</code>-tagged tool&rsquo;s shell block (PATH entry, completion, OMZ plugin coupling) still gets written to <code>.zshrc</code> even when <code>PULSE_EXCLUDE_TAGS</code> skipped installing the tool itself. Usually harmless (blocks tend to guard on the binary existing), but worth knowing before assuming an exclude-tags profile produced a byte-for-byte-minimal <code>.zshrc</code>.</td>
+</tr>
+</tbody>
+</table>
+<p>This split is exactly what <a href="wsl.html">wsl.md</a> and <a href="dev-container.html">dev-container.md</a> rely on — when building a new environment profile, check which bucket the task you&rsquo;re skipping falls into before assuming a tag exclusion is enough.</p>
+<p><strong>Tag catalog</strong> — only seven tags currently gate anything (used across the exclusion recipes in this repo):</p>
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Excludes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gui</code></td>
+<td>Wayland/X11 apps, desktop tools, browsers</td>
+</tr>
+<tr>
+<td><code>desktop</code></td>
+<td>Anything depending on a desktop session (e.g. Wayland clipboard)</td>
+</tr>
+<tr>
+<td><code>gnome</code></td>
+<td>Anything needing a <em>live GNOME Shell</em>, not just a display server: GNOME Shell extensions, <code>gnome-extensions-cli</code>, and GNOME-only <code>xdg-desktop-portal</code> backends (<code>xdg-desktop-portal-gnome</code>, <code>flameshot</code>)</td>
+</tr>
+<tr>
+<td><code>ide</code></td>
+<td>Full IDEs and their support profiles (<code>vscode</code>, <code>jetbrains-toolbox</code>, <code>apparmor-jbr-cef</code>) — see <a href="wsl.html">wsl.md</a> for when to exclude these in favor of a remote client</td>
+</tr>
+<tr>
+<td><code>windows-native</code></td>
+<td>GUI apps with no Linux-specific reason to duplicate under WSL (<code>terminator</code>, <code>wezterm</code>, <code>freelens</code>, <code>font-manager</code>, <code>claude-desktop</code>, <code>edge</code>) — WSL-specific, see <a href="wsl.html">wsl.md</a></td>
+</tr>
+<tr>
+<td><code>workstation</code></td>
+<td>Hardware sensors, local terminal multiplexer, Docker</td>
+</tr>
+<tr>
+<td><code>corporate</code></td>
+<td>Webex, Citrix, and other work-specific tools</td>
+</tr>
+</tbody>
+</table>
+<p>The rest of the tags in <code>setup.toml</code> (<code>cli</code>, <code>dev</code>, <code>k8s</code>, <code>shell</code>, <code>vcs</code>, <code>search</code>, <code>modern</code>, <code>legacy</code>, …) are purely organizational/searchable — categorization for humans reading the file, not wired to any exclusion recipe. Don&rsquo;t assume a tag does something just because it exists; check whether it&rsquo;s actually referenced in a documented <code>PULSE_EXCLUDE_TAGS</code> recipe (this file, <code>dev-container.md</code>, <code>wsl.md</code>) or <code>setup.toml</code>&rsquo;s header comment.</p>
+<p><strong><code>{version}</code> / <code>version_cmd</code> templating</strong> — the <code>archive</code> and <code>deb-url</code> methods both support resolving a dynamic version before downloading: set <code>version_cmd</code> to a shell command that prints the version string, and include <code>{version}</code> in <code>download_url</code> (<code>archive</code>) or <code>url</code> (<code>deb-url</code>). See <code>[packages.atuin]</code> (archive) or <code>[packages.glab]</code> (deb-url) for examples. <code>deb-github</code> resolves version differently — via the GitHub releases API directly (<code>tag</code> field, or auto-latest if omitted) — since it doesn&rsquo;t need a custom command.</p>
+<hr />
+<h2 id="setup-phases">Setup phases<a class="headerlink" href="#setup-phases" title="Permanent link">&para;</a></h2>
+<p>What <code>inv setup</code> actually runs, in order. One interruption: a single logout at the end. An optional reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural reboot — nothing depends on it being immediate.</p>
+<h3 id="phase-1-system-config">Phase 1 — System config<a class="headerlink" href="#phase-1-system-config" title="Permanent link">&para;</a></h3>
+<p>All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No reboot needed.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>system.locale
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>system.curlrc
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>inv<span class="w"> </span>system.dns
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>inv<span class="w"> </span>system.disable-ipv6<span class="w">          </span><span class="c1"># optional — sysctl -p applies immediately</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>inv<span class="w"> </span>system.journal-size<span class="w">          </span><span class="c1"># optional — restarts journald</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>inv<span class="w"> </span>system.initramfs-compression<span class="w"> </span><span class="c1"># optional — deferred to next reboot</span>
 </span></code></pre></div>
-<p>Reboot to apply. The only downside is cosmetic: no splash screen, verbose boot output.</p>
-<p>To undo, restore <code>GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"</code> and run <code>sudo update-grub</code> again.</p>
-<h2 id="fix-crlf-line-endings">Fix CRLF line endings<a class="headerlink" href="#fix-crlf-line-endings" title="Permanent link">&para;</a></h2>
-<p>If you receive files from Windows machines, they may have <code>\r\n</code> line endings that break shell scripts and tools. <code>dos2unix</code> is installed by default in this setup.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Check how many files have CRLF</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>file<span class="w"> </span>-k<span class="w"> </span>--<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>CRLF<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Fix all files recursively</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>dos2unix
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># After fixing, clean up stale permission bits if needed</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>chmod<span class="w"> </span>go-w<span class="w"> </span>-R<span class="w"> </span>*
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>sudo<span class="w"> </span>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>chmod<span class="w"> </span>a-x
+<p>GRUB (<code>nomodeset</code>) is manual and hardware-specific — see <a href="troubleshooting.html">troubleshooting.md</a>. If applied, it also defers to next reboot.</p>
+<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools<a class="headerlink" href="#phase-2-packages-and-tools" title="Permanent link">&para;</a></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>apt.configure<span class="w">      </span><span class="c1"># write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>apt.repos<span class="w">          </span><span class="c1"># register external repo GPG keys + sources, then install their packages</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>inv<span class="w"> </span>apt.base<span class="w">           </span><span class="c1"># install from Ubuntu default repos</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>inv<span class="w"> </span>apt.deb<span class="w">            </span><span class="c1"># install .deb packages from GitHub releases or direct URLs</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># install tools via scripts, binaries, archives; also writes askpass-zenity</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>inv<span class="w"> </span>python.tools
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>inv<span class="w"> </span>node.install
 </span></code></pre></div>
-<h2 id="ibus-ctrlshiftu-shortcut-conflict">IBus Ctrl+Shift+U shortcut conflict<a class="headerlink" href="#ibus-ctrlshiftu-shortcut-conflict" title="Permanent link">&para;</a></h2>
-<p>On Ubuntu with the IBus input method, <code>Ctrl+Shift+U</code> is bound to &ldquo;Unicode code point input&rdquo; by default. This conflicts with some terminal workflows and applications.</p>
-<p>To disable it:</p>
-<ol>
-<li>Run <code>ibus-setup</code> (or open IBus Preferences from the system tray)</li>
-<li>Go to the <strong>Emoji</strong> tab</li>
-<li>Find <strong>Unicode code point:</strong> and click the <code>...</code> button</li>
-<li>Click <strong>Delete</strong>, then <strong>OK</strong></li>
-<li>Close IBus Preferences</li>
-</ol>
-<p>The shortcut is now free for other uses.</p>
-<h2 id="hdmi-audio-nvidia">HDMI audio (NVidia)<a class="headerlink" href="#hdmi-audio-nvidia" title="Permanent link">&para;</a></h2>
-<h3 id="problem">Problem<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h3>
-<p>No audio output when using a TV or monitor connected via HDMI to an NVidia GPU, even
-though video works fine. The TV works correctly with other machines.</p>
-<h3 id="root-cause">Root cause<a class="headerlink" href="#root-cause" title="Permanent link">&para;</a></h3>
-<p>The NVidia HDMI audio device is a separate PCI function (<code>01:00.1</code>) from the GPU
-(<code>01:00.0</code>). It exposes audio capability to the OS via ELD (EDID-Like Data), which
-the GPU driver reads from the connected display&rsquo;s EDID and passes to the HDA audio
-driver. If the audio PCI function initializes before the GPU driver has finished
-negotiating the HDMI link, it misses the ELD handoff and sees no monitor.</p>
-<p>You can confirm this is the issue:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>grep<span class="w"> </span>-h<span class="w"> </span><span class="s1">&#39;monitor_present\|eld_valid&#39;</span><span class="w"> </span>/proc/asound/card2/eld*
+<p><code>inv apt.configure</code> writes a drop-in that suppresses dpkg&rsquo;s progress bar output — run it once before any other apt tasks.</p>
+<p><code>inv apt.repos</code> is a two-phase command: Phase 1 registers all GPG keys and sources files, then runs <code>apt update</code> once; Phase 2 installs the packages. The two phases are bundled because the packages can&rsquo;t be installed without the repo. If a GPG key URL or sources write fails, that repo is skipped with a <code>WARNING:</code> message rather than aborting the whole run.</p>
+<p>After <code>inv tools.install</code> + <code>inv zsh.configure</code>, all new shell sessions have <code>SUDO_ASKPASS</code> set to <code>~/.local/bin/askpass-zenity</code>. Any sudo call via <code>sudo -A</code> (used by the task scripts when <code>SUDO_ASKPASS</code> is present) opens a Zenity GUI dialog for the password instead of requiring a terminal prompt.</p>
+<h3 id="phase-3-shell-config">Phase 3 — Shell config<a class="headerlink" href="#phase-3-shell-config" title="Permanent link">&para;</a></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>zsh.omz-configure
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>inv<span class="w"> </span>zsh.configure
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>inv<span class="w"> </span>zsh.p10k-configure<span class="w">    </span><span class="c1"># copies config/p10k.zsh to ~/.p10k.zsh if not already present</span>
 </span></code></pre></div>
-<p>A broken state shows only:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>eld_valid       0
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>monitor_present 0
+<p><code>zsh.p10k-configure</code> installs the repo&rsquo;s opinionated baseline (lean style, Nerd Fonts icons, transient prompt, instant prompt) and is a no-op if <code>~/.p10k.zsh</code> already exists — manual customizations are never overwritten.</p>
+<p>To redo or fix the prompt: delete <code>~/.p10k.zsh</code> and run <code>inv zsh.p10k-configure</code> to restore the baseline, or run <code>p10k configure</code> to go through the interactive wizard. To update the baseline itself, copy your <code>~/.p10k.zsh</code> to <code>config/p10k.zsh</code>.</p>
+<p>Phases 1–3 run automatically via <code>inv setup</code>.</p>
+<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em><a class="headerlink" href="#phase-4-desktop-before-logout" title="Permanent link">&para;</a></h3>
+<p><code>inv setup</code> also runs <code>fonts.install</code> and <code>fonts.configure</code>, which:</p>
+<ul>
+<li>Download all Nerd Font families to <code>~/.local/share/fonts/</code></li>
+<li>Set <strong>CaskaydiaCove Nerd Font Mono 12</strong> as the system monospace, GNOME Terminal profile font, VS Code editor and terminal font, and Terminator terminal font</li>
+</ul>
+<p>GNOME extensions require manual installation — see <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
+<blockquote>
+<p><strong>Logout and log back in.</strong>
+Covers: docker group, locale full effect, GNOME extension activation, font cache.
+If GRUB or initramfs were changed, reboot instead of logout — one restart covers both.</p>
+</blockquote>
+<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em><a class="headerlink" href="#phase-5-authentication-interactive-last" title="Permanent link">&para;</a></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gh<span class="w"> </span>auth<span class="w"> </span>login<span class="w">             </span><span class="c1"># GitHub CLI — opens browser</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519<span class="w">     </span><span class="c1"># or follow ssh.md for full setup</span>
 </span></code></pre></div>
-<p>A healthy state also includes <code>eld_valid 1</code> and <code>monitor_present 1</code> in the output.
-<code>monitor_present 0</code> on all entries means the HDA audio driver has no idea a display
-is connected, so PipeWire marks the HDMI sink as <strong>suspended</strong> and audio never plays.</p>
-<p>Note: there are many ELD entries (one per pin/device combination). The active one
-after the fix will be whichever pin the display is actually connected to — not
-necessarily <code>eld#0.0</code>. Check all of them with the grep above.</p>
-<h3 id="investigation-steps">Investigation steps<a class="headerlink" href="#investigation-steps" title="Permanent link">&para;</a></h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Confirm PipeWire is running and HDMI is the default sink</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>wpctl<span class="w"> </span>status
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Check the sink state — &quot;suspended&quot; here is the symptom</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>pw-cli<span class="w"> </span>info<span class="w"> </span>&lt;sink-id&gt;<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>state
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Check ELD data for all HDMI ports on the NVidia card</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>cat<span class="w"> </span>/proc/asound/card2/eld*
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># Confirm the GPU/audio PCI functions</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>lspci<span class="w"> </span>-k<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A3<span class="w"> </span><span class="s1">&#39;VGA\|Audio&#39;</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># 01:00.0  VGA  — NVidia GA104, driver: nvidia</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1"># 01:00.1  Audio — NVidia GA104 HDA, driver: snd_hda_intel</span>
-</span></code></pre></div>
-<h3 id="fix">Fix<a class="headerlink" href="#fix" title="Permanent link">&para;</a></h3>
-<p>Force the NVidia HDMI audio PCI function to re-initialize, which causes it to
-re-read the ELD from the running GPU driver:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo 1 &gt; /sys/bus/pci/devices/0000:01:00.1/remove&quot;</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo 1 &gt; /sys/bus/pci/rescan&quot;</span>
-</span></code></pre></div>
-<p>No reboot needed. Video is unaffected (that&rsquo;s <code>01:00.0</code>; this only touches <code>01:00.1</code>).</p>
-<p>Verify it worked:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>grep<span class="w"> </span>-h<span class="w"> </span><span class="s1">&#39;monitor_present\|eld_valid&#39;</span><span class="w"> </span>/proc/asound/card2/eld*
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># should include:</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># eld_valid       1</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># monitor_present 1</span>
-</span></code></pre></div>
-<p>PipeWire will now see the HDMI sink as active. The sink will still show as &ldquo;suspended&rdquo;
-when idle — that is normal. It will activate when audio plays.</p>
-<h3 id="making-it-permanent">Making it permanent<a class="headerlink" href="#making-it-permanent" title="Permanent link">&para;</a></h3>
-<p>This fix does <strong>not</strong> survive a reboot. The PCI remove/rescan is a one-shot operation.
-If the problem recurs after rebooting, a systemd service can automate it:</p>
-<div class="language-ini highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># /etc/systemd/system/nvidia-hdmi-audio-fix.service</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">[Unit]</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="na">Description</span><span class="o">=</span><span class="s">Re-initialize NVidia HDMI audio after GPU driver loads</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="na">After</span><span class="o">=</span><span class="s">systemd-modules-load.service nvidia-persistenced.service</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="na">Wants</span><span class="o">=</span><span class="s">sound.target</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">[Service]</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="na">ExecStart</span><span class="o">=</span><span class="s">/bin/sh -c &quot;echo 1 &gt; /sys/bus/pci/devices/0000:01:00.1/remove&quot;</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="na">ExecStart</span><span class="o">=</span><span class="s">/bin/sh -c &quot;echo 1 &gt; /sys/bus/pci/rescan&quot;</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="na">RemainAfterExit</span><span class="o">=</span><span class="s">yes</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="k">[Install]</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
-</span></code></pre></div>
-<p>Enable with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>nvidia-hdmi-audio-fix.service
-</span></code></pre></div>
-<p>System details at time of writing: NVidia GA104 (RTX 3070 Ti), proprietary driver, <code>snd_hda_intel</code> on PCI <code>01:00.1</code>, PipeWire 1.0.5 with WirePlumber.</p>
+<p>For gcloud: see <a href="gcloud.html">gcloud.md</a>.</p>
 
 
 
@@ -2473,7 +2383,7 @@ If the problem recurs after rebooting, a systemd service can automate it:</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="./zensical.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Zensical (docs site engine)">
+          <a href="./index.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Home">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -2483,20 +2393,20 @@ If the problem recurs after rebooting, a systemd service can automate it:</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Zensical (docs site engine)
+                Home
               </div>
             </div>
           </a>
         
         
           
-          <a href="./upgrade_20_04_to_24_04.html" class="md-footer__link md-footer__link--next" aria-label="Next: Ubuntu 20.04 → 24.04 Upgrade Tracker">
+          <a href="./zsh.html" class="md-footer__link md-footer__link--next" aria-label="Next: Zsh">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Ubuntu 20.04 → 24.04 Upgrade Tracker
+                Zsh
               </div>
             </div>
             <div class="md-footer__button md-icon">
