@@ -1,0 +1,1945 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/zsh.html">
+      
+      
+        <link rel="prev" href="./zensical.html">
+      
+      
+      
+        
+      
+      
+      <link rel="icon" href="./assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.44">
+    
+    
+      
+        <title>Zsh - Power User Linux Setup</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="./assets/stylesheets/modern/main.fba56155.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="./assets/stylesheets/modern/palette.dfe2e883.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="./extra/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#zsh" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+  
+
+<header class="md-header md-header--shadow" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="./index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Zsh
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+
+<nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="./index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    Power User Linux Setup
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  PULSE — Power User Linux Setup
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  AI tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./apt_packages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Apt packages
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./citrix.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Citrix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./claude-code.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Claude Code environment
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./dev-container.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dev Container
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./docker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Docker
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./fonts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fonts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gcloud.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Google Cloud CLI
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./git.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Git
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./github.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub CLI (gh)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gitlab.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitLab
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gnome_extensions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GNOME extensions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./golang.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Go
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ide.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  IDEs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./input_devices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Input devices
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./js.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Node.js
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./keybindings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keybindings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./kubernetes.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Kubernetes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./locale.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Locale
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./networking.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./python.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rust.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Rust
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./scala.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scala
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./screen_capture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Screen capture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./shortcuts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Shortcuts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ssh.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./upgrade_20_04_to_24_04.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Ubuntu 20.04 → 24.04 Upgrade Tracker
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./wsl.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  WSL
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./zensical.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Zensical (docs site engine)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Zsh
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="zsh.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Zsh
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Setup
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What gets installed
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Plugins
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keybindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keybindings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Aliases
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clipboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Clipboard
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#completions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Completions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        History
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fzf" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        fzf
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fzf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Key bindings
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fuzzy-tab-completion" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>**</code> fuzzy tab completion
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#in-scripts-and-pipelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        In scripts and pipelines
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#navigation-inside-fzf" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Navigation inside fzf
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        PATH
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#setup" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Setup
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What gets installed
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#plugins" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Plugins
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#keybindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keybindings
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#aliases" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Aliases
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#clipboard" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Clipboard
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#completions" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Completions
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#history" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        History
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#fzf" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        fzf
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="fzf">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#key-bindings" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Key bindings
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#fuzzy-tab-completion" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>**</code> fuzzy tab completion
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#in-scripts-and-pipelines" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        In scripts and pipelines
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#navigation-inside-fzf" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Navigation inside fzf
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#path" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        PATH
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+  
+  
+
+
+<h1 id="zsh">Zsh<a class="headerlink" href="#zsh" title="Permanent link">&para;</a></h1>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<p>All zsh configuration is declared in <code>setup.toml</code> and applied via invoke:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># installs OMZ, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w">  </span><span class="c1"># updates plugins=() and ZSH_THEME in ~/.zshrc</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>zsh.configure<span class="w">      </span><span class="c1"># writes sentinel blocks (completions, aliases, keybindings, direnv, etc.)</span>
+</span></code></pre></div>
+<p>Or all at once via <code>inv setup</code>.</p>
+<p><strong>First run only</strong> — configure the Powerlevel10k prompt interactively:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>p10k<span class="w"> </span>configure
+</span></code></pre></div>
+<p>Config is saved to <code>~/.p10k.zsh</code>. Re-run any time to change the prompt layout.</p>
+<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>Method</th>
+<th>Destination</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Oh My Zsh</td>
+<td>script (official installer, <code>--unattended</code>)</td>
+<td><code>~/.oh-my-zsh</code></td>
+</tr>
+<tr>
+<td>Powerlevel10k</td>
+<td>git-clone <code>--depth=1</code></td>
+<td><code>~/.oh-my-zsh/custom/themes/powerlevel10k</code></td>
+</tr>
+<tr>
+<td>zsh-autosuggestions</td>
+<td>git-clone</td>
+<td><code>~/.oh-my-zsh/custom/plugins/zsh-autosuggestions</code></td>
+</tr>
+<tr>
+<td>zsh-syntax-highlighting</td>
+<td>git-clone</td>
+<td><code>~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h2>
+<p>Applied by <code>inv zsh.omz-configure</code>, which rewrites the <code>plugins=(...)</code> block in <code>~/.zshrc</code> in-place. <code>zsh-syntax-highlighting</code> is always kept last — it post-processes already-parsed input.</p>
+<p>The final plugins list is assembled from two sources:
+- <strong>Base plugins</strong> in <code>[packages.oh-my-zsh].plugins</code> — always included, no external dependency
+- <strong>Tool plugins</strong> via <code>omz_plugin</code> on each package entry — only included when that package is enabled</p>
+<p>This means enabling <code>[packages.gcloud]</code> automatically adds the <code>gcloud</code> OMZ plugin; disabling it drops it.</p>
+<p><strong>Always-on (base):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>What it provides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>git</code></td>
+<td>~60 aliases: <code>gs</code> (status), <code>ga</code> (add), <code>gc!</code> (commit &ndash;amend), <code>gp</code> (push), <code>gl</code> (pull), etc.</td>
+</tr>
+<tr>
+<td><code>rsync</code></td>
+<td>Aliases for common rsync invocations (rsync is a Ubuntu standard default)</td>
+</tr>
+<tr>
+<td><code>dirhistory</code></td>
+<td>Ctrl+Up/Down to navigate <code>cd</code> history</td>
+</tr>
+<tr>
+<td><code>history</code></td>
+<td><code>h</code> alias for <code>history</code>; <code>hsi</code> for history grep</td>
+</tr>
+<tr>
+<td><code>web-search</code></td>
+<td><code>google term</code>, <code>bing term</code>, etc. open browser searches</td>
+</tr>
+<tr>
+<td><code>zsh-autosuggestions</code></td>
+<td>Fish-style inline suggestions from history as you type</td>
+</tr>
+<tr>
+<td><code>zsh-syntax-highlighting</code></td>
+<td>Real-time command syntax highlighting in the prompt</td>
+</tr>
+</tbody>
+</table>
+<p><strong>Tool-coupled (via <code>omz_plugin</code> on the package entry):</strong></p>
+<table>
+<thead>
+<tr>
+<th>Plugin</th>
+<th>Package</th>
+<th>What it provides</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>kubectl</code></td>
+<td><code>[packages.kubectl]</code></td>
+<td>Tab completions; <code>k</code> alias</td>
+</tr>
+<tr>
+<td><code>helm</code></td>
+<td><code>[packages.helm]</code></td>
+<td>Tab completions</td>
+</tr>
+<tr>
+<td><code>docker</code>, <code>docker-compose</code></td>
+<td><code>[packages.docker]</code> <em>(workstation tag)</em></td>
+<td>Tab completions</td>
+</tr>
+<tr>
+<td><code>nvm</code></td>
+<td><code>[packages.node]</code></td>
+<td><code>.nvmrc</code> auto-detection on <code>cd</code></td>
+</tr>
+<tr>
+<td><code>gcloud</code></td>
+<td><code>[packages.gcloud]</code> <em>(disabled)</em></td>
+<td>Completions when gcloud is installed</td>
+</tr>
+</tbody>
+</table>
+<p>The <code>nvm</code> plugin lazy-loads nvm on first use but is kept for <code>.nvmrc</code> auto-detection. The <code>[packages.node]</code> sentinel block in <code>~/.zshrc</code> also eagerly sources <code>nvm.sh</code> — they coexist without conflict.</p>
+<p>The <code>jsontools</code> plugin was removed — <code>ppjson</code>, <code>isjson</code>, <code>urlencode</code>, and <code>urldecode</code> are re-implemented in <code>[packages.jq-aliases]</code> (see Aliases).</p>
+<h2 id="keybindings">Keybindings<a class="headerlink" href="#keybindings" title="Permanent link">&para;</a></h2>
+<p>No custom bindings — OMZ uses emacs mode (<code>bindkey -e</code>) which covers everything via <code>Alt</code> (or <code>Esc</code>) combinations:</p>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Home / End</td>
+<td><code>beginning-of-line</code> / <code>end-of-line</code></td>
+</tr>
+<tr>
+<td>Ctrl+Right / Ctrl+Left</td>
+<td><code>forward-word</code> / <code>backward-word</code></td>
+</tr>
+<tr>
+<td>Alt+Backspace</td>
+<td><code>backward-kill-word</code></td>
+</tr>
+<tr>
+<td>Alt+D</td>
+<td><code>kill-word</code></td>
+</tr>
+<tr>
+<td>Alt+U</td>
+<td><code>up-case-word</code></td>
+</tr>
+<tr>
+<td>Alt+L</td>
+<td><code>down-case-word</code></td>
+</tr>
+<tr>
+<td>Alt+&rsquo;</td>
+<td><code>quote-line</code></td>
+</tr>
+<tr>
+<td>Alt+&rdquo;</td>
+<td><code>quote-region</code></td>
+</tr>
+<tr>
+<td>Ctrl+L</td>
+<td><code>clear-screen</code></td>
+</tr>
+<tr>
+<td>Ctrl+R</td>
+<td>incremental history search backward</td>
+</tr>
+<tr>
+<td>Ctrl+X Ctrl+E</td>
+<td>edit current command in <code>$EDITOR</code></td>
+</tr>
+</tbody>
+</table>
+<h2 id="aliases">Aliases<a class="headerlink" href="#aliases" title="Permanent link">&para;</a></h2>
+<ul>
+<li><code>jq='jq -S'</code>: sort keys by default — declared in <code>[packages.jq-aliases]</code>; alias scope means scripts calling <code>jq</code> directly are unaffected (jq has no config file or <code>JQ_FLAGS</code> env var)</li>
+<li><code>ppjson</code>: pretty-print JSON from stdin — wraps <code>jq .</code> (inherits <code>-S</code>, so keys are sorted)</li>
+<li><code>isjson</code>: validate JSON from stdin — prints <code>true</code>/<code>false</code> to stdout and exits 0/1</li>
+<li><code>urlencode</code>: URI-encode stdin — wraps <code>jq -Rr @uri</code> (RFC 3986, spaces → <code>%20</code>); replaces the <code>urltools</code> OMZ plugin which was arg-based and used <code>quote_plus</code> (spaces → <code>+</code>)</li>
+<li><code>urldecode</code>: URI-decode stdin — wraps <code>python3 urllib.parse.unquote</code> (no jq equivalent)</li>
+<li><code>k</code> → <code>kubectl</code>: provided by the OMZ <code>kubectl</code> plugin, not declared here</li>
+<li><code>curl</code> defaults: <code>--silent --show-error --location</code> written to <code>~/.config/curlrc</code> by <code>inv system.curlrc</code> — no alias needed</li>
+</ul>
+<h2 id="clipboard">Clipboard<a class="headerlink" href="#clipboard" title="Permanent link">&para;</a></h2>
+<p>Declared in <code>[packages.clipboard]</code> in <code>setup.toml</code>. Requires <code>wl-clipboard</code> (apt). <strong>Wayland only — does not work over SSH or in X11-only sessions.</strong></p>
+<table>
+<thead>
+<tr>
+<th>Command</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>xcc</code></td>
+<td>Pipe stdin to clipboard: <code>cat file \| xcc</code></td>
+</tr>
+<tr>
+<td><code>xc "text"</code></td>
+<td>Copy argument to clipboard</td>
+</tr>
+<tr>
+<td><code>xv</code></td>
+<td>Paste clipboard to stdout</td>
+</tr>
+</tbody>
+</table>
+<h2 id="completions">Completions<a class="headerlink" href="#completions" title="Permanent link">&para;</a></h2>
+<p>Sourced as sentinel blocks in <code>~/.zshrc</code> after <code>source $ZSH/oh-my-zsh.sh</code>:</p>
+<table>
+<thead>
+<tr>
+<th>Tool</th>
+<th>Source</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fzf</code></td>
+<td><code>/usr/share/doc/fzf/examples/</code> (key bindings + completions)</td>
+</tr>
+<tr>
+<td><code>uv</code>, <code>uvx</code></td>
+<td><code>uv generate-shell-completion zsh</code></td>
+</tr>
+<tr>
+<td><code>kind</code></td>
+<td><code>kind completion zsh</code></td>
+</tr>
+<tr>
+<td><code>tilt</code></td>
+<td><code>tilt completion zsh</code></td>
+</tr>
+</tbody>
+</table>
+<p>OMZ calls <code>compinit</code> internally — no manual <code>autoload -Uz compinit &amp;&amp; compinit</code> needed.</p>
+<h2 id="history">History<a class="headerlink" href="#history" title="Permanent link">&para;</a></h2>
+<p>Declared in <code>[packages.zsh-history]</code>:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">HISTSIZE</span><span class="o">=</span><span class="m">1000000</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">SAVEHIST</span><span class="o">=</span><span class="m">1000000</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>setopt<span class="w"> </span>EXTENDED_HISTORY<span class="w">       </span><span class="c1"># record timestamp + elapsed time per command</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>setopt<span class="w"> </span>HIST_IGNORE_ALL_DUPS<span class="w">   </span><span class="c1"># remove older duplicate when same command is entered</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>setopt<span class="w"> </span>HIST_FIND_NO_DUPS<span class="w">      </span><span class="c1"># skip duplicates during Ctrl+R search</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>setopt<span class="w"> </span>HIST_IGNORE_SPACE<span class="w">      </span><span class="c1"># don&#39;t record commands prefixed with a space</span>
+</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>setopt<span class="w"> </span>HIST_REDUCE_BLANKS<span class="w">     </span><span class="c1"># strip superfluous whitespace before recording</span>
+</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>setopt<span class="w"> </span>HIST_VERIFY<span class="w">            </span><span class="c1"># show expanded history before executing (e.g. !foo)</span>
+</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>setopt<span class="w"> </span>SHARE_HISTORY<span class="w">          </span><span class="c1"># live cross-session sharing via atomic appends</span>
+</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>setopt<span class="w"> </span>HIST_FCNTL_LOCK<span class="w">        </span><span class="c1"># fcntl-based file locking for concurrent-session writes</span>
+</span></code></pre></div>
+<p><strong>Corruption:</strong> <code>EXTENDED_HISTORY</code> + <code>SHARE_HISTORY</code> is the standard zsh combo for a large,
+cross-session-shared history, but zsh&rsquo;s history file format has no crash-safety against power
+loss mid-write — an unfixed upstream limitation, not something a <code>setopt</code> can close. <code>HIST_FCNTL_LOCK</code>
+mitigates the other real-world cause (concurrent shells racing to write the file at once) by using
+standard <code>fcntl()</code> locking instead of zsh&rsquo;s ad-hoc default. If <code>~/.zsh_history</code> still gets corrupted
+(unreadable lines, <code>zsh: corrupt history file</code>), recover it with:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>zsh.history-fix<span class="w">   </span><span class="c1"># strings(1) strips non-printable bytes, then reloads history</span>
+</span></code></pre></div>
+<p><strong>Atuin</strong> (SQLite-backed history with a richer Ctrl+R UI, exit codes, durations, optional sync) was
+evaluated and deliberately deferred — fzf&rsquo;s Ctrl+R over the native history file is sufficient for now
+and adds no daemon or separate data store. <code>[packages.atuin]</code> exists in <code>setup.toml</code> with
+<code>enabled = false</code> for whenever it&rsquo;s worth revisiting; see the fzf section below for what changes
+when switching.</p>
+<h2 id="fzf">fzf<a class="headerlink" href="#fzf" title="Permanent link">&para;</a></h2>
+<p>fzf is wired to <code>fd</code> (fast file finder) and <code>bat</code> (syntax-highlighted preview) via env vars in <code>[packages.fzf]</code>. All bindings open an interactive fuzzy picker — type to filter, <code>Enter</code> to accept, <code>Esc</code> to cancel.</p>
+<h3 id="key-bindings">Key bindings<a class="headerlink" href="#key-bindings" title="Permanent link">&para;</a></h3>
+<p><strong><code>Ctrl+R</code> — history search</strong></p>
+<p>Opens a picker over your full shell history. Type any fragment of the command. Results are sorted by recency. Press <code>Ctrl+/</code> to toggle a preview pane showing the full command text (useful for long commands). Accepts into the prompt without executing — press <code>Enter</code> again to run.</p>
+<p><strong><code>Ctrl+T</code> — file picker</strong></p>
+<p>Searches files recursively from the current directory (via <code>fd</code>, so <code>.gitignore</code> is respected and <code>.git</code> directories are excluded). Pastes the selected path at the cursor position in the current command. Useful mid-command:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>vim &lt;Ctrl+T&gt;          # pick a file to open
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>cp &lt;Ctrl+T&gt; ./dest/   # pick the source file
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>git add &lt;Ctrl+T&gt;      # stage a specific file
+</span></code></pre></div>
+<p>Preview pane shows the file&rsquo;s contents via <code>bat</code> (syntax highlighting, line numbers, first 300 lines).</p>
+<p><strong><code>Alt+C</code> — directory jump</strong></p>
+<p>Searches subdirectories recursively and <code>cd</code>s into the selected one immediately. Preview shows <code>ls -la</code> of the directory.</p>
+<h3 id="fuzzy-tab-completion"><code>**</code> fuzzy tab completion<a class="headerlink" href="#fuzzy-tab-completion" title="Permanent link">&para;</a></h3>
+<p>Type a command, then <code>**</code> and press <code>Tab</code> to get a fuzzy picker for what comes next:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>vim **&lt;Tab&gt;           # pick any file under current dir
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cd **&lt;Tab&gt;            # pick a subdirectory to cd into
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ssh **&lt;Tab&gt;           # pick from ~/.ssh/config hosts
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>kill **&lt;Tab&gt;          # pick a running process by name
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>unset **&lt;Tab&gt;         # pick an environment variable
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>export **&lt;Tab&gt;        # pick an environment variable
+</span></code></pre></div>
+<p>The picker for each context is context-aware — <code>kill **&lt;Tab&gt;</code> shows processes, <code>ssh **&lt;Tab&gt;</code> shows hosts from your SSH config, etc.</p>
+<h3 id="in-scripts-and-pipelines">In scripts and pipelines<a class="headerlink" href="#in-scripts-and-pipelines" title="Permanent link">&para;</a></h3>
+<p>fzf can be used directly in scripts as a generic picker — pipe any list to it and it returns the selected line:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># pick a git branch to check out</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>git<span class="w"> </span>checkout<span class="w"> </span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># pick a running docker container to exec into</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span><span class="k">$(</span>docker<span class="w"> </span>ps<span class="w"> </span>--format<span class="w"> </span><span class="s1">&#39;{{.Names}}&#39;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span><span class="w"> </span>bash
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
+</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># pick a file to edit from ripgrep results</span>
+</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>vim<span class="w"> </span><span class="k">$(</span>rg<span class="w"> </span>--files<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
+</span></code></pre></div>
+<h3 id="navigation-inside-fzf">Navigation inside fzf<a class="headerlink" href="#navigation-inside-fzf" title="Permanent link">&para;</a></h3>
+<table>
+<thead>
+<tr>
+<th>Key</th>
+<th>Action</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Type</td>
+<td>filter results</td>
+</tr>
+<tr>
+<td><code>↑</code> / <code>↓</code></td>
+<td>move selection</td>
+</tr>
+<tr>
+<td><code>Enter</code></td>
+<td>accept</td>
+</tr>
+<tr>
+<td><code>Esc</code> / <code>Ctrl+C</code></td>
+<td>cancel</td>
+</tr>
+<tr>
+<td><code>Ctrl+/</code></td>
+<td>toggle preview pane (where configured)</td>
+</tr>
+<tr>
+<td><code>Tab</code></td>
+<td>mark multiple items (where multi-select is enabled)</td>
+</tr>
+</tbody>
+</table>
+<p><strong>When enabling Atuin:</strong> remove the <code>key-bindings.zsh</code> source from <code>[packages.fzf]</code> in <code>setup.toml</code> (keep <code>completion.zsh</code>) to avoid the <code>Ctrl+R</code> conflict. <code>Ctrl+T</code>, <code>Alt+C</code>, and <code>**</code> completion are unaffected.</p>
+<h2 id="path">PATH<a class="headerlink" href="#path" title="Permanent link">&para;</a></h2>
+<p>PATH is controlled entirely through <code>setup.toml</code> sentinel blocks written to <code>~/.zshenv</code> (loaded for all zsh instances):</p>
+<table>
+<thead>
+<tr>
+<th>Entry</th>
+<th>Adds</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>[packages.zsh-path]</code></td>
+<td><code>~/.local/bin</code> prepended — user tools shadow system tools</td>
+</tr>
+<tr>
+<td><code>[packages.go]</code></td>
+<td><code>$GOROOT/bin</code> (<code>go</code>, <code>gofmt</code>), <code>$GOPATH/bin</code> (go-installed tools)</td>
+</tr>
+<tr>
+<td><code>[packages.gcloud]</code> <em>(disabled)</em></td>
+<td><code>~/.local/share/google-cloud-sdk/bin</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>~/.local/bin</code> goes in <code>~/.zshenv</code> rather than <code>~/.zshrc</code> so they are available to all zsh instances, including non-interactive scripts. <code>/usr/local/bin</code> is already in the system PATH via <code>/etc/environment</code> and is not duplicated here.</p>
+<p>When adding a new tool that needs a PATH entry, prefer creating a symlink in <code>~/.local/bin</code> over a new PATH manipulation. Only add a PATH entry when the tool writes multiple binaries to its own directory dynamically (like <code>go install</code> populating <code>$GOPATH/bin</code>).</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./zensical.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Zensical (docs site engine)">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Zensical (docs site engine)
+              </div>
+            </div>
+          </a>
+        
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":".","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.top","navigation.tracking","search.highlight"],"search":"./assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="./assets/javascripts/bundle.6e5f0216.min.js"></script>
+      
+    
+  </body>
+</html>

@@ -10,30 +10,36 @@
         <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
       
       
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/js.html">
       
+      
+        <link rel="prev" href="./input_devices.html">
+      
+      
+        <link rel="next" href="./keybindings.html">
       
       
         
       
       
-      <link rel="icon" href="/power-user-linux-setup/assets/images/favicon.png">
+      <link rel="icon" href="./assets/images/favicon.png">
       <meta name="generator" content="zensical-0.0.44">
     
     
       
-        <title>Power User Linux Setup</title>
+        <title>Node.js - Power User Linux Setup</title>
       
     
     
       
         
       
-      <link rel="stylesheet" href="/power-user-linux-setup/assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="./assets/stylesheets/modern/main.fba56155.min.css">
       
         
           
         
-        <link rel="stylesheet" href="/power-user-linux-setup/assets/stylesheets/modern/palette.dfe2e883.min.css">
+        <link rel="stylesheet" href="./assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -52,9 +58,9 @@
       
     
     
-      <link rel="stylesheet" href="/power-user-linux-setup/extra/extra.css">
+      <link rel="stylesheet" href="./extra/extra.css">
     
-    <script>__md_scope=new URL("/power-user-linux-setup",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -78,7 +84,8 @@
     <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
-        <a href="#__skip" class="md-skip">
+        
+        <a href="#nodejs" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +101,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/power-user-linux-setup/index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+    <a href="./index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
@@ -114,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Node.js
             
           </span>
         </div>
@@ -189,7 +196,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/power-user-linux-setup/index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+    <a href="./index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
@@ -219,7 +226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/index.html" class="md-nav__link">
+      <a href="./index.html" class="md-nav__link">
         
   
   
@@ -245,7 +252,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/ai.html" class="md-nav__link">
+      <a href="./ai.html" class="md-nav__link">
         
   
   
@@ -271,7 +278,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/apt_packages.html" class="md-nav__link">
+      <a href="./apt_packages.html" class="md-nav__link">
         
   
   
@@ -297,7 +304,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/citrix.html" class="md-nav__link">
+      <a href="./citrix.html" class="md-nav__link">
         
   
   
@@ -323,7 +330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/claude-code.html" class="md-nav__link">
+      <a href="./claude-code.html" class="md-nav__link">
         
   
   
@@ -349,7 +356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/dev-container.html" class="md-nav__link">
+      <a href="./dev-container.html" class="md-nav__link">
         
   
   
@@ -375,7 +382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/docker.html" class="md-nav__link">
+      <a href="./docker.html" class="md-nav__link">
         
   
   
@@ -401,7 +408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/fonts.html" class="md-nav__link">
+      <a href="./fonts.html" class="md-nav__link">
         
   
   
@@ -427,7 +434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/gcloud.html" class="md-nav__link">
+      <a href="./gcloud.html" class="md-nav__link">
         
   
   
@@ -453,7 +460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/git.html" class="md-nav__link">
+      <a href="./git.html" class="md-nav__link">
         
   
   
@@ -479,7 +486,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/github.html" class="md-nav__link">
+      <a href="./github.html" class="md-nav__link">
         
   
   
@@ -505,7 +512,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/gitlab.html" class="md-nav__link">
+      <a href="./gitlab.html" class="md-nav__link">
         
   
   
@@ -531,7 +538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/gnome_extensions.html" class="md-nav__link">
+      <a href="./gnome_extensions.html" class="md-nav__link">
         
   
   
@@ -557,7 +564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/golang.html" class="md-nav__link">
+      <a href="./golang.html" class="md-nav__link">
         
   
   
@@ -583,7 +590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/ide.html" class="md-nav__link">
+      <a href="./ide.html" class="md-nav__link">
         
   
   
@@ -609,7 +616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/input_devices.html" class="md-nav__link">
+      <a href="./input_devices.html" class="md-nav__link">
         
   
   
@@ -632,10 +639,36 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/power-user-linux-setup/js.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Node.js
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="js.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -650,6 +683,77 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#version-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Version management
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Global packages
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Global packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-installs-vs-uv-tool-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Global installs vs uv tool install
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -661,7 +765,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/keybindings.html" class="md-nav__link">
+      <a href="./keybindings.html" class="md-nav__link">
         
   
   
@@ -687,7 +791,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/kubernetes.html" class="md-nav__link">
+      <a href="./kubernetes.html" class="md-nav__link">
         
   
   
@@ -713,7 +817,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/locale.html" class="md-nav__link">
+      <a href="./locale.html" class="md-nav__link">
         
   
   
@@ -739,7 +843,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/networking.html" class="md-nav__link">
+      <a href="./networking.html" class="md-nav__link">
         
   
   
@@ -765,7 +869,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/python.html" class="md-nav__link">
+      <a href="./python.html" class="md-nav__link">
         
   
   
@@ -791,7 +895,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/rust.html" class="md-nav__link">
+      <a href="./rust.html" class="md-nav__link">
         
   
   
@@ -817,7 +921,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/scala.html" class="md-nav__link">
+      <a href="./scala.html" class="md-nav__link">
         
   
   
@@ -843,7 +947,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/screen_capture.html" class="md-nav__link">
+      <a href="./screen_capture.html" class="md-nav__link">
         
   
   
@@ -869,7 +973,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/shortcuts.html" class="md-nav__link">
+      <a href="./shortcuts.html" class="md-nav__link">
         
   
   
@@ -895,7 +999,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/ssh.html" class="md-nav__link">
+      <a href="./ssh.html" class="md-nav__link">
         
   
   
@@ -921,7 +1025,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/troubleshooting.html" class="md-nav__link">
+      <a href="./troubleshooting.html" class="md-nav__link">
         
   
   
@@ -947,7 +1051,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/upgrade_20_04_to_24_04.html" class="md-nav__link">
+      <a href="./upgrade_20_04_to_24_04.html" class="md-nav__link">
         
   
   
@@ -973,7 +1077,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/wsl.html" class="md-nav__link">
+      <a href="./wsl.html" class="md-nav__link">
         
   
   
@@ -999,7 +1103,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/zensical.html" class="md-nav__link">
+      <a href="./zensical.html" class="md-nav__link">
         
   
   
@@ -1025,7 +1129,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/zsh.html" class="md-nav__link">
+      <a href="./zsh.html" class="md-nav__link">
         
   
   
@@ -1058,6 +1162,13 @@
                     
                     
                     
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
                     
                   
                   <div class="md-sidebar__inner">
@@ -1068,6 +1179,66 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#version-management" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Version management
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#global-packages" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Global packages
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Global packages">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#global-installs-vs-uv-tool-install" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Global installs vs uv tool install
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1088,8 +1259,67 @@
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
+  
+  
 
+
+<h1 id="nodejs">Node.js<a class="headerlink" href="#nodejs" title="Permanent link">&para;</a></h1>
+<p><a href="https://github.com/nvm-sh/nvm">https://github.com/nvm-sh/nvm</a></p>
+<p>Installed via <code>inv node.install</code> (nvm method — installs nvm to <code>~/.local/share/nvm</code>, then installs Node LTS and global packages declared in <code>setup.toml</code>).</p>
+<p>Shell integration is split across two files written by <code>inv zsh.configure</code>:</p>
+<ul>
+<li><code>~/.zshenv</code> — <code>export NVM_DIR</code> (sourced first, before oh-my-zsh, so the <code>nvm</code> plugin sees the custom path)</li>
+<li><code>~/.zshrc</code> — <code>export NVM_DIR</code> as a fallback for shells that skip <code>.zshenv</code></li>
+</ul>
+<p>The oh-my-zsh <code>nvm</code> plugin (declared in <code>setup.toml</code> as <code>omz_plugin = "nvm"</code>) sources <code>nvm.sh</code> and handles zsh completion via <code>bashcompinit</code>. The <code>nvm install</code> script is run with <code>PROFILE=/dev/null</code> so it never writes to shell config files directly — PULSE owns those.</p>
+<h2 id="version-management">Version management<a class="headerlink" href="#version-management" title="Permanent link">&para;</a></h2>
+<p>nvm manages Node versions. Common commands:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>nvm<span class="w"> </span>install<span class="w"> </span>--lts<span class="w">          </span><span class="c1"># install latest LTS</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>nvm<span class="w"> </span>install<span class="w"> </span><span class="m">22</span><span class="w">             </span><span class="c1"># install a specific major version</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>nvm<span class="w"> </span>use<span class="w"> </span><span class="m">22</span><span class="w">                 </span><span class="c1"># switch version in current shell</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>nvm<span class="w"> </span><span class="nb">alias</span><span class="w"> </span>default<span class="w"> </span>lts/*<span class="w">    </span><span class="c1"># set default for new shells</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>nvm<span class="w"> </span>ls<span class="w">                     </span><span class="c1"># list installed versions</span>
+</span></code></pre></div>
+<h2 id="global-packages">Global packages<a class="headerlink" href="#global-packages" title="Permanent link">&para;</a></h2>
+<p>Global npm packages are declared in <code>setup.toml</code> under <code>global_packages</code> and installed by <code>inv node.install</code>. Currently:</p>
+<table>
+<thead>
+<tr>
+<th>Package</th>
+<th>What it does</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>skills</code></td>
+<td>Install Claude Code slash commands from GitHub — <code>skills add &lt;owner&gt;/&lt;repo&gt;</code></td>
+</tr>
+</tbody>
+</table>
+<h3 id="global-installs-vs-uv-tool-install">Global installs vs uv tool install<a class="headerlink" href="#global-installs-vs-uv-tool-install" title="Permanent link">&para;</a></h3>
+<p><code>npm install -g</code> puts all tools in a single shared location under the active nvm version — there is no per-tool isolation like <code>uv tool install</code> provides. In practice this rarely causes conflicts because Node CLI tools have few shared dependencies.</p>
+<p>For one-off runs use <code>npx &lt;tool&gt;</code> (equivalent to <code>uvx</code>) — it downloads and runs without installing. Only add to <code>global_packages</code> for commands used daily.</p>
+<p>If tool isolation ever becomes a real need, <a href="https://volta.sh">Volta</a> is the upgrade path: it manages Node versions and installs global tools in isolated shims, pinnable per project via <code>package.json</code>.</p>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>node<span class="w"> </span>--version
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>npm<span class="w"> </span>--version
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -1109,6 +1339,44 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./input_devices.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Input devices">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Input devices
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="./keybindings.html" class="md-footer__link md-footer__link--next" aria-label="Next: Keybindings">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Keybindings
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">
@@ -1136,10 +1404,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"/power-user-linux-setup","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.top","navigation.tracking","search.highlight"],"search":"/power-user-linux-setup/assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":".","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.top","navigation.tracking","search.highlight"],"search":"./assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="/power-user-linux-setup/assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="./assets/javascripts/bundle.6e5f0216.min.js"></script>
       
     
   </body>

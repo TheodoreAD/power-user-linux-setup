@@ -10,30 +10,36 @@
         <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
       
       
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/rust.html">
       
+      
+        <link rel="prev" href="./python.html">
+      
+      
+        <link rel="next" href="./scala.html">
       
       
         
       
       
-      <link rel="icon" href="/power-user-linux-setup/assets/images/favicon.png">
+      <link rel="icon" href="./assets/images/favicon.png">
       <meta name="generator" content="zensical-0.0.44">
     
     
       
-        <title>Power User Linux Setup</title>
+        <title>Rust - Power User Linux Setup</title>
       
     
     
       
         
       
-      <link rel="stylesheet" href="/power-user-linux-setup/assets/stylesheets/modern/main.fba56155.min.css">
+      <link rel="stylesheet" href="./assets/stylesheets/modern/main.fba56155.min.css">
       
         
           
         
-        <link rel="stylesheet" href="/power-user-linux-setup/assets/stylesheets/modern/palette.dfe2e883.min.css">
+        <link rel="stylesheet" href="./assets/stylesheets/modern/palette.dfe2e883.min.css">
       
       
 
@@ -52,9 +58,9 @@
       
     
     
-      <link rel="stylesheet" href="/power-user-linux-setup/extra/extra.css">
+      <link rel="stylesheet" href="./extra/extra.css">
     
-    <script>__md_scope=new URL("/power-user-linux-setup",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
     
       
 
@@ -78,7 +84,8 @@
     <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
     <div data-md-component="skip">
       
-        <a href="#__skip" class="md-skip">
+        
+        <a href="#rust" class="md-skip">
           Skip to content
         </a>
       
@@ -94,7 +101,7 @@
 
 <header class="md-header md-header--shadow" data-md-component="header">
   <nav class="md-header__inner md-grid" aria-label="Header">
-    <a href="/power-user-linux-setup/index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+    <a href="./index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
@@ -114,7 +121,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              
+              Rust
             
           </span>
         </div>
@@ -189,7 +196,7 @@
 
 <nav class="md-nav md-nav--primary" aria-label="Navigation" data-md-level="0">
   <label class="md-nav__title" for="__drawer">
-    <a href="/power-user-linux-setup/index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+    <a href="./index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
       
   
   <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
@@ -219,7 +226,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/index.html" class="md-nav__link">
+      <a href="./index.html" class="md-nav__link">
         
   
   
@@ -245,7 +252,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/ai.html" class="md-nav__link">
+      <a href="./ai.html" class="md-nav__link">
         
   
   
@@ -271,7 +278,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/apt_packages.html" class="md-nav__link">
+      <a href="./apt_packages.html" class="md-nav__link">
         
   
   
@@ -297,7 +304,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/citrix.html" class="md-nav__link">
+      <a href="./citrix.html" class="md-nav__link">
         
   
   
@@ -323,7 +330,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/claude-code.html" class="md-nav__link">
+      <a href="./claude-code.html" class="md-nav__link">
         
   
   
@@ -349,7 +356,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/dev-container.html" class="md-nav__link">
+      <a href="./dev-container.html" class="md-nav__link">
         
   
   
@@ -375,7 +382,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/docker.html" class="md-nav__link">
+      <a href="./docker.html" class="md-nav__link">
         
   
   
@@ -401,7 +408,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/fonts.html" class="md-nav__link">
+      <a href="./fonts.html" class="md-nav__link">
         
   
   
@@ -427,7 +434,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/gcloud.html" class="md-nav__link">
+      <a href="./gcloud.html" class="md-nav__link">
         
   
   
@@ -453,7 +460,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/git.html" class="md-nav__link">
+      <a href="./git.html" class="md-nav__link">
         
   
   
@@ -479,7 +486,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/github.html" class="md-nav__link">
+      <a href="./github.html" class="md-nav__link">
         
   
   
@@ -505,7 +512,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/gitlab.html" class="md-nav__link">
+      <a href="./gitlab.html" class="md-nav__link">
         
   
   
@@ -531,7 +538,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/gnome_extensions.html" class="md-nav__link">
+      <a href="./gnome_extensions.html" class="md-nav__link">
         
   
   
@@ -557,7 +564,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/golang.html" class="md-nav__link">
+      <a href="./golang.html" class="md-nav__link">
         
   
   
@@ -583,7 +590,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/ide.html" class="md-nav__link">
+      <a href="./ide.html" class="md-nav__link">
         
   
   
@@ -609,7 +616,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/input_devices.html" class="md-nav__link">
+      <a href="./input_devices.html" class="md-nav__link">
         
   
   
@@ -635,7 +642,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/js.html" class="md-nav__link">
+      <a href="./js.html" class="md-nav__link">
         
   
   
@@ -661,7 +668,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/keybindings.html" class="md-nav__link">
+      <a href="./keybindings.html" class="md-nav__link">
         
   
   
@@ -687,7 +694,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/kubernetes.html" class="md-nav__link">
+      <a href="./kubernetes.html" class="md-nav__link">
         
   
   
@@ -713,7 +720,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/locale.html" class="md-nav__link">
+      <a href="./locale.html" class="md-nav__link">
         
   
   
@@ -739,7 +746,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/networking.html" class="md-nav__link">
+      <a href="./networking.html" class="md-nav__link">
         
   
   
@@ -765,7 +772,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/python.html" class="md-nav__link">
+      <a href="./python.html" class="md-nav__link">
         
   
   
@@ -788,10 +795,36 @@
       
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="/power-user-linux-setup/rust.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Rust
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="rust.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -806,6 +839,82 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Environment
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What&rsquo;s included
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Updating
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uninstalling" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Uninstalling
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -817,7 +926,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/scala.html" class="md-nav__link">
+      <a href="./scala.html" class="md-nav__link">
         
   
   
@@ -843,7 +952,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/screen_capture.html" class="md-nav__link">
+      <a href="./screen_capture.html" class="md-nav__link">
         
   
   
@@ -869,7 +978,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/shortcuts.html" class="md-nav__link">
+      <a href="./shortcuts.html" class="md-nav__link">
         
   
   
@@ -895,7 +1004,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/ssh.html" class="md-nav__link">
+      <a href="./ssh.html" class="md-nav__link">
         
   
   
@@ -921,7 +1030,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/troubleshooting.html" class="md-nav__link">
+      <a href="./troubleshooting.html" class="md-nav__link">
         
   
   
@@ -947,7 +1056,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/upgrade_20_04_to_24_04.html" class="md-nav__link">
+      <a href="./upgrade_20_04_to_24_04.html" class="md-nav__link">
         
   
   
@@ -973,7 +1082,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/wsl.html" class="md-nav__link">
+      <a href="./wsl.html" class="md-nav__link">
         
   
   
@@ -999,7 +1108,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/zensical.html" class="md-nav__link">
+      <a href="./zensical.html" class="md-nav__link">
         
   
   
@@ -1025,7 +1134,7 @@
   
   
     <li class="md-nav__item">
-      <a href="/power-user-linux-setup/zsh.html" class="md-nav__link">
+      <a href="./zsh.html" class="md-nav__link">
         
   
   
@@ -1058,6 +1167,13 @@
                     
                     
                     
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
                     
                   
                   <div class="md-sidebar__inner">
@@ -1068,6 +1184,71 @@
   
   
   
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#environment" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Environment
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#whats-included" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What&rsquo;s included
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#updating" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Updating
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uninstalling" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Uninstalling
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
   
 </nav>
                   </div>
@@ -1088,8 +1269,72 @@
               
               <article class="md-content__inner md-typeset">
                 
-  <h1>404 - Not found</h1>
+                  
+  
+  
 
+
+<h1 id="rust">Rust<a class="headerlink" href="#rust" title="Permanent link">&para;</a></h1>
+<p><a href="https://www.rust-lang.org/tools/install">https://www.rust-lang.org/tools/install</a>
+<a href="https://rust-lang.github.io/rustup/">https://rust-lang.github.io/rustup/</a></p>
+<p>Installed via <code>inv tools.install</code> (script method — pipes the official rustup installer,
+pointed at XDG-compliant paths instead of its <code>~/.cargo</code> / <code>~/.rustup</code> defaults). Shell
+environment is written to <code>~/.zshenv</code> by <code>inv zsh.configure</code>.</p>
+<h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">RUSTUP_HOME</span><span class="o">=</span>~/.local/share/rustup<span class="w">   </span><span class="c1"># installed toolchains, rustup config</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">CARGO_HOME</span><span class="o">=</span>~/.local/share/cargo<span class="w">     </span><span class="c1"># cargo cache, registry, installed binaries, rustc/cargo/etc.</span>
+</span></code></pre></div>
+<p>Both are set automatically by the <code>zshenv</code> snippet in <code>setup.toml</code>, which also sources
+<code>$CARGO_HOME/env</code> to put <code>$CARGO_HOME/bin</code> on <code>PATH</code>.</p>
+<h2 id="whats-included">What&rsquo;s included<a class="headerlink" href="#whats-included" title="Permanent link">&para;</a></h2>
+<p>Rustup&rsquo;s <code>default</code> profile (used here) installs <code>rustc</code>, <code>cargo</code>, <code>rust-std</code>, <code>rust-docs</code>,
+<code>rustfmt</code>, and <code>clippy</code> in one shot. The <code>rust-analyzer</code> language server is added on top via
+<code>post_install</code> in <code>setup.toml</code> (<code>rustup component add rust-analyzer</code>) — it&rsquo;s only needed for
+non-JetBrains editors (VS Code, Neovim, Helix, Zed); PyCharm&rsquo;s Rust plugin uses its own
+analysis engine, see <a href="ide.html">ide.md</a>. <code>post_install</code> only runs on a fresh install (it&rsquo;s
+skipped once <code>rustc</code> already exists), so it won&rsquo;t retroactively add new components to an
+existing install — see Updating below for that.</p>
+<h2 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">&para;</a></h2>
+<p><code>rustup</code> itself manages toolchain versions (stable/beta/nightly, and per-project overrides
+via <code>rust-toolchain.toml</code>) — no separate version manager needed. <code>inv tools.install</code> will
+<strong>not</strong> update an existing install (the <code>script</code> method only runs once, when <code>rustc</code> is
+missing), so updates go through <code>rustup</code> directly:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>rustup<span class="w"> </span>update<span class="w">                              </span><span class="c1"># update the toolchain (rustc, cargo, clippy, rustfmt, ...)</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>rustup<span class="w"> </span>self<span class="w"> </span>update<span class="w">                         </span><span class="c1"># update rustup itself</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>rustup<span class="w"> </span>component<span class="w"> </span>add<span class="w"> </span>rust-analyzer<span class="w">         </span><span class="c1"># add a component that&#39;s missing on an existing install</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>rustup<span class="w"> </span>toolchain<span class="w"> </span>list<span class="w">                      </span><span class="c1"># installed toolchains</span>
+</span></code></pre></div>
+<h2 id="uninstalling">Uninstalling<a class="headerlink" href="#uninstalling" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>rustup<span class="w"> </span>self<span class="w"> </span>uninstall
+</span></code></pre></div>
+<p>This removes the whole install — toolchains, cargo cache/registry, and the rustup binary
+itself (<code>~/.local/share/cargo</code> and <code>~/.local/share/rustup</code>, since <code>CARGO_HOME</code>/<code>RUSTUP_HOME</code>
+point there). It prompts for confirmation; pass <code>-y</code> to skip that.</p>
+<p>Afterwards, either set <code>enabled = false</code> on <code>[packages.rust]</code> in <code>setup.toml</code> (so
+<code>inv tools.install</code> doesn&rsquo;t reinstall it) or remove the section entirely. Neither
+<code>inv tools.install</code> nor <code>inv zsh.configure</code> prune stale config on their own, so also remove
+the <code>PULSE::rust</code> sentinel block from <code>~/.zshenv</code> by hand — otherwise it&rsquo;ll harmlessly export
+<code>RUSTUP_HOME</code>/<code>CARGO_HOME</code> and source a <code>$CARGO_HOME/env</code> that no longer exists.</p>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>rustc<span class="w"> </span>--version
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cargo<span class="w"> </span>--version
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>rust-analyzer<span class="w"> </span>--version
+</span></code></pre></div>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
               </article>
             </div>
           
@@ -1109,6 +1354,44 @@
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./python.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Python">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Python
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="./scala.html" class="md-footer__link md-footer__link--next" aria-label="Next: Scala">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Scala
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">
@@ -1136,10 +1419,10 @@
     
       
       
-      <script id="__config" type="application/json">{"annotate":null,"base":"/power-user-linux-setup","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.top","navigation.tracking","search.highlight"],"search":"/power-user-linux-setup/assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+      <script id="__config" type="application/json">{"annotate":null,"base":".","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.top","navigation.tracking","search.highlight"],"search":"./assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
     
     
-      <script src="/power-user-linux-setup/assets/javascripts/bundle.6e5f0216.min.js"></script>
+      <script src="./assets/javascripts/bundle.6e5f0216.min.js"></script>
       
     
   </body>
