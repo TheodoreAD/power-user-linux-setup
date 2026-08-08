@@ -14,7 +14,8 @@ easy to reproduce your setup on a new machine, with the least amount of manual r
 - **Full workstation** — bare-metal or VM Ubuntu 24.04 desktop, GNOME included.
 - **Headless / server** — `PULSE_EXCLUDE_TAGS` skips anything needing a display or hardware access.
 - **Dev container** — the same manifest builds a Dockerfile-based dev image.
-- **WSL2** — a diagnostic task (`inv wsl.check`) and a documented tag profile for Windows/WSL2.
+- **WSL2** — a diagnostic task (`inv wsl.check`) and a one-shot install task (`inv wsl.install`)
+  with a documented tag profile for Windows/WSL2.
 
 ## Requirements
 
@@ -28,7 +29,7 @@ be distribution-agnostic eventually, but only Ubuntu 24.04 (`noble numbat`) is t
 ## Quick start
 
 ```shell
-git clone <this repo>
+git clone https://github.com/TheodoreAD/power-user-linux-setup.git
 cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
 inv setup             # runs the full setup
