@@ -80,9 +80,11 @@ eval $(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --confh
 [ -f "${HOME}/.keychain/${HOSTNAME}-sh" ] && source "${HOME}/.keychain/${HOSTNAME}-sh"
 ```
 
-!!! WARNING
-    Keychain compatibility with Wayland sessions on 24.04 is not yet verified.
-    Test before relying on it.
+**Verified on 24.04 + Wayland (2026-08-08):** the `keychain`-managed `ssh-agent` persists correctly
+across the Wayland session — the agent socket survives from login through the full session, and
+`AddKeysToAgent yes` (in the `Host *` block above) adds each key to it on first use. An empty
+`ssh-add -l` right after login is expected (keys load lazily on first connection, not eagerly at
+login), not a sign of breakage.
 
 ## Troubleshooting
 

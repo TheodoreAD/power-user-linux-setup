@@ -154,7 +154,7 @@ if needed; `inv gnome.extensions` will install and activate.
 
 | UUID | EGO | setup.toml key | Notes |
 |---|---|---|---|
-| `freon@UshakovVasilii_Github.yahoo.com` | — | `gnome-ext-freon` | Superseded by Vitals — keep disabled |
+| `freon@UshakovVasilii_Github.yahoo.com` | [#841](https://extensions.gnome.org/extension/841/freon/) | `gnome-ext-freon` | Superseded by Vitals — keep disabled; confirmed GNOME 46-compatible (extension supports Shell 45-50) |
 | `gTile@vibou` | [#28](https://extensions.gnome.org/extension/28/) | `gnome-ext-gtile` | Keyboard-driven tiling grid overlay. **→ retired** — replaced by Tiling Shell. |
 | `switcher@landau.fi` | [#973](https://extensions.gnome.org/extension/973/) | `gnome-ext-switcher` | Combined app launcher + window switcher. **→ retired** — original maintainer inactive (no maintainer-authored commits since 2023); GNOME 47 fix was community-contributed. Replaced by AATWS. |
 

@@ -116,6 +116,40 @@ Sourced as sentinel blocks in `~/.zshrc` after `source $ZSH/oh-my-zsh.sh`:
 
 OMZ calls `compinit` internally — no manual `autoload -Uz compinit && compinit` needed.
 
+## History
+
+Declared in `[packages.zsh-history]`:
+
+```shell
+HISTSIZE=1000000
+SAVEHIST=1000000
+setopt EXTENDED_HISTORY       # record timestamp + elapsed time per command
+setopt HIST_IGNORE_ALL_DUPS   # remove older duplicate when same command is entered
+setopt HIST_FIND_NO_DUPS      # skip duplicates during Ctrl+R search
+setopt HIST_IGNORE_SPACE      # don't record commands prefixed with a space
+setopt HIST_REDUCE_BLANKS     # strip superfluous whitespace before recording
+setopt HIST_VERIFY            # show expanded history before executing (e.g. !foo)
+setopt SHARE_HISTORY          # live cross-session sharing via atomic appends
+setopt HIST_FCNTL_LOCK        # fcntl-based file locking for concurrent-session writes
+```
+
+**Corruption:** `EXTENDED_HISTORY` + `SHARE_HISTORY` is the standard zsh combo for a large,
+cross-session-shared history, but zsh's history file format has no crash-safety against power
+loss mid-write — an unfixed upstream limitation, not something a `setopt` can close. `HIST_FCNTL_LOCK`
+mitigates the other real-world cause (concurrent shells racing to write the file at once) by using
+standard `fcntl()` locking instead of zsh's ad-hoc default. If `~/.zsh_history` still gets corrupted
+(unreadable lines, `zsh: corrupt history file`), recover it with:
+
+```shell
+inv zsh.history-fix   # strings(1) strips non-printable bytes, then reloads history
+```
+
+**Atuin** (SQLite-backed history with a richer Ctrl+R UI, exit codes, durations, optional sync) was
+evaluated and deliberately deferred — fzf's Ctrl+R over the native history file is sufficient for now
+and adds no daemon or separate data store. `[packages.atuin]` exists in `setup.toml` with
+`enabled = false` for whenever it's worth revisiting; see the fzf section below for what changes
+when switching.
+
 ## fzf
 
 fzf is wired to `fd` (fast file finder) and `bat` (syntax-highlighted preview) via env vars in `[packages.fzf]`. All bindings open an interactive fuzzy picker — type to filter, `Enter` to accept, `Esc` to cancel.
