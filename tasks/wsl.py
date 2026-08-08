@@ -121,6 +121,30 @@ def _resolv_conf_symlinked_to_stub() -> bool:
     return _RESOLV_CONF.is_symlink() and os.path.realpath(_RESOLV_CONF) == os.path.realpath(_STUB_RESOLV_CONF)
 
 
+def _dns_resolves(c) -> bool:
+    """Actually test resolution, rather than trust that a correct config + a restarted service
+    means it works. Seen in the wild under WSL2: systemd-resolved freshly configured and
+    restarted, `resolvectl status` even showing the right DNS servers, and the stub at
+    127.0.0.53 *still* not resolving anything — some WSL2 network configurations (mirrored
+    networking mode, certain VPN/firewall setups) break the loopback stub specifically, even
+    though raw connectivity (e.g. `ping 1.1.1.1`) is fine.
+    """
+    return c.run("getent hosts archive.ubuntu.com", warn=True, hide=True).ok
+
+
+def _write_static_resolv_conf(c, primary="1.1.1.1", secondary="1.0.0.1") -> None:
+    """Bypass systemd-resolved's stub entirely: replace /etc/resolv.conf with a plain file
+    pointing straight at public DNS servers. Fallback for when the stub isn't resolving anything
+    even after system.dns() has configured and restarted systemd-resolved — see _dns_resolves.
+    Loses systemd-resolved's integration (split DNS, mDNS, etc.) but this is the last resort after
+    that's already been tried and failed.
+    """
+    with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
+        f.write(f"nameserver {primary}\nnameserver {secondary}\n")
+        tmp = f.name
+    c.run(f"{util.SUDO} rm -f {_RESOLV_CONF} && {util.SUDO} cp {tmp} {_RESOLV_CONF} && rm {tmp}")
+
+
 def _wslg_available() -> bool:
     return Path("/mnt/wslg").exists() or bool(os.environ.get("WAYLAND_DISPLAY"))
 
@@ -354,6 +378,25 @@ def install(c, wslg="auto", docker=False):
                 c.run(f"{util.SUDO} ln -sf {_STUB_RESOLV_CONF} {_RESOLV_CONF}")
                 print(f"[wsl.install] relinked /etc/resolv.conf -> {_STUB_RESOLV_CONF}")
         system.dns(c)
+        if util.DRY_RUN:
+            pass
+        elif _dns_resolves(c):
+            print("[wsl.install] DNS resolution verified working")
+        else:
+            print(
+                "[wsl.install] systemd-resolved is configured and restarted, but DNS still isn't "
+                "resolving — falling back to a static /etc/resolv.conf (bypassing the stub)"
+            )
+            _write_static_resolv_conf(c)
+            if _dns_resolves(c):
+                print("[wsl.install] DNS resolution verified working (static /etc/resolv.conf)")
+            else:
+                print(
+                    "[wsl.install] WARNING: DNS still isn't resolving after the static fallback — "
+                    "installs below will likely fail. This looks like a network/VPN/firewall issue "
+                    "outside PULSE's control, not a config problem — check with `getent hosts "
+                    "archive.ubuntu.com` and `ping 1.1.1.1` once this finishes."
+                )
     else:
         print("[wsl.install] systemd/DNS not both live yet — skipping system.dns (restart WSL and re-run)")
 
