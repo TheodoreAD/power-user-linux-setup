@@ -18,6 +18,9 @@ directly; see [Prerequisites](#prerequisites-etcwslconf) below. Everything else 
 (distro choice, WSL1 vs WSL2, WSLg availability) needs action from the Windows side instead, so
 there's no task for it. Everything below is the detail behind what it checks.
 
+For the install itself, prefer `inv wsl.install` over copy-pasting the [Recommended
+sequence](#recommended-sequence) below by hand — see that section for why.
+
 This isn't just advisory, either: the tasks that actually need systemd or apt/dpkg check for them
 directly (`util.require_systemd()` / `util.require_apt()` in [tasks/util.py](../tasks/util.py)) and
 abort immediately with an actionable message if the precondition isn't met, rather than failing
@@ -108,9 +111,25 @@ still reports on those, but there's nothing to write from inside WSL to fix them
 verifies `/run/systemd/system` is actually mounted, not just that the config file says so.
 
 **`generateResolvConf = false`** — without it, WSL regenerates `/etc/resolv.conf` from the Windows
-host's DNS settings on every restart, silently discarding whatever `inv system.dns` wrote. With it
-set, `/etc/resolv.conf` stays under your control and `inv system.dns` works exactly as it does on
-bare metal.
+host's DNS settings on every restart, silently discarding whatever `inv system.dns` wrote.
+
+Setting it doesn't finish the job by itself, though: on stock Ubuntu `/etc/resolv.conf` is a
+symlink to systemd-resolved's stub (`/run/systemd/resolve/stub-resolv.conf`), and `inv system.dns`
+(same as on bare metal) only ever edits systemd-resolved's own drop-in config — it never touches
+`/etc/resolv.conf` itself. WSL's `generateResolvConf` replaces that symlink with a plain file, and
+disabling the setting only stops WSL from touching the file *going forward* — it does not restore
+the symlink. So after `wsl.exe --shutdown` and reopening, `/etc/resolv.conf` is still the stale
+plain file WSL last wrote, `inv system.dns` has nothing to point at, and DNS resolution breaks
+(`curl: (6) Could not resolve host`, etc.) until the symlink is put back:
+
+```shell
+sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+inv system.dns
+```
+
+`inv wsl.install` does this relink automatically; `inv wsl.check` detects and reports whichever of
+these three states you're in (WSL still generating it, generated-but-frozen without the symlink,
+or correctly symlinked) if you're running the steps by hand instead.
 
 ## Docker
 
@@ -247,8 +266,30 @@ useful under WSL if you're using VS Code's Remote-WSL extension.
 ## Recommended sequence
 
 Skip `inv setup` wholesale — it calls `system.dns` and `docker.configure` unconditionally, which
-you may not want depending on your `/etc/wsl.conf` and Docker choice above. Run the phases you want
-directly:
+you may not want depending on your `/etc/wsl.conf` and Docker choice above.
+
+`inv wsl.install` runs the sequence below for you, as task calls inside a single invoke process:
+
+```shell
+inv wsl.install              # auto-detects WSLg, excludes workstation/corporate/ide/... per the table above
+inv wsl.install --wslg=no    # force the no-WSLg tag set instead of auto-detecting
+inv wsl.install --docker     # also keep the workstation tag (installs Docker natively)
+```
+
+It calls `wsl.check` and `wsl.fix` first, then `apt.repos`/`apt.base`/`apt.deb`, `tools.install`,
+`python.tools`, `node.install`, and the zsh tasks, then `system.locale`/`system.dns` only if
+systemd/DNS are actually live yet (skipped with a message otherwise, if `wsl.fix` just changed
+`/etc/wsl.conf` and you haven't restarted WSL).
+
+This is the one worth using instead of pasting the equivalent multi-line block below into a
+terminal: that block is a series of separate `inv` invocations one per line, so if one hangs (a
+network problem mid-`apt`, say) and you hit Ctrl-C, the shell only kills *that* command — it then
+reads the next already-pasted line from its input buffer and keeps going, which looks like Ctrl-C
+"did nothing" and skipped ahead. `wsl.install` runs everything in one process instead, so Ctrl-C at
+any point aborts the whole thing.
+
+If you want to run the phases individually instead — e.g. to stop and inspect state between
+steps — here's the same sequence by hand:
 
 ```shell
 inv wsl.check   # do this first — tells you whether WSLg is available
@@ -270,7 +311,9 @@ inv zsh.omz-configure zsh.configure zsh.p10k-configure
 # only if /etc/wsl.conf has systemd=true:
 inv system.locale
 
-# only if /etc/wsl.conf also has generateResolvConf = false:
+# only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs
+# restoring first, see "Prerequisites" above for why:
+sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 inv system.dns
 ```
 
