@@ -276,10 +276,13 @@ inv wsl.install --wslg=no    # force the no-WSLg tag set instead of auto-detecti
 inv wsl.install --docker     # also keep the workstation tag (installs Docker natively)
 ```
 
-It calls `wsl.check` and `wsl.fix` first, then `apt.repos`/`apt.base`/`apt.deb`, `tools.install`,
-`python.tools`, `node.install`, and the zsh tasks, then `system.locale`/`system.dns` only if
-systemd/DNS are actually live yet (skipped with a message otherwise, if `wsl.fix` just changed
-`/etc/wsl.conf` and you haven't restarted WSL).
+It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS
+are actually live yet — skipped with a message otherwise, if `wsl.fix` just changed
+`/etc/wsl.conf` and you haven't restarted WSL), *then* `apt.repos`/`apt.base`/`apt.deb`,
+`tools.install`, `python.tools`, `node.install`, and the zsh tasks. DNS has to be fixed before
+those — on a re-run after a restart with `generateResolvConf=false` already active, DNS is broken
+(see [Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of
+those later steps needs working DNS itself.
 
 This is the one worth using instead of pasting the equivalent multi-line block below into a
 terminal: that block is a series of separate `inv` invocations one per line, so if one hangs (a
@@ -298,6 +301,17 @@ inv wsl.fix     # sets systemd=true / generateResolvConf=false in /etc/wsl.conf 
 # then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —
 # and reopen your terminal before continuing
 
+# fix locale/DNS *before* anything below that needs network access — on a re-run after a restart
+# with generateResolvConf=false already active, DNS is broken until this runs (see Prerequisites):
+
+# only if /etc/wsl.conf has systemd=true:
+inv system.locale
+
+# only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs
+# restoring first, see "Prerequisites" above for why:
+sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
+inv system.dns
+
 # with WSLg (default on current Windows 11):
 PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos apt.base apt.deb
 # without WSLg:
@@ -307,14 +321,6 @@ inv tools.install
 inv python.tools
 inv node.install
 inv zsh.omz-configure zsh.configure zsh.p10k-configure
-
-# only if /etc/wsl.conf has systemd=true:
-inv system.locale
-
-# only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs
-# restoring first, see "Prerequisites" above for why:
-sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-inv system.dns
 ```
 
 `gnome.*` and `screenshot.*` tasks are never called by `inv setup` and have no meaning under WSL —
