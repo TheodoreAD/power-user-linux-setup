@@ -634,6 +634,63 @@ Full details and troubleshooting log: **[docs/citrix.md](citrix.md)**.
 
 ---
 
+## Git history — landing `initial_version` on `master`
+
+All of the PULSE rewrite work above happened on `initial_version` — a branch whose last real
+commit was from 2022-07-06, then dormant for four years while this upgrade work continued on it
+starting 2026-06-07. Meanwhile `master` was independently rewritten from scratch in Sept–Nov 2024
+(commits `da61690`, `fd51827`, `bf5400d`, `d0f193d`, `a68fbc3`, `629a3d5`) — its own mkdocs site,
+its own docs set — and neither branch ever saw the other's work. Both traced back to the same
+2019-08-02 "Initial commit" (`719a1e2`, just `LICENSE` + `README.md`), so a plain merge would have
+tried to reconcile two independent full rewrites against a nearly-empty common ancestor.
+
+**Investigation (2026-08-08)** — found real content on `master` the tracker had never reviewed,
+since it only ever looked at `initial_version`'s own docs:
+
+- Two genuine regressions if landed naively: `README.md` still said "Ubuntu 20.04" (never touched
+  by the 2026 rewrite) while `master` had already corrected this to 24.04 in 2024; and the docs
+  site's `mkdocs.yml`/`requirements-docs.txt` were frozen at a 2021 `mkdocs-material~=7.0` config,
+  missing plugins `master` had picked up in 2024 (`mkdocs-awesome-pages-plugin`, `mkdocs-markmap`,
+  `pymdownx.snippets`, `pymdownx.progressbar`).
+- Four doc pages existed only on `master`, never reviewed: `docs/browsers.md`, `docs/cloud.md`,
+  `docs/extras.md`, `docs/kubernetes-server.md`. Assessed and confirmed superseded (Terraform/gcloud
+  now automated via `setup.toml`, browsers install via `inv apt.repos`, `kubernetes-server.md`
+  duplicates content already deliberately deleted under a different filename) — dropped, not
+  carried over.
+- Everything else `master` had independently added (`docs/kubernetes-dev.md`, the old EFK/history-
+  fix scripts, `poetry.lock`/`pyproject.toml`/`requirements.txt`, old mermaid/tablesort assets) was
+  already accounted for by name in this tracker's own deletion decisions, or cleanly superseded.
+
+**Resolution:**
+1. New branch `land-on-master` off `initial_version`'s tip, staged PULSE work committed as `b9300b1`.
+2. `git merge master -X ours` — auto-resolves every overlapping-content conflict in favor of the
+   2026 work (the more recent, actively-verified rewrite) while structurally preserving anything
+   `master`-only untouched, since a 3-way merge treats "we never touched that path" as unchanged.
+3. Follow-up commit removing the 13 `master`-only files confirmed superseded above, fixing the
+   `README.md` regression, and — **user decision, in place of just patching the old mkdocs config**
+   — migrating the docs site from `mkdocs-material` to `zensical` (verified drop-in compatible with
+   the existing `mkdocs.yml`; see the Docs site entry below and [zensical.md](zensical.md)).
+4. Remaining tracker items worked through in the same effort: `glab` automated into `setup.toml`
+   (deb-url + a new `{version}`/`version_cmd` extension to `_install_deb_url`, since GitLab releases
+   aren't mirrored to GitHub), zsh history hardening (`HIST_FCNTL_LOCK`), the Freon EGO id, the
+   `ssh.md` keychain warning removed (verified working), a WSL support module added
+   (`inv wsl.check` + [wsl.md](wsl.md)), and the `setup.toml`/tag-system architecture fully
+   documented in `docs/index.md` and `setup.toml`'s own header comment.
+5. **Memory policy correction:** durable project knowledge (the tag/method architecture findings,
+   the WSL module pointer) was briefly saved to Claude Code's cross-session memory system, then
+   moved into the repo instead — `AGENTS.md` (actual content, cross-tool standard) + `CLAUDE.md`
+   (`@AGENTS.md` import, since Claude Code has no native AGENTS.md support). Version-controlled and
+   visible to any contributor or agent tool beats memory hidden in `~/.claude/`.
+6. Two further commits from other sessions landed on top of this same branch: a Rust toolchain via
+   rustup (`abc1c23` — see docs/rust.md below) and a real fix for the zensical migration (`e959de7`
+   — the original migration was only build-clean by accident; see the corrected Docs site entry
+   below and [zensical.md](zensical.md)).
+
+`initial_version` and the pre-landing `master` history are both left untouched — branches kept for
+historical reference, not deleted.
+
+---
+
 ## Guide analysis — what needs updating for 24.04
 
 Full read of all docs in this repo. Issues and update tasks recorded here so the guide reflects 24.04 reality post-upgrade.
@@ -686,6 +743,18 @@ Status: updated 2026-06-09.
 
 Status: ✓ **done 2026-06-08** — rewritten. Manual install steps removed; references `inv tools.install` and `inv zsh.configure`. GOROOT/GOPATH bug fixed (were swapped in original). Update instructions use `rm -rf ~/.local/share/go && inv tools.install`.
 
+### docs/rust.md
+
+Status: ✓ **new file, 2026-08-08** (added in a separate session, not part of the original 24.04
+guide review — recorded here for completeness). Rust toolchain via rustup, added as `[packages.rust]`
+in `setup.toml` — `method = "script"` piping the official rustup installer, redirected to XDG paths
+(`~/.local/share/{cargo,rustup}` instead of the `~/.cargo`/`~/.rustup` defaults) via a new
+`post_install` hook on the `script` method (`tasks/tools.py`) that adds the `rust-analyzer`
+component right after a fresh install. `docs/ide.md` documents the PyCharm Rust plugin separately —
+it uses its own analysis engine, not `rust-analyzer`, so no extra component is needed there, just
+the toolchain itself and (if PyCharm doesn't autodetect it) manually setting the toolchain location
+to `~/.local/share/cargo/bin`.
+
 ### docs/js.md
 
 Status: ✓ **done 2026-06-08** — rewritten. References `inv node.install` and `inv zsh.configure`. nvm to `~/.local/share/nvm`, Node LTS, global packages from `setup.toml`. Updated 2026-06-08: `NVM_DIR` in `~/.zshenv`; omz `nvm` plugin owns loading and completion; `PROFILE=/dev/null` prevents install script from touching shell files.
@@ -708,7 +777,12 @@ Status: ✓ **done** — fully rewritten. Now documents the invoke-based workflo
 
 ### docs/python.md
 
-Status: ✓ **done** — fully rewritten for uv. Covers bootstrap, shims, UV_PYTHON, `inv python.tools`, project venvs, private PyPI, Nuitka. Poetry/pipx/pyenv sections gone.
+Status: ✓ **done** — fully rewritten for uv. Covers bootstrap, shims, UV_PYTHON, `inv python.tools`, project venvs, private PyPI, Nuitka. Poetry/pipx/pyenv sections gone. **Updated 2026-08-08:**
+added a "How the pieces fit together" section with a Mermaid diagram showing how interpreters
+(`uv python install`), tools (`uv tool install`), project venvs, and the system Python never share
+dependencies — written as part of verifying the zensical Mermaid fix (see Docs site entry below)
+using this doc as the real test case. Also clarifies that `mkdocs`/`mkdocs-material` stay installed
+via `inv python.tools` for other projects even though they no longer build *this* repo's docs site.
 
 ### docs/docker.md
 
