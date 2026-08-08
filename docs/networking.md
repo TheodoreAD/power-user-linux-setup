@@ -1,48 +1,55 @@
 # Networking
 
-## Disable IPv6
+## DNS
+
+Ubuntu 24.04 uses **systemd-resolved** exclusively. `resolvconf` is gone — do not use it.
+
+DNS is configured via a drop-in file at `/etc/systemd/resolved.conf.d/pulse-dns.conf`, managed by `inv system.dns`:
 
 ```shell
-sudo tee "/etc/sysctl.d/local-disable-ipv6.conf" >/dev/null <<EOF
-net.ipv6.conf.all.disable_ipv6=1
-net.ipv6.conf.default.disable_ipv6=1
-EOF
-# reload configs
-sudo service procps force-reload
-# verify
-netplan status
+inv system.dns
+# or with custom servers:
+inv system.dns --primary=9.9.9.9 --secondary=149.112.112.112 --fallback=8.8.8.8
 ```
 
-# Set up DNS with Cloudflare, Google, Quad
+### Default servers
 
-!!! WARNING
-    Not working properly.
+| Server | IP | Why |
+|---|---|---|
+| Primary | `1.1.1.1` (Cloudflare) | Fastest globally, no query logging, no filtering |
+| Secondary | `1.0.0.1` (Cloudflare) | Same, alternate |
+| Fallback | `8.8.8.8` (Google) | Reliable fallback if Cloudflare unreachable |
 
-!!! TODO
-    Get more context and arrive at a working AND permanent solution.
+Cloudflare is preferred over Google for privacy: Cloudflare does not log queries or sell DNS data.
 
-<https://wiki.archlinux.org/title/systemd-resolved>
-<https://man7.org/linux/man-pages/man5/resolved.conf.d.5.html>
+### Why DNSSEC is disabled
+
+`DNSSEC=no` is intentional. DNSSEC breaks:
+- Corporate VPNs and split-horizon DNS
+- Docker's internal DNS resolver (`127.0.0.11`)
+- Some self-signed local services
+
+The security benefit for a development workstation is marginal compared to the breakage risk.
+
+### Why DNS-over-TLS is disabled
+
+`DNSOverTLS=no` is intentional. It adds ~50 ms latency on cold connections and interferes with `.local` mDNS resolution used by some dev tools and printers. Not worth it for a workstation.
+
+### Verifying
 
 ```shell
-sudo mkdir -p /etc/systemd/resolved.conf.d
-sudo tee "/etc/systemd/resolved.conf.d/99-dns.conf" >/dev/null <<EOF
-[Resolve]
-DNS=1.1.1.1 1.0.0.1
-FallbackDNS=8.8.8.8 8.8.4.4 9.9.9.9
-# to prevent systemd-resolved from using the per-link DNS servers, if any of them set Domains=~. in the per-link configuration
-Domains=~.
-EOF
-# reload configs
-sudo service systemd-resolved restart
-# verify
 resolvectl status
-netplan status
-
-# set DNS via netplan
-# currently disabled as we use systemd-resolved instead
-#MAIN_INTERFACE=$(ip route get 8.8.8.8 | awk -- '{printf $5}')
-#sudo netplan get network.ethernets.${MAIN_INTERFACE}
-#set DNS for main interface
-#sudo netplan set network.ethernets.${MAIN_INTERFACE}.nameservers.addresses=[1.1.1.1, 1.0.0.1]
+# look for: DNS Servers: 1.1.1.1 1.0.0.1
 ```
+
+### Drop-in file location
+
+`/etc/systemd/resolved.conf.d/pulse-dns.conf` — a PULSE sentinel block wraps the `[Resolve]` section so the file is idempotent across runs and safe to edit manually outside the block.
+
+## Docker DNS
+
+Docker containers use their own internal resolver (`127.0.0.11`) for container-to-container DNS, but for external resolution they read the host's `/etc/resolv.conf` at container start — with a catch.
+
+With systemd-resolved active, `/etc/resolv.conf` contains `nameserver 127.0.0.53` (the stub listener). That address is only reachable on the host's loopback interface, not from inside a container's network namespace. Docker detects this and **silently falls back to `8.8.8.8`**, ignoring the Cloudflare servers configured by `inv system.dns`.
+
+Without explicit config, Docker falls back to Google DNS (`8.8.8.8`) automatically — containers resolve fine, just not via Cloudflare. To make containers match the host DNS, set it explicitly in `/etc/docker/daemon.json` — see [docker.md](docker.md).

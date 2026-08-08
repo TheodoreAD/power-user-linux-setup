@@ -1,47 +1,42 @@
 # GitLab
 
-## glab, the GitLab CLI tool
-
-https://gitlab.com/gitlab-org/cli#installation
+Install `glab` (GitLab CLI) — declared in `setup.toml` as `[packages.glab]`, `method = "deb-url"`
+with a `version_cmd` that resolves the latest release via the GitLab API (GitLab's own releases
+aren't mirrored to GitHub, so `deb-github` doesn't apply here):
 
 ```shell
-DEB_FILE="$(mktemp)"
-VERSION=$(
-    curl -s "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases/permalink/latest" \
-      | tr '\n' ' ' \
-      | sed 's/.*"tag_name":\s*"v\([^"]*\)".*/\1/'
-)
-FILE_URL="https://gitlab.com/gitlab-org/cli/-/releases/v${VERSION}/downloads/glab_${VERSION}_Linux_x86_64.deb"
-curl -sS -L -o "${DEB_FILE}" "${FILE_URL}"
-sudo dpkg -i "${DEB_FILE}"
-rm "${DEB_FILE}"
+inv apt.deb
 ```
 
-Config:
+## Config
 
 ```shell
-# TODO: use glab config set
+glab config set -h gitlab.com git_protocol ssh
+glab config set -h gitlab.com api_protocol https
+glab config set pager "less --quit-if-one-screen"
+glab config set editor "code --wait"
 ```
 
-Completions:
+## Completions
 
 ```shell
-# TODO: use glab completion
+glab completion -s zsh \
+  | sudo -A tee "/usr/local/share/zsh/site-functions/_glab" >/dev/null
 ```
 
-Log gh in to gitlab.com via ssh key using web authentication:
-- run the command below
-- choose Web auth
-- choose SSH default Git protocol
-- perform web auth following instructions in the terminal
+## Connect
+
+Log in to gitlab.com via SSH key using web authentication:
 
 ```shell
+# select Web auth, SSH as default Git protocol, follow browser prompt
 glab auth login --hostname gitlab.com
-# TODO: see if the following are useful to run before the command to avoid choosing:
-#   glab config set -h gitlab.com git_protocol ssh
-#   glab config set -h gitlab.com api_protocol https
-# TODO: add ssh key with glab ssh-key add ~/.ssh/my_key.pub --title "my title"
 ```
 
-!!! TODO
-    See why there is no option to select the SSH key during setup.
+## Add SSH key
+
+```shell
+# list existing keys first to avoid duplicates
+glab ssh-key list
+glab ssh-key add ~/.ssh/<your_key>.pub --title "$(uname -n)"
+```

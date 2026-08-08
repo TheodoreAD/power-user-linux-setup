@@ -1,211 +1,186 @@
 # Python
 
-## pip configuration
+All Python version management, tool installs, and virtual environments are handled by
+[uv](https://github.com/astral-sh/uv). pyenv, poetry, and pipx are no longer used.
 
-If you're using a private pypi server, assign its URL to `PIP_INTERNAL_INDEX_URL`
-and uncomment the `index-url` lines.
+## Bootstrap
 
-If using and/or building wheels, uncomment the `[wheel]` section.
-
-```shell
-PIP_INTERNAL_INDEX_URL=
-mkdir -p "${HOME}/.config/pip"
-tee -a "${HOME}/.config/pip/pip.conf" >/dev/null <<EOF
-[global]
-# index-url = ${PIP_INTERNAL_INDEX_URL}
-# extra-index-url = https://pypi.org/simple
-no-cache-dir = true
-disable-pip-version-check = true
-
-[install]
-progress-bar = off
-
-# [wheel]
-# wheel-dir = /tmp/wheelhouse
-# find-links = /tmp/wheelhouse
-
-EOF
-```
-
-## pyenv
-
-`pyenv` handles Python version and virtual environment management.
-
-<https://github.com/pyenv/pyenv-installer?tab=readme-ov-file#installation--update--uninstallation>
+Run `bootstrap.sh` from the repo root. It installs uv, then installs and manages all
+Python versions defined in `setup.toml`:
 
 ```shell
-curl -sS -L "https://pyenv.run" | bash
-ln -s "${HOME}/.pyenv/bin/pyenv" "${HOME}/.local/bin/pyenv"
-tee -a "${HOME}/.zshrc" >/dev/null <<EOF
-
-# pyenv
-eval "\$(pyenv init -)"
-eval "\$(pyenv virtualenv-init -)"
-EOF
-# to enable right away
-source "${HOME}/.zshrc"
+./bootstrap.sh
 ```
 
-To update `pyenv`, run:
+This installs:
+- uv itself into `~/.local/bin/uv`
+- Python versions via uv — default (`uv_python_default`) plus extras (`uv_python_extra`)
+- invoke (the task runner) under the default Python version
 
-```shell
-pyenv update
+To change which versions are installed, edit `setup.toml`:
+
+```toml
+[settings]
+uv_python_default = "3.11"
+uv_python_extra   = ["3.12", "3.13", "3.14"]
 ```
 
-Install Python via pyenv in user home, create and set a global virtual environment to avoid polluting the system Python:
+## Python version shims
 
-!!! TODO
-    Read version from prompt.
+After bootstrap, uv creates versioned shims in `~/.local/bin`:
 
-```shell
-PYENV_VENV_VERSION="3.11.9"
-pyenv install "${PYENV_VENV_VERSION}"
-pyenv virtualenv "${PYENV_VENV_VERSION}" "global-${PYENV_VENV_VERSION//.}"
-pyenv global "global-${PYENV_VENV_VERSION//.}"
+```
+~/.local/bin/python3.11  ->  ~/.local/share/uv/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11
+~/.local/bin/python3.12  ->  ...
 ```
 
-## pipx
+These are available in any shell where `~/.local/bin` precedes `/usr/bin` on `PATH`.
+The unversioned `python` and `python3` remain as the OS-level system Python — this
+keeps system tools happy while all dev work uses explicit versioned commands or uv's
+own resolution.
 
-`pipx` enables running Python tools from isolated environments.
+## Shell default
 
-<https://github.com/pypa/pipx?tab=readme-ov-file#install-pipx>
-
-!!! WARNING
-    This assumes you have the global pyenv virtualenv indicated above active.
-
-```shell
-"$(pyenv which python)" -m pip install --upgrade pipx
-ln -s "$(pyenv which pipx)" "${HOME}/.local/bin/pipx"
-tee -a "${HOME}/.zshrc" >/dev/null <<EOF
-
-# pipx
-argcomplete_dir="$(pyenv root)/versions/$(pyenv whence register-python-argcomplete | head -n1)/bin/"
-eval "$(${argcomplete_dir}/register-python-argcomplete pipx)"
-EOF
-```
-
-## Poetry
-
-`poetry` handles package dependency management.
-
-<https://python-poetry.org/docs/#installing-with-pipx>
-<https://python-poetry.org/docs/#zsh>
-
-```shell
-pipx install poetry
-# Add plugin to Oh-My-Zsh
-# The poetry docs mention using $ZSH_CUSTOM instead of $ZSH, however the $ZSH-based path contains poetry.plugin.zsh
-poetry completions zsh >"${ZSH}/plugins/poetry/_poetry"
-# configure poetry to not create virtual envs, we handle those with pyenv
-poetry config virtualenvs.create false
-poetry config virtualenvs.in-project true 
-```
-
-!!! TODO
-    Make this commented out in the original zsh setup, use `sed` to uncomment here.
-
-Enable plugin in ~/.zshrc plugins if not already previously performed:
-
-```shell
-plugins(
-    poetry
-    ...
-    )
-```
-
-!!! TODO
-    Solve this deprecation issue:
-
-    ```shell
-    Warning: poetry-plugin-export will not be installed by default in a future version of Poetry.
-    In order to avoid a breaking change and make your automation forward-compatible, please install poetry-plugin-export explicitly. See https://python-poetry.org/docs/plugins/#using-plugins for details on how to install a plugin.
-    To disable this warning run 'poetry config warnings.export false'.
-    ```
+`UV_PYTHON` is set in `~/.zshenv` automatically by `inv zsh.configure` (or `inv setup`),
+sourced from the `[packages.uv-env]` entry in `setup.toml`. Project-level `.python-version`
+files override it automatically.
 
 ## System-wide tools
 
-### invoke and dotenv
-
-`invoke` is a Python-based alternative to `make` focused on task management.
-`dotenv` is used together with `invoke` for `.env` file local dev workflows.
-
-<https://github.com/pyinvoke/invoke>
-<https://github.com/theskumar/python-dotenv>
-
-We install `dotenv` side-by-side so that the `invoke`-run `tasks.py`
-can import `dotenv` and read `.env` files.
-
-!!! TODO
-    solve issues forcing versions lower than 2 to avoid compatibilty issues
+All tools are installed as isolated uv-managed executables and defined in `setup.toml`
+under `method = "uv-tool"`. Install or upgrade all of them with:
 
 ```shell
-pipx install invoke==1.7.3
-pipx inject --include-apps invoke 'python-dotenv[cli]'
+inv python.tools
 ```
 
-### twine
+Current tools: `nox`, `mkdocs` (with `mkdocs-material`), `twine`, `glances`, `nuitka`, `zensical`.
+(`invoke` itself is installed by `bootstrap.sh`, not this task.)
 
-Twine is a utility for publishing Python packages on PyPI.
+`mkdocs`/`mkdocs-material` is no longer what builds *this* repo's docs site (see
+[zensical.md](zensical.md) — that migrated to `zensical` 2026-08-08) but is kept installed
+system-wide for other projects that still use it.
 
-<https://twine.readthedocs.io/en/stable/#installation>
+To add a new tool, add a section to `setup.toml`:
 
-```shell
-pipx install twine
+```toml
+[packages.mytool]
+method  = "uv-tool"
+package = "mytool"
 ```
 
-!!! TODO
-    See how to use keyring to publish to PyPI.
+Then run `inv python.tools` again.
 
-### Nox
+## Project virtual environments
 
-!!! WARNING
-    Optional.
-
-!!! TODO
-    See if we want this in the project env, the same as pytest.
-
-`Nox` automates testing in multiple Python environments.
-
-<https://github.com/theacodes/nox>
+Create a virtualenv pinned to a specific Python:
 
 ```shell
-pipx install nox
+uv venv --python 3.12
 ```
 
-### mkdocs including material theme
-
-!!! WARNING
-    Optional.
-
-!!! TODO
-    See if we want this in the project env.
-
-`mkdocs` generates and serves documentation sites based on markdown files.
+Pin the project's default Python (writes `.python-version`, committed to the repo):
 
 ```shell
-pipx install mkdocs-material --include-deps
+uv python pin 3.12
 ```
 
-### yamllint
+From then on, plain `uv venv` and `uv run` in that project automatically use 3.12.
+
+Install project dependencies from a `pyproject.toml` or `requirements.txt`:
 
 ```shell
-pipx install yamllint
+uv sync           # pyproject.toml with [project.dependencies]
+uv pip install -r requirements.txt
+```
+
+## How the pieces fit together
+
+Three separate things share the `uv`-managed Python builds but never share dependencies with
+each other or with the OS:
+
+```mermaid
+graph TD
+    apt["apt-installed /usr/bin/python3<br/>OS package manager owns it, untouched by uv"]
+
+    subgraph interpreters["uv python install (shared interpreter builds)"]
+        direction TB
+        cpython["~/.local/share/uv/python/cpython-3.11 / 3.12 / 3.13 / 3.14"]
+        shims["~/.local/bin/python3.11, python3.12, ...<br/>versioned shims"]
+        cpython --> shims
+    end
+
+    subgraph tools["uv tool install TOOL (system-wide tools)"]
+        direction TB
+        toolvenv["~/.local/share/uv/tools/TOOL/<br/>isolated venv, own deps"]
+        toolbin["~/.local/bin/TOOL<br/>entrypoint symlink only"]
+        toolvenv --> toolbin
+    end
+
+    subgraph project["uv venv / uv sync (per project)"]
+        direction TB
+        venv[".venv/ inside the project dir<br/>project deps only, not linked into PATH"]
+    end
+
+    cpython -. interpreter .-> toolvenv
+    cpython -. interpreter .-> venv
+
+    shims --> path(("$PATH<br/>~/.local/bin before /usr/bin"))
+    toolbin --> path
+    apt -. plain python / python3, never shadowed .-> path
+```
+
+- **Interpreters** (`uv python install`) are just Python builds — no packages of their own beyond
+  the stdlib. Everything else borrows one of these as its interpreter.
+- **Tools** (`uv tool install`, driven by `[packages.*] method = "uv-tool"` in `setup.toml`) each
+  get a fully isolated venv under `~/.local/share/uv/tools/<name>/`; only the entrypoint script is
+  symlinked into `~/.local/bin`, so `zensical`'s dependencies (or `nox`'s, or `twine`'s) can never
+  collide with each other or with a project's `.venv`. This is why `~/.local/bin/zensical` is a
+  symlink to `~/.local/share/uv/tools/zensical/bin/zensical` rather than a real binary.
+- **Project venvs** (`uv venv`, `uv sync`, `uv run`) are scoped to a single project directory and
+  are never put on `PATH` directly — you either activate one or prefix commands with `uv run`.
+- The **system Python** (`/usr/bin/python3`) is never touched or shadowed by any of the above;
+  `~/.local/bin` only ever adds versioned shims and tool entrypoints ahead of it on `PATH`.
+
+## Private PyPI
+
+If using a private package index, configure it via environment variable or `uv.toml`:
+
+```shell
+# environment variable (e.g. in .env or shell profile)
+export UV_INDEX_URL="https://your-private-pypi/simple"
+export UV_EXTRA_INDEX_URL="https://pypi.org/simple"
+```
+
+Or in `~/.config/uv/uv.toml` for a persistent user-level config:
+
+```toml
+[[index]]
+url      = "https://your-private-pypi/simple"
+default  = true
+
+[[index]]
+url      = "https://pypi.org/simple"
 ```
 
 ## Nuitka
 
-!!! WARNING
-    Optional.
+Nuitka is installed as a uv tool (`inv python.tools`). It compiles Python to C and
+produces standalone native executables. `patchelf` (apt) is required at compile time
+and is listed in `setup.toml`.
 
-!!! WARNING
-    Experimental.
-
-!!! TODO
-    Intall via pyenv and pipx.
-
-!!! TODO
-    test
+Compile a script:
 
 ```shell
-python -m nuitka --module invoke --include-package=invoke
+python -m nuitka --standalone --onefile my_script.py
 ```
+
+Compile a package as an importable extension module:
+
+```shell
+python -m nuitka --module mypackage --include-package=mypackage
+```
+
+!!! NOTE
+    Nuitka uses the Python it was invoked with. Run it via `python3.11 -m nuitka` or
+    activate the project's venv first to control which interpreter is used.
