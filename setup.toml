@@ -21,6 +21,10 @@
 # For dev container / Dockerfile builds, exclude: PULSE_EXCLUDE_TAGS=gui,workstation,corporate
 # See docs/dev-container.md for the full Dockerfile approach and which invoke tasks to skip.
 #
+# For WSL, exclude: PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate
+# Run `inv wsl.check` first — diagnoses systemd, DNS, Docker, and WSLg risks before you install
+# anything. See docs/wsl.md for the full picture.
+#
 # apt / apt-repo sections:
 #   packages      list of apt package names to install (optional — defaults to [section-name])
 #                 only needed when the apt name differs from the section name, or for multi-package groups
