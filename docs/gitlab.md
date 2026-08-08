@@ -1,21 +1,11 @@
 # GitLab
 
-Install `glab` (GitLab CLI):
-
-> **Note:** `glab` is not yet in `setup.toml`. The manual install below works; to add it to PULSE
-> declare it as `method = "deb-github"` with `repo = "gitlab-org/cli"`.
+Install `glab` (GitLab CLI) — declared in `setup.toml` as `[packages.glab]`, `method = "deb-url"`
+with a `version_cmd` that resolves the latest release via the GitLab API (GitLab's own releases
+aren't mirrored to GitHub, so `deb-github` doesn't apply here):
 
 ```shell
-DEB_FILE="$(mktemp)"
-VERSION=$(
-    curl -s "https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases/permalink/latest" \
-      | tr '\n' ' ' \
-      | sed 's/.*"tag_name":\s*"v\([^"]*\)".*/\1/'
-)
-FILE_URL="https://gitlab.com/gitlab-org/cli/-/releases/v${VERSION}/downloads/glab_${VERSION}_Linux_x86_64.deb"
-curl -sS -L -o "${DEB_FILE}" "${FILE_URL}"
-sudo -A dpkg -i "${DEB_FILE}"
-rm "${DEB_FILE}"
+inv apt.deb
 ```
 
 ## Config

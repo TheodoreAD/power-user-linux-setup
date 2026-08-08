@@ -276,6 +276,9 @@ def _install_deb_url(c, name: str, cfg: dict) -> None:
         c.run(f"{util.SUDO} dpkg -i {path}")
         print(f"[{name}] installed")
         return
+    if "{version}" in url:
+        version = c.run(cfg["version_cmd"], hide=True).stdout.strip()
+        url = url.format(version=version)
     print(f"[{name}] installing...")
     deb = f"/tmp/{name}.deb"
     c.run(f'curl -fsSL "{url}" -o {deb}')

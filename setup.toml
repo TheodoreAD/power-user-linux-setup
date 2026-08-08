@@ -440,6 +440,7 @@ method      = "gnome-extension"
 enabled     = false
 tags        = ["gnome", "desktop", "gui", "workstation"]
 uuid        = "freon@UshakovVasilii_Github.yahoo.com"
+ego_id      = 841
 
 [packages.gnome-ext-tophat]
 description = "Top Hat — CPU, memory, disk I/O, and network sparklines in the top bar; modern TypeScript codebase, no extra deps"
@@ -708,6 +709,8 @@ setopt HIST_IGNORE_SPACE      # don't record commands prefixed with a space
 setopt HIST_REDUCE_BLANKS     # strip superfluous whitespace before recording
 setopt HIST_VERIFY            # show expanded history before executing (e.g. !foo)
 setopt SHARE_HISTORY          # live cross-session sharing via atomic appends
+setopt HIST_FCNTL_LOCK        # fcntl-based file locking — avoids corruption from concurrent
+                               # sessions writing to ~/.zsh_history at once (see docs/zsh.md)
 """
 
 [packages.oh-my-zsh]
@@ -852,6 +855,14 @@ gpg_url       = "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 gpg_path      = "/usr/share/keyrings/githubcli-archive-keyring.gpg"
 sources_path  = "/etc/apt/sources.list.d/github-cli.list"
 sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://cli.github.com/packages stable main"
+
+[packages.glab]
+description = "GitLab CLI — create MRs, manage issues, clone repos, and authenticate from the terminal"
+method      = "deb-url"
+tags        = ["dev", "vcs"]
+check_cmd   = "glab"
+version_cmd = "curl -fsSL https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases/permalink/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
+url         = "https://gitlab.com/gitlab-org/cli/-/releases/v{version}/downloads/glab_{version}_linux_amd64.deb"
 
 [packages.kubectl]
 description   = """

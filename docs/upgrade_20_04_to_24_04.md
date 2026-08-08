@@ -651,30 +651,9 @@ Status: ✓ **done 2026-06-09** — fully rewritten for PULSE. All items resolve
 | `xclip` aliases | ✓ **done** — `[packages.clipboard]` uses `wl-clipboard`; Wayland-only, documented |
 | No history tuning | ✓ **done 2026-06-09** — `[packages.zsh-history]` in `setup.toml` |
 | History corruption recovery script | ✓ **done 2026-06-09** — `inv zsh.history-fix` task |
-| Evaluate Atuin as history backend | **→ deferred** — `[packages.atuin]` added to `setup.toml` with `enabled = false`. No daemon required for local-only use. fzf remains primary for now. Enable when ready: remove `key-bindings.zsh` source from `[packages.fzf]`, set `[packages.atuin] enabled = true`, run `inv tools.install`. |
+| Concurrent-session corruption mitigation | ✓ **done 2026-08-08** — `setopt HIST_FCNTL_LOCK` added to `[packages.zsh-history]` and applied live via `inv zsh.configure`. Uses standard `fcntl()` locking instead of zsh's ad-hoc default, closing the "concurrent session race" half of the corruption risk. Power-loss mid-write corruption remains unfixable at the zsh level (upstream limitation) — `inv zsh.history-fix` is still the recovery path for that. Documented in a new "History" section in docs/zsh.md. |
+| Evaluate Atuin as history backend | **Decided 2026-08-08 — stick with fzf, defer Atuin.** fzf's Ctrl+R over the native history file is sufficient and adds no daemon/data store. `[packages.atuin]` stays in `setup.toml` with `enabled = false` for future evaluation. **→ future task:** experiment with Atuin (richer Ctrl+R UI, exit codes/duration/cwd per command, optional sync) once there's an actual pain point fzf doesn't cover. To enable: remove `key-bindings.zsh` source from `[packages.fzf]`, set `[packages.atuin] enabled = true`, run `inv tools.install`. |
 | fzf integration | ✓ **done 2026-06-09** — fd as default command (Ctrl+T + Alt+C), bat preview for files, ls preview for directories, Ctrl+R preview with Ctrl+/ toggle. |
-
-#### Atuin vs fzf — history backend research note (2026-06-09)
-
-**Context:** zsh's `.zsh_history` corruption via `EXTENDED_HISTORY` is an unfixed upstream issue (power loss / concurrent session race). The canonical fix is `strings ~/.zsh_history` (now `inv zsh.history-fix`). Separately, power users are increasingly replacing native history with Atuin.
-
-**Atuin** (~22k GitHub stars, 2025):
-- Replaces `~/.zsh_history` with a SQLite database — atomic writes eliminate corruption entirely
-- Ctrl+R TUI with fuzzy search, timestamps, exit codes, working directory, and duration per command
-- Optional encrypted cross-machine sync (Atuin cloud or self-hosted)
-- Works alongside or instead of fzf
-
-**fzf** (already installed in PULSE):
-- `fzf --history` mode (Ctrl+R) gives fuzzy search over the native `~/.zsh_history`
-- No daemon, no database, no sync — just fzf applied to the flat file
-- Already wired in via `[packages.fzf]` key-bindings in `setup.toml`
-
-**The tension:** fzf's Ctrl+R is already active and works well. Atuin replaces it with a richer interface but adds a background daemon and a new data store. They serve the same Ctrl+R interaction but are not complementary — Atuin takes over the binding.
-
-**Decision needed:**
-- If cross-machine history sync is valuable → Atuin is the clear choice; add as optional `[packages.atuin]` in `setup.toml` with `enabled = false` by default
-- If fzf's Ctrl+R is sufficient → keep as-is; the history options added above fix the main pain point
-- Could also keep both: Atuin for its TUI and sync, fzf for everything else (file search, process kill, etc.) — they don't conflict outside of the Ctrl+R binding
 
 ### docs/git.md
 
@@ -683,7 +662,7 @@ Status: updated 2026-06-09.
 | Issue | Status |
 |---|---|
 | PyCharm difftool path uses `which pycharm-professional` | ✓ **done 2026-06-09** — updated to `~/.local/share/JetBrains/Toolbox/apps/pycharm/bin/pycharm`; note added that path changes on IDE version upgrades |
-| `git-projects.txt` approach untested on fresh machine | Pending — test on next fresh install: create file, run script, verify per-dir `.gitconfig` and global `includeIf` entries |
+| `git-projects.txt` approach untested on fresh machine | **→ future task** (2026-08-08) — `~/projects` is a working setup on this machine now; testing this requires a fresh install or throwaway environment, deliberately not risking the current one. Test when a new machine is next provisioned: create the file, run the script, verify per-dir `.gitconfig` and global `includeIf` entries. |
 
 ### docs/github.md
 
@@ -700,8 +679,8 @@ Status: updated 2026-06-09.
 | Issue | Status |
 |---|---|
 | RSA 4096 keys | ✓ **done 2026-06-09** — keygen updated to `ssh-keygen -t ed25519`; all `_rsa` filename suffixes updated to `_ed25519` throughout |
-| `ssh-hosts.txt` 4-field format | Pending — test multi-account GitHub alias flow on fresh machine: clone via alias, verify correct key used |
-| keychain on 24.04 + Wayland | Pending — `keychain` is still in apt; Wayland session compatibility not yet verified |
+| Multi-account alias flow (`ssh_hosts` in `identity.toml`) | **→ future task, assessed 2026-08-08.** Not hard in principle — the underlying mechanism (`Host` alias + `IdentitiesOnly yes` + per-alias `IdentityFile`) is exactly what the *current* live `~/.ssh/config` has been running manually for years across 8+ hosts (four employers, AWS, etc.), so it's proven. The catch: this machine's live `~/.ssh/config` still predates PULSE entirely (old RSA keys, hand-written blocks, no PULSE sentinel markers). Running `inv ssh.configure` now would *append* a new PULSE block via `ensure_block` (additive, doesn't touch existing blocks) — but a new alias that collides with an existing hand-written `Host` entry (e.g. `github.com`) would silently lose to the old block, since ssh config resolution is first-match-wins per keyword. Safe to test in a throwaway `$HOME`/container; testing directly against this machine's config needs the alias list checked for collisions with the existing hand-written entries first. |
+| keychain on 24.04 + Wayland | ✓ **verified 2026-08-08** — already installed and active in `~/.zprofile` on this machine (pre-PULSE, but confirmed working). The keychain-managed `ssh-agent` socket persists correctly across the Wayland session; `ssh-add -l` reporting no identities right after login is expected (`AddKeysToAgent yes` loads each key lazily on first use, not eagerly at login), not a failure. Warning removed from docs/ssh.md. |
 
 ### docs/golang.md
 
@@ -741,7 +720,7 @@ Status: ✓ **done 2026-06-09** — fully rewritten for 24.04; all 12 extensions
 
 | Issue | Status |
 |---|---|
-| UUIDs for some "not yet enabled" extensions | Pending — verify at EGO before enabling any `enabled = false` entry |
+| UUIDs for some "not yet enabled" extensions | ✓ **done 2026-08-08** — every other `enabled = false` entry already had its EGO link recorded; `gnome-ext-freon` was the one actually missing it (no `ego_id` field at all). Confirmed via extensions.gnome.org: [#841](https://extensions.gnome.org/extension/841/freon/), GNOME Shell 45-50 compatible. Added `ego_id = 841` to `setup.toml` and the EGO link to docs/gnome_extensions.md. |
 | Per-extension confirmed-active status | ✓ **done 2026-06-09** — all 12 confirmed via `gnome-extensions list --enabled` after login |
 
 ### docs/gitlab.md
@@ -750,7 +729,7 @@ Status: updated 2026-06-09 — config, completions, and SSH key upload sections 
 
 | Issue | Status |
 |---|---|
-| `glab` install uses manual `curl` + `dpkg` | Pending — evaluate adding `[packages.glab]` to `setup.toml` as `deb-github` method |
+| `glab` install uses manual `curl` + `dpkg` | ✓ **done 2026-08-08** — added `[packages.glab]` to `setup.toml`. Note: `deb-github` doesn't apply — `gitlab-org/cli` has no GitHub release mirror (confirmed: `api.github.com/repos/gitlab-org/cli/releases/latest` 404s). Used `method = "deb-url"` instead, extending `_install_deb_url` (`tasks/apt.py`) with the same `{version}`/`version_cmd` templating the `archive` method already had, resolving the latest tag via the GitLab releases API. Also caught a stale asset-name assumption in the old manual instructions: glab's actual release filenames are `glab_{version}_linux_amd64.deb` (lowercase, `amd64`), not `Linux_x86_64` as the old doc had it. Installed and verified live: `glab 1.112.0`. |
 | Config and completions | ✓ **done 2026-06-09** — `glab config set` and `glab completion -s zsh` documented |
 | SSH key upload | ✓ **done 2026-06-09** — `glab ssh-key add` documented |
 
@@ -790,7 +769,9 @@ Status: ✓ **done 2026-06-09** — fully rewritten for PULSE. All issues resolv
 
 ### docs/shortcuts.md
 
-Status: **pending review** — pulled from master 2026-06-09. Currently only contains a Flameshot gsettings script.
+Status: **→ future task** (confirmed 2026-08-08) — pulled from master 2026-06-09, currently only
+contains a Flameshot gsettings script. Deferred: a full review/audit is a lot of work and not
+essential right now.
 
 | Task | Notes |
 |---|---|
@@ -801,15 +782,17 @@ Status: **pending review** — pulled from master 2026-06-09. Currently only con
 
 ### Docs site — mkdocs-material → zensical
 
-Status: **pending** — switch from mkdocs-material to zensical.
+Status: ✓ **done 2026-08-08** — migrated during the `initial_version` → `master` git landing effort
+(see the Git history section below).
 
-| Item | Notes |
+| Item | Outcome |
 |---|---|
-| Current setup | `mkdocs` + `mkdocs-material` installed via `uv tool install`; `mkdocs.yml` drives the site; GitHub Actions publishes on push |
-| Target | Replace with zensical |
-| Feature parity check needed | Tablesort (master has `docs/javascripts/tablesort.js`); Mermaid diagram support (master has `docs/stylesheets/mermaid-fix.css`); navigation tabs, admonitions (`!!! INFO`, `!!! WARNING`, `!!! TODO`), code block highlighting, search |
-| Dependency change | Keep `mkdocs`/`mkdocs-material` in `setup.toml` — other projects depend on them. Add/keep zensical alongside (already present as `zensical` in `setup.toml` tools) |
-| GitHub Actions | `publish_on_push.yml` will need to be updated for the zensical build command |
+| Compatibility | `zensical` (same author as mkdocs-material, Rust core) reads the existing `mkdocs.yml` directly — confirmed drop-in, no rewrite needed. Kept the `mkdocs.yml` filename rather than migrating to zensical's native `zensical.toml` format, to stay on the officially-supported compat path rather than an early-alpha (v0.0.44) native config schema. |
+| Feature parity | Mermaid already worked via the `mermaid2` plugin + `pymdownx.superfences` custom fence — no gap. `tablesort.js` was dropped — grep confirmed no doc actually uses sortable tables, so nothing lost. |
+| Verification | `zensical build --strict` — 0 issues, checked with `docs/reference/repos/` (gitignored research clones) removed to simulate exactly what a clean CI checkout sees. |
+| Dependency change | `requirements-docs.txt` replaced `mkdocs-material~=7.0` / `mkdocs-mermaid2-plugin~=0.5` with `zensical==0.0.44` — confirmed zensical has zero mkdocs/mkdocs-material dependencies, fully self-contained. |
+| GitHub Actions | `publish_on_push.yml` updated: `zensical build --strict` instead of `mkdocs gh-deploy`, deploy step switched to `peaceiris/actions-gh-pages@v4` (zensical has no built-in gh-deploy equivalent — build/serve/new only). Also bumped `actions/checkout` and `actions/setup-python` to current major versions and dropped the temporary `initial_version` trigger branch. |
+| Side fix | Found and fixed a dead link in `docs/kubernetes.md` (pointed at the already-deleted `kubernetes_bare_metal.md`) — would have failed the new `--strict` build. |
 
 ---
 
