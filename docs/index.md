@@ -236,4 +236,5 @@ the latest nightly build.
 | GNOME extensions | [gnome_extensions.md](gnome_extensions.md) |
 | Dev container / Dockerfile | [dev-container.md](dev-container.md) |
 | AI tools (local LLMs, agents, assistants) | [ai.md](ai.md) |
+| Docs site engine (zensical) — findings, pain points, re-verify checklist | [zensical.md](zensical.md) |
 | Troubleshooting | [troubleshooting.md](troubleshooting.md) |

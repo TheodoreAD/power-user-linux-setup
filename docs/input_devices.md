@@ -109,7 +109,7 @@ affects.
 
 ### SmartSet direct-programming syntax reference
 
-Reference PDFs (large, not checked in — see `docs/reference/kinesis/`, which is gitignored;
+Reference PDFs (large, not checked in — see `reference/kinesis/`, which is gitignored;
 re-download from https://kinesis-ergo.com/support/kb360/ if missing):
 
 - `adv360-smartset-direct-programming-guide-v12-2-22.pdf` — syntax rules, section 4

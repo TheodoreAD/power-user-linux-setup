@@ -57,6 +57,10 @@ inv python.tools
 Current tools: `nox`, `mkdocs` (with `mkdocs-material`), `twine`, `glances`, `nuitka`, `zensical`.
 (`invoke` itself is installed by `bootstrap.sh`, not this task.)
 
+`mkdocs`/`mkdocs-material` is no longer what builds *this* repo's docs site (see
+[zensical.md](zensical.md) — that migrated to `zensical` 2026-08-08) but is kept installed
+system-wide for other projects that still use it.
+
 To add a new tool, add a section to `setup.toml`:
 
 ```toml
@@ -89,6 +93,54 @@ Install project dependencies from a `pyproject.toml` or `requirements.txt`:
 uv sync           # pyproject.toml with [project.dependencies]
 uv pip install -r requirements.txt
 ```
+
+## How the pieces fit together
+
+Three separate things share the `uv`-managed Python builds but never share dependencies with
+each other or with the OS:
+
+```mermaid
+graph TD
+    apt["apt-installed /usr/bin/python3<br/>OS package manager owns it, untouched by uv"]
+
+    subgraph interpreters["uv python install (shared interpreter builds)"]
+        direction TB
+        cpython["~/.local/share/uv/python/cpython-3.11 / 3.12 / 3.13 / 3.14"]
+        shims["~/.local/bin/python3.11, python3.12, ...<br/>versioned shims"]
+        cpython --> shims
+    end
+
+    subgraph tools["uv tool install TOOL (system-wide tools)"]
+        direction TB
+        toolvenv["~/.local/share/uv/tools/TOOL/<br/>isolated venv, own deps"]
+        toolbin["~/.local/bin/TOOL<br/>entrypoint symlink only"]
+        toolvenv --> toolbin
+    end
+
+    subgraph project["uv venv / uv sync (per project)"]
+        direction TB
+        venv[".venv/ inside the project dir<br/>project deps only, not linked into PATH"]
+    end
+
+    cpython -. interpreter .-> toolvenv
+    cpython -. interpreter .-> venv
+
+    shims --> path(("$PATH<br/>~/.local/bin before /usr/bin"))
+    toolbin --> path
+    apt -. plain python / python3, never shadowed .-> path
+```
+
+- **Interpreters** (`uv python install`) are just Python builds — no packages of their own beyond
+  the stdlib. Everything else borrows one of these as its interpreter.
+- **Tools** (`uv tool install`, driven by `[packages.*] method = "uv-tool"` in `setup.toml`) each
+  get a fully isolated venv under `~/.local/share/uv/tools/<name>/`; only the entrypoint script is
+  symlinked into `~/.local/bin`, so `zensical`'s dependencies (or `nox`'s, or `twine`'s) can never
+  collide with each other or with a project's `.venv`. This is why `~/.local/bin/zensical` is a
+  symlink to `~/.local/share/uv/tools/zensical/bin/zensical` rather than a real binary.
+- **Project venvs** (`uv venv`, `uv sync`, `uv run`) are scoped to a single project directory and
+  are never put on `PATH` directly — you either activate one or prefix commands with `uv run`.
+- The **system Python** (`/usr/bin/python3`) is never touched or shadowed by any of the above;
+  `~/.local/bin` only ever adds versioned shims and tool entrypoints ahead of it on `PATH`.
 
 ## Private PyPI
 

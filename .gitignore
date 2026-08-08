@@ -137,4 +137,6 @@ dmypy.json
 .envrc
 
 # Downloaded vendor reference docs (large binaries, not needed by other contributors)
-docs/reference/
+# Lives outside docs/ so the docs-site build (zensical/mkdocs) never walks into it —
+# its markdown files aren't site content and its walker isn't gitignore-aware.
+reference/
