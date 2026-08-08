@@ -228,6 +228,7 @@ the latest nightly build.
 | Kubernetes tools | [kubernetes.md](kubernetes.md) |
 | Python (uv, virtualenvs) | [python.md](python.md) |
 | Go | [golang.md](golang.md) |
+| Rust | [rust.md](rust.md) |
 | IDEs, terminal emulators | [ide.md](ide.md) |
 | Scala | [scala.md](scala.md) |
 | Networking and DNS | [networking.md](networking.md) |

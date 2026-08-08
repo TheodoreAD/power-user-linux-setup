@@ -34,6 +34,9 @@ def _install_script(c, name: str, cfg: dict) -> None:
         if util.ensure_symlink_path(src, cfg.get("check_cmd", name)):
             print(f"[{name}] symlink created in ~/.local/bin")
 
+    if post_install := cfg.get("post_install"):
+        c.run(post_install, env=env)
+
     print(f"[{name}] installed")
 
 
