@@ -16,8 +16,9 @@
 #   apt-repo, deb-github, deb-url, archive, uv-tool, script, binary, git-clone, wrapper-script,
 #   gnome-extension, apparmor-profile). A few core tasks read one [packages.*] section directly and
 #   ignore tags/enabled entirely (node.install, docker.configure, fonts.*) or check enabled but not
-#   tags (zsh.configure's zshrc/zshenv/zprofile block writer) — see docs/index.md, "Tags, enabled,
-#   and which tasks actually respect either" for the full breakdown before building a new profile.
+#   tags (zsh.configure's zshrc/zshenv/zprofile block writer) — see docs/configuration.md, "Tags,
+#   enabled, and which tasks actually respect either" for the full breakdown before building a new
+#   profile.
 #
 # Tags that actually gate an exclusion recipe (everything else is organizational only):
 #   gui         — requires a display server (Wayland/X11); skip on headless machines and in containers

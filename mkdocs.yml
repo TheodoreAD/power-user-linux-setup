@@ -82,6 +82,7 @@ theme:
     - navigation.instant.prefetch
     - navigation.path
     - navigation.sections
+    - navigation.tabs
     - navigation.top
     - navigation.tracking
     - search.highlight
@@ -91,11 +92,51 @@ theme:
 # Material theme uses a different way of settings this
 # site_favicon: 'img/favicon.ico'
 
-# If nothing is specified, navigation will be implicitly created using
-# capitalized direcotry names and the H1 of each file, sorted alphanumerically
-# used to be done using 'pages', now deprecated, new syntax is 'nav'
-#nav:
-#  - Home: 'install.md'
+# Without this, nav is implicitly built from directory listing + each file's H1, sorted
+# alphanumerically — 33 pages in one flat A-Z sidebar with no grouping. This explicit tree +
+# navigation.tabs (above) turns the top-level groups into a horizontal tab bar instead, each with
+# its own sidebar section. Verified working under zensical's mkdocs.yml compat layer (no native
+# zensical.toml-only feature involved) by building a throwaway multi-section test site.
+nav:
+  - Home: index.md
+  - How it works: configuration.md
+  - Shell & desktop:
+      - zsh.md
+      - keybindings.md
+      - shortcuts.md
+      - input_devices.md
+      - screen_capture.md
+      - gnome_extensions.md
+      - fonts.md
+      - ide.md
+  - Languages & tooling:
+      - python.md
+      - golang.md
+      - rust.md
+      - scala.md
+      - js.md
+      - docker.md
+      - kubernetes.md
+  - Cloud & accounts:
+      - git.md
+      - github.md
+      - gitlab.md
+      - gcloud.md
+      - ssh.md
+      - networking.md
+  - AI:
+      - ai.md
+      - claude-code.md
+  - Environments:
+      - wsl.md
+      - dev-container.md
+  - Reference:
+      - apt_packages.md
+      - citrix.md
+      - locale.md
+      - zensical.md
+      - troubleshooting.md
+      - upgrade_20_04_to_24_04.md
 
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/
