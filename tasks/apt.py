@@ -298,6 +298,15 @@ def deb(c):
     for name, cfg in util.packages_by_method("deb-url").items():
         _install_deb_url(c, name, cfg)
 
+    if not util.DRY_RUN:
+        # Both loops above install via plain `dpkg -i`, which doesn't resolve dependencies — a
+        # .deb needing a package not already on the system (e.g. google-chrome-stable needing
+        # fonts-liberation/libasound2/libnspr4/libnss3, unremarkable on an aged daily-driver
+        # machine but missing on a fresh install) leaves dpkg with that package "unconfigured"
+        # instead of actually installed. `apt-get install -f` resolves and installs whatever's
+        # currently missing for any package dpkg left in that state; cheap no-op if nothing broke.
+        c.run(f"{util.SUDO} apt-get install -f -y", warn=True)
+
 
 @task
 def uninstall(c, name):
