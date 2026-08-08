@@ -1,6 +1,7 @@
 # Machine setup configuration.
 # Each [packages.*] section declares one installable unit and how to install it.
-# Supported methods: apt, apt-repo, deb-github, deb-url, archive, uv-tool, nvm, script, binary, git-clone, wrapper-script
+# Supported methods: apt, apt-repo, deb-github, deb-url, archive, uv-tool, nvm, script, binary,
+#                     git-clone, wrapper-script, gnome-extension, apparmor-profile, zsh
 #
 # Common fields (all methods):
 #   description   human-readable summary of what the package is/does
@@ -11,12 +12,19 @@
 # Tag-based exclusion:
 #   Set PULSE_EXCLUDE_TAGS=<tag> or PULSE_EXCLUDE_TAGS=<tag1>,<tag2> to skip packages with matching tags.
 #   Example: PULSE_EXCLUDE_TAGS=gui inv apt.repos   — skips all GUI packages on a headless server.
+#   Only respected by util.packages_by_method() — the generic per-method install tasks (apt,
+#   apt-repo, deb-github, deb-url, archive, uv-tool, script, binary, git-clone, wrapper-script,
+#   gnome-extension, apparmor-profile). A few core tasks read one [packages.*] section directly and
+#   ignore tags/enabled entirely (node.install, docker.configure, fonts.*) or check enabled but not
+#   tags (zsh.configure's zshrc/zshenv/zprofile block writer) — see docs/index.md, "Tags, enabled,
+#   and which tasks actually respect either" for the full breakdown before building a new profile.
 #
-# Defined tags:
+# Tags that actually gate an exclusion recipe (everything else is organizational only):
 #   gui         — requires a display server (Wayland/X11); skip on headless machines and in containers
 #   desktop     — depends on a desktop session (e.g. Wayland clipboard); usually paired with gui
+#   gnome       — GNOME Shell extensions / gnome-extensions-cli; meaningless without GNOME Shell
 #   corporate   — work-specific tools (Webex, Citrix); skip on personal machines
-#   workstation — physical machine only (hardware sensors, local terminal multiplexer); skip in containers
+#   workstation — physical machine only (hardware sensors, local terminal multiplexer, Docker); skip in containers
 #
 # For dev container / Dockerfile builds, exclude: PULSE_EXCLUDE_TAGS=gui,workstation,corporate
 # See docs/dev-container.md for the full Dockerfile approach and which invoke tasks to skip.
@@ -31,25 +39,86 @@
 #                 also read by `inv apt.uninstall <section-name>` for any method, to map the section
 #                 to the actual dpkg package name(s) to purge
 #
+# deb-github sections:
+#   repo          "owner/repo" — GitHub repo whose releases host the .deb
+#   tag           literal release tag to install (e.g. "v14.0.0"); omit to auto-resolve the latest
+#                 release via the GitHub API each run (used by inv apt.upgrade-debs)
+#   tag_prefix    prefix before the version in the release URL path (default: "v"; set to "" if the
+#                 tag itself already includes "v", e.g. tag = "v14.0.0" with tag_prefix = "")
+#   asset         release asset filename; supports {version} templating (version = tag, minus any
+#                 leading "v" the resolver strips). If the asset is a .zip (some CI artifacts wrap
+#                 the .deb), it's unzipped to a scratch dir and whatever .deb is inside is installed.
+#   check_cmd     binary name to check for already-installed (default: section name)
+#
+# deb-url sections:
+#   url           direct .deb URL. Supports {version} + version_cmd for dynamic resolution — set
+#                 version_cmd to a shell command that prints the version string on stdout (see
+#                 [packages.glab] for a GitLab-releases-API example, since GitLab projects aren't on
+#                 GitHub and deb-github doesn't apply to them)
+#   download_page fallback when there's no stable/scriptable download URL (e.g. Citrix) — prints the
+#                 page and prompts interactively for a local path to a manually downloaded .deb
+#   check_cmd     binary name to check for already-installed (default: section name)
+#   Only one of url / download_page is needed; url takes priority if both are set.
+#
 # binary sections:
 #   url           direct URL to download as an executable into ~/.local/bin/<check_cmd>
 #   check_cmd     binary name to check/install as (default: section name)
 #
 # archive sections:
-#   download_url  URL to a .tar.gz archive
+#   download_url  URL to a .tar.gz archive; supports {version} + version_cmd exactly like deb-url
+#                 above (see [packages.atuin]), or {version} + version_url (fetch latest version
+#                 string via `curl | head -1` instead of a custom command)
 #   extract_to    directory to extract into (creates <name> subdirectory)
 #   install_dir   expected post-extract path; removed and re-extracted if missing
-#   bin_pick      if set, extract only this binary name to ~/.local/bin/ (strips top-level dir)
+#   strip_components  path components to strip on extract (default: 1 with bin_pick, 0 with install_dir)
+#   bin_pick      if set, extract only this binary name to ~/.local/bin/ (strips top-level dir unless
+#                 bin_in_root = true, for archives with the binary directly at the archive root)
+#   symlinks      list of {src, dst} — additional symlinks into ~/.local/bin after extraction
+#                 (dst relative to install_dir)
 #   check_path    path to check for existence instead of check_cmd (useful when binary is not on PATH yet)
 #
 # uv-tool sections:
+#   package       PyPI package name to install (uv tool install --upgrade <package>)
 #   python        override the Python version for this tool (default: settings.uv_python_default)
+#   extras        list of extra packages to install alongside (--with <extra>, e.g. python-dotenv)
+#   check_cmd     binary name to check/install as (default: section name)
+#
+# script sections:
+#   script_url    URL piped into a shell (curl -fsSL <script_url> | <shell>) — for installers that
+#                 only ship as a shell script (nvm-style; but see the nvm note below — node itself
+#                 is NOT a generic script-method entry, it's a dedicated task)
+#   shell         interpreter for the piped script (default: "sh")
+#   env           dict of env vars passed to the install script; values starting with "~" are
+#                 expanded to the home directory first
+#   single_binary / symlink_from   if the installer doesn't already put its binary on PATH,
+#                 symlink_from names the installed path to symlink into ~/.local/bin/<check_cmd>
+#   check_cmd / check_path   same as other methods
+#
+# git-clone sections:
+#   repo          URL to git clone
+#   dest          destination path (existence alone is the "already installed" check — no update logic)
+#   depth         optional shallow-clone depth (e.g. 1)
+#
+# wrapper-script sections:
+#   dest          path to write an executable script to (chmod 0o755)
+#   content       the script body, written verbatim (stripped + trailing newline added)
+#   Rewritten in place whenever content changes — treat dest as fully PULSE-owned, not user-editable.
 #
 # gnome-extension sections:
 #   uuid          extension UUID (e.g. "dash-to-panel@jderose9.github.com") — shown in gnome-extensions list
 #   ego_id        numeric EGO package ID from extensions.gnome.org — fallback when UUID is not yet confirmed
 #   gext accepts both. Managed by: inv gnome.extensions
 #   Requires a live GNOME session; newly installed extensions activate after logout/login.
+#
+# apparmor-profile sections:
+#   profile       absolute path to write the profile to (e.g. /etc/apparmor.d/jbr-cef)
+#   content       the profile body, written verbatim. Reloaded via apparmor_parser -r after writing.
+#
+# nvm / Node.js — NOT a generic dispatched method, despite being listed above:
+#   [packages.node] is read directly by node.install (tasks/node.py), not via packages_by_method().
+#   enabled and tags on this section are NOT checked — inv node.install always runs if invoked.
+#   Fields: version (default "lts"), global_packages (list of npm -g package names), nvm_dir
+#   (default ~/.local/share/nvm).
 #
 # any section (any method):
 #   zshrc         shell snippet appended to ~/.zshrc   (interactive shells — hooks, completions)

@@ -49,6 +49,42 @@ Run `inv zsh.configure` — the block is written on first run and updated in pla
 
 ---
 
+## Tags, `enabled`, and which tasks actually respect either
+
+Every `[packages.*]` entry has two independent, unrelated ways to be skipped:
+
+- **`enabled = false`** — a permanent, environment-independent switch baked into `setup.toml`. Used for things that are evaluated-but-not-wanted (e.g. `freon`, superseded by `vitals`) or opt-in extras (e.g. `glab`, `atuin`).
+- **`tags = [...]` + `PULSE_EXCLUDE_TAGS`** — a runtime filter layered on top, for building environment-specific profiles (headless, container, WSL) without editing `setup.toml` per environment.
+
+**Both are only checked by `util.packages_by_method(method)`** (`tasks/util.py`) — the dispatcher every *generic* install-method task loops over: `apt`, `apt-repo`, `deb-github`, `deb-url`, `archive`, `uv-tool`, `script`, `binary`, `git-clone`, `wrapper-script`, `gnome-extension`, `apparmor-profile`. An entry needs to pass **both** checks (`enabled != false` *and* no tag in `PULSE_EXCLUDE_TAGS`) to be picked up by any of these.
+
+**Several core tasks bypass `packages_by_method` entirely** and read one hardcoded `[packages.<name>]` section directly — for these, `enabled` and `tags` do nothing at all; the only way to skip them is to not invoke the `inv` task:
+
+| Task | Reads directly | Tag/enabled-aware? |
+|---|---|---|
+| `node.install` | `packages["node"]` | No — always runs `[packages.node]` regardless of `enabled` or tags |
+| `docker.configure` | live `docker` command + `packages.docker`'s literal defaults | No — gated only by whether the `docker` binary exists on `$PATH` |
+| `fonts.install` / `fonts.configure` | `settings.fonts` (not `packages.*` at all) | N/A — not a package entry, no tags possible |
+| `zsh.configure` | **every** entry in `packages.*` that has a `zshrc`/`zshenv`/`zprofile` field | `enabled` only — **tags are ignored**. A `gui`-tagged tool's shell block (PATH entry, completion, OMZ plugin coupling) still gets written to `.zshrc` even when `PULSE_EXCLUDE_TAGS` skipped installing the tool itself. Usually harmless (blocks tend to guard on the binary existing), but worth knowing before assuming an exclude-tags profile produced a byte-for-byte-minimal `.zshrc`. |
+
+This split is exactly what [wsl.md](wsl.md), [dev-container.md](dev-container.md), and the headless example below rely on — when building a new environment profile, check which bucket the task you're skipping falls into before assuming a tag exclusion is enough.
+
+**Tag catalog** — only five tags currently gate anything (used across the exclusion recipes in this repo):
+
+| Tag | Excludes |
+|---|---|
+| `gui` | Wayland/X11 apps, desktop tools, browsers |
+| `desktop` | Anything depending on a desktop session (e.g. Wayland clipboard) |
+| `gnome` | GNOME Shell extensions, `gnome-extensions-cli` — meaningless without GNOME Shell |
+| `workstation` | Hardware sensors, local terminal multiplexer, Docker |
+| `corporate` | Webex, Citrix, and other work-specific tools |
+
+The rest of the tags in `setup.toml` (`cli`, `dev`, `k8s`, `shell`, `vcs`, `search`, `modern`, `legacy`, …) are purely organizational/searchable — categorization for humans reading the file, not wired to any exclusion recipe. Don't assume a tag does something just because it exists; check whether it's actually referenced in a documented `PULSE_EXCLUDE_TAGS` recipe (this file, `dev-container.md`, `wsl.md`) or `setup.toml`'s header comment.
+
+**`{version}` / `version_cmd` templating** — the `archive` and `deb-url` methods both support resolving a dynamic version before downloading: set `version_cmd` to a shell command that prints the version string, and include `{version}` in `download_url` (`archive`) or `url` (`deb-url`). See `[packages.atuin]` (archive) or `[packages.glab]` (deb-url) for examples. `deb-github` resolves version differently — via the GitHub releases API directly (`tag` field, or auto-latest if omitted) — since it doesn't need a custom command.
+
+---
+
 ## Quick start
 
 ```shell
@@ -65,7 +101,7 @@ inv setup             # runs all phases below
 | Variable | Effect |
 |---|---|
 | `PULSE_DRY_RUN=1` | Print installed/missing status for every item without making any changes. Works across all install tasks. |
-| `PULSE_EXCLUDE_TAGS=<tag>[,<tag>]` | Skip packages whose `tags` list contains any of the given labels. Defined tags: `gui`, `desktop`, `workstation`, `corporate`. |
+| `PULSE_EXCLUDE_TAGS=<tag>[,<tag>]` | Skip packages whose `tags` list contains any of the given labels — see [Tags, `enabled`, and which tasks actually respect either](#tags-enabled-and-which-tasks-actually-respect-either) above for the full catalog and its limits. |
 
 ```shell
 # Check what's missing before running setup
