@@ -2368,10 +2368,13 @@ you may not want depending on your <code>/etc/wsl.conf</code> and Docker choice 
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--wslg<span class="o">=</span>no<span class="w">    </span><span class="c1"># force the no-WSLg tag set instead of auto-detecting</span>
 </span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--docker<span class="w">     </span><span class="c1"># also keep the workstation tag (installs Docker natively)</span>
 </span></code></pre></div>
-<p>It calls <code>wsl.check</code> and <code>wsl.fix</code> first, then <code>apt.repos</code>/<code>apt.base</code>/<code>apt.deb</code>, <code>tools.install</code>,
-<code>python.tools</code>, <code>node.install</code>, and the zsh tasks, then <code>system.locale</code>/<code>system.dns</code> only if
-systemd/DNS are actually live yet (skipped with a message otherwise, if <code>wsl.fix</code> just changed
-<code>/etc/wsl.conf</code> and you haven&rsquo;t restarted WSL).</p>
+<p>It calls <code>wsl.check</code> and <code>wsl.fix</code> first, then <code>system.locale</code>/<code>system.dns</code> (only if systemd/DNS
+are actually live yet — skipped with a message otherwise, if <code>wsl.fix</code> just changed
+<code>/etc/wsl.conf</code> and you haven&rsquo;t restarted WSL), <em>then</em> <code>apt.repos</code>/<code>apt.base</code>/<code>apt.deb</code>,
+<code>tools.install</code>, <code>python.tools</code>, <code>node.install</code>, and the zsh tasks. DNS has to be fixed before
+those — on a re-run after a restart with <code>generateResolvConf=false</code> already active, DNS is broken
+(see <a href="#prerequisites-etcwslconf">Prerequisites</a> above) until <code>system.dns</code> runs, and every one of
+those later steps needs working DNS itself.</p>
 <p>This is the one worth using instead of pasting the equivalent multi-line block below into a
 terminal: that block is a series of separate <code>inv</code> invocations one per line, so if one hangs (a
 network problem mid-<code>apt</code>, say) and you hit Ctrl-C, the shell only kills <em>that</em> command — it then
@@ -2386,23 +2389,26 @@ steps — here&rsquo;s the same sequence by hand:</p>
 </span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —</span>
 </span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="c1"># and reopen your terminal before continuing</span>
 </span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># with WSLg (default on current Windows 11):</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gnome,ide,windows-native,workstation,corporate<span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base<span class="w"> </span>apt.deb
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a><span class="c1"># without WSLg:</span>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>inv<span class="w"> </span>tools.install
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a>inv<span class="w"> </span>python.tools
-</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a>inv<span class="w"> </span>node.install
-</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.p10k-configure
-</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>
-</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a><span class="c1"># only if /etc/wsl.conf has systemd=true:</span>
-</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a>inv<span class="w"> </span>system.locale
-</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a>
-</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="c1"># only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs</span>
-</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="c1"># restoring first, see &quot;Prerequisites&quot; above for why:</span>
-</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/stub-resolv.conf<span class="w"> </span>/etc/resolv.conf
-</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>inv<span class="w"> </span>system.dns
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># fix locale/DNS *before* anything below that needs network access — on a re-run after a restart</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a><span class="c1"># with generateResolvConf=false already active, DNS is broken until this runs (see Prerequisites):</span>
+</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
+</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># only if /etc/wsl.conf has systemd=true:</span>
+</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>inv<span class="w"> </span>system.locale
+</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a>
+</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1"># only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs</span>
+</span><span id="__span-7-14"><a id="__codelineno-7-14" name="__codelineno-7-14" href="#__codelineno-7-14"></a><span class="c1"># restoring first, see &quot;Prerequisites&quot; above for why:</span>
+</span><span id="__span-7-15"><a id="__codelineno-7-15" name="__codelineno-7-15" href="#__codelineno-7-15"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/stub-resolv.conf<span class="w"> </span>/etc/resolv.conf
+</span><span id="__span-7-16"><a id="__codelineno-7-16" name="__codelineno-7-16" href="#__codelineno-7-16"></a>inv<span class="w"> </span>system.dns
+</span><span id="__span-7-17"><a id="__codelineno-7-17" name="__codelineno-7-17" href="#__codelineno-7-17"></a>
+</span><span id="__span-7-18"><a id="__codelineno-7-18" name="__codelineno-7-18" href="#__codelineno-7-18"></a><span class="c1"># with WSLg (default on current Windows 11):</span>
+</span><span id="__span-7-19"><a id="__codelineno-7-19" name="__codelineno-7-19" href="#__codelineno-7-19"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gnome,ide,windows-native,workstation,corporate<span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base<span class="w"> </span>apt.deb
+</span><span id="__span-7-20"><a id="__codelineno-7-20" name="__codelineno-7-20" href="#__codelineno-7-20"></a><span class="c1"># without WSLg:</span>
+</span><span id="__span-7-21"><a id="__codelineno-7-21" name="__codelineno-7-21" href="#__codelineno-7-21"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb</span>
+</span><span id="__span-7-22"><a id="__codelineno-7-22" name="__codelineno-7-22" href="#__codelineno-7-22"></a>
+</span><span id="__span-7-23"><a id="__codelineno-7-23" name="__codelineno-7-23" href="#__codelineno-7-23"></a>inv<span class="w"> </span>tools.install
+</span><span id="__span-7-24"><a id="__codelineno-7-24" name="__codelineno-7-24" href="#__codelineno-7-24"></a>inv<span class="w"> </span>python.tools
+</span><span id="__span-7-25"><a id="__codelineno-7-25" name="__codelineno-7-25" href="#__codelineno-7-25"></a>inv<span class="w"> </span>node.install
+</span><span id="__span-7-26"><a id="__codelineno-7-26" name="__codelineno-7-26" href="#__codelineno-7-26"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.p10k-configure
 </span></code></pre></div>
 <p><code>gnome.*</code> and <code>screenshot.*</code> tasks are never called by <code>inv setup</code> and have no meaning under WSL —
 just don&rsquo;t invoke them.</p>
