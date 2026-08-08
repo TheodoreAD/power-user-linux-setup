@@ -236,5 +236,6 @@ the latest nightly build.
 | GNOME extensions | [gnome_extensions.md](gnome_extensions.md) |
 | Dev container / Dockerfile | [dev-container.md](dev-container.md) |
 | AI tools (local LLMs, agents, assistants) | [ai.md](ai.md) |
+| Claude Code environment (askpass, global CLAUDE.md, AGENTS.md) | [claude-code.md](claude-code.md) |
 | Docs site engine (zensical) — findings, pain points, re-verify checklist | [zensical.md](zensical.md) |
 | Troubleshooting | [troubleshooting.md](troubleshooting.md) |
