@@ -2060,8 +2060,8 @@
   
 
 
-<h1 id="ssh">SSH<a class="headerlink" href="#ssh" title="Permanent link">&para;</a></h1>
-<h2 id="identity-setup">Identity setup<a class="headerlink" href="#identity-setup" title="Permanent link">&para;</a></h2>
+<h1 id="ssh">SSH</h1>
+<h2 id="identity-setup">Identity setup</h2>
 <p>SSH keys and config are driven by <code>~/.config/pulse/identity.toml</code> — a personal file that is never committed to the repo.</p>
 <p>Copy the example and fill in your details:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>~/.config/pulse
@@ -2074,7 +2074,7 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>ssh.forward<span class="w">    </span><span class="c1"># ssh-copy-id to non-git server hosts (skips GitHub/GitLab)</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>ssh.add<span class="w">        </span><span class="c1"># add all keys for this machine to ssh-agent</span>
 </span></code></pre></div>
-<h2 id="what-gets-created">What gets created<a class="headerlink" href="#what-gets-created" title="Permanent link">&para;</a></h2>
+<h2 id="what-gets-created">What gets created</h2>
 <p><strong>Keys</strong> — one per unique email across your <code>ssh_hosts</code> entries, named:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub
@@ -2098,7 +2098,7 @@
 </span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a>  ServerAliveInterval 300
 </span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>  ServerAliveCountMax 3
 </span></code></pre></div>
-<h2 id="add-keys-to-github-gitlab">Add keys to GitHub / GitLab<a class="headerlink" href="#add-keys-to-github-gitlab" title="Permanent link">&para;</a></h2>
+<h2 id="add-keys-to-github-gitlab">Add keys to GitHub / GitLab</h2>
 <p>After creating keys, upload each public key to the relevant platform:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># GitHub</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>gh<span class="w"> </span>ssh-key<span class="w"> </span>add<span class="w"> </span>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub<span class="w"> </span>--title<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>uname<span class="w"> </span>-n<span class="k">)</span><span class="s2">&quot;</span>
@@ -2106,7 +2106,7 @@
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># GitLab</span>
 </span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>glab<span class="w"> </span>ssh-key<span class="w"> </span>add<span class="w"> </span>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub<span class="w"> </span>--title<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>uname<span class="w"> </span>-n<span class="k">)</span><span class="s2">&quot;</span>
 </span></code></pre></div>
-<h2 id="keychain-persistent-agent-across-logins">Keychain (persistent agent across logins)<a class="headerlink" href="#keychain-persistent-agent-across-logins" title="Permanent link">&para;</a></h2>
+<h2 id="keychain-persistent-agent-across-logins">Keychain (persistent agent across logins)</h2>
 <p><code>keychain</code> wraps <code>ssh-agent</code> so keys survive across terminal sessions and survive logout/login.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>-A<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>keychain
 </span></code></pre></div>
@@ -2120,7 +2120,7 @@ across the Wayland session — the agent socket survives from login through the 
 <code>AddKeysToAgent yes</code> (in the <code>Host *</code> block above) adds each key to it on first use. An empty
 <code>ssh-add -l</code> right after login is expected (keys load lazily on first connection, not eagerly at
 login), not a sign of breakage.</p>
-<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h2 id="troubleshooting">Troubleshooting</h2>
 <p>Fix key permissions if needed:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/.ssh/&lt;keyfile&gt;
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>~/.ssh/&lt;keyfile&gt;.pub
