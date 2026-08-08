@@ -860,6 +860,7 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://cli.github.com/pa
 description = "GitLab CLI — create MRs, manage issues, clone repos, and authenticate from the terminal"
 method      = "deb-url"
 tags        = ["dev", "vcs"]
+enabled     = false
 check_cmd   = "glab"
 version_cmd = "curl -fsSL https://gitlab.com/api/v4/projects/gitlab-org%2Fcli/releases/permalink/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 url         = "https://gitlab.com/gitlab-org/cli/-/releases/v{version}/downloads/glab_{version}_linux_amd64.deb"

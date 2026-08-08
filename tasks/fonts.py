@@ -188,11 +188,15 @@ def configure(c):
         return
 
     if monospace:
-        c.run(
+        result = c.run(
             f'gsettings set org.gnome.desktop.interface monospace-font-name "{monospace}"',
             hide=True,
+            warn=True,
         )
-        print(f"[fonts] System monospace → {monospace}")
+        if result.ok:
+            print(f"[fonts] System monospace → {monospace}")
+        else:
+            print("[fonts] no org.gnome.desktop.interface schema (no GNOME) — skipping")
 
     result = c.run(
         "gsettings get org.gnome.Terminal.ProfilesList default",
