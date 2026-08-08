@@ -147,6 +147,26 @@ directory, so it survives version upgrades.
 For other JetBrains IDEs (IntelliJ, GoLand, etc.), set manually:
 **Settings → Editor → Font → Font:** `CaskaydiaCove Nerd Font Mono`, size 12.
 
+### Rust plugin
+
+PyCharm has no built-in Rust support — install the
+[Rust plugin](https://plugins.jetbrains.com/plugin/22407-rust) from **Settings → Plugins →
+Marketplace** (search "Rust"). Like other JetBrains plugins, this is a manual Marketplace
+install; there's no CLI/apt equivalent to automate it.
+
+The plugin ships its own IntelliJ-based analysis engine — it does not use `rust-analyzer`,
+so no separate `rustup component add rust-analyzer` is needed for PyCharm specifically (see
+[rust.md](rust.md)). It does need the toolchain itself (`rustc`/`cargo`), installed via
+`inv tools.install` (`[packages.rust]` in `setup.toml`) to the XDG-compliant
+`~/.local/share/cargo`.
+
+The plugin can also offer to install the toolchain itself via rustup on first use — decline
+that prompt if `inv tools.install` has already run, since its default location (`~/.cargo`)
+would duplicate the one already in `~/.local/share/cargo`. GUI-launched PyCharm may not
+inherit the `~/.zshenv` `PATH` export, so if the plugin doesn't autodetect the toolchain, set
+it explicitly: **Settings → Languages & Frameworks → Rust → Toolchain location** →
+`~/.local/share/cargo/bin`.
+
 ---
 
 ## Terminal emulators

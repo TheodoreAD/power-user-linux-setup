@@ -92,6 +92,9 @@
 #                 expanded to the home directory first
 #   single_binary / symlink_from   if the installer doesn't already put its binary on PATH,
 #                 symlink_from names the installed path to symlink into ~/.local/bin/<check_cmd>
+#   post_install  optional shell command run once, right after the install script succeeds
+#                 (same env dict as above; only runs on first install, not on later re-runs —
+#                 the whole section is skipped once check_cmd/check_path already exists)
 #   check_cmd / check_path   same as other methods
 #
 # git-clone sections:
@@ -1237,3 +1240,27 @@ nvm_dir         = "~/.local/share/nvm"
 global_packages = ["skills"]  # npx skills add <owner>/<repo> — installs Claude Code slash commands from GitHub
 zshenv          = 'export NVM_DIR="${HOME}/.local/share/nvm"'
 zshrc           = 'export NVM_DIR="${HOME}/.local/share/nvm"'
+
+[packages.rust]
+description = """
+Rust toolchain via rustup — installs rustc, cargo, rustfmt, and clippy (the default rustup
+profile), plus the rust-analyzer component, to ~/.local/share/cargo and
+~/.local/share/rustup, instead of the ~/.cargo / ~/.rustup dotdirs rustup creates by default.
+rust-analyzer is only needed for non-JetBrains editors (VS Code, Neovim, etc.) — PyCharm's
+Rust plugin uses its own analysis engine, see docs/ide.md.
+"""
+method       = "script"
+tags         = ["dev", "language"]
+script_url   = "https://sh.rustup.rs"
+shell        = "sh -s -- -y --no-modify-path --profile default"
+check_path   = "~/.local/share/cargo/bin/rustc"
+post_install = "~/.local/share/cargo/bin/rustup component add rust-analyzer"
+zshenv       = """
+export RUSTUP_HOME="${HOME}/.local/share/rustup"
+export CARGO_HOME="${HOME}/.local/share/cargo"
+[ -f "${CARGO_HOME}/env" ] && . "${CARGO_HOME}/env"
+"""
+
+[packages.rust.env]
+RUSTUP_HOME = "~/.local/share/rustup"
+CARGO_HOME  = "~/.local/share/cargo"
