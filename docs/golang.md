@@ -1,45 +1,39 @@
-# Golang
+# Go
 
-<https://golang.org/doc/install>
-
-<https://www.digitalocean.com/community/tutorials/how-to-install-go-on-ubuntu-18-04>
-
+<https://go.dev/doc/install>
 <https://github.com/golang-standards/project-layout>
 
+Installed via `inv tools.install` (archive method — downloads the official tarball from go.dev and extracts to `~/.local/share/go`). Shell environment is written to `~/.zshrc` by `inv zsh.configure`.
 
-!!! WARNING
-    If you aren't installing for the first time, remove the go install directory first:
-    
-    ```shell
-    rm -rf "${HOME}/.local/share/go"
-    ```
+## Environment
 
 ```shell
-GO_INSTALL_ROOT="${HOME}/.local/share"
-GO_INSTALL_PATH="${GO_INSTALL_ROOT}/go"
-GO_PROJECTS_ROOT="${HOME}/go"
-mkdir -p "${GO_INSTALL_PATH}" "${GO_PROJECTS_ROOT}"
-GOLANG_VERSION=$(curl -sS -L "https://golang.org/VERSION?m=text")
-curl -sS -L "https://storage.googleapis.com/golang/${GOLANG_VERSION}.linux-amd64.tar.gz" \
-  | tar -zx --directory "${GO_INSTALL_ROOT}"
-
-# Add environment variables to shell startup for persistence
-tee -a "${HOME}/.zshrc" >/dev/null <<EOF
-
-# Golang
-export GOPATH="${GO_INSTALL_PATH}"
-export GOROOT="${GO_PROJECTS_ROOT}"
-export PATH="\${PATH}":"\${GOROOT}/bin":"\${GOPATH}/bin"
-EOF
+GOROOT=~/.local/share/go   # Go installation (binaries, stdlib)
+GOPATH=~/go                # workspace (go install puts binaries in ~/go/bin)
 ```
 
-To enable right away:
+Both are set automatically by the `zshrc` snippet in `setup.toml`.
+
+## Version management
+
+Go 1.21+ has built-in per-project version management. A `go.mod` declaring:
+
+```
+toolchain go1.26.4
+```
+
+will cause the `go` command to automatically download and use that exact version when you enter the project. `GOTOOLCHAIN=auto` (the default since 1.21) enables this behaviour — no extra tool needed.
+
+Install one bootstrap version via `inv tools.install` and let projects pull their own toolchains as needed.
+
+## To update the bootstrap install
 
 ```shell
-source "${HOME}/.zshrc"
+rm -rf ~/.local/share/go
+inv tools.install
 ```
 
-To verify:
+## Verify
 
 ```shell
 go version

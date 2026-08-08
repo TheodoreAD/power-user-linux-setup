@@ -1,97 +1,101 @@
 # Apt packages
 
-!!! IMPORTANT
-    Install these before anything else in this guide, many of them are dependencies.
+All apt packages are declared in `setup.toml` and installed via invoke tasks.
+Each package has a `method` field that determines how it is installed:
+
+| Method       | Command               | Description                                                    |
+|--------------|-----------------------|----------------------------------------------------------------|
+| `apt`        | `inv apt.base`        | Standard packages from Ubuntu's default repos                  |
+| `apt-repo`   | `inv apt.repos`       | External repos — registers GPG key + sources, then installs    |
+| `deb-github` | `inv apt.deb`         | Latest `.deb` from a GitHub release page                       |
+| `deb-url`    | `inv apt.deb`         | `.deb` from a direct URL (e.g. Chrome, which self-manages its sources afterwards) |
+| —            | `inv apt.configure`   | Write `/etc/apt/apt.conf.d/99-pulse` — disable dpkg progress bars |
+| —            | `inv apt.refresh-keys`| Re-download all apt-repo GPG keys                              |
+| —            | `inv apt.audit-keys`  | Audit key hygiene across all key stores                        |
+
+`inv apt.repos` is a two-phase command. Phase 1 registers all GPG keys and sources files
+in one pass, then runs a single `apt update`. Phase 2 installs the packages. If a GPG key
+URL or sources write fails for any entry (e.g. a dead URL), that repo is skipped with a
+`WARNING:` message and the rest continue — a broken third-party repo does not abort the run.
+
+Run everything at once:
+
+```shell
+inv setup
+```
+
+Or selectively:
+
+```shell
+sudo apt update && sudo apt full-upgrade -y
+inv apt.configure
+inv apt.base
+inv apt.repos
+inv apt.deb
+```
 
 !!! WARNING
-    After the apt commands you might get a list of packages that are considered
-    to no longer be required, followed by the following advice:
+    After apt commands you may see a list of packages suggested for removal:
 
     ```
     Use 'sudo apt autoremove' to remove them.
     ```
 
-    Do NOT run this unless you know EXACTLY what the involved packages do.
+    Do NOT run this unless you know exactly what each package does.
 
-```shell
-PACKAGES=()
-# build
-PACKAGES+=(make build-essential gettext)
-# source control
-PACKAGES+=(git)
-# man pages
-PACKAGES+=(manpages-dev man-db manpages-posix-dev)
-# editor
-PACKAGES+=(vim)
-# network
-PACKAGES+=(wget curl libpcap-dev libnet1-dev rpcbind openssh-client openssh-server nmap)
-# iproute2 is installed by default, but the docs aren't
-PACKAGES+=(iproute2-doc)
-# includes older utilities, iproute2 is the newer alternative:
-#     arp, hostname, ifconfig, netstat, rarp, route,
-#     plipconfig, slattach, mii-tool, iptunnel, ipmaddr
-PACKAGES+=(net-tools traceroute iftop hping3 vnstat iptraf dstat)
-# TODO: find resolvconf replacement
-# network fs mounting
-PACKAGES+=(cifs-utils)
-# docker requirements
-PACKAGES+=(apt-transport-https ca-certificates software-properties-common)
-# pyenv requirements
-# https://github.com/pyenv/pyenv/wiki#suggested-build-environment
-PACKAGES+=(
-  libssl-dev zlib1g-dev \
-  libbz2-dev libreadline-dev libsqlite3-dev  \
-  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev \
-  llvm
-)
-# TODO: find what requires this
-PACKAGES+=(python3-openssl)
-# TODO: find what requires these, likely python related
-PACKAGES+=(libgdbm-dev libnss3-dev)
-# python dev
-PACKAGES+=(python3-pip python3-venv)
-# security
-PACKAGES+=(keychain gnupg)
-# hardware diagnostics
-PACKAGES+=(lm-sensors gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0)
-# system monitor
-PACKAGES+=(htop ncdu)
-# terminal
-PACKAGES+=(terminator tmux xclip)
-# file management and search
-PACKAGES+=(tree fd-find ripgrep)
-# converters
-PACKAGES+=(html2text bat jq)
-# linting
-PACKAGES+=(shellcheck)
-# environment variable management
-PACKAGES+=(direnv)
-# windows compatiblity
-PACKAGES+=(dos2unix)
-# system configuration (ui)
-PACKAGES+=(font-manager)
-# idle state management
-PACKAGES+=(xidle)
-# screenshot and annotation
-PACKAGES+=(flameshot)
-# typo helper
-# TODO: see why thefuck isn't working
-# clipboard
-PACKAGES+=(gpaste-2)
+## Adding or disabling packages
 
-sudo apt update
-sudo apt full-upgrade -y
-sudo apt install -y ${PACKAGES[@]}
+Edit `setup.toml`. To disable a package without deleting it, set `enabled = false`.
+To add a new apt package where the section name matches the apt package name:
 
-# TODO: see if this is still an issue
-# to solve apt clash due to rust packaging error
-# sudo apt install -o Dpkg::Options::="--force-overwrite" bat ripgrep
-
-# symlinks for programs with already claimed binary names
-mkdir -p "${HOME}/.local/bin"
-ln -s "$(which batcat)" "${HOME}/.local/bin/bat"
-ln -s "$(which fdfind)" "${HOME}/.local/bin/fd"
+```toml
+[packages.mypackage]
+description = "..."
+method      = "apt"
+tags        = ["some-tag"]
 ```
 
-!!! TODO
-    Configure flameshot and other installed software above.
+If the apt package name differs from the section name, or you need multiple packages,
+declare them explicitly:
+
+```toml
+[packages.mygroup]
+description = "..."
+method      = "apt"
+packages    = ["pkg-one", "pkg-two"]
+```
+
+## GPG key hygiene
+
+### Audit
+
+Check the state of all apt key stores:
+
+```shell
+inv apt.audit-keys
+```
+
+Checks three locations and reports issues:
+
+| Location | Rule | Auto-fixed |
+|---|---|---|
+| `/etc/apt/trusted.gpg` | Must be empty — any key here trusts **all** repos with no scoping | Yes — cleared in live mode |
+| `/etc/apt/trusted.gpg.d/` | Only Ubuntu system keys expected; others are old-style (not `signed-by`) | No — reported for manual review |
+| `/etc/apt/keyrings/`, `/usr/share/keyrings/` | No `~` backup files | Yes — removed in live mode |
+
+All repos declared in `setup.toml` use the modern `signed-by` approach with keys stored in `/usr/share/keyrings/` — the old global key stores should stay empty after initial cleanup.
+
+`PULSE_DRY_RUN=1 inv apt.audit-keys` reports without changing anything.
+
+### Refresh expired keys
+
+Third-party apt repo keys can expire. To re-download all keys declared in `setup.toml`:
+
+```shell
+inv apt.refresh-keys
+```
+
+This re-fetches the key from each `gpg_url` and overwrites the file at `gpg_path` for
+every enabled `apt-repo` entry — no need to look up per-repo commands.
+
+See [gcloud.md](gcloud.md) for Google Cloud CLI setup.
