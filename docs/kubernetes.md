@@ -48,5 +48,3 @@ Open-source Kubernetes IDE (community fork of Lens). Installed as a `.deb` from 
 ## Tilt
 
 Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual `kubectl apply`.
-
-For bare metal Kubernetes (kubeadm, kubelet, Istio, etc.) see [kubernetes_bare_metal.md](kubernetes_bare_metal.md).
