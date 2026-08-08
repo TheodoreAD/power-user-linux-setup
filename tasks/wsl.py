@@ -271,28 +271,35 @@ def check(c):
 
 
 @task
-def fix(c):
+def fix(c, dns=True):
     """Fix common /etc/wsl.conf misconfigurations: systemd=true, generateResolvConf=false.
 
     Only touches settings that are actually fixable from inside the distro — distro choice, WSL1
     vs WSL2, and WSLg availability all require action on the Windows side (see `inv wsl.check`
     for those). Requires a full WSL restart (`wsl.exe --shutdown` from Windows) to take effect.
+
+    dns: pass --no-dns to set generateResolvConf=true instead (or leave it, if already true) —
+      for networks where public DNS (1.1.1.1 etc.) is unreachable but WSL's own auto-detected
+      resolver works (it mirrors whatever DNS server Windows itself uses, e.g. a corporate
+      resolver a VPN/firewall actually allows). Signature of this: `ping 1.1.1.1` works but DNS
+      resolution doesn't, even against a resolv.conf pointed straight at 1.1.1.1 — see docs/wsl.md.
     """
     if not _is_wsl():
         print("[wsl] not running under WSL — nothing to fix")
         return
 
+    dns_target = "false" if dns else "true"
     text = _WSL_CONF.read_text() if _WSL_CONF.exists() else ""
     new_text, systemd_changed = _ensure_wsl_conf_kv(text, "boot", "systemd", "true")
-    new_text, dns_changed = _ensure_wsl_conf_kv(new_text, "network", "generateResolvConf", "false")
+    new_text, dns_changed = _ensure_wsl_conf_kv(new_text, "network", "generateResolvConf", dns_target)
 
     if util.DRY_RUN:
         print(f"[wsl.fix] systemd=true: {'MISSING' if systemd_changed else 'ok'}")
-        print(f"[wsl.fix] generateResolvConf=false: {'MISSING' if dns_changed else 'ok'}")
+        print(f"[wsl.fix] generateResolvConf={dns_target}: {'MISSING' if dns_changed else 'ok'}")
         return
 
     if not (systemd_changed or dns_changed):
-        print("[wsl.fix] /etc/wsl.conf already has systemd=true and generateResolvConf=false — nothing to do")
+        print(f"[wsl.fix] /etc/wsl.conf already has systemd=true and generateResolvConf={dns_target} — nothing to do")
         return
 
     with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
@@ -308,17 +315,22 @@ def fix(c):
         "[wsl.fix] Takes effect only after a full WSL restart — from Windows (PowerShell/cmd, not "
         "from inside this distro): `wsl.exe --shutdown`, then reopen your terminal."
     )
-    if dns_changed:
+    if dns_changed and dns:
         print(
             "[wsl.fix] After restarting: /etc/resolv.conf will still be the stale WSL-written file "
             "— WSL doesn't restore the systemd-resolved symlink on its own. Run "
             f"`sudo ln -sf {_STUB_RESOLV_CONF} /etc/resolv.conf` then `inv system.dns` "
             "(or just `inv wsl.install`, which does this for you) — see docs/wsl.md."
         )
+    elif dns_changed and not dns:
+        print(
+            "[wsl.fix] After restarting: WSL will regenerate /etc/resolv.conf itself from the "
+            "Windows host's own DNS settings — nothing else to run, don't call `inv system.dns`."
+        )
 
 
 @task
-def install(c, wslg="auto", docker=False):
+def install(c, wslg="auto", docker=False, dns=True):
     """Run the docs/wsl.md recommended install sequence in one shot: check, fix, system.locale/
     system.dns (only if systemd/DNS are actually live yet), then apt/tools/language/zsh setup
     with WSL-appropriate tags excluded.
@@ -333,6 +345,12 @@ def install(c, wslg="auto", docker=False):
       which tag set is excluded (see docs/wsl.md, "Tags to exclude").
     docker: pass --docker to also install Docker natively (drops the `workstation` tag exclusion)
       instead of leaving Docker to Docker Desktop's WSL integration.
+    dns: pass --no-dns if public DNS (1.1.1.1 etc.) is unreachable on this network — e.g. `ping
+      1.1.1.1` works but nothing resolves, even against a resolv.conf pointed straight at it
+      (common on corporate VPNs/firewalls that only allow DNS to an internal resolver). Leaves
+      generateResolvConf=true instead, so WSL manages /etc/resolv.conf itself by mirroring
+      whatever DNS server Windows actually uses — skips the relink/system.dns/fallback dance
+      entirely. See docs/wsl.md.
     """
     if not _is_wsl():
         print("[wsl.install] not running under WSL — nothing to do")
@@ -352,13 +370,14 @@ def install(c, wslg="auto", docker=False):
     check(c)
 
     pre = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
-    fix(c)
+    fix(c, dns=dns)
     post = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
     if pre != post:
         print(
-            "[wsl.install] /etc/wsl.conf just changed — system.locale/system.dns below will be "
-            "skipped until you `wsl.exe --shutdown` (from Windows) and reopen, then re-run "
-            "`inv wsl.install`. Continuing with the rest of the install now."
+            "[wsl.install] /etc/wsl.conf just changed — system.locale"
+            + ("/system.dns" if dns else "")
+            + " below will be skipped until you `wsl.exe --shutdown` (from Windows) and reopen, "
+            "then re-run `inv wsl.install`. Continuing with the rest of the install now."
         )
 
     # Fix locale/DNS *before* anything network-dependent below (apt, tools.install, node, zsh's
@@ -370,7 +389,9 @@ def install(c, wslg="auto", docker=False):
     else:
         print("[wsl.install] systemd not live yet — skipping system.locale (restart WSL and re-run)")
 
-    if _systemd_running() and not _resolv_conf_wsl_active():
+    if not dns:
+        print("[wsl.install] --no-dns: leaving /etc/resolv.conf to WSL's own generateResolvConf")
+    elif _systemd_running() and not _resolv_conf_wsl_active():
         if not _resolv_conf_symlinked_to_stub():
             if util.DRY_RUN:
                 print("[wsl.install] /etc/resolv.conf: MISSING symlink to stub-resolv.conf")
@@ -392,10 +413,12 @@ def install(c, wslg="auto", docker=False):
                 print("[wsl.install] DNS resolution verified working (static /etc/resolv.conf)")
             else:
                 print(
-                    "[wsl.install] WARNING: DNS still isn't resolving after the static fallback — "
-                    "installs below will likely fail. This looks like a network/VPN/firewall issue "
-                    "outside PULSE's control, not a config problem — check with `getent hosts "
-                    "archive.ubuntu.com` and `ping 1.1.1.1` once this finishes."
+                    "[wsl.install] WARNING: DNS still isn't resolving even against a static "
+                    "resolv.conf pointed straight at 1.1.1.1 — if `ping 1.1.1.1` works but this "
+                    "doesn't, your network is very likely blocking DNS to public resolvers (common "
+                    "on corporate VPNs/firewalls). Public DNS isn't usable here at all — re-run as "
+                    "`inv wsl.install --no-dns`, restart WSL, and let WSL manage /etc/resolv.conf "
+                    "itself by mirroring the Windows host's own (working) DNS server instead."
                 )
     else:
         print("[wsl.install] systemd/DNS not both live yet — skipping system.dns (restart WSL and re-run)")

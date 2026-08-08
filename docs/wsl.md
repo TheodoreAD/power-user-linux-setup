@@ -131,6 +131,32 @@ inv system.dns
 these three states you're in (WSL still generating it, generated-but-frozen without the symlink,
 or correctly symlinked) if you're running the steps by hand instead.
 
+### If public DNS is blocked on this network
+
+Everything above assumes `1.1.1.1`/`1.0.0.1`/`8.8.8.8` (what `inv system.dns` configures) are
+actually reachable. On some corporate networks they aren't — a VPN client or firewall allows
+general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver. The
+signature: `ping 1.1.1.1` works, but nothing resolves, even against `/etc/resolv.conf` pointed
+*directly* at `1.1.1.1` (no systemd-resolved involved at all). If that's what you're seeing, no
+amount of correctly configuring public DNS servers will fix it — `inv wsl.install` detects this
+itself (tests real resolution after configuring DNS, falls back to a static resolv.conf, and warns
+if even that doesn't resolve) rather than silently leaving you with a broken config.
+
+The actual fix is to *not* override WSL's own DNS handling: `generateResolvConf=true` (WSL's
+default) makes WSL regenerate `/etc/resolv.conf` from whatever DNS server Windows itself is
+configured to use — which, on a locked-down network, is presumably the internal resolver the
+firewall actually allows through. Run:
+
+```shell
+inv wsl.install --no-dns
+```
+
+This sets `generateResolvConf=true` in `/etc/wsl.conf` (reverting it if `wsl.fix`/`wsl.install`
+had already set it to `false`) and skips the relink/`system.dns`/fallback dance entirely, letting
+WSL manage `/etc/resolv.conf` itself. Needs the usual `wsl.exe --shutdown` + reopen to take
+effect. **Pass `--no-dns` on every future `inv wsl.install` run on this machine** — without it,
+`wsl.fix` will flip `generateResolvConf` back to `false` again and DNS breaks again.
+
 ## Docker
 
 `[packages.docker]` is tagged `workstation`, so it's excluded by the recommended tag set above by
@@ -274,6 +300,7 @@ you may not want depending on your `/etc/wsl.conf` and Docker choice above.
 inv wsl.install              # auto-detects WSLg, excludes workstation/corporate/ide/... per the table above
 inv wsl.install --wslg=no    # force the no-WSLg tag set instead of auto-detecting
 inv wsl.install --docker     # also keep the workstation tag (installs Docker natively)
+inv wsl.install --no-dns     # public DNS blocked on this network — see "If public DNS is blocked" above
 ```
 
 It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS
