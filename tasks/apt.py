@@ -24,6 +24,7 @@ _APT_CONF_CONTENT = 'DPkg::Progress-Fancy "false";\n'
 @task
 def configure(c):
     """Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars."""
+    util.require_apt()
     if util.DRY_RUN:
         ok = _APT_CONF.exists() and c.run(f"{util.SUDO} cat {_APT_CONF}", hide=True, warn=True).stdout == _APT_CONF_CONTENT
         print(f"[apt.configure] {'ok' if ok else 'MISSING'}")
@@ -65,6 +66,7 @@ def _install_apt(c, name: str, cfg: dict) -> None:
 @task
 def base(c):
     """Install base apt packages from config."""
+    util.require_apt()
     pkgs = util.packages_by_method("apt")
     if util.DRY_RUN:
         for name, cfg in pkgs.items():
@@ -141,6 +143,7 @@ def _status_repo(name: str, cfg: dict) -> None:
 @task
 def repos(c):
     """Set up external apt repos and install their packages."""
+    util.require_apt()
     pkgs = util.packages_by_method("apt-repo")
 
     if util.DRY_RUN:
@@ -289,6 +292,7 @@ def _install_deb_url(c, name: str, cfg: dict) -> None:
 @task
 def deb(c):
     """Install packages sourced from GitHub releases or direct deb URLs."""
+    util.require_apt()
     for name, cfg in util.packages_by_method("deb-github").items():
         _install_github_deb(c, name, cfg)
     for name, cfg in util.packages_by_method("deb-url").items():

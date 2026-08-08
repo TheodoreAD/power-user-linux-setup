@@ -22,14 +22,29 @@
 # Tags that actually gate an exclusion recipe (everything else is organizational only):
 #   gui         — requires a display server (Wayland/X11); skip on headless machines and in containers
 #   desktop     — depends on a desktop session (e.g. Wayland clipboard); usually paired with gui
-#   gnome       — GNOME Shell extensions / gnome-extensions-cli; meaningless without GNOME Shell
+#   gnome       — requires a live GNOME Shell session specifically, not just any Wayland/X11
+#                 compositor: gnome-extensions-cli, GNOME Shell extensions, and GNOME-only
+#                 xdg-desktop-portal backends (e.g. [packages.xdg-desktop-portal-gnome],
+#                 [packages.flameshot] — its capture path depends on that portal backend)
 #   corporate   — work-specific tools (Webex, Citrix); skip on personal machines
 #   workstation — physical machine only (hardware sensors, local terminal multiplexer, Docker); skip in containers
+#   ide         — full IDEs and their support profiles (vscode, jetbrains-toolbox,
+#                 apparmor-jbr-cef); skip when you're editing this machine from a remote client
+#                 instead (e.g. Windows-native VS Code/JetBrains + Remote-WSL, see docs/wsl.md)
+#   windows-native — GUI apps (terminator, wezterm, freelens, font-manager, claude-desktop, edge)
+#                 that duplicate a Windows-native app the user already has, with no Linux-specific
+#                 reason to run the Linux build too; skip under WSL to avoid install/config
+#                 surface that isn't earning its keep (see docs/wsl.md)
 #
 # For dev container / Dockerfile builds, exclude: PULSE_EXCLUDE_TAGS=gui,workstation,corporate
 # See docs/dev-container.md for the full Dockerfile approach and which invoke tasks to skip.
 #
-# For WSL, exclude: PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate
+# For WSL with WSLg (default on current Windows 11 builds — GUI Linux apps, clipboard, and GPU
+# accel all work through it): PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate
+# This keeps only what's genuinely useful under WSLg: wl-clipboard (integration) and Chrome
+# (real-Linux-build testing). Drop `ide`/`windows-native` selectively if you want more running
+# natively inside the distro instead of from Windows — see docs/wsl.md for the tradeoffs.
+# Without WSLg (no display server at all): PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate
 # Run `inv wsl.check` first — diagnoses systemd, DNS, Docker, and WSLg risks before you install
 # anything. See docs/wsl.md for the full picture.
 #
@@ -369,7 +384,7 @@ alias xv="wl-paste"
 description = "GNOME backend for the xdg-desktop-portal Screenshot/ScreenCast D-Bus interfaces"
 method      = "apt"
 enabled     = true
-tags        = ["desktop"]
+tags        = ["desktop", "gnome"]
 
 # See docs/screen_capture.md for shortcut design and comparison with the built-in GNOME screenshot
 # tool. After install, run `inv screenshot.enable` to wire up shortcuts (see docs for details).
@@ -388,7 +403,12 @@ tag_prefix   = ""
 asset        = "flameshot-v14.0+git0.da6121bd-artifact-ubuntu-24.04-amd64.zip"
 check_cmd    = "flameshot"
 enabled      = true
-tags         = ["desktop", "gui"]
+# Tagged gnome (not just desktop/gui): capture goes through org.freedesktop.portal.Screenshot,
+# which xdg-desktop-portal-gnome only answers when a real GNOME Shell is running as the D-Bus
+# service behind it (see the comment above [packages.xdg-desktop-portal-gnome]). A Wayland
+# compositor alone — e.g. WSLg's weston — is not enough; the request hangs with no error, same
+# failure mode as the Ubuntu noble-updates v12.1.0 bug described above.
+tags         = ["desktop", "gui", "gnome"]
 
 [packages.shellcheck]
 description = "Static analysis and linting for shell scripts"
@@ -413,7 +433,7 @@ tags        = ["files", "network", "cli"]
 [packages.font-manager]
 description = "GUI for browsing, previewing, and toggling installed font families — useful alongside Nerd Fonts"
 method      = "apt"
-tags        = ["fonts", "desktop", "gui"]
+tags        = ["fonts", "desktop", "gui", "windows-native"]
 
 [packages.gnome-system-monitor-ext]
 description = """
@@ -650,7 +670,7 @@ tags        = ["terminal", "fun"]
 [packages.terminator]
 description  = "Feature-rich terminal emulator with split panes and profiles"
 method       = "apt"
-tags         = ["terminal", "gui"]
+tags         = ["terminal", "gui", "windows-native"]
 config_files = [{ src = "config/terminator.conf", dst = "~/.config/terminator/config" }]
 
 [packages.tmux]
@@ -926,7 +946,7 @@ fi
 [packages.claude-desktop]
 description   = "Claude desktop app (community repackage — aaddrick/claude-desktop-debian)"
 method        = "apt-repo"
-tags          = ["ai", "desktop", "gui"]
+tags          = ["ai", "desktop", "gui", "windows-native"]
 gpg_url       = "https://pkg.claude-desktop-debian.dev/KEY.gpg"
 gpg_path      = "/usr/share/keyrings/claude-desktop.gpg"
 sources_path  = "/etc/apt/sources.list.d/claude-desktop.list"
@@ -1010,7 +1030,7 @@ check_cmd   = "k9s"
 [packages.freelens]
 description = "Open-source Kubernetes IDE (community fork of Lens) — cluster explorer, log viewer, resource editor"
 method      = "deb-github"
-tags        = ["k8s", "dev", "gui"]
+tags        = ["k8s", "dev", "gui", "windows-native"]
 repo        = "freelensapp/freelens"
 asset       = "Freelens-{version}-linux-amd64.deb"
 check_cmd   = "freelens"
@@ -1040,7 +1060,7 @@ sources_entry = "deb [signed-by={gpg_path}] https://apt.releases.hashicorp.com {
 [packages.edge]
 description   = "Microsoft Edge browser (stable channel)"
 method        = "apt-repo"
-tags          = ["browser", "desktop", "gui"]
+tags          = ["browser", "desktop", "gui", "windows-native"]
 packages      = ["microsoft-edge-stable"]
 gpg_url       = "https://packages.microsoft.com/keys/microsoft.asc"
 gpg_path      = "/usr/share/keyrings/microsoft-edge.gpg"
@@ -1050,7 +1070,7 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://packages.microsof
 [packages.vscode]
 description   = "Visual Studio Code — Microsoft official apt repo; auto-updates via apt. Snap avoided: sandboxing breaks SSH Remote Dev and slows extension loading."
 method        = "apt-repo"
-tags          = ["dev", "editor", "gui"]
+tags          = ["dev", "editor", "ide", "gui"]
 packages      = ["code"]
 gpg_url       = "https://packages.microsoft.com/keys/microsoft.asc"
 gpg_path      = "/usr/share/keyrings/microsoft-vscode.gpg"
@@ -1072,7 +1092,7 @@ symlinks         = [{ src = "jetbrains-toolbox", dst = "jetbrains-toolbox" }]
 [packages.wezterm]
 description  = "WezTerm — GPU-accelerated terminal emulator with Lua config, split panes, tabs, and SSH multiplexing. Configured via config/wezterm.lua."
 method       = "deb-github"
-tags         = ["gui", "terminal", "dev"]
+tags         = ["gui", "terminal", "dev", "windows-native"]
 repo         = "wez/wezterm"
 tag          = "nightly"
 tag_prefix   = ""

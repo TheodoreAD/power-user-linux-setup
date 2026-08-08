@@ -103,6 +103,40 @@ def command_exists(name: str) -> bool:
     return shutil.which(name) is not None
 
 
+def require_systemd() -> None:
+    """Abort immediately if systemd isn't the running init system.
+
+    Any task that shells out to systemctl/localectl needs this — fails the same way whether the
+    cause is WSL1 (no real kernel, systemd never runs at all), WSL2 with `systemd=true` unset in
+    /etc/wsl.conf, or a minimal/container environment with no init system. This repo only
+    supports WSL2 with systemd enabled; WSL1 is not a supported target.
+    """
+    if not Path("/run/systemd/system").is_dir():
+        raise RuntimeError(
+            "systemd is not running (no /run/systemd/system) — this task shells out to "
+            "systemctl/localectl and needs it.\n"
+            "On WSL2, add to /etc/wsl.conf:\n"
+            "  [boot]\n"
+            "  systemd=true\n"
+            "then run `wsl.exe --shutdown` from Windows and reopen the terminal. WSL1 cannot run "
+            "systemd at all and isn't a supported target.\n"
+            "Run `inv wsl.check` for a full diagnostic."
+        )
+
+
+def require_apt() -> None:
+    """Abort immediately if apt/dpkg aren't available — this repo only targets Debian/Ubuntu."""
+    missing = [name for name in ("apt", "dpkg") if not command_exists(name)]
+    if missing:
+        raise RuntimeError(
+            f"{' and '.join(missing)} not found — this repo only supports Debian/Ubuntu (apt, "
+            "apt-repo, deb-github, deb-url methods all shell out to apt/dpkg).\n"
+            "On WSL this usually means a non-Ubuntu distro (Alpine, Fedora Remix, etc.) — install "
+            "Ubuntu-24.04 from the Microsoft Store instead: wsl.exe --install Ubuntu-24.04\n"
+            "Run `inv wsl.check` for a full diagnostic."
+        )
+
+
 def file_contains(path: str | Path, text: str) -> bool:
     try:
         return text in Path(path).expanduser().read_text()

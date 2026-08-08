@@ -63,19 +63,21 @@ Every `[packages.*]` entry has two independent, unrelated ways to be skipped:
 | Task | Reads directly | Tag/enabled-aware? |
 |---|---|---|
 | `node.install` | `packages["node"]` | No — always runs `[packages.node]` regardless of `enabled` or tags |
-| `docker.configure` | live `docker` command + `packages.docker`'s literal defaults | No — gated only by whether the `docker` binary exists on `$PATH` |
+| `docker.configure` | live `docker` command + `packages.docker`'s literal defaults | No — gated only by whether the `docker` binary exists on `$PATH`, plus a `dockerd` presence check: if `docker` exists without a local `dockerd` (e.g. Docker Desktop's WSL integration), it skips cleanly instead of failing on `systemctl restart docker` |
 | `fonts.install` / `fonts.configure` | `settings.fonts` (not `packages.*` at all) | N/A — not a package entry, no tags possible |
 | `zsh.configure` | **every** entry in `packages.*` that has a `zshrc`/`zshenv`/`zprofile` field | `enabled` only — **tags are ignored**. A `gui`-tagged tool's shell block (PATH entry, completion, OMZ plugin coupling) still gets written to `.zshrc` even when `PULSE_EXCLUDE_TAGS` skipped installing the tool itself. Usually harmless (blocks tend to guard on the binary existing), but worth knowing before assuming an exclude-tags profile produced a byte-for-byte-minimal `.zshrc`. |
 
 This split is exactly what [wsl.md](wsl.md), [dev-container.md](dev-container.md), and the headless example below rely on — when building a new environment profile, check which bucket the task you're skipping falls into before assuming a tag exclusion is enough.
 
-**Tag catalog** — only five tags currently gate anything (used across the exclusion recipes in this repo):
+**Tag catalog** — only seven tags currently gate anything (used across the exclusion recipes in this repo):
 
 | Tag | Excludes |
 |---|---|
 | `gui` | Wayland/X11 apps, desktop tools, browsers |
 | `desktop` | Anything depending on a desktop session (e.g. Wayland clipboard) |
-| `gnome` | GNOME Shell extensions, `gnome-extensions-cli` — meaningless without GNOME Shell |
+| `gnome` | Anything needing a *live GNOME Shell*, not just a display server: GNOME Shell extensions, `gnome-extensions-cli`, and GNOME-only `xdg-desktop-portal` backends (`xdg-desktop-portal-gnome`, `flameshot`) |
+| `ide` | Full IDEs and their support profiles (`vscode`, `jetbrains-toolbox`, `apparmor-jbr-cef`) — see [wsl.md](wsl.md) for when to exclude these in favor of a remote client |
+| `windows-native` | GUI apps with no Linux-specific reason to duplicate under WSL (`terminator`, `wezterm`, `freelens`, `font-manager`, `claude-desktop`, `edge`) — WSL-specific, see [wsl.md](wsl.md) |
 | `workstation` | Hardware sensors, local terminal multiplexer, Docker |
 | `corporate` | Webex, Citrix, and other work-specific tools |
 

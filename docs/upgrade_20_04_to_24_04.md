@@ -863,6 +863,46 @@ essential right now.
 | Guiding principle | Minimize overrides — fewer custom bindings means less to maintain and fewer surprises on a fresh install |
 | Wayland env var | Any Flameshot binding needs `QT_QPA_PLATFORM=wayland` in the command (see Phase 8f); check if other app shortcuts have similar requirements |
 
+### docs/wsl.md
+
+Status: ✓ **new file, 2026-08-08** (added in a separate session, not part of the original 24.04
+guide review — recorded here for completeness; substantially expanded in a follow-up session, also
+2026-08-08). Covers bootstrapping this repo inside a WSL2 distro instead of a native workstation.
+
+- `inv wsl.check` — read-only diagnostic: WSL1 vs WSL2, distro (Ubuntu vs other), systemd running,
+  `/etc/resolv.conf` WSL-managed vs not, native `dockerd` vs Docker Desktop's WSL integration, WSLg
+  availability.
+- `inv wsl.fix` — **added in the follow-up session** — the fixable subset of the above: idempotently
+  sets `systemd=true` / `generateResolvConf=false` in `/etc/wsl.conf` via a targeted key/value merge
+  (`tasks/wsl.py`'s `_ensure_wsl_conf_kv`) that leaves any other content in that file untouched, then
+  reminds you to run `wsl.exe --shutdown` from Windows. Distro choice, WSL1→WSL2, and WSLg
+  availability all need action from the Windows side instead — no task can fix those from inside
+  the distro, so `wsl.check` still just reports on them.
+- Task-level enforcement, not just advisory — **added in the follow-up session**: `util.require_systemd()`
+  / `util.require_apt()` (`tasks/util.py`) are generic capability checks, not WSL-specific branching,
+  wired into `system.locale`/`system.dns`/`system.journal_size` and
+  `apt.configure`/`apt.base`/`apt.repos`/`apt.deb` — they abort immediately with an actionable
+  message instead of failing partway through a raw `systemctl`/`apt` error. `docker.configure`
+  similarly detects "`docker` CLI present, no local `dockerd`" and skips cleanly instead of failing
+  on `systemctl restart docker`.
+- Two new `setup.toml` tags scope the WSLg-enabled GUI package set down to what's actually useful
+  under WSL, instead of installing everything that merely *can* run there: `ide` (`vscode`,
+  `jetbrains-toolbox`, `apparmor-jbr-cef` — use Windows-native VS Code/JetBrains + Remote-WSL
+  instead) and `windows-native` (`terminator`, `wezterm`, `freelens`, `font-manager`,
+  `claude-desktop`, `edge` — each duplicates a Windows app with no Linux-specific reason to run the
+  Linux build). Recommended WSLg install set:
+  `PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate`, leaving just `wl-clipboard`
+  (Windows clipboard interop) and Google Chrome (real-Linux-build testing) from the `gui`/`desktop`
+  tags. Also flagged that setup.toml has no Gecko-engine (Firefox) package at all — worth adding if
+  cross-browser-engine testing under WSLg ever matters, since Chrome/Edge are both Blink.
+- `xdg-desktop-portal-gnome` and `flameshot` retagged `gnome` (not just `desktop`) — their capture
+  path needs a live GNOME Shell D-Bus service to back the portal, which WSLg's `weston` compositor
+  doesn't provide; they'd hang under WSLg the same way `flameshot` already hangs on any machine
+  without a running GNOME session (see the comment above `[packages.xdg-desktop-portal-gnome]` in
+  `setup.toml`).
+- Tag catalog and exclusion recipes also updated in `docs/index.md` and `setup.toml`'s own header
+  comment to match.
+
 ### Docs site — mkdocs-material → zensical
 
 Status: ✓ **done 2026-08-08** — migrated during the `initial_version` → `master` git landing effort

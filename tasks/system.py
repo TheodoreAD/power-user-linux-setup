@@ -79,6 +79,7 @@ def curlrc(c):
 @task
 def locale(c, lang="en_US.UTF-8"):
     """Set system locale via localectl (default: en_US.UTF-8). Idempotent."""
+    util.require_systemd()
     current = c.run("localectl status", hide=True).stdout
     ok = f"System Locale: LANG={lang}" in current
     if util.DRY_RUN:
@@ -111,6 +112,7 @@ def disable_ipv6(c):
 @task
 def journal_size(c, max_use="500M"):
     """Cap persistent journal size (default: 500M) and restart journald if changed."""
+    util.require_systemd()
     content = f"[Journal]\nSystemMaxUse={max_use}"
     text = _sudo_read(c, _JOURNALD_SIZE_CONF)
     new_text, status = util.ensure_block_text(text, "journal-size", content)
@@ -155,6 +157,7 @@ def initramfs_compression(c, algorithm="xz"):
 @task
 def dns(c, primary="1.1.1.1", secondary="1.0.0.1", fallback="8.8.8.8"):
     """Configure DNS via systemd-resolved drop-in (Cloudflare + Google fallback). Idempotent."""
+    util.require_systemd()
     content = f"[Resolve]\nDNS={primary} {secondary}\nFallbackDNS={fallback}\nDNSSEC=no"
     text = _sudo_read(c, _RESOLVED_CONF)
     new_text, status = util.ensure_block_text(text, "dns", content)

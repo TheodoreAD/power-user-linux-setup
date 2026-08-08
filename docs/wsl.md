@@ -12,10 +12,44 @@ Run the diagnostic first, before installing anything:
 inv wsl.check
 ```
 
-It's read-only — reports what it finds and how to fix it, changes nothing. Everything below is the
-detail behind what it checks.
+It's read-only — reports what it finds and how to fix it, changes nothing. For the fixable subset
+— `/etc/wsl.conf`'s `systemd`/`generateResolvConf` settings — `inv wsl.fix` applies the fix
+directly; see [Prerequisites](#prerequisites-etcwslconf) below. Everything else `wsl.check` finds
+(distro choice, WSL1 vs WSL2, WSLg availability) needs action from the Windows side instead, so
+there's no task for it. Everything below is the detail behind what it checks.
+
+This isn't just advisory, either: the tasks that actually need systemd or apt/dpkg check for them
+directly (`util.require_systemd()` / `util.require_apt()` in [tasks/util.py](../tasks/util.py)) and
+abort immediately with an actionable message if the precondition isn't met, rather than failing
+partway through with a raw `systemctl`/`apt` error. This isn't WSL-specific detection — it's a
+plain capability check ("is systemd actually running", "does `apt`/`dpkg` exist"), so it fails the
+same way on WSL1, a WSL2 distro with `systemd=true` unset, a non-Ubuntu WSL distro, or any other
+system missing those tools. This repo targets WSL2 (with systemd enabled) specifically — WSL1 has
+no real kernel and can't run systemd at all, so it's rejected by the same generic check, not a
+special case. `docker.configure` similarly detects "no local `dockerd`" (Docker Desktop's WSL
+integration) and skips cleanly instead of failing on `systemctl restart docker` — see
+[Docker](#docker) below.
 
 ## Tags to exclude
+
+The general principle under WSL: install as little as possible on the Linux side of the boundary.
+Every extra GUI app installed inside the distro is something to keep updated, something that can
+break in a WSLg-specific way, and — if it duplicates an app you already run on Windows — a second
+copy to context-switch between for no reason. Default to the smallest set, and only opt back in to
+something deliberately, once you have a concrete reason.
+
+If WSLg is available (default on current Windows 11 builds — check with `inv wsl.check`), `gui`/
+`desktop` packages *can* install and work (see [GUI, WSLg, and clipboard](#gui-wslg-and-clipboard)
+below), but most of them shouldn't, by default — see
+[IDEs: edit from Windows instead](#ides-edit-from-windows-instead) for `ide`, and
+[Windows-native duplicates](#windows-native-duplicates) for `windows-native`:
+
+```shell
+PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos apt.base apt.deb tools.install
+```
+
+Without WSLg — no display server at all — exclude the full GUI set instead (`windows-native` and
+`ide` become redundant with `gui`/`desktop` in that case, but including them doesn't hurt):
 
 ```shell
 PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb tools.install
@@ -25,12 +59,20 @@ PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.bas
 |---|---|
 | `gui` | Wayland/X11 apps, desktop tools, browsers |
 | `desktop` | Anything depending on a desktop session (e.g. Wayland clipboard) |
-| `gnome` | GNOME Shell extensions and `gnome-extensions-cli` — meaningless without GNOME Shell |
+| `gnome` | Anything needing a *live GNOME Shell*, not just a display server: GNOME Shell extensions, `gnome-extensions-cli`, and GNOME-only `xdg-desktop-portal` backends (`xdg-desktop-portal-gnome`, and `flameshot` — its capture path routes through that portal) |
+| `ide` | Full IDEs and their support profiles: `vscode`, `jetbrains-toolbox`, `apparmor-jbr-cef` |
+| `windows-native` | GUI apps with no Linux-specific reason to duplicate under WSL: `terminator`, `wezterm`, `freelens`, `font-manager`, `claude-desktop`, `edge` |
 | `workstation` | Hardware sensors, local terminal multiplexer, **and Docker** (see below) |
 | `corporate` | Webex, Citrix, and other work-specific tools |
 
 Drop `workstation` from the list if you want Docker installed natively inside the distro — see
-[Docker](#docker) below.
+[Docker](#docker) below. Drop `ide`/`windows-native` selectively if you have an actual reason to
+run one of those inside the distro instead of from Windows — the sections below cover what each
+one is for and why it's excluded by default.
+
+With the recommended set, what's left installed from the GUI/desktop tags is just
+`[packages.clipboard]` (`wl-clipboard`) and `[packages.google-chrome]` — see below for why those
+two specifically earn their place.
 
 ## Prerequisites — `/etc/wsl.conf`
 
@@ -45,9 +87,24 @@ systemd=true
 generateResolvConf = false
 ```
 
+Set both at once with:
+
+```shell
+inv wsl.fix
+```
+
+It edits `/etc/wsl.conf` in place — adding whichever of the two keys is missing or wrong, without
+touching any other section you already have in that file (it's user-owned config, not something
+PULSE fully manages) — then reminds you to restart. Idempotent: running it again once both are
+already set does nothing. This is the only kind of WSL misconfiguration `inv wsl.fix` can address:
+it edits a file inside the distro, so it only covers settings that live there. Distro choice, WSL1
+vs WSL2, and WSLg availability all require action from the Windows side instead — `inv wsl.check`
+still reports on those, but there's nothing to write from inside WSL to fix them.
+
 **`systemd=true`** — Ubuntu 24.04's WSL image ships with this by default, but confirm it.
 `system.locale` (`localectl`), `system.dns` and `system.journal-size` (`systemctl`), and
-`docker.configure`'s daemon restart all shell out to systemd and fail without it. `inv wsl.check`
+`docker.configure`'s daemon restart all shell out to systemd and now abort immediately via
+`util.require_systemd()` if it isn't running, rather than failing partway through. `inv wsl.check`
 verifies `/run/systemd/system` is actually mounted, not just that the config file says so.
 
 **`generateResolvConf = false`** — without it, WSL regenerates `/etc/resolv.conf` from the Windows
@@ -62,8 +119,9 @@ default. Two ways to get Docker working, matching the split in [docs/dev-contain
 
 **Docker Desktop's WSL integration** — don't install `[packages.docker]` at all (leave `workstation`
 excluded). The `docker` CLI is provided by Desktop's integration; there is no local `docker.service`
-for `docker.configure` to manage, so running it would fail on `systemctl restart docker`. Manage
-Docker Desktop settings from Windows instead.
+for `docker.configure` to manage. `docker.configure` now detects this itself (docker CLI present,
+no local `dockerd` binary) and skips with an explanatory message instead of failing on
+`systemctl restart docker`. Manage Docker Desktop settings from Windows instead.
 
 **Native `dockerd` inside the distro** — drop `workstation` from `PULSE_EXCLUDE_TAGS` (or run
 `inv apt.repos apt.base` without any exclusion) and treat it like a normal Linux box. This needs
@@ -75,14 +133,103 @@ reliable signal for "native", its absence alongside a working `docker` CLI means
 
 ## GUI, WSLg, and clipboard
 
-If WSLg is enabled (default on current Windows 11 builds), GUI Linux apps and a Wayland compositor
-are available inside the distro, which means `[packages.clipboard]` (`wl-clipboard`) and other
-`gui`/`desktop`-tagged packages might actually work. PULSE doesn't test against this — if you want
-to try it, drop `gui`/`desktop` from the exclusion list selectively rather than installing a GNOME
-desktop's worth of extensions and expecting them to mean anything (there's no GNOME Shell under
-WSLg, so anything `gnome`-tagged specifically still doesn't apply).
+WSLg (default on current Windows 11 builds; check with `inv wsl.check`) runs a real Wayland
+compositor (`weston`) plus PulseAudio/PipeWire inside the WSL2 VM, and bridges individual app
+windows onto the Windows desktop over an RDP-based channel — not a full remote desktop, just
+per-window compositing. GPU access comes through virtio passthrough (`/dev/dxg`) mapped to the
+Windows GPU driver, so both rendering and compute get real acceleration, not software fallback.
+
+Practically, that means `gui`/`desktop`-tagged packages *install and run* normally under WSLg — no
+separate X server (VcXsrv/X410), no manual clipboard bridge. But "would work" isn't the bar; the
+bar is "is there a reason to run the Linux build specifically." Two packages clear it:
+
+- **`[packages.clipboard]` (`wl-clipboard`)** — bidirectional and automatic. `wl-copy`/`wl-paste`
+  talk to the same clipboard as Windows apps out of the box; this is reliable on any current
+  Windows 11 build, not a "might work." This isn't optional the way the rest of this list is — any
+  other GUI app you do run under WSLg needs it to interoperate with the Windows clipboard at all,
+  and it's a single small CLI tool, not a duplicate app to maintain.
+- **`[packages.google-chrome]`** — the one browser worth running as its actual Linux build: Chrome
+  on Linux can render, behave, and fail differently than Chrome on Windows (font rendering, GPU
+  compositing quirks, extension behavior, anything you're validating against a Linux CI/prod
+  target). That's a genuine "test real Linux stuff" case WSLg makes practical. `[packages.edge]`
+  doesn't add anything beyond this — same Blink/V8 engine as Chrome, so it's not distinct browser
+  coverage, just a second install of the same rendering stack; see
+  [Windows-native duplicates](#windows-native-duplicates).
+
+If you're specifically doing cross-browser-engine testing, note **there's no Gecko-engine (Firefox)
+package in setup.toml at all** — Chrome/Edge are both Blink. If that gap matters to you, it's worth
+adding a `[packages.firefox]` entry (`apt` from Mozilla's official APT repo, not the Ubuntu snap —
+same rationale as VS Code's snap avoidance elsewhere in setup.toml) rather than treating Edge as
+your second engine.
+
+Everything else `gui`/`desktop`-tagged either needs a live GNOME Shell (see the exception below) or
+duplicates an app you'd run from Windows anyway — see
+[Windows-native duplicates](#windows-native-duplicates) and
+[IDEs: edit from Windows instead](#ides-edit-from-windows-instead).
+
+Docker Desktop's WSL2 backend already shares this VM, which is why it's the default Docker story
+for most people now rather than a separate Hyper-V VM (see [Docker](#docker) above) — but that's
+Windows-side configuration, not a `[packages.*]` entry, so it isn't part of this tag discussion.
+
+**Exception: anything that needs a live GNOME Shell, not just a compositor.** WSLg's `weston` is
+not GNOME Shell — there's no `org.gnome.Shell` D-Bus service, no GNOME Shell extensions, no
+`gsettings`-driven keybindings backed by a real Shell. This is exactly what the `gnome` tag now
+tracks (see the table above): `[packages.xdg-desktop-portal-gnome]` and `[packages.flameshot]`
+(whose capture path depends on that portal backend) are tagged `gnome` for this reason — they'll
+hang or no-op under WSLg the same way they'd fail on any machine without a running GNOME session.
+Anything actually `gnome`-tagged (Shell extensions, `gnome-extensions-cli`) is meaningless under
+WSLg for the same reason it's meaningless in any non-GNOME compositor. `gnome.*` and `screenshot.*`
+invoke tasks still shouldn't be run under WSL regardless — see the note at the bottom of this doc.
 
 Without WSLg, skip `gui`, `desktop`, and `gnome` entirely — there's no display server at all.
+
+## IDEs: edit from Windows instead
+
+`[packages.vscode]`, `[packages.jetbrains-toolbox]`, and `[packages.apparmor-jbr-cef]` are tagged
+`ide` and excluded by default under WSL — not because they don't work under WSLg (they would,
+same as any other Electron/GTK app), but because installing them inside the distro duplicates a
+client that already runs better on the Windows side:
+
+- **VS Code**: install VS Code natively on Windows and use the **Remote-WSL** extension. The UI
+  runs on Windows (native window compositing, no weston/RDP round-trip per keystroke); the
+  language servers, debugger, terminal, and file watching run inside the distro over `vsock`. This
+  is the same tradeoff as [dev-container.md](dev-container.md)'s Remote-Containers workflow, just
+  targeting WSL instead of a container.
+- **JetBrains IDEs**: same idea via **JetBrains Gateway** (or a JetBrains IDE's built-in WSL remote
+  target) instead of installing `jetbrains-toolbox` inside the distro.
+- **`apparmor-jbr-cef`** exists to let JetBrains' embedded Chromium (JCEF) sandbox itself — it's
+  only relevant if a JetBrains IDE is actually running *inside* the distro, so it has nothing to do
+  if you're using Gateway/remote targets from Windows. It would likely need extra troubleshooting
+  under WSL2 regardless: the profile requires a live AppArmor LSM (`apparmor_parser -r` against
+  `/etc/apparmor.d/`), and stock WSL2 kernels don't always ship AppArmor enabled — `inv wsl.check`
+  doesn't currently probe for this, so don't assume it works.
+
+Drop `ide` from `PULSE_EXCLUDE_TAGS` if you specifically want a Linux-side IDE window running
+inside the distro rather than a remote client from Windows.
+
+## Windows-native duplicates
+
+Tagged `windows-native` and excluded by default under WSL — these install and run fine under
+WSLg, but there's no Linux-specific reason to, and you almost certainly already have (or would
+rather have) the same tool on the Windows side:
+
+- **`[packages.terminator]`, `[packages.wezterm]`** — terminal emulators. You're necessarily
+  already inside *some* terminal to reach a WSL shell in the first place (Windows Terminal, or
+  Windows-side WezTerm), so launching a second terminal emulator from within that session via
+  WSLg mostly just adds a redundant window, not new capability.
+- **`[packages.freelens]`** — a Kubernetes GUI. It only needs network reachability to a cluster
+  and a kubeconfig, neither of which is Linux-specific; run it from Windows and point it at the
+  same cluster.
+- **`[packages.claude-desktop]`** — an Electron chat client with no OS-specific behavior to test.
+  Install once, on Windows.
+- **`[packages.font-manager]`** — previews fonts already present in the *WSL-side* filesystem,
+  which per [Fonts](#fonts) below usually isn't where the fonts your terminal actually renders
+  live anyway, so it's previewing the wrong set more often than not.
+- **`[packages.edge]`** — see the browser discussion above: same engine as `google-chrome`, so it
+  isn't distinct Linux-testing coverage, just a second Chromium install.
+
+Drop `windows-native` selectively (not as a block) if one of these is a deliberate exception —
+e.g. you want WezTerm's Linux build specifically to test its GPU passthrough behavior under WSLg.
 
 ## Fonts
 
@@ -104,9 +251,17 @@ you may not want depending on your `/etc/wsl.conf` and Docker choice above. Run 
 directly:
 
 ```shell
-inv wsl.check   # do this first
+inv wsl.check   # do this first — tells you whether WSLg is available
+inv wsl.fix     # sets systemd=true / generateResolvConf=false in /etc/wsl.conf if needed
 
-PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb
+# then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —
+# and reopen your terminal before continuing
+
+# with WSLg (default on current Windows 11):
+PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos apt.base apt.deb
+# without WSLg:
+# PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb
+
 inv tools.install
 inv python.tools
 inv node.install
