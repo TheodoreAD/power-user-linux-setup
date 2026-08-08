@@ -19,15 +19,16 @@ The `setup.toml` config/tag system is fully documented in the repo — don't re-
 - `setup.toml`'s header comment — field reference for every method (`apt`, `apt-repo`,
   `deb-github`, `deb-url`, `archive`, `uv-tool`, `nvm`, `script`, `binary`, `git-clone`,
   `wrapper-script`, `gnome-extension`, `apparmor-profile`, `zsh`), plus the tag catalog.
-- `docs/index.md`, section "Tags, `enabled`, and which tasks actually respect either" — which
-  tasks go through `util.packages_by_method()` (tag+enabled aware) vs which read a `[packages.*]`
-  section directly and ignore tags (`node.install`, `docker.configure`, `fonts.*`) or ignore tags
-  but not `enabled` (`zsh.configure`'s `zshrc`/`zshenv`/`zprofile` writer).
+- `docs/configuration.md`, section "Tags, `enabled`, and which tasks actually respect either" —
+  which tasks go through `util.packages_by_method()` (tag+enabled aware) vs which read a
+  `[packages.*]` section directly and ignore tags (`node.install`, `docker.configure`, `fonts.*`)
+  or ignore tags but not `enabled` (`zsh.configure`'s `zshrc`/`zshenv`/`zprofile` writer).
 
 Only 7 tags actually gate anything: `gui`, `desktop`, `gnome`, `workstation`, `corporate`, `ide`,
 `windows-native`. Everything else in the tag catalog is organizational only. Building an
 environment profile (headless, dev container, WSL) by setting `PULSE_EXCLUDE_TAGS` alone is not
-sufficient — check the docs/index.md table for what each task actually respects before assuming.
+sufficient — check the docs/configuration.md table for what each task actually respects before
+assuming.
 
 ## WSL support
 
