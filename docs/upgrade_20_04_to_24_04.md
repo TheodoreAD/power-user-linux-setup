@@ -783,13 +783,15 @@ essential right now.
 ### Docs site — mkdocs-material → zensical
 
 Status: ✓ **done 2026-08-08** — migrated during the `initial_version` → `master` git landing effort
-(see the Git history section below).
+(see the Git history section below). Full findings, pain points, and a re-verify checklist for
+next time: [zensical.md](zensical.md).
 
 | Item | Outcome |
 |---|---|
 | Compatibility | `zensical` (same author as mkdocs-material, Rust core) reads the existing `mkdocs.yml` directly — confirmed drop-in, no rewrite needed. Kept the `mkdocs.yml` filename rather than migrating to zensical's native `zensical.toml` format, to stay on the officially-supported compat path rather than an early-alpha (v0.0.44) native config schema. |
-| Feature parity | Mermaid already worked via the `mermaid2` plugin + `pymdownx.superfences` custom fence — no gap. `tablesort.js` was dropped — grep confirmed no doc actually uses sortable tables, so nothing lost. |
-| Verification | `zensical build --strict` — 0 issues, checked with `docs/reference/repos/` (gitignored research clones) removed to simulate exactly what a clean CI checkout sees. |
+| Feature parity | **Correction, 2026-08-08:** originally assessed as "mermaid already worked via the `mermaid2` plugin — no gap," but that plugin is actually a silent no-op under zensical (not in its native plugin allowlist) and the diagram was only rendering by accident, in the wrong (light) theme — see [zensical.md § Mermaid](zensical.md#mermaid) for the full story and the actual fix (`fence_code_format` + zensical's native mermaid support). `tablesort.js` was dropped — grep confirmed no doc actually uses sortable tables, so nothing lost there. |
+| Verification | `zensical build --strict` — 0 issues against the real doc content. |
+| Vendor-clone dir moved out of `docs_dir` | The original verification pass only worked because `docs/reference/repos/` (gitignored research clones) happened to be absent from CI's clean checkout — zensical's directory walker isn't gitignore-aware, so every *local* `zensical build`/`serve` was walking into vendored repos (gnome-shell, flameshot, …) and either hanging or drowning in broken-link warnings. Fixed properly by moving the whole dir to repo-root `reference/` (still gitignored), outside `docs_dir` entirely, so it's structurally excluded rather than excluded by chance. |
 | Dependency change | `requirements-docs.txt` replaced `mkdocs-material~=7.0` / `mkdocs-mermaid2-plugin~=0.5` with `zensical==0.0.44` — confirmed zensical has zero mkdocs/mkdocs-material dependencies, fully self-contained. |
 | GitHub Actions | `publish_on_push.yml` updated: `zensical build --strict` instead of `mkdocs gh-deploy`, deploy step switched to `peaceiris/actions-gh-pages@v4` (zensical has no built-in gh-deploy equivalent — build/serve/new only). Also bumped `actions/checkout` and `actions/setup-python` to current major versions and dropped the temporary `initial_version` trigger branch. |
 | Side fix | Found and fixed a dead link in `docs/kubernetes.md` (pointed at the already-deleted `kubernetes_bare_metal.md`) — would have failed the new `--strict` build. |

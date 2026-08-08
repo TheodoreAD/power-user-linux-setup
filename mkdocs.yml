@@ -66,9 +66,25 @@ theme:
   font:
     text: Roboto
     code: Roboto Mono
-  # TODO: research what this does
-  # feature:
-  #   tabs: 'true'
+  # zensical's own recommended feature defaults (bootstrap zensical.toml) — none of these
+  # were ever active before (this key was `feature:` singular, silently a no-op).
+  features:
+    - announce.dismiss
+    - content.code.annotate
+    - content.code.copy
+    - content.code.select
+    - content.footnote.tooltips
+    - content.tabs.link
+    - content.tooltips
+    - navigation.footer
+    - navigation.indexes
+    - navigation.instant
+    - navigation.instant.prefetch
+    - navigation.path
+    - navigation.sections
+    - navigation.top
+    - navigation.tracking
+    - search.highlight
 
 # To use a different favicon, create an img subdirectory in your docs_dir
 # and copy your custom favicon.ico file to that directory.
@@ -103,7 +119,10 @@ markdown_extensions:
       # baselevel: 1
 
   # https://facelessuser.github.io/pymdown-extensions/extensions/tabbed/
+  # zensical default: modern clickable-link tab style instead of the plain legacy tabs
   - pymdownx.tabbed:
+      alternate_style: true
+      combine_header_slug: true
 
   # https://squidfunk.github.io/mkdocs-material/extensions/footnotes/
   - markdown.extensions.footnotes:
@@ -113,6 +132,11 @@ markdown_extensions:
 
   # https://python-markdown.github.io/extensions/definition_lists/
   - markdown.extensions.def_list:
+
+  # https://python-markdown.github.io/extensions/md_in_html/
+  # zensical default: lets raw HTML blocks (e.g. <div markdown>) have their contents processed
+  # as Markdown instead of passed through verbatim
+  - markdown.extensions.md_in_html:
 
   # http://bwmarrin.github.io/MkDocsPlus/fontawesome/
   # https://github.com/mkdocs/mkdocs/issues/909#issuecomment-214936194
@@ -141,6 +165,10 @@ markdown_extensions:
   - pymdownx.tilde:
   - pymdownx.caret:
 
+  # https://facelessuser.github.io/pymdown-extensions/extensions/betterem/
+  # zensical default: fixes edge cases in **bold**/*italic* parsing (e.g. mixed with underscores)
+  - pymdownx.betterem:
+
   # https://facelessuser.github.io/pymdown-extensions/extensions/mark/
   - pymdownx.mark:
 
@@ -148,9 +176,9 @@ markdown_extensions:
   - pymdownx.smartsymbols:
 
   #  https://facelessuser.github.io/pymdown-extensions/extensions/tasklist/
+  # zensical default: themed checkbox glyph instead of a bare native <input type="checkbox">
   - pymdownx.tasklist:
-      # custom_checkbox: true
-      clickable_checkbox: true
+      custom_checkbox: true
 
   # https://facelessuser.github.io/pymdown-extensions/extensions/magiclink/
   # TODO: add corresponding section in documentation
@@ -161,19 +189,21 @@ markdown_extensions:
   # Create tabbed fenced code blocks
   # Specify custom fences for flowcharts, sequence diagrams, or other custom blocks
   - pymdownx.superfences:
-    # Mermaid integration from https://github.com/squidfunk/mkdocs-material/issues/693#issuecomment-411885426
+    # zensical's built-in mermaid support (bundle.js) only auto-mounts <pre class="mermaid">
+    # elements — that's what fence_code_format produces. fence_div_format (<div>) is invisible
+    # to it. See https://zensical.org/docs/authoring/diagrams/
       custom_fences:
         - name: mermaid
           class: mermaid
-          format: !!python/name:pymdownx.superfences.fence_div_format
+          format: !!python/name:pymdownx.superfences.fence_code_format
 
   # https://facelessuser.github.io/pymdown-extensions/extensions/highlight/
   - pymdownx.highlight:
-      # CONFLICT: disabled default due to conflict with clipboard.js
-      # css_class: 'highlight'
-      # this used to have to be enabled no it should be disabled, see why
-      # css_class: 'codehilite'
-      # https://github.com/squidfunk/mkdocs-material/issues/138#issuecomment-276567696
+      # zensical defaults: anchor_linenums/line_spans back the content.code.copy/annotate
+      # theme features above; pygments_lang_class adds a per-language class for finer styling
+      anchor_linenums: true
+      line_spans: __span
+      pygments_lang_class: true
       # Code highlighting, includes php fix so code is not required to start with <? or <?php
       extend_pygments_lang:
         - name: php
@@ -218,17 +248,6 @@ markdown_extensions:
 
 plugins:
   - search
-  - mermaid2:
-      arguments:
-        theme: 'dark'
 
-# https://cdnjs.com/libraries/mermaid
 extra_css:
-  # the .css file is no longer used after 7.0.11, used here for readthedocs fix
-  #  - https://unpkg.com/mermaid@7.0.11/dist/mermaid.css
-  # using version 7.0.11 so the fix for readthedocs below can be applied
-  #  - 'mermaid-fix.css'
-  # Custom CSS, file should be in /docs/ or the custom documents directory
   - extra/extra.css
-extra_javascript:
-  - https://unpkg.com/mermaid/dist/mermaid.min.js
