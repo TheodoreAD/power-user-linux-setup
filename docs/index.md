@@ -41,6 +41,9 @@
 ## Quick start
 
 ```shell
+cd ~
+mkdir -p projects
+cd projects
 git clone https://github.com/TheodoreAD/power-user-linux-setup.git
 cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke

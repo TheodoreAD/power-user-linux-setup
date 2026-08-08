@@ -29,6 +29,9 @@ be distribution-agnostic eventually, but only Ubuntu 24.04 (`noble numbat`) is t
 ## Quick start
 
 ```shell
+cd ~
+mkdir -p projects
+cd projects
 git clone https://github.com/TheodoreAD/power-user-linux-setup.git
 cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
