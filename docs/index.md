@@ -41,7 +41,7 @@
 ## Quick start
 
 ```shell
-git clone <this repo>
+git clone https://github.com/TheodoreAD/power-user-linux-setup.git
 cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
 inv setup             # runs the full setup — see configuration.md for what that covers, phase by phase
