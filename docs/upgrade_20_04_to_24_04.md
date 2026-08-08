@@ -685,6 +685,15 @@ since it only ever looked at `initial_version`'s own docs:
    rustup (`abc1c23` — see docs/rust.md below) and a real fix for the zensical migration (`e959de7`
    — the original migration was only build-clean by accident; see the corrected Docs site entry
    below and [zensical.md](zensical.md)).
+7. **Push blocker fixed properly, not routed around:** `git push` failed from Claude Code with
+   `Permission denied (publickey)` — this machine's SSH keys are passphrase-protected and
+   `keychain` loads them into the agent lazily on first use, and Claude Code's Bash tool has no TTY
+   to prompt for that passphrase. Rather than push over HTTPS as a one-off workaround, extended the
+   existing `askpass-zenity` helper (already solving the identical problem for `sudo -A`) to also
+   serve as `SSH_ASKPASS` (`SSH_ASKPASS_REQUIRE=prefer`, not `force`, so a real interactive
+   terminal is unaffected). Verified: `git push` succeeded over the real SSH remote once the
+   passphrase was entered in the popped-up dialog. Full writeup, and everything else this repo does
+   to make Claude Code work well here, in the new [claude-code.md](claude-code.md).
 
 `initial_version` and the pre-landing `master` history are both left untouched — branches kept for
 historical reference, not deleted.

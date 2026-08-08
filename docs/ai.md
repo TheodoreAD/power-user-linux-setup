@@ -63,7 +63,7 @@ npm install -g @anthropic-ai/claude-code
 claude
 ```
 
-See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands.
+See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global `CLAUDE.md`, this repo's own `AGENTS.md`), see [claude-code.md](claude-code.md).
 
 ### Goose
 

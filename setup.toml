@@ -731,18 +731,24 @@ fkill() {
 """
 
 [packages.askpass-zenity]
-description = "Zenity GUI askpass helper — enables sudo without a terminal by showing a GUI password dialog"
+description = "Zenity GUI askpass helper — enables sudo and ssh-agent key unlocks without a terminal by showing a GUI password/passphrase dialog"
 method      = "wrapper-script"
 tags        = ["shell", "system"]
 dest        = "~/.local/bin/askpass-zenity"
 content     = """
 #!/bin/bash
-zenity --password --title="sudo" --text="sudo password required"
+# $1 is the caller-supplied prompt (sudo passes "[sudo] password for user:", ssh passes
+# "Enter passphrase for key '...':") — shown verbatim so the dialog is accurate for either caller.
+zenity --password --title="Authentication required" --text="${1:-Password required}"
 """
-zshenv      = 'export SUDO_ASKPASS="${HOME}/.local/bin/askpass-zenity"'
+zshenv      = """
+export SUDO_ASKPASS="${HOME}/.local/bin/askpass-zenity"
+export SSH_ASKPASS="${HOME}/.local/bin/askpass-zenity"
+export SSH_ASKPASS_REQUIRE="prefer"
+"""
 
 [packages.claude-global-md]
-description = "Global ~/.claude/CLAUDE.md — sudo instructions for all Claude Code sessions"
+description = "Global ~/.claude/CLAUDE.md — sudo and git/ssh instructions for all Claude Code sessions"
 method      = "wrapper-script"
 tags        = ["shell", "ai"]
 dest        = "~/.claude/CLAUDE.md"
@@ -763,6 +769,16 @@ sudo -A cp /tmp/foo /etc/bar
 # wrong — hangs or fails with "sudo: a terminal is required"
 sudo apt install -y something
 ```
+
+## git fetch/push over SSH
+
+`SSH_ASKPASS` (same `askpass-zenity` helper) and `SSH_ASKPASS_REQUIRE=prefer` are set, so a
+`git fetch`/`git push` that needs to unlock an SSH key (no key loaded yet in the `keychain`-managed
+agent this session) pops the same GUI passphrase dialog instead of failing with "Permission
+denied (publickey)". `prefer` only engages the dialog when there's no usable TTY — your own
+interactive terminal is unaffected and still prompts normally. Just run the `git` command as
+normal; no HTTPS/token workaround needed. The dialog blocks on user input, so if nobody is at the
+machine to enter the passphrase it will time out rather than hang forever.
 """
 
 [packages.zsh-path]
