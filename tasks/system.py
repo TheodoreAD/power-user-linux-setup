@@ -164,10 +164,14 @@ def dns(c, primary="1.1.1.1", secondary="1.0.0.1", fallback="8.8.8.8"):
     if util.DRY_RUN:
         print(f"[dns] {primary}/{secondary} (fallback {fallback}): {'ok' if status == 'ok' else 'MISSING'}")
         return
-    if status == "ok":
-        print("[dns] already configured — nothing to do")
-        return
-    c.run(f"{util.SUDO} mkdir -p {_RESOLVED_CONF_DIR}")
-    _sudo_write(c, _RESOLVED_CONF, new_text)
+    if status != "ok":
+        c.run(f"{util.SUDO} mkdir -p {_RESOLVED_CONF_DIR}")
+        _sudo_write(c, _RESOLVED_CONF, new_text)
+    # Always restart, even when the drop-in file already matched: the file matching on disk
+    # doesn't mean the *running* systemd-resolved has actually loaded it — e.g. under WSL2, a
+    # fresh VM boot can leave resolved running with no DNS servers configured at all even though
+    # the drop-in from a previous session is still sitting there untouched (`resolvectl status`
+    # shows no Global/per-link DNS servers in that state). Restarting is cheap and this task's
+    # actual contract is "DNS works", not just "the file is correct".
     c.run(f"{util.SUDO} systemctl restart systemd-resolved")
-    print(f"[dns] configured — {primary}, {secondary}, fallback {fallback} ({status})")
+    print(f"[dns] {primary}, {secondary}, fallback {fallback} ({status})")
