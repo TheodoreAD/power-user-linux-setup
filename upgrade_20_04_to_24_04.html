@@ -1761,6 +1761,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#docswslmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        docs/wsl.md
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#docs-site-mkdocs-material-zensical" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2655,6 +2666,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         docs/shortcuts.md
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docswslmd" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        docs/wsl.md
       </span>
     </span>
   </a>
@@ -4234,6 +4256,45 @@ essential right now.</p>
 </tr>
 </tbody>
 </table>
+<h3 id="docswslmd">docs/wsl.md<a class="headerlink" href="#docswslmd" title="Permanent link">&para;</a></h3>
+<p>Status: ✓ <strong>new file, 2026-08-08</strong> (added in a separate session, not part of the original 24.04
+guide review — recorded here for completeness; substantially expanded in a follow-up session, also
+2026-08-08). Covers bootstrapping this repo inside a WSL2 distro instead of a native workstation.</p>
+<ul>
+<li><code>inv wsl.check</code> — read-only diagnostic: WSL1 vs WSL2, distro (Ubuntu vs other), systemd running,
+  <code>/etc/resolv.conf</code> WSL-managed vs not, native <code>dockerd</code> vs Docker Desktop&rsquo;s WSL integration, WSLg
+  availability.</li>
+<li><code>inv wsl.fix</code> — <strong>added in the follow-up session</strong> — the fixable subset of the above: idempotently
+  sets <code>systemd=true</code> / <code>generateResolvConf=false</code> in <code>/etc/wsl.conf</code> via a targeted key/value merge
+  (<code>tasks/wsl.py</code>&rsquo;s <code>_ensure_wsl_conf_kv</code>) that leaves any other content in that file untouched, then
+  reminds you to run <code>wsl.exe --shutdown</code> from Windows. Distro choice, WSL1→WSL2, and WSLg
+  availability all need action from the Windows side instead — no task can fix those from inside
+  the distro, so <code>wsl.check</code> still just reports on them.</li>
+<li>Task-level enforcement, not just advisory — <strong>added in the follow-up session</strong>: <code>util.require_systemd()</code>
+  / <code>util.require_apt()</code> (<code>tasks/util.py</code>) are generic capability checks, not WSL-specific branching,
+  wired into <code>system.locale</code>/<code>system.dns</code>/<code>system.journal_size</code> and
+  <code>apt.configure</code>/<code>apt.base</code>/<code>apt.repos</code>/<code>apt.deb</code> — they abort immediately with an actionable
+  message instead of failing partway through a raw <code>systemctl</code>/<code>apt</code> error. <code>docker.configure</code>
+  similarly detects &ldquo;<code>docker</code> CLI present, no local <code>dockerd</code>&rdquo; and skips cleanly instead of failing
+  on <code>systemctl restart docker</code>.</li>
+<li>Two new <code>setup.toml</code> tags scope the WSLg-enabled GUI package set down to what&rsquo;s actually useful
+  under WSL, instead of installing everything that merely <em>can</em> run there: <code>ide</code> (<code>vscode</code>,
+  <code>jetbrains-toolbox</code>, <code>apparmor-jbr-cef</code> — use Windows-native VS Code/JetBrains + Remote-WSL
+  instead) and <code>windows-native</code> (<code>terminator</code>, <code>wezterm</code>, <code>freelens</code>, <code>font-manager</code>,
+  <code>claude-desktop</code>, <code>edge</code> — each duplicates a Windows app with no Linux-specific reason to run the
+  Linux build). Recommended WSLg install set:
+  <code>PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate</code>, leaving just <code>wl-clipboard</code>
+  (Windows clipboard interop) and Google Chrome (real-Linux-build testing) from the <code>gui</code>/<code>desktop</code>
+  tags. Also flagged that setup.toml has no Gecko-engine (Firefox) package at all — worth adding if
+  cross-browser-engine testing under WSLg ever matters, since Chrome/Edge are both Blink.</li>
+<li><code>xdg-desktop-portal-gnome</code> and <code>flameshot</code> retagged <code>gnome</code> (not just <code>desktop</code>) — their capture
+  path needs a live GNOME Shell D-Bus service to back the portal, which WSLg&rsquo;s <code>weston</code> compositor
+  doesn&rsquo;t provide; they&rsquo;d hang under WSLg the same way <code>flameshot</code> already hangs on any machine
+  without a running GNOME session (see the comment above <code>[packages.xdg-desktop-portal-gnome]</code> in
+  <code>setup.toml</code>).</li>
+<li>Tag catalog and exclusion recipes also updated in <code>docs/index.md</code> and <code>setup.toml</code>&rsquo;s own header
+  comment to match.</li>
+</ul>
 <h3 id="docs-site-mkdocs-material-zensical">Docs site — mkdocs-material → zensical<a class="headerlink" href="#docs-site-mkdocs-material-zensical" title="Permanent link">&para;</a></h3>
 <p>Status: ✓ <strong>done 2026-08-08</strong> — migrated during the <code>initial_version</code> → <code>master</code> git landing effort
 (see the Git history section below). Full findings, pain points, and a re-verify checklist for

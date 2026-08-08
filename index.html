@@ -1666,7 +1666,7 @@
 <tr>
 <td><code>docker.configure</code></td>
 <td>live <code>docker</code> command + <code>packages.docker</code>&rsquo;s literal defaults</td>
-<td>No — gated only by whether the <code>docker</code> binary exists on <code>$PATH</code></td>
+<td>No — gated only by whether the <code>docker</code> binary exists on <code>$PATH</code>, plus a <code>dockerd</code> presence check: if <code>docker</code> exists without a local <code>dockerd</code> (e.g. Docker Desktop&rsquo;s WSL integration), it skips cleanly instead of failing on <code>systemctl restart docker</code></td>
 </tr>
 <tr>
 <td><code>fonts.install</code> / <code>fonts.configure</code></td>
@@ -1681,7 +1681,7 @@
 </tbody>
 </table>
 <p>This split is exactly what <a href="wsl.html">wsl.md</a>, <a href="dev-container.html">dev-container.md</a>, and the headless example below rely on — when building a new environment profile, check which bucket the task you&rsquo;re skipping falls into before assuming a tag exclusion is enough.</p>
-<p><strong>Tag catalog</strong> — only five tags currently gate anything (used across the exclusion recipes in this repo):</p>
+<p><strong>Tag catalog</strong> — only seven tags currently gate anything (used across the exclusion recipes in this repo):</p>
 <table>
 <thead>
 <tr>
@@ -1700,7 +1700,15 @@
 </tr>
 <tr>
 <td><code>gnome</code></td>
-<td>GNOME Shell extensions, <code>gnome-extensions-cli</code> — meaningless without GNOME Shell</td>
+<td>Anything needing a <em>live GNOME Shell</em>, not just a display server: GNOME Shell extensions, <code>gnome-extensions-cli</code>, and GNOME-only <code>xdg-desktop-portal</code> backends (<code>xdg-desktop-portal-gnome</code>, <code>flameshot</code>)</td>
+</tr>
+<tr>
+<td><code>ide</code></td>
+<td>Full IDEs and their support profiles (<code>vscode</code>, <code>jetbrains-toolbox</code>, <code>apparmor-jbr-cef</code>) — see <a href="wsl.html">wsl.md</a> for when to exclude these in favor of a remote client</td>
+</tr>
+<tr>
+<td><code>windows-native</code></td>
+<td>GUI apps with no Linux-specific reason to duplicate under WSL (<code>terminator</code>, <code>wezterm</code>, <code>freelens</code>, <code>font-manager</code>, <code>claude-desktop</code>, <code>edge</code>) — WSL-specific, see <a href="wsl.html">wsl.md</a></td>
 </tr>
 <tr>
 <td><code>workstation</code></td>
