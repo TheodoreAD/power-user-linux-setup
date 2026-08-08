@@ -1,61 +1,70 @@
 # Git
 
-Multi-email config
+## Identity setup
 
-!!! TODO
-    Get data from files instead of hardcoding here.
+Git identity is driven by `~/.config/pulse/identity.toml` — a personal file that is never committed to the repo.
+
+Copy the example and fill in your details:
 
 ```shell
-# Disable global user name and email in favor of project-specific ones
-git config --global --unset user.name
-git config --global --unset user.email
-# set up project directories and configure per-directory identities
-PROJECTS_ROOT="${HOME}/projects"
-mkdir -p "${PROJECTS_ROOT}"
-# no spaces allowed after the comma delimiters
-# projects_directory,git_commit_name,git_commit_email
-PROJECTS=(
-  github.com-personal,"Teodor Dumitrescu","teodor.dumitrescu@gmail.com"
-)
-for project in "${PROJECTS[@]}"; do
-  project_dir=$(echo ${project} | cut -d ',' -f 1)
-  user_name=$(echo ${project} | cut -d ',' -f 2)
-  user_email=$(echo ${project} | cut -d ',' -f 3)
-  project_dir_full="${PROJECTS_ROOT}/${project_dir}"
-  mkdir -p "${project_dir_full}"
-  git config --global \
-    includeIf.gitdir:"${project_dir_full}/".path \
-    \""${project_dir_full}/.gitconfig"\"
-  git config --file "${project_dir_full}/.gitconfig" user.name \""${user_name}"\"
-  git config --file "${project_dir_full}/.gitconfig" user.email \""${user_email}"\"
-done
+mkdir -p ~/.config/pulse
+cp config/identity.toml.example ~/.config/pulse/identity.toml
+# edit ~/.config/pulse/identity.toml
 ```
 
-## Configuration
+Then apply:
 
 ```shell
-# Make git aware of executable permissions
-git config --global core.filemode true
-# Push your current branch to a branch with the same name
-git config --global push.default current
-# Set VS Code as default editor
-git config --global core.editor code
-# configure the pager to just output content is below one page
-git config --global core.pager "less --quit-if-one-screen --quit-at-eof --raw-control-chars --no-init"
-# Display the command line interface in color
-git config --global color.ui auto
-# Show branch names with git log
-git config --global log.decorate auto
-# Enable parallel index preload for operations like git diff
-git config --global core.preloadindex true
+inv git.configure   # creates ~/projects/<directory>/ + per-dir .gitconfig with includeIf
+inv git.settings    # applies global git settings (editor, push, pull, log, etc.)
 ```
 
-## Pycharm
+`inv git.configure` disables the global `user.name`/`user.email` and wires up `includeIf.gitdir`
+so git automatically picks the right identity based on which `~/projects/<directory>/` the repo lives in.
 
-Enable PyCharm as the default diff and merge tools, use with git difftool and git mergetool:
+## Multi-account platforms
+
+For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in `identity.toml`:
+
+```toml
+[[ssh_hosts]]
+user     = "git"
+alias    = "github-work"
+hostname = "github.com"
+email    = "jane.smith@work.com"
+```
+
+Then clone via the alias instead of the real hostname:
 
 ```shell
-PYCHARM_PATH="$(which pycharm-professional)"
+git clone git@github-work:org/repo.git
+```
+
+SSH will route through the alias and use the correct key. See [ssh.md](ssh.md) for key setup.
+
+## Global configuration
+
+Applied by `inv git.settings`:
+
+| Setting | Value | Purpose |
+|---|---|---|
+| `core.autocrlf` | `input` | Normalise CRLF on commit; leave LF alone on checkout |
+| `core.fileMode` | `true` | Track executable bit |
+| `core.ignorecase` | `false` | Case-sensitive filenames |
+| `core.preloadindex` | `true` | Parallel index preload for faster diffs |
+| `core.editor` | `code --wait` | VS Code as commit message editor |
+| `push.default` | `current` | Push current branch to same-name remote branch |
+| `push.autoSetupRemote` | `true` | Automatically set upstream on first push |
+| `pull.rebase` | `false` | Merge on pull (not rebase) |
+| `rebase.autoStash` | `true` | Auto-stash dirty working tree before rebase |
+| `log.decorate` | `auto` | Show branch/tag names in `git log` |
+
+## PyCharm diff and merge tools
+
+Run once after installing PyCharm via Toolbox:
+
+```shell
+PYCHARM_PATH="${HOME}/.local/share/JetBrains/Toolbox/apps/pycharm/bin/pycharm"
 git config --global diff.tool pycharm-professional
 git config --global difftool.prompt false
 git config --global difftool.pycharm-professional.cmd \
@@ -67,54 +76,5 @@ git config --global mergetool.pycharm-professional.cmd \
 git config --global mergetool.pycharm-professional.keepBackup false
 ```
 
-!!! TODO
-    See if this is desirable.
-
-```shell
-# When pulling code, always rebase your local changes
-git config --global pull.rebase true
-```
-
-!!! TODO
-    See if this is desirable.
-
-```shell
-# Automatically prune deleted branches from your local copy when you fetch or pull
-git config --global fetch.prune true
-```
-
-!!! TODO
-    See if this is desirable.
-
-```shell
-# Ignore symlinks
-git config --global core.symlinks false
-```
-
-If the setting doesn't work, try:
-
-```shell
-git config --global --unset core.symlinks
-```
-
-!!! TODO
-    See if this is desirable. Add description.
-
-```shell
-# Disable SSL verify
-git config --global http.sslVerify false
-```
-
-!!! TODO
-    See if this is desirable. Add description.
-
-```shell
-git config --global status.showUntrackedFiles all
-```
-
-!!! TODO
-    See if this is desirable. Add description.
-
-```shell
-git config --global transfer.fsckobjects true
-```
+!!! WARNING
+    The Toolbox path changes on IDE version upgrades — re-run when upgrading PyCharm.

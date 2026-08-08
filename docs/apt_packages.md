@@ -1,213 +1,101 @@
 # Apt packages
 
-# Basic pack
+All apt packages are declared in `setup.toml` and installed via invoke tasks.
+Each package has a `method` field that determines how it is installed:
 
-Install these as the very first step, many of them are dependencies.
+| Method       | Command               | Description                                                    |
+|--------------|-----------------------|----------------------------------------------------------------|
+| `apt`        | `inv apt.base`        | Standard packages from Ubuntu's default repos                  |
+| `apt-repo`   | `inv apt.repos`       | External repos — registers GPG key + sources, then installs    |
+| `deb-github` | `inv apt.deb`         | Latest `.deb` from a GitHub release page                       |
+| `deb-url`    | `inv apt.deb`         | `.deb` from a direct URL (e.g. Chrome, which self-manages its sources afterwards) |
+| —            | `inv apt.configure`   | Write `/etc/apt/apt.conf.d/99-pulse` — disable dpkg progress bars |
+| —            | `inv apt.refresh-keys`| Re-download all apt-repo GPG keys                              |
+| —            | `inv apt.audit-keys`  | Audit key hygiene across all key stores                        |
+
+`inv apt.repos` is a two-phase command. Phase 1 registers all GPG keys and sources files
+in one pass, then runs a single `apt update`. Phase 2 installs the packages. If a GPG key
+URL or sources write fails for any entry (e.g. a dead URL), that repo is skipped with a
+`WARNING:` message and the rest continue — a broken third-party repo does not abort the run.
+
+Run everything at once:
+
+```shell
+inv setup
+```
+
+Or selectively:
+
+```shell
+sudo apt update && sudo apt full-upgrade -y
+inv apt.configure
+inv apt.base
+inv apt.repos
+inv apt.deb
+```
 
 !!! WARNING
-    After the apt commands you might get a list of packages that are considered
-    to no longer be required, followed by the following advice:
+    After apt commands you may see a list of packages suggested for removal:
 
     ```
     Use 'sudo apt autoremove' to remove them.
     ```
 
-    Do NOT run this unless you know exactly what the involved packages do.
+    Do NOT run this unless you know exactly what each package does.
 
+## Adding or disabling packages
 
-```shell
-PACKAGES=(
-  # build
-  make build-essential gettext
-  # source control
-  git
-  # man pages
-  manpages-dev man-db manpages-posix-dev
-  # editor
-  vim
-  # network
-  wget curl libpcap-dev libnet1-dev rpcbind openssh-client openssh-server nmap
-  # iproute2 is installed by default, but the docs aren't
-  iproute2-doc
-  # includes older utilities, iproute2 is the newer alternative:
-  #     arp, hostname, ifconfig, netstat, rarp, route,
-  #     plipconfig, slattach, mii-tool, iptunnel, ipmaddr
-  net-tools
-  traceroute iftop hping3 vnstat iptraf dstat
-  resolvconf
-  # network fs mounting
-  cifs-utils
-  # docker requirements
-  apt-transport-https ca-certificates software-properties-common
-  # pyenv requirements
-  # https://github.com/pyenv/pyenv/wiki/Common-build-problems
-  libssl-dev zlib1g-dev libbz2-dev libreadline-dev libsqlite3-dev llvm
-  libncursesw5-dev xz-utils tk-dev libxml2-dev libxmlsec1-dev libffi-dev liblzma-dev
-  # TODO: find what requires this
-  python-openssl
-  # TODO: find what requires these
-  libgdbm-dev libnss3-dev
-  # python dev
-  python3-distutils python3-pip python3-venv
-  # security
-  keychain gnupg
-  # hardware diagnostics
-  lm-sensors
-  # system monitor
-  htop ncdu
-  gir1.2-gtop-2.0 gir1.2-nm-1.0 gir1.2-clutter-1.0
-  # terminal
-  terminator tmux xclip
-  # file management and search
-  tree fd-find ripgrep
-  # converters
-  html2text bat jq
-  # linting
-  shellcheck
-  # environment variable management
-  direnv
-  # windows compatiblity
-  dos2unix
-  # ui
-  gnome-clocks
-  # system configuration (ui)
-  font-manager
-  # idle state management
-  # WARNING: superseded by xidle
-  # xautolock
-  xidle
-  # typo helper
-  thefuck
-  # clipboard
-  # disabled for now due to curious disk leak
-  # gpaste
-)
+Edit `setup.toml`. To disable a package without deleting it, set `enabled = false`.
+To add a new apt package where the section name matches the apt package name:
 
-sudo apt update
-sudo apt full-upgrade -y
-sudo apt install -y ${PACKAGES[@]}
-
-# TODO: see if this is still an issue
-# to solve apt clash due to rust packaging error
-# sudo apt install -o Dpkg::Options::="--force-overwrite" bat ripgrep
-
-# symlinks for programs with already claimed binary names
-mkdir -p "${HOME}/.local/bin"
-ln -s "$(which batcat)" "${HOME}/.local/bin/bat"
-ln -s "$(which fdfind)" "${HOME}/.local/bin/fd"
+```toml
+[packages.mypackage]
+description = "..."
+method      = "apt"
+tags        = ["some-tag"]
 ```
 
-!!! TODO
-    See how `${PACKAGES[@]}` and `${PACKAGES}` compare wrt defining the variable.
+If the apt package name differs from the section name, or you need multiple packages,
+declare them explicitly:
 
-!!! TODO
-    Investigate <https://github.com/Tarrasch/zsh-autoenv>.
-
-
-## Google Cloud SDK and CLI
-
-!!! TODO
-    Add post-install auth instructions.
-
-```shell
-
-echo "deb [signed-by=/usr/share/keyrings/cloud.google.gpg] https://packages.cloud.google.com/apt cloud-sdk main" \
-  | sudo tee -a "/etc/apt/sources.list.d/google-cloud-sdk.list"
-curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
-  | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
-sudo apt update
-sudo apt install -y google-cloud-sdk
-GOOGLE_INSTALL_PACKAGES=(
-  google-cloud-sdk-app-engine-python
-  google-cloud-sdk-app-engine-python-extras
-  google-cloud-sdk-bigtable-emulator
-  google-cloud-sdk-cbt
-  google-cloud-sdk-cloud-build-local
-  google-cloud-sdk-config-connector
-  google-cloud-sdk-datalab
-  google-cloud-sdk-datastore-emulator
-  google-cloud-sdk-firestore-emulator
-  google-cloud-sdk-kind
-  google-cloud-sdk-kpt
-  google-cloud-sdk-kubectl-oidc
-  google-cloud-sdk-local-extract
-  google-cloud-sdk-minikube
-  google-cloud-sdk-pubsub-emulator
-  google-cloud-sdk-skaffold
-  kubectl
-)
-sudo apt install -y ${GOOGLE_INSTALL_PACKAGES[@]}
+```toml
+[packages.mygroup]
+description = "..."
+method      = "apt"
+packages    = ["pkg-one", "pkg-two"]
 ```
 
-Although not essential (see below), `docker-credential-gcr` is missing from apt packages.
+## GPG key hygiene
 
-<https://github.com/GoogleCloudPlatform/docker-credential-gcr>
+### Audit
 
-> Note: `docker-credential-gcr` is primarily intended for users
-> wishing to authenticate with GCR in the absence of `gcloud`,
-> though they are not mutually exclusive. For normal development setups,
-> users are encouraged to use `gcloud auth configure-docker`, instead.
-
-To later update all the packages:
+Check the state of all apt key stores:
 
 ```shell
-GOOGLE_UPDATE_PACKAGES=(
-  google-cloud-sdk
-  google-cloud-sdk-anthos-auth
-  google-cloud-sdk-app-engine-go
-  google-cloud-sdk-app-engine-grpc
-  google-cloud-sdk-app-engine-java
-  google-cloud-sdk-app-engine-python
-  google-cloud-sdk-app-engine-python-extras
-  google-cloud-sdk-bigtable-emulator
-  google-cloud-sdk-cbt
-  google-cloud-sdk-cloud-build-local
-  google-cloud-sdk-config-connector
-  google-cloud-sdk-datalab
-  google-cloud-sdk-datastore-emulator
-  google-cloud-sdk-firestore-emulator
-  google-cloud-sdk-kind
-  google-cloud-sdk-kpt
-  google-cloud-sdk-kubectl-oidc
-  google-cloud-sdk-local-extract
-  google-cloud-sdk-minikube
-  google-cloud-sdk-pubsub-emulator
-  google-cloud-sdk-skaffold
-  google-cloud-sdk-spanner-emulator
-  kubectl
-)
-sudo apt install -y --only-upgrade ${GOOGLE_UPDATE_PACKAGES[@]}
+inv apt.audit-keys
 ```
 
-To fix GPG key expiration, run:
+Checks three locations and reports issues:
+
+| Location | Rule | Auto-fixed |
+|---|---|---|
+| `/etc/apt/trusted.gpg` | Must be empty — any key here trusts **all** repos with no scoping | Yes — cleared in live mode |
+| `/etc/apt/trusted.gpg.d/` | Only Ubuntu system keys expected; others are old-style (not `signed-by`) | No — reported for manual review |
+| `/etc/apt/keyrings/`, `/usr/share/keyrings/` | No `~` backup files | Yes — removed in live mode |
+
+All repos declared in `setup.toml` use the modern `signed-by` approach with keys stored in `/usr/share/keyrings/` — the old global key stores should stay empty after initial cleanup.
+
+`PULSE_DRY_RUN=1 inv apt.audit-keys` reports without changing anything.
+
+### Refresh expired keys
+
+Third-party apt repo keys can expire. To re-download all keys declared in `setup.toml`:
 
 ```shell
-curl -sS -L "https://packages.cloud.google.com/apt/doc/apt-key.gpg" \
-  | sudo apt-key --keyring "/usr/share/keyrings/cloud.google.gpg" add -
+inv apt.refresh-keys
 ```
 
-## Terraform
+This re-fetches the key from each `gpg_url` and overwrites the file at `gpg_path` for
+every enabled `apt-repo` entry — no need to look up per-repo commands.
 
-```shell
-curl -sS -L -f https://apt.releases.hashicorp.com/gpg | sudo apt-key add -
-sudo apt-add-repository "deb [arch=amd64] https://apt.releases.hashicorp.com $(lsb_release -cs) main"
-sudo apt update
-sudo apt install -y terraform
-```
-
-## Dive (Docker image inspection)
-
-```shell
-DIVE_REPO="wagoodman/dive"
-DIVE_VERSION=$(
-  curl "https://api.github.com/repos/${DIVE_REPO}/releases/latest" \
-    | grep '"tag_name"' \
-    | sed -E 's/.*"([^"]+)".*/\1/' \
-    | cut -c2-
-)
-DIVE_URL="https://github.com/${DIVE_REPO}/releases/download/v${DIVE_VERSION}/dive_${DIVE_VERSION}_linux_amd64.deb"
-DIVE_DEB="$(mktemp)"
-curl -sS -L -o "${DIVE_DEB}" "${DIVE_URL}"
-sudo dpkg -i "${DIVE_DEB}"
-rm "${DIVE_DEB}"
-```
+See [gcloud.md](gcloud.md) for Google Cloud CLI setup.
