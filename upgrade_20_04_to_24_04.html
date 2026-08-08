@@ -2567,6 +2567,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#docsdev-containermd" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        docs/dev-container.md
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#docs-site-mkdocs-material-zensical" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -3402,6 +3413,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         docs/wsl.md
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#docsdev-containermd" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        docs/dev-container.md
       </span>
     </span>
   </a>
@@ -5079,6 +5101,25 @@ guide review — recorded here for completeness; substantially expanded in a fol
 <li>Tag catalog and exclusion recipes also updated in <code>docs/index.md</code> and <code>setup.toml</code>&rsquo;s own header
   comment to match.</li>
 </ul>
+<h3 id="docsdev-containermd">docs/dev-container.md<a class="headerlink" href="#docsdev-containermd" title="Permanent link">&para;</a></h3>
+<p>Status: <strong>planned, not yet implemented</strong> — explored 2026-08-08 (separate session, not part of the
+original 24.04 guide review — recorded here for completeness, same pattern as the rust.md/wsl.md
+entries above). Existing doc already covered building a custom Docker image from <code>setup.toml</code> via
+<code>PULSE_EXCLUDE_TAGS</code>; explored an additional distribution path instead — layering PULSE&rsquo;s curated
+CLI tooling onto whatever base image a consumer already uses via <code>devcontainer.json</code>&rsquo;s
+<code>postCreateCommand</code> (live git clone of this repo + normal <code>inv</code> tasks), rather than a maintained
+custom image, so nobody is forced onto this machine&rsquo;s base image or has to trust a prebuilt image.
+&ldquo;Up to date&rdquo; without floating an untested <code>master</code>/<code>HEAD</code> reference: pin to a <code>stable</code> git tag that
+CI only force-moves forward once a build/smoke-test passes.</p>
+<p>Full design — a new <code>bootstrap-devcontainer.sh</code> entrypoint, a <code>tasks/devcontainer.py</code> namespace
+(<code>CONTAINER_EXCLUDE_TAGS</code> constant, <code>render-docs</code>, <code>check</code>), a self-hosting
+<code>.devcontainer/devcontainer.json</code>, and a <code>devcontainer.yml</code> CI pipeline (matrix smoke-test via the
+<code>devcontainers/ci</code> action, force-move <code>stable</code> on green, auto-regenerate the doc&rsquo;s tag table) — is
+written up but not yet built: see <code>plans/2026-08-08-devcontainer-pipeline.md</code>.</p>
+<p>Also added in this session: a top-level <code>plans/</code> directory as a repo convention for saving these
+standalone design docs (dated filenames, git-tracked, outside <code>docs_dir</code> so it never gets swept
+into the published GitHub Pages site) instead of only living in Claude Code&rsquo;s local plan-mode
+scratch files.</p>
 <h3 id="docs-site-mkdocs-material-zensical">Docs site — mkdocs-material → zensical<a class="headerlink" href="#docs-site-mkdocs-material-zensical" title="Permanent link">&para;</a></h3>
 <p>Status: ✓ <strong>done 2026-08-08</strong> — migrated during the <code>initial_version</code> → <code>master</code> git landing effort
 (see the Git history section below). Full findings, pain points, and a re-verify checklist for
