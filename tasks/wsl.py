@@ -63,6 +63,17 @@ def _wslg_available() -> bool:
     return Path("/mnt/wslg").exists() or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
+def _os_release_id() -> str:
+    try:
+        text = Path("/etc/os-release").read_text()
+    except FileNotFoundError:
+        return ""
+    for line in text.splitlines():
+        if line.startswith("ID="):
+            return line.partition("=")[2].strip().strip('"')
+    return ""
+
+
 @task
 def check(c):
     """Diagnose WSL-specific risks before running PULSE tasks: systemd, DNS, Docker, WSLg.
@@ -81,6 +92,28 @@ def check(c):
             "layer only). systemd does not run under WSL1 at all, so every check below will fail "
             "and most of PULSE's system.* and docker.* tasks are not usable. Upgrade to WSL2:\n"
             "       wsl.exe --set-version <distro> 2   (run from Windows)"
+        )
+
+    # Distro — WSL isn't Ubuntu-only (Debian, Kali, Alpine, Fedora Remix, openSUSE, Arch are all
+    # available from the Microsoft Store); PULSE assumes apt/dpkg everywhere (apt, apt-repo,
+    # deb-github, deb-url methods) and Ubuntu specifically for apt.repos (uses `lsb_release -cs` as
+    # the codename in repo source lines) and apt.base's package set.
+    os_id = _os_release_id()
+    if os_id == "ubuntu":
+        print("[wsl] distro: Ubuntu ✓")
+    elif util.command_exists("apt"):
+        print(
+            f"[wsl] distro: {os_id or 'unknown'} — has apt, but PULSE is only tested against "
+            "Ubuntu 24.04.  ← apt/apt-repo/deb-github/deb-url methods should work; anything "
+            "assuming Ubuntu specifically (apt.repos' `lsb_release -cs` codename in repo source "
+            "lines, apt.base's exact package names) may not resolve or may pull the wrong repo."
+        )
+    else:
+        print(
+            f"[wsl] distro: {os_id or 'unknown'} — no `apt` found.  ← PULSE assumes apt/dpkg "
+            "throughout (apt, apt-repo, deb-github, deb-url methods); almost none of this repo "
+            "will work here as-is. Install Ubuntu-24.04 from the Microsoft Store instead:\n"
+            "       wsl.exe --install Ubuntu-24.04   (run from Windows)"
         )
 
     # systemd — gates system.locale, system.dns, system.journal_size, docker.configure
