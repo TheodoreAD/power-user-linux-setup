@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "*": "Usage:\n su [options] [-] [<user> [<argument>...]]\n\nChange the effective user ID and group ID to that of <user>.\nA mere - implies -l.  If <user> is not given, root is assumed.\n\nOptions:\n -m, -p, --preserve-environment      do not reset environment variables\n -w, --whitelist-environment <list>  don't reset specified variables\n\n -g, --group <group>             specify the primary group\n -G, --supp-group <group>        specify a supplemental group\n\n -, -l, --login                  make the shell a login shell\n -c, --command <command>         pass a single command to the shell with -c\n --session-command <command>     pass a single command to the shell with -c\n                                   and do not create a new session\n -f, --fast                      pass -f to the shell (for csh or tcsh)\n -s, --shell <shell>             run <shell> if /etc/shells allows it\n -P, --pty                       create a new pseudo-terminal\n\n -h, --help                      display this help\n -V, --version                   display version\n\nFor more details see su(1)."
+  },
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "interactive": false,
+  "version": "su from util-linux 2.39.3"
+}

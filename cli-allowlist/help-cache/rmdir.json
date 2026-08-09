@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "*": "Usage: rmdir [OPTION]... DIRECTORY...\nRemove the DIRECTORY(ies), if they are empty.\n\n      --ignore-fail-on-non-empty\n                    ignore each failure to remove a non-empty directory\n  -p, --parents     remove DIRECTORY and its ancestors;\n                    e.g., 'rmdir -p a/b' is similar to 'rmdir a/b a'\n\n  -v, --verbose     output a diagnostic for every directory processed\n      --help        display this help and exit\n      --version     output version information and exit\n\nGNU coreutils online help: <https://www.gnu.org/software/coreutils/>\nFull documentation <https://www.gnu.org/software/coreutils/rmdir>\nor available locally via: info '(coreutils) rmdir invocation'"
+  },
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "interactive": false,
+  "version": "rmdir (GNU coreutils) 9.4"
+}
