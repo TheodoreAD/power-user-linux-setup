@@ -95,6 +95,10 @@ The rest of the tags in `setup.toml` (`cli`, `dev`, `k8s`, `shell`, `vcs`, `sear
 
 What `inv setup` actually runs, in order. One interruption: a single logout at the end. An optional reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural reboot — nothing depends on it being immediate.
 
+Under WSL, `inv setup` detects it (`util.is_wsl()`) and delegates straight to `inv wsl.install`
+instead of the phases below — different tag exclusions, DNS handling, and it skips
+`docker.configure`/`fonts.*` by default. See [wsl.md](wsl.md) for what that runs instead.
+
 ### Phase 1 — System config
 
 All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No reboot needed.
@@ -133,14 +137,17 @@ After `inv tools.install` + `inv zsh.configure`, all new shell sessions have `SU
 ```shell
 inv zsh.omz-configure
 inv zsh.configure
-inv zsh.p10k-configure    # copies config/p10k.zsh to ~/.p10k.zsh if not already present
+inv zsh.p10k-configure       # copies config/p10k.zsh to ~/.p10k.zsh if not already present
+inv zsh.set-default-shell    # usermod -s — takes a new terminal to actually apply, doesn't chsh
 ```
 
 `zsh.p10k-configure` installs the repo's opinionated baseline (lean style, Nerd Fonts icons, transient prompt, instant prompt) and is a no-op if `~/.p10k.zsh` already exists — manual customizations are never overwritten.
 
 To redo or fix the prompt: delete `~/.p10k.zsh` and run `inv zsh.p10k-configure` to restore the baseline, or run `p10k configure` to go through the interactive wizard. To update the baseline itself, copy your `~/.p10k.zsh` to `config/p10k.zsh`.
 
-Phases 1–3 run automatically via `inv setup`.
+`zsh.set-default-shell` uses `usermod -s`, not `chsh` — `chsh`'s PAM password prompt doesn't work non-interactively the way `sudo -A` does. It's a no-op if the login shell is already some zsh (matched by binary name, not exact path — a machine can have more than one zsh on disk). Takes a brand new terminal/login session to actually apply, not just a new tab in an already-open shell.
+
+Phases 1–3 run automatically via `inv setup`. It finishes by calling `util.print_next_steps()`, which checks real state (current login shell, whether `~/.config/pulse/identity.toml` exists — not a stored "already told you" flag) and prints the single next concrete thing to do, including which Phase 5 command comes next once identity.toml is filled in. Safe to re-run after doing whatever it suggests.
 
 ### Phase 4 — Desktop *(before logout)*
 

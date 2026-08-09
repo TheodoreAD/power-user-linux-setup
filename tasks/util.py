@@ -1,6 +1,8 @@
 import os
+import pwd
 import shutil
 import subprocess
+import sys
 import tomllib
 from functools import lru_cache
 from pathlib import Path
@@ -12,6 +14,84 @@ DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "ye
 SUDO: str = "sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo"
 
 _PULSE_WIDTH = 78
+
+_PROC_VERSION = Path("/proc/version")
+
+
+def is_wsl() -> bool:
+    """True if running under any WSL version (1 or 2) — see tasks/wsl.py for version-specific
+    checks and the rest of the WSL-aware tasks."""
+    if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
+        return True
+    try:
+        return "microsoft" in _PROC_VERSION.read_text().lower()
+    except FileNotFoundError:
+        return False
+
+
+def interactive() -> bool:
+    """True if stdin is a real terminal and this isn't a dry run — the gate for whether it's
+    safe to prompt with input() at all, vs. a piped/scripted/CI invocation that would just hang.
+    """
+    return sys.stdin.isatty() and not DRY_RUN
+
+
+def confirm(question: str, default: bool = True) -> bool:
+    """Prompt a yes/no question on stdin. Returns `default` unmodified if stdin isn't a real
+    terminal — call interactive() yourself first if the caller needs to skip prompting (and any
+    surrounding explanation) entirely rather than silently falling back to the default.
+    """
+    if not sys.stdin.isatty():
+        return default
+    suffix = " [Y/n] " if default else " [y/N] "
+    while True:
+        answer = input(question + suffix).strip().lower()
+        if not answer:
+            return default
+        if answer in ("y", "yes"):
+            return True
+        if answer in ("n", "no"):
+            return False
+        print("Please answer y or n.")
+
+
+def print_next_steps(extra_note: str | None = None) -> None:
+    """Print the single next concrete manual step after setup.setup or wsl.install — the things
+    that genuinely can't be automated (a shell change needing a fresh terminal, a personal
+    identity file only you can fill in) or that depend on a prior step having been done first.
+
+    Checks real state each time rather than a stored "did we already tell you" flag: a flag can
+    drift from reality (exactly the bug that made system.dns() unreliable — see git history),
+    a fresh check can't. Safe to re-run after doing what it suggests; it just reports whatever's
+    still outstanding.
+    """
+    print("\n[next steps]")
+    current_user = os.environ.get("SUDO_USER") or os.environ.get("USER", "")
+    try:
+        current_shell = pwd.getpwnam(current_user).pw_shell if current_user else ""
+    except KeyError:
+        current_shell = ""
+    zsh_path = shutil.which("zsh")
+    # Name-based, not exact-path: a machine can have more than one zsh on disk (e.g. an apt one
+    # at /usr/bin/zsh plus another earlier on PATH) — what matters is the registered shell is
+    # *a* zsh, not that it's byte-for-byte the one `shutil.which` happens to find right now.
+    if zsh_path and Path(current_shell).name != "zsh":
+        print(f"  Your login shell isn't zsh yet (currently: {current_shell or 'unknown'}).")
+        print("  zsh.set_default_shell just tried to set it — if that succeeded, close this")
+        print("  terminal, open a new one, and re-run this command to continue.")
+        print(f"  If it's still not zsh after that, run: sudo usermod -s {zsh_path} $USER")
+        return
+
+    identity_path = Path.home() / ".config" / "pulse" / "identity.toml"
+    if not identity_path.exists():
+        print(f"  1. cp config/identity.toml.example {identity_path}")
+        print("     — edit it with your name/email/GitHub account details")
+        print("  2. Then: inv git.configure git.settings ssh.keys ssh.configure ssh.add")
+        return
+
+    print("  Nothing left that's automatable.")
+    if extra_note:
+        print(f"  Reminder: {extra_note}")
 
 
 def _marker(name: str, open_: bool) -> str:
