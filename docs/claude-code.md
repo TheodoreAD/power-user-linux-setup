@@ -59,17 +59,22 @@ symlinked into `~/.local/share/claude/versions/`). Don't use `npm install -g @an
 for a fresh install on this machine — it still works but is the legacy path; PULSE only needs to
 `curl`-install once and then leaves auto-update to Claude Code itself.
 
-## `~/.claude/CLAUDE.md` — global instructions, declaratively managed
+## `~/AGENTS.md` — global instructions, declaratively managed
 
-`[packages.claude-global-md]` writes `~/.claude/CLAUDE.md` (Claude Code's global, cross-project
-instructions file) from `setup.toml` — the sudo/ssh guidance above is duplicated there in
-Claude-readable form, so every session on this machine picks it up automatically without needing
-to rediscover it. Edit the `content` field in `setup.toml`, then `inv tools.install`, rather than
-hand-editing `~/.claude/CLAUDE.md` directly — a manual edit gets silently overwritten on the next
+`[packages.claude-global-md]` writes `~/AGENTS.md` (the cross-tool, cross-project instructions
+file every agent CLI on this machine can read) from `setup.toml`, and symlinks
+`~/.claude/CLAUDE.md -> ~/AGENTS.md` via the `wrapper-script` method's `symlink_dest` field — the
+exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
+`CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
+agent-readable form, so every session on this machine picks it up automatically without needing to
+rediscover it. Edit the `content` field in `setup.toml`, then `inv tools.install`, rather than
+hand-editing `~/AGENTS.md` directly — a manual edit gets silently overwritten on the next
 `inv tools.install` run since the file is treated as fully PULSE-owned (same as any
-`wrapper-script`-method entry).
+`wrapper-script`-method entry). `~/.claude/CLAUDE.md` itself is never touched once it's a correct
+symlink; if something other than that symlink already lives there, `inv tools.install` warns and
+leaves it alone rather than overwriting it.
 
-Two conventions live there too, deliberately global rather than repeated per-repo — see the
+Several conventions live there too, deliberately global rather than repeated per-repo — see the
 `content` field for the exact wording:
 
 - **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
@@ -78,12 +83,21 @@ Two conventions live there too, deliberately global rather than repeated per-rep
   directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content
   to every harness that reads a literal `CLAUDE.md`, no special-case parsing needed. Trade-off:
   nothing can be appended below a symlink's target, so a genuinely Claude-specific addendum belongs
-  in `AGENTS.md` itself instead. This repo's own root follows that: `AGENTS.md` has the actual
-  content, `CLAUDE.md` is `-> AGENTS.md`.
+  in `AGENTS.md` itself instead. Both this repo's own root (`AGENTS.md` real, `CLAUDE.md ->
+  AGENTS.md`) and `~` itself (`AGENTS.md` real, `~/.claude/CLAUDE.md -> ~/AGENTS.md`) follow it.
 - **Cross-session memory policy.** Durable, repo-specific knowledge belongs in that repo's
   `AGENTS.md`, not Claude Code's auto-memory system (`~/.claude/projects/.../memory/`) — memory is
   invisible to every other contributor, every other agent tool, and every code review; `AGENTS.md`
   is version-controlled and visible to all three.
+- **Bash tool / CLI allowlist discipline.** Don't `cd` out of a project — the Bash tool's cwd is
+  already the project root, so just run plain commands, and don't reach for a directory-scoping
+  flag (`git -C`, `npm --prefix`, etc.) as a substitute either, since for subcommand-tree tools
+  that breaks the allow-rule match the same way `cd &&` does. Also prefer several simple, separate
+  Bash calls over one chained/piped/env-prefixed command. Both come from the same mechanism: `inv allowlist.*`
+  (see [`cli-allowlist.md`](cli-allowlist.md)) generates permission rules that match on a literal
+  command *prefix*, and a `cd x && cmd`/`cmd1 && cmd2`-style compound string can't match a prefix
+  rule that was written for the plain command alone — so it prompts every time even when every
+  individual piece is already allowlisted.
 
 ## `~/.claude/settings.json` — permissions merged in by `inv allowlist.apply`
 

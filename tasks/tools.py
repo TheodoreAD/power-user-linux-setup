@@ -3,7 +3,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import util
+from . import ui, util
 
 
 def _expand(value: str) -> str:
@@ -74,17 +74,33 @@ def _install_git_clone(c, name: str, cfg: dict) -> None:
 def _install_wrapper_script(c, name: str, cfg: dict) -> None:
     dest = Path(cfg["dest"]).expanduser()
     content = cfg["content"].strip() + "\n"
+    link = Path(cfg["symlink_dest"]).expanduser() if cfg.get("symlink_dest") else None
+    link_ok = link is None or (link.is_symlink() and link.resolve() == dest.resolve())
+
     if util.DRY_RUN:
-        ok = dest.exists() and dest.read_text() == content
+        ok = dest.exists() and dest.read_text() == content and link_ok
         print(f"[{name}] {'ok' if ok else 'MISSING'}")
         return
+
     if dest.exists() and dest.read_text() == content:
-        print(f"[{name}] already installed")
+        print(f"[{name}] content already installed")
+    else:
+        dest.parent.mkdir(parents=True, exist_ok=True)
+        dest.write_text(content)
+        dest.chmod(0o755)
+        print(f"[{name}] installed")
+
+    if link is None or link_ok:
         return
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    dest.write_text(content)
-    dest.chmod(0o755)
-    print(f"[{name}] installed")
+    if link.exists() or link.is_symlink():
+        ui.warn(
+            f"{link} already exists and isn't a symlink to {dest}.",
+            "Leaving it alone — move its content into the file above yourself, then re-run.",
+        )
+        return
+    link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(dest)
+    print(f"[{name}] symlinked {link} -> {dest}")
 
 
 def _install_archive(c, name: str, cfg: dict) -> None:

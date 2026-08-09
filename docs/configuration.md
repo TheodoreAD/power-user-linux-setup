@@ -34,7 +34,7 @@ PULSE owns config files through named sentinel blocks rather than overwriting wh
 | `/etc/systemd/journald.conf.d/size.conf` | `inv system.journal-size` | `SystemMaxUse` drop-in |
 | `/etc/apt/apt.conf.d/99-pulse` | `inv apt.configure` | Disable dpkg progress bars |
 | `~/.local/bin/askpass-zenity` | `inv tools.install` | Zenity GUI askpass helper — enables `sudo -A` without a TTY |
-| `~/.claude/CLAUDE.md` | `inv tools.install` | Global Claude Code instructions (use `sudo -A` for all sudo calls) |
+| `~/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it) | `inv tools.install` | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline) |
 
 ### Adding a new block
 

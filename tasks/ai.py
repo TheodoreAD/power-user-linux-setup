@@ -43,7 +43,9 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
 _AGENTS_MD_TEMPLATE = """\
 # Agent instructions for {name}
 
-Cross-tool instructions for AI coding agents working in this repo.
+Cross-tool instructions for AI coding agents working in this repo. Universal conventions (sudo/ssh
+askpass, Bash/allowlist discipline, cross-session memory policy) live in `~/AGENTS.md` — no need
+to repeat them here, only what's specific to this repo.
 
 ## Build & test
 
