@@ -9,17 +9,7 @@ from . import apt, node, python, system, tools, util, zsh
 _WSL_CONF   = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
 _STUB_RESOLV_CONF = Path("/run/systemd/resolve/stub-resolv.conf")
-_PROC_VERSION  = Path("/proc/version")
 _OSRELEASE     = Path("/proc/sys/kernel/osrelease")
-
-
-def _is_wsl() -> bool:
-    if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
-        return True
-    try:
-        return "microsoft" in _PROC_VERSION.read_text().lower()
-    except FileNotFoundError:
-        return False
 
 
 def _is_wsl2() -> bool:
@@ -166,7 +156,7 @@ def check(c):
 
     Read-only — reports findings and remediation, changes nothing. See docs/wsl.md.
     """
-    if not _is_wsl():
+    if not util.is_wsl():
         print("[wsl] not running under WSL — nothing to check")
         return
 
@@ -284,7 +274,7 @@ def fix(c, dns=True):
       resolver a VPN/firewall actually allows). Signature of this: `ping 1.1.1.1` works but DNS
       resolution doesn't, even against a resolv.conf pointed straight at 1.1.1.1 — see docs/wsl.md.
     """
-    if not _is_wsl():
+    if not util.is_wsl():
         print("[wsl] not running under WSL — nothing to fix")
         return
 
@@ -330,7 +320,7 @@ def fix(c, dns=True):
 
 
 @task
-def install(c, wslg="auto", docker=False, dns=True):
+def install(c, wslg="auto", docker=False, dns="auto"):
     """Run the docs/wsl.md recommended install sequence in one shot: check, fix, system.locale/
     system.dns (only if systemd/DNS are actually live yet), then apt/tools/language/zsh setup
     with WSL-appropriate tags excluded.
@@ -341,20 +331,53 @@ def install(c, wslg="auto", docker=False, dns=True):
     pasted line rather than stopping — it looks like Ctrl-C "did nothing". Running everything
     as task calls inside one invoke process means Ctrl-C here aborts the whole thing.
 
+    In a real terminal (not piped/scripted/CI), asks before doing anything: a one-line summary
+    of what's about to happen, plus the DNS question below if `dns` is left at "auto". Answers
+    default to "yes" on Enter, so scripting this by piping `yes` still works if needed.
+
     wslg: "auto" (default, detected the same way `inv wsl.check` does), "yes", or "no" — controls
       which tag set is excluded (see docs/wsl.md, "Tags to exclude").
     docker: pass --docker to also install Docker natively (drops the `workstation` tag exclusion)
       instead of leaving Docker to Docker Desktop's WSL integration.
-    dns: pass --no-dns if public DNS (1.1.1.1 etc.) is unreachable on this network — e.g. `ping
-      1.1.1.1` works but nothing resolves, even against a resolv.conf pointed straight at it
-      (common on corporate VPNs/firewalls that only allow DNS to an internal resolver). Leaves
-      generateResolvConf=true instead, so WSL manages /etc/resolv.conf itself by mirroring
-      whatever DNS server Windows actually uses — skips the relink/system.dns/fallback dance
-      entirely. See docs/wsl.md.
+    dns: "auto" (default — asks interactively if this is a real terminal; otherwise tries public
+      DNS, same as "yes"), "yes" (force public DNS), or "no" (skip straight to WSL-managed DNS —
+      for a network you already know blocks public resolvers, e.g. `ping 1.1.1.1` works but
+      nothing resolves. See docs/wsl.md).
     """
-    if not _is_wsl():
+    if not util.is_wsl():
         print("[wsl.install] not running under WSL — nothing to do")
         return
+
+    interactive = util.interactive()
+
+    if dns == "auto":
+        if interactive:
+            print(
+                "\n[wsl.install] Does this network block DNS to public resolvers (1.1.1.1 etc.)? "
+                "Common on corporate VPNs/firewalls — the tell is `ping 1.1.1.1` working while "
+                "nothing actually resolves. If unsure, just try public DNS: this verifies it "
+                "actually resolves and falls back automatically if it doesn't."
+            )
+            use_public_dns = util.confirm("[wsl.install] Try public DNS first?", default=True)
+        else:
+            use_public_dns = True
+    elif dns in ("yes", "true", "1"):
+        use_public_dns = True
+    elif dns in ("no", "false", "0"):
+        use_public_dns = False
+    else:
+        raise RuntimeError(f"--dns must be auto, yes, or no (got {dns!r})")
+
+    if interactive:
+        print(
+            "\n[wsl.install] About to: configure /etc/wsl.conf (systemd"
+            + (", public DNS with automatic fallback" if use_public_dns else ", WSL-managed DNS")
+            + "), install apt packages/dev tools/Node/zsh with WSL-appropriate tags excluded, "
+            "and set zsh as your login shell."
+        )
+        if not util.confirm("[wsl.install] Proceed?", default=True):
+            print("[wsl.install] aborted")
+            return
 
     if not os.environ.get("SUDO_ASKPASS") and not util.DRY_RUN:
         # Every other sudo call below runs through invoke's non-interactive Runner, which doesn't
@@ -370,12 +393,12 @@ def install(c, wslg="auto", docker=False, dns=True):
     check(c)
 
     pre = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
-    fix(c, dns=dns)
+    fix(c, dns=use_public_dns)
     post = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
     if pre != post:
         print(
             "[wsl.install] /etc/wsl.conf just changed — system.locale"
-            + ("/system.dns" if dns else "")
+            + ("/system.dns" if use_public_dns else "")
             + " below will be skipped until you `wsl.exe --shutdown` (from Windows) and reopen, "
             "then re-run `inv wsl.install`. Continuing with the rest of the install now."
         )
@@ -389,8 +412,8 @@ def install(c, wslg="auto", docker=False, dns=True):
     else:
         print("[wsl.install] systemd not live yet — skipping system.locale (restart WSL and re-run)")
 
-    if not dns:
-        print("[wsl.install] --no-dns: leaving /etc/resolv.conf to WSL's own generateResolvConf")
+    if not use_public_dns:
+        print("[wsl.install] leaving /etc/resolv.conf to WSL's own generateResolvConf")
     elif _systemd_running() and not _resolv_conf_wsl_active():
         if not _resolv_conf_symlinked_to_stub():
             if util.DRY_RUN:
@@ -417,7 +440,7 @@ def install(c, wslg="auto", docker=False, dns=True):
                     "resolv.conf pointed straight at 1.1.1.1 — if `ping 1.1.1.1` works but this "
                     "doesn't, your network is very likely blocking DNS to public resolvers (common "
                     "on corporate VPNs/firewalls). Public DNS isn't usable here at all — re-run as "
-                    "`inv wsl.install --no-dns`, restart WSL, and let WSL manage /etc/resolv.conf "
+                    "`inv wsl.install --dns=no`, restart WSL, and let WSL manage /etc/resolv.conf "
                     "itself by mirroring the Windows host's own (working) DNS server instead."
                 )
     else:
@@ -457,6 +480,12 @@ def install(c, wslg="auto", docker=False, dns=True):
     zsh.omz_configure(c)
     zsh.configure(c)
     zsh.p10k_configure(c)
+    zsh.set_default_shell(c)
 
     if docker:
         print("[wsl.install] --docker: run `inv docker.configure` once systemd is confirmed live (`inv wsl.check`).")
+
+    util.print_next_steps(
+        extra_note="Install a Nerd Font on the Windows side for Powerlevel10k icons to render in "
+        "Windows Terminal — see docs/wsl.md."
+    )

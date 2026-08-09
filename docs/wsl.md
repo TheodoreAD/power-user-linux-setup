@@ -148,14 +148,16 @@ configured to use — which, on a locked-down network, is presumably the interna
 firewall actually allows through. Run:
 
 ```shell
-inv wsl.install --no-dns
+inv wsl.install --dns=no
 ```
 
 This sets `generateResolvConf=true` in `/etc/wsl.conf` (reverting it if `wsl.fix`/`wsl.install`
 had already set it to `false`) and skips the relink/`system.dns`/fallback dance entirely, letting
 WSL manage `/etc/resolv.conf` itself. Needs the usual `wsl.exe --shutdown` + reopen to take
-effect. **Pass `--no-dns` on every future `inv wsl.install` run on this machine** — without it,
-`wsl.fix` will flip `generateResolvConf` back to `false` again and DNS breaks again.
+effect. **Pass `--dns=no` on every future `inv wsl.install` run on this machine** — without it,
+`wsl.fix` will flip `generateResolvConf` back to `false` again and DNS breaks again. (In a real
+terminal, `wsl.install` asks this exact question interactively before doing anything if you leave
+`--dns` unset — see [Interactive prompts](#interactive-prompts) below.)
 
 ## Docker
 
@@ -291,8 +293,11 @@ useful under WSL if you're using VS Code's Remote-WSL extension.
 
 ## Recommended sequence
 
-Skip `inv setup` wholesale — it calls `system.dns` and `docker.configure` unconditionally, which
-you may not want depending on your `/etc/wsl.conf` and Docker choice above.
+`inv setup` auto-detects WSL (via `util.is_wsl()`) and delegates straight to `inv wsl.install` —
+you don't need to know to call `wsl.install` specifically; running the same `inv setup` from the
+[Quick start](index.md#quick-start) does the right thing on WSL too. Run `inv wsl.install` directly
+instead of `inv setup` only when you want its `--wslg`/`--docker`/`--dns` options (`inv setup`
+always uses their defaults).
 
 `inv wsl.install` runs the sequence below for you, as task calls inside a single invoke process:
 
@@ -300,16 +305,18 @@ you may not want depending on your `/etc/wsl.conf` and Docker choice above.
 inv wsl.install              # auto-detects WSLg, excludes workstation/corporate/ide/... per the table above
 inv wsl.install --wslg=no    # force the no-WSLg tag set instead of auto-detecting
 inv wsl.install --docker     # also keep the workstation tag (installs Docker natively)
-inv wsl.install --no-dns     # public DNS blocked on this network — see "If public DNS is blocked" above
+inv wsl.install --dns=no     # public DNS blocked on this network — see "If public DNS is blocked" above
 ```
 
 It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS
 are actually live yet — skipped with a message otherwise, if `wsl.fix` just changed
 `/etc/wsl.conf` and you haven't restarted WSL), *then* `apt.repos`/`apt.base`/`apt.deb`,
-`tools.install`, `python.tools`, `node.install`, and the zsh tasks. DNS has to be fixed before
-those — on a re-run after a restart with `generateResolvConf=false` already active, DNS is broken
-(see [Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of
-those later steps needs working DNS itself.
+`tools.install`, `python.tools`, `node.install`, the zsh tasks, and `zsh.set_default_shell`. DNS
+has to be fixed before the apt/tools steps — on a re-run after a restart with
+`generateResolvConf=false` already active, DNS is broken (see
+[Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of those
+later steps needs working DNS itself. It finishes by printing the next concrete manual step (see
+["next steps" reporting](#next-steps-reporting) below).
 
 This is the one worth using instead of pasting the equivalent multi-line block below into a
 terminal: that block is a series of separate `inv` invocations one per line, so if one hangs (a
@@ -317,6 +324,36 @@ network problem mid-`apt`, say) and you hit Ctrl-C, the shell only kills *that* 
 reads the next already-pasted line from its input buffer and keeps going, which looks like Ctrl-C
 "did nothing" and skipped ahead. `wsl.install` runs everything in one process instead, so Ctrl-C at
 any point aborts the whole thing.
+
+### Interactive prompts
+
+In a real terminal (not piped, scripted, or CI — checked via `sys.stdin.isatty()`), `wsl.install`
+asks before doing anything:
+
+- If `--dns` was left at its default (`auto`), the exact "does this network block public DNS"
+  question from [If public DNS is blocked](#if-public-dns-is-blocked-on-this-network) above,
+  defaulting to "try public DNS" (safe either way — it verifies and falls back automatically).
+- A one-line summary of what's about to happen (given your answer above, plus `--wslg`/`--docker`),
+  then a final "Proceed?" — answering no aborts before touching anything.
+
+Both default to yes on Enter, so `yes | inv wsl.install` still works non-interactively if you ever
+need it scripted; a genuinely non-interactive invocation (piped, cron, CI) skips the prompts
+entirely and behaves as `--dns=auto` always has (try public DNS, fall back automatically).
+
+### "next steps" reporting
+
+Both `inv wsl.install` and `inv setup` end by calling `util.print_next_steps()` — it checks real
+state (current login shell, whether `~/.config/pulse/identity.toml` exists) rather than a stored
+"did we already tell you" flag, and prints the single next thing to do:
+
+1. If the login shell isn't zsh yet, tells you to open a new terminal (or, if `usermod` failed,
+   the exact command to run by hand) and re-run.
+2. Otherwise, if `~/.config/pulse/identity.toml` doesn't exist, tells you to copy it from the
+   example and fill it in, then which `inv git.*`/`inv ssh.*` tasks to run next.
+3. Otherwise, nothing left that's automatable — just the Windows-side Nerd Font reminder (see
+   [Fonts](#fonts) below; this one genuinely can't be checked or done from inside WSL).
+
+Safe to re-run after doing whatever it suggests — it's checking, not remembering.
 
 If you want to run the phases individually instead — e.g. to stop and inspect state between
 steps — here's the same sequence by hand:
@@ -348,6 +385,7 @@ inv tools.install
 inv python.tools
 inv node.install
 inv zsh.omz-configure zsh.configure zsh.p10k-configure
+inv zsh.set-default-shell   # usermod -s — takes a new terminal to actually apply
 ```
 
 `gnome.*` and `screenshot.*` tasks are never called by `inv setup` and have no meaning under WSL —

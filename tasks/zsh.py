@@ -1,4 +1,7 @@
+import os
+import pwd
 import re
+import shutil
 from pathlib import Path
 
 from invoke import task
@@ -6,6 +9,21 @@ from invoke import task
 from . import util
 
 _REPO_ROOT = Path(__file__).parent.parent
+
+
+def _current_user() -> str:
+    return os.environ.get("SUDO_USER") or os.environ.get("USER", "")
+
+
+def _current_shell() -> str:
+    return pwd.getpwnam(_current_user()).pw_shell
+
+
+def _shell_is_zsh(shell_path: str) -> bool:
+    # Name-based, not exact-path: machines can have more than one zsh on disk (e.g. an apt one
+    # at /usr/bin/zsh and another earlier on PATH) — what matters is that the registered login
+    # shell is *a* zsh, not that it's byte-for-byte the one `shutil.which` happens to find.
+    return Path(shell_path).name == "zsh"
 
 
 @task
@@ -91,6 +109,26 @@ def configure(c):
                 result = util.ensure_block(path, name, content)
                 if result != "ok":
                     print(f"[{name}] .{target}: {result}")
+
+
+@task
+def set_default_shell(c):
+    """Set zsh as the login shell (usermod -s, not chsh — chsh's PAM password prompt doesn't
+    work in a non-interactive/piped session the way sudo -A does). Only takes effect in a new
+    login shell/terminal, not the one this runs in.
+    """
+    zsh_path = shutil.which("zsh")
+    if not zsh_path:
+        print("[zsh] zsh not found on PATH — install it first (apt.base)")
+        return
+    if util.DRY_RUN:
+        print(f"[zsh] default shell: {'ok' if _shell_is_zsh(_current_shell()) else 'MISSING'}")
+        return
+    if _shell_is_zsh(_current_shell()):
+        print(f"[zsh] default shell already zsh ({_current_shell()}) — nothing to do")
+        return
+    c.run(f"{util.SUDO} usermod -s {zsh_path} {_current_user()}")
+    print(f"[zsh] default shell set to {zsh_path} — close this terminal and open a new one for it to take effect")
 
 
 @task
