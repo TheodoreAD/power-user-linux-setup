@@ -2208,7 +2208,7 @@
   
 
 
-<h1 id="wsl">WSL</h1>
+<h1 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h1>
 <p>The same <code>setup.toml</code> and invoke tasks that configure a workstation can bootstrap a WSL2
 distro. Most of it works unmodified — apt/apt-repo/deb-github/deb-url/uv-tool/archive installs and
 the zsh/uv/nvm toolchain are plain userspace and don&rsquo;t care that they&rsquo;re running under WSL. The
@@ -2235,7 +2235,7 @@ no real kernel and can&rsquo;t run systemd at all, so it&rsquo;s rejected by the
 special case. <code>docker.configure</code> similarly detects &ldquo;no local <code>dockerd</code>&rdquo; (Docker Desktop&rsquo;s WSL
 integration) and skips cleanly instead of failing on <code>systemctl restart docker</code> — see
 <a href="#docker">Docker</a> below.</p>
-<h2 id="tags-to-exclude">Tags to exclude</h2>
+<h2 id="tags-to-exclude">Tags to exclude<a class="headerlink" href="#tags-to-exclude" title="Permanent link">&para;</a></h2>
 <p>The general principle under WSL: install as little as possible on the Linux side of the boundary.
 Every extra GUI app installed inside the distro is something to keep updated, something that can
 break in a WSLg-specific way, and — if it duplicates an app you already run on Windows — a second
@@ -2297,7 +2297,7 @@ one is for and why it&rsquo;s excluded by default.</p>
 <p>With the recommended set, what&rsquo;s left installed from the GUI/desktop tags is just
 <code>[packages.clipboard]</code> (<code>wl-clipboard</code>) and <code>[packages.google-chrome]</code> — see below for why those
 two specifically earn their place.</p>
-<h2 id="prerequisites-etcwslconf">Prerequisites — <code>/etc/wsl.conf</code></h2>
+<h2 id="prerequisites-etcwslconf">Prerequisites — <code>/etc/wsl.conf</code><a class="headerlink" href="#prerequisites-etcwslconf" title="Permanent link">&para;</a></h2>
 <p>Two settings gate most of the rest. Both require a full WSL restart to take effect
 (<code>wsl.exe --shutdown</code> from Windows, then reopen the terminal):</p>
 <div class="language-ini highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[boot]</span>
@@ -2337,7 +2337,7 @@ plain file WSL last wrote, <code>inv system.dns</code> has nothing to point at, 
 <p><code>inv wsl.install</code> does this relink automatically; <code>inv wsl.check</code> detects and reports whichever of
 these three states you&rsquo;re in (WSL still generating it, generated-but-frozen without the symlink,
 or correctly symlinked) if you&rsquo;re running the steps by hand instead.</p>
-<h3 id="if-public-dns-is-blocked-on-this-network">If public DNS is blocked on this network</h3>
+<h3 id="if-public-dns-is-blocked-on-this-network">If public DNS is blocked on this network<a class="headerlink" href="#if-public-dns-is-blocked-on-this-network" title="Permanent link">&para;</a></h3>
 <p>Everything above assumes <code>1.1.1.1</code>/<code>1.0.0.1</code>/<code>8.8.8.8</code> (what <code>inv system.dns</code> configures) are
 actually reachable. On some corporate networks they aren&rsquo;t — a VPN client or firewall allows
 general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver. The
@@ -2359,7 +2359,7 @@ effect. <strong>Pass <code>--dns=no</code> on every future <code>inv wsl.install
 <code>wsl.fix</code> will flip <code>generateResolvConf</code> back to <code>false</code> again and DNS breaks again. (In a real
 terminal, <code>wsl.install</code> asks this exact question interactively before doing anything if you leave
 <code>--dns</code> unset — see <a href="#interactive-prompts">Interactive prompts</a> below.)</p>
-<h2 id="docker">Docker</h2>
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
 <p><code>[packages.docker]</code> is tagged <code>workstation</code>, so it&rsquo;s excluded by the recommended tag set above by
 default. Two ways to get Docker working, matching the split in <a href="dev-container.html">docs/dev-container.md</a>:</p>
 <p><strong>Docker Desktop&rsquo;s WSL integration</strong> — don&rsquo;t install <code>[packages.docker]</code> at all (leave <code>workstation</code>
@@ -2373,7 +2373,7 @@ no local <code>dockerd</code> binary) and skips with an explanatory message inst
 works unmodified.</p>
 <p><code>inv wsl.check</code> tells you which situation you&rsquo;re in — presence of a local <code>dockerd</code> binary is a
 reliable signal for &ldquo;native&rdquo;, its absence alongside a working <code>docker</code> CLI means Desktop integration.</p>
-<h2 id="gui-wslg-and-clipboard">GUI, WSLg, and clipboard</h2>
+<h2 id="gui-wslg-and-clipboard">GUI, WSLg, and clipboard<a class="headerlink" href="#gui-wslg-and-clipboard" title="Permanent link">&para;</a></h2>
 <p>WSLg (default on current Windows 11 builds; check with <code>inv wsl.check</code>) runs a real Wayland
 compositor (<code>weston</code>) plus PulseAudio/PipeWire inside the WSL2 VM, and bridges individual app
 windows onto the Windows desktop over an RDP-based channel — not a full remote desktop, just
@@ -2418,7 +2418,7 @@ Anything actually <code>gnome</code>-tagged (Shell extensions, <code>gnome-exten
 WSLg for the same reason it&rsquo;s meaningless in any non-GNOME compositor. <code>gnome.*</code> and <code>screenshot.*</code>
 invoke tasks still shouldn&rsquo;t be run under WSL regardless — see the note at the bottom of this doc.</p>
 <p>Without WSLg, skip <code>gui</code>, <code>desktop</code>, and <code>gnome</code> entirely — there&rsquo;s no display server at all.</p>
-<h2 id="ides-edit-from-windows-instead">IDEs: edit from Windows instead</h2>
+<h2 id="ides-edit-from-windows-instead">IDEs: edit from Windows instead<a class="headerlink" href="#ides-edit-from-windows-instead" title="Permanent link">&para;</a></h2>
 <p><code>[packages.vscode]</code>, <code>[packages.jetbrains-toolbox]</code>, and <code>[packages.apparmor-jbr-cef]</code> are tagged
 <code>ide</code> and excluded by default under WSL — not because they don&rsquo;t work under WSLg (they would,
 same as any other Electron/GTK app), but because installing them inside the distro duplicates a
@@ -2440,7 +2440,7 @@ client that already runs better on the Windows side:</p>
 </ul>
 <p>Drop <code>ide</code> from <code>PULSE_EXCLUDE_TAGS</code> if you specifically want a Linux-side IDE window running
 inside the distro rather than a remote client from Windows.</p>
-<h2 id="windows-native-duplicates">Windows-native duplicates</h2>
+<h2 id="windows-native-duplicates">Windows-native duplicates<a class="headerlink" href="#windows-native-duplicates" title="Permanent link">&para;</a></h2>
 <p>Tagged <code>windows-native</code> and excluded by default under WSL — these install and run fine under
 WSLg, but there&rsquo;s no Linux-specific reason to, and you almost certainly already have (or would
 rather have) the same tool on the Windows side:</p>
@@ -2462,7 +2462,7 @@ rather have) the same tool on the Windows side:</p>
 </ul>
 <p>Drop <code>windows-native</code> selectively (not as a block) if one of these is a deliberate exception —
 e.g. you want WezTerm&rsquo;s Linux build specifically to test its GPU passthrough behavior under WSLg.</p>
-<h2 id="fonts">Fonts</h2>
+<h2 id="fonts">Fonts<a class="headerlink" href="#fonts" title="Permanent link">&para;</a></h2>
 <p><code>inv fonts.install</code> installs Nerd Fonts into <code>~/.local/share/fonts</code> <em>inside the WSL filesystem</em>.
 If your terminal is Windows Terminal (or anything else running on the Windows side, not through
 WSLg), it can&rsquo;t see fonts installed there — install the Nerd Font on the Windows side separately.
@@ -2472,7 +2472,7 @@ the WSL/Windows boundary to install a font on the host from a distro-side task.<
 <code>gsettings</code> — both no-op safely without a GNOME session (confirmed: <code>gsettings set</code> failures are
 caught and printed as a skip, not a crash). The VS Code settings.json part of the same task is
 useful under WSL if you&rsquo;re using VS Code&rsquo;s Remote-WSL extension.</p>
-<h2 id="recommended-sequence">Recommended sequence</h2>
+<h2 id="recommended-sequence">Recommended sequence<a class="headerlink" href="#recommended-sequence" title="Permanent link">&para;</a></h2>
 <p><code>inv setup</code> auto-detects WSL (via <code>util.is_wsl()</code>) and delegates straight to <code>inv wsl.install</code> —
 you don&rsquo;t need to know to call <code>wsl.install</code> specifically; running the same <code>inv setup</code> from the
 <a href="index.html#quick-start">Quick start</a> does the right thing on WSL too. Run <code>inv wsl.install</code> directly
@@ -2486,20 +2486,28 @@ always uses their defaults).</p>
 </span></code></pre></div>
 <p>It calls <code>wsl.check</code> and <code>wsl.fix</code> first, then <code>system.locale</code>/<code>system.dns</code> (only if systemd/DNS
 are actually live yet — skipped with a message otherwise, if <code>wsl.fix</code> just changed
-<code>/etc/wsl.conf</code> and you haven&rsquo;t restarted WSL), <em>then</em> <code>apt.repos</code>/<code>apt.base</code>/<code>apt.deb</code>,
-<code>tools.install</code>, <code>python.tools</code>, <code>node.install</code>, the zsh tasks, and <code>zsh.set_default_shell</code>. DNS
-has to be fixed before the apt/tools steps — on a re-run after a restart with
-<code>generateResolvConf=false</code> already active, DNS is broken (see
-<a href="#prerequisites-etcwslconf">Prerequisites</a> above) until <code>system.dns</code> runs, and every one of those
-later steps needs working DNS itself. It finishes by printing the next concrete manual step (see
-<a href="#next-steps-reporting">&ldquo;next steps&rdquo; reporting</a> below).</p>
+<code>/etc/wsl.conf</code> and you haven&rsquo;t restarted WSL), <em>then</em> two named phases run through
+<code>tasks/phases.py</code>: <strong>packages</strong> (<code>apt.repos</code>/<code>apt.base</code>/<code>apt.deb</code>/<code>tools.install</code>/<code>ai.skills</code>/
+<code>python.tools</code>/<code>node.install</code>) and <strong>shell</strong> (<code>zsh.omz-configure</code>/<code>zsh.configure</code>/
+<code>zsh.p10k-configure</code>/<code>zsh.set-default-shell</code>). DNS has to be fixed before the packages/shell
+phases — on a re-run after a restart with <code>generateResolvConf=false</code> already active, DNS is broken
+(see <a href="#prerequisites-etcwslconf">Prerequisites</a> above) until <code>system.dns</code> runs, and every one of
+those later steps needs working DNS itself. It finishes by printing the next concrete manual step
+(see <a href="#next-steps-reporting">&ldquo;next steps&rdquo; reporting</a> below).</p>
+<p>Each phase prints a labeled banner, then probes itself with <code>PULSE_DRY_RUN</code> forced on (every task
+inside already has a side-effect-free dry-run check) before doing any real work. If the probe comes
+back with nothing missing, it asks whether to skip the phase — default <strong>skip</strong> on Enter, and
+skipped silently outside a real terminal. This is what makes re-running <code>inv wsl.install</code> after the
+<code>/etc/wsl.conf</code> restart cheap: if packages and shell already succeeded before the restart, each is
+now a single confirmation instead of redoing every <code>apt</code>/tool/<code>zsh</code> step from scratch. A phase with
+real outstanding work is never gated behind a prompt — it just runs.</p>
 <p>This is the one worth using instead of pasting the equivalent multi-line block below into a
 terminal: that block is a series of separate <code>inv</code> invocations one per line, so if one hangs (a
 network problem mid-<code>apt</code>, say) and you hit Ctrl-C, the shell only kills <em>that</em> command — it then
 reads the next already-pasted line from its input buffer and keeps going, which looks like Ctrl-C
 &ldquo;did nothing&rdquo; and skipped ahead. <code>wsl.install</code> runs everything in one process instead, so Ctrl-C at
 any point aborts the whole thing.</p>
-<h3 id="interactive-prompts">Interactive prompts</h3>
+<h3 id="interactive-prompts">Interactive prompts<a class="headerlink" href="#interactive-prompts" title="Permanent link">&para;</a></h3>
 <p>In a real terminal (not piped, scripted, or CI — checked via <code>sys.stdin.isatty()</code>), <code>wsl.install</code>
 asks before doing anything:</p>
 <ul>
@@ -2508,16 +2516,21 @@ asks before doing anything:</p>
   defaulting to &ldquo;try public DNS&rdquo; (safe either way — it verifies and falls back automatically).</li>
 <li>A one-line summary of what&rsquo;s about to happen (given your answer above, plus <code>--wslg</code>/<code>--docker</code>),
   then a final &ldquo;Proceed?&rdquo; — answering no aborts before touching anything.</li>
+<li>Once running, the <strong>packages</strong> and <strong>shell</strong> phases each ask &ldquo;Already looks complete — skip this
+  phase?&rdquo; if their own dry-run probe found nothing missing — see <a href="#recommended-sequence">Recommended
+  sequence</a> above.</li>
 </ul>
-<p>Both default to yes on Enter, so <code>yes | inv wsl.install</code> still works non-interactively if you ever
-need it scripted; a genuinely non-interactive invocation (piped, cron, CI) skips the prompts
-entirely and behaves as <code>--dns=auto</code> always has (try public DNS, fall back automatically).</p>
+<p>All of these default to yes (proceed / skip) on Enter, so <code>yes | inv wsl.install</code> still works
+non-interactively if you ever need it scripted; a genuinely non-interactive invocation (piped,
+cron, CI) skips every prompt entirely — <code>--dns=auto</code> behaves as it always has (try public DNS, fall
+back automatically), and any phase whose probe came back clean is skipped silently rather than
+redone.</p>
 <p>Summaries, warnings, doc pointers, and these prompts all render as bordered blocks — via
 <code>tasks/ui.py</code>, a small formatting library (<code>ui.block</code>/<code>ui.note</code>/<code>ui.warn</code>/<code>ui.ask</code>) that&rsquo;s what
 actually makes them stand out from the apt/dpkg/curl/gpg output scrolling past in the same run.
 Terse per-package status lines (<code>[gh] repo:ok</code>) are deliberately left alone — they&rsquo;re meant to
 blend in with everything else&rsquo;s output, not compete with it.</p>
-<h3 id="next-steps-reporting">&ldquo;next steps&rdquo; reporting</h3>
+<h3 id="next-steps-reporting">&ldquo;next steps&rdquo; reporting<a class="headerlink" href="#next-steps-reporting" title="Permanent link">&para;</a></h3>
 <p>Both <code>inv wsl.install</code> and <code>inv setup</code> end by calling <code>next_steps.print_next_steps()</code> — it checks
 real state rather than a stored &ldquo;did we already tell you&rdquo; flag, and prints the single next thing
 to do:</p>
@@ -2559,10 +2572,11 @@ steps — here&rsquo;s the same sequence by hand:</p>
 </span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb</span>
 </span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
 </span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>inv<span class="w"> </span>tools.install
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>inv<span class="w"> </span>python.tools
-</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>inv<span class="w"> </span>node.install
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.p10k-configure
-</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">   </span><span class="c1"># usermod -s — takes a new terminal to actually apply</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>inv<span class="w"> </span>ai.skills
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>inv<span class="w"> </span>python.tools
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>inv<span class="w"> </span>node.install
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.p10k-configure
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">   </span><span class="c1"># usermod -s — takes a new terminal to actually apply</span>
 </span></code></pre></div>
 <p><code>gnome.*</code> and <code>screenshot.*</code> tasks are never called by <code>inv setup</code> and have no meaning under WSL —
 just don&rsquo;t invoke them.</p>
