@@ -1,6 +1,6 @@
 from invoke import task
 
-from . import apt, docker, fonts, node, python, system, tools, util, wsl, zsh
+from . import apt, docker, fonts, next_steps, node, python, system, tools, util, wsl, zsh
 
 
 @task
@@ -33,4 +33,4 @@ def setup(c):
     zsh.set_default_shell(c)
     fonts.install(c)
     fonts.configure(c)
-    util.print_next_steps()
+    next_steps.print_next_steps()
