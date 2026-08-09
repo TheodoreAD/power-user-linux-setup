@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "*": "Usage: tee [OPTION]... [FILE]...\nCopy standard input to each FILE, and also to standard output.\n\n  -a, --append              append to the given FILEs, do not overwrite\n  -i, --ignore-interrupts   ignore interrupt signals\n  -p                        operate in a more appropriate MODE with pipes.\n      --output-error[=MODE]   set behavior on write error.  See MODE below\n      --help        display this help and exit\n      --version     output version information and exit\n\nMODE determines behavior with write errors on the outputs:\n  warn           diagnose errors writing to any output\n  warn-nopipe    diagnose errors writing to any output not a pipe\n  exit           exit on error writing to any output\n  exit-nopipe    exit on error writing to any output not a pipe\nThe default MODE for the -p option is 'warn-nopipe'.\nWith \"nopipe\" MODEs, exit immediately if all outputs become broken pipes.\nThe default operation when --output-error is not specified, is to\nexit immediately on error writing to a pipe, and diagnose errors\nwriting to non pipe outputs.\n\nGNU coreutils online help: <https://www.gnu.org/software/coreutils/>\nFull documentation <https://www.gnu.org/software/coreutils/tee>\nor available locally via: info '(coreutils) tee invocation'"
+  },
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "interactive": false,
+  "version": "tee (GNU coreutils) 9.4"
+}

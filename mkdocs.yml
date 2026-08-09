@@ -127,6 +127,7 @@ nav:
   - AI:
       - ai.md
       - claude-code.md
+      - cli-allowlist.md
   - Environments:
       - wsl.md
       - dev-container.md

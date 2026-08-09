@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "*": "Usage: touch [OPTION]... FILE...\nUpdate the access and modification times of each FILE to the current time.\n\nA FILE argument that does not exist is created empty, unless -c or -h\nis supplied.\n\nA FILE argument string of - is handled specially and causes touch to\nchange the times of the file associated with standard output.\n\nMandatory arguments to long options are mandatory for short options too.\n  -a                     change only the access time\n  -c, --no-create        do not create any files\n  -d, --date=STRING      parse STRING and use it instead of current time\n  -f                     (ignored)\n  -h, --no-dereference   affect each symbolic link instead of any referenced\n                         file (useful only on systems that can change the\n                         timestamps of a symlink)\n  -m                     change only the modification time\n  -r, --reference=FILE   use this file's times instead of current time\n  -t STAMP               use [[CC]YY]MMDDhhmm[.ss] instead of current time\n      --time=WORD        change the specified time:\n                           WORD is access, atime, or use: equivalent to -a\n                           WORD is modify or mtime: equivalent to -m\n      --help        display this help and exit\n      --version     output version information and exit\n\nNote that the -d and -t options accept different time-date formats.\n\nGNU coreutils online help: <https://www.gnu.org/software/coreutils/>\nFull documentation <https://www.gnu.org/software/coreutils/touch>\nor available locally via: info '(coreutils) touch invocation'"
+  },
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "interactive": false,
+  "version": "touch (GNU coreutils) 9.4"
+}

@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "*": "Usage: chmod [OPTION]... MODE[,MODE]... FILE...\n  or:  chmod [OPTION]... OCTAL-MODE FILE...\n  or:  chmod [OPTION]... --reference=RFILE FILE...\nChange the mode of each FILE to MODE.\nWith --reference, change the mode of each FILE to that of RFILE.\n\n  -c, --changes          like verbose but report only when a change is made\n  -f, --silent, --quiet  suppress most error messages\n  -v, --verbose          output a diagnostic for every file processed\n      --no-preserve-root  do not treat '/' specially (the default)\n      --preserve-root    fail to operate recursively on '/'\n      --reference=RFILE  use RFILE's mode instead of specifying MODE values.\n                         RFILE is always dereferenced if a symbolic link.\n  -R, --recursive        change files and directories recursively\n      --help        display this help and exit\n      --version     output version information and exit\n\nEach MODE is of the form '[ugoa]*([-+=]([rwxXst]*|[ugo]))+|[-+=][0-7]+'.\n\nGNU coreutils online help: <https://www.gnu.org/software/coreutils/>\nFull documentation <https://www.gnu.org/software/coreutils/chmod>\nor available locally via: info '(coreutils) chmod invocation'"
+  },
+  "extracted_at": "2026-08-09T18:11:18Z",
+  "interactive": false,
+  "version": "chmod (GNU coreutils) 9.4"
+}

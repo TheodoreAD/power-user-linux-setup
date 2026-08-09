@@ -1,0 +1,8 @@
+{
+  "commands": {
+    "*": "Usage: xz [OPTION]... [FILE]...\nCompress or decompress FILEs in the .xz format.\n\n  -z, --compress      force compression\n  -d, --decompress    force decompression\n  -t, --test          test compressed file integrity\n  -l, --list          list information about .xz files\n  -k, --keep          keep (don't delete) input files\n  -f, --force         force overwrite of output file and (de)compress links\n  -c, --stdout        write to standard output and don't delete input files\n  -0 ... -9           compression preset; default is 6; take compressor *and*\n                      decompressor memory usage into account before using 7-9!\n  -e, --extreme       try to improve compression ratio by using more CPU time;\n                      does not affect decompressor memory requirements\n  -T, --threads=NUM   use at most NUM threads; the default is 1; set to 0\n                      to use as many threads as there are processor cores\n  -q, --quiet         suppress warnings; specify twice to suppress errors too\n  -v, --verbose       be verbose; specify twice for even more verbose\n  -h, --help          display this short help and exit\n  -H, --long-help     display the long help (lists also the advanced options)\n  -V, --version       display the version number and exit\n\nWith no FILE, or when FILE is -, read standard input.\n\nReport bugs to <xz@tukaani.org> (in English or Finnish).\nXZ Utils home page: <https://tukaani.org/xz/>"
+  },
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "interactive": false,
+  "version": "xz (XZ Utils) 5.4.5"
+}

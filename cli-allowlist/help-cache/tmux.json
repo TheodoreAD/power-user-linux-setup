@@ -1,0 +1,17 @@
+{
+  "commands": {
+    "_top": "usage: tmux [-2CDlNuVv] [-c shell-command] [-f file] [-L socket-name]\n            [-S socket-path] [-T features] [command [flags]]",
+    "display-message": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "kill-server": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "kill-session": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "list-panes": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "list-sessions": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "list-windows": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "new-session": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "send-keys": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
+    "show-options": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+  },
+  "extracted_at": "2026-08-09T16:48:13Z",
+  "interactive": false,
+  "version": "tmux 3.4"
+}

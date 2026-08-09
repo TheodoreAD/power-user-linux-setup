@@ -1,0 +1,354 @@
+# Registry of CLI tools tracked by `inv allowlist.*` (tasks/allowlist.py).
+#
+# Fields (all optional except the section name, which is the binary to invoke):
+#   version_flag     args to get a version string, for cache-invalidation (default: "--version")
+#   help_flag        args to get top-level help (default: "--help")
+#   help_style       "prefix" = <tool> <help_flag> <sub> instead of the default <tool> <sub>
+#                     <help_flag> — needed for tools whose <sub> --help is a stub pointing
+#                     elsewhere (go: `go list --help` says "Run 'go help list' for details")
+#   no_subcommands   true = flat tool (flags only, no subcommand tree) — capture top-level help
+#                     only, classify it as a single unit (default: false)
+#   subcommands      explicit list of subcommands to probe --help for, instead of
+#                     auto-discovering them by parsing the top-level help text
+#   skip_interactive true = don't run --help at all; this tool is only usable interactively
+#                     (a TUI), so there's no non-interactive command surface to classify
+#   max_subcommands  override the global auto-discovery breadth cap (default: 40)
+#   shell_prefix     shell snippet to source before invoking the tool, for tools that only exist
+#                     as a shell function (e.g. nvm) rather than a binary on PATH — extraction
+#                     runs `bash -c "<shell_prefix> && <tool> <args>"` instead of exec-ing directly
+#
+# Extraction runs with PAGER/MANPAGER/GIT_PAGER/BROWSER neutralized (see _DETERMINISTIC_ENV in
+# tasks/allowlist.py) so captured text doesn't depend on this machine's interactive shell config
+# or on optional packages like git-man being installed — confirmed empirically that git's default
+# `--help` only worked here because git-man happens to be present; `-h` doesn't have that
+# dependency and is used below for that reason, not merely as a style preference.
+#
+# Man-page-dependency audit: `cli-allowlist/check_man_deps.py` runs every registered tool's help
+# invocation under `strace -f -e trace=execve` and checks for a child exec of /usr/bin/man — the
+# only reliable way to tell "renders like a man page" (gcloud, which mimics man's NAME/SYNOPSIS/
+# DESCRIPTION layout with its own self-contained renderer) apart from "actually shells out to man"
+# (git, the one real case as of 2026-08-10, already fixed above with `-h`). Re-run it before
+# trusting a newly-added tool's default `--help` on a machine that might not have every optional
+# doc package installed — as of 2026-08-10 it's clean (0 of 49 registered tools depend on man).
+#
+# Some tools (currently gh, kubectl, helm, docker, terraform, gcloud — git was seeded the same way
+# but later reclassified via LLM after its help_flag changed) have a `source: community` entry in
+# rules.json, seeded from github.com/UgurcanAkkok/claude-allow-list (MIT-style curated allowlist)
+# rather than classified fresh. `inv allowlist.classify` backfills their help_hash on first extract
+# rather than re-classifying from scratch, but they still go through `inv allowlist.review` like
+# everything else.
+
+[git]
+help_flag = "-h"  # not --help: that renders through `man`, which depends on git-man being installed
+subcommands = [
+  "status", "log", "diff", "show", "blame", "grep", "branch", "tag", "remote", "config",
+  "stash", "submodule", "worktree", "notes", "bisect", "rev-parse", "ls-files", "ls-remote",
+  "fsck", "commit", "add", "merge", "rebase", "checkout", "push", "pull", "clean", "reset",
+]
+
+[gh]
+subcommands = [
+  "auth", "pr", "issue", "repo", "release", "run", "workflow", "search", "project", "label",
+  "secret", "variable", "ssh-key", "gpg-key", "ruleset", "org", "codespace", "gist",
+  "attestation", "extension",
+]
+
+[glab]
+subcommands = ["mr", "issue", "ci", "repo", "release", "pipeline", "label", "variable", "auth"]
+
+[kubectl]
+version_flag = "version --client"
+subcommands = [
+  "get", "describe", "logs", "top", "events", "rollout", "diff", "kustomize", "auth",
+  "api-resources", "api-versions", "explain", "cluster-info", "config", "apply", "create",
+  "patch", "edit", "scale", "exec", "port-forward", "delete", "drain", "cordon",
+]
+
+[helm]
+version_flag = "version --short"
+subcommands = [
+  "list", "status", "history", "get", "show", "template", "lint", "diff", "repo", "search",
+  "plugin", "env", "install", "upgrade", "rollback", "create", "package", "uninstall",
+]
+
+[kind]
+subcommands = ["get", "create", "delete", "load", "build", "export"]
+
+[tilt]
+subcommands = ["get", "logs", "status", "dump", "doctor", "up", "down", "ci"]
+
+[k9s]
+skip_interactive = true
+
+[docker]
+subcommands = [
+  "ps", "inspect", "logs", "top", "stats", "port", "diff", "events", "wait", "images",
+  "image", "network", "volume", "info", "system", "manifest", "trust", "config", "secret",
+  "plugin", "context", "buildx", "compose", "service", "stack", "node", "run", "build",
+  "exec", "rm", "rmi",
+]
+
+[terraform]
+subcommands = [
+  "validate", "fmt", "plan", "show", "output", "state", "providers", "workspace", "graph",
+  "apply", "destroy", "init", "import",
+]
+
+[gcloud]
+version_flag = "version"
+subcommands = [
+  "auth", "config", "info", "projects", "compute", "container", "run", "functions",
+  "storage", "iam", "sql", "redis", "pubsub", "secrets", "artifacts", "dns", "logging",
+  "monitoring", "billing",
+]
+max_subcommands = 25
+
+[go]
+version_flag = "version"
+help_flag = "help"  # not --help: `go <sub> --help` is a stub ("Run 'go help list' for details")
+help_style = "prefix"
+subcommands = ["list", "mod", "version", "env", "build", "run", "install", "get", "clean", "generate"]
+
+[npm]
+subcommands = [
+  "list", "info", "view", "outdated", "audit", "search", "config", "explain", "install",
+  "update", "ci", "run", "publish", "unpublish",
+]
+
+[cargo]
+subcommands = [
+  "tree", "search", "metadata", "verify-project", "pkgid", "check", "clippy", "test",
+  "build", "run", "clean", "install", "update", "publish", "yank",
+]
+
+[uv]
+subcommands = ["pip", "tree", "add", "sync", "run", "tool", "venv", "python", "init", "build"]
+
+[jq]
+no_subcommands = true
+
+[tmux]
+version_flag = "-V"
+subcommands = [
+  "list-sessions", "list-windows", "list-panes", "show-options", "display-message",
+  "new-session", "kill-session", "kill-server", "send-keys",
+]
+
+[direnv]
+subcommands = ["status", "dump", "allow", "edit", "deny", "reload"]
+
+[dprint]
+subcommands = ["check", "fmt", "config", "output-file-paths"]
+
+[zensical]
+help_flag = "--help"
+subcommands = ["build", "serve"]
+
+[twine]
+subcommands = ["check", "upload", "register"]
+
+[nuitka]
+no_subcommands = true
+
+[hyperfine]
+no_subcommands = true
+
+[dive]
+no_subcommands = true
+
+[vim]
+skip_interactive = true
+
+[atuin]
+subcommands = ["history", "import", "sync", "status", "search"]
+
+# ---------------------------------------------------------------------------
+# Everyday coreutils/search/shell tools an agent reaches for constantly. Added after an audit of
+# every [packages.*] section in setup.toml across all install methods (apt, apt-repo, archive,
+# binary, deb-github, deb-url, script, uv-tool, nvm), not just apt — the first pass of this
+# registry only looked at what ended up in tool-rules.md and missed real, installed CLIs like
+# rg/fd/mkdocs/rustup entirely. Most of these are flat (no subcommand tree): the risk lives in
+# flags, not subcommands (sed -i, find -delete, rsync --delete), so no_subcommands = true and the
+# LLM classifies the tool's default behavior as one unit.
+# ---------------------------------------------------------------------------
+
+[rg]
+no_subcommands = true
+
+[fd]
+no_subcommands = true
+
+[grep]
+no_subcommands = true
+
+[find]
+no_subcommands = true
+
+[sed]
+no_subcommands = true
+
+[awk]
+no_subcommands = true
+
+[xargs]
+no_subcommands = true
+
+[bash]
+no_subcommands = true
+
+[zsh]
+no_subcommands = true
+
+[eza]
+no_subcommands = true
+
+[fzf]
+no_subcommands = true
+
+[bat]
+no_subcommands = true
+
+[tree]
+no_subcommands = true
+
+[unzip]
+version_flag = "-v"
+no_subcommands = true
+
+[curl]
+no_subcommands = true
+
+[ssh]
+version_flag = "-V"
+no_subcommands = true
+
+[rsync]
+no_subcommands = true
+
+[node]
+no_subcommands = true
+
+[wezterm]
+# `wezterm cli <action>` has real per-action distinctions (list vs. send-text are very different
+# risk levels) but that's a 3rd invocation level this pipeline doesn't model — classified flat as
+# a conservative simplification rather than over-building for a niche, GUI-tagged tool.
+no_subcommands = true
+
+[mkdocs]
+subcommands = ["build", "serve", "gh-deploy", "new"]
+
+[gext]
+subcommands = ["list", "search", "show", "install", "uninstall", "enable", "disable", "update"]
+
+[rustup]
+subcommands = ["show", "toolchain", "target", "component", "update", "default", "override", "check"]
+
+[nvm]
+# Not a binary — nvm only exists as a shell function after sourcing nvm.sh, so `which nvm` and a
+# direct exec both fail. nvm_dir matches tasks/node.py's default (node.py reads it from
+# setup.toml's [packages.node].nvm_dir if that's ever changed from the default — update here too).
+shell_prefix = 'export NVM_DIR="$HOME/.local/share/nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+subcommands = [
+  "install", "uninstall", "use", "alias", "unalias", "list", "list-remote", "current",
+  "which", "run", "exec", "deactivate",
+]
+
+# ---------------------------------------------------------------------------
+# Base-system tools — ship with Ubuntu itself (coreutils/util-linux/diffutils/procps/tar/gzip/...),
+# not something power-user-linux-setup installs, so absent from setup.toml entirely. Audited via
+# `dpkg -L coreutils` etc. rather than working from memory, cross-checked against what's actually
+# on PATH. Not every binary in those packages is here — skipped the ones an agent essentially never
+# invokes directly (ptx, pinky, tsort, hostid, dircolors, csplit, and the whole ipc*/ns*/lsblk-style
+# low-level admin surface) in favor of the ones genuinely in an agent's everyday path, including a
+# few whose risk is easy to underestimate (`date -s` sets the clock; `su` is arbitrary-code-as-
+# another-user). All flat (no_subcommands) except tar, which has real archive-mode distinctions.
+# ---------------------------------------------------------------------------
+
+[cat]
+no_subcommands = true
+
+[cp]
+no_subcommands = true
+
+[mv]
+no_subcommands = true
+
+[rm]
+no_subcommands = true
+
+[mkdir]
+no_subcommands = true
+
+[rmdir]
+no_subcommands = true
+
+[touch]
+no_subcommands = true
+
+[chmod]
+no_subcommands = true
+
+[chown]
+no_subcommands = true
+
+[ln]
+no_subcommands = true
+
+[dd]
+no_subcommands = true
+
+[shred]
+no_subcommands = true
+
+[truncate]
+no_subcommands = true
+
+[tee]
+no_subcommands = true
+
+[mktemp]
+no_subcommands = true
+
+[install]
+no_subcommands = true
+
+[date]
+no_subcommands = true
+
+[id]
+no_subcommands = true
+
+[uname]
+no_subcommands = true
+
+[env]
+no_subcommands = true
+
+[kill]
+no_subcommands = true
+
+[pkill]
+no_subcommands = true
+
+[su]
+no_subcommands = true
+
+[mount]
+no_subcommands = true
+
+[umount]
+no_subcommands = true
+
+[gzip]
+no_subcommands = true
+
+[bzip2]
+no_subcommands = true
+
+[xz]
+no_subcommands = true
+
+[tar]
+# Not actually subcommand-based — -c/-x/-t are flags, not subcommands `tar -tvf --help` can query
+# individually (tar --help already dumps the full flag reference in one screen). Flat like unzip.
+no_subcommands = true
