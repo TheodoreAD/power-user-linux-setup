@@ -10,11 +10,13 @@
         <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
       
       
-        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/troubleshooting.html">
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/cli-allowlist.html">
       
       
-        <link rel="prev" href="./zensical.html">
+        <link rel="prev" href="./claude-code.html">
       
+      
+        <link rel="next" href="./wsl.html">
       
       
         
@@ -25,7 +27,7 @@
     
     
       
-        <title>Troubleshooting - Power User Linux Setup</title>
+        <title>CLI permission allowlist - Power User Linux Setup</title>
       
     
     
@@ -83,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#troubleshooting" class="md-skip">
+        <a href="#cli-permission-allowlist" class="md-skip">
           Skip to content
         </a>
       
@@ -117,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Troubleshooting
+              CLI permission allowlist
             
           </span>
         </div>
@@ -331,6 +333,8 @@
   
   
   
+    
+  
   
     
       
@@ -345,7 +349,7 @@
     
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="./ai.html" class="md-tabs__link">
           
   
@@ -389,8 +393,6 @@
   
   
   
-    
-  
   
     
       
@@ -411,7 +413,7 @@
     
     
     
-      <li class="md-tabs__item md-tabs__item--active">
+      <li class="md-tabs__item">
         <a href="./apt_packages.html" class="md-tabs__link">
           
   
@@ -1310,8 +1312,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -1325,19 +1329,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
         
           
-          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
             
   
   
@@ -1354,7 +1361,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_6">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1422,10 +1429,36 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="./cli-allowlist.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  CLI permission allowlist
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="cli-allowlist.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1440,6 +1473,143 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#architecture-extract-classify-review-apply" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Architecture: extract → classify → review → apply
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Architecture: extract → classify → review → apply">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#toolstoml-the-registry" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>tools.toml</code> — the registry
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#deterministic-extraction-has-more-sharp-edges-than-it-looks-like" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Deterministic extraction has more sharp edges than it looks like
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#classification-via-headless-claude" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Classification via headless Claude
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#review-the-human-gate" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Review — the human gate
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#render-apply-where-the-classified-data-goes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>render</code> / <code>apply</code> — where the classified data goes
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-confirmed-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        End-to-end confirmed live
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#retention-policy-note" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Retention policy note
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#operating-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Operating it
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#known-gaps-deliberately-not-built" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Known gaps / deliberately not built
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1573,10 +1743,8 @@
       
   
   
-    
   
   
-  
     
     
       
@@ -1596,22 +1764,19 @@
     
     
       
-        
-        
-      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" checked>
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
         
           
-          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="">
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
             
   
   
@@ -1628,7 +1793,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="true">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
           <label class="md-nav__title" for="__nav_8">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1777,36 +1942,10 @@
                 
   
   
-    
   
   
-  
-    <li class="md-nav__item md-nav__item--active">
-      
-      
-      
-      
-        
-      
-      
-        <label class="md-nav__link md-nav__link--active" for="__toc">
-          
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Troubleshooting
-
-    
-  </span>
-  
-  
-
-          <span class="md-nav__icon md-icon"></span>
-        </label>
-      
-      <a href="troubleshooting.html" class="md-nav__link md-nav__link--active">
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
         
   
   
@@ -1821,193 +1960,6 @@
   
 
       </a>
-      
-        
-
-
-<nav class="md-nav md-nav--secondary" aria-label="On this page">
-  
-  
-  
-    
-  
-  
-    <label class="md-nav__title" for="__toc">
-      <span class="md-nav__icon md-icon"></span>
-      On this page
-    </label>
-    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
-      
-        <li class="md-nav__item">
-  <a href="#hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Hardware sensors — fan and voltage monitoring on Gigabyte Z390
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="Hardware sensors — fan and voltage monitoring on Gigabyte Z390">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#what-works-out-of-the-box" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        What works out of the box
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#what-doesnt-work-fans-and-voltages" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        What doesn&rsquo;t work: fans and voltages
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fix-requires-reboot" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix (requires reboot)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#decision-2026-06-09" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Decision (2026-06-09)
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#grub-gpu-driver-conflicts-at-boot-nomodeset" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#fix-crlf-line-endings" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix CRLF line endings
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#ibus-ctrlshiftu-shortcut-conflict" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        IBus Ctrl+Shift+U shortcut conflict
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hdmi-audio-nvidia" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        HDMI audio (NVidia)
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="HDMI audio (NVidia)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Problem
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#root-cause" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Root cause
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#investigation-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Investigation steps
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#making-it-permanent" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Making it permanent
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
-  
-</li>
-      
-    </ul>
-  
-</nav>
-      
     </li>
   
 
@@ -2061,22 +2013,22 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390" class="md-nav__link">
+  <a href="#architecture-extract-classify-review-apply" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Hardware sensors — fan and voltage monitoring on Gigabyte Z390
+        Architecture: extract → classify → review → apply
       </span>
     </span>
   </a>
   
-    <nav class="md-nav" aria-label="Hardware sensors — fan and voltage monitoring on Gigabyte Z390">
+    <nav class="md-nav" aria-label="Architecture: extract → classify → review → apply">
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#what-works-out-of-the-box" class="md-nav__link">
+  <a href="#toolstoml-the-registry" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What works out of the box
+        <code>tools.toml</code> — the registry
       </span>
     </span>
   </a>
@@ -2084,10 +2036,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#what-doesnt-work-fans-and-voltages" class="md-nav__link">
+  <a href="#deterministic-extraction-has-more-sharp-edges-than-it-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        What doesn&rsquo;t work: fans and voltages
+        Deterministic extraction has more sharp edges than it looks like
       </span>
     </span>
   </a>
@@ -2095,10 +2047,10 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#fix-requires-reboot" class="md-nav__link">
+  <a href="#classification-via-headless-claude" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Fix (requires reboot)
+        Classification via headless Claude
       </span>
     </span>
   </a>
@@ -2106,10 +2058,32 @@
 </li>
         
           <li class="md-nav__item">
-  <a href="#decision-2026-06-09" class="md-nav__link">
+  <a href="#review-the-human-gate" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Decision (2026-06-09)
+        Review — the human gate
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#render-apply-where-the-classified-data-goes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>render</code> / <code>apply</code> — where the classified data goes
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#end-to-end-confirmed-live" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        End-to-end confirmed live
       </span>
     </span>
   </a>
@@ -2122,10 +2096,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#grub-gpu-driver-conflicts-at-boot-nomodeset" class="md-nav__link">
+  <a href="#retention-policy-note" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)
+        Retention policy note
       </span>
     </span>
   </a>
@@ -2133,10 +2107,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#fix-crlf-line-endings" class="md-nav__link">
+  <a href="#operating-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Fix CRLF line endings
+        Operating it
       </span>
     </span>
   </a>
@@ -2144,85 +2118,13 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#ibus-ctrlshiftu-shortcut-conflict" class="md-nav__link">
+  <a href="#known-gaps-deliberately-not-built" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        IBus Ctrl+Shift+U shortcut conflict
+        Known gaps / deliberately not built
       </span>
     </span>
   </a>
-  
-</li>
-      
-        <li class="md-nav__item">
-  <a href="#hdmi-audio-nvidia" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        HDMI audio (NVidia)
-      </span>
-    </span>
-  </a>
-  
-    <nav class="md-nav" aria-label="HDMI audio (NVidia)">
-      <ul class="md-nav__list">
-        
-          <li class="md-nav__item">
-  <a href="#problem" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Problem
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#root-cause" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Root cause
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#investigation-steps" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Investigation steps
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#fix" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Fix
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-          <li class="md-nav__item">
-  <a href="#making-it-permanent" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Making it permanent
-      </span>
-    </span>
-  </a>
-  
-</li>
-        
-      </ul>
-    </nav>
   
 </li>
       
@@ -2276,22 +2178,16 @@
       
         
       
-        
-      
-        
-      
-        
-      
     
     
     
     
       <li class="md-path__item">
-        <a href="./apt_packages.html" class="md-path__link">
+        <a href="./ai.html" class="md-path__link">
           
   
   <span class="md-ellipsis">
-    Reference
+    AI
   </span>
 
         </a>
@@ -2311,158 +2207,195 @@
   
 
 
-<h1 id="troubleshooting">Troubleshooting</h1>
-<h2 id="hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390">Hardware sensors — fan and voltage monitoring on Gigabyte Z390</h2>
-<p><strong>Board:</strong> Gigabyte Z390 GAMING X · <strong>Chip:</strong> ITE IT8628E at I/O port 0xa40</p>
-<h3 id="what-works-out-of-the-box">What works out of the box</h3>
-<p>Temperature data is available via two hwmon drivers loaded automatically:
-- <code>gigabyte_wmi</code> (hwmon2) — 6 system temps from BIOS WMI (VRM, PCH, etc.)
-- <code>coretemp</code> (hwmon3) — 7 readings: CPU Package + 6 individual cores</p>
-<p><code>sensors</code> shows all of these. Vitals reads from <code>/sys/class/hwmon/</code> and displays them.</p>
-<h3 id="what-doesnt-work-fans-and-voltages">What doesn&rsquo;t work: fans and voltages</h3>
-<p>The IT8628E SuperIO chip that reads fan headers and voltage rails is present at ISA
-port 0xa40, but the BIOS registers those ports in the ACPI namespace, blocking the
-<code>it87</code> kernel driver from claiming them:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># it87 finds the chip but can&#39;t register the port:
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>it87: Found IT8628E chip at 0xa40, revision 1
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>modprobe: ERROR: could not insert &#39;it87&#39;: Device or resource busy
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a># Other drivers also fail:
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>modprobe nct6775  → No such device
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>modprobe nct6683  → No such device
+<h1 id="cli-permission-allowlist">CLI permission allowlist</h1>
+<p>Claude Code (and similar agent harnesses) prompt for approval on most Bash commands. Most of what
+gets run in a typical session is safe — inspecting, listing, describing — and approving the same
+<code>kubectl get</code>/<code>git log</code>/<code>docker ps</code> shape of command over and over is pure friction. The fix isn&rsquo;t
+a hand-written list of &ldquo;safe commands&rdquo; (stale the moment a tool updates, and nobody keeps it in
+sync) — it&rsquo;s a small pipeline that regenerates the list from what&rsquo;s actually installed, classifies
+it with an LLM instead of guessing, and keeps a human in the loop before anything gets trusted.</p>
+<p>That pipeline lives in <code>cli-allowlist/</code> (tracked in git — this is original derived project config,
+not vendor material) and <code>tasks/allowlist.py</code> (<code>inv allowlist.*</code>). This page is the durable
+explanation of <em>why</em> it&rsquo;s built the way it is; the code docstrings cover the <em>how</em>.</p>
+<h2 id="architecture-extract-classify-review-apply">Architecture: extract → classify → review → apply</h2>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv allowlist.extract   deterministic, no LLM      captures --help text, version-gated
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv allowlist.classify  LLM (headless claude -p)    read_only / write / dangerous per subcommand
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv allowlist.review    human gate                  you look at what changed, mark it reviewed
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>inv allowlist.apply     deterministic, no LLM       merges reviewed rules into ~/.claude/settings.json
 </span></code></pre></div>
-<p><code>sensors-detect</code> does not find the chip because the ACPI port conflict prevents
-<code>it87</code> from loading even during detection.</p>
-<h3 id="fix-requires-reboot">Fix (requires reboot)</h3>
-<p>Add <code>acpi_enforce_resources=lax</code> to the GRUB kernel command line. This tells the
-kernel to allow hwmon drivers to claim I/O ports even if ACPI has registered them —
-safe on desktop boards, standard fix for this class of SuperIO conflict.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="s1">&#39;s/GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash&quot;/GRUB_CMDLINE_LINUX_DEFAULT=&quot;quiet splash acpi_enforce_resources=lax&quot;/&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span>/etc/default/grub
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>sudo<span class="w"> </span>update-grub
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="c1"># reboot</span>
-</span></code></pre></div>
-<p>After reboot, load the driver and make it persistent:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>modprobe<span class="w"> </span>it87
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sensors<span class="w">   </span><span class="c1"># should now show fan RPM and voltages from it8628-isa-0a40</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># If sensors still needs a label mapping, run: sudo sensors-detect</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;it87&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/modules-load.d/it87.conf
-</span></code></pre></div>
-<h3 id="decision-2026-06-09">Decision (2026-06-09)</h3>
-<p>Not applied. <code>acpi_enforce_resources=lax</code> is a GRUB change and the payoff (fans +
-voltages in Vitals) was judged not worth the reboot and boot-parameter risk for now.
-Vitals is configured to show temperatures only. Revisit if fan monitoring becomes
-important (e.g. before overclocking or in a hot environment).</p>
-<hr />
-<h2 id="grub-gpu-driver-conflicts-at-boot-nomodeset">GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)</h2>
-<p>Some machines (particularly with older NVIDIA or AMD discrete GPUs) show a blank screen or freeze during boot because the kernel tries to take over framebuffer mode before GPU drivers are loaded. The fix is <code>nomodeset</code>, which tells the kernel not to set video modes — the GPU driver handles it instead.</p>
-<p><strong>Only apply this if you are experiencing boot issues.</strong> On most modern hardware with Ubuntu 24.04 it is not needed.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="s1">&#39;s~GRUB_CMDLINE_LINUX_DEFAULT=.*~GRUB_CMDLINE_LINUX_DEFAULT=&quot;nomodeset&quot;~&#39;</span><span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span>/etc/default/grub
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>sudo<span class="w"> </span>update-grub
-</span></code></pre></div>
-<p>Reboot to apply. The only downside is cosmetic: no splash screen, verbose boot output.</p>
-<p>To undo, restore <code>GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"</code> and run <code>sudo update-grub</code> again.</p>
-<h2 id="fix-crlf-line-endings">Fix CRLF line endings</h2>
-<p>If you receive files from Windows machines, they may have <code>\r\n</code> line endings that break shell scripts and tools. <code>dos2unix</code> is installed by default in this setup.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Check how many files have CRLF</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>file<span class="w"> </span>-k<span class="w"> </span>--<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>CRLF<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="c1"># Fix all files recursively</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>dos2unix
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="c1"># After fixing, clean up stale permission bits if needed</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>chmod<span class="w"> </span>go-w<span class="w"> </span>-R<span class="w"> </span>*
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>sudo<span class="w"> </span>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>chmod<span class="w"> </span>a-x
-</span></code></pre></div>
-<h2 id="ibus-ctrlshiftu-shortcut-conflict">IBus Ctrl+Shift+U shortcut conflict</h2>
-<p>On Ubuntu with the IBus input method, <code>Ctrl+Shift+U</code> is bound to &ldquo;Unicode code point input&rdquo; by default. This conflicts with some terminal workflows and applications.</p>
-<p>To disable it:</p>
+<p>Each stage is independently re-runnable and cheap to re-run when nothing changed — that&rsquo;s the
+point. <code>extract</code> is skipped per-tool when <code>--version</code> output hasn&rsquo;t changed; <code>classify</code> is skipped
+per-tool when the extracted help text hasn&rsquo;t changed (content-hash-gated); <code>apply</code> is a no-op when
+the computed rule set already matches what&rsquo;s live. A routine re-run after <code>apt upgrade</code> costs
+close to nothing and makes zero LLM calls unless a tool&rsquo;s actual command surface changed.</p>
+<h3 id="toolstoml-the-registry"><code>tools.toml</code> — the registry</h3>
+<p><code>cli-allowlist/tools.toml</code> lists every tool <code>extract</code> probes, one <code>[tool]</code> section per binary.
+Most CLIs are <code>&lt;tool&gt; &lt;subcommand&gt; --help</code> cobra/click/argparse programs and need no special
+handling, but the registry has escape hatches for the ones that aren&rsquo;t, discovered by testing, not
+guessed:</p>
+<ul>
+<li><strong><code>help_flag</code></strong> — override the default <code>--help</code>. <code>git</code> uses <code>-h</code> instead: see below.</li>
+<li><strong><code>help_style = "prefix"</code></strong> — some tools put the flag <em>before</em> the subcommand
+  (<code>go help list</code>, not <code>go list --help</code> — the latter is just a one-line stub pointing at the
+  former). Only <code>go</code> needs this so far.</li>
+<li><strong><code>no_subcommands</code></strong> — flat tools (coreutils, <code>jq</code>, <code>curl</code>, <code>rsync</code>, <code>bash</code>, <code>zsh</code>&hellip;) where the
+  risk lives in flags, not a subcommand tree. Classified as one unit.</li>
+<li><strong><code>skip_interactive</code></strong> — TUI-only tools (<code>k9s</code>, <code>vim</code>) with no non-interactive surface to
+  classify at all.</li>
+<li><strong><code>shell_prefix</code></strong> — for tools that aren&rsquo;t binaries. <code>nvm</code> only exists as a shell function after
+  sourcing <code>nvm.sh</code>; <code>which nvm</code> fails and a direct exec fails. Extraction instead runs
+  <code>bash -c "&lt;shell_prefix&gt; &amp;&amp; nvm &lt;args&gt;"</code>.</li>
+<li><strong><code>version_flag</code></strong> — several tools don&rsquo;t use <code>--version</code>: <code>kubectl</code> needs <code>version --client</code>,
+  <code>helm</code> needs <code>version --short</code>, <code>go</code> needs <code>version</code>, <code>tmux</code> needs <code>-V</code>, <code>ssh</code>/<code>unzip</code> need
+  <code>-V</code>/<code>-v</code>. Guessed wrong for all of these on the first pass; caught by actually running each one
+  and reading the output, not by assuming GNU-style conventions apply everywhere.</li>
+</ul>
+<p>Coverage isn&rsquo;t limited to what <code>setup.toml</code> installs — it also includes the base system
+(coreutils, util-linux, diffutils, procps, tar/gzip/bzip2/xz), audited via <code>dpkg -L coreutils</code> etc.
+rather than from memory, since an agent reaches for <code>cat</code>/<code>cp</code>/<code>rm</code>/<code>dd</code> just as often as anything
+PULSE explicitly installs.</p>
+<h3 id="deterministic-extraction-has-more-sharp-edges-than-it-looks-like">Deterministic extraction has more sharp edges than it looks like</h3>
+<p>Two real, empirically-confirmed problems, not hypothetical ones:</p>
 <ol>
-<li>Run <code>ibus-setup</code> (or open IBus Preferences from the system tray)</li>
-<li>Go to the <strong>Emoji</strong> tab</li>
-<li>Find <strong>Unicode code point:</strong> and click the <code>...</code> button</li>
-<li>Click <strong>Delete</strong>, then <strong>OK</strong></li>
-<li>Close IBus Preferences</li>
+<li><strong>A tool&rsquo;s <code>--help</code> can depend on a separately-installed package.</strong> <code>git status --help</code>
+   renders through the system <code>man</code> command, which needs the <code>git-man</code> package. It happened to be
+   installed on the machine this was built on, which made the bug invisible until tested with a
+   stripped environment. Fixed by using <code>git -h</code> instead — a self-contained synopsis with no
+   package dependency. <code>cli-allowlist/check_man_deps.py</code> runs every registered tool&rsquo;s help
+   invocation under <code>strace -f -e trace=execve</code> and checks for a child <code>exec</code> of <code>/usr/bin/man</code> —
+   the only reliable way to tell &ldquo;renders like a man page&rdquo; (<code>gcloud</code>, which mimics man&rsquo;s
+   NAME/SYNOPSIS/DESCRIPTION layout with its own self-contained renderer, no <code>man</code> involved) apart
+   from &ldquo;actually shells out to man&rdquo; (<code>git</code>, the one real case found so far). Re-run it
+   (<code>python3 cli-allowlist/check_man_deps.py</code>) after registering a new tool.</li>
+<li><strong>Extraction must be portable, not just correct on the machine that wrote it.</strong> <code>PAGER</code>,
+   <code>MANPAGER</code>, <code>GIT_PAGER</code>, and <code>BROWSER</code> are neutralized (<code>cat</code>/<code>true</code>) for every extraction call
+   — the actual defense here isn&rsquo;t &ldquo;nothing tries to page or open a browser,&rdquo; it&rsquo;s that the
+   captured text can&rsquo;t depend on this machine&rsquo;s interactive shell configuration.</li>
 </ol>
-<p>The shortcut is now free for other uses.</p>
-<h2 id="hdmi-audio-nvidia">HDMI audio (NVidia)</h2>
-<h3 id="problem">Problem</h3>
-<p>No audio output when using a TV or monitor connected via HDMI to an NVidia GPU, even
-though video works fine. The TV works correctly with other machines.</p>
-<h3 id="root-cause">Root cause</h3>
-<p>The NVidia HDMI audio device is a separate PCI function (<code>01:00.1</code>) from the GPU
-(<code>01:00.0</code>). It exposes audio capability to the OS via ELD (EDID-Like Data), which
-the GPU driver reads from the connected display&rsquo;s EDID and passes to the HDA audio
-driver. If the audio PCI function initializes before the GPU driver has finished
-negotiating the HDMI link, it misses the ELD handoff and sees no monitor.</p>
-<p>You can confirm this is the issue:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>grep<span class="w"> </span>-h<span class="w"> </span><span class="s1">&#39;monitor_present\|eld_valid&#39;</span><span class="w"> </span>/proc/asound/card2/eld*
+<h3 id="classification-via-headless-claude">Classification via headless Claude</h3>
+<p><code>classify</code> shells out to the <code>claude</code> CLI already installed on this machine (<code>-p</code>/<code>--print</code>,
+<code>--model haiku</code>, <code>--output-format json</code>, <code>--json-schema</code> for enforced structure) rather than
+standing up separate Anthropic API billing. This was the answer to &ldquo;how do you automate the LLM
+judgment call without new infrastructure&rdquo;: reuse what&rsquo;s already paid for and authenticated.</p>
+<p>Things that weren&rsquo;t obvious until tested:</p>
+<ul>
+<li><strong><code>--bare</code> cannot be used.</strong> It restricts auth to <code>ANTHROPIC_API_KEY</code>/<code>apiKeyHelper</code> only — &ldquo;OAuth
+  and keychain are never read&rdquo; per its own <code>--help</code> text — and this account is logged in via
+  OAuth, so <code>--bare</code> calls fail outright with &ldquo;Not logged in&rdquo;. Isolation from this repo&rsquo;s own
+  <code>.claude/</code> instead rests on running with <code>cwd</code> pointed at a scratch directory outside the repo
+  entirely, plus <code>--disallowedTools</code> covering every file/exec/subagent-spawning tool as a backstop.</li>
+<li><strong><code>--json-schema</code> output lands in <code>structured_output</code> at the top level of the response envelope</strong>,
+  not nested inside <code>result</code> as text (that field is just the model&rsquo;s natural-language summary).</li>
+<li><strong><code>claude -p</code> waits ~3s for stdin and prints a warning that breaks JSON parsing</strong> unless stdin is
+  explicitly closed (<code>stdin=subprocess.DEVNULL</code>).</li>
+<li><strong>A single flat &ldquo;classify this whole tool as one thing&rdquo; prompt is genuinely ambiguous.</strong> The
+  first attempt used a heading literally named <code>*</code> for <code>no_subcommands</code> tools; the model read that
+  as &ldquo;find distinct things to classify&rdquo; and broke <code>nuitka --help</code> into per-flag verdicts
+  (<code>--mode</code>, <code>--run</code>, &hellip;) instead of one verdict for the tool. Fixed by asking explicitly for a
+  single entry under a fixed key (<code>_default_</code>), with a conservative fallback (take the most
+  cautious of whatever came back) if a future tool&rsquo;s help text confuses it the same way again.</li>
+<li><strong>Cost is dominated by fixed per-call overhead, not prompt size.</strong> A single trivial 2-item
+  classification call cost ~$0.026 and ~12s at Haiku — a real tool with 15-25 subcommands costs
+  roughly the same ballpark. Classifying the ~70 tools not already covered by a community-sourced
+  seed (see below) cost under $2 total, one time; steady-state re-runs are close to free because of
+  the content-hash gate.</li>
+<li><strong>A deterministic safety backstop runs after every LLM call, at no extra cost</strong>: any subcommand
+  the model marks <code>read_only</code> gets re-checked against a small set of dangerous-sounding verb tokens
+  in the subcommand <em>name itself</em> (<code>delete</code>, <code>destroy</code>, <code>rm</code>, <code>force</code>, <code>run</code>, <code>exec</code>, &hellip;) — a
+  match downgrades it to <code>needs_review</code> regardless of what the model said. <code>run</code>/<code>exec</code> were added
+  to this list after the model classified <code>nvm run</code>/<code>nvm exec</code> as <code>read_only</code>, which is wrong —
+  they execute arbitrary commands. (This does cause one known, accepted false positive: <code>gh run</code>
+  — the noun, GitHub Actions run history, not a verb — also gets flagged. Harmless: it just means
+  that one entry falls back to a normal prompt instead of being pre-approved, same as any other
+  <code>needs_review</code> entry.)</li>
+</ul>
+<p>Six tools (<code>git</code>*, <code>gh</code>, <code>kubectl</code>, <code>helm</code>, <code>docker</code>, <code>terraform</code>, <code>gcloud</code>) were seeded from a
+cloned community allowlist repo rather than classified fresh — <code>source: "community"</code> in
+<code>rules.json</code> — on the theory that a well-covered, actively-maintained community list is a fine
+starting point for stable, widely-used tools. (* <code>git</code> was later reclassified via LLM anyway,
+after switching its <code>help_flag</code> to <code>-h</code> changed the extracted text enough to invalidate the seed&rsquo;s
+hash — an expected one-time cost of that fix, not a bug.)</p>
+<h3 id="review-the-human-gate">Review — the human gate</h3>
+<p><code>inv allowlist.review</code> shows what&rsquo;s new or changed since the last reviewed snapshot and, on
+confirmation, marks a tool <code>reviewed: true</code>. <strong>Nothing downstream trusts an unreviewed entry</strong> —
+<code>render</code> and <code>apply</code> silently exclude any tool that hasn&rsquo;t been through this. This is a
+per-<em>tool</em> gate, not per-subcommand: there&rsquo;s no mechanism (yet) to individually override a single
+subcommand&rsquo;s classification without re-running the LLM step, which is why <code>needs_review</code> entries
+stay excluded even after their tool is marked reviewed.</p>
+<h3 id="render-apply-where-the-classified-data-goes"><code>render</code> / <code>apply</code> — where the classified data goes</h3>
+<p><code>render --target=claude|copilot</code> is pure, deterministic, output-only: turns the reviewed subset of
+<code>rules.json</code> into Claude <code>Bash(...)</code> glob-prefix rules or Copilot <code>chat.tools.terminal.autoApprove</code>
+regex rules. It never writes anywhere by itself.</p>
+<p><code>apply</code> (Claude only, so far) is what actually makes the rules take effect: it merges the
+<code>allow</code>/<code>ask</code> output into <strong><code>~/.claude/settings.json</code></strong>, the global per-user config that applies to
+every project on this machine. Two things make this safe to run repeatedly without either
+clobbering your own settings or leaving stale rules behind:</p>
+<ol>
+<li><strong>Only the <code>permissions</code> block is ever touched.</strong> Every other key — <code>theme</code>, <code>effortLevel</code>,
+   <code>cleanupPeriodDays</code>, anything else you or a future you adds — is read, kept, and written back
+   unchanged.</li>
+<li><strong>A local manifest tracks exactly which rule strings this pipeline wrote last time</strong>
+   (<code>~/.local/state/pulse/claude-settings-applied.json</code> — deliberately <em>not</em> repo content, unlike
+   everything under <code>cli-allowlist/</code>, since it&rsquo;s machine-local mutation-tracking state for an
+   out-of-repo file, the same category as <code>~/.config/pulse/identity.toml</code>). On each run, only rule
+   strings present in that manifest are eligible for removal; anything else already in your
+   <code>permissions.allow</code>/<code>ask</code> — a rule you added by hand — is never touched, and a rule this
+   pipeline generated before but no longer does (a tool&rsquo;s classification changed) gets cleanly
+   removed instead of left orphaned. A <code>.json.bak</code> is written alongside the settings file before
+   every real change.</li>
+</ol>
+<p>Verified directly, not just by reading the code: idempotent re-run is a true no-op; a manually
+added rule survives repeated <code>apply</code> runs untouched; a tool&rsquo;s classification changing tiers (tested
+by flipping one back and forth) correctly moves its rule between <code>allow</code> and <code>ask</code> with an accurate
+diff report. (The first version of the diff report was itself wrong — it compared the flattened
+union of both arrays, so a rule moving from <code>allow</code> to <code>ask</code> printed as <code>+0 -0</code>. Caught by testing
+the actual move, not by reading the diff logic and assuming it was right.)</p>
+<p>Both tiers always still let you approve interactively — <code>write</code> and <code>dangerous</code> classifications
+render as <code>ask</code> rules, never <code>deny</code>. This was a deliberate call, not an oversight: a PreToolUse
+hook that intercepts and blocks specific patterns (the approach a couple of community repos take,
+and what Anthropic&rsquo;s own docs suggest as the workaround for prefix-glob allowlisting&rsquo;s known
+fragility) was considered and rejected — it changes the agent&rsquo;s control flow more invasively than
+a declarative <code>ask</code> rule, for a benefit (catching a dangerous command <em>before</em> Claude even proposes
+it, vs. after) that didn&rsquo;t seem worth the added complexity of a custom interception script. What
+matters is that dangerous-tier commands still surface a real, interactively-approvable prompt
+instead of running silently — plain <code>ask</code> rules already get that.</p>
+<h3 id="end-to-end-confirmed-live">End-to-end confirmed live</h3>
+<p>This isn&rsquo;t just tested in isolation — after <code>apply</code>, the actual rules were exercised in a live
+Claude Code session: <code>allow</code>-tier commands (<code>git status</code>, <code>cat</code>, <code>jq --version</code>) ran without any
+visible prompt; <code>ask</code>-tier commands (<code>rm --help</code>, <code>git add --help</code>, <code>npm install --help</code> — chosen
+so they&rsquo;re harmless to execute either way) triggered real permission prompts. Confirmed by the
+user watching the session, since a silent auto-approval and an instantly-approved prompt look
+identical from the agent&rsquo;s own side.</p>
+<h2 id="retention-policy-note">Retention policy note</h2>
+<p>While reviewing the global <code>~/.claude/settings.json</code> for this work, <code>cleanupPeriodDays</code> (governs
+how long session transcripts, <code>tasks/</code>, <code>shell-snapshots/</code>, and <code>backups/</code> under <code>~/.claude/</code> are
+kept before cleanup) was checked and deliberately left at <strong>365</strong> — the default is 30; other users
+in the wild range from 60 to effectively-unlimited (99999). Not a disk problem at the time this was
+reviewed (~52M total under <code>~/.claude/</code>, oldest transcript only a couple of days old on a
+freshly-set-up install) — this was a preference call, not a fix.</p>
+<h2 id="operating-it">Operating it</h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># after installing a new tool, or periodically (e.g. after apt upgrade):</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>allowlist.extract
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>allowlist.classify
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>allowlist.review<span class="w">      </span><span class="c1"># look at what&#39;s new/changed, approve it</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>inv<span class="w"> </span>allowlist.apply<span class="w">       </span><span class="c1"># merge into ~/.claude/settings.json</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>inv<span class="w"> </span>allowlist.status<span class="w">                        </span><span class="c1"># what&#39;s tracked, stale, or still unreviewed</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>inv<span class="w"> </span>allowlist.render<span class="w"> </span>--target<span class="o">=</span>copilot<span class="w">       </span><span class="c1"># Copilot&#39;s format instead — still print-only, no apply yet</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>python3<span class="w"> </span>cli-allowlist/check_man_deps.py<span class="w">     </span><span class="c1"># re-check for new man-page dependencies</span>
 </span></code></pre></div>
-<p>A broken state shows only:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>eld_valid       0
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>monitor_present 0
-</span></code></pre></div>
-<p>A healthy state also includes <code>eld_valid 1</code> and <code>monitor_present 1</code> in the output.
-<code>monitor_present 0</code> on all entries means the HDA audio driver has no idea a display
-is connected, so PipeWire marks the HDMI sink as <strong>suspended</strong> and audio never plays.</p>
-<p>Note: there are many ELD entries (one per pin/device combination). The active one
-after the fix will be whichever pin the display is actually connected to — not
-necessarily <code>eld#0.0</code>. Check all of them with the grep above.</p>
-<h3 id="investigation-steps">Investigation steps</h3>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Confirm PipeWire is running and HDMI is the default sink</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>wpctl<span class="w"> </span>status
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># Check the sink state — &quot;suspended&quot; here is the symptom</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>pw-cli<span class="w"> </span>info<span class="w"> </span>&lt;sink-id&gt;<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>state
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># Check ELD data for all HDMI ports on the NVidia card</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>cat<span class="w"> </span>/proc/asound/card2/eld*
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a><span class="c1"># Confirm the GPU/audio PCI functions</span>
-</span><span id="__span-7-11"><a id="__codelineno-7-11" name="__codelineno-7-11" href="#__codelineno-7-11"></a>lspci<span class="w"> </span>-k<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-A3<span class="w"> </span><span class="s1">&#39;VGA\|Audio&#39;</span>
-</span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># 01:00.0  VGA  — NVidia GA104, driver: nvidia</span>
-</span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1"># 01:00.1  Audio — NVidia GA104 HDA, driver: snd_hda_intel</span>
-</span></code></pre></div>
-<h3 id="fix">Fix</h3>
-<p>Force the NVidia HDMI audio PCI function to re-initialize, which causes it to
-re-read the ELD from the running GPU driver:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo 1 &gt; /sys/bus/pci/devices/0000:01:00.1/remove&quot;</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo 1 &gt; /sys/bus/pci/rescan&quot;</span>
-</span></code></pre></div>
-<p>No reboot needed. Video is unaffected (that&rsquo;s <code>01:00.0</code>; this only touches <code>01:00.1</code>).</p>
-<p>Verify it worked:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>grep<span class="w"> </span>-h<span class="w"> </span><span class="s1">&#39;monitor_present\|eld_valid&#39;</span><span class="w"> </span>/proc/asound/card2/eld*
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="c1"># should include:</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a><span class="c1"># eld_valid       1</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="c1"># monitor_present 1</span>
-</span></code></pre></div>
-<p>PipeWire will now see the HDMI sink as active. The sink will still show as &ldquo;suspended&rdquo;
-when idle — that is normal. It will activate when audio plays.</p>
-<h3 id="making-it-permanent">Making it permanent</h3>
-<p>This fix does <strong>not</strong> survive a reboot. The PCI remove/rescan is a one-shot operation.
-If the problem recurs after rebooting, a systemd service can automate it:</p>
-<div class="language-ini highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># /etc/systemd/system/nvidia-hdmi-audio-fix.service</span>
-</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a><span class="k">[Unit]</span>
-</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a><span class="na">Description</span><span class="o">=</span><span class="s">Re-initialize NVidia HDMI audio after GPU driver loads</span>
-</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a><span class="na">After</span><span class="o">=</span><span class="s">systemd-modules-load.service nvidia-persistenced.service</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a><span class="na">Wants</span><span class="o">=</span><span class="s">sound.target</span>
-</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>
-</span><span id="__span-10-7"><a id="__codelineno-10-7" name="__codelineno-10-7" href="#__codelineno-10-7"></a><span class="k">[Service]</span>
-</span><span id="__span-10-8"><a id="__codelineno-10-8" name="__codelineno-10-8" href="#__codelineno-10-8"></a><span class="na">Type</span><span class="o">=</span><span class="s">oneshot</span>
-</span><span id="__span-10-9"><a id="__codelineno-10-9" name="__codelineno-10-9" href="#__codelineno-10-9"></a><span class="na">ExecStart</span><span class="o">=</span><span class="s">/bin/sh -c &quot;echo 1 &gt; /sys/bus/pci/devices/0000:01:00.1/remove&quot;</span>
-</span><span id="__span-10-10"><a id="__codelineno-10-10" name="__codelineno-10-10" href="#__codelineno-10-10"></a><span class="na">ExecStart</span><span class="o">=</span><span class="s">/bin/sh -c &quot;echo 1 &gt; /sys/bus/pci/rescan&quot;</span>
-</span><span id="__span-10-11"><a id="__codelineno-10-11" name="__codelineno-10-11" href="#__codelineno-10-11"></a><span class="na">RemainAfterExit</span><span class="o">=</span><span class="s">yes</span>
-</span><span id="__span-10-12"><a id="__codelineno-10-12" name="__codelineno-10-12" href="#__codelineno-10-12"></a>
-</span><span id="__span-10-13"><a id="__codelineno-10-13" name="__codelineno-10-13" href="#__codelineno-10-13"></a><span class="k">[Install]</span>
-</span><span id="__span-10-14"><a id="__codelineno-10-14" name="__codelineno-10-14" href="#__codelineno-10-14"></a><span class="na">WantedBy</span><span class="o">=</span><span class="s">multi-user.target</span>
-</span></code></pre></div>
-<p>Enable with:</p>
-<div class="language-bash highlight"><pre><span></span><code><span id="__span-11-1"><a id="__codelineno-11-1" name="__codelineno-11-1" href="#__codelineno-11-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span><span class="nb">enable</span><span class="w"> </span>--now<span class="w"> </span>nvidia-hdmi-audio-fix.service
-</span></code></pre></div>
-<p>System details at time of writing: NVidia GA104 (RTX 3070 Ti), proprietary driver, <code>snd_hda_intel</code> on PCI <code>01:00.1</code>, PipeWire 1.0.5 with WirePlumber.</p>
+<h2 id="known-gaps-deliberately-not-built">Known gaps / deliberately not built</h2>
+<ul>
+<li><strong><code>apply</code> only targets Claude&rsquo;s <code>settings.json</code>.</strong> Copilot&rsquo;s <code>chat.tools.terminal.autoApprove</code>
+  still needs manual copy-paste from <code>render --target=copilot</code>.</li>
+<li><strong>No sandboxing integration</strong> (<code>/sandbox</code>, OS-level filesystem/network isolation) — a stronger,
+  orthogonal control considered out of scope for this pass.</li>
+<li><strong>No PreToolUse hook</strong> — see the <code>render</code>/<code>apply</code> section above for why this was a deliberate
+  rejection, not a TODO.</li>
+<li><strong>No subcommand-level review override</strong> — <code>needs_review</code> entries (currently just <code>nvm run</code> /
+  <code>nvm exec</code>) stay excluded from both <code>allow</code> and <code>ask</code> until the underlying classification changes
+  and gets re-run through the LLM step; there&rsquo;s no way to manually promote one without that.</li>
+</ul>
 
 
 
@@ -2502,7 +2435,7 @@ If the problem recurs after rebooting, a systemd service can automate it:</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="./zensical.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Zensical (docs site engine)">
+          <a href="./claude-code.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Claude Code environment">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -2512,11 +2445,27 @@ If the problem recurs after rebooting, a systemd service can automate it:</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                Zensical (docs site engine)
+                Claude Code environment
               </div>
             </div>
           </a>
         
+        
+          
+          <a href="./wsl.html" class="md-footer__link md-footer__link--next" aria-label="Next: WSL">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                WSL
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
         
       </nav>
     
