@@ -340,6 +340,12 @@ Both default to yes on Enter, so `yes | inv wsl.install` still works non-interac
 need it scripted; a genuinely non-interactive invocation (piped, cron, CI) skips the prompts
 entirely and behaves as `--dns=auto` always has (try public DNS, fall back automatically).
 
+Summaries, warnings, doc pointers, and these prompts all render as bordered blocks — via
+`tasks/ui.py`, a small formatting library (`ui.block`/`ui.note`/`ui.warn`/`ui.ask`) that's what
+actually makes them stand out from the apt/dpkg/curl/gpg output scrolling past in the same run.
+Terse per-package status lines (`[gh] repo:ok`) are deliberately left alone — they're meant to
+blend in with everything else's output, not compete with it.
+
 ### "next steps" reporting
 
 Both `inv wsl.install` and `inv setup` end by calling `next_steps.print_next_steps()` — it checks
