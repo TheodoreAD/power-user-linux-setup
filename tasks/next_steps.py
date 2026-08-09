@@ -4,7 +4,7 @@ import shutil
 import subprocess
 from pathlib import Path
 
-from . import git, ssh, util
+from . import git, ssh, ui, util
 
 _IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
 
@@ -83,51 +83,62 @@ def print_next_steps(extra_note: str | None = None) -> None:
     In tasks/next_steps.py rather than tasks/util.py because it needs to check git/ssh state —
     both of those import util, so util importing them back would be circular.
     """
-    print("\n[next steps]")
-
     zsh_path = shutil.which("zsh")
     current_shell = _current_shell()
     # Name-based, not exact-path: a machine can have more than one zsh on disk (e.g. an apt one
     # at /usr/bin/zsh plus another earlier on PATH) — what matters is the registered shell is
     # *a* zsh, not that it's byte-for-byte the one `shutil.which` happens to find right now.
     if zsh_path and Path(current_shell).name != "zsh":
-        print(f"  Your login shell isn't zsh yet (currently: {current_shell or 'unknown'}).")
-        print("  zsh.set_default_shell just tried to set it — if that succeeded, close this")
-        print("  terminal, open a new one, and re-run this command to continue.")
-        print(f"  If it's still not zsh after that, run: sudo usermod -s {zsh_path} $USER")
+        ui.block(
+            f"Your login shell isn't zsh yet (currently: {current_shell or 'unknown'}).",
+            "zsh.set_default_shell just tried to set it — if that succeeded, close this "
+            "terminal, open a new one, and re-run this command to continue.",
+            f"If it's still not zsh after that, run: sudo usermod -s {zsh_path} $USER",
+            label="next steps",
+        )
         return
 
     if not _IDENTITY_PATH.exists():
-        print(f"  1. cp config/identity.toml.example {_IDENTITY_PATH}")
-        print("     — edit it with your name/email/GitHub account details")
-        print("  2. Then re-run this command to continue.")
+        ui.block(
+            f"1. cp config/identity.toml.example {_IDENTITY_PATH}",
+            "   — edit it with your name/email/GitHub account details",
+            "2. Then re-run this command to continue.",
+            label="next steps",
+        )
         return
 
     identity = util.load_identity()
 
     if not _git_settings_applied() or not _git_profiles_applied(identity):
-        print("  Run: inv git.configure git.settings")
+        ui.block("Run: inv git.configure git.settings", label="next steps")
         return
 
     missing_keys = _missing_ssh_keys(identity)
     if missing_keys:
-        print(f"  SSH key(s) missing for: {', '.join(missing_keys)}")
-        print("  Run: inv ssh.keys   (prompts for a passphrase per key)")
+        ui.block(
+            f"SSH key(s) missing for: {', '.join(missing_keys)}",
+            "Run: inv ssh.keys   (prompts for a passphrase per key)",
+            label="next steps",
+        )
         return
 
     if not _ssh_config_applied(identity):
-        print("  Run: inv ssh.configure")
+        ui.block("Run: inv ssh.configure", label="next steps")
         return
 
     if not _ssh_keys_loaded():
-        print("  SSH keys aren't loaded into the agent yet.")
-        print("  Run: inv ssh.add")
+        ui.block(
+            "SSH keys aren't loaded into the agent yet.",
+            "Run: inv ssh.add",
+            label="next steps",
+        )
         return
 
     if _gh_authenticated() is False:
-        print("  gh CLI is installed but not authenticated. Run: gh auth login")
+        ui.block("gh CLI is installed but not authenticated. Run: gh auth login", label="next steps")
         return
 
-    print("  Nothing left that's automatable.")
+    lines = ["Nothing left that's automatable."]
     if extra_note:
-        print(f"  Reminder: {extra_note}")
+        lines.append(f"Reminder: {extra_note}")
+    ui.note(*lines)
