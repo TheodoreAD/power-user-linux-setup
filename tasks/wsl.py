@@ -4,7 +4,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import apt, node, python, system, tools, util, zsh
+from . import apt, next_steps, node, python, system, tools, util, zsh
 
 _WSL_CONF   = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
@@ -485,7 +485,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     if docker:
         print("[wsl.install] --docker: run `inv docker.configure` once systemd is confirmed live (`inv wsl.check`).")
 
-    util.print_next_steps(
+    next_steps.print_next_steps(
         extra_note="Install a Nerd Font on the Windows side for Powerlevel10k icons to render in "
         "Windows Terminal — see docs/wsl.md."
     )

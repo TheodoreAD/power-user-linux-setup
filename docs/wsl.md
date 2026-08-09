@@ -342,15 +342,19 @@ entirely and behaves as `--dns=auto` always has (try public DNS, fall back autom
 
 ### "next steps" reporting
 
-Both `inv wsl.install` and `inv setup` end by calling `util.print_next_steps()` — it checks real
-state (current login shell, whether `~/.config/pulse/identity.toml` exists) rather than a stored
-"did we already tell you" flag, and prints the single next thing to do:
+Both `inv wsl.install` and `inv setup` end by calling `next_steps.print_next_steps()` — it checks
+real state rather than a stored "did we already tell you" flag, and prints the single next thing
+to do:
 
 1. If the login shell isn't zsh yet, tells you to open a new terminal (or, if `usermod` failed,
    the exact command to run by hand) and re-run.
 2. Otherwise, if `~/.config/pulse/identity.toml` doesn't exist, tells you to copy it from the
-   example and fill it in, then which `inv git.*`/`inv ssh.*` tasks to run next.
-3. Otherwise, nothing left that's automatable — just the Windows-side Nerd Font reminder (see
+   example and fill it in, then re-run.
+3. Otherwise, walks the `inv git.*`/`inv ssh.*` chain one command at a time — global git settings
+   applied? per-directory git profiles set up? an SSH key present for every `identity.toml` email?
+   `~/.ssh/config` written? keys loaded into the agent? `gh` authenticated (only checked if `gh`
+   is actually installed)?
+4. Otherwise, nothing left that's automatable — just the Windows-side Nerd Font reminder (see
    [Fonts](#fonts) below; this one genuinely can't be checked or done from inside WSL).
 
 Safe to re-run after doing whatever it suggests — it's checking, not remembering.
