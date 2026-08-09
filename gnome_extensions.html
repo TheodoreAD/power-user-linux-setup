@@ -2467,13 +2467,13 @@ and run <code>inv gnome.extensions</code> to install and activate. Currently 12 
 <td><code>tilingshell@ferrarodomenico.com</code></td>
 <td><a href="https://extensions.gnome.org/extension/7065/">#7065</a></td>
 <td><code>gnome-ext-tiling-shell</code></td>
-<td>Snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native. <code>inv gnome.extensions</code> auto-disables <code>tiling-assistant@ubuntu.com</code> (confirmed conflict on fresh Ubuntu 24.04 installs — gsettings key collision).</td>
+<td>Snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native. <code>inv gnome.extensions</code> auto-disables <code>tiling-assistant@ubuntu.com</code> (confirmed conflict on fresh Ubuntu 24.04 installs — gsettings key collision). Its own <code>override-alt-tab</code> setting conflicts with AATWS (see below) and is disabled via dconf.</td>
 </tr>
 <tr>
 <td><code>advanced-alt-tab@G-dH.github.com</code></td>
 <td><a href="https://extensions.gnome.org/extension/4412/">#4412</a></td>
 <td><code>gnome-ext-aatws</code></td>
-<td>Replaces Alt+Tab/Super+Tab with a searchable, filterable switcher — type to find running windows by title; actively maintained for GNOME 46–50. Replaces Switcher (maintainer inactive).</td>
+<td>Replaces Alt+Tab/Super+Tab with a searchable, filterable switcher — type to find running windows by title; actively maintained for GNOME 46–50. Replaces Switcher (maintainer inactive). Tiling Shell&rsquo;s <code>override-alt-tab</code> (default on) monkey-patches the same native <code>WindowSwitcherPopup.show</code> and crashes it with <code>TypeError: this._switcherList is null</code>, breaking Alt+Tab entirely — confirmed conflict, fixed by setting <code>gnome-ext-tiling-shell</code>&rsquo;s dconf <code>override-alt-tab</code> to <code>false</code> in <code>setup.toml</code>.</td>
 </tr>
 <tr>
 <td><code>clipboard-indicator@tudmotu.com</code></td>
