@@ -128,6 +128,14 @@
 #   ego_id        numeric EGO package ID from extensions.gnome.org — fallback when UUID is not yet confirmed
 #   gext accepts both. Managed by: inv gnome.extensions
 #   Requires a live GNOME session; newly installed extensions activate after logout/login.
+#   dconf (optional table)   dconf-key -> GVariant-literal-string pairs (e.g. "false", "'slow'",
+#                 "['a', 'b']") applied after install/enable via _apply_dconf() in tasks/gnome.py.
+#                 Use for per-extension settings: silencing overlap with another extension (see
+#                 gnome-ext-vitals), disabling a default that conflicts with another extension
+#                 (see gnome-ext-tiling-shell's override-alt-tab vs. gnome-ext-aatws), etc.
+#                 Re-applied on every run of inv gnome.extensions, or standalone via
+#                 inv gnome.configure (no reinstall). Prefer this over telling someone to run a
+#                 one-off dconf/gsettings command — it keeps the fix declarative and idempotent.
 #
 # apparmor-profile sections:
 #   profile       absolute path to write the profile to (e.g. /etc/apparmor.d/jbr-cef)
@@ -582,11 +590,15 @@ uuid        = "Vitals@CoreCoding.com"
 "/org/gnome/shell/extensions/vitals/show-processor" = "false"
 "/org/gnome/shell/extensions/vitals/show-memory"    = "false"
 "/org/gnome/shell/extensions/vitals/show-network"   = "false"
-# No fan/voltage/storage/gpu hardware available (IT8628E SuperIO blocked by ACPI — see troubleshooting.md)
+# No fan/voltage/storage hardware exposed (IT8628E SuperIO blocked by ACPI — see troubleshooting.md)
 "/org/gnome/shell/extensions/vitals/show-fan"     = "false"
 "/org/gnome/shell/extensions/vitals/show-voltage" = "false"
 "/org/gnome/shell/extensions/vitals/show-storage" = "false"
-"/org/gnome/shell/extensions/vitals/show-gpu"     = "false"
+# GPU temp comes from `nvidia-smi`, not hwmon/lm-sensors — Vitals only spawns the nvidia-smi
+# subprocess when show-gpu is true (see sensors.js _queryNvidiaSmi). Leaving this false while
+# still pinning '_temperature_gpu_' below means that sensor can never resolve and shows as "..."
+# in the panel forever.
+"/org/gnome/shell/extensions/vitals/show-gpu"     = "true"
 # Pin specific sensors: GPU temp, CPU Package, 1-min load average
 "/org/gnome/shell/extensions/vitals/hot-sensors" = "['_temperature_gpu_', '_temperature_processor_0_', '_system_load_1m_']"
 
@@ -649,6 +661,14 @@ method      = "gnome-extension"
 enabled     = true
 tags        = ["gnome", "desktop", "gui"]
 uuid        = "tilingshell@ferrarodomenico.com"
+
+[packages.gnome-ext-tiling-shell.dconf]
+# override-alt-tab (default true) monkey-patches AltTab.WindowSwitcherPopup.prototype.show to
+# inject a grouped-tile icon. AATWS (gnome-ext-aatws) replaces that same popup wholesale, so the
+# two collide: Tiling Shell's patched show() runs against a switcher with no _switcherList yet
+# and throws "TypeError: this._switcherList is null", which kills Alt+Tab entirely. AATWS is our
+# configured switcher, so Tiling Shell's override loses.
+"/org/gnome/shell/extensions/tilingshell/override-alt-tab" = "false"
 
 [packages.gnome-ext-space-bar]
 description = "Space Bar — replaces Activities/workspace indicator with an i3-style named workspace bar; click to switch, auto-name by running app; pairs well with dash-to-panel"
