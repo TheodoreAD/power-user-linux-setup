@@ -4,7 +4,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import apt, next_steps, node, python, system, tools, ui, util, zsh
+from . import ai, apt, next_steps, node, python, system, tools, ui, util, zsh
 
 _WSL_CONF   = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
@@ -470,6 +470,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     apt.base(c)
     apt.deb(c)
     tools.install(c)
+    ai.skills(c)
     python.tools(c)
     node.install(c)
     zsh.omz_configure(c)

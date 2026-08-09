@@ -4,12 +4,16 @@ Cross-tool instructions for AI coding agents working in this repo (Claude Code, 
 that reads `AGENTS.md`). Claude Code specifically loads this via a `@AGENTS.md` import in
 `CLAUDE.md` — see that file's docs for why.
 
-## Memory policy
+## AI agent tooling (`tasks/ai.py`)
 
-Don't use Claude Code's cross-session memory system (`~/.claude/projects/.../memory/`) for durable
-knowledge about this project. Put it here instead, or in a `docs/*.md` file with a pointer from
-here. Reasons: this file is version-controlled, visible to every contributor and every agent tool
-(not just Claude), and reviewable in diffs — the memory system is none of those.
+`inv ai.skills` and `inv ai.init` scaffold the conventions this repo already follows — a minimal
+`AGENTS.md`, a `CLAUDE.md` that's only ever an `@AGENTS.md` shim, and `.agents/skills/` with
+`.claude/skills` symlinked to it (Claude Code doesn't read `.agents/skills/` natively, only the
+symlink target) — for *other* projects on this machine, not just this one. Both tasks check for
+existing files/symlinks first and never overwrite hand-written content. The cross-session-memory
+policy (don't use Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead)
+is documented once, globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated
+per-repo — see `docs/claude-code.md`.
 
 ## PULSE tag/method architecture
 
