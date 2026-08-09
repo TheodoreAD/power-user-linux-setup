@@ -3542,19 +3542,19 @@
   
 
 
-<h1 id="ubuntu-2004-2404-upgrade-tracker">Ubuntu 20.04 → 24.04 Upgrade Tracker<a class="headerlink" href="#ubuntu-2004-2404-upgrade-tracker" title="Permanent link">&para;</a></h1>
+<h1 id="ubuntu-2004-2404-upgrade-tracker">Ubuntu 20.04 → 24.04 Upgrade Tracker</h1>
 <p>Goal: upgrade the machine from Ubuntu 20.04 LTS (Focal Fossa) to 24.04 LTS (Noble Numbat),
 then install Webex and Citrix Workspace.</p>
 <hr />
-<h2 id="upgrade-path">Upgrade path<a class="headerlink" href="#upgrade-path" title="Permanent link">&para;</a></h2>
+<h2 id="upgrade-path">Upgrade path</h2>
 <p>Direct 20.04 → 24.04 is <strong>not supported</strong>. You must hop through 22.04:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>20.04 (Focal) → 22.04 (Jammy) → 24.04 (Noble)
 </span></code></pre></div>
 <p>Each hop uses <code>sudo do-release-upgrade</code> and requires a reboot between steps.</p>
 <hr />
-<h2 id="inventory-captured-2026-06-07">Inventory (captured 2026-06-07)<a class="headerlink" href="#inventory-captured-2026-06-07" title="Permanent link">&para;</a></h2>
-<h3 id="external-repos-ppas">External repos / PPAs<a class="headerlink" href="#external-repos-ppas" title="Permanent link">&para;</a></h3>
-<h4 id="active-and-clean-kept">Active and clean (kept)<a class="headerlink" href="#active-and-clean-kept" title="Permanent link">&para;</a></h4>
+<h2 id="inventory-captured-2026-06-07">Inventory (captured 2026-06-07)</h2>
+<h3 id="external-repos-ppas">External repos / PPAs</h3>
+<h4 id="active-and-clean-kept">Active and clean (kept)</h4>
 <table>
 <thead>
 <tr>
@@ -3586,7 +3586,7 @@ then install Webex and Citrix Workspace.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="removed-to-re-add-with-modern-signed-by-format-after-upgrade">Removed — to re-add with modern <code>signed-by</code> format after upgrade<a class="headerlink" href="#removed-to-re-add-with-modern-signed-by-format-after-upgrade" title="Permanent link">&para;</a></h4>
+<h4 id="removed-to-re-add-with-modern-signed-by-format-after-upgrade">Removed — to re-add with modern <code>signed-by</code> format after upgrade</h4>
 <table>
 <thead>
 <tr>
@@ -3623,7 +3623,7 @@ then install Webex and Citrix Workspace.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="removed-not-needed">Removed — not needed<a class="headerlink" href="#removed-not-needed" title="Permanent link">&para;</a></h4>
+<h4 id="removed-not-needed">Removed — not needed</h4>
 <table>
 <thead>
 <tr>
@@ -3657,8 +3657,8 @@ then install Webex and Citrix Workspace.</p>
 </span></code></pre></div>
 NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.nordvpn.com/apps/linux/install.sh)</code></p>
 </blockquote>
-<h3 id="installed-applications-inventory-captured-2026-06-07">Installed applications inventory (captured 2026-06-07)<a class="headerlink" href="#installed-applications-inventory-captured-2026-06-07" title="Permanent link">&para;</a></h3>
-<h4 id="must-remove-removed-2026-06-07"><del>Must remove</del> — removed 2026-06-07<a class="headerlink" href="#must-remove-removed-2026-06-07" title="Permanent link">&para;</a></h4>
+<h3 id="installed-applications-inventory-captured-2026-06-07">Installed applications inventory (captured 2026-06-07)</h3>
+<h4 id="must-remove-removed-2026-06-07"><del>Must remove</del> — removed 2026-06-07</h4>
 <table>
 <thead>
 <tr>
@@ -3693,7 +3693,7 @@ NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.no
 </tr>
 </tbody>
 </table>
-<h4 id="from-repos-removed-removed-2026-06-07-except-edge"><del>From repos removed</del> — removed 2026-06-07 (except Edge)<a class="headerlink" href="#from-repos-removed-removed-2026-06-07-except-edge" title="Permanent link">&para;</a></h4>
+<h4 id="from-repos-removed-removed-2026-06-07-except-edge"><del>From repos removed</del> — removed 2026-06-07 (except Edge)</h4>
 <table>
 <thead>
 <tr>
@@ -3736,7 +3736,7 @@ NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.no
 </tr>
 </tbody>
 </table>
-<h4 id="decide-old-drivers">Decide — old drivers<a class="headerlink" href="#decide-old-drivers" title="Permanent link">&para;</a></h4>
+<h4 id="decide-old-drivers">Decide — old drivers</h4>
 <table>
 <thead>
 <tr>
@@ -3751,7 +3751,7 @@ NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.no
 </tr>
 </tbody>
 </table>
-<h4 id="decide-applications-keep-or-drop">Decide — applications (keep or drop?)<a class="headerlink" href="#decide-applications-keep-or-drop" title="Permanent link">&para;</a></h4>
+<h4 id="decide-applications-keep-or-drop">Decide — applications (keep or drop?)</h4>
 <table>
 <thead>
 <tr>
@@ -3813,7 +3813,7 @@ NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.no
 </tr>
 </tbody>
 </table>
-<h4 id="slate-for-removal-post-upgrade-cleanup">Slate for removal — post-upgrade cleanup<a class="headerlink" href="#slate-for-removal-post-upgrade-cleanup" title="Permanent link">&para;</a></h4>
+<h4 id="slate-for-removal-post-upgrade-cleanup">Slate for removal — post-upgrade cleanup</h4>
 <p><strong>PDF viewer</strong> — browsers handle PDFs natively now</p>
 <table>
 <thead>
@@ -3918,7 +3918,7 @@ NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.no
 <blockquote>
 <p>Total recoverable from games: ~4.7GB if all removed</p>
 </blockquote>
-<h4 id="snaps-post-2404-state">Snaps — post-24.04 state<a class="headerlink" href="#snaps-post-2404-state" title="Permanent link">&para;</a></h4>
+<h4 id="snaps-post-2404-state">Snaps — post-24.04 state</h4>
 <table>
 <thead>
 <tr>
@@ -3990,15 +3990,15 @@ NordVPN provides its own installer: <code>sh &lt;(curl -sSf https://downloads.no
 </tr>
 </tbody>
 </table>
-<h3 id="gnome-extensions">GNOME extensions<a class="headerlink" href="#gnome-extensions" title="Permanent link">&para;</a></h3>
+<h3 id="gnome-extensions">GNOME extensions</h3>
 <p>Full extension list, current state, cleanup history, and dconf configuration:
 see <strong><a href="gnome_extensions.html">gnome_extensions.md</a></strong>.</p>
 <p><strong>All 12 active as of 2026-06-09:</strong> dash-to-panel, extension-list, lockkeys, tophat, vitals,
 tiling-shell, aatws, clipboard-indicator, smart-auto-move, caffeine, just-perfection, space-bar.
 See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 <hr />
-<h2 id="checklist">Checklist<a class="headerlink" href="#checklist" title="Permanent link">&para;</a></h2>
-<h3 id="phase-1-pre-upgrade-preparation">Phase 1 — Pre-upgrade preparation<a class="headerlink" href="#phase-1-pre-upgrade-preparation" title="Permanent link">&para;</a></h3>
+<h2 id="checklist">Checklist</h2>
+<h3 id="phase-1-pre-upgrade-preparation">Phase 1 — Pre-upgrade preparation</h3>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Back up important data / create a system snapshot</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Fully update the current system:
@@ -4010,7 +4010,7 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 </span></code></pre></div></li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Confirm <code>Prompt=lts</code> is set in <code>/etc/update-manager/release-upgrades</code></li>
 </ul>
-<h3 id="config-file-decisions-during-upgrade">Config file decisions during upgrade<a class="headerlink" href="#config-file-decisions-during-upgrade" title="Permanent link">&para;</a></h3>
+<h3 id="config-file-decisions-during-upgrade">Config file decisions during upgrade</h3>
 <p>Decisions made at dpkg prompts during <code>do-release-upgrade</code>.</p>
 <table>
 <thead>
@@ -4068,7 +4068,7 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 </span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a><span class="gd">-net.ipv6.conf.lo.disable_ipv6 = 1</span>
 </span></code></pre></div></p>
 <hr />
-<h3 id="phase-2-upgrade-to-2204">Phase 2 — Upgrade to 22.04<a class="headerlink" href="#phase-2-upgrade-to-2204" title="Permanent link">&para;</a></h3>
+<h3 id="phase-2-upgrade-to-2204">Phase 2 — Upgrade to 22.04</h3>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Start upgrade (run inside <code>tmux</code> if on SSH)</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Completed — now on Ubuntu 22.04.5 LTS (Jammy), kernel 5.15.0-181</li>
@@ -4079,7 +4079,7 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Snaps updated (core18 refreshed)</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> dpkg clean, no pending upgrades</li>
 </ul>
-<h4 id="packages-removed-by-upgrader-action-required">Packages removed by upgrader — action required<a class="headerlink" href="#packages-removed-by-upgrader-action-required" title="Permanent link">&para;</a></h4>
+<h4 id="packages-removed-by-upgrader-action-required">Packages removed by upgrader — action required</h4>
 <table>
 <thead>
 <tr>
@@ -4171,9 +4171,9 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="nvidia-driver-resolved-on-reboot">NVIDIA driver — resolved on reboot<a class="headerlink" href="#nvidia-driver-resolved-on-reboot" title="Permanent link">&para;</a></h4>
+<h4 id="nvidia-driver-resolved-on-reboot">NVIDIA driver — resolved on reboot</h4>
 <p>Driver 470 was removed as obsolete. On reboot, NVIDIA 535.309.01 was auto-installed and working correctly (<code>nvidia-smi</code> confirmed, RTX 3070 Ti active). No manual action was needed.</p>
-<h3 id="phase-3-upgrade-to-2404">Phase 3 — Upgrade to 24.04<a class="headerlink" href="#phase-3-upgrade-to-2404" title="Permanent link">&para;</a></h3>
+<h3 id="phase-3-upgrade-to-2404">Phase 3 — Upgrade to 24.04</h3>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Start upgrade (run inside <code>tmux</code> if on SSH)</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> <code>/boot</code> space freed: removed old 5.11.0-37 kernel; switched initramfs to <code>xz</code> compression</li>
@@ -4198,7 +4198,7 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 <p><strong>Known 22.04 → 24.04 pitfalls:</strong>
 - <code>webkit2gtk-4.0</code> removed from default repos (replaced by <code>webkit2gtk-4.1</code>); affects Citrix (handled below)
 - Some GNOME extensions will break — GNOME version changes from 42 to 46</p>
-<h4 id="packages-removed-by-upgrader-2204-2404">Packages removed by upgrader — 22.04 → 24.04<a class="headerlink" href="#packages-removed-by-upgrader-2204-2404" title="Permanent link">&para;</a></h4>
+<h4 id="packages-removed-by-upgrader-2204-2404">Packages removed by upgrader — 22.04 → 24.04</h4>
 <table>
 <thead>
 <tr>
@@ -4277,7 +4277,7 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="phase-4-install-webex">Phase 4 — Install Webex<a class="headerlink" href="#phase-4-install-webex" title="Permanent link">&para;</a></h3>
+<h3 id="phase-4-install-webex">Phase 4 — Install Webex</h3>
 <p>Supported on Ubuntu 22.04 and 24.04. Ubuntu 20.04 support was dropped after Webex 45.6.</p>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Download the <code>.deb</code> from the <a href="https://www.webex.com/downloads.html">Webex download page</a> (Linux section)</li>
@@ -4297,7 +4297,7 @@ See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
 </span></code></pre></div></li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> Verify: launch Webex, sign in, test audio/video</li>
 </ul>
-<h3 id="phase-5-install-citrix-workspace">Phase 5 — Install Citrix Workspace ✓<a class="headerlink" href="#phase-5-install-citrix-workspace" title="Permanent link">&para;</a></h3>
+<h3 id="phase-5-install-citrix-workspace">Phase 5 — Install Citrix Workspace ✓</h3>
 <p>Supported on Ubuntu 20.04, 22.04, and 24.04. Recent versions bundle <code>webkit2gtk-4.0</code>
 to avoid the 24.04 library-removal issue.</p>
 <ul class="task-list">
@@ -4307,7 +4307,7 @@ to avoid the 24.04 library-removal issue.</p>
   normal desktop development. <strong>Paused, not abandoned</strong> — full status, the AppProtection
   conflict, and how to bring it back are in <a href="citrix.html">docs/citrix.md</a>.</li>
 </ul>
-<h3 id="phase-6-python-toolchain-pyenv-uv">Phase 6 — Python toolchain: pyenv → uv<a class="headerlink" href="#phase-6-python-toolchain-pyenv-uv" title="Permanent link">&para;</a></h3>
+<h3 id="phase-6-python-toolchain-pyenv-uv">Phase 6 — Python toolchain: pyenv → uv</h3>
 <p>The existing guide (<code>docs/python.md</code>) is built around pyenv + Poetry + pipx. Switch to <code>uv</code> after reaching 24.04. Existing venvs do not need to be migrated.</p>
 <p><strong>What uv replaces:</strong></p>
 <table>
@@ -4353,15 +4353,15 @@ to avoid the 24.04 library-removal issue.</p>
 - [x] Update <code>docs/python.md</code> — fully rewritten for uv workflow
 - [x] Nuitka — added as <code>uv tool install nuitka</code> in <code>setup.toml</code>
 - [x] Remove the pip global config — done 2026-06-08: <code>rm ~/.config/pip/pip.conf</code> (had legacy <code>wheel-dir</code>/<code>find-links</code> settings from an old offline-install workflow; uv does not read pip.conf)</p>
-<h3 id="phase-7-nodejs-toolchain">Phase 7 — Node.js toolchain ✓<a class="headerlink" href="#phase-7-nodejs-toolchain" title="Permanent link">&para;</a></h3>
+<h3 id="phase-7-nodejs-toolchain">Phase 7 — Node.js toolchain ✓</h3>
 <p>Was: <code>nodejs</code> 18.19.1 (apt, EOL), <code>nodejs-doc</code>, orphaned <code>/usr/local/bin/{npm,npx,fkill}</code> symlinks
 and <code>/usr/local/lib/node_modules/{npm,fkill-cli}</code> from a manually installed npm@7.</p>
 <p><strong>Tasks:</strong>
 - [x] Purge apt packages and orphaned globals — done 2026-06-08
 - [x] <code>inv node.install</code> — done 2026-06-08: nvm to <code>~/.local/share/nvm</code>, Node v24.16.0 LTS
 - [x] <code>inv zsh.configure</code> — done 2026-06-08: <code>NVM_DIR</code> in <code>~/.zshenv</code> + <code>~/.zshrc</code>; omz <code>nvm</code> plugin owns loading and completion; <code>PROFILE=/dev/null</code> prevents nvm install script from touching shell files</p>
-<h3 id="phase-8-post-upgrade-cleanup">Phase 8 — Post-upgrade cleanup<a class="headerlink" href="#phase-8-post-upgrade-cleanup" title="Permanent link">&para;</a></h3>
-<h4 id="8a-repos-re-enable-and-re-add">8a — Repos: re-enable and re-add ✓<a class="headerlink" href="#8a-repos-re-enable-and-re-add" title="Permanent link">&para;</a></h4>
+<h3 id="phase-8-post-upgrade-cleanup">Phase 8 — Post-upgrade cleanup</h3>
+<h4 id="8a-repos-re-enable-and-re-add">8a — Repos: re-enable and re-add ✓</h4>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> All repos re-enabled — done 2026-06-08 via <code>inv apt.repos</code></li>
 <li>Deleted stale <code>.distUpgrade</code> files; <code>inv apt.repos</code> rewrote all sources with modern <code>signed-by</code> format</li>
@@ -4370,12 +4370,12 @@ and <code>/usr/local/lib/node_modules/{npm,fkill-cli}</code> from a manually ins
 <li>Chrome moved from <code>apt-repo</code> to <code>deb-url</code> (Chrome self-manages its own <code>google-chrome.sources</code>)</li>
 <li>NordVPN and Bazel dropped — no longer needed</li>
 </ul>
-<h4 id="8b-go-update">8b — Go update ✓<a class="headerlink" href="#8b-go-update" title="Permanent link">&para;</a></h4>
+<h4 id="8b-go-update">8b — Go update ✓</h4>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Old install (1.16.2, 2021) removed 2026-06-08</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Go 1.26.4 installed — confirmed working (<code>go version go1.26.4 linux/amd64</code>)</li>
 </ul>
-<h4 id="8c-gnome-extensions">8c — GNOME extensions<a class="headerlink" href="#8c-gnome-extensions" title="Permanent link">&para;</a></h4>
+<h4 id="8c-gnome-extensions">8c — GNOME extensions</h4>
 <p>All old extensions were installed via apt or git clone against GNOME 3.36 and are gone after
 the upgrade. Full extension research and the current list live in <strong><code>docs/gnome_extensions.md</code></strong>.</p>
 <p>Extensions are declared in <code>setup.toml</code> as <code>method = "gnome-extension"</code> entries and installed via:</p>
@@ -4397,13 +4397,13 @@ Full evaluations, current state, dconf config, and extension selection guide: <s
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> ✓ <strong>2026-06-09</strong> — <code>sensors-detect</code> ran; coretemp confirmed; Vitals sensors pinned: GPU temp, CPU Package, 1-min load</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> ✓ <strong>2026-06-09</strong> — tiling-shell, AATWS, clipboard-indicator, smart-auto-move, caffeine, just-perfection, space-bar enabled; all 12 extensions confirmed active after logout/login (see gnome_extensions.md)</li>
 </ul>
-<h4 id="8d-microsoft-edge-dev-stable">8d — Microsoft Edge: dev → stable ✓<a class="headerlink" href="#8d-microsoft-edge-dev-stable" title="Permanent link">&para;</a></h4>
+<h4 id="8d-microsoft-edge-dev-stable">8d — Microsoft Edge: dev → stable ✓</h4>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Profile data copied — 2026-06-08: rsync <code>~/.config/microsoft-edge-dev/</code> → <code>~/.config/microsoft-edge/</code> excluding all caches (3.3 GB). Both profiles (Profile 3: DoHu, Profile 4: Beltane) and <code>Local State</code> transferred. Cookies/local sessions preserved; bookmarks/passwords/extensions also backed by account sync.</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> <code>microsoft-edge-stable</code> 149.0.4022.52 installed (was already present from <code>inv apt.repos</code> in 8a)</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> <code>microsoft-edge-dev</code> 150.0.4064.2 purged — 2026-06-08</li>
 </ul>
-<h4 id="8e-remaining-housekeeping">8e — Remaining housekeeping<a class="headerlink" href="#8e-remaining-housekeeping" title="Permanent link">&para;</a></h4>
+<h4 id="8e-remaining-housekeeping">8e — Remaining housekeeping</h4>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Confirmed <code>Prompt=lts</code> in <code>/etc/update-manager/release-upgrades</code> — 2026-06-08</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Removed all legacy apt keys — done 2026-06-08:</li>
@@ -4429,7 +4429,7 @@ Full evaluations, current state, dconf config, and extension selection guide: <s
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> PyCharm Professional installed via Toolbox — 2026-06-09: Toolbox manages IDE installs, updates, and settings; no snap required</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> PyCharm AppArmor profiles installed — 2026-06-09: <code>inv system.apparmor-profiles</code> writes <code>/etc/apparmor.d/jbr-cef</code> (two profiles: <code>jbr_pycharm</code> + <code>jbr_cef</code>); also called automatically from <code>inv setup</code> after <code>inv tools.install</code>; fixes <code>kernel.apparmor_restrict_unprivileged_userns=1</code> sandbox warning</li>
 </ul>
-<h4 id="8f-screenshot-tool">8f — Screenshot tool<a class="headerlink" href="#8f-screenshot-tool" title="Permanent link">&para;</a></h4>
+<h4 id="8f-screenshot-tool">8f — Screenshot tool</h4>
 <p><strong>Decision required:</strong> keep the built-in GNOME screenshot tool, or replace it with Flameshot.</p>
 <table>
 <thead>
@@ -4464,9 +4464,9 @@ Full evaluations, current state, dconf config, and extension selection guide: <s
   own Qt/D-Bus signal handling, not anything on our end).</p>
 <p>Full detail, the up-to-date shortcut table, and both root-cause writeups are in
 <code>docs/screen_capture.md</code>; this phase now just points at the automated tasks.</p>
-<h5 id="if-keeping-the-built-in-no-action-needed">If keeping the built-in — no action needed<a class="headerlink" href="#if-keeping-the-built-in-no-action-needed" title="Permanent link">&para;</a></h5>
+<h5 id="if-keeping-the-built-in-no-action-needed">If keeping the built-in — no action needed</h5>
 <p>Flameshot is in <code>setup.toml</code> as <code>enabled = false</code> (see <code>[packages.flameshot]</code>). Leave it.</p>
-<h5 id="if-replacing-with-flameshot">If replacing with Flameshot<a class="headerlink" href="#if-replacing-with-flameshot" title="Permanent link">&para;</a></h5>
+<h5 id="if-replacing-with-flameshot">If replacing with Flameshot</h5>
 <p><strong>Step 1 — install:</strong></p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-12-1"><a id="__codelineno-12-1" name="__codelineno-12-1" href="#__codelineno-12-1"></a>inv<span class="w"> </span>apt.base<span class="w">   </span><span class="c1"># installs xdg-desktop-portal-gnome — required for Flameshot (or any</span>
 </span><span id="__span-12-2"><a id="__codelineno-12-2" name="__codelineno-12-2" href="#__codelineno-12-2"></a><span class="w">               </span><span class="c1"># portal-based screenshot tool) to capture at all on Wayland; see docs/screen_capture.md</span>
@@ -4489,7 +4489,7 @@ defaults via <code>gsettings reset</code> (not hardcoded values), so removing Fl
 gsettings work. <code>inv screenshot.status</code> shows current state.</p>
 <p><strong>Step 3 — <code>setup.toml</code> already has <code>[packages.flameshot]</code> and <code>[packages.xdg-desktop-portal-gnome]</code>
 enabled</strong> — nothing further needed for future machine setups.</p>
-<h4 id="8g-developer-tooling-and-font-configuration">8g — Developer tooling and font configuration<a class="headerlink" href="#8g-developer-tooling-and-font-configuration" title="Permanent link">&para;</a></h4>
+<h4 id="8g-developer-tooling-and-font-configuration">8g — Developer tooling and font configuration</h4>
 <ul class="task-list">
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> WezTerm nightly installed — 2026-06-09: <code>inv apt.deb</code>; <code>deb-github</code> method, tag <code>nightly</code>,
   asset <code>wezterm-nightly.Ubuntu24.04.deb</code> from <code>wez/wezterm</code>; installed version
@@ -4523,7 +4523,7 @@ enabled</strong> — nothing further needed for future machine setups.</p>
   app) and <code>Alt+PrtSc</code> (untouched GNOME native window capture) both work as designed</li>
 <li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> Confirmed 2026-08-08: annotation editor (arrows, text, blur, crop) works</li>
 </ul>
-<h4 id="8h-citrix-secure-access-vpn">8h — Citrix Secure Access VPN<a class="headerlink" href="#8h-citrix-secure-access-vpn" title="Permanent link">&para;</a></h4>
+<h4 id="8h-citrix-secure-access-vpn">8h — Citrix Secure Access VPN</h4>
 <p>Separate from Citrix Workspace (virtual desktop client). Citrix Secure Access is the SSL VPN
 client for connecting to the corporate network via NetScaler Gateway (<code>myworkspace.rbcvpn.com</code>).
 Full details and troubleshooting log: <strong><a href="citrix.html">docs/citrix.md</a></strong>.</p>
@@ -4545,7 +4545,7 @@ Full details and troubleshooting log: <strong><a href="citrix.html">docs/citrix.
 </ul>
 <p><strong>What to tell IT:</strong> The gateway needs a Linux pre-authentication EPA policy that passes the session token in the <code>nsgcepa://</code> invocation (<code>nsgcepa://nsgcepa/epav2plugin/{host}/{token}/</code>). Alternatively, ask them to switch to post-authentication EPA or whitelist Linux devices.</p>
 <hr />
-<h2 id="status">Status<a class="headerlink" href="#status" title="Permanent link">&para;</a></h2>
+<h2 id="status">Status</h2>
 <table>
 <thead>
 <tr>
@@ -4592,7 +4592,7 @@ Full details and troubleshooting log: <strong><a href="citrix.html">docs/citrix.
 </tr>
 </tbody>
 </table>
-<h3 id="system-state-2026-06-12">System state (2026-06-12)<a class="headerlink" href="#system-state-2026-06-12" title="Permanent link">&para;</a></h3>
+<h3 id="system-state-2026-06-12">System state (2026-06-12)</h3>
 <table>
 <thead>
 <tr>
@@ -4732,7 +4732,7 @@ Full details and troubleshooting log: <strong><a href="citrix.html">docs/citrix.
 </tbody>
 </table>
 <hr />
-<h2 id="git-history-landing-initial_version-on-master">Git history — landing <code>initial_version</code> on <code>master</code><a class="headerlink" href="#git-history-landing-initial_version-on-master" title="Permanent link">&para;</a></h2>
+<h2 id="git-history-landing-initial_version-on-master">Git history — landing <code>initial_version</code> on <code>master</code></h2>
 <p>All of the PULSE rewrite work above happened on <code>initial_version</code> — a branch whose last real
 commit was from 2022-07-06, then dormant for four years while this upgrade work continued on it
 starting 2026-06-07. Meanwhile <code>master</code> was independently rewritten from scratch in Sept–Nov 2024
@@ -4793,9 +4793,9 @@ since it only ever looked at <code>initial_version</code>&rsquo;s own docs:</p>
 <p><code>initial_version</code> and the pre-landing <code>master</code> history are both left untouched — branches kept for
 historical reference, not deleted.</p>
 <hr />
-<h2 id="guide-analysis-what-needs-updating-for-2404">Guide analysis — what needs updating for 24.04<a class="headerlink" href="#guide-analysis-what-needs-updating-for-2404" title="Permanent link">&para;</a></h2>
+<h2 id="guide-analysis-what-needs-updating-for-2404">Guide analysis — what needs updating for 24.04</h2>
 <p>Full read of all docs in this repo. Issues and update tasks recorded here so the guide reflects 24.04 reality post-upgrade.</p>
-<h3 id="docszshmd">docs/zsh.md<a class="headerlink" href="#docszshmd" title="Permanent link">&para;</a></h3>
+<h3 id="docszshmd">docs/zsh.md</h3>
 <p>Status: ✓ <strong>done 2026-06-09</strong> — fully rewritten for PULSE. All items resolved:</p>
 <table>
 <thead>
@@ -4847,7 +4847,7 @@ historical reference, not deleted.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="docsgitmd">docs/git.md<a class="headerlink" href="#docsgitmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsgitmd">docs/git.md</h3>
 <p>Status: updated 2026-06-09.</p>
 <table>
 <thead>
@@ -4867,11 +4867,11 @@ historical reference, not deleted.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="docsgithubmd">docs/github.md<a class="headerlink" href="#docsgithubmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsgithubmd">docs/github.md</h3>
 <p>Status: ✓ <strong>done 2026-06-08</strong> — rewritten. Install via <code>inv apt.repos</code>; deprecated apt-key and manual methods removed; zsh completions noted as automatic from apt package; manual steps: <code>gh auth login</code>, config set.</p>
-<h3 id="docsfontsmd">docs/fonts.md<a class="headerlink" href="#docsfontsmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsfontsmd">docs/fonts.md</h3>
 <p>Status: ✓ <strong>done 2026-06-08</strong> — fully rewritten. Bash script replaced with <code>inv fonts.install</code> / <code>inv fonts.configure</code> Python tasks. Nerd Fonts v2 → v3 migration logic documented (legacy glob cleanup + v3 file detection). Dry-run shows <code>ok (v2 — will upgrade)</code> for families needing migration. Font families and VS Code settings moved to <code>setup.toml</code>. FiraMono <code>.otf</code> anomaly documented. CaskaydiaCove / CascadiaCode naming explained.</p>
-<h3 id="docssshmd">docs/ssh.md<a class="headerlink" href="#docssshmd" title="Permanent link">&para;</a></h3>
+<h3 id="docssshmd">docs/ssh.md</h3>
 <p>Status: updated 2026-06-09.</p>
 <table>
 <thead>
@@ -4895,9 +4895,9 @@ historical reference, not deleted.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="docsgolangmd">docs/golang.md<a class="headerlink" href="#docsgolangmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsgolangmd">docs/golang.md</h3>
 <p>Status: ✓ <strong>done 2026-06-08</strong> — rewritten. Manual install steps removed; references <code>inv tools.install</code> and <code>inv zsh.configure</code>. GOROOT/GOPATH bug fixed (were swapped in original). Update instructions use <code>rm -rf ~/.local/share/go &amp;&amp; inv tools.install</code>.</p>
-<h3 id="docsrustmd">docs/rust.md<a class="headerlink" href="#docsrustmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsrustmd">docs/rust.md</h3>
 <p>Status: ✓ <strong>new file, 2026-08-08</strong> (added in a separate session, not part of the original 24.04
 guide review — recorded here for completeness). Rust toolchain via rustup, added as <code>[packages.rust]</code>
 in <code>setup.toml</code> — <code>method = "script"</code> piping the official rustup installer, redirected to XDG paths
@@ -4907,26 +4907,26 @@ component right after a fresh install. <code>docs/ide.md</code> documents the Py
 it uses its own analysis engine, not <code>rust-analyzer</code>, so no extra component is needed there, just
 the toolchain itself and (if PyCharm doesn&rsquo;t autodetect it) manually setting the toolchain location
 to <code>~/.local/share/cargo/bin</code>.</p>
-<h3 id="docsjsmd">docs/js.md<a class="headerlink" href="#docsjsmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsjsmd">docs/js.md</h3>
 <p>Status: ✓ <strong>done 2026-06-08</strong> — rewritten. References <code>inv node.install</code> and <code>inv zsh.configure</code>. nvm to <code>~/.local/share/nvm</code>, Node LTS, global packages from <code>setup.toml</code>. Updated 2026-06-08: <code>NVM_DIR</code> in <code>~/.zshenv</code>; omz <code>nvm</code> plugin owns loading and completion; <code>PROFILE=/dev/null</code> prevents install script from touching shell files.</p>
-<h3 id="docskubernetesmd">docs/kubernetes.md<a class="headerlink" href="#docskubernetesmd" title="Permanent link">&para;</a></h3>
+<h3 id="docskubernetesmd">docs/kubernetes.md</h3>
 <p>Status: ✓ <strong>done 2026-06-08</strong> — rewritten. All deprecated install blocks removed; replaced with <code>inv apt.repos</code> / <code>inv tools.install</code> references. kubectl, helm, kind, tilt, freelens all declared in <code>setup.toml</code>. Content past the &ldquo;Stop here&rdquo; warning left untouched.</p>
-<h3 id="docslocalemd">docs/locale.md<a class="headerlink" href="#docslocalemd" title="Permanent link">&para;</a></h3>
+<h3 id="docslocalemd">docs/locale.md</h3>
 <p>Status: WIP/incomplete but the approach is correct. No 24.04 changes needed.</p>
-<h3 id="docsgamesmd">docs/games.md<a class="headerlink" href="#docsgamesmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsgamesmd">docs/games.md</h3>
 <p>Status: ✓ <strong>deleted 2026-06-08</strong>.</p>
-<h3 id="docsapt_packagesmd">docs/apt_packages.md<a class="headerlink" href="#docsapt_packagesmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsapt_packagesmd">docs/apt_packages.md</h3>
 <p>Status: ✓ <strong>done</strong> — fully rewritten. Now documents the invoke-based workflow (<code>inv apt.base</code>, <code>inv apt.repos</code>, <code>inv apt.deb</code>, <code>inv apt.refresh-keys</code>). All deprecated packages removed. All install methods reference <code>setup.toml</code>.</p>
-<h3 id="docspythonmd">docs/python.md<a class="headerlink" href="#docspythonmd" title="Permanent link">&para;</a></h3>
+<h3 id="docspythonmd">docs/python.md</h3>
 <p>Status: ✓ <strong>done</strong> — fully rewritten for uv. Covers bootstrap, shims, UV_PYTHON, <code>inv python.tools</code>, project venvs, private PyPI, Nuitka. Poetry/pipx/pyenv sections gone. <strong>Updated 2026-08-08:</strong>
 added a &ldquo;How the pieces fit together&rdquo; section with a Mermaid diagram showing how interpreters
 (<code>uv python install</code>), tools (<code>uv tool install</code>), project venvs, and the system Python never share
 dependencies — written as part of verifying the zensical Mermaid fix (see Docs site entry below)
 using this doc as the real test case. Also clarifies that <code>mkdocs</code>/<code>mkdocs-material</code> stay installed
 via <code>inv python.tools</code> for other projects even though they no longer build <em>this</em> repo&rsquo;s docs site.</p>
-<h3 id="docsdockermd">docs/docker.md<a class="headerlink" href="#docsdockermd" title="Permanent link">&para;</a></h3>
+<h3 id="docsdockermd">docs/docker.md</h3>
 <p>Status: ✓ <strong>done 2026-06-08</strong> — rewritten. Install via <code>inv apt.repos</code>; deprecated apt-key method removed; <code>overlay2</code>/cgroupdriver daemon.json dropped (both are 24.04 defaults); compose v2 noted; <code>newgrp docker</code> and troubleshooting kept.</p>
-<h3 id="docsgnome_extensionsmd">docs/gnome_extensions.md<a class="headerlink" href="#docsgnome_extensionsmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsgnome_extensionsmd">docs/gnome_extensions.md</h3>
 <p>Status: ✓ <strong>done 2026-06-09</strong> — fully rewritten for 24.04; all 12 extensions confirmed active.</p>
 <table>
 <thead>
@@ -4946,7 +4946,7 @@ via <code>inv python.tools</code> for other projects even though they no longer 
 </tr>
 </tbody>
 </table>
-<h3 id="docsgitlabmd">docs/gitlab.md<a class="headerlink" href="#docsgitlabmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsgitlabmd">docs/gitlab.md</h3>
 <p>Status: updated 2026-06-09 — config, completions, and SSH key upload sections filled in.</p>
 <table>
 <thead>
@@ -4970,13 +4970,13 @@ via <code>inv python.tools</code> for other projects even though they no longer 
 </tr>
 </tbody>
 </table>
-<h3 id="docskubernetes-devmd">docs/kubernetes-dev.md<a class="headerlink" href="#docskubernetes-devmd" title="Permanent link">&para;</a></h3>
+<h3 id="docskubernetes-devmd">docs/kubernetes-dev.md</h3>
 <p>Status: ✓ <strong>deleted 2026-06-09</strong> — entirely superseded by PULSE. kubectl and Helm already in <code>setup.toml</code> with modern GPG patterns; KIND already installed as latest binary via <code>setup.toml</code>. The file also had a stale v0.10.0 KIND pin and a path typo.</p>
-<h3 id="docskubernetes_bare_metalmd-scriptskubernetes-efk-stacksh">docs/kubernetes_bare_metal.md + scripts/kubernetes-efk-stack.sh<a class="headerlink" href="#docskubernetes_bare_metalmd-scriptskubernetes-efk-stacksh" title="Permanent link">&para;</a></h3>
+<h3 id="docskubernetes_bare_metalmd-scriptskubernetes-efk-stacksh">docs/kubernetes_bare_metal.md + scripts/kubernetes-efk-stack.sh</h3>
 <p>Status: ✓ <strong>deleted 2026-06-09</strong> — old kubeadm/Flannel/MetalLB/Istio bare-metal setup and EFK stack Helm charts. No content relevant to current PULSE approach. Recoverable from git history if ever needed.</p>
-<h3 id="docsidemd">docs/ide.md<a class="headerlink" href="#docsidemd" title="Permanent link">&para;</a></h3>
+<h3 id="docsidemd">docs/ide.md</h3>
 <p>Status: ✓ <strong>done 2026-06-09</strong> — new file, written this session. VS Code (deb vs snap, Wayland rationale), JetBrains Toolbox (archive extract, strip_components=2, bundled JRE), PyCharm (snap removal, Wayland fix, AppArmor profiles).</p>
-<h3 id="docsscreen_capturemd">docs/screen_capture.md<a class="headerlink" href="#docsscreen_capturemd" title="Permanent link">&para;</a></h3>
+<h3 id="docsscreen_capturemd">docs/screen_capture.md</h3>
 <p>Status: new file added — GNOME built-in shortcuts, Flameshot overview, Wayland caveats.</p>
 <table>
 <thead>
@@ -4996,7 +4996,7 @@ via <code>inv python.tools</code> for other projects even though they no longer 
 </tr>
 </tbody>
 </table>
-<h3 id="docsindexmd">docs/index.md<a class="headerlink" href="#docsindexmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsindexmd">docs/index.md</h3>
 <p>Status: ✓ <strong>done 2026-06-09</strong> — fully rewritten for PULSE. All issues resolved:</p>
 <table>
 <thead>
@@ -5032,7 +5032,7 @@ via <code>inv python.tools</code> for other projects even though they no longer 
 </tr>
 </tbody>
 </table>
-<h3 id="docsshortcutsmd">docs/shortcuts.md<a class="headerlink" href="#docsshortcutsmd" title="Permanent link">&para;</a></h3>
+<h3 id="docsshortcutsmd">docs/shortcuts.md</h3>
 <p>Status: <strong>→ future task</strong> (confirmed 2026-08-08) — pulled from master 2026-06-09, currently only
 contains a Flameshot gsettings script. Deferred: a full review/audit is a lot of work and not
 essential right now.</p>
@@ -5062,7 +5062,7 @@ essential right now.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="docswslmd">docs/wsl.md<a class="headerlink" href="#docswslmd" title="Permanent link">&para;</a></h3>
+<h3 id="docswslmd">docs/wsl.md</h3>
 <p>Status: ✓ <strong>new file, 2026-08-08</strong> (added in a separate session, not part of the original 24.04
 guide review — recorded here for completeness; substantially expanded in a follow-up session, also
 2026-08-08). Covers bootstrapping this repo inside a WSL2 distro instead of a native workstation.</p>
@@ -5101,7 +5101,7 @@ guide review — recorded here for completeness; substantially expanded in a fol
 <li>Tag catalog and exclusion recipes also updated in <code>docs/index.md</code> and <code>setup.toml</code>&rsquo;s own header
   comment to match.</li>
 </ul>
-<h3 id="docsdev-containermd">docs/dev-container.md<a class="headerlink" href="#docsdev-containermd" title="Permanent link">&para;</a></h3>
+<h3 id="docsdev-containermd">docs/dev-container.md</h3>
 <p>Status: <strong>planned, not yet implemented</strong> — explored 2026-08-08 (separate session, not part of the
 original 24.04 guide review — recorded here for completeness, same pattern as the rust.md/wsl.md
 entries above). Existing doc already covered building a custom Docker image from <code>setup.toml</code> via
@@ -5120,7 +5120,7 @@ written up but not yet built: see <code>plans/2026-08-08-devcontainer-pipeline.m
 standalone design docs (dated filenames, git-tracked, outside <code>docs_dir</code> so it never gets swept
 into the published GitHub Pages site) instead of only living in Claude Code&rsquo;s local plan-mode
 scratch files.</p>
-<h3 id="docs-site-mkdocs-material-zensical">Docs site — mkdocs-material → zensical<a class="headerlink" href="#docs-site-mkdocs-material-zensical" title="Permanent link">&para;</a></h3>
+<h3 id="docs-site-mkdocs-material-zensical">Docs site — mkdocs-material → zensical</h3>
 <p>Status: ✓ <strong>done 2026-08-08</strong> — migrated during the <code>initial_version</code> → <code>master</code> git landing effort
 (see the Git history section below). Full findings, pain points, and a re-verify checklist for
 next time: <a href="zensical.html">zensical.md</a>.</p>
@@ -5163,7 +5163,7 @@ next time: <a href="zensical.html">zensical.md</a>.</p>
 </tbody>
 </table>
 <hr />
-<h2 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h2>
+<h2 id="references">References</h2>
 <ul>
 <li><a href="https://documentation.ubuntu.com/desktop/en/latest/how-to/upgrade-ubuntu-desktop/">Official Ubuntu upgrade guide (desktop)</a></li>
 <li><a href="https://documentation.ubuntu.com/server/how-to/software/upgrade-your-release/">Official Ubuntu upgrade guide (server)</a></li>
