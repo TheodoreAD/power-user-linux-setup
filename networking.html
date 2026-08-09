@@ -2116,15 +2116,15 @@
   
 
 
-<h1 id="networking">Networking</h1>
-<h2 id="dns">DNS</h2>
+<h1 id="networking">Networking<a class="headerlink" href="#networking" title="Permanent link">&para;</a></h1>
+<h2 id="dns">DNS<a class="headerlink" href="#dns" title="Permanent link">&para;</a></h2>
 <p>Ubuntu 24.04 uses <strong>systemd-resolved</strong> exclusively. <code>resolvconf</code> is gone — do not use it.</p>
 <p>DNS is configured via a drop-in file at <code>/etc/systemd/resolved.conf.d/pulse-dns.conf</code>, managed by <code>inv system.dns</code>:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>system.dns
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="c1"># or with custom servers:</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>system.dns<span class="w"> </span>--primary<span class="o">=</span><span class="m">9</span>.9.9.9<span class="w"> </span>--secondary<span class="o">=</span><span class="m">149</span>.112.112.112<span class="w"> </span>--fallback<span class="o">=</span><span class="m">8</span>.8.8.8
 </span></code></pre></div>
-<h3 id="default-servers">Default servers</h3>
+<h3 id="default-servers">Default servers<a class="headerlink" href="#default-servers" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2152,21 +2152,21 @@
 </tbody>
 </table>
 <p>Cloudflare is preferred over Google for privacy: Cloudflare does not log queries or sell DNS data.</p>
-<h3 id="why-dnssec-is-disabled">Why DNSSEC is disabled</h3>
+<h3 id="why-dnssec-is-disabled">Why DNSSEC is disabled<a class="headerlink" href="#why-dnssec-is-disabled" title="Permanent link">&para;</a></h3>
 <p><code>DNSSEC=no</code> is intentional. DNSSEC breaks:
 - Corporate VPNs and split-horizon DNS
 - Docker&rsquo;s internal DNS resolver (<code>127.0.0.11</code>)
 - Some self-signed local services</p>
 <p>The security benefit for a development workstation is marginal compared to the breakage risk.</p>
-<h3 id="why-dns-over-tls-is-disabled">Why DNS-over-TLS is disabled</h3>
+<h3 id="why-dns-over-tls-is-disabled">Why DNS-over-TLS is disabled<a class="headerlink" href="#why-dns-over-tls-is-disabled" title="Permanent link">&para;</a></h3>
 <p><code>DNSOverTLS=no</code> is intentional. It adds ~50 ms latency on cold connections and interferes with <code>.local</code> mDNS resolution used by some dev tools and printers. Not worth it for a workstation.</p>
-<h3 id="verifying">Verifying</h3>
+<h3 id="verifying">Verifying<a class="headerlink" href="#verifying" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>resolvectl<span class="w"> </span>status
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="c1"># look for: DNS Servers: 1.1.1.1 1.0.0.1</span>
 </span></code></pre></div>
-<h3 id="drop-in-file-location">Drop-in file location</h3>
+<h3 id="drop-in-file-location">Drop-in file location<a class="headerlink" href="#drop-in-file-location" title="Permanent link">&para;</a></h3>
 <p><code>/etc/systemd/resolved.conf.d/pulse-dns.conf</code> — a PULSE sentinel block wraps the <code>[Resolve]</code> section so the file is idempotent across runs and safe to edit manually outside the block.</p>
-<h2 id="docker-dns">Docker DNS</h2>
+<h2 id="docker-dns">Docker DNS<a class="headerlink" href="#docker-dns" title="Permanent link">&para;</a></h2>
 <p>Docker containers use their own internal resolver (<code>127.0.0.11</code>) for container-to-container DNS, but for external resolution they read the host&rsquo;s <code>/etc/resolv.conf</code> at container start — with a catch.</p>
 <p>With systemd-resolved active, <code>/etc/resolv.conf</code> contains <code>nameserver 127.0.0.53</code> (the stub listener). That address is only reachable on the host&rsquo;s loopback interface, not from inside a container&rsquo;s network namespace. Docker detects this and <strong>silently falls back to <code>8.8.8.8</code></strong>, ignoring the Cloudflare servers configured by <code>inv system.dns</code>.</p>
 <p>Without explicit config, Docker falls back to Google DNS (<code>8.8.8.8</code>) automatically — containers resolve fine, just not via Cloudflare. To make containers match the host DNS, set it explicitly in <code>/etc/docker/daemon.json</code> — see <a href="docker.html">docker.md</a>.</p>
