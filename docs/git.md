@@ -22,6 +22,11 @@ inv git.settings    # applies global git settings (editor, push, pull, log, etc.
 `inv git.configure` disables the global `user.name`/`user.email` and wires up `includeIf.gitdir`
 so git automatically picks the right identity based on which `~/projects/<directory>/` the repo lives in.
 
+This per-directory `.gitconfig`/`includeIf` mechanism has been running unmodified on an existing
+machine for a long time, but hasn't yet been validated end-to-end on a genuinely fresh install —
+worth confirming the created `~/projects/<directory>/.gitconfig` files and the global `includeIf`
+entries look right the next time this repo is bootstrapped on a new machine.
+
 ## Multi-account platforms
 
 For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in `identity.toml`:
