@@ -1,19 +1,23 @@
 # Agent instructions for power-user-linux-setup
 
 Cross-tool instructions for AI coding agents working in this repo (Claude Code, and anything else
-that reads `AGENTS.md`). Claude Code specifically loads this via a `@AGENTS.md` import in
-`CLAUDE.md` — see that file's docs for why.
+that reads `AGENTS.md`). This repo's own `CLAUDE.md` is a plain symlink to `AGENTS.md` — not a file
+containing Claude Code's `@AGENTS.md` import directive — so Claude Code and any other harness that
+also happens to read a literal `CLAUDE.md` see byte-identical content, no special-case import
+syntax required. See `tasks/ai.py` for why this replaced the import-line approach.
 
 ## AI agent tooling (`tasks/ai.py`)
 
 `inv ai.skills` and `inv ai.init` scaffold the conventions this repo already follows — a minimal
-`AGENTS.md`, a `CLAUDE.md` that's only ever an `@AGENTS.md` shim, and `.agents/skills/` with
-`.claude/skills` symlinked to it (Claude Code doesn't read `.agents/skills/` natively, only the
-symlink target) — for *other* projects on this machine, not just this one. Both tasks check for
-existing files/symlinks first and never overwrite hand-written content. The cross-session-memory
-policy (don't use Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead)
-is documented once, globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated
-per-repo — see `docs/claude-code.md`.
+`AGENTS.md`, a `CLAUDE.md` symlinked to it, and `.agents/skills/` with `.claude/skills` symlinked to
+it (Claude Code doesn't read `.agents/skills/` natively, only the symlink target) — for *other*
+projects on this machine, not just this one. Both tasks check for existing files/symlinks first and
+never overwrite hand-written content. `init`'s `CLAUDE.md` symlink means nothing can be appended
+below it the way the old `@AGENTS.md`-import form allowed — a genuinely Claude-specific addendum
+now belongs in `AGENTS.md` itself (shared) or a separate `.claude/`-scoped file, not in `CLAUDE.md`.
+The cross-session-memory policy (don't use Claude Code's auto-memory for durable repo knowledge —
+use `AGENTS.md` instead) is documented once, globally, in `[packages.claude-global-md]` in
+`setup.toml` rather than repeated per-repo — see `docs/claude-code.md`.
 
 ## PULSE tag/method architecture
 
@@ -43,6 +47,22 @@ repo's setup under WSL2 — distro/apt check, systemd, DNS, Docker Desktop-vs-na
 install tasks fail fast with an actionable message instead of partway through a raw error; these
 are generic capability checks, not WSL-specific branching. If asked about WSL support again, extend
 that module rather than re-researching from scratch.
+
+## CLI permission allowlist pipeline
+
+`cli-allowlist/` (tracked, unlike the gitignored `reference/` research dump it grew out of) keeps a
+read_only/write/dangerous classification for every CLI tool this machine has installed — base
+system included, not just what `setup.toml` installs — so Claude Code / Copilot permission rules
+can be generated from real `--help` output instead of hand-written guesses, and `inv
+allowlist.apply` can keep `~/.claude/settings.json` current from it automatically. `tasks/
+allowlist.py` implements it as `inv allowlist.{extract,classify,review,render,apply,status}`.
+
+**Full writeup, including every gotcha the first implementation pass hit and how testing (not
+code review) caught each one, is [`docs/cli-allowlist.md`](docs/cli-allowlist.md) — read that
+before re-deriving this architecture from scratch or "fixing" something that was already a
+deliberate tradeoff** (why there's no PreToolUse hook, why dangerous/write tiers render as `ask`
+rather than `deny`, why `--bare` isn't used for the classify step, why the `apply` manifest lives
+outside the repo).
 
 ## Git workflow
 
