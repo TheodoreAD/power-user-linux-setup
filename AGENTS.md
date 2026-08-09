@@ -6,6 +6,15 @@ containing Claude Code's `@AGENTS.md` import directive — so Claude Code and an
 also happens to read a literal `CLAUDE.md` see byte-identical content, no special-case import
 syntax required. See `tasks/ai.py` for why this replaced the import-line approach.
 
+## Global conventions live in `~/AGENTS.md`
+
+Anyone working in this repo already has `~/AGENTS.md` installed — this repo is literally what
+deploys it (`[packages.claude-global-md]` in `setup.toml`, symlinked from `~/.claude/CLAUDE.md`
+the same way this file symlinks from its own `CLAUDE.md`). It covers sudo/ssh askpass, the
+`AGENTS.md`-over-`CLAUDE.md` convention itself, cross-session memory policy, and Bash/allowlist
+discipline (don't `cd` out of a project, prefer several simple commands over one chained one).
+Nothing universal is repeated below — only what's specific to this repo.
+
 ## AI agent tooling (`tasks/ai.py`)
 
 `inv ai.skills` and `inv ai.init` scaffold the conventions this repo already follows — a minimal

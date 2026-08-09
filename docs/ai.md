@@ -65,7 +65,7 @@ claude
 
 PULSE installs it this way too — `[packages.claude-code]` in `setup.toml`, via `inv tools.install` — so on this machine you generally don't need the command above at all. (`npm install -g @anthropic-ai/claude-code` still works but is the legacy path.)
 
-See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global `CLAUDE.md`, `AGENTS.md`/`.agents/skills` scaffolding for any project), see [claude-code.md](claude-code.md).
+See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global `~/AGENTS.md` symlinked as `CLAUDE.md`, `AGENTS.md`/`.agents/skills` scaffolding for any project), see [claude-code.md](claude-code.md).
 
 ### Goose
 
