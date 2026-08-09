@@ -2130,13 +2130,13 @@
   
 
 
-<h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
+<h1 id="how-it-works">How it works</h1>
 <p>The mechanics behind <code>inv setup</code>: how PULSE writes shared config files without clobbering manual
 edits, how <code>tags</code>/<code>enabled</code>/<code>PULSE_EXCLUDE_TAGS</code> decide what gets installed, and what each setup
 phase actually runs. Start at <a href="index.html">index.md</a> if you just want to run the thing — this page
 is for when you need to change what it does, build a new environment profile, or debug why a
 package was (or wasn&rsquo;t) picked up.</p>
-<h2 id="configuration-management">Configuration management<a class="headerlink" href="#configuration-management" title="Permanent link">&para;</a></h2>
+<h2 id="configuration-management">Configuration management</h2>
 <p>PULSE owns config files through named sentinel blocks rather than overwriting whole files. Any snippet written to a shared config file is wrapped in a PULSE block:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># ╔═══════════════════════════════ PULSE::&lt;name&gt; ════════════════════════════╗
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>...config content...
@@ -2145,7 +2145,7 @@ package was (or wasn&rsquo;t) picked up.</p>
 <p>78 characters wide, name centered, box-drawing corners. <code>╔</code>/<code>╗</code> open the block, <code>╚</code>/<code>╝</code> close it. <code>&lt;name&gt;</code> is the <code>[packages.&lt;name&gt;]</code> key from <code>setup.toml</code>.</p>
 <p><strong>Why:</strong> config files like <code>~/.zshrc</code> or <code>/etc/sysctl.conf</code> are shared — multiple tools and the user write to them. Overwriting the file on each run would destroy manual edits. Sentinels let each PULSE-managed entry own its own region of the file independently.</p>
 <p><strong>Idempotency:</strong> on re-run the block is found by its opening marker and replaced in place if the content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.</p>
-<h3 id="managed-files">Managed files<a class="headerlink" href="#managed-files" title="Permanent link">&para;</a></h3>
+<h3 id="managed-files">Managed files</h3>
 <table>
 <thead>
 <tr>
@@ -2202,7 +2202,7 @@ package was (or wasn&rsquo;t) picked up.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="adding-a-new-block">Adding a new block<a class="headerlink" href="#adding-a-new-block" title="Permanent link">&para;</a></h3>
+<h3 id="adding-a-new-block">Adding a new block</h3>
 <p>Declare <code>zshrc</code>, <code>zshenv</code>, or <code>zprofile</code> on any package entry in <code>setup.toml</code>:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[packages.mytool]</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;apt&quot;</span>
@@ -2213,7 +2213,7 @@ package was (or wasn&rsquo;t) picked up.</p>
 </span></code></pre></div>
 <p>Run <code>inv zsh.configure</code> — the block is written on first run and updated in place on subsequent runs. For non-shell config files, call <code>util.ensure_block(path, name, content)</code> or <code>util.ensure_block_text(text, name, content)</code> (returns new text without writing, for files that require <code>sudo</code>).</p>
 <hr />
-<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either<a class="headerlink" href="#tags-enabled-and-which-tasks-actually-respect-either" title="Permanent link">&para;</a></h2>
+<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either</h2>
 <p>Every <code>[packages.*]</code> entry has two independent, unrelated ways to be skipped:</p>
 <ul>
 <li><strong><code>enabled = false</code></strong> — a permanent, environment-independent switch baked into <code>setup.toml</code>. Used for things that are evaluated-but-not-wanted (e.g. <code>freon</code>, superseded by <code>vitals</code>) or opt-in extras (e.g. <code>glab</code>, <code>atuin</code>).</li>
@@ -2295,9 +2295,12 @@ package was (or wasn&rsquo;t) picked up.</p>
 <p>The rest of the tags in <code>setup.toml</code> (<code>cli</code>, <code>dev</code>, <code>k8s</code>, <code>shell</code>, <code>vcs</code>, <code>search</code>, <code>modern</code>, <code>legacy</code>, …) are purely organizational/searchable — categorization for humans reading the file, not wired to any exclusion recipe. Don&rsquo;t assume a tag does something just because it exists; check whether it&rsquo;s actually referenced in a documented <code>PULSE_EXCLUDE_TAGS</code> recipe (this file, <code>dev-container.md</code>, <code>wsl.md</code>) or <code>setup.toml</code>&rsquo;s header comment.</p>
 <p><strong><code>{version}</code> / <code>version_cmd</code> templating</strong> — the <code>archive</code> and <code>deb-url</code> methods both support resolving a dynamic version before downloading: set <code>version_cmd</code> to a shell command that prints the version string, and include <code>{version}</code> in <code>download_url</code> (<code>archive</code>) or <code>url</code> (<code>deb-url</code>). See <code>[packages.atuin]</code> (archive) or <code>[packages.glab]</code> (deb-url) for examples. <code>deb-github</code> resolves version differently — via the GitHub releases API directly (<code>tag</code> field, or auto-latest if omitted) — since it doesn&rsquo;t need a custom command.</p>
 <hr />
-<h2 id="setup-phases">Setup phases<a class="headerlink" href="#setup-phases" title="Permanent link">&para;</a></h2>
+<h2 id="setup-phases">Setup phases</h2>
 <p>What <code>inv setup</code> actually runs, in order. One interruption: a single logout at the end. An optional reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural reboot — nothing depends on it being immediate.</p>
-<h3 id="phase-1-system-config">Phase 1 — System config<a class="headerlink" href="#phase-1-system-config" title="Permanent link">&para;</a></h3>
+<p>Under WSL, <code>inv setup</code> detects it (<code>util.is_wsl()</code>) and delegates straight to <code>inv wsl.install</code>
+instead of the phases below — different tag exclusions, DNS handling, and it skips
+<code>docker.configure</code>/<code>fonts.*</code> by default. See <a href="wsl.html">wsl.md</a> for what that runs instead.</p>
+<h3 id="phase-1-system-config">Phase 1 — System config</h3>
 <p>All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No reboot needed.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>system.locale
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>system.curlrc
@@ -2307,7 +2310,7 @@ package was (or wasn&rsquo;t) picked up.</p>
 </span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>inv<span class="w"> </span>system.initramfs-compression<span class="w"> </span><span class="c1"># optional — deferred to next reboot</span>
 </span></code></pre></div>
 <p>GRUB (<code>nomodeset</code>) is manual and hardware-specific — see <a href="troubleshooting.html">troubleshooting.md</a>. If applied, it also defers to next reboot.</p>
-<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools<a class="headerlink" href="#phase-2-packages-and-tools" title="Permanent link">&para;</a></h3>
+<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools</h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>apt.configure<span class="w">      </span><span class="c1"># write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>apt.repos<span class="w">          </span><span class="c1"># register external repo GPG keys + sources, then install their packages</span>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>inv<span class="w"> </span>apt.base<span class="w">           </span><span class="c1"># install from Ubuntu default repos</span>
@@ -2319,15 +2322,17 @@ package was (or wasn&rsquo;t) picked up.</p>
 <p><code>inv apt.configure</code> writes a drop-in that suppresses dpkg&rsquo;s progress bar output — run it once before any other apt tasks.</p>
 <p><code>inv apt.repos</code> is a two-phase command: Phase 1 registers all GPG keys and sources files, then runs <code>apt update</code> once; Phase 2 installs the packages. The two phases are bundled because the packages can&rsquo;t be installed without the repo. If a GPG key URL or sources write fails, that repo is skipped with a <code>WARNING:</code> message rather than aborting the whole run.</p>
 <p>After <code>inv tools.install</code> + <code>inv zsh.configure</code>, all new shell sessions have <code>SUDO_ASKPASS</code> set to <code>~/.local/bin/askpass-zenity</code>. Any sudo call via <code>sudo -A</code> (used by the task scripts when <code>SUDO_ASKPASS</code> is present) opens a Zenity GUI dialog for the password instead of requiring a terminal prompt.</p>
-<h3 id="phase-3-shell-config">Phase 3 — Shell config<a class="headerlink" href="#phase-3-shell-config" title="Permanent link">&para;</a></h3>
+<h3 id="phase-3-shell-config">Phase 3 — Shell config</h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>zsh.omz-configure
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>inv<span class="w"> </span>zsh.configure
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>inv<span class="w"> </span>zsh.p10k-configure<span class="w">    </span><span class="c1"># copies config/p10k.zsh to ~/.p10k.zsh if not already present</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>inv<span class="w"> </span>zsh.p10k-configure<span class="w">       </span><span class="c1"># copies config/p10k.zsh to ~/.p10k.zsh if not already present</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">    </span><span class="c1"># usermod -s — takes a new terminal to actually apply, doesn&#39;t chsh</span>
 </span></code></pre></div>
 <p><code>zsh.p10k-configure</code> installs the repo&rsquo;s opinionated baseline (lean style, Nerd Fonts icons, transient prompt, instant prompt) and is a no-op if <code>~/.p10k.zsh</code> already exists — manual customizations are never overwritten.</p>
 <p>To redo or fix the prompt: delete <code>~/.p10k.zsh</code> and run <code>inv zsh.p10k-configure</code> to restore the baseline, or run <code>p10k configure</code> to go through the interactive wizard. To update the baseline itself, copy your <code>~/.p10k.zsh</code> to <code>config/p10k.zsh</code>.</p>
-<p>Phases 1–3 run automatically via <code>inv setup</code>.</p>
-<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em><a class="headerlink" href="#phase-4-desktop-before-logout" title="Permanent link">&para;</a></h3>
+<p><code>zsh.set-default-shell</code> uses <code>usermod -s</code>, not <code>chsh</code> — <code>chsh</code>&rsquo;s PAM password prompt doesn&rsquo;t work non-interactively the way <code>sudo -A</code> does. It&rsquo;s a no-op if the login shell is already some zsh (matched by binary name, not exact path — a machine can have more than one zsh on disk). Takes a brand new terminal/login session to actually apply, not just a new tab in an already-open shell.</p>
+<p>Phases 1–3 run automatically via <code>inv setup</code>. It finishes by calling <code>util.print_next_steps()</code>, which checks real state (current login shell, whether <code>~/.config/pulse/identity.toml</code> exists — not a stored &ldquo;already told you&rdquo; flag) and prints the single next concrete thing to do, including which Phase 5 command comes next once identity.toml is filled in. Safe to re-run after doing whatever it suggests.</p>
+<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em></h3>
 <p><code>inv setup</code> also runs <code>fonts.install</code> and <code>fonts.configure</code>, which:</p>
 <ul>
 <li>Download all Nerd Font families to <code>~/.local/share/fonts/</code></li>
@@ -2339,7 +2344,7 @@ package was (or wasn&rsquo;t) picked up.</p>
 Covers: docker group, locale full effect, GNOME extension activation, font cache.
 If GRUB or initramfs were changed, reboot instead of logout — one restart covers both.</p>
 </blockquote>
-<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em><a class="headerlink" href="#phase-5-authentication-interactive-last" title="Permanent link">&para;</a></h3>
+<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>gh<span class="w"> </span>auth<span class="w"> </span>login<span class="w">             </span><span class="c1"># GitHub CLI — opens browser</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>ssh-keygen<span class="w"> </span>-t<span class="w"> </span>ed25519<span class="w">     </span><span class="c1"># or follow ssh.md for full setup</span>
 </span></code></pre></div>
