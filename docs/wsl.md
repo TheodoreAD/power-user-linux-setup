@@ -310,13 +310,22 @@ inv wsl.install --dns=no     # public DNS blocked on this network — see "If pu
 
 It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS
 are actually live yet — skipped with a message otherwise, if `wsl.fix` just changed
-`/etc/wsl.conf` and you haven't restarted WSL), *then* `apt.repos`/`apt.base`/`apt.deb`,
-`tools.install`, `python.tools`, `node.install`, the zsh tasks, and `zsh.set_default_shell`. DNS
-has to be fixed before the apt/tools steps — on a re-run after a restart with
-`generateResolvConf=false` already active, DNS is broken (see
-[Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of those
-later steps needs working DNS itself. It finishes by printing the next concrete manual step (see
-["next steps" reporting](#next-steps-reporting) below).
+`/etc/wsl.conf` and you haven't restarted WSL), *then* two named phases run through
+`tasks/phases.py`: **packages** (`apt.repos`/`apt.base`/`apt.deb`/`tools.install`/`ai.skills`/
+`python.tools`/`node.install`) and **shell** (`zsh.omz-configure`/`zsh.configure`/
+`zsh.p10k-configure`/`zsh.set-default-shell`). DNS has to be fixed before the packages/shell
+phases — on a re-run after a restart with `generateResolvConf=false` already active, DNS is broken
+(see [Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of
+those later steps needs working DNS itself. It finishes by printing the next concrete manual step
+(see ["next steps" reporting](#next-steps-reporting) below).
+
+Each phase prints a labeled banner, then probes itself with `PULSE_DRY_RUN` forced on (every task
+inside already has a side-effect-free dry-run check) before doing any real work. If the probe comes
+back with nothing missing, it asks whether to skip the phase — default **skip** on Enter, and
+skipped silently outside a real terminal. This is what makes re-running `inv wsl.install` after the
+`/etc/wsl.conf` restart cheap: if packages and shell already succeeded before the restart, each is
+now a single confirmation instead of redoing every `apt`/tool/`zsh` step from scratch. A phase with
+real outstanding work is never gated behind a prompt — it just runs.
 
 This is the one worth using instead of pasting the equivalent multi-line block below into a
 terminal: that block is a series of separate `inv` invocations one per line, so if one hangs (a
@@ -335,10 +344,15 @@ asks before doing anything:
   defaulting to "try public DNS" (safe either way — it verifies and falls back automatically).
 - A one-line summary of what's about to happen (given your answer above, plus `--wslg`/`--docker`),
   then a final "Proceed?" — answering no aborts before touching anything.
+- Once running, the **packages** and **shell** phases each ask "Already looks complete — skip this
+  phase?" if their own dry-run probe found nothing missing — see [Recommended
+  sequence](#recommended-sequence) above.
 
-Both default to yes on Enter, so `yes | inv wsl.install` still works non-interactively if you ever
-need it scripted; a genuinely non-interactive invocation (piped, cron, CI) skips the prompts
-entirely and behaves as `--dns=auto` always has (try public DNS, fall back automatically).
+All of these default to yes (proceed / skip) on Enter, so `yes | inv wsl.install` still works
+non-interactively if you ever need it scripted; a genuinely non-interactive invocation (piped,
+cron, CI) skips every prompt entirely — `--dns=auto` behaves as it always has (try public DNS, fall
+back automatically), and any phase whose probe came back clean is skipped silently rather than
+redone.
 
 Summaries, warnings, doc pointers, and these prompts all render as bordered blocks — via
 `tasks/ui.py`, a small formatting library (`ui.block`/`ui.note`/`ui.warn`/`ui.ask`) that's what
@@ -392,6 +406,7 @@ PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos 
 # PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb
 
 inv tools.install
+inv ai.skills
 inv python.tools
 inv node.install
 inv zsh.omz-configure zsh.configure zsh.p10k-configure

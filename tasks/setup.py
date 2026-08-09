@@ -1,11 +1,13 @@
 from invoke import task
 
-from . import ai, apt, docker, fonts, next_steps, node, python, system, tools, util, wsl, zsh
+from . import ai, apt, docker, fonts, next_steps, node, phases, python, system, tools, util, wsl, zsh
 
 
 @task
 def setup(c):
-    """Run full machine setup (all tasks in order) — delegates to wsl.install under WSL."""
+    """Run full machine setup, in phases (system, packages, shell, desktop) — delegates to
+    wsl.install under WSL. Each phase is skippable (default: skip) if it already looks done.
+    """
     if util.is_wsl():
         print(
             "[setup] WSL detected — delegating to `inv wsl.install` (different tag exclusions, "
@@ -15,23 +17,24 @@ def setup(c):
         wsl.install(c)
         return
 
-    system.locale(c)
-    system.curlrc(c)
-    system.dns(c)
-    apt.configure(c)
-    apt.repos(c)
-    apt.base(c)
-    docker.configure(c)
-    apt.deb(c)
-    tools.install(c)
-    ai.skills(c)
-    system.apparmor_profiles(c)
-    zsh.omz_configure(c)
-    python.tools(c)
-    node.install(c)
-    zsh.configure(c)
-    zsh.p10k_configure(c)
-    zsh.set_default_shell(c)
-    fonts.install(c)
-    fonts.configure(c)
+    phases.run(c, "system", [system.locale, system.curlrc, system.dns],
+               note="locale, curl config, DNS")
+
+    phases.run(
+        c, "packages",
+        [apt.configure, apt.repos, apt.base, docker.configure, apt.deb,
+         tools.install, ai.skills, system.apparmor_profiles, python.tools, node.install],
+        note="apt config/repos/packages, Docker, .deb packages, script/binary tools, "
+             "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools",
+    )
+
+    phases.run(
+        c, "shell",
+        [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell],
+        note="Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell",
+    )
+
+    phases.run(c, "desktop", [fonts.install, fonts.configure],
+               note="Nerd Fonts, monospace font config")
+
     next_steps.print_next_steps()

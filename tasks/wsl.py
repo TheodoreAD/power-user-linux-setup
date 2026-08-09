@@ -4,7 +4,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import ai, apt, next_steps, node, python, system, tools, ui, util, zsh
+from . import ai, apt, next_steps, node, phases, python, system, tools, ui, util, zsh
 
 _WSL_CONF   = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
@@ -321,8 +321,8 @@ def fix(c, dns=True):
 
 @task
 def install(c, wslg="auto", docker=False, dns="auto"):
-    """Run the docs/wsl.md recommended install sequence in one shot: check, fix, system.locale/
-    system.dns (only if systemd/DNS are actually live yet), then apt/tools/language/zsh setup
+    """Run the docs/wsl.md recommended install sequence in one shot, as named phases: wsl config,
+    system config (locale/DNS, only if systemd/DNS are actually live yet), packages, then shell —
     with WSL-appropriate tags excluded.
 
     This exists instead of pasting the multi-line sequence from docs/wsl.md into a terminal:
@@ -333,7 +333,10 @@ def install(c, wslg="auto", docker=False, dns="auto"):
 
     In a real terminal (not piped/scripted/CI), asks before doing anything: a one-line summary
     of what's about to happen, plus the DNS question below if `dns` is left at "auto". Answers
-    default to "yes" on Enter, so scripting this by piping `yes` still works if needed.
+    default to "yes" on Enter, so scripting this by piping `yes` still works if needed. On a
+    re-run — e.g. after the WSL restart that `/etc/wsl.conf` changes require — the packages and
+    shell phases each probe whether they already look done and, if so, offer to skip (default:
+    skip) instead of redoing apt/tool/zsh work that already succeeded (see tasks/phases.py).
 
     wslg: "auto" (default, detected the same way `inv wsl.check` does), "yes", or "no" — controls
       which tag set is excluded (see docs/wsl.md, "Tags to exclude").
@@ -387,6 +390,11 @@ def install(c, wslg="auto", docker=False, dns="auto"):
 
     check(c)
 
+    ui.block(
+        "/etc/wsl.conf: systemd, DNS mode. Requires a full WSL restart (wsl.exe --shutdown) to "
+        "take effect.",
+        label="phase: wsl config",
+    )
     pre = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
     fix(c, dns=use_public_dns)
     post = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
@@ -402,6 +410,11 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     # oh-my-zsh clone, ...): if this is a re-run after a restart and generateResolvConf=false is
     # already live, DNS is broken (stale resolv.conf, see _resolv_conf_symlinked_to_stub) until
     # this runs — doing it last meant every one of those steps hit the same DNS failure first.
+    ui.block(
+        "Locale and DNS — skipped automatically below until systemd/DNS are actually live "
+        "post-restart.",
+        label="phase: system config",
+    )
     if _systemd_running():
         system.locale(c)
     else:
@@ -466,17 +479,18 @@ def install(c, wslg="auto", docker=False, dns="auto"):
         os.environ["PULSE_EXCLUDE_TAGS"] = ",".join(sorted(excluded))
         print(f"[wsl.install] PULSE_EXCLUDE_TAGS={os.environ['PULSE_EXCLUDE_TAGS']}")
 
-    apt.repos(c)
-    apt.base(c)
-    apt.deb(c)
-    tools.install(c)
-    ai.skills(c)
-    python.tools(c)
-    node.install(c)
-    zsh.omz_configure(c)
-    zsh.configure(c)
-    zsh.p10k_configure(c)
-    zsh.set_default_shell(c)
+    phases.run(
+        c, "packages",
+        [apt.repos, apt.base, apt.deb, tools.install, ai.skills, python.tools, node.install],
+        note="apt repos/packages, script/binary tools, AI agent skills scaffolding, Python and "
+             "Node.js",
+    )
+
+    phases.run(
+        c, "shell",
+        [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell],
+        note="Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell",
+    )
 
     if docker:
         ui.note("--docker: run `inv docker.configure` once systemd is confirmed live (`inv wsl.check`).")
