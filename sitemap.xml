@@ -88,6 +88,9 @@
         <loc>https://TheodoreAD.github.io/power-user-linux-setup/citrix.html</loc>
       </url>
       <url>
+        <loc>https://TheodoreAD.github.io/power-user-linux-setup/webex.html</loc>
+      </url>
+      <url>
         <loc>https://TheodoreAD.github.io/power-user-linux-setup/locale.html</loc>
       </url>
       <url>
@@ -95,8 +98,5 @@
       </url>
       <url>
         <loc>https://TheodoreAD.github.io/power-user-linux-setup/troubleshooting.html</loc>
-      </url>
-      <url>
-        <loc>https://TheodoreAD.github.io/power-user-linux-setup/upgrade_20_04_to_24_04.html</loc>
       </url>
 </urlset>

@@ -1772,6 +1772,33 @@
   
   
     <li class="md-nav__item">
+      <a href="./webex.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Webex
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="./locale.html" class="md-nav__link">
         
   
@@ -1834,33 +1861,6 @@
     
   
   Troubleshooting
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="./upgrade_20_04_to_24_04.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Ubuntu 20.04 → 24.04 Upgrade Tracker
 
     
   </span>
@@ -2074,6 +2074,13 @@
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>ssh.forward<span class="w">    </span><span class="c1"># ssh-copy-id to non-git server hosts (skips GitHub/GitLab)</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>ssh.add<span class="w">        </span><span class="c1"># add all keys for this machine to ssh-agent</span>
 </span></code></pre></div>
+<p><strong>Migrating a machine with an existing hand-written <code>~/.ssh/config</code></strong> (not managed by PULSE, no
+sentinel markers): <code>inv ssh.configure</code> only <em>appends</em> a new PULSE block via <code>ensure_block</code> — it
+won&rsquo;t touch or remove existing hand-written blocks. That&rsquo;s safe in general, but if a new
+<code>ssh_hosts</code> alias collides with an existing hand-written <code>Host</code> entry (e.g. both define
+<code>github.com</code>), the old block wins, since SSH config resolution is first-match-wins per keyword.
+Check the <code>ssh_hosts</code> alias list against the existing config&rsquo;s <code>Host</code> entries for collisions
+before running this on a machine with years of accumulated manual SSH config.</p>
 <h2 id="what-gets-created">What gets created</h2>
 <p><strong>Keys</strong> — one per unique email across your <code>ssh_hosts</code> entries, named:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519

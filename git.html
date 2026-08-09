@@ -1761,6 +1761,33 @@
   
   
     <li class="md-nav__item">
+      <a href="./webex.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Webex
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
       <a href="./locale.html" class="md-nav__link">
         
   
@@ -1823,33 +1850,6 @@
     
   
   Troubleshooting
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="./upgrade_20_04_to_24_04.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Ubuntu 20.04 → 24.04 Upgrade Tracker
 
     
   </span>
@@ -2052,6 +2052,10 @@
 </span></code></pre></div>
 <p><code>inv git.configure</code> disables the global <code>user.name</code>/<code>user.email</code> and wires up <code>includeIf.gitdir</code>
 so git automatically picks the right identity based on which <code>~/projects/&lt;directory&gt;/</code> the repo lives in.</p>
+<p>This per-directory <code>.gitconfig</code>/<code>includeIf</code> mechanism has been running unmodified on an existing
+machine for a long time, but hasn&rsquo;t yet been validated end-to-end on a genuinely fresh install —
+worth confirming the created <code>~/projects/&lt;directory&gt;/.gitconfig</code> files and the global <code>includeIf</code>
+entries look right the next time this repo is bootstrapped on a new machine.</p>
 <h2 id="multi-account-platforms">Multi-account platforms</h2>
 <p>For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in <code>identity.toml</code>:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[[ssh_hosts]]</span>
