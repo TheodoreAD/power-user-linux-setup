@@ -843,18 +843,33 @@ interactive terminal is unaffected and still prompts normally. Just run the `git
 normal; no HTTPS/token workaround needed. The dialog blocks on user input, so if nobody is at the
 machine to enter the passphrase it will time out rather than hang forever.
 
+## Preferred search tools
+
+When shelling out via Bash — not the dedicated Grep/Glob tools, which are already preferred by
+default and unaffected by this — use `rg` instead of `grep -r`/`grep -R` and `fd` instead of
+`find`. Both are installed globally via power-user-linux-setup, both are faster, and both respect
+`.gitignore` by default (fewer accidental matches inside `node_modules/`, `.venv/`, build output,
+etc.). Plain `grep`/`find` are still fine for a simple non-recursive lookup, inside a pipeline that
+specifically needs `find`'s `-exec`/`-delete`, or anything meant to stay portable to a machine
+without rg/fd — default to rg/fd otherwise.
+
 ## Project conventions
 
 If a repo has (or should have) instructions for AI coding agents, prefer `AGENTS.md` at the repo
 root over `CLAUDE.md` — it's the cross-tool convention read by 30+ agents (Claude Code, Cursor,
-Copilot, Aider, ...), not just this one. `CLAUDE.md`, if it exists at all, should only ever be a
-one-line `@AGENTS.md` import (or a symlink), plus a short Claude-specific addendum below the import
-if truly needed — never a duplicate copy of the same content.
+Copilot, Aider, ...), not just this one. `CLAUDE.md`, if it exists at all, should be a plain
+**symlink** to `AGENTS.md` — not a file containing the `@AGENTS.md` import directive. The import
+syntax is Claude-Code-specific, so any other harness that also happens to read a literal
+`CLAUDE.md` (for compat) would see that text verbatim instead of real instructions; a symlink
+presents byte-identical content to every harness with no special-case parsing anywhere. Trade-off
+worth knowing: unlike the import form, nothing can be appended below a symlink's target — a
+genuinely Claude-specific addendum belongs in `AGENTS.md` itself (shared) or a separate
+`.claude/`-scoped file, never a duplicate copy of `AGENTS.md`'s content.
 
 Skills go in `.agents/skills/` — the emerging cross-tool convention — with `.claude/skills`
 symlinked to it so Claude Code actually discovers them (`.agents/skills/` alone isn't read
 natively yet). `inv ai.skills` sets this up for `~`; `inv ai.init [--dir PATH]` scaffolds a full
-project (`AGENTS.md` + the `CLAUDE.md` shim + the skills symlink) — both from the
+project (`AGENTS.md` + the `CLAUDE.md` symlink + the skills symlink) — both from the
 power-user-linux-setup repo. Neither ever overwrites a file or symlink that's already there.
 
 ## Cross-session memory

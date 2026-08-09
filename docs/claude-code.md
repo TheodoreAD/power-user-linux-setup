@@ -72,14 +72,29 @@ hand-editing `~/.claude/CLAUDE.md` directly — a manual edit gets silently over
 Two conventions live there too, deliberately global rather than repeated per-repo — see the
 `content` field for the exact wording:
 
-- **`CLAUDE.md` is only ever a shim.** Any repo that wants agent instructions should have a real
-  `AGENTS.md` (the cross-tool standard 30+ agent CLIs read — Anthropic's own docs recommend this
-  import pattern) and, if `CLAUDE.md` exists at all, it's a one-line `@AGENTS.md` import. This
-  repo's own root follows that: `AGENTS.md` has the actual content, `CLAUDE.md` is `@AGENTS.md`.
+- **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
+  `AGENTS.md` (the cross-tool standard 30+ agent CLIs read) and, if `CLAUDE.md` exists at all, it's
+  a plain symlink to `AGENTS.md` — not a file containing Claude Code's `@AGENTS.md` import
+  directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content
+  to every harness that reads a literal `CLAUDE.md`, no special-case parsing needed. Trade-off:
+  nothing can be appended below a symlink's target, so a genuinely Claude-specific addendum belongs
+  in `AGENTS.md` itself instead. This repo's own root follows that: `AGENTS.md` has the actual
+  content, `CLAUDE.md` is `-> AGENTS.md`.
 - **Cross-session memory policy.** Durable, repo-specific knowledge belongs in that repo's
   `AGENTS.md`, not Claude Code's auto-memory system (`~/.claude/projects/.../memory/`) — memory is
   invisible to every other contributor, every other agent tool, and every code review; `AGENTS.md`
   is version-controlled and visible to all three.
+
+## `~/.claude/settings.json` — permissions merged in by `inv allowlist.apply`
+
+Unlike `~/.claude/CLAUDE.md` above, `~/.claude/settings.json` is *not* fully PULSE-owned — it's a
+partial merge. `inv allowlist.apply` (see [`cli-allowlist.md`](cli-allowlist.md) for the full
+pipeline this is the last step of) rewrites only the `permissions.allow`/`permissions.ask` arrays,
+tracking what it wrote via a local manifest so it never touches a rule you added by hand, or any
+other key in the file (`theme`, `effortLevel`, `cleanupPeriodDays`, ...). `cleanupPeriodDays`
+specifically — governs how long session transcripts/tasks/shell-snapshots/backups are kept — is
+set to `365` here (default is `30`) as a deliberate preference, reviewed and confirmed while
+building the allowlist pipeline, not something PULSE enforces or will change on your behalf.
 
 ## `.agents/skills/` and project scaffolding — `tasks/ai.py`
 
@@ -92,8 +107,9 @@ PULSE symlinks `.claude/skills` to `.agents/skills`:
   to it. Defaults to `~` (the personal, cross-project skills location); part of the standard
   `inv setup`/`inv wsl.install` chain.
 - `inv ai.init [--dir PATH]` — full project scaffold: the skills symlink above, plus a minimal
-  `AGENTS.md` and a `CLAUDE.md` shim, for any project on the machine (defaults to the current
-  directory). Run it from this repo against another project, e.g. `inv ai.init --dir ~/projects/foo`.
+  `AGENTS.md` and a `CLAUDE.md` symlinked to it, for any project on the machine (defaults to the
+  current directory). Run it from this repo against another project, e.g.
+  `inv ai.init --dir ~/projects/foo`.
 
 Both tasks check for existing files/symlinks first and skip rather than overwrite — safe to re-run,
 and safe to point at a project that already has hand-written `AGENTS.md`/`CLAUDE.md`/skills content.
