@@ -2179,7 +2179,7 @@
   
 
 
-<h1 id="zensical-docs-site-engine">Zensical (docs site engine)</h1>
+<h1 id="zensical-docs-site-engine">Zensical (docs site engine)<a class="headerlink" href="#zensical-docs-site-engine" title="Permanent link">&para;</a></h1>
 <p>This site is built with <a href="https://zensical.org/">zensical</a> (<code>requirements-docs.txt</code> pins
 <code>zensical==0.0.44</code>), not <code>mkdocs</code> + <code>mkdocs-material</code> anymore (migrated 2026-08-08).
 <code>mkdocs</code>/<code>mkdocs-material</code> is still installed machine-wide as a <code>uv tool</code> (<code>setup.toml</code>, see
@@ -2195,7 +2195,7 @@ pages in headless Chrome — not by trusting the hosted docs at zensical.org, wh
 be incomplete for at least one case (see <a href="#mermaid">Mermaid</a> below). If you&rsquo;re re-verifying this
 after a version bump, that&rsquo;s the method: don&rsquo;t just read the changelog, build the real site and
 look at the real output.</p>
-<h2 id="config-format-staying-on-mkdocsyml-not-zensicaltoml">Config format: staying on <code>mkdocs.yml</code>, not <code>zensical.toml</code></h2>
+<h2 id="config-format-staying-on-mkdocsyml-not-zensicaltoml">Config format: staying on <code>mkdocs.yml</code>, not <code>zensical.toml</code><a class="headerlink" href="#config-format-staying-on-mkdocsyml-not-zensicaltoml" title="Permanent link">&para;</a></h2>
 <p>Zensical supports two config formats: its own native <code>zensical.toml</code>, or drop-in <code>mkdocs.yml</code>
 compat (<code>zensical build</code> auto-detects whichever is present, preferring <code>zensical.toml</code> if both
 exist). We deliberately kept <code>mkdocs.yml</code> rather than migrating to <code>zensical.toml</code> — the native
@@ -2209,7 +2209,7 @@ everything below works fine through the compat layer.</p>
 <li><code>materialx.emoji.*</code> and <code>material.extensions.*</code> python object references in YAML are
   regex-rewritten to <code>zensical.extensions.*</code> at load time, before the YAML tags resolve.</li>
 </ul>
-<h2 id="docs_dir-is-walked-not-gitignore-aware"><code>docs_dir</code> is walked, not gitignore-aware</h2>
+<h2 id="docs_dir-is-walked-not-gitignore-aware"><code>docs_dir</code> is walked, not gitignore-aware<a class="headerlink" href="#docs_dir-is-walked-not-gitignore-aware" title="Permanent link">&para;</a></h2>
 <p>Zensical&rsquo;s file discovery uses plain <code>walkdir</code> (confirmed in the Rust source, <code>Cargo.toml</code> has no
 <code>ignore</code>-crate dependency) — it has no concept of <code>.gitignore</code>. Any non-content directory nested
 inside <code>docs_dir</code> gets walked and built as if it were site content, warnings and all.</p>
@@ -2221,7 +2221,7 @@ checkout — but every <em>local</em>
 hundreds of broken-link warnings or hung outright. Fixed by moving it to repo-root <code>reference/</code>,
 outside <code>docs_dir</code> entirely, 2026-08-08. <strong>Takeaway: never put anything under <code>docs_dir</code> that
 isn&rsquo;t meant to be a site page, even if it&rsquo;s gitignored.</strong></p>
-<h2 id="plugins-a-small-native-allowlist-not-the-mkdocs-plugin-ecosystem"><code>plugins:</code> — a small native allowlist, not the mkdocs plugin ecosystem</h2>
+<h2 id="plugins-a-small-native-allowlist-not-the-mkdocs-plugin-ecosystem"><code>plugins:</code> — a small native allowlist, not the mkdocs plugin ecosystem<a class="headerlink" href="#plugins-a-small-native-allowlist-not-the-mkdocs-plugin-ecosystem" title="Permanent link">&para;</a></h2>
 <p>Zensical does not run arbitrary mkdocs plugins (no Python entry-point plugin lifecycle). It has
 native, hardcoded support for exactly these plugin names (confirmed by reading
 <code>_convert_plugins</code>/<code>_shim_*</code> in <code>config.py</code>): <code>search</code>, <code>offline</code>, <code>autorefs</code>, <code>mkdocstrings</code>,
@@ -2231,7 +2231,7 @@ accepted and does <strong>nothing</strong> — no error, no warning, just dead c
 migration; mermaid rendering was happening through an entirely different path (see below).</p>
 <p><strong>Takeaway: if a plugin isn&rsquo;t in that list, don&rsquo;t bother adding it — check this list before
 assuming a familiar mkdocs plugin will do anything under zensical.</strong></p>
-<h2 id="markdown_extensions-replaces-zensicals-defaults-doesnt-merge-with-them"><code>markdown_extensions:</code> replaces zensical&rsquo;s defaults, doesn&rsquo;t merge with them</h2>
+<h2 id="markdown_extensions-replaces-zensicals-defaults-doesnt-merge-with-them"><code>markdown_extensions:</code> replaces zensical&rsquo;s defaults, doesn&rsquo;t merge with them<a class="headerlink" href="#markdown_extensions-replaces-zensicals-defaults-doesnt-merge-with-them" title="Permanent link">&para;</a></h2>
 <p>Zensical ships a <code>DEFAULT_MARKDOWN_EXTENSIONS</code> dict with sensible defaults (<code>abbr</code>, <code>admonition</code>,
 <code>md_in_html</code>, <code>pymdownx.betterem</code>, tabbed/tasklist with modern options, etc. — see
 <code>zensical/config.py</code>), but only when a config <strong>omits</strong> <code>markdown_extensions:</code> entirely
@@ -2242,7 +2242,7 @@ brought in line with zensical&rsquo;s own default <em>values</em> where they ove
 alternate style, <code>pymdownx.tasklist</code> custom checkbox, <code>pymdownx.highlight</code> anchor/line-span
 options, added <code>md_in_html</code> + <code>pymdownx.betterem</code>) — see git history on this file for the exact
 diff if checking whether a newer zensical version&rsquo;s defaults have changed further.</p>
-<h2 id="mermaid">Mermaid</h2>
+<h2 id="mermaid">Mermaid<a class="headerlink" href="#mermaid" title="Permanent link">&para;</a></h2>
 <p>Zensical has genuine <strong>native</strong> mermaid support baked into the theme&rsquo;s JS bundle
 (<code>assets/javascripts/bundle.*.min.js</code>): it lazy-loads a pinned <code>mermaid@11</code> from unpkg on demand
 (only if a mermaid diagram is actually present on the page) and themes it via <code>--md-mermaid-*</code>
@@ -2278,7 +2278,7 @@ wrong-theme (light-on-dark) with the old div-based config, correctly dark-themed
 <p><strong>Takeaway: if you migrate an existing <code>mkdocs-material</code> + <code>mermaid2</code> config to zensical, you
 must change <code>fence_div_format</code> → <code>fence_code_format</code>, or diagrams silently don&rsquo;t render and the
 build gives no indication why.</strong></p>
-<h2 id="no-native-math-mathjaxkatex-support">No native math (MathJax/KaTeX) support</h2>
+<h2 id="no-native-math-mathjaxkatex-support">No native math (MathJax/KaTeX) support<a class="headerlink" href="#no-native-math-mathjaxkatex-support" title="Permanent link">&para;</a></h2>
 <p>Unlike mermaid, there is no equivalent lazy-loader for <code>pymdownx.arithmatex</code> in the theme bundle
 — grepped for <code>MathJax</code>/<code>katex</code>/<code>arithmatex</code>, zero hits. Even though <code>pymdownx.arithmatex</code> is
 part of zensical&rsquo;s own <code>DEFAULT_MARKDOWN_EXTENSIONS</code>, using it still requires the site owner to
@@ -2286,19 +2286,19 @@ manually load MathJax or KaTeX via <code>extra_javascript</code>, exactly like t
 just removed. We have zero math content, so this wasn&rsquo;t added — re-evaluate if a future doc page
 needs math notation, and expect to hand-roll the CDN script the same way mermaid used to be
 hand-rolled pre-fix.</p>
-<h2 id="themefeatures-same-key-as-material-watch-the-typo"><code>theme.features</code> — same key as Material, watch the typo</h2>
+<h2 id="themefeatures-same-key-as-material-watch-the-typo"><code>theme.features</code> — same key as Material, watch the typo<a class="headerlink" href="#themefeatures-same-key-as-material-watch-the-typo" title="Permanent link">&para;</a></h2>
 <p>Standard Material-style <code>theme.features:</code> list (<code>content.code.copy</code>, <code>navigation.footer</code>, etc.)
 works under zensical too, sourced from zensical&rsquo;s own bootstrap template. Historical footgun in
 this repo specifically: the key was written as <code>feature:</code> (singular) inside a commented-out
 block for years, across both the <code>mkdocs-material</code> era and the initial zensical migration — a
 silent no-op the whole time, since neither engine recognizes a <code>feature:</code> key. Fixed 2026-08-08;
 current feature list is in <code>mkdocs.yml</code>.</p>
-<h2 id="-strict-is-aggressive-in-a-good-way"><code>--strict</code> is aggressive, in a good way</h2>
+<h2 id="-strict-is-aggressive-in-a-good-way"><code>--strict</code> is aggressive, in a good way<a class="headerlink" href="#-strict-is-aggressive-in-a-good-way" title="Permanent link">&para;</a></h2>
 <p><code>zensical build --strict</code> aborts on <strong>any</strong> warning — broken links, unresolved heading anchors,
 unused link reference definitions. This is stricter than it sounds: it caught a genuinely dead
 link in <code>docs/kubernetes.md</code> during the original mkdocs → zensical migration. Keep it in CI
 (<code>.github/workflows/publish_on_push.yml</code> already does).</p>
-<h2 id="checklist-for-next-time-re-verifying-after-a-version-bump">Checklist for next time (re-verifying after a version bump)</h2>
+<h2 id="checklist-for-next-time-re-verifying-after-a-version-bump">Checklist for next time (re-verifying after a version bump)<a class="headerlink" href="#checklist-for-next-time-re-verifying-after-a-version-bump" title="Permanent link">&para;</a></h2>
 <p>Re-run <code>zensical build --strict</code> at the repo root and re-check each of the above still holds,
 particularly:</p>
 <ul class="task-list">
