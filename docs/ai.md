@@ -59,11 +59,13 @@ aider src/main.go src/handler.go
 Anthropic's official terminal agent. Strongest at large-scope refactors, architecture reasoning, and multi-file changes. Requires an Anthropic API key or Pro/Max subscription.
 
 ```shell
-npm install -g @anthropic-ai/claude-code
+curl -fsSL https://claude.ai/install.sh | bash   # native installer, auto-updates itself
 claude
 ```
 
-See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global `CLAUDE.md`, this repo's own `AGENTS.md`), see [claude-code.md](claude-code.md).
+PULSE installs it this way too — `[packages.claude-code]` in `setup.toml`, via `inv tools.install` — so on this machine you generally don't need the command above at all. (`npm install -g @anthropic-ai/claude-code` still works but is the legacy path.)
+
+See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global `CLAUDE.md`, `AGENTS.md`/`.agents/skills` scaffolding for any project), see [claude-code.md](claude-code.md).
 
 ### Goose
 

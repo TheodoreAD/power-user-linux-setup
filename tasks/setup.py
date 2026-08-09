@@ -1,6 +1,6 @@
 from invoke import task
 
-from . import apt, docker, fonts, next_steps, node, python, system, tools, util, wsl, zsh
+from . import ai, apt, docker, fonts, next_steps, node, python, system, tools, util, wsl, zsh
 
 
 @task
@@ -24,6 +24,7 @@ def setup(c):
     docker.configure(c)
     apt.deb(c)
     tools.install(c)
+    ai.skills(c)
     system.apparmor_profiles(c)
     zsh.omz_configure(c)
     python.tools(c)

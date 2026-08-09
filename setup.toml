@@ -803,8 +803,15 @@ export SSH_ASKPASS="${HOME}/.local/bin/askpass-zenity"
 export SSH_ASKPASS_REQUIRE="prefer"
 """
 
+[packages.claude-code]
+description = "Claude Code CLI — Anthropic's terminal coding agent, via the native self-updating installer"
+method      = "script"
+tags        = ["ai"]
+script_url  = "https://claude.ai/install.sh"
+check_cmd   = "claude"
+
 [packages.claude-global-md]
-description = "Global ~/.claude/CLAUDE.md — sudo and git/ssh instructions for all Claude Code sessions"
+description = "Global ~/.claude/CLAUDE.md — sudo, git/ssh, and project-convention instructions for all Claude Code sessions"
 method      = "wrapper-script"
 tags        = ["shell", "ai"]
 dest        = "~/.claude/CLAUDE.md"
@@ -835,6 +842,28 @@ denied (publickey)". `prefer` only engages the dialog when there's no usable TTY
 interactive terminal is unaffected and still prompts normally. Just run the `git` command as
 normal; no HTTPS/token workaround needed. The dialog blocks on user input, so if nobody is at the
 machine to enter the passphrase it will time out rather than hang forever.
+
+## Project conventions
+
+If a repo has (or should have) instructions for AI coding agents, prefer `AGENTS.md` at the repo
+root over `CLAUDE.md` — it's the cross-tool convention read by 30+ agents (Claude Code, Cursor,
+Copilot, Aider, ...), not just this one. `CLAUDE.md`, if it exists at all, should only ever be a
+one-line `@AGENTS.md` import (or a symlink), plus a short Claude-specific addendum below the import
+if truly needed — never a duplicate copy of the same content.
+
+Skills go in `.agents/skills/` — the emerging cross-tool convention — with `.claude/skills`
+symlinked to it so Claude Code actually discovers them (`.agents/skills/` alone isn't read
+natively yet). `inv ai.skills` sets this up for `~`; `inv ai.init [--dir PATH]` scaffolds a full
+project (`AGENTS.md` + the `CLAUDE.md` shim + the skills symlink) — both from the
+power-user-linux-setup repo. Neither ever overwrites a file or symlink that's already there.
+
+## Cross-session memory
+
+Don't use Claude Code's auto-memory system (`~/.claude/projects/.../memory/`) for durable,
+repo-specific knowledge — put it in that repo's `AGENTS.md` (or a `docs/*.md` file it points to)
+instead. Reasons: `AGENTS.md` is version-controlled, visible to every contributor and every agent
+tool (not just Claude), and reviewable in diffs — auto-memory is none of those. Personal,
+cross-repo preferences (not tied to one project) are still fine to keep in memory.
 """
 
 [packages.zsh]
