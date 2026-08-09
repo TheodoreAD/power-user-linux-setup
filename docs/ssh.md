@@ -21,6 +21,14 @@ inv ssh.forward    # ssh-copy-id to non-git server hosts (skips GitHub/GitLab)
 inv ssh.add        # add all keys for this machine to ssh-agent
 ```
 
+**Migrating a machine with an existing hand-written `~/.ssh/config`** (not managed by PULSE, no
+sentinel markers): `inv ssh.configure` only *appends* a new PULSE block via `ensure_block` — it
+won't touch or remove existing hand-written blocks. That's safe in general, but if a new
+`ssh_hosts` alias collides with an existing hand-written `Host` entry (e.g. both define
+`github.com`), the old block wins, since SSH config resolution is first-match-wins per keyword.
+Check the `ssh_hosts` alias list against the existing config's `Host` entries for collisions
+before running this on a machine with years of accumulated manual SSH config.
+
 ## What gets created
 
 **Keys** — one per unique email across your `ssh_hosts` entries, named:

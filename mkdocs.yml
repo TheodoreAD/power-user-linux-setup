@@ -133,10 +133,10 @@ nav:
   - Reference:
       - apt_packages.md
       - citrix.md
+      - webex.md
       - locale.md
       - zensical.md
       - troubleshooting.md
-      - upgrade_20_04_to_24_04.md
 
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/
