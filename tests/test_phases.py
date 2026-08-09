@@ -1,0 +1,104 @@
+"""Unit tests for tasks/phases.py — the only part of tasks/*.py that's pure orchestration (no
+direct system calls), so it's the only part worth an automated test. See tests/README.md.
+"""
+import sys
+
+import pytest
+
+from tasks import phases, ui, util
+
+
+def _make_task(missing: bool):
+    """A stub task function matching the real convention: prints ok/MISSING depending on
+    util.DRY_RUN, and records each call as (dry_run_value_at_call_time,).
+    """
+    calls = []
+
+    def task(c):
+        calls.append(util.DRY_RUN)
+        print(f"[x] {'MISSING' if missing else 'ok'}")
+
+    task.calls = calls
+    return task
+
+
+@pytest.fixture(autouse=True)
+def _reset_dry_run():
+    """Every test starts from util.DRY_RUN == False and restores it afterward, regardless of
+    what the test (or a bug in the code under test) leaves behind.
+    """
+    saved = util.DRY_RUN
+    util.DRY_RUN = False
+    yield
+    util.DRY_RUN = saved
+
+
+def test_probe_captures_output_and_restores_dry_run(capsys):
+    ok = _make_task(missing=False)
+    output = phases._probe(None, [ok])
+    assert "ok" in output
+    assert util.DRY_RUN is False
+    assert ok.calls == [True]  # ran once, with DRY_RUN forced on during the probe
+    capsys.readouterr()  # _probe redirects stdout internally — nothing should leak to the real one
+
+
+def test_probe_restores_dry_run_on_exception():
+    def boom(c):
+        raise RuntimeError("boom")
+
+    with pytest.raises(RuntimeError):
+        phases._probe(None, [boom])
+    assert util.DRY_RUN is False
+
+
+def test_run_skips_when_everything_already_ok(monkeypatch, capsys):
+    ok = _make_task(missing=False)
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)  # simulate accepting the skip offer
+
+    phases.run(None, "shell", [ok])
+
+    assert ok.calls == [True]  # only the probe call — no real (DRY_RUN=False) call followed
+    assert "[shell] skipped" in capsys.readouterr().out
+
+
+def test_run_does_not_offer_skip_when_something_is_missing(monkeypatch):
+    missing = _make_task(missing=True)
+
+    def fail_if_asked(*a, **k):
+        raise AssertionError("should not ask to skip when a phase has outstanding work")
+
+    monkeypatch.setattr(ui, "ask", fail_if_asked)
+
+    phases.run(None, "packages", [missing])
+
+    # probe call (DRY_RUN=True) + real call (DRY_RUN=False) — ran unconditionally, no prompt
+    assert missing.calls == [True, False]
+
+
+def test_run_bypasses_skip_logic_under_global_dry_run(monkeypatch):
+    ok = _make_task(missing=False)
+
+    def fail_if_asked(*a, **k):
+        raise AssertionError("PULSE_DRY_RUN=1 must never be gated behind a skip prompt")
+
+    monkeypatch.setattr(ui, "ask", fail_if_asked)
+    util.DRY_RUN = True  # simulates PULSE_DRY_RUN=1 inv setup
+
+    phases.run(None, "packages", [ok])
+
+    # falls straight through to running funcs for real, once, still under DRY_RUN — the full
+    # diagnostic report documented in docs/index.md, not a silently skipped phase.
+    assert ok.calls == [True]
+    assert util.DRY_RUN is True
+
+
+def test_run_skips_silently_when_noninteractive(monkeypatch, capsys):
+    ok = _make_task(missing=False)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: False)  # piped/scripted/CI
+
+    phases.run(None, "shell", [ok])
+
+    out = capsys.readouterr().out
+    assert ok.calls == [True]
+    assert "[shell] skipped" in out
+    assert "action needed" not in out  # ui.ask's box never renders outside a real terminal

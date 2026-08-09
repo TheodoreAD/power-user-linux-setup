@@ -99,6 +99,15 @@ Under WSL, `inv setup` detects it (`util.is_wsl()`) and delegates straight to `i
 instead of the phases below — different tag exclusions, DNS handling, and it skips
 `docker.configure`/`fonts.*` by default. See [wsl.md](wsl.md) for what that runs instead.
 
+Each phase below is a group of task calls run through `tasks/phases.py`'s `run()` helper, which
+prints a labeled banner naming the phase before it starts. Before running for real, it probes the
+phase with `util.DRY_RUN` forced on (every task's dry-run branch is already a side-effect-free
+local check — see each task module) and, if nothing comes back `MISSING`, asks whether to skip the
+phase entirely — defaulting to **skip** on Enter, and skipping silently in non-interactive runs.
+This is what makes re-running `inv setup` (or `inv wsl.install`) after an interruption cheap:
+phases that already succeeded are a single confirmation instead of a full redo. A phase with any
+outstanding work is never gated behind a prompt — it just runs, same as before.
+
 ### Phase 1 — System config
 
 All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No reboot needed.
@@ -120,8 +129,11 @@ GRUB (`nomodeset`) is manual and hardware-specific — see [troubleshooting.md](
 inv apt.configure      # write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)
 inv apt.repos          # register external repo GPG keys + sources, then install their packages
 inv apt.base           # install from Ubuntu default repos
+inv docker.configure   # merge log limits/DNS into daemon.json, add user to docker group
 inv apt.deb            # install .deb packages from GitHub releases or direct URLs
 inv tools.install      # install tools via scripts, binaries, archives; also writes askpass-zenity
+inv ai.skills          # symlink ~/.claude/skills to ~/.agents/skills — see ai.md
+inv system.apparmor-profiles
 inv python.tools
 inv node.install
 ```
