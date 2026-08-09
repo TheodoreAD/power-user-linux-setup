@@ -2368,10 +2368,11 @@
 <h3 id="claude-code">Claude Code</h3>
 <p><a href="https://claude.ai/code">https://claude.ai/code</a></p>
 <p>Anthropic&rsquo;s official terminal agent. Strongest at large-scope refactors, architecture reasoning, and multi-file changes. Requires an Anthropic API key or Pro/Max subscription.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>npm<span class="w"> </span>install<span class="w"> </span>-g<span class="w"> </span>@anthropic-ai/claude-code
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://claude.ai/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>bash<span class="w">   </span><span class="c1"># native installer, auto-updates itself</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>claude
 </span></code></pre></div>
-<p>See the <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code docs</a> for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global <code>CLAUDE.md</code>, this repo&rsquo;s own <code>AGENTS.md</code>), see <a href="claude-code.html">claude-code.md</a>.</p>
+<p>PULSE installs it this way too — <code>[packages.claude-code]</code> in <code>setup.toml</code>, via <code>inv tools.install</code> — so on this machine you generally don&rsquo;t need the command above at all. (<code>npm install -g @anthropic-ai/claude-code</code> still works but is the legacy path.)</p>
+<p>See the <a href="https://docs.anthropic.com/en/docs/claude-code">Claude Code docs</a> for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global <code>CLAUDE.md</code>, <code>AGENTS.md</code>/<code>.agents/skills</code> scaffolding for any project), see <a href="claude-code.html">claude-code.md</a>.</p>
 <h3 id="goose">Goose</h3>
 <p><a href="https://goose-docs.ai">https://goose-docs.ai</a></p>
 <p>Editor-agnostic autonomous agent (Apache-2.0, Linux Foundation AI). Goes beyond code: can run shell commands, manage files, call APIs, and execute test suites. Works offline with Ollama.</p>
