@@ -22,7 +22,7 @@ GNOME 46 keeps these bindings in `org.gnome.shell.keybindings`, not the older
 there's no separate "clipboard-only" shortcut to look for.** This is confirmed straight from
 `gnome-shell` 46.0 source (`js/ui/screenshot.js`, cloned into
 `$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-shell` for reference — a shared,
-cross-project clone outside this repo, see `reference/research-library-plan.md`): `screenshot`
+cross-project clone outside this repo, see `docs/research-library.md`): `screenshot`
 and `screenshot-window` both
 call a shared `_storeScreenshot()`, whose docstring is literally *"Stores a PNG-encoded
 screenshot into the clipboard and a file"*; the interactive picker's capture button

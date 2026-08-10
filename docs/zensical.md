@@ -47,7 +47,7 @@ warnings or hung outright. Fixed by moving it to repo-root `reference/`, outside
 entirely, 2026-08-08. **Takeaway: never put anything under `docs_dir` that isn't meant to be a
 site page, even if it's gitignored.** (That material has since moved again, out of this repo
 entirely, to a machine-wide `$RESEARCH_HOME` shared across projects — see
-`reference/research-library-plan.md` — so this repo no longer has a `reference/repos/` at all;
+`docs/research-library.md` — so this repo no longer has a `reference/repos/` at all;
 the `docs_dir`-walking lesson still applies to anything non-content placed under `docs/`.)
 
 ## `plugins:` — a small native allowlist, not the mkdocs plugin ecosystem
