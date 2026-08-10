@@ -1087,6 +1087,47 @@ tags        = ["browser", "desktop", "gui"]
 check_cmd   = "google-chrome-stable"
 url         = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
 
+[packages.google-chrome-x11]
+description = """
+Force Chrome (and its installed PWA windows) onto XWayland via a user-level google-chrome.desktop
+override — works around an NVIDIA-driver + native-Wayland bug where protected/DRM video (e.g.
+Netflix) renders as a black overlay while audio keeps playing. Google Chrome's official .deb
+wrapper does NOT read a chrome-flags.conf file (that's a Chromium-package convention only), so the
+flag has to go on the launcher's Exec line instead. This user-level file in
+~/.local/share/applications takes XDG priority over the system one, so dock/app-grid/taskbar
+launches inherit the flag too.
+Machine-specific workaround, not a universal default — enable only if you hit this NVIDIA+Wayland
+black-video symptom (audio fine, video black except a flash on play/pause).
+"""
+method      = "wrapper-script"
+enabled     = false
+tags        = ["browser", "desktop", "gui"]
+dest        = "~/.local/share/applications/google-chrome.desktop"
+content     = """
+[Desktop Entry]
+Version=1.0
+Name=Google Chrome
+GenericName=Web Browser
+Comment=Access the Internet
+Exec=/usr/bin/google-chrome-stable --ozone-platform=x11 %U
+StartupNotify=true
+StartupWMClass=google-chrome
+Terminal=false
+Icon=google-chrome
+Type=Application
+Categories=Network;WebBrowser;
+MimeType=application/pdf;application/rdf+xml;application/rss+xml;application/xhtml+xml;application/xhtml_xml;application/xml;image/gif;image/jpeg;image/png;image/webp;text/html;text/xml;x-scheme-handler/http;x-scheme-handler/https;x-scheme-handler/google-chrome;
+Actions=new-window;new-private-window;
+
+[Desktop Action new-window]
+Name=New Window
+Exec=/usr/bin/google-chrome-stable --ozone-platform=x11
+
+[Desktop Action new-private-window]
+Name=New Incognito Window
+Exec=/usr/bin/google-chrome-stable --ozone-platform=x11 --incognito
+"""
+
 [packages.gh]
 description   = "GitHub CLI — create PRs, manage issues, clone repos, and authenticate from the terminal"
 method        = "apt-repo"
