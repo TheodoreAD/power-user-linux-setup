@@ -1385,24 +1385,3 @@ claude_permissions_allow = [
   "Grep(//home/tdumitrescu/research/**)",
   "Read(//home/tdumitrescu/research/**)",
 ]
-
-[packages.caveman]
-description = """
-Caveman (github.com/JuliusBrussee/caveman) — ultra-compressed communication style skill. Cuts
-Claude Code's own conversational output ~65% (measured, prose-style tasks) by dropping filler
-while keeping code/commands/errors and technical accuracy exact; auto-drops the style for
-security warnings and irreversible-action confirmations. Installed by default (part of the
-standard `inv setup` chain via `inv ai.skills`, same as every other enabled package here) — not
-opt-in. Deliberately just the one `caveman` skill from that repo's 7-skill suite: the rest
-(caveman-compress mutates memory files, cavecrew needs subagent definitions, caveman-stats needs
-a hook wired through Claude Code's separate plugin system) are real complexity/surprise for
-comparatively little gain over the core skill alone — see reference/research-library-plan.md's
-"Packaging as a skill" history for the fuller writeup of what was reviewed and why it was cut down
-to just this one. The skill only reaches Claude Code, so the same rules are also duplicated into
-config/global-AGENTS.md's "Caveman-style terse output" section, deployed to ~/AGENTS.md by
-[packages.claude-global-md] — that copy applies to every agent tool that reads AGENTS.md, always
-on rather than conditionally triggered, since AGENTS.md is loaded unconditionally.
-"""
-method      = "skill"
-tags        = ["ai"]
-skills      = [{ source = "npx", repo = "JuliusBrussee/caveman", names = ["caveman"], agents = ["claude-code"] }]

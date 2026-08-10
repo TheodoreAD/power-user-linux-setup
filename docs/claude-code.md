@@ -148,7 +148,7 @@ that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zpro
   an `inv ai.skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
   `[packages.research-library]` is the example: its `skills` field points at
   `skills/research-library/`, which documents `$RESEARCH_HOME` (see
-  `reference/research-library-plan.md`).
+  `docs/research-library.md`).
 - **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — for skills
   published on GitHub. Installed via the real `skills` CLI (`[packages.node].global_packages`,
   [skills.sh](https://skills.sh)): `skills add <repo> --global --skill <names...> --agent
@@ -163,17 +163,13 @@ that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zpro
 Add a skill to install without attaching it to some other tool's entry by giving it its own
 `[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
 
-`[packages.caveman]` is the `npx`-source example, and the one skill installed **by default** on
-this machine (no tag gate, part of the standard `inv setup` chain like everything else enabled
-here) rather than something you have to remember to add — [caveman](https://github.com/
-JuliusBrussee/caveman) is an ultra-compressed communication-style skill, personally used and
-vouched for professionally, not adopted sight-unseen. It ships as a 7-skill suite (core style
-mode, commit messages, code review, a memory-file compressor, subagents, stats, help); only the
-core `caveman` skill is installed here — the rest were reviewed and deliberately left out (a
-memory-file-mutating skill, one needing subagent definitions, and pieces that depend on a hook
-wired through Claude Code's separate plugin system, not `.agents/skills`) as more complexity than
-the core skill's value justifies for now. `reference/research-library-plan.md` has the fuller
-review notes.
+The `npx` source was validated end-to-end against a real package
+([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style
+skill) before being trusted for `research-library`'s own `local` source — but caveman itself
+ended up living in `~/AGENTS.md` instead (see "Caveman-style terse output" in
+`config/global-AGENTS.md`), not as an installed skill: a skill only reaches Claude Code, and the
+simpler, always-on AGENTS.md version covers every agent tool on this machine for less overall
+complexity than keeping both. `docs/research-library.md` has the fuller review notes.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 
