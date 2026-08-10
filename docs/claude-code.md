@@ -67,15 +67,15 @@ file every agent CLI on this machine can read) from `setup.toml`, and symlinks
 exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
 `CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
 agent-readable form, so every session on this machine picks it up automatically without needing to
-rediscover it. Edit the `content` field in `setup.toml`, then `inv tools.install`, rather than
+rediscover it. Edit `config/global-AGENTS.md` in this repo, then `inv tools.install`, rather than
 hand-editing `~/AGENTS.md` directly — a manual edit gets silently overwritten on the next
 `inv tools.install` run since the file is treated as fully PULSE-owned (same as any
 `wrapper-script`-method entry). `~/.claude/CLAUDE.md` itself is never touched once it's a correct
 symlink; if something other than that symlink already lives there, `inv tools.install` warns and
 leaves it alone rather than overwriting it.
 
-Several conventions live there too, deliberately global rather than repeated per-repo — see the
-`content` field for the exact wording:
+Several conventions live there too, deliberately global rather than repeated per-repo — see
+`config/global-AGENTS.md` for the exact wording:
 
 - **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
   `AGENTS.md` (the cross-tool standard 30+ agent CLIs read) and, if `CLAUDE.md` exists at all, it's
@@ -118,18 +118,88 @@ currently only discovers skills from `~/.claude/skills/` and `<project>/.claude/
 PULSE symlinks `.claude/skills` to `.agents/skills`:
 
 - `inv ai.skills [--dir PATH]` — ensures `.agents/skills/` exists and `.claude/skills` is symlinked
-  to it. Defaults to `~` (the personal, cross-project skills location); part of the standard
+  to it, then installs every skill declared via a `skills` field anywhere in `setup.toml` (see
+  below). Defaults to `~` (the personal, cross-project skills location); part of the standard
   `inv setup`/`inv wsl.install` chain.
-- `inv ai.init [--dir PATH]` — full project scaffold: the skills symlink above, plus a minimal
-  `AGENTS.md` and a `CLAUDE.md` symlinked to it, for any project on the machine (defaults to the
-  current directory). Run it from this repo against another project, e.g.
+- `inv ai.init [--dir PATH]` — full project scaffold: the skills symlink above (not the declared
+  skills — those are meant for the shared `~`, not baked into every new project by default), plus
+  a minimal `AGENTS.md` and a `CLAUDE.md` symlinked to it, for any project on the machine (defaults
+  to the current directory). Run it from this repo against another project, e.g.
   `inv ai.init --dir ~/projects/foo`.
 
 Both tasks check for existing files/symlinks first and skip rather than overwrite — safe to re-run,
 and safe to point at a project that already has hand-written `AGENTS.md`/`CLAUDE.md`/skills content.
 
-## Slash commands
+## Declaring skills to install — the `skills` field
 
-`[packages.node].global_packages` includes `skills` (an npm package installed globally via `nvm`),
-which provides `npx skills add <owner>/<repo>` — installs Claude Code slash commands from a GitHub
-repo. See `docs/js.md` for the general Node/nvm global-package mechanism.
+Any `setup.toml` package entry can carry a `skills` list, checked by `inv ai.skills` regardless of
+that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zprofile`. Two sources:
+
+- **`{ source = "local", path = "skills/<name>" }`** — for skills authored *in this repo*.
+  Real skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references,
+  assets) live under `skills/` at the repo root, tracked by git like any other repo content —
+  deliberately not gitignored `reference/`, and not nested under this repo's own `.agents/skills/`
+  (that's the *deployed*, tool-agnostic location on a given machine; this repo is where some
+  skills happen to be authored, not where they run from). `inv ai.skills` **copies** the repo's
+  `skills/<name>/` to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching
+  how the `npx` source below behaves (it copies too). A `.pulse-source` marker file inside the
+  copy records which entry installed it, so a re-run can tell "ours, safe to refresh to match the
+  repo" apart from "something else is already here, leave it alone" — editing the repo copy needs
+  an `inv ai.skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
+  `[packages.research-library]` is the example: its `skills` field points at
+  `skills/research-library/`, which documents `$RESEARCH_HOME` (see
+  `reference/research-library-plan.md`).
+- **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — for skills
+  published on GitHub. Installed via the real `skills` CLI (`[packages.node].global_packages`,
+  [skills.sh](https://skills.sh)): `skills add <repo> --global --skill <names...> --agent
+  <agents...> --yes`. `names` omitted installs every skill the repo has; `agents` defaults to
+  `["claude-code"]` — this repo doesn't manage other agents' skill directories, and since
+  `.claude/skills` is already symlinked to `.agents/skills`, targeting `claude-code` lands in the
+  same shared directory the `local` source uses, not a separate copy. The CLI prints its own
+  security-risk assessment (Socket/Snyk-style) per skill at install time — worth actually reading
+  before adding an entry, since an installed skill runs with full agent permissions, same trust
+  level as any other content read into an agent session.
+
+Add a skill to install without attaching it to some other tool's entry by giving it its own
+`[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
+
+`[packages.caveman]` is the `npx`-source example, and the one skill installed **by default** on
+this machine (no tag gate, part of the standard `inv setup` chain like everything else enabled
+here) rather than something you have to remember to add — [caveman](https://github.com/
+JuliusBrussee/caveman) is an ultra-compressed communication-style skill, personally used and
+vouched for professionally, not adopted sight-unseen. It ships as a 7-skill suite (core style
+mode, commit messages, code review, a memory-file compressor, subagents, stats, help); only the
+core `caveman` skill is installed here — the rest were reviewed and deliberately left out (a
+memory-file-mutating skill, one needing subagent definitions, and pieces that depend on a hook
+wired through Claude Code's separate plugin system, not `.agents/skills`) as more complexity than
+the core skill's value justifies for now. `reference/research-library-plan.md` has the fuller
+review notes.
+
+## Declaring static permission rules — the `claude_permissions_allow` field
+
+A second any-section field, same pattern as `skills`: any package entry can carry
+`claude_permissions_allow`, a list of literal Claude Code permission-rule strings, checked
+regardless of that entry's `method`. `inv ai.skills` merges every declared rule into
+`~/.claude/settings.json`'s `permissions.allow` — same safe-merge shape as
+`tasks/allowlist.py`'s `apply` (every other key untouched, `.json.bak` written before any real
+change, only rule strings this mechanism wrote previously are ever removed) but through its own,
+separate manifest (`~/.local/state/pulse/claude-static-permissions-applied.json`) — **deliberately
+not routed through the CLI-allowlist pipeline** (see [`cli-allowlist.md`](cli-allowlist.md)): that
+pipeline exists specifically to classify CLI tool risk from `--help` output, and these are static,
+hand-declared rules with nothing to classify. Keeping the manifests separate means neither
+mechanism can ever remove a rule the other one owns, even though both write to the same file.
+
+`[packages.research-library]` is the example: `Read`/`Glob`/`Grep` allowed, unprompted, for
+everything under `$RESEARCH_HOME` — deliberately treating that curated, read-only library like
+project files rather than gating every lookup, which is the entire point of building a shared
+library instead of fetching things ad hoc.
+
+**GitHub Copilot, if present, gets checked but not written to.** `inv ai.skills` looks for a
+`github.copilot-*` VS Code extension and, if found, prints a note rather than guessing: research
+turned up `chat.tools.terminal.autoApprove` (terminal commands — already handled by
+`inv allowlist.render --target=copilot`) and `chat.tools.urls.autoApprove` (URL fetches), but no
+confirmed, documented Copilot setting for path-scoped *file-read* auto-approval the way Claude's
+`Read(pattern)` rules work — only a global, all-or-nothing
+`github.copilot.chat.agent.autoApproveFileChanges` boolean, which governs edits, not reads, and
+isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse
+than an honest "nothing applied, here's why." Revisit if a scoped-read key is ever confirmed.

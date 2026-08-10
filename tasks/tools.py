@@ -5,6 +5,8 @@ from invoke import task
 
 from . import ui, util
 
+_REPO_ROOT = Path(__file__).parent.parent
+
 
 def _expand(value: str) -> str:
     return str(Path(value).expanduser()) if value.startswith("~") else value
@@ -73,7 +75,11 @@ def _install_git_clone(c, name: str, cfg: dict) -> None:
 
 def _install_wrapper_script(c, name: str, cfg: dict) -> None:
     dest = Path(cfg["dest"]).expanduser()
-    content = cfg["content"].strip() + "\n"
+    # content_file, not an inline `content` string: the deployed file lives as a real file under
+    # config/ in this repo (readable, diffable, editable with normal tooling) and setup.toml just
+    # points at it, the same way [packages.p10k]/zsh.py's p10k_configure already reads
+    # config/p10k.zsh rather than embedding it.
+    content = (_REPO_ROOT / cfg["content_file"]).read_text().strip() + "\n"
     link = Path(cfg["symlink_dest"]).expanduser() if cfg.get("symlink_dest") else None
     link_ok = link is None or (link.is_symlink() and link.resolve() == dest.resolve())
 
