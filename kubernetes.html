@@ -317,6 +317,8 @@
       
         
       
+        
+      
     
     
     
@@ -1218,6 +1220,8 @@
       
         
       
+        
+      
     
     
     
@@ -1438,6 +1442,33 @@
     
   
   Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
 
     
   </span>
@@ -2146,7 +2177,7 @@
   
 
 
-<h1 id="kubernetes">Kubernetes</h1>
+<h1 id="kubernetes">Kubernetes<a class="headerlink" href="#kubernetes" title="Permanent link">&para;</a></h1>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Kubernetes may cause: headaches, fits of rage, binge eating, back pain and container orchestration.</p>
@@ -2157,24 +2188,24 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>tools.install<span class="w">  </span><span class="c1"># kind</span>
 </span></code></pre></div>
 <p>Or all at once: <code>inv setup</code></p>
-<h2 id="kubectl">kubectl</h2>
+<h2 id="kubectl">kubectl<a class="headerlink" href="#kubectl" title="Permanent link">&para;</a></h2>
 <p>Kubernetes CLI — declared as <code>[packages.kubectl]</code> in <code>setup.toml</code>. The apt repo is version-specific (<code>v1.33</code>); update the repo URL in <code>setup.toml</code> when upgrading to a new minor version.</p>
-<h2 id="helm">helm</h2>
+<h2 id="helm">helm<a class="headerlink" href="#helm" title="Permanent link">&para;</a></h2>
 <p>Package manager for Kubernetes charts. After install, add repos you need:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>&lt;name&gt;<span class="w"> </span>&lt;url&gt;
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>helm<span class="w"> </span>repo<span class="w"> </span>update
 </span></code></pre></div>
-<h2 id="kind">kind</h2>
+<h2 id="kind">kind<a class="headerlink" href="#kind" title="Permanent link">&para;</a></h2>
 <p>Kubernetes in Docker — for when you kinda want the banana but without the gorilla and the whole jungle.</p>
 <p>Single-node cluster on your machine without the pain of kubeadm, kubelet &amp; friends. Installed as a direct binary download to <code>~/.local/bin/kind</code>.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kind<span class="w"> </span>create<span class="w"> </span>cluster
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kind<span class="w"> </span>delete<span class="w"> </span>cluster
 </span></code></pre></div>
-<h2 id="k9s">k9s</h2>
+<h2 id="k9s">k9s<a class="headerlink" href="#k9s" title="Permanent link">&para;</a></h2>
 <p>Terminal UI for Kubernetes — browse clusters, pods, logs, exec into containers, port-forward, all from the keyboard. Installed as a <code>.deb</code> from the latest GitHub release via <code>inv apt.deb</code>.</p>
-<h2 id="freelens">Freelens</h2>
+<h2 id="freelens">Freelens<a class="headerlink" href="#freelens" title="Permanent link">&para;</a></h2>
 <p>Open-source Kubernetes IDE (community fork of Lens). Installed as a <code>.deb</code> from the latest GitHub release via <code>inv apt.deb</code>.</p>
-<h2 id="tilt">Tilt</h2>
+<h2 id="tilt">Tilt<a class="headerlink" href="#tilt" title="Permanent link">&para;</a></h2>
 <p>Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual <code>kubectl apply</code>.</p>
 
 

@@ -317,6 +317,8 @@
       
         
       
+        
+      
     
     
     
@@ -1207,6 +1209,8 @@
       
         
       
+        
+      
     
     
     
@@ -1427,6 +1431,33 @@
     
   
   Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
 
     
   </span>
@@ -2124,19 +2155,19 @@
   
 
 
-<h1 id="rust">Rust</h1>
+<h1 id="rust">Rust<a class="headerlink" href="#rust" title="Permanent link">&para;</a></h1>
 <p><a href="https://www.rust-lang.org/tools/install">https://www.rust-lang.org/tools/install</a>
 <a href="https://rust-lang.github.io/rustup/">https://rust-lang.github.io/rustup/</a></p>
 <p>Installed via <code>inv tools.install</code> (script method — pipes the official rustup installer,
 pointed at XDG-compliant paths instead of its <code>~/.cargo</code> / <code>~/.rustup</code> defaults). Shell
 environment is written to <code>~/.zshenv</code> by <code>inv zsh.configure</code>.</p>
-<h2 id="environment">Environment</h2>
+<h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">RUSTUP_HOME</span><span class="o">=</span>~/.local/share/rustup<span class="w">   </span><span class="c1"># installed toolchains, rustup config</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">CARGO_HOME</span><span class="o">=</span>~/.local/share/cargo<span class="w">     </span><span class="c1"># cargo cache, registry, installed binaries, rustc/cargo/etc.</span>
 </span></code></pre></div>
 <p>Both are set automatically by the <code>zshenv</code> snippet in <code>setup.toml</code>, which also sources
 <code>$CARGO_HOME/env</code> to put <code>$CARGO_HOME/bin</code> on <code>PATH</code>.</p>
-<h2 id="whats-included">What&rsquo;s included</h2>
+<h2 id="whats-included">What&rsquo;s included<a class="headerlink" href="#whats-included" title="Permanent link">&para;</a></h2>
 <p>Rustup&rsquo;s <code>default</code> profile (used here) installs <code>rustc</code>, <code>cargo</code>, <code>rust-std</code>, <code>rust-docs</code>,
 <code>rustfmt</code>, and <code>clippy</code> in one shot. The <code>rust-analyzer</code> language server is added on top via
 <code>post_install</code> in <code>setup.toml</code> (<code>rustup component add rust-analyzer</code>) — it&rsquo;s only needed for
@@ -2144,7 +2175,7 @@ non-JetBrains editors (VS Code, Neovim, Helix, Zed); PyCharm&rsquo;s Rust plugin
 analysis engine, see <a href="ide.html">ide.md</a>. <code>post_install</code> only runs on a fresh install (it&rsquo;s
 skipped once <code>rustc</code> already exists), so it won&rsquo;t retroactively add new components to an
 existing install — see Updating below for that.</p>
-<h2 id="updating">Updating</h2>
+<h2 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">&para;</a></h2>
 <p><code>rustup</code> itself manages toolchain versions (stable/beta/nightly, and per-project overrides
 via <code>rust-toolchain.toml</code>) — no separate version manager needed. <code>inv tools.install</code> will
 <strong>not</strong> update an existing install (the <code>script</code> method only runs once, when <code>rustc</code> is
@@ -2154,7 +2185,7 @@ missing), so updates go through <code>rustup</code> directly:</p>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>rustup<span class="w"> </span>component<span class="w"> </span>add<span class="w"> </span>rust-analyzer<span class="w">         </span><span class="c1"># add a component that&#39;s missing on an existing install</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>rustup<span class="w"> </span>toolchain<span class="w"> </span>list<span class="w">                      </span><span class="c1"># installed toolchains</span>
 </span></code></pre></div>
-<h2 id="uninstalling">Uninstalling</h2>
+<h2 id="uninstalling">Uninstalling<a class="headerlink" href="#uninstalling" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>rustup<span class="w"> </span>self<span class="w"> </span>uninstall
 </span></code></pre></div>
 <p>This removes the whole install — toolchains, cargo cache/registry, and the rustup binary
@@ -2165,7 +2196,7 @@ point there). It prompts for confirmation; pass <code>-y</code> to skip that.</p
 <code>inv tools.install</code> nor <code>inv zsh.configure</code> prune stale config on their own, so also remove
 the <code>PULSE::rust</code> sentinel block from <code>~/.zshenv</code> by hand — otherwise it&rsquo;ll harmlessly export
 <code>RUSTUP_HOME</code>/<code>CARGO_HOME</code> and source a <code>$CARGO_HOME/env</code> that no longer exists.</p>
-<h2 id="verify">Verify</h2>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>rustc<span class="w"> </span>--version
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>cargo<span class="w"> </span>--version
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>rust-analyzer<span class="w"> </span>--version

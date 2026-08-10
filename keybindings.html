@@ -317,6 +317,8 @@
       
         
       
+        
+      
     
     
     
@@ -1251,6 +1253,8 @@
       
         
       
+        
+      
     
     
     
@@ -1471,6 +1475,33 @@
     
   
   Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
 
     
   </span>
@@ -2214,19 +2245,19 @@
   
 
 
-<h1 id="keybindings">Keybindings</h1>
+<h1 id="keybindings">Keybindings<a class="headerlink" href="#keybindings" title="Permanent link">&para;</a></h1>
 <p>Reference for every binding that uses the Super (Windows) key on this setup, so it&rsquo;s clear what
 to expect and where a given shortcut is defined. Pulled from live <code>gsettings</code>/<code>dconf</code> state on
 2026-08-08 — re-verify with the commands shown if extensions or GNOME defaults change.</p>
 <p>See <a href="input_devices.html">input_devices.md</a> for why a bare Super <em>tap</em> might not register at all
 (Kinesis Super_L/Super_R issue).</p>
-<h2 id="tap-to-open-overview">Tap-to-open overview</h2>
+<h2 id="tap-to-open-overview">Tap-to-open overview<a class="headerlink" href="#tap-to-open-overview" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>gsettings<span class="w"> </span>get<span class="w"> </span>org.gnome.mutter<span class="w"> </span>overlay-key<span class="w">   </span><span class="c1"># &#39;Super_L&#39;</span>
 </span></code></pre></div>
 <p>Tapping (press+release with no other key) Super alone opens the Activities overview. This is a
 separate mechanism from the <code>Super+&lt;key&gt;</code> combos below — it only recognizes the <code>Super_L</code> keysym,
 not <code>Super_R</code>.</p>
-<h2 id="gnome-defaults-orggnomedesktopwmkeybindings">GNOME defaults — <code>org.gnome.desktop.wm.keybindings</code></h2>
+<h2 id="gnome-defaults-orggnomedesktopwmkeybindings">GNOME defaults — <code>org.gnome.desktop.wm.keybindings</code><a class="headerlink" href="#gnome-defaults-orggnomedesktopwmkeybindings" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2297,7 +2328,7 @@ not <code>Super_R</code>.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="gnome-defaults-orggnomeshellkeybindings">GNOME defaults — <code>org.gnome.shell.keybindings</code></h2>
+<h2 id="gnome-defaults-orggnomeshellkeybindings">GNOME defaults — <code>org.gnome.shell.keybindings</code><a class="headerlink" href="#gnome-defaults-orggnomeshellkeybindings" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2336,7 +2367,7 @@ not <code>Super_R</code>.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="gnome-defaults-orggnomemutterkeybindings">GNOME defaults — <code>org.gnome.mutter.keybindings</code></h2>
+<h2 id="gnome-defaults-orggnomemutterkeybindings">GNOME defaults — <code>org.gnome.mutter.keybindings</code><a class="headerlink" href="#gnome-defaults-orggnomemutterkeybindings" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2355,7 +2386,7 @@ not <code>Super_R</code>.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="tiling-shell-tilingshellferrarodomenicocom">Tiling Shell (<code>tilingshell@ferrarodomenico.com</code>)</h2>
+<h2 id="tiling-shell-tilingshellferrarodomenicocom">Tiling Shell (<code>tilingshell@ferrarodomenico.com</code>)<a class="headerlink" href="#tiling-shell-tilingshellferrarodomenicocom" title="Permanent link">&para;</a></h2>
 <p>Tiling Shell records the native bindings it overrides in its own <code>overridden-settings</code> dconf key
 (so it can restore them if disabled) and implements the actual Super+Arrow tiling itself:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>dconf<span class="w"> </span><span class="nb">read</span><span class="w"> </span>/org/gnome/shell/extensions/tilingshell/overridden-settings
@@ -2389,19 +2420,19 @@ not <code>Super_R</code>.</p>
 <p><strong>Known conflict:</strong> <code>tiling-assistant@ubuntu.com</code> (ships enabled by default on fresh Ubuntu 24.04)
 writes to the same gsettings keys — <code>inv gnome.extensions</code> auto-disables it when Tiling Shell is
 active. See <a href="gnome_extensions.html">gnome_extensions.md</a>.</p>
-<h2 id="dash-to-panel-dash-to-paneljderose9githubcom">Dash to Panel (<code>dash-to-panel@jderose9.github.com</code>)</h2>
+<h2 id="dash-to-panel-dash-to-paneljderose9githubcom">Dash to Panel (<code>dash-to-panel@jderose9.github.com</code>)<a class="headerlink" href="#dash-to-panel-dash-to-paneljderose9githubcom" title="Permanent link">&para;</a></h2>
 <p>Doesn&rsquo;t bind Super itself — it visualizes the native <code>Super+1..9</code> shortcuts above by showing
 number overlays on pinned/running app icons while Super is held:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>dconf<span class="w"> </span><span class="nb">read</span><span class="w"> </span>/org/gnome/shell/extensions/dash-to-panel/hotkeys-overlay-combo<span class="w">   </span><span class="c1"># &#39;TEMPORARILY&#39;</span>
 </span></code></pre></div>
-<h2 id="advanced-alt-tab-window-switcher-advanced-alt-tabg-dhgithubcom">Advanced Alt-Tab Window Switcher (<code>advanced-alt-tab@G-dH.github.com</code>)</h2>
+<h2 id="advanced-alt-tab-window-switcher-advanced-alt-tabg-dhgithubcom">Advanced Alt-Tab Window Switcher (<code>advanced-alt-tab@G-dH.github.com</code>)<a class="headerlink" href="#advanced-alt-tab-window-switcher-advanced-alt-tabg-dhgithubcom" title="Permanent link">&para;</a></h2>
 <p>Replaces the handler behind <code>Super+Tab</code> / <code>Shift+Super+Tab</code> (still the same native keybinding
 above) with a searchable, filterable switcher instead of GNOME&rsquo;s default. No separate dconf-level
 binding of its own — check its extension preferences dialog for any custom shortcuts added there.</p>
-<h2 id="custom-shortcuts">Custom shortcuts</h2>
+<h2 id="custom-shortcuts">Custom shortcuts<a class="headerlink" href="#custom-shortcuts" title="Permanent link">&para;</a></h2>
 <p>Ad-hoc <code>Ctrl</code>/<code>Alt</code>-based custom shortcuts (e.g. Flameshot) are managed separately — see
 <a href="shortcuts.html">shortcuts.md</a>. None currently use Super.</p>
-<h2 id="re-checking-this-list">Re-checking this list</h2>
+<h2 id="re-checking-this-list">Re-checking this list<a class="headerlink" href="#re-checking-this-list" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>gsettings<span class="w"> </span>list-recursively<span class="w"> </span>org.gnome.desktop.wm.keybindings<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>super
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>gsettings<span class="w"> </span>list-recursively<span class="w"> </span>org.gnome.shell.keybindings<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>super
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>gsettings<span class="w"> </span>list-recursively<span class="w"> </span>org.gnome.mutter.keybindings<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>super

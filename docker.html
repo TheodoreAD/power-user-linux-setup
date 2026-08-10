@@ -317,6 +317,8 @@
       
         
       
+        
+      
     
     
     
@@ -1130,6 +1132,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#corporate-registriesmirrors-not-automated-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Corporate registries/mirrors (not automated yet)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -1181,6 +1194,8 @@
   
     
     
+      
+        
       
         
       
@@ -1416,6 +1431,33 @@
     
   
   Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
 
     
   </span>
@@ -2015,6 +2057,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#corporate-registriesmirrors-not-automated-yet" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Corporate registries/mirrors (not automated yet)
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2102,20 +2155,20 @@
   
 
 
-<h1 id="docker">Docker</h1>
+<h1 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h1>
 <p>Installed via apt-repo by <code>inv apt.repos</code> (or <code>inv setup</code>). Installs:
 <code>docker-ce</code>, <code>docker-ce-cli</code>, <code>containerd.io</code>, <code>docker-buildx-plugin</code>, <code>docker-compose-plugin</code>.</p>
 <p><code>inv docker.configure</code> (part of <code>inv setup</code>) adds the current user to the <code>docker</code> group and configures the daemon.</p>
-<h2 id="post-install">Post-install</h2>
+<h2 id="post-install">Post-install<a class="headerlink" href="#post-install" title="Permanent link">&para;</a></h2>
 <p>Group membership takes effect in new login sessions. Open a new terminal after running <code>inv docker.configure</code> — no full logout needed.</p>
 <p>Verify:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>run<span class="w"> </span>hello-world
 </span></code></pre></div>
-<h2 id="compose">Compose</h2>
+<h2 id="compose">Compose<a class="headerlink" href="#compose" title="Permanent link">&para;</a></h2>
 <p>Docker Compose v1 (<code>docker-compose</code>) is deprecated and unmaintained. Use the v2 plugin:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up
 </span></code></pre></div>
-<h2 id="daemon-config">Daemon config</h2>
+<h2 id="daemon-config">Daemon config<a class="headerlink" href="#daemon-config" title="Permanent link">&para;</a></h2>
 <p><code>overlay2</code> storage driver and <code>systemd</code> cgroup driver are the defaults on Ubuntu 24.04 — no changes needed for those.</p>
 <p>Log limits and DNS are configured by <code>inv docker.configure</code> (also runs as part of <code>inv setup</code>):</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>docker.configure
@@ -2132,7 +2185,7 @@
 </span></code></pre></div>
 <p><strong>Log limits:</strong> Docker&rsquo;s default log driver (<code>json-file</code>) writes to <code>/var/lib/docker/containers/&lt;id&gt;/&lt;id&gt;-json.log</code> with no size cap, which will eventually fill the disk on long-running or chatty containers. <code>max-size</code> caps each file before rotation; <code>max-file</code> sets how many rotated files to keep. With the defaults above each container uses at most 150 MB of log space (3 × 50 MB). Per-container overrides work via <code>--log-opt</code> or the <code>logging:</code> key in docker-compose.</p>
 <p><strong>DNS:</strong> optional but makes containers use Cloudflare, matching <code>inv system.dns</code>. Without it, Docker falls back to <code>8.8.8.8</code> automatically. See <a href="networking.html">networking.md</a>.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <p><strong>Daemon masked</strong> (<code>Loaded: masked</code>): <code>inv docker.configure</code> detects and fixes this automatically. To fix manually:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>unmask<span class="w"> </span>docker
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>start<span class="w"> </span>docker
@@ -2140,6 +2193,28 @@
 <p><strong>Socket permission error</strong> (temporary workaround if the group change hasn&rsquo;t propagated):</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>chown<span class="w"> </span><span class="nv">$USER</span>:docker<span class="w"> </span>/var/run/docker.sock
 </span></code></pre></div>
+<h2 id="corporate-registriesmirrors-not-automated-yet">Corporate registries/mirrors (not automated yet)<a class="headerlink" href="#corporate-registriesmirrors-not-automated-yet" title="Permanent link">&para;</a></h2>
+<p>Not covered by <code>inv docker.configure</code> or <code>inv certs.install</code> — tracked as a follow-up, documented
+here so the mechanism doesn&rsquo;t have to be re-derived. Three distinct, easily-conflated pieces if
+this network has a corporate registry mirror and/or TLS-inspecting proxy:</p>
+<ul>
+<li><strong>Registry pull-through mirror</strong> (Docker Hub only) — <code>registry-mirrors</code> in <code>/etc/docker/daemon.json</code>,
+  same merge mechanism <code>inv docker.configure</code> already uses for <code>log-driver</code>/<code>dns</code> above.</li>
+<li><strong>Daemon&rsquo;s own outbound proxy</strong> — dockerd is a systemd service and does <em>not</em> inherit the
+  shell&rsquo;s <code>http_proxy</code>/<code>https_proxy</code>. Needs its own systemd drop-in:
+  <code>/etc/systemd/system/docker.service.d/http-proxy.conf</code> with <code>Environment="HTTPS_PROXY=..."</code>,
+  then <code>systemctl daemon-reload &amp;&amp; systemctl restart docker</code>.</li>
+<li><strong>Containers&rsquo; own proxy</strong> (so processes <em>inside</em> containers see it too) — not a daemon setting,
+  goes in <code>~/.docker/config.json</code>&rsquo;s <code>proxies</code> key.</li>
+</ul>
+<p><strong>Cert-wise</strong>, this is separate from <code>inv certs.install</code> — Docker doesn&rsquo;t read the OS trust store
+the way <code>curl</code> does. A corporate registry behind the same TLS-inspecting proxy (see
+<a href="certs.html">certs.md</a>) needs its own per-registry CA file:
+<code>/etc/docker/certs.d/&lt;registry-host&gt;/ca.crt</code>.</p>
+<p>Also relevant if this is being configured under WSL2 with Docker Desktop&rsquo;s WSL integration:
+<code>docker.configure</code> already detects that case (<code>docker</code> CLI present, no local <code>dockerd</code> —
+<code>tasks/docker.py</code>) and skips, since the daemon isn&rsquo;t running inside the WSL guest at all. None of
+the above applies there either — it goes in Docker Desktop&rsquo;s Windows-side settings instead.</p>
 
 
 

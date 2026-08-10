@@ -10,9 +10,13 @@
         <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
       
       
-        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/research-library.html">
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/certs.html">
       
       
+        <link rel="prev" href="./corporate-proxy.html">
+      
+      
+        <link rel="next" href="./ai.html">
       
       
         
@@ -23,7 +27,7 @@
     
     
       
-        <title>Research library ($RESEARCH_HOME) - Power User Linux Setup</title>
+        <title>Corporate CA bundle - Power User Linux Setup</title>
       
     
     
@@ -81,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#research-library-research_home" class="md-skip">
+        <a href="#corporate-ca-bundle" class="md-skip">
           Skip to content
         </a>
       
@@ -115,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Research library ($RESEARCH_HOME)
+              Corporate CA bundle
             
           </span>
         </div>
@@ -293,6 +297,8 @@
   
   
   
+    
+  
   
     
       
@@ -317,7 +323,7 @@
     
     
     
-      <li class="md-tabs__item">
+      <li class="md-tabs__item md-tabs__item--active">
         <a href="./git.html" class="md-tabs__link">
           
   
@@ -1077,8 +1083,10 @@
       
   
   
+    
   
   
+  
     
     
       
@@ -1102,19 +1110,22 @@
     
     
       
+        
+        
+      
       
         
       
     
     
-    <li class="md-nav__item md-nav__item--nested">
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
       
         
         
-        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" checked>
         
           
-          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="">
             
   
   
@@ -1131,7 +1142,7 @@
             <span class="md-nav__icon md-icon"></span>
           </label>
         
-        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="true">
           <label class="md-nav__title" for="__nav_5">
             <span class="md-nav__icon md-icon"></span>
             
@@ -1334,10 +1345,36 @@
                 
   
   
+    
   
   
-    <li class="md-nav__item">
-      <a href="./certs.html" class="md-nav__link">
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="certs.html" class="md-nav__link md-nav__link--active">
         
   
   
@@ -1352,6 +1389,137 @@
   
 
       </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#quick-start" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Quick start
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#config" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Config
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#what-gets-installed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What gets installed
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#format-detection" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Format detection
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#java" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Java
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#wsl" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        WSL
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#uninstall-rotation" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Uninstall / rotation
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#verify" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#genuine-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Genuine limitations
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
     </li>
   
 
@@ -1901,10 +2069,10 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
-  <a href="#why-it-exists" class="md-nav__link">
+  <a href="#quick-start" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Why it exists
+        Quick start
       </span>
     </span>
   </a>
@@ -1912,10 +2080,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#layout-and-naming" class="md-nav__link">
+  <a href="#config" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Layout and naming
+        Config
       </span>
     </span>
   </a>
@@ -1923,10 +2091,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#provenance-sourcemd" class="md-nav__link">
+  <a href="#what-gets-installed" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Provenance — <code>SOURCE.md</code>
+        What gets installed
       </span>
     </span>
   </a>
@@ -1934,10 +2102,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#reachability-and-update" class="md-nav__link">
+  <a href="#format-detection" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Reachability and update
+        Format detection
       </span>
     </span>
   </a>
@@ -1945,10 +2113,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#discoverability-two-layers-not-one" class="md-nav__link">
+  <a href="#java" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Discoverability: two layers, not one
+        Java
       </span>
     </span>
   </a>
@@ -1956,10 +2124,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#docs-sites-not-just-repos" class="md-nav__link">
+  <a href="#wsl" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Docs sites (not just repos)
+        WSL
       </span>
     </span>
   </a>
@@ -1967,10 +2135,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#rag-embeddings-researched-not-adding" class="md-nav__link">
+  <a href="#uninstall-rotation" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        RAG / embeddings — researched, not adding
+        Uninstall / rotation
       </span>
     </span>
   </a>
@@ -1978,10 +2146,32 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#packaging-conventions-as-a-skill-and-a-reversal-worth-remembering" class="md-nav__link">
+  <a href="#verify" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Packaging conventions as a skill — and a reversal worth remembering
+        Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#genuine-limitations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Genuine limitations
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
       </span>
     </span>
   </a>
@@ -2006,6 +2196,69 @@
   
 
 
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="./index.html" class="md-path__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-path__item">
+        <a href="./git.html" class="md-path__link">
+          
+  
+  <span class="md-ellipsis">
+    Cloud & accounts
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
               
               <article class="md-content__inner md-typeset">
                 
@@ -2014,180 +2267,139 @@
   
 
 
-<h1 id="research-library-research_home">Research library (<code>$RESEARCH_HOME</code>)<a class="headerlink" href="#research-library-research_home" title="Permanent link">&para;</a></h1>
-<p>Design rationale for the shared, cross-project reference material store at <code>~/research/</code> —
-vendor repo clones, PDFs/epubs, mirrored docs pages. What it <em>is</em> and how to use it are covered
-by <code>skills/research-library/SKILL.md</code> (the deployed skill) and <code>~/research/README.md</code> (the
-portable copy that travels with the library itself, since this doc doesn&rsquo;t). This page is the
-<em>why</em>, kept here because it&rsquo;s durable knowledge that belongs in a tracked, reviewable file, not
-a local scratch note.</p>
-<h2 id="why-it-exists">Why it exists<a class="headerlink" href="#why-it-exists" title="Permanent link">&para;</a></h2>
-<p>Before this, reference material (vendor repo clones, PDFs) lived in this repo&rsquo;s own gitignored
-<code>reference/</code>. Two problems with that:</p>
+<h1 id="corporate-ca-bundle">Corporate CA bundle<a class="headerlink" href="#corporate-ca-bundle" title="Permanent link">&para;</a></h1>
+<p>Many corporate networks run a TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, etc.) that
+terminates HTTPS and re-signs it with its own root CA. Every TLS client on the machine needs to
+trust that CA, or verification fails everywhere (<code>SSL: CERTIFICATE_VERIFY_FAILED</code>, <code>x509:
+certificate signed by unknown authority</code>, <code>unable to get local issuer certificate</code>). Installing it
+into the OS trust store alone isn&rsquo;t enough — several common tools vendor their own CA bundle
+instead of reading the OS one: Python (<code>certifi</code>), Node/npm, and the AWS CLI.</p>
+<p><code>inv certs.*</code> installs an IT-provided bundle into the OS trust store via
+<code>update-ca-certificates</code>, then points those tools at the resulting merged bundle.</p>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>certs.check<span class="w">      </span><span class="c1"># read-only — bundle/env-var/Java status, changes nothing</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>certs.install<span class="w">     </span><span class="c1"># installs into the OS trust store, exports env vars for python/node/awscli</span>
+</span></code></pre></div>
+<p>On a personal machine with no corporate CA configured, both exit cleanly with &ldquo;nothing to
+configure&rdquo; — expected, not a failure.</p>
+<h2 id="config">Config<a class="headerlink" href="#config" title="Permanent link">&para;</a></h2>
+<p>Add a <code>[certs]</code> section to <code>~/.config/pulse/identity.toml</code> (see
+<code>config/identity.toml.example</code>):</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[certs]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">bundle</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/home/jsmith/Downloads/CorporateRootCA.crt&quot;</span>
+</span></code></pre></div>
+<p>A root + separate intermediate can be given as a list instead. <code>--bundle=path</code> on either task
+overrides this for a one-off run without editing the file.</p>
+<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
 <ol>
-<li><strong>AI security exposure.</strong> Gitignored ≠ unreadable. Anything operating with a repo as its cwd
-   (an Explore agent, <code>grep -r</code>, &ldquo;read the whole repo&rdquo;) walks straight into third-party cloned
-   code/docs and treats their content as trusted project context — the vector prompt-injection-
-   via-cloned-repo attacks use. Moving the content fully outside any repo directory takes it out
-   of the <em>default</em> blast radius of repo-scoped operations; it only enters an agent&rsquo;s context when
-   a task explicitly names the external path — deliberate, not ambient.</li>
-<li><strong>Not shareable.</strong> Every repo that wanted the same reference material (GNOME internals, Claude
-   Code allowlist research) re-cloned it into its own gitignored <code>reference/</code>, duplicating disk
-   and staleness.</li>
+<li>Each configured file is format-detected and normalized to PEM (see below), then written to
+   <code>/usr/local/share/ca-certificates/pulse-corporate.crt</code>.</li>
+<li><code>update-ca-certificates</code> merges it with the public CA set into
+   <code>/etc/ssl/certs/ca-certificates.crt</code>.</li>
+<li>A <code>PULSE::certs</code> block in <code>~/.zshenv</code> exports <code>SSL_CERT_FILE</code>, <code>REQUESTS_CA_BUNDLE</code>,
+   <code>NODE_EXTRA_CA_CERTS</code>, and <code>AWS_CA_BUNDLE</code>, all pointed at that <em>merged</em> bundle — not a
+   corporate-only file, since those tools still need the public CAs too.</li>
 </ol>
-<h2 id="layout-and-naming">Layout and naming<a class="headerlink" href="#layout-and-naming" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>~/research/
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>  repos/&lt;host&gt;--&lt;owner&gt;--&lt;repo&gt;/   # shallow git clones, e.g. repos/github.com--zensical--zensical
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>  docs/&lt;file&gt;.pdf|.epub            # downloaded reference docs
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>  pages/&lt;host&gt;--&lt;site&gt;/            # mirrored/llms.txt-derived doc site snapshots
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>  README.md                        # human map + conventions (the portable copy)
+<p>Re-running <code>inv certs.install</code> is idempotent: it compares the desired bundle text against what&rsquo;s
+already installed and skips <code>update-ca-certificates</code> entirely when nothing changed.</p>
+<h2 id="format-detection">Format detection<a class="headerlink" href="#format-detection" title="Permanent link">&para;</a></h2>
+<p>The bundle&rsquo;s file extension is not trusted — <code>.crt</code>/<code>.cer</code>/<code>.pem</code> are filename conventions, not a
+format guarantee, and IT-issued files show up as ASCII PEM, raw binary DER, or a Windows PKCS#7
+<code>.p7b</code>/<code>.p7c</code> (common from AD Certificate Services) with no reliable way to tell from the name
+alone. <code>certs.install</code> probes with <code>openssl</code> in this order and uses the first that parses:</p>
+<ol>
+<li><code>openssl x509 -noout -inform PEM</code> — already PEM, pass through.</li>
+<li><code>openssl x509 -inform DER -outform PEM</code> — single-cert DER, convert.</li>
+<li><code>openssl pkcs7 -print_certs -inform PEM</code> — PEM-armored PKCS#7, extract (root + intermediate).</li>
+<li><code>openssl pkcs7 -print_certs -inform DER</code> — DER-armored PKCS#7, extract (also seen from Windows
+   AD CS — extension alone doesn&rsquo;t say which armor).</li>
+</ol>
+<p>If none of the four parse, <code>certs.install</code> <strong>fails loudly</strong> rather than installing anything.
+This is a deliberate departure from <code>update-ca-certificates</code>&rsquo;s own behavior: it silently <em>skips</em>
+a file it can&rsquo;t parse (just a warning), so a plain reinstall attempt with a bad file would
+otherwise &ldquo;succeed&rdquo; while TLS verification keeps failing with no clear signal why. Inspect a
+rejected file manually with <code>file &lt;path&gt;</code> or <code>openssl asn1parse -in &lt;path&gt;</code>.</p>
+<h2 id="java">Java<a class="headerlink" href="#java" title="Permanent link">&para;</a></h2>
+<p>No JDK is installed or managed by this repo — Scala tooling uses Coursier&rsquo;s own private JVM
+instead (see <a href="scala.html">scala.md</a>), and nothing else here needs one. The <code>cacerts</code> import step is
+purely conditional on <code>keytool</code> already being on <code>PATH</code>: a no-op today, and it activates
+automatically without any further changes if a JDK is added independently later.</p>
+<p>If a JDK is present, each cert in the bundle is imported into <code>$JAVA_HOME/lib/security/cacerts</code>
+under aliases <code>pulse-corporate-0</code>, <code>pulse-corporate-1</code>, etc. (idempotent — checked via <code>keytool
+-list</code> first, <code>storepass</code> is the Java default <code>changeit</code>).</p>
+<h2 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h2>
+<p>WSL2&rsquo;s trust store is fully independent of Windows&rsquo; own. IT populating the Windows certificate
+store via Group Policy/Intune does <strong>not</strong> carry over into WSL — <code>update-ca-certificates</code> still
+has to run inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an
+OS-trust-store issue, not a networking one). If the bundle needs to be pulled off the Windows side
+first, that&rsquo;s a one-time manual copy (e.g. via <code>/mnt/c</code>) — this repo has no automation for reading
+the Windows certificate store or shelling out to <code>certutil.exe</code>/<code>powershell.exe</code>; usually simplest
+to just ask IT for the raw file directly.</p>
+<h2 id="uninstall-rotation">Uninstall / rotation<a class="headerlink" href="#uninstall-rotation" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/share/ca-certificates/pulse-corporate.crt
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>update-ca-certificates
 </span></code></pre></div>
-<p>Flat, not namespaced per project — namespacing was the initial idea but doesn&rsquo;t hold up: the
-point of a shared library is that projects overlap in what they reference, and filing each clone
-under whichever project pulled it in first just hides the duplication the library exists to
-avoid.</p>
-<p><strong>Naming is always <code>&lt;host&gt;--&lt;owner&gt;--&lt;repo&gt;</code>, no GitHub special case.</strong> This caught a real
-mistake during migration: two of the four repos being moved into the library turned out to be
-hosted on <code>gitlab.gnome.org</code> (a self-hosted GitLab instance), not GitHub, despite looking like
-they might be. A uniform rule forces checking the actual <code>origin</code> remote for every entry, every
-time; special-casing &ldquo;GitHub, no prefix&rdquo; would have hidden that assumption. The prefix is the
-full host, not a generic label like <code>gitlab</code> — that avoids ambiguity between <code>gitlab.com</code> and
-self-hosted instances.</p>
-<p><strong>Location: plain <code>~/research/</code>, not <code>~/.local/share/research/</code>.</strong> The XDG-paths convention this
-machine otherwise follows (&ldquo;user tool installs go to <code>~/.local/share/&lt;tool&gt;</code>&rdquo;) is about <em>tool</em>
-installs cluttering <code>$HOME</code>; this is human-facing content opened directly (PDFs, epubs) — more
-like <code>~/Documents</code> than a tool&rsquo;s data dir.</p>
-<h2 id="provenance-sourcemd">Provenance — <code>SOURCE.md</code><a class="headerlink" href="#provenance-sourcemd" title="Permanent link">&para;</a></h2>
-<p>Every entry gets a small <code>SOURCE.md</code> in its own directory (not a central manifest that can drift
-out of sync):</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>url: &lt;repo or docs URL actually fetched from&gt;
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>kind: repo-clone | llms-txt-mirror | site-mirror
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>ref: &lt;branch/tag/commit for a repo-clone, or fetch date for a mirror&gt;
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>fetched: &lt;date&gt;
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>note: &lt;only when non-obvious&gt;
+<p>Don&rsquo;t pass <code>--fresh</code> — it rebuilds the trust store from scratch and would also drop any <em>other</em>
+locally-added certs, not just this one. Neither task prunes stale config on its own, so also
+remove by hand:</p>
+<ul>
+<li>The <code>PULSE::certs</code> block from <code>~/.zshenv</code>.</li>
+<li>Any <code>pulse-corporate-*</code> Java aliases: <code>sudo keytool -delete -alias pulse-corporate-0 -keystore
+  "$JAVA_HOME/lib/security/cacerts" -storepass changeit</code> (repeat per alias).</li>
+</ul>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<p>Run this in a disposable container or VM, not the primary workstation — <code>certs.install</code> makes
+real, persistent, root-owned changes to the system trust store, and a real corporate CA isn&rsquo;t
+available outside a corporate network to test against anyway.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/repo<span class="w"> </span>-w<span class="w"> </span>/repo<span class="w"> </span>ubuntu:24.04<span class="w"> </span>bash
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>openssl<span class="w"> </span>ca-certificates<span class="w"> </span>python3
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Fixtures for each detection branch</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>openssl<span class="w"> </span>req<span class="w"> </span>-x509<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-sha256<span class="w"> </span>-days<span class="w"> </span><span class="m">3650</span><span class="w"> </span>-nodes<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>-keyout<span class="w"> </span>/tmp/test-ca.key<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-subj<span class="w"> </span><span class="s2">&quot;/CN=Test Corp Root CA&quot;</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-in<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-outform<span class="w"> </span>DER<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca.der
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>openssl<span class="w"> </span>crl2pkcs7<span class="w"> </span>-nocrl<span class="w"> </span>-certfile<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca.p7b
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>openssl<span class="w"> </span>crl2pkcs7<span class="w"> </span>-nocrl<span class="w"> </span>-certfile<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-outform<span class="w"> </span>DER<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca-der.p7b
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;not a cert&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/tmp/garbage.txt<span class="w">   </span><span class="c1"># must fail loudly, not silently</span>
+</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
+</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1"># End to end, no real corporate CA needed</span>
+</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem
+</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem
+</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
+</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1"># Prove it actually works, not just that files were written</span>
+</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>openssl<span class="w"> </span>genrsa<span class="w"> </span>-out<span class="w"> </span>/tmp/leaf.key<span class="w"> </span><span class="m">2048</span>
+</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-key<span class="w"> </span>/tmp/leaf.key<span class="w"> </span>-subj<span class="w"> </span><span class="s2">&quot;/CN=test.example.com&quot;</span><span class="w"> </span>-out<span class="w"> </span>/tmp/leaf.csr
+</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-req<span class="w"> </span>-in<span class="w"> </span>/tmp/leaf.csr<span class="w"> </span>-CA<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-CAkey<span class="w"> </span>/tmp/test-ca.key<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">  </span>-CAcreateserial<span class="w"> </span>-out<span class="w"> </span>/tmp/leaf.pem<span class="w"> </span>-days<span class="w"> </span><span class="m">365</span><span class="w"> </span>-sha256
+</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>openssl<span class="w"> </span>verify<span class="w"> </span>-CAfile<span class="w"> </span>/etc/ssl/certs/ca-certificates.crt<span class="w"> </span>/tmp/leaf.pem<span class="w">   </span><span class="c1"># expect: OK</span>
+</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
+</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="c1"># Idempotency</span>
+</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem<span class="w">   </span><span class="c1"># expect &quot;already up to date&quot;, zshenv:ok not added</span>
+</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>
+</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="c1"># Optional: Java branch</span>
+</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>default-jdk-headless
+</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem
+</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>keytool<span class="w"> </span>-list<span class="w"> </span>-alias<span class="w"> </span>pulse-corporate-0<span class="w"> </span>-keystore<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$JAVA_HOME</span><span class="s2">/lib/security/cacerts&quot;</span><span class="w"> </span>-storepass<span class="w"> </span>changeit
 </span></code></pre></div>
-<p>This isn&rsquo;t just for non-git items — a repo&rsquo;s default branch isn&rsquo;t guaranteed to match what&rsquo;s
-actually published as &ldquo;the docs&rdquo; (docs sites are often built from a <code>stable</code>/release-tag branch,
-or an entirely separate docs repo). <code>note:</code> is where that gets flagged.</p>
-<p><strong>Gotcha found doing the first real migration, not anticipated up front:</strong> the <code>gnome-shell</code>
-clone had originally been created pinned to release tag <code>46.0</code>
-(<code>remote.origin.fetch = +refs/tags/46.0:refs/tags/46.0</code>), not tracking a branch. The naive
-refresh loop (<code>git fetch --depth 1 origin</code>) happily kept re-fetching that same 2024-03-16 tag
-forever and reporting &ldquo;up to date&rdquo; — silently wrong, not an error. Fixed by reconfiguring the
-fetch refspec to the actual default branch (found via <code>git ls-remote --symref origin HEAD</code>).
-Worth checking <code>git config --get-all remote.origin.fetch</code> on any entry that looks suspiciously
-stale.</p>
-<h2 id="reachability-and-update">Reachability and update<a class="headerlink" href="#reachability-and-update" title="Permanent link">&para;</a></h2>
+<h2 id="genuine-limitations">Genuine limitations<a class="headerlink" href="#genuine-limitations" title="Permanent link">&para;</a></h2>
 <ul>
-<li><code>RESEARCH_HOME=~/research</code> is provisioned via <code>[packages.research-library]</code> in <code>setup.toml</code>
-  (a <code>zsh</code>-method <code>zshenv</code> field), so every project references <code>$RESEARCH_HOME/...</code> instead of a
-  hardcoded path.</li>
-<li><strong>Deliberately no symlink from inside any repo into <code>~/research</code>.</strong> That would reintroduce
-  ambient exposure to repo-scoped agents — the entire reason the library lives outside every
-  repo. Access is an explicit act: a project&rsquo;s <code>AGENTS.md</code> names the exact path relevant to a
-  given task, read only when that task calls for it.</li>
-<li><code>research-update</code> (deployed via the same package entry&rsquo;s <code>wrapper-script</code>/<code>content_file</code>, see
-  <code>config/research-update.sh</code>) refreshes every clone under <code>repos/</code> to its default branch&rsquo;s
-  latest commit — shallow fetch + hard reset via <code>FETCH_HEAD</code>, since these are disposable
-  reference clones, not working copies with local commits to preserve.</li>
-<li>Adding an entry is just <code>git clone --depth 1 &lt;url&gt; $RESEARCH_HOME/repos/&lt;host&gt;--&lt;owner&gt;--&lt;repo&gt;</code>
-  plus a hand-written <code>SOURCE.md</code>.</li>
+<li><strong>Real Windows-issued PKCS#7 bundles are untested</strong> — only locally-generated <code>openssl</code>
+  fixtures were used to build and verify the four detection branches (see Verify above).</li>
+<li><strong>The Java <code>cacerts</code> step is untested against a real JDK</strong> — no JDK is present anywhere in this
+  environment (see Java above). Reviewed-and-defensive, not proven.</li>
+<li><strong><code>update-ca-certificates --fresh</code> interaction with other manually-added local certs is out of
+  scope by design</strong> — hence the &ldquo;no <code>--fresh</code>&rdquo; uninstall instructions above.</li>
+<li><strong>Docker registry mirrors, daemon proxy config, and per-registry <code>certs.d</code> are out of scope
+  here</strong> — a corporate registry behind the same TLS-inspecting proxy needs its own separate setup;
+  see <a href="docker.html#corporate-registriesmirrors-not-automated-yet">docker.md</a> for the mechanism
+  (tracked as a follow-up, not covered by this task).</li>
 </ul>
-<h2 id="discoverability-two-layers-not-one">Discoverability: two layers, not one<a class="headerlink" href="#discoverability-two-layers-not-one" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>A global skill</strong> (<code>skills/research-library/SKILL.md</code>, deployed to
-  <code>~/.agents/skills/research-library</code>) teaches the <em>mechanism</em> — where <code>$RESEARCH_HOME</code> is, the
-  naming convention, how to add/update entries. Applies in every project automatically.</li>
-<li><strong>Each project&rsquo;s own <code>AGENTS.md</code> still needs a short, project-specific pointer</strong> — e.g. &ldquo;for
-  GNOME Shell extension behavior, check <code>$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-
-  shell</code> before reading anything online&rdquo; — because <em>which</em> library entries matter to a given
-  project is knowledge the global skill can&rsquo;t have on its own. This is also what makes the
-  convention visible to non-Claude <code>AGENTS.md</code> readers (Cursor, Copilot, Aider) with no
-  equivalent global-skill discovery of their own.</li>
+<li><a href="corporate-proxy.html">corporate-proxy.md</a> — the separate concern of authenticating <em>through</em> a
+  corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA;
+  proxy auth is unrelated and doesn&rsquo;t require one to imply the other.</li>
 </ul>
-<p>The instruction that actually delivers &ldquo;avoid reading lots of files off the internet&rdquo; lives in
-both: the skill says <em>how</em> to check the library; each project&rsquo;s <code>AGENTS.md</code> says <em>prefer the
-local copy over <code>WebFetch</code></em> as a standing rule, not a one-off suggestion.</p>
-<h2 id="docs-sites-not-just-repos">Docs sites (not just repos)<a class="headerlink" href="#docs-sites-not-just-repos" title="Permanent link">&para;</a></h2>
-<p>Researched rather than guessed, since mirroring whole websites is a bigger commitment than
-cloning a repo:</p>
-<ul>
-<li><strong><code>llms.txt</code> / <code>llms-full.txt</code></strong> is a real, growing convention — a plain-markdown index or full
-  concatenated dump of a docs site, published specifically so an agent can fetch clean text
-  instead of crawling rendered HTML. Not a formal standard (no public commitment from
-  Anthropic/OpenAI/Google to read it automatically as of early 2026), but real adoption (Stripe,
-  Clerk, Snowflake, others). Where a site has one, it&rsquo;s the best thing to cache.</li>
-<li><strong>Prefer the source repo over the built site when one&rsquo;s public</strong> — most docs sites (mkdocs/
-  docusaurus/sphinx/zensical) are generated from markdown/rst in a public repo, often the
-  project&rsquo;s own. Cloning that gets clean source instead of scraped HTML and reuses the <code>repos/</code>
-  bucket and update mechanism already built — no new tooling.</li>
-<li><strong>Fallback tier, only when neither exists:</strong> purpose-built mirror-to-markdown tools —
-  <a href="https://pypi.org/project/llms-mirror/0.1.0/"><code>llms-mirror</code></a> (pulls via a site&rsquo;s <code>llms.txt</code>
-  index) and <a href="https://github.com/CamiloMartinezM/site2md"><code>site2md</code></a> (wget-based mirror +
-  HTML-to-Markdown cleanup). Both beat hand-rolled <code>wget --mirror</code> plus manual conversion.</li>
-<li><strong>Order: <code>llms.txt</code> → clone source repo → general site-to-markdown mirror.</strong> Full site
-  mirroring is the fallback of last resort — most staleness risk, plus a new tool dependency.</li>
-<li><strong>Bucket:</strong> <code>pages/&lt;host&gt;--&lt;site&gt;/</code>, no version segment by default (&ldquo;latest&rdquo; is normally the
-  goal; re-fetch in place rather than accumulate dated snapshots). Version actually fetched goes
-  in that entry&rsquo;s <code>SOURCE.md</code>.</li>
-<li>Docs sites move faster than repos and have no pinned commit to anchor to — <code>research-update</code>
-  should eventually re-fetch <code>pages/</code> entries on their own, shorter cadence, not <code>git pull</code>.</li>
-</ul>
-<p>Sources: <a href="https://buildwithfern.com/post/how-to-write-llm-friendly-documentation">Write LLM-friendly docs (Fern)</a>,
-<a href="https://buildwithfern.com/post/optimizing-api-docs-ai-agents-llms-txt-guide">llms.txt guide (Fern)</a>,
-<a href="https://docs.snowflake.com/en/release-notes/2026/other/2026-04-15-agent-friendly-docs">Snowflake docs for AI agents</a>,
-<a href="https://www.agentpatterns.ai/standards/llms-txt/">llms.txt: Making Your Project Discoverable to AI Agents</a>.</p>
-<h2 id="rag-embeddings-researched-not-adding">RAG / embeddings — researched, not adding<a class="headerlink" href="#rag-embeddings-researched-not-adding" title="Permanent link">&para;</a></h2>
-<p><strong>Reminder of the mechanics:</strong> RAG means an external index, not the model&rsquo;s trained knowledge,
-supplies facts at answer time — chunk source text, embed each chunk, store the vectors, embed
-the query at search time, splice the nearest chunks into the prompt. It&rsquo;s how you search a corpus
-too large to hand the model wholesale, and it matches on meaning rather than exact wording — at
-the cost of a whole pipeline (chunker, embedding model, vector store, re-embed-on-update) to
-build and keep in sync.</p>
-<p><strong>2026 consensus:</strong> the industry has moved <em>away</em> from vector-DB RAG for code specifically —
-multiple sources describe Anthropic/Claude Code itself moving off a vector-RAG pipeline toward
-agentic search (grep, glob, file reads, symbol navigation), because code questions are usually
-literal (&ldquo;where is <code>X</code> defined&rdquo;) and exact-match search answers them better and cheaper. RAG
-still earns its place for monorepos too large to grep from scratch each time, genuine concept
-search, and large non-code corpora — usually hybrid, not embeddings alone.</p>
-<p><strong>Applied here: doesn&rsquo;t clear the bar.</strong> Curated entries, <code>AGENTS.md</code> naming the exact relevant
-path, individually modest-sized repos/docs — that&rsquo;s already what makes agentic grep/Read
-sufficient, the tool Claude Code already uses natively with zero added infrastructure.</p>
-<p><strong>Revisit trigger, not a default:</strong> a genuinely large, term-agnostic corpus (a huge PDF manual or
-doc dump where the right search term isn&rsquo;t known and a full read-through isn&rsquo;t practical) is the
-specific condition that would justify a lightweight local option (a local embedding model +
-something like <code>sqlite-vec</code>, exposed via an MCP server) — added for that case, not built
-preemptively.</p>
-<p><strong>Checked against actual expected use, not just in the abstract:</strong> the realistic workloads here
-are a single novel at a time (themes/characters/style) or a handful of papers/books on one topic
-— not hundreds of documents with repeated queries, the scenario where RAG&rsquo;s cost/recall numbers
-actually apply. At that scale the corpus fits in a single context window outright (no retrieval
-step needed), and for the novel case specifically, chunked retrieval would work <em>against</em> the
-task — themes and style are properties of the whole book, and top-k retrieval severs the
-cross-chapter connections that kind of analysis depends on.</p>
-<p>Sources: <a href="https://dev.to/nimay_04/rag-is-not-always-the-answer-anymore-how-ai-agents-search-code-in-2026-43m3">RAG Is Not Always the Answer Anymore (DEV Community)</a>,
-<a href="https://smartscope.blog/en/ai-development/practices/rag-debate-agentic-search-code-exploration/">Why Claude Code Dropped Vector DB-Based RAG (SmartScope)</a>,
-<a href="https://medium.com/@jhanavibehl/code-retrieval-grep-rag-or-both-706cdefd0b70">Code Retrieval: Grep, RAG, or Both? (Medium)</a>,
-<a href="https://www.llamaindex.ai/blog/is-grep-all-you-need-lexical-vs-sematic-search-for-agents">grep vs. RAG (LlamaIndex)</a>.</p>
-<h2 id="packaging-conventions-as-a-skill-and-a-reversal-worth-remembering">Packaging conventions as a skill — and a reversal worth remembering<a class="headerlink" href="#packaging-conventions-as-a-skill-and-a-reversal-worth-remembering" title="Permanent link">&para;</a></h2>
-<p>The library&rsquo;s own conventions are packaged as a skill (<code>skills/research-library/SKILL.md</code>,
-declared via <code>setup.toml</code>&rsquo;s <code>skills = [{ source = "local", path = "..." }]</code> field, deployed as a
-real copy — not a symlink — by <code>inv ai.skills</code>; full mechanism documented in
-<code>docs/claude-code.md</code>). That <code>npx</code>-source path (installing a skill straight from a GitHub repo
-via the <code>skills</code> CLI) was validated end-to-end against a real package,
-<a href="https://github.com/JuliusBrussee/caveman">caveman</a> — worth recording why it <em>isn&rsquo;t</em> installed
-that way today, since the reasoning generalizes:</p>
-<p>Caveman ships terse-communication-style rules. Installed first as a skill, then also duplicated
-into <code>~/AGENTS.md</code> for cross-tool, always-on reach — a skill only reaches Claude Code, and
-loads conditionally, where AGENTS.md is unconditional and read by every agent tool on the
-machine. Once both existed, the skill was mostly redundant for Claude Code specifically, and its
-only remaining value (switchable intensity levels) was more complexity than wanted. Reversed:
-skill uninstalled, only the AGENTS.md copy kept, trimmed down to one always-on mode with no
-levels — the simplest version that still keeps the two things that matter (never drop negations,
-carve out security/irreversible actions). <strong>The lesson for future skill decisions:</strong> if a skill&rsquo;s
-behavior needs to apply unconditionally and across every agent tool, it belongs in <code>AGENTS.md</code>,
-not as a skill — a skill is the right tool only for something genuinely conditional/on-demand or
-Claude-Code-specific.</p>
 
 
 
@@ -2222,6 +2434,44 @@ Claude-Code-specific.</p>
       
         <footer class="md-footer">
   
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./corporate-proxy.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Corporate proxy">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                Corporate proxy
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="./ai.html" class="md-footer__link md-footer__link--next" aria-label="Next: AI tools">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                AI tools
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
     
   
   <div class="md-footer-meta md-typeset">

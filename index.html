@@ -315,6 +315,8 @@
       
         
       
+        
+      
     
     
     
@@ -1212,6 +1214,8 @@
       
         
       
+        
+      
     
     
     
@@ -1432,6 +1436,33 @@
     
   
   Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
 
     
   </span>
@@ -2080,7 +2111,7 @@
   
 
 
-<h1 id="pulse-power-user-linux-setup">PULSE — Power User Linux Setup</h1>
+<h1 id="pulse-power-user-linux-setup">PULSE — Power User Linux Setup<a class="headerlink" href="#pulse-power-user-linux-setup" title="Permanent link">&para;</a></h1>
 <p><strong>PULSE</strong> (Power User Linux Setup) is an opinionated, reproducible workstation setup for Ubuntu 24.04, driven by a single <code>setup.toml</code> and <a href="https://www.pyinvoke.org/"><code>invoke</code></a> tasks. Clone, run <code>bootstrap.sh</code>, run <code>inv setup</code> — no step-by-step walkthrough required for the golden path.</p>
 <div class="grid cards">
 <ul>
@@ -2110,7 +2141,7 @@
 </li>
 </ul>
 </div>
-<h2 id="quick-start">Quick start</h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>~
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>projects
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>projects
@@ -2120,7 +2151,7 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>inv<span class="w"> </span>setup<span class="w">             </span><span class="c1"># runs the full setup — see configuration.md for what that covers, phase by phase</span>
 </span></code></pre></div>
 <p><code>inv setup</code> does not cover everything — see <strong>Manual steps</strong> below for what still requires human input.</p>
-<h3 id="environment-variables">Environment variables</h3>
+<h3 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2146,7 +2177,7 @@
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation<span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base
 </span></code></pre></div>
 <p>Curious what <code>inv setup</code> actually runs, phase by phase, or how config files and tags work under the hood? See <a href="configuration.html">How it works</a>.</p>
-<h2 id="manual-steps">Manual steps</h2>
+<h2 id="manual-steps">Manual steps<a class="headerlink" href="#manual-steps" title="Permanent link">&para;</a></h2>
 <p>These cannot be automated — they require hardware knowledge, a browser, or interactive auth:</p>
 <table>
 <thead>
@@ -2190,8 +2221,8 @@
 </tr>
 </tbody>
 </table>
-<h2 id="maintenance">Maintenance</h2>
-<h3 id="updating-deb-github-packages">Updating deb-github packages</h3>
+<h2 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h2>
+<h3 id="updating-deb-github-packages">Updating deb-github packages<a class="headerlink" href="#updating-deb-github-packages" title="Permanent link">&para;</a></h3>
 <p>Packages installed via <code>deb-github</code> (e.g. wezterm nightly) are not updated by <code>apt upgrade</code>.
 To upgrade all of them to the latest release:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>apt.upgrade-debs
