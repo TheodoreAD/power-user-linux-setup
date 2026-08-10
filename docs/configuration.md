@@ -28,6 +28,7 @@ PULSE owns config files through named sentinel blocks rather than overwriting wh
 |---|---|---|
 | `~/.zshrc` | `inv zsh.configure` | completions, aliases, hooks — from `zshrc` fields in `setup.toml` |
 | `~/.zshenv` | `inv zsh.configure` | environment variables, PATH — from `zshenv` fields in `setup.toml` |
+| `~/.zshenv` (separate `proxy` block) | `inv proxy.install` | `http_proxy`/`https_proxy`/`no_proxy` pointed at the local Px daemon — written only once verified working, see [corporate-proxy.md](corporate-proxy.md) |
 | `~/.zprofile` | `inv zsh.configure` | login-shell config — from `zprofile` fields in `setup.toml` |
 | `~/.config/curlrc` | `inv system.curlrc` | curl defaults (silent, follow redirects) |
 | `/etc/sysctl.conf` | `inv system.disable-ipv6` | IPv6 disable keys |
@@ -35,6 +36,8 @@ PULSE owns config files through named sentinel blocks rather than overwriting wh
 | `/etc/apt/apt.conf.d/99-pulse` | `inv apt.configure` | Disable dpkg progress bars |
 | `~/.local/bin/askpass-zenity` | `inv tools.install` | Zenity GUI askpass helper — enables `sudo -A` without a TTY |
 | `~/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it) | `inv tools.install` | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline) |
+| `~/.config/systemd/user/pulse-proxy.service` | `inv proxy.fix`/`install` | Runs the Px proxy daemon — see [corporate-proxy.md](corporate-proxy.md) |
+| `~/.config/px/px.ini` | **not PULSE-managed** — owned entirely by Px's own `--save` | Upstream proxy address, bypass list, username. `inv proxy.*` never hand-authors this file's schema. |
 
 ### Adding a new block
 

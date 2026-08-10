@@ -64,3 +64,13 @@ user     = "jsmith"
 alias    = "myserver"
 hostname = "10.11.12.13"
 email    = "jane.smith@work.com"
+
+# Optional — only needed if `inv proxy.check`/`inv proxy.install`'s auto-discovery guesses wrong
+# or finds nothing (e.g. the corporate proxy isn't reflected in any env var, /etc/environment, or
+# GNOME's proxy setting on this machine). Never put credentials here — proxy.install captures
+# those separately (GUI prompt / terminal / PULSE_PROXY_PASSWORD_FILE) and stores them in the OS
+# keyring, never in this file. See docs/corporate-proxy.md.
+# [proxy]
+# host    = "proxy.corp.example.com"
+# port    = 8080
+# noproxy = "*.corp.example.com,10.0.0.0/8"

@@ -1,5 +1,11 @@
 # Networking
 
+## Corporate proxy
+
+For authenticating HTTP(S) proxies (common on corporate networks) — detecting what auth scheme is
+required and running a local unauthenticated daemon so apps never see the real credential — see
+[corporate-proxy.md](corporate-proxy.md), not this page. This page covers DNS only.
+
 ## DNS
 
 Ubuntu 24.04 uses **systemd-resolved** exclusively. `resolvconf` is gone — do not use it.

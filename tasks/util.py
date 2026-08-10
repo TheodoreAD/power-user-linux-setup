@@ -28,6 +28,17 @@ def is_wsl() -> bool:
         return False
 
 
+def is_devcontainer() -> bool:
+    """True if running inside a dev container / Codespace — used by tasks/proxy.py to skip
+    systemd-`--user`-daemon assumptions and prefer the Windows/host-proxy discovery path over
+    installing a second local daemon. `/.dockerenv` alone isn't enough (any Docker container has
+    it, including plain CI runners) — pair it with an env var a dev-container tool actually sets.
+    """
+    return Path("/.dockerenv").exists() and bool(
+        os.environ.get("REMOTE_CONTAINERS") or os.environ.get("CODESPACES") or os.environ.get("DEVCONTAINER")
+    )
+
+
 def interactive() -> bool:
     """True if stdin is a real terminal and this isn't a dry run — the gate for whether it's
     safe to prompt with input() at all, vs. a piped/scripted/CI invocation that would just hang.
@@ -124,6 +135,20 @@ def load_identity() -> dict:
         )
     with open(_IDENTITY_PATH, "rb") as f:
         return tomllib.load(f)
+
+
+def load_proxy_override() -> dict:
+    """Optional [proxy] table from ~/.config/pulse/identity.toml (host/port/noproxy). Unlike
+    load_identity(), tolerant of a missing file — proxy detection has to degrade gracefully on the
+    common case of a personal, non-corporate machine, not require identity.toml to exist just to
+    run `inv proxy.check`. Not cached like load_identity()/load_config(): this is re-read on every
+    proxy.* invocation on the assumption it's edited far more often mid-troubleshooting than the
+    machine's own identity ever is.
+    """
+    if not _IDENTITY_PATH.exists():
+        return {}
+    with open(_IDENTITY_PATH, "rb") as f:
+        return tomllib.load(f).get("proxy", {})
 
 
 def _excluded_tags() -> set[str]:

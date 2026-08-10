@@ -1300,6 +1300,20 @@ description = "Cross-platform system monitoring TUI — CPU, memory, disk, netwo
 method      = "uv-tool"
 package     = "glances"
 
+[packages.px-proxy]
+description = "Px — local unauthenticated proxy daemon that authenticates to a corporate HTTP(S) proxy on the client's behalf (NTLM/Kerberos/Basic), so apps never see the real credential. Powers inv proxy.*. See docs/corporate-proxy.md."
+method      = "uv-tool"
+package     = "px-proxy"
+check_cmd   = "px"
+tags        = ["corporate"]
+
+[packages.pulse-proxy-start]
+description = "Devcontainer/no-systemd fallback starter for the Px proxy daemon (inv proxy.fix/install use this when systemd --user isn't available)"
+method      = "wrapper-script"
+tags        = ["corporate"]
+dest        = "~/.local/bin/pulse-proxy-start"
+content_file = "config/pulse-proxy-start.sh"
+
 [packages.zensical]
 description = "Modern static site generator from the creators of Material for MkDocs — Rust core, Python API"
 method      = "uv-tool"
