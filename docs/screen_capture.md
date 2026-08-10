@@ -21,7 +21,9 @@ GNOME 46 keeps these bindings in `org.gnome.shell.keybindings`, not the older
 **Every one of the 3 screenshot actions already saves to disk *and* copies to the clipboard —
 there's no separate "clipboard-only" shortcut to look for.** This is confirmed straight from
 `gnome-shell` 46.0 source (`js/ui/screenshot.js`, cloned into
-`reference/repos/gnome-shell` for reference): `screenshot` and `screenshot-window` both
+`$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-shell` for reference — a shared,
+cross-project clone outside this repo, see `reference/research-library-plan.md`): `screenshot`
+and `screenshot-window` both
 call a shared `_storeScreenshot()`, whose docstring is literally *"Stores a PNG-encoded
 screenshot into the clipboard and a file"*; the interactive picker's capture button
 (`_onCaptureButtonClicked`) goes through the same function. So this is already the "always save +
@@ -44,7 +46,8 @@ tool.
 
 Flameshot is the recommended tool when annotation is needed — it provides a built-in editor that
 launches immediately after capture. Everything below comes from reading the Flameshot source
-directly (`flameshot-org/flameshot`, cloned into `reference/repos/flameshot`), not its docs.
+directly (`flameshot-org/flameshot`, cloned into
+`$RESEARCH_HOME/repos/github.com--flameshot-org--flameshot`), not its docs.
 
 **Install:** via `[packages.flameshot]` in `setup.toml` (`inv apt.deb`) — **not** `apt install
 flameshot`. Two real bugs were found and fixed getting this working on this machine
