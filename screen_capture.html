@@ -2163,14 +2163,14 @@
   
 
 
-<h1 id="screen-capture">Screen capture</h1>
-<h2 id="built-in-gnome-tool-ubuntu-2404-default">Built-in GNOME tool (Ubuntu 24.04 default)</h2>
+<h1 id="screen-capture">Screen capture<a class="headerlink" href="#screen-capture" title="Permanent link">&para;</a></h1>
+<h2 id="built-in-gnome-tool-ubuntu-2404-default">Built-in GNOME tool (Ubuntu 24.04 default)<a class="headerlink" href="#built-in-gnome-tool-ubuntu-2404-default" title="Permanent link">&para;</a></h2>
 <p>Since GNOME 42 the screenshot/screencast UI is baked directly into GNOME Shell — no separate app
 is needed. It works on both Wayland (default in 24.04) and X11.</p>
 <p>GNOME 46 keeps these bindings in <code>org.gnome.shell.keybindings</code>, not the older
 <code>org.gnome.settings-daemon.plugins.media-keys</code> schema some older guides reference — that schema&rsquo;s
 <code>screenshot</code>/<code>screenshot-clip</code>/<code>window-screenshot</code>/etc. keys don&rsquo;t exist on this GNOME version.</p>
-<h3 id="keyboard-shortcuts">Keyboard shortcuts</h3>
+<h3 id="keyboard-shortcuts">Keyboard shortcuts<a class="headerlink" href="#keyboard-shortcuts" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2206,7 +2206,7 @@ is needed. It works on both Wayland (default in 24.04) and X11.</p>
 there&rsquo;s no separate &ldquo;clipboard-only&rdquo; shortcut to look for.</strong> This is confirmed straight from
 <code>gnome-shell</code> 46.0 source (<code>js/ui/screenshot.js</code>, cloned into
 <code>$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-shell</code> for reference — a shared,
-cross-project clone outside this repo, see <code>reference/research-library-plan.md</code>): <code>screenshot</code>
+cross-project clone outside this repo, see <code>docs/research-library.md</code>): <code>screenshot</code>
 and <code>screenshot-window</code> both
 call a shared <code>_storeScreenshot()</code>, whose docstring is literally <em>&ldquo;Stores a PNG-encoded
 screenshot into the clipboard and a file&rdquo;</em>; the interactive picker&rsquo;s capture button
@@ -2216,11 +2216,11 @@ clipboard, no dialog&rdquo; behavior — no configuration needed.</p>
 (<code>GLib.UserDirectory.DIRECTORY_PICTURES</code> + a literal <code>Screenshots</code> subfolder, auto-created).</p>
 <p>Screencasts: <code>Ctrl+Shift+Alt+R</code> opens an interactive recording UI; output is <code>.webm</code> in
 <code>~/Videos/</code>.</p>
-<h3 id="limitations">Limitations</h3>
+<h3 id="limitations">Limitations<a class="headerlink" href="#limitations" title="Permanent link">&para;</a></h3>
 <p>No annotation tools. For marking up screenshots (arrows, text, blur, crop) you need a third-party
 tool.</p>
 <hr />
-<h2 id="flameshot">Flameshot</h2>
+<h2 id="flameshot">Flameshot<a class="headerlink" href="#flameshot" title="Permanent link">&para;</a></h2>
 <p>Flameshot is the recommended tool when annotation is needed — it provides a built-in editor that
 launches immediately after capture. Everything below comes from reading the Flameshot source
 directly (<code>flameshot-org/flameshot</code>, cloned into
@@ -2247,7 +2247,7 @@ flameshot</code>. Two real bugs were found and fixed getting this working on thi
    embeds a git-describe string, not the version — bump <code>tag</code>/<code>asset</code> by hand to try a newer
    release.</li>
 </ol>
-<h3 id="design-same-keys-same-directory-same-always-save-clipboard-behavior">Design: same keys, same directory, same &ldquo;always save + clipboard&rdquo; behavior</h3>
+<h3 id="design-same-keys-same-directory-same-always-save-clipboard-behavior">Design: same keys, same directory, same &ldquo;always save + clipboard&rdquo; behavior<a class="headerlink" href="#design-same-keys-same-directory-same-always-save-clipboard-behavior" title="Permanent link">&para;</a></h3>
 <p>Flameshot only takes over the 2 shortcuts it can actually replace. <code>Alt+PrtSc</code> (active window) is
 left on GNOME&rsquo;s own <code>screenshot-window</code> action — it already saves + copies to clipboard by
 default (see above), and Flameshot has no window-capture mode to offer instead
@@ -2290,7 +2290,7 @@ and can&rsquo;t communicate with the Wayland screenshot portal (&ldquo;Unable to
 correctly with no override needed — tested both with and without it. <code>inv screenshot.enable</code> still
 applies the override when the session is Wayland, since it&rsquo;s a harmless no-op on a version that
 doesn&rsquo;t need it and protects against a future downgrade.</p>
-<h3 id="managing-it">Managing it</h3>
+<h3 id="managing-it">Managing it<a class="headerlink" href="#managing-it" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>screenshot.enable<span class="w">    </span><span class="c1"># sets Flameshot&#39;s savePath, applies the Wayland fix if needed,</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">                          </span><span class="c1"># disables GNOME&#39;s show-screenshot-ui/screenshot keys, binds PrtSc/Shift+PrtSc</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>screenshot.disable<span class="w">   </span><span class="c1"># removes the 2 custom bindings, restores GNOME&#39;s shipped defaults exactly</span>
@@ -2308,7 +2308,7 @@ The earlier scripted <code>flameshot full -c</code> + immediate <code>wl-paste -
 <code>image/png</code> was a false alarm from the non-interactive repro, not a real clipboard problem. The
 annotation editor (arrows/text/blur/crop) also confirmed working on a <code>PrtSc</code> capture.</p>
 <hr />
-<h2 id="other-options">Other options</h2>
+<h2 id="other-options">Other options<a class="headerlink" href="#other-options" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Shutter</strong> — heavier GUI editor, pixel-level tools; overkill for most use cases</li>
 <li><strong>Kazam</strong> — screenshots + screen recording in one app; no annotation</li>

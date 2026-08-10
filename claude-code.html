@@ -2151,15 +2151,15 @@
   
 
 
-<h1 id="claude-code-environment">Claude Code environment</h1>
+<h1 id="claude-code-environment">Claude Code environment<a class="headerlink" href="#claude-code-environment" title="Permanent link">&para;</a></h1>
 <p>What this repo does specifically to make <a href="https://claude.ai/code">Claude Code</a> (the CLI agent)
 work smoothly on this machine — as opposed to <code>docs/ai.md</code>, which covers AI tools generally
 (install, model choice, other agents).</p>
-<h2 id="the-core-problem-no-tty">The core problem: no TTY</h2>
+<h2 id="the-core-problem-no-tty">The core problem: no TTY<a class="headerlink" href="#the-core-problem-no-tty" title="Permanent link">&para;</a></h2>
 <p>Claude Code&rsquo;s Bash tool runs commands non-interactively — there&rsquo;s no controlling terminal, so
 anything that tries to prompt interactively (a <code>sudo</code> password, an SSH key passphrase) just fails
 outright instead of waiting for input. Two independent instances of this are solved the same way:</p>
-<h2 id="askpass-zenity-gui-dialog-instead-of-a-tty-prompt">askpass-zenity — GUI dialog instead of a TTY prompt</h2>
+<h2 id="askpass-zenity-gui-dialog-instead-of-a-tty-prompt">askpass-zenity — GUI dialog instead of a TTY prompt<a class="headerlink" href="#askpass-zenity-gui-dialog-instead-of-a-tty-prompt" title="Permanent link">&para;</a></h2>
 <p><code>[packages.askpass-zenity]</code> in <code>setup.toml</code> writes <code>~/.local/bin/askpass-zenity</code>, a script that
 pops a Zenity GUI password dialog and prints whatever was entered to stdout — the standard
 <code>*_ASKPASS</code> program contract. It&rsquo;s wired up for two separate purposes:</p>
@@ -2189,7 +2189,7 @@ command times out rather than hanging forever.</p>
 <p>The askpass script itself shows the caller&rsquo;s actual prompt (<code>$1</code> — sudo passes something like
 <code>[sudo] password for user:</code>, ssh passes <code>Enter passphrase for key '...':</code>) instead of a hardcoded
 string, so the dialog text is accurate regardless of which one triggered it.</p>
-<h2 id="installing-the-cli">Installing the CLI</h2>
+<h2 id="installing-the-cli">Installing the CLI<a class="headerlink" href="#installing-the-cli" title="Permanent link">&para;</a></h2>
 <p><code>[packages.claude-code]</code> installs the <code>claude</code> binary itself via <code>inv tools.install</code>, using
 Anthropic&rsquo;s native installer (<code>curl -fsSL https://claude.ai/install.sh | bash</code>) — a <code>script</code>-method
 entry, same as Oh My Zsh. This is the officially recommended method: it needs no Node.js, ships a
@@ -2197,7 +2197,7 @@ signed per-platform binary, and auto-updates itself in the background (<code>~/.
 symlinked into <code>~/.local/share/claude/versions/</code>). Don&rsquo;t use <code>npm install -g @anthropic-ai/claude-code</code>
 for a fresh install on this machine — it still works but is the legacy path; PULSE only needs to
 <code>curl</code>-install once and then leaves auto-update to Claude Code itself.</p>
-<h2 id="agentsmd-global-instructions-declaratively-managed"><code>~/AGENTS.md</code> — global instructions, declaratively managed</h2>
+<h2 id="agentsmd-global-instructions-declaratively-managed"><code>~/AGENTS.md</code> — global instructions, declaratively managed<a class="headerlink" href="#agentsmd-global-instructions-declaratively-managed" title="Permanent link">&para;</a></h2>
 <p><code>[packages.claude-global-md]</code> writes <code>~/AGENTS.md</code> (the cross-tool, cross-project instructions
 file every agent CLI on this machine can read) from <code>setup.toml</code>, and symlinks
 <code>~/.claude/CLAUDE.md -&gt; ~/AGENTS.md</code> via the <code>wrapper-script</code> method&rsquo;s <code>symlink_dest</code> field — the
@@ -2235,7 +2235,7 @@ leaves it alone rather than overwriting it.</p>
   rule that was written for the plain command alone — so it prompts every time even when every
   individual piece is already allowlisted.</li>
 </ul>
-<h2 id="claudesettingsjson-permissions-merged-in-by-inv-allowlistapply"><code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code></h2>
+<h2 id="claudesettingsjson-permissions-merged-in-by-inv-allowlistapply"><code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code><a class="headerlink" href="#claudesettingsjson-permissions-merged-in-by-inv-allowlistapply" title="Permanent link">&para;</a></h2>
 <p>Unlike <code>~/.claude/CLAUDE.md</code> above, <code>~/.claude/settings.json</code> is <em>not</em> fully PULSE-owned — it&rsquo;s a
 partial merge. <code>inv allowlist.apply</code> (see <a href="cli-allowlist.html"><code>cli-allowlist.md</code></a> for the full
 pipeline this is the last step of) rewrites only the <code>permissions.allow</code>/<code>permissions.ask</code> arrays,
@@ -2244,7 +2244,7 @@ other key in the file (<code>theme</code>, <code>effortLevel</code>, <code>clean
 specifically — governs how long session transcripts/tasks/shell-snapshots/backups are kept — is
 set to <code>365</code> here (default is <code>30</code>) as a deliberate preference, reviewed and confirmed while
 building the allowlist pipeline, not something PULSE enforces or will change on your behalf.</p>
-<h2 id="agentsskills-and-project-scaffolding-tasksaipy"><code>.agents/skills/</code> and project scaffolding — <code>tasks/ai.py</code></h2>
+<h2 id="agentsskills-and-project-scaffolding-tasksaipy"><code>.agents/skills/</code> and project scaffolding — <code>tasks/ai.py</code><a class="headerlink" href="#agentsskills-and-project-scaffolding-tasksaipy" title="Permanent link">&para;</a></h2>
 <p><code>.agents/skills/</code> is the emerging cross-tool convention for Agent Skills, but Claude Code itself
 currently only discovers skills from <code>~/.claude/skills/</code> and <code>&lt;project&gt;/.claude/skills/</code> — not
 <code>.agents/skills/</code> directly. To get both the cross-tool convention <em>and</em> a working Claude Code setup,
@@ -2262,7 +2262,7 @@ PULSE symlinks <code>.claude/skills</code> to <code>.agents/skills</code>:</p>
 </ul>
 <p>Both tasks check for existing files/symlinks first and skip rather than overwrite — safe to re-run,
 and safe to point at a project that already has hand-written <code>AGENTS.md</code>/<code>CLAUDE.md</code>/skills content.</p>
-<h2 id="declaring-skills-to-install-the-skills-field">Declaring skills to install — the <code>skills</code> field</h2>
+<h2 id="declaring-skills-to-install-the-skills-field">Declaring skills to install — the <code>skills</code> field<a class="headerlink" href="#declaring-skills-to-install-the-skills-field" title="Permanent link">&para;</a></h2>
 <p>Any <code>setup.toml</code> package entry can carry a <code>skills</code> list, checked by <code>inv ai.skills</code> regardless of
 that entry&rsquo;s own <code>method</code> — same any-section pattern as <code>zshenv</code>/<code>zshrc</code>/<code>zprofile</code>. Two sources:</p>
 <ul>
@@ -2279,7 +2279,7 @@ that entry&rsquo;s own <code>method</code> — same any-section pattern as <code
   an <code>inv ai.skills</code> re-run to take effect, it doesn&rsquo;t apply instantly the way a symlink would.
   <code>[packages.research-library]</code> is the example: its <code>skills</code> field points at
   <code>skills/research-library/</code>, which documents <code>$RESEARCH_HOME</code> (see
-  <code>reference/research-library-plan.md</code>).</li>
+  <code>docs/research-library.md</code>).</li>
 <li><strong><code>{ source = "npx", repo = "&lt;owner&gt;/&lt;repo&gt;", names = [...], agents = [...] }</code></strong> — for skills
   published on GitHub. Installed via the real <code>skills</code> CLI (<code>[packages.node].global_packages</code>,
   <a href="https://skills.sh">skills.sh</a>): <code>skills add &lt;repo&gt; --global --skill &lt;names...&gt; --agent
@@ -2293,18 +2293,14 @@ that entry&rsquo;s own <code>method</code> — same any-section pattern as <code
 </ul>
 <p>Add a skill to install without attaching it to some other tool&rsquo;s entry by giving it its own
 <code>[packages.&lt;name&gt;]</code> block with <code>method = "skill"</code> and nothing else but <code>skills</code>.</p>
-<p><code>[packages.caveman]</code> is the <code>npx</code>-source example, and the one skill installed <strong>by default</strong> on
-this machine (no tag gate, part of the standard <code>inv setup</code> chain like everything else enabled
-here) rather than something you have to remember to add — <a href="https://github.com/
-JuliusBrussee/caveman">caveman</a> is an ultra-compressed communication-style skill, personally used and
-vouched for professionally, not adopted sight-unseen. It ships as a 7-skill suite (core style
-mode, commit messages, code review, a memory-file compressor, subagents, stats, help); only the
-core <code>caveman</code> skill is installed here — the rest were reviewed and deliberately left out (a
-memory-file-mutating skill, one needing subagent definitions, and pieces that depend on a hook
-wired through Claude Code&rsquo;s separate plugin system, not <code>.agents/skills</code>) as more complexity than
-the core skill&rsquo;s value justifies for now. <code>reference/research-library-plan.md</code> has the fuller
-review notes.</p>
-<h2 id="declaring-static-permission-rules-the-claude_permissions_allow-field">Declaring static permission rules — the <code>claude_permissions_allow</code> field</h2>
+<p>The <code>npx</code> source was validated end-to-end against a real package
+(<a href="https://github.com/JuliusBrussee/caveman">caveman</a>, an ultra-compressed communication-style
+skill) before being trusted for <code>research-library</code>&rsquo;s own <code>local</code> source — but caveman itself
+ended up living in <code>~/AGENTS.md</code> instead (see &ldquo;Caveman-style terse output&rdquo; in
+<code>config/global-AGENTS.md</code>), not as an installed skill: a skill only reaches Claude Code, and the
+simpler, always-on AGENTS.md version covers every agent tool on this machine for less overall
+complexity than keeping both. <code>docs/research-library.md</code> has the fuller review notes.</p>
+<h2 id="declaring-static-permission-rules-the-claude_permissions_allow-field">Declaring static permission rules — the <code>claude_permissions_allow</code> field<a class="headerlink" href="#declaring-static-permission-rules-the-claude_permissions_allow-field" title="Permanent link">&para;</a></h2>
 <p>A second any-section field, same pattern as <code>skills</code>: any package entry can carry
 <code>claude_permissions_allow</code>, a list of literal Claude Code permission-rule strings, checked
 regardless of that entry&rsquo;s <code>method</code>. <code>inv ai.skills</code> merges every declared rule into

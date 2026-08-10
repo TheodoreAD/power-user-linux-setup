@@ -2311,15 +2311,15 @@
   
 
 
-<h1 id="troubleshooting">Troubleshooting</h1>
-<h2 id="hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390">Hardware sensors — fan and voltage monitoring on Gigabyte Z390</h2>
+<h1 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h1>
+<h2 id="hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390">Hardware sensors — fan and voltage monitoring on Gigabyte Z390<a class="headerlink" href="#hardware-sensors-fan-and-voltage-monitoring-on-gigabyte-z390" title="Permanent link">&para;</a></h2>
 <p><strong>Board:</strong> Gigabyte Z390 GAMING X · <strong>Chip:</strong> ITE IT8628E at I/O port 0xa40</p>
-<h3 id="what-works-out-of-the-box">What works out of the box</h3>
+<h3 id="what-works-out-of-the-box">What works out of the box<a class="headerlink" href="#what-works-out-of-the-box" title="Permanent link">&para;</a></h3>
 <p>Temperature data is available via two hwmon drivers loaded automatically:
 - <code>gigabyte_wmi</code> (hwmon2) — 6 system temps from BIOS WMI (VRM, PCH, etc.)
 - <code>coretemp</code> (hwmon3) — 7 readings: CPU Package + 6 individual cores</p>
 <p><code>sensors</code> shows all of these. Vitals reads from <code>/sys/class/hwmon/</code> and displays them.</p>
-<h3 id="what-doesnt-work-fans-and-voltages">What doesn&rsquo;t work: fans and voltages</h3>
+<h3 id="what-doesnt-work-fans-and-voltages">What doesn&rsquo;t work: fans and voltages<a class="headerlink" href="#what-doesnt-work-fans-and-voltages" title="Permanent link">&para;</a></h3>
 <p>The IT8628E SuperIO chip that reads fan headers and voltage rails is present at ISA
 port 0xa40, but the BIOS registers those ports in the ACPI namespace, blocking the
 <code>it87</code> kernel driver from claiming them:</p>
@@ -2333,7 +2333,7 @@ port 0xa40, but the BIOS registers those ports in the ACPI namespace, blocking t
 </span></code></pre></div>
 <p><code>sensors-detect</code> does not find the chip because the ACPI port conflict prevents
 <code>it87</code> from loading even during detection.</p>
-<h3 id="fix-requires-reboot">Fix (requires reboot)</h3>
+<h3 id="fix-requires-reboot">Fix (requires reboot)<a class="headerlink" href="#fix-requires-reboot" title="Permanent link">&para;</a></h3>
 <p>Add <code>acpi_enforce_resources=lax</code> to the GRUB kernel command line. This tells the
 kernel to allow hwmon drivers to claim I/O ports even if ACPI has registered them —
 safe on desktop boards, standard fix for this class of SuperIO conflict.</p>
@@ -2349,13 +2349,13 @@ safe on desktop boards, standard fix for this class of SuperIO conflict.</p>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="c1"># If sensors still needs a label mapping, run: sudo sensors-detect</span>
 </span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;it87&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sudo<span class="w"> </span>tee<span class="w"> </span>/etc/modules-load.d/it87.conf
 </span></code></pre></div>
-<h3 id="decision-2026-06-09">Decision (2026-06-09)</h3>
+<h3 id="decision-2026-06-09">Decision (2026-06-09)<a class="headerlink" href="#decision-2026-06-09" title="Permanent link">&para;</a></h3>
 <p>Not applied. <code>acpi_enforce_resources=lax</code> is a GRUB change and the payoff (fans +
 voltages in Vitals) was judged not worth the reboot and boot-parameter risk for now.
 Vitals is configured to show temperatures only. Revisit if fan monitoring becomes
 important (e.g. before overclocking or in a hot environment).</p>
 <hr />
-<h2 id="grub-gpu-driver-conflicts-at-boot-nomodeset">GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)</h2>
+<h2 id="grub-gpu-driver-conflicts-at-boot-nomodeset">GRUB — GPU driver conflicts at boot (<code>nomodeset</code>)<a class="headerlink" href="#grub-gpu-driver-conflicts-at-boot-nomodeset" title="Permanent link">&para;</a></h2>
 <p>Some machines (particularly with older NVIDIA or AMD discrete GPUs) show a blank screen or freeze during boot because the kernel tries to take over framebuffer mode before GPU drivers are loaded. The fix is <code>nomodeset</code>, which tells the kernel not to set video modes — the GPU driver handles it instead.</p>
 <p><strong>Only apply this if you are experiencing boot issues.</strong> On most modern hardware with Ubuntu 24.04 it is not needed.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>sudo<span class="w"> </span>sed<span class="w"> </span>-i<span class="w"> </span><span class="se">\</span>
@@ -2365,7 +2365,7 @@ important (e.g. before overclocking or in a hot environment).</p>
 </span></code></pre></div>
 <p>Reboot to apply. The only downside is cosmetic: no splash screen, verbose boot output.</p>
 <p>To undo, restore <code>GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"</code> and run <code>sudo update-grub</code> again.</p>
-<h2 id="fix-crlf-line-endings">Fix CRLF line endings</h2>
+<h2 id="fix-crlf-line-endings">Fix CRLF line endings<a class="headerlink" href="#fix-crlf-line-endings" title="Permanent link">&para;</a></h2>
 <p>If you receive files from Windows machines, they may have <code>\r\n</code> line endings that break shell scripts and tools. <code>dos2unix</code> is installed by default in this setup.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="c1"># Check how many files have CRLF</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>file<span class="w"> </span>-k<span class="w"> </span>--<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>CRLF<span class="w"> </span><span class="p">|</span><span class="w"> </span>wc<span class="w"> </span>-l
@@ -2377,7 +2377,7 @@ important (e.g. before overclocking or in a hot environment).</p>
 </span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a>chmod<span class="w"> </span>go-w<span class="w"> </span>-R<span class="w"> </span>*
 </span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a>sudo<span class="w"> </span>find<span class="w"> </span>.<span class="w"> </span>-type<span class="w"> </span>f<span class="w"> </span><span class="p">|</span><span class="w"> </span>xargs<span class="w"> </span>chmod<span class="w"> </span>a-x
 </span></code></pre></div>
-<h2 id="ibus-ctrlshiftu-shortcut-conflict">IBus Ctrl+Shift+U shortcut conflict</h2>
+<h2 id="ibus-ctrlshiftu-shortcut-conflict">IBus Ctrl+Shift+U shortcut conflict<a class="headerlink" href="#ibus-ctrlshiftu-shortcut-conflict" title="Permanent link">&para;</a></h2>
 <p>On Ubuntu with the IBus input method, <code>Ctrl+Shift+U</code> is bound to &ldquo;Unicode code point input&rdquo; by default. This conflicts with some terminal workflows and applications.</p>
 <p>To disable it:</p>
 <ol>
@@ -2388,11 +2388,11 @@ important (e.g. before overclocking or in a hot environment).</p>
 <li>Close IBus Preferences</li>
 </ol>
 <p>The shortcut is now free for other uses.</p>
-<h2 id="hdmi-audio-nvidia">HDMI audio (NVidia)</h2>
-<h3 id="problem">Problem</h3>
+<h2 id="hdmi-audio-nvidia">HDMI audio (NVidia)<a class="headerlink" href="#hdmi-audio-nvidia" title="Permanent link">&para;</a></h2>
+<h3 id="problem">Problem<a class="headerlink" href="#problem" title="Permanent link">&para;</a></h3>
 <p>No audio output when using a TV or monitor connected via HDMI to an NVidia GPU, even
 though video works fine. The TV works correctly with other machines.</p>
-<h3 id="root-cause">Root cause</h3>
+<h3 id="root-cause">Root cause<a class="headerlink" href="#root-cause" title="Permanent link">&para;</a></h3>
 <p>The NVidia HDMI audio device is a separate PCI function (<code>01:00.1</code>) from the GPU
 (<code>01:00.0</code>). It exposes audio capability to the OS via ELD (EDID-Like Data), which
 the GPU driver reads from the connected display&rsquo;s EDID and passes to the HDA audio
@@ -2411,7 +2411,7 @@ is connected, so PipeWire marks the HDMI sink as <strong>suspended</strong> and 
 <p>Note: there are many ELD entries (one per pin/device combination). The active one
 after the fix will be whichever pin the display is actually connected to — not
 necessarily <code>eld#0.0</code>. Check all of them with the grep above.</p>
-<h3 id="investigation-steps">Investigation steps</h3>
+<h3 id="investigation-steps">Investigation steps<a class="headerlink" href="#investigation-steps" title="Permanent link">&para;</a></h3>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># Confirm PipeWire is running and HDMI is the default sink</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>wpctl<span class="w"> </span>status
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
@@ -2426,7 +2426,7 @@ necessarily <code>eld#0.0</code>. Check all of them with the grep above.</p>
 </span><span id="__span-7-12"><a id="__codelineno-7-12" name="__codelineno-7-12" href="#__codelineno-7-12"></a><span class="c1"># 01:00.0  VGA  — NVidia GA104, driver: nvidia</span>
 </span><span id="__span-7-13"><a id="__codelineno-7-13" name="__codelineno-7-13" href="#__codelineno-7-13"></a><span class="c1"># 01:00.1  Audio — NVidia GA104 HDA, driver: snd_hda_intel</span>
 </span></code></pre></div>
-<h3 id="fix">Fix</h3>
+<h3 id="fix">Fix<a class="headerlink" href="#fix" title="Permanent link">&para;</a></h3>
 <p>Force the NVidia HDMI audio PCI function to re-initialize, which causes it to
 re-read the ELD from the running GPU driver:</p>
 <div class="language-bash highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>sudo<span class="w"> </span>sh<span class="w"> </span>-c<span class="w"> </span><span class="s2">&quot;echo 1 &gt; /sys/bus/pci/devices/0000:01:00.1/remove&quot;</span>
@@ -2441,7 +2441,7 @@ re-read the ELD from the running GPU driver:</p>
 </span></code></pre></div>
 <p>PipeWire will now see the HDMI sink as active. The sink will still show as &ldquo;suspended&rdquo;
 when idle — that is normal. It will activate when audio plays.</p>
-<h3 id="making-it-permanent">Making it permanent</h3>
+<h3 id="making-it-permanent">Making it permanent<a class="headerlink" href="#making-it-permanent" title="Permanent link">&para;</a></h3>
 <p>This fix does <strong>not</strong> survive a reboot. The PCI remove/rescan is a one-shot operation.
 If the problem recurs after rebooting, a systemd service can automate it:</p>
 <div class="language-ini highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a><span class="c1"># /etc/systemd/system/nvidia-hdmi-audio-fix.service</span>
