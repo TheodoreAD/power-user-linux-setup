@@ -124,6 +124,7 @@ nav:
       - gcloud.md
       - ssh.md
       - networking.md
+      - corporate-proxy.md
   - AI:
       - ai.md
       - claude-code.md
