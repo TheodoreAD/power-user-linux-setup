@@ -1,0 +1,58 @@
+{
+  "classified_at": "2026-08-10T15:38:02Z",
+  "extracted_at": "2026-08-09T23:05:30Z",
+  "nodes": {
+    "allow": {
+      "classification": "write",
+      "content_hash": "c3f107276651899a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Grants direnv permission to load .envrc/.env files, modifying the internal allow-list.",
+      "source": "llm"
+    },
+    "deny": {
+      "classification": "write",
+      "content_hash": "c3f107276651899a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Alias for block; revokes permission to load env files.",
+      "source": "llm"
+    },
+    "dump": {
+      "classification": "invalid",
+      "content_hash": "ba86ff41445a782c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The extracted text is an error message, not documentation of what 'direnv dump' does; the command also doesn't appear in the available commands list.",
+      "source": "llm"
+    },
+    "edit": {
+      "classification": "write",
+      "content_hash": "09b466ac754d35ec",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Opens file in editor for modification and grants load permission; modifies files and direnv state.",
+      "source": "llm"
+    },
+    "reload": {
+      "classification": "write",
+      "content_hash": "f2a68642cf03ecb0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reloads current direnv configuration; re-evaluates .envrc and changes active environment state.",
+      "source": "llm"
+    },
+    "status": {
+      "classification": "read_only",
+      "content_hash": "2df1618c11683806",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints debug information about direnv state; no state modification.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:50:38Z",
+  "truncated": false,
+  "version": "2.32.1"
+}

@@ -1,0 +1,98 @@
+{
+  "classified_at": "2026-08-10T08:03:59Z",
+  "extracted_at": "2026-08-09T23:05:56Z",
+  "nodes": {
+    "auth": {
+      "classification": "write",
+      "content_hash": "eb484b55dbb37e7f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages local authentication tokens and sessions, which are reversible.",
+      "source": "llm"
+    },
+    "auth configure-docker": {
+      "classification": "write",
+      "content_hash": "eda390022adf91da",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies Docker's local configuration to use glab for GitLab container registry authentication; effect is bounded to auth config and reversible.",
+      "source": "llm"
+    },
+    "auth docker-helper": {
+      "classification": "write",
+      "content_hash": "3d05a0e67b74e844",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Acts as a credential helper for Docker that stores/retrieves/erases GitLab registry credentials; modifies credential storage but effect is bounded and reversible.",
+      "source": "llm"
+    },
+    "ci": {
+      "classification": "write",
+      "content_hash": "1c2ed36cb63c1df5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Triggers and manages CI/CD jobs with reversible operations like cancel and retry.",
+      "source": "llm"
+    },
+    "issue": {
+      "classification": "write",
+      "content_hash": "e1c0ae39ec83e4b6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates and manages issues with reversible operations like comment, close, reopen, and label.",
+      "source": "llm"
+    },
+    "label": {
+      "classification": "write",
+      "content_hash": "a7b7750f685ad49c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, edits, and deletes labels; all operations are fully reversible.",
+      "source": "llm"
+    },
+    "mr": {
+      "classification": "dangerous",
+      "content_hash": "a9c0c141c9dc7cbc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Can merge code to main branch, which applies commits that are difficult to reverse.",
+      "source": "llm"
+    },
+    "pipeline": {
+      "classification": "write",
+      "content_hash": "1c2ed36cb63c1df5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages CI/CD pipelines with reversible operations like trigger, cancel, and retry.",
+      "source": "llm"
+    },
+    "release": {
+      "classification": "dangerous",
+      "content_hash": "3e625e39bb7fcf37",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates and publishes releases to public registries, which are difficult to unpublish or reverse.",
+      "source": "llm"
+    },
+    "repo": {
+      "classification": "write",
+      "content_hash": "1882c5845abf51d4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, clones, and forks repositories with mostly reversible operations; some subcommands like archive may carry more risk.",
+      "source": "llm"
+    },
+    "variable": {
+      "classification": "write",
+      "content_hash": "6536f4dbc01a2893",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages CI/CD variables for configuration and secrets with fully reversible operations.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T14:50:57Z",
+  "truncated": false,
+  "version": "glab 1.112.0 (816e3a52)"
+}

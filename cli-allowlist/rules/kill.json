@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:15:29Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "05727202813f6c0b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Terminating processes is irreversible and can cascade to affect system stability or cause data loss; each invocation should require human approval.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:32:04Z",
+  "truncated": false,
+  "version": "kill from procps-ng 4.0.4"
+}

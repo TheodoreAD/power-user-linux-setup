@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:13:03Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "705d5cac1ef44779",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Copies files to modify the filesystem, but the operation is bounded to specific source/destination paths, reversible (copied files can be deleted), and represents expected behavior; even the -f force-overwrite flag only overwrites individual destination files, not a broad destructive operation.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:28Z",
+  "truncated": false,
+  "version": "cp (GNU coreutils) 9.4"
+}

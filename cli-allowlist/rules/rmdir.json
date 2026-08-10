@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:17:50Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "62f0b25202cd5b1b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly deletes directories from the filesystem; even though limited to empty directories, the deletion is destructive and requires human oversight.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:49Z",
+  "truncated": false,
+  "version": "rmdir (GNU coreutils) 9.4"
+}

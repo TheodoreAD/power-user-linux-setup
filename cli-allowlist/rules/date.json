@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:13:45Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "30ddcce0fa42c3e8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "While primary use (displaying date/time) is read-only, the -s flag and date arguments allow setting system date/time, which has broad blast radius affecting all time-dependent system operations and should not run unattended.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:35Z",
+  "truncated": false,
+  "version": "date (GNU coreutils) 9.4"
+}

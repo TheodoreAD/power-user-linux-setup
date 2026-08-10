@@ -16,6 +16,50 @@
 #   shell_prefix     shell snippet to source before invoking the tool, for tools that only exist
 #                     as a shell function (e.g. nvm) rather than a binary on PATH — extraction
 #                     runs `bash -c "<shell_prefix> && <tool> <args>"` instead of exec-ing directly
+#   max_depth        how many levels deep to recurse into subcommands (default: 1, i.e. today's
+#                     behavior — tool -> direct subcommand only). 2 means also probe each
+#                     subcommand's own --help for a further "Commands:" listing and capture those
+#                     too (git remote add, docker network create, gh secret set, ...). Opt-in per
+#                     tool, not global — most tools' real risk lives at depth 1 and don't need it.
+#   max_nodes        total node budget for the whole recursive tree, breadth-first (default: 60).
+#                     Only matters once max_depth > 1; caps runaway trees (docker/gh/git/kubectl
+#                     need a higher override — see below) rather than growing unbounded.
+#   cloud_cli        true = this tool's real command surface is too large to auto-discover
+#                     exhaustively (gcloud/aws-style provider CLIs: thousands of leaf commands,
+#                     3 levels deep by construction: <tool> <service> <resource> <verb>). Marks the
+#                     tool as intentionally staying at max_depth=1 with a hand-picked top-level
+#                     `subcommands` list, rather than looking like an oversight — recursion into
+#                     these is a non-goal, not a gap to eventually close. Also caps every node of
+#                     the tool at `ask` in `render`/`apply`, regardless of its own classification —
+#                     a node here is necessarily a bare top-level service-group command (`gcloud
+#                     storage`, `sql`, ...), classified on what running it with no args does, not
+#                     on what its real (unrecursed, unmodeled) subcommands do. Confirmed as a real
+#                     gap, not hypothetical: `gcloud storage`/`sql`/`secrets`/`run` all classified
+#                     read_only this way despite having genuinely destructive subcommands
+#                     (`storage rm -r`, `sql instances delete`, ...) with no narrower rule to catch
+#                     them. See docs/cli-allowlist.md's "render / apply" section.
+#
+# Tree discovery can surface a node that isn't actually a real command — a discovery regex
+# matching a sample-output table row, a deprecated/plugin subcommand whose --help silently echoes
+# its parent's — rather than a hand-maintained exclude list per tool, these get caught by a
+# two-layer check (deterministic "lone duplicate of its parent" detection at extract time, plus an
+# `invalid` classification tier the LLM can assign at classify time for weirdness that isn't a
+# content duplicate at all) and excluded from render/apply automatically. Full writeup with the two
+# real examples that drove this (`helm list maudlin-arachnid`, `helm diff`) is in
+# docs/cli-allowlist.md under "Recursive tree extraction".
+#
+# Three more things worth knowing before touching classify/render, all documented in full in
+# docs/cli-allowlist.md:
+#   - `render` skips a read_only node that has children of its own (`docker network` when
+#     `docker network rm`/`create`/... already exist) — see "render / apply".
+#   - `classify` always re-sweeps any node with `source: "community"` back into fresh LLM
+#     classification, content hash notwithstanding — community-seeded data is deliberately
+#     self-liquidating now that the pipeline has its own mature rubric. See "Classification via
+#     headless Claude".
+#   - `inv allowlist.reconfirm` is a second-pass LLM call, separate from `classify`, that resolves
+#     `needs_review` items (subcommands/flags the verb-token backstop overrode) by giving the model
+#     the specific flagged word and trusting its verdict without re-running the same backstop on
+#     it. See "reconfirm — resolving needs_review".
 #
 # Extraction runs with PAGER/MANPAGER/GIT_PAGER/BROWSER neutralized (see _DETERMINISTIC_ENV in
 # tasks/allowlist.py) so captured text doesn't depend on this machine's interactive shell config
@@ -32,14 +76,18 @@
 # doc package installed — as of 2026-08-10 it's clean (0 of 49 registered tools depend on man).
 #
 # Some tools (currently gh, kubectl, helm, docker, terraform, gcloud — git was seeded the same way
-# but later reclassified via LLM after its help_flag changed) have a `source: community` entry in
-# rules.json, seeded from github.com/UgurcanAkkok/claude-allow-list (MIT-style curated allowlist)
-# rather than classified fresh. `inv allowlist.classify` backfills their help_hash on first extract
-# rather than re-classifying from scratch, but they still go through `inv allowlist.review` like
-# everything else.
+# but later reclassified via LLM after its help_flag changed) have depth-1 nodes with
+# `source: "community"` in their cli-allowlist/rules/<tool>.json, seeded from
+# github.com/UgurcanAkkok/claude-allow-list (MIT-style curated allowlist) rather than classified
+# fresh. Since five of these six also now recurse to depth 2 (see below), their depth-1 nodes stay
+# community-sourced while their new depth-2 nodes are freshly LLM-classified — source is tracked
+# per node, not per tool, specifically for this mixed case. They all still go through
+# `inv allowlist.review` like everything else.
 
 [git]
 help_flag = "-h"  # not --help: that renders through `man`, which depends on git-man being installed
+max_depth = 2  # real per-verb risk lives one level down: remote add/rm, stash pop/drop, worktree remove
+max_nodes = 100
 subcommands = [
   "status", "log", "diff", "show", "blame", "grep", "branch", "tag", "remote", "config",
   "stash", "submodule", "worktree", "notes", "bisect", "rev-parse", "ls-files", "ls-remote",
@@ -47,6 +95,8 @@ subcommands = [
 ]
 
 [gh]
+max_depth = 2  # pr create/merge, secret set/remove, release delete, etc. are the real distinctions
+max_nodes = 200  # real tree measured ~170+ nodes at depth 2; 150 truncated it
 subcommands = [
   "auth", "pr", "issue", "repo", "release", "run", "workflow", "search", "project", "label",
   "secret", "variable", "ssh-key", "gpg-key", "ruleset", "org", "codespace", "gist",
@@ -54,10 +104,13 @@ subcommands = [
 ]
 
 [glab]
+max_depth = 2  # mr create/merge, ci run/trace
 subcommands = ["mr", "issue", "ci", "repo", "release", "pipeline", "label", "variable", "auth"]
 
 [kubectl]
 version_flag = "version --client"
+max_depth = 2  # config use-context/delete-context, rollout undo/restart, create <kind> are the real leaves
+max_nodes = 90
 subcommands = [
   "get", "describe", "logs", "top", "events", "rollout", "diff", "kustomize", "auth",
   "api-resources", "api-versions", "explain", "cluster-info", "config", "apply", "create",
@@ -66,6 +119,7 @@ subcommands = [
 
 [helm]
 version_flag = "version --short"
+max_depth = 2  # repo add/remove, plugin install/uninstall
 subcommands = [
   "list", "status", "history", "get", "show", "template", "lint", "diff", "repo", "search",
   "plugin", "env", "install", "upgrade", "rollback", "create", "package", "uninstall",
@@ -81,6 +135,8 @@ subcommands = ["get", "logs", "status", "dump", "doctor", "up", "down", "ci"]
 skip_interactive = true
 
 [docker]
+max_depth = 2  # this is where docker's real danger lives: network/volume/image/context rm vs ls
+max_nodes = 200  # real tree measured ~160-170 nodes at depth 2; 150 truncated it
 subcommands = [
   "ps", "inspect", "logs", "top", "stats", "port", "diff", "events", "wait", "images",
   "image", "network", "volume", "info", "system", "manifest", "trust", "config", "secret",
@@ -89,6 +145,7 @@ subcommands = [
 ]
 
 [terraform]
+max_depth = 2  # state rm/mv, workspace delete are meaningfully different from state show/list
 subcommands = [
   "validate", "fmt", "plan", "show", "output", "state", "providers", "workspace", "graph",
   "apply", "destroy", "init", "import",
@@ -96,6 +153,8 @@ subcommands = [
 
 [gcloud]
 version_flag = "version"
+cloud_cli = true  # thousands of leaf commands, 3 levels deep (gcloud <group> <resource> <verb>) —
+                   # recursion is a non-goal here, not a gap; stays at this hand-picked top-level list
 subcommands = [
   "auth", "config", "info", "projects", "compute", "container", "run", "functions",
   "storage", "iam", "sql", "redis", "pubsub", "secrets", "artifacts", "dns", "logging",
@@ -103,13 +162,27 @@ subcommands = [
 ]
 max_subcommands = 25
 
+[aws]
+cloud_cli = true  # same shape of problem as gcloud: aws <service> <operation>, hundreds of services
+help_flag = "help"  # not --help: aws uses a literal `help` pseudo-subcommand (pager-rendered)
+# Unlike git, there's no alternate flag that avoids this: `aws help` pipes through groff/troff/
+# grotty for its formatted output (confirmed via check_man_deps.py's strace check) on every
+# invocation — extraction only works here because groff happens to be installed on this machine,
+# same risk class as git's original git-man dependency, just with no workaround available.
+subcommands = [
+  "s3", "s3api", "ec2", "iam", "lambda", "cloudformation", "ecs", "ecr", "rds", "sts",
+  "ssm", "logs", "sns", "sqs", "dynamodb", "configure",
+]
+
 [go]
 version_flag = "version"
 help_flag = "help"  # not --help: `go <sub> --help` is a stub ("Run 'go help list' for details")
 help_style = "prefix"
+max_depth = 2  # mod tidy/vendor vs mod download are meaningfully different
 subcommands = ["list", "mod", "version", "env", "build", "run", "install", "get", "clean", "generate"]
 
 [npm]
+max_depth = 2  # config get/list (read) vs config set/delete (write) are meaningfully different
 subcommands = [
   "list", "info", "view", "outdated", "audit", "search", "config", "explain", "install",
   "update", "ci", "run", "publish", "unpublish",

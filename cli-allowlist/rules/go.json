@@ -1,0 +1,162 @@
+{
+  "classified_at": "2026-08-10T08:05:25Z",
+  "extracted_at": "2026-08-09T23:05:56Z",
+  "nodes": {
+    "build": {
+      "classification": "write",
+      "content_hash": "76148547704e5070",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles packages and produces executable/object files to disk.",
+      "source": "llm"
+    },
+    "clean": {
+      "classification": "write",
+      "content_hash": "3daeaeb43fe72c26",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes build artifacts and caches, but effects are reversible by rebuilding/re-downloading.",
+      "source": "llm"
+    },
+    "env": {
+      "classification": "write",
+      "content_hash": "eabf3aba52ba996b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads environment by default but can modify persistent settings with -w/-u flags.",
+      "source": "llm"
+    },
+    "generate": {
+      "classification": "write",
+      "content_hash": "f79159b6eb49b384",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or updates Go source files via directives in existing files.",
+      "source": "llm"
+    },
+    "get": {
+      "classification": "write",
+      "content_hash": "c7497add2197f863",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies go.mod to add/upgrade/remove dependencies and downloads modules.",
+      "source": "llm"
+    },
+    "install": {
+      "classification": "write",
+      "content_hash": "154f91f271ac5164",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles packages and installs executables to filesystem (typically $GOBIN).",
+      "source": "llm"
+    },
+    "list": {
+      "classification": "read_only",
+      "content_hash": "37083d43ad000ba7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists packages or modules without modifying state.",
+      "source": "llm"
+    },
+    "mod": {
+      "classification": "write",
+      "content_hash": "35e42d5b323967a0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Module maintenance command group; subcommands can modify go.mod, create vendor dirs, and edit module metadata.",
+      "source": "llm"
+    },
+    "mod download": {
+      "classification": "write",
+      "content_hash": "d88fc5f025a8f452",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads modules into the local module cache, which modifies local state but is bounded and reversible.",
+      "source": "llm"
+    },
+    "mod edit": {
+      "classification": "write",
+      "content_hash": "9c134aa2e49d094d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies the go.mod file by applying editing operations, which is reversible.",
+      "source": "llm"
+    },
+    "mod graph": {
+      "classification": "read_only",
+      "content_hash": "6196c502effe98de",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints the module requirement graph without modifying any files.",
+      "source": "llm"
+    },
+    "mod init": {
+      "classification": "write",
+      "content_hash": "d2ca63524bcda1e7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new go.mod file in the current directory, which is reversible.",
+      "source": "llm"
+    },
+    "mod tidy": {
+      "classification": "write",
+      "content_hash": "c522bdd9e3900a6f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies go.mod and go.sum to match source code dependencies, which is reversible.",
+      "source": "llm"
+    },
+    "mod vendor": {
+      "classification": "write",
+      "content_hash": "d7f6fb818a1d914d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or resets the vendor directory with needed packages, which is reversible.",
+      "source": "llm"
+    },
+    "mod verify": {
+      "classification": "read_only",
+      "content_hash": "094ef5d86dcc3297",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Verifies that downloaded modules have not been modified, without making any changes.",
+      "source": "llm"
+    },
+    "mod why": {
+      "classification": "read_only",
+      "content_hash": "3be3b03da0c85921",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows import graph paths to packages, without modifying any state.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "write",
+      "content_hash": "9d6fb5b1355fd57b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles and executes code, creating temporary compilation artifacts.",
+      "source": "llm"
+    },
+    "run package": {
+      "classification": "write",
+      "content_hash": "69b598d52bd014e6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles and runs a Go program, which may have side effects but is typical development behavior.",
+      "source": "llm"
+    },
+    "version": {
+      "classification": "read_only",
+      "content_hash": "70575fa4adfc5adf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints version information without modifying state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T14:51:12Z",
+  "truncated": false,
+  "version": "go version go1.26.4 linux/amd64"
+}

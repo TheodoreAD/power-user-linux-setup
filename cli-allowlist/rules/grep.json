@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:42:52Z",
+  "extracted_at": "2026-08-09T17:34:27Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "4d186d2eb723b45b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "grep only searches and reads file contents to find pattern matches; it has no options to modify, delete, or write state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:31:34Z",
+  "truncated": false,
+  "version": "grep (GNU grep) 3.11"
+}

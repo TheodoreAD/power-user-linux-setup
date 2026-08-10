@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:16:07Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "0c39ea141704f860",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates filesystem links (hard or symbolic), modifying state but bounded and reversible by default; normal use fails safely if destination exists, and links can be removed with rm.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:32:48Z",
+  "truncated": false,
+  "version": "ln (GNU coreutils) 9.4"
+}

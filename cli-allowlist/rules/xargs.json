@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:48:08Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "aa0a35c90b5a3db4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "xargs reads input and executes a supplied COMMAND with that input as arguments; the effect depends on what command runs, but it can certainly modify state (files, git repos, etc.) and is not inherently irreversible or bypassing confirmation.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:30Z",
+  "truncated": false,
+  "version": "xargs (GNU findutils) 4.9.0"
+}

@@ -1,0 +1,106 @@
+{
+  "classified_at": "2026-08-09T17:50:44Z",
+  "extracted_at": "2026-08-09T17:33:29Z",
+  "nodes": {
+    "alias": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or modifies nvm alias mappings in configuration; state change is bounded and reversible.",
+      "source": "llm"
+    },
+    "current": {
+      "classification": "read_only",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the currently active Node version without modifying any state.",
+      "source": "llm"
+    },
+    "deactivate": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Disables nvm in the current shell session; modifies active environment state but is reversible.",
+      "source": "llm"
+    },
+    "exec": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The 'exec' is the safe sense of execute/run-code-with-a-version, not the shell builtin; executing code may modify state but operations are boundedly reversible, not irreversible destruction.",
+      "source": "llm-reconfirmed"
+    },
+    "install": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads and installs a Node version; modifies filesystem but is bounded and reversible (can uninstall).",
+      "source": "llm"
+    },
+    "list": {
+      "classification": "read_only",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays locally installed Node versions without modifying any state.",
+      "source": "llm"
+    },
+    "list-remote": {
+      "classification": "read_only",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Queries and displays available remote Node versions without modifying any state.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The 'run' is the safe sense of execute-code, not a dangerous operation; code execution may modify state but is boundedly reversible, not irreversible destruction.",
+      "source": "llm-reconfirmed"
+    },
+    "unalias": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes an alias mapping from configuration; minor, reversible state change.",
+      "source": "llm"
+    },
+    "uninstall": {
+      "classification": "dangerous",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes an installed Node version from the filesystem; destructive operation matching the dangerous category.",
+      "source": "llm"
+    },
+    "use": {
+      "classification": "write",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Switches the active Node version; modifies shell environment state but is reversible.",
+      "source": "llm"
+    },
+    "which": {
+      "classification": "read_only",
+      "content_hash": "fe016b27e37543c8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the path to the currently active Node executable without modifying any state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:53:37Z",
+  "truncated": false,
+  "version": "0.40.5"
+}

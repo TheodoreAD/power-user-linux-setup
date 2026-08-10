@@ -1,0 +1,82 @@
+{
+  "classified_at": "2026-08-09T16:57:46Z",
+  "extracted_at": "2026-08-09T16:48:13Z",
+  "nodes": {
+    "display-message": {
+      "classification": "read_only",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays a message to the tmux client; does not modify state.",
+      "source": "llm"
+    },
+    "kill-server": {
+      "classification": "dangerous",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Terminates the entire tmux server and all sessions; irreversible and destroys running work without confirmation.",
+      "source": "llm"
+    },
+    "kill-session": {
+      "classification": "dangerous",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Terminates a session and all its windows/panes; destroys work and is irreversible.",
+      "source": "llm"
+    },
+    "list-panes": {
+      "classification": "read_only",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists panes in a window; only inspects state.",
+      "source": "llm"
+    },
+    "list-sessions": {
+      "classification": "read_only",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists tmux sessions; only inspects state.",
+      "source": "llm"
+    },
+    "list-windows": {
+      "classification": "read_only",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists windows; only inspects state.",
+      "source": "llm"
+    },
+    "new-session": {
+      "classification": "write",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new tmux session; modifies state but is bounded, expected, and reversible (session can be killed).",
+      "source": "llm"
+    },
+    "send-keys": {
+      "classification": "dangerous",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Sends arbitrary keystrokes to a pane, which executes commands and bypasses normal confirmation steps; can modify files or run destructive operations.",
+      "source": "llm"
+    },
+    "show-options": {
+      "classification": "read_only",
+      "content_hash": "8ec1b846923c37ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays tmux configuration options; only inspects state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:08Z",
+  "truncated": false,
+  "version": "tmux 3.4"
+}

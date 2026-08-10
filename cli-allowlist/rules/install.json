@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:15:12Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "e4a1a9dbd2a96d81",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Copies files to destinations and sets permissions/ownership\u2014modifies filesystem state but operations are bounded, expected, and reversible without deletion or force-overwrites.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:31:58Z",
+  "truncated": false,
+  "version": "install (GNU coreutils) 9.4"
+}

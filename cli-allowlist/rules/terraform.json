@@ -1,0 +1,286 @@
+{
+  "classified_at": "2026-08-10T15:14:17Z",
+  "extracted_at": "2026-08-10T13:10:45Z",
+  "nodes": {
+    "apply": {
+      "classification": "write",
+      "content_hash": "7a66da82827c9007",
+      "flags": {
+        "-destroy": {
+          "classification": "dangerous",
+          "rationale": "Destroys infrastructure, which is irreversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates or updates infrastructure according to configuration.",
+      "source": "llm"
+    },
+    "destroy": {
+      "classification": "dangerous",
+      "content_hash": "0cfae2009e23e482",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Destroys Terraform-managed infrastructure, which is irreversible and destructive.",
+      "source": "llm"
+    },
+    "fmt": {
+      "classification": "write",
+      "content_hash": "f76be8173ce1b678",
+      "flags": {
+        "-check": {
+          "classification": "read_only",
+          "rationale": "Only checks if files are formatted correctly without modifying them."
+        },
+        "-recursive": {
+          "classification": "write",
+          "rationale": "Expands scope to subdirectories but still modifies files as part of fmt operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Rewrites configuration files to a canonical format, modifying files locally.",
+      "source": "llm"
+    },
+    "graph": {
+      "classification": "read_only",
+      "content_hash": "a0e38c2401c07cfc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Generates and displays a dependency graph without modifying any state or infrastructure.",
+      "source": "llm"
+    },
+    "import": {
+      "classification": "write",
+      "content_hash": "efee848c4e6318ba",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies the Terraform state file to track existing infrastructure under management.",
+      "source": "llm"
+    },
+    "init": {
+      "classification": "write",
+      "content_hash": "022b50925e168d9b",
+      "flags": {
+        "-force-copy": {
+          "classification": "write",
+          "rationale": "Suppresses prompts but performs the same state initialization and setup operations."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates initial files and directories, downloads modules, and sets up local state.",
+      "source": "llm"
+    },
+    "output": {
+      "classification": "read_only",
+      "content_hash": "5ad7aa18d5842036",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads and displays output values from the Terraform state file without modification.",
+      "source": "llm"
+    },
+    "plan": {
+      "classification": "read_only",
+      "content_hash": "b2d9ea7ef40e2ef3",
+      "flags": {
+        "-destroy": {
+          "classification": "read_only",
+          "rationale": "The -destroy flag selects a planning mode that generates a speculative preview; terraform plan never performs actions and doesn't modify state or infrastructure."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Generates a speculative plan showing what would happen without actually performing any actions.",
+      "source": "llm"
+    },
+    "providers": {
+      "classification": "read_only",
+      "content_hash": "c71b678e850ffbe2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays a tree of provider requirements across modules without modifying state.",
+      "source": "llm"
+    },
+    "providers lock": {
+      "classification": "write",
+      "content_hash": "4e0afa59de02b519",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates the dependency lock file with provider checksums from origin registry; modifies local file but is a bounded, routine operational task.",
+      "source": "llm"
+    },
+    "providers mirror": {
+      "classification": "write",
+      "content_hash": "e8f563a4eb932bb1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Populates a local directory with provider plugin copies; creates/modifies local files in a bounded, expected way.",
+      "source": "llm"
+    },
+    "providers schema": {
+      "classification": "read_only",
+      "content_hash": "0d0cfbfad0e19449",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Outputs JSON schema information for providers; reads and displays schema data only.",
+      "source": "llm"
+    },
+    "show": {
+      "classification": "read_only",
+      "content_hash": "ed8bf6a235ffa46e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads and displays a Terraform state or plan file in human or machine-readable format.",
+      "source": "llm"
+    },
+    "state": {
+      "classification": "read_only",
+      "content_hash": "8071c85997db70e1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Base command requires a subcommand; running without one displays help or error.",
+      "source": "llm"
+    },
+    "state identities": {
+      "classification": "read_only",
+      "content_hash": "f46fce02fc0aedea",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists resource identities in Terraform state; inspection and reading only.",
+      "source": "llm"
+    },
+    "state list": {
+      "classification": "read_only",
+      "content_hash": "3e4cade46ccb8a47",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists resources in Terraform state; inspection and reading only.",
+      "source": "llm"
+    },
+    "state mv": {
+      "classification": "write",
+      "content_hash": "3cc922eb9013126d",
+      "flags": {
+        "-dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be moved without making any changes; inspection only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Moves state entries between addresses in a bounded, specified way; automatic backups are created, making it reversible.",
+      "source": "llm"
+    },
+    "state pull": {
+      "classification": "read_only",
+      "content_hash": "0888ff2784cf16fe",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads and outputs remote state to stdout after upgrading format; no modifications to state.",
+      "source": "llm"
+    },
+    "state push": {
+      "classification": "dangerous",
+      "content_hash": "19848981e0677e1f",
+      "flags": {
+        "-force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses safety checks on lineage and serial number mismatches; makes unsafe overwrites possible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Directly overwrites remote state with local state file; high blast radius and very risky for infrastructure management.",
+      "source": "llm"
+    },
+    "state replace-provider": {
+      "classification": "write",
+      "content_hash": "fc12a45fa0194b32",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies provider references in state for specified resources; bounded modification of state metadata.",
+      "source": "llm"
+    },
+    "state rm": {
+      "classification": "dangerous",
+      "content_hash": "8c728c8fb63aab03",
+      "flags": {
+        "-dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be removed without making any changes; inspection only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes state entries and orphans infrastructure; irreversible removal that disconnects Terraform from managing resources.",
+      "source": "llm"
+    },
+    "state show": {
+      "classification": "read_only",
+      "content_hash": "786d061fb35123a3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays attributes of a single resource in state; reads and displays state information only.",
+      "source": "llm"
+    },
+    "validate": {
+      "classification": "read_only",
+      "content_hash": "942f03f744bfa816",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Validates configuration syntax and consistency without accessing remote services or modifying state.",
+      "source": "llm"
+    },
+    "workspace": {
+      "classification": "read_only",
+      "content_hash": "a94de51e407b1b32",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Base command displays current workspace or help text without modifying workspace state.",
+      "source": "llm"
+    },
+    "workspace delete": {
+      "classification": "dangerous",
+      "content_hash": "bb2910a53c396bb9",
+      "flags": {
+        "-force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses protection that prevents deletion of workspaces managing resources; forces deletion even with active infrastructure."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a workspace; destructive and irreversible operation affecting managed infrastructure.",
+      "source": "llm"
+    },
+    "workspace list": {
+      "classification": "read_only",
+      "content_hash": "dab8ea1cb00b58da",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists available workspaces; inspection and reading only.",
+      "source": "llm"
+    },
+    "workspace new": {
+      "classification": "write",
+      "content_hash": "e365b40a62d7d7da",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new workspace; bounded modification of workspace configuration.",
+      "source": "llm"
+    },
+    "workspace select": {
+      "classification": "write",
+      "content_hash": "edc348434e672805",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Switches the active workspace; modifies local working context in a bounded way, similar to checking out a git branch.",
+      "source": "llm"
+    },
+    "workspace show": {
+      "classification": "read_only",
+      "content_hash": "fc41ef2dd12aed7e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only displays information about the current workspace without modifying any state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:53:43Z",
+  "truncated": false,
+  "version": "Terraform v1.15.8"
+}

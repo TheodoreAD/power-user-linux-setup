@@ -1,16 +1,53 @@
 {
-  "commands": {
-    "_top": "usage: gext [-h] [--version] [--no-color] [--no-compile-schemas] [-D | -F]\n            {list,ls,search,show,install,i,uninstall,update,u,enable,disable,preferences,p,config}\n            ...\n\nGnome Shell extensions manager\n\npositional arguments:\n  {list,ls,search,show,install,i,uninstall,update,u,enable,disable,preferences,p,config}\n    list (ls)           list installed extensions\n    search              search for extensions\n    show                show extensions details\n    install (i)         install extensions\n    uninstall           uninstall extensions\n    update (u)          update extensions\n    enable              enable extensions\n    disable             disable extensions\n    preferences (p, config)\n                        edit preferences of extension\n\noptions:\n  -h, --help            show this help message and exit\n  --version             show program's version number and exit\n  --no-color            disable colors and style in output text (you can also\n                        set NO_COLOR=1 instead of using this option)\n  --no-compile-schemas  when using filesystem backend, do not compile schemas\n                        with glib-compile-schemas if needed\n  -D, --dbus            force DBus backend\n  -F, --filesystem      force filesystem backend",
-    "disable": "usage: gext disable [-h] [--not-installed] [UUID ...]\n\npositional arguments:\n  UUID             uuid of extensions to disable\n\noptions:\n  -h, --help       show this help message and exit\n  --not-installed  disable all extensions which are not installed",
-    "enable": "usage: gext enable [-h] UUID [UUID ...]\n\npositional arguments:\n  UUID        uuid of extensions to enable\n\noptions:\n  -h, --help  show this help message and exit",
-    "install": "usage: gext install [-h] UUID_OR_PK [UUID_OR_PK ...]\n\npositional arguments:\n  UUID_OR_PK  uuid (or pk) of extensions to install\n\noptions:\n  -h, --help  show this help message and exit",
-    "list": "usage: gext list [-h] [-v] [--only-uuid] [-a]\n\noptions:\n  -h, --help     show this help message and exit\n  -v, --verbose  display more information\n  --only-uuid    display only uuid of extensions\n  -a, --all      list all extensions, (by default only enabled are shown)",
-    "search": "usage: gext search [-h] [-v] [-l LIMIT] motif [motif ...]\n\npositional arguments:\n  motif                 search motif\n\noptions:\n  -h, --help            show this help message and exit\n  -v, --verbose         search for extensions\n  -l LIMIT, --limit LIMIT\n                        limit to N items",
-    "show": "usage: gext show [-h] [-v] UUID_OR_PK [UUID_OR_PK ...]\n\npositional arguments:\n  UUID_OR_PK     uuid (or pk) of extensions\n\noptions:\n  -h, --help     show this help message and exit\n  -v, --verbose  display more information",
-    "uninstall": "usage: gext uninstall [-h] UUID [UUID ...]\n\npositional arguments:\n  UUID        uuid of extensions to uninstall\n\noptions:\n  -h, --help  show this help message and exit",
-    "update": "usage: gext update [-h] [-i] [-y | -n] [--user] [UUID_OR_PK ...]\n\npositional arguments:\n  UUID_OR_PK     uuid (or pk) of extensions to update (default: all enabled\n                 extensions)\n\noptions:\n  -h, --help     show this help message and exit\n  -i, --install  install extension if not installed\n  -y, --yes      do not prompt confirmation for update/install\n  -n, --dry-run  do not update nor install anything, a return code 17 is\n                 returned if updates are available\n  --user         only update /user extensions, ignore /system ones"
-  },
-  "extracted_at": "2026-08-09T17:34:27Z",
+  "extracted_at": "2026-08-09T23:05:50Z",
   "interactive": false,
+  "nodes": {
+    "_top": {
+      "children": [],
+      "content_hash": "5faaaebba3e87a19",
+      "help_text": "usage: gext [-h] [--version] [--no-color] [--no-compile-schemas] [-D | -F]\n            {list,ls,search,show,install,i,uninstall,update,u,enable,disable,preferences,p,config}\n            ...\n\nGnome Shell extensions manager\n\npositional arguments:\n  {list,ls,search,show,install,i,uninstall,update,u,enable,disable,preferences,p,config}\n    list (ls)           list installed extensions\n    search              search for extensions\n    show                show extensions details\n    install (i)         install extensions\n    uninstall           uninstall extensions\n    update (u)          update extensions\n    enable              enable extensions\n    disable             disable extensions\n    preferences (p, config)\n                        edit preferences of extension\n\noptions:\n  -h, --help            show this help message and exit\n  --version             show program's version number and exit\n  --no-color            disable colors and style in output text (you can also\n                        set NO_COLOR=1 instead of using this option)\n  --no-compile-schemas  when using filesystem backend, do not compile schemas\n                        with glib-compile-schemas if needed\n  -D, --dbus            force DBus backend\n  -F, --filesystem      force filesystem backend"
+    },
+    "disable": {
+      "children": [],
+      "content_hash": "b9da58a11c636029",
+      "help_text": "usage: gext disable [-h] [--not-installed] [UUID ...]\n\npositional arguments:\n  UUID             uuid of extensions to disable\n\noptions:\n  -h, --help       show this help message and exit\n  --not-installed  disable all extensions which are not installed"
+    },
+    "enable": {
+      "children": [],
+      "content_hash": "eb0442e5edb178b7",
+      "help_text": "usage: gext enable [-h] UUID [UUID ...]\n\npositional arguments:\n  UUID        uuid of extensions to enable\n\noptions:\n  -h, --help  show this help message and exit"
+    },
+    "install": {
+      "children": [],
+      "content_hash": "e1468cf3fa17ea5e",
+      "help_text": "usage: gext install [-h] UUID_OR_PK [UUID_OR_PK ...]\n\npositional arguments:\n  UUID_OR_PK  uuid (or pk) of extensions to install\n\noptions:\n  -h, --help  show this help message and exit"
+    },
+    "list": {
+      "children": [],
+      "content_hash": "e07720cb309812cb",
+      "help_text": "usage: gext list [-h] [-v] [--only-uuid] [-a]\n\noptions:\n  -h, --help     show this help message and exit\n  -v, --verbose  display more information\n  --only-uuid    display only uuid of extensions\n  -a, --all      list all extensions, (by default only enabled are shown)"
+    },
+    "search": {
+      "children": [],
+      "content_hash": "d5540981a7ea3b0d",
+      "help_text": "usage: gext search [-h] [-v] [-l LIMIT] motif [motif ...]\n\npositional arguments:\n  motif                 search motif\n\noptions:\n  -h, --help            show this help message and exit\n  -v, --verbose         search for extensions\n  -l LIMIT, --limit LIMIT\n                        limit to N items"
+    },
+    "show": {
+      "children": [],
+      "content_hash": "8ef8ba242ebf867a",
+      "help_text": "usage: gext show [-h] [-v] UUID_OR_PK [UUID_OR_PK ...]\n\npositional arguments:\n  UUID_OR_PK     uuid (or pk) of extensions\n\noptions:\n  -h, --help     show this help message and exit\n  -v, --verbose  display more information"
+    },
+    "uninstall": {
+      "children": [],
+      "content_hash": "44d544cf2744552f",
+      "help_text": "usage: gext uninstall [-h] UUID [UUID ...]\n\npositional arguments:\n  UUID        uuid of extensions to uninstall\n\noptions:\n  -h, --help  show this help message and exit"
+    },
+    "update": {
+      "children": [],
+      "content_hash": "5b41637d843d8a82",
+      "help_text": "usage: gext update [-h] [-i] [-y | -n] [--user] [UUID_OR_PK ...]\n\npositional arguments:\n  UUID_OR_PK     uuid (or pk) of extensions to update (default: all enabled\n                 extensions)\n\noptions:\n  -h, --help     show this help message and exit\n  -i, --install  install extension if not installed\n  -y, --yes      do not prompt confirmation for update/install\n  -n, --dry-run  do not update nor install anything, a return code 17 is\n                 returned if updates are available\n  --user         only update /user extensions, ignore /system ones"
+    }
+  },
+  "truncated": false,
   "version": "gext 0.11.0"
 }

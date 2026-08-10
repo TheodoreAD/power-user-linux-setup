@@ -1,0 +1,74 @@
+{
+  "classified_at": "2026-08-09T17:40:10Z",
+  "extracted_at": "2026-08-09T17:34:27Z",
+  "nodes": {
+    "disable": {
+      "classification": "write",
+      "content_hash": "b9da58a11c636029",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Disables extensions by changing configuration state (reversible via enable).",
+      "source": "llm"
+    },
+    "enable": {
+      "classification": "write",
+      "content_hash": "eb0442e5edb178b7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Enables extensions by changing configuration state (reversible via disable).",
+      "source": "llm"
+    },
+    "install": {
+      "classification": "write",
+      "content_hash": "e1468cf3fa17ea5e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs extensions, modifying system state but in an expected, reversible way.",
+      "source": "llm"
+    },
+    "list": {
+      "classification": "read_only",
+      "content_hash": "e07720cb309812cb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists installed or available extensions without modifying state.",
+      "source": "llm"
+    },
+    "search": {
+      "classification": "read_only",
+      "content_hash": "d5540981a7ea3b0d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for extensions in a repository without making changes.",
+      "source": "llm"
+    },
+    "show": {
+      "classification": "read_only",
+      "content_hash": "8ef8ba242ebf867a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed information about specific extensions.",
+      "source": "llm"
+    },
+    "uninstall": {
+      "classification": "write",
+      "content_hash": "44d544cf2744552f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes specific extensions; deletion is reversible via reinstall.",
+      "source": "llm"
+    },
+    "update": {
+      "classification": "write",
+      "content_hash": "5b41637d843d8a82",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates extension versions; includes --dry-run to preview changes safely.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:29:57Z",
+  "truncated": false,
+  "version": "gext 0.11.0"
+}

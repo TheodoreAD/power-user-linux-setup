@@ -1,0 +1,130 @@
+{
+  "classified_at": "2026-08-09T16:49:42Z",
+  "extracted_at": "2026-08-09T16:46:33Z",
+  "nodes": {
+    "build": {
+      "classification": "write",
+      "content_hash": "8e54cd69de8f4a83",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles package and dependencies, modifying the target directory with build artifacts\u2014bounded and reversible via rebuild.",
+      "source": "llm"
+    },
+    "check": {
+      "classification": "write",
+      "content_hash": "334b4fdb69d10edd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Checks for compilation errors and creates intermediate artifacts in target directory\u2014bounded and reversible.",
+      "source": "llm"
+    },
+    "clean": {
+      "classification": "write",
+      "content_hash": "b1b067d8dabcc2d3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes generated build artifacts from target directory\u2014bounded to cargo artifacts, expected operation, and reversible via rebuild.",
+      "source": "llm"
+    },
+    "clippy": {
+      "classification": "write",
+      "content_hash": "122e2823f96ebbbb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lints code and can auto-fix source files with --fix flag\u2014modifies source code but is reversible and bounded to project files.",
+      "source": "llm"
+    },
+    "install": {
+      "classification": "write",
+      "content_hash": "428839edf7bb3e0b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs binary to system directory (default ~/.cargo/bin)\u2014bounded installation and reversible via deletion.",
+      "source": "llm"
+    },
+    "metadata": {
+      "classification": "read_only",
+      "content_hash": "e54727f4c5fb76be",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Outputs machine-readable dependency metadata without modifying any state.",
+      "source": "llm"
+    },
+    "pkgid": {
+      "classification": "read_only",
+      "content_hash": "873c13cdb08cfce0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints fully qualified package specification by querying manifest\u2014no modifications.",
+      "source": "llm"
+    },
+    "publish": {
+      "classification": "dangerous",
+      "content_hash": "d48ad094ca971a9b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Uploads package to public registry\u2014irreversible, affects remote systems publicly, and changes are immediately visible to users.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "write",
+      "content_hash": "cead71ed48528c07",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Builds and executes the project binary\u2014modifies local build artifacts and runs code as expected for testing/verification.",
+      "source": "llm"
+    },
+    "search": {
+      "classification": "read_only",
+      "content_hash": "7cd0a740d60dbff5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Queries the package registry for packages\u2014only reads remote state without modifications.",
+      "source": "llm"
+    },
+    "test": {
+      "classification": "write",
+      "content_hash": "49b81c2d824797f4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles and executes test suite\u2014modifies build artifacts and runs tests as expected part of normal development.",
+      "source": "llm"
+    },
+    "tree": {
+      "classification": "read_only",
+      "content_hash": "403a788633d6d4b4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays dependency graph visualization\u2014only reads/formats existing dependency metadata without modifications.",
+      "source": "llm"
+    },
+    "update": {
+      "classification": "write",
+      "content_hash": "1cef3c2fcbebd72f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates Cargo.lock with new dependency versions\u2014modifies project state but is reversible via re-running or git undo.",
+      "source": "llm"
+    },
+    "verify-project": {
+      "classification": "read_only",
+      "content_hash": "d94384d49b209628",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Checks manifest correctness (deprecated command)\u2014validates state without making modifications.",
+      "source": "llm"
+    },
+    "yank": {
+      "classification": "dangerous",
+      "content_hash": "59cd3d32ad75defe",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes crate version from registry\u2014irreversible, affects remote systems publicly, and changes are immediately visible to all users.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:11Z",
+  "truncated": false,
+  "version": "cargo 1.97.1 (c980f4866 2026-06-30)"
+}

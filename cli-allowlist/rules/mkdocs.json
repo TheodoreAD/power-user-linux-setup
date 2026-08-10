@@ -1,0 +1,42 @@
+{
+  "classified_at": "2026-08-09T17:43:11Z",
+  "extracted_at": "2026-08-09T17:34:27Z",
+  "nodes": {
+    "build": {
+      "classification": "write",
+      "content_hash": "94bdf69362cc1194",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies local filesystem by creating/updating site output files, but the effect is bounded to the site_dir and easily reversible by deletion.",
+      "source": "llm"
+    },
+    "gh-deploy": {
+      "classification": "dangerous",
+      "content_hash": "311f2b9c81934ea2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Publishes documentation to a public remote service (GitHub Pages) and commits/pushes to a remote branch, modifying shared production state.",
+      "source": "llm"
+    },
+    "new": {
+      "classification": "write",
+      "content_hash": "43eb4e9bd2aa81b4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates new local project files and directories in a specified location, but the effect is bounded and reversible.",
+      "source": "llm"
+    },
+    "serve": {
+      "classification": "write",
+      "content_hash": "db2d298292802b97",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Starts a local development server with optional rebuilds on file changes; modifies local filesystem temporarily during development and is fully reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:32:55Z",
+  "truncated": false,
+  "version": "mkdocs, version 1.6.1 from /home/tdumitrescu/.local/share/uv/tools/mkdocs/lib/python3.11/site-packages/mkdocs (Python 3.11)"
+}

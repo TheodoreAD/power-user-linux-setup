@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:18:43Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "af17f592f329d3c4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "tar modifies local files and archives (extract, create, append, delete operations) but effects are bounded and reversible; no force flags or system-destroying operations.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:43Z",
+  "truncated": false,
+  "version": "tar (GNU tar) 1.35"
+}

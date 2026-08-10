@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:38:09Z",
+  "extracted_at": "2026-08-09T17:34:24Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "de37b9b7fddb718e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "bat displays file contents with syntax highlighting and Git integration; it cannot modify, create, or delete any files or state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:26:16Z",
+  "truncated": false,
+  "version": "bat 0.24.0"
+}

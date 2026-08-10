@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:19:49Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "177a631efe543719",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only outputs system information; cannot modify any state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:20Z",
+  "truncated": false,
+  "version": "uname (GNU coreutils) 9.4"
+}

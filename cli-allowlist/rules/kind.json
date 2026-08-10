@@ -1,0 +1,58 @@
+{
+  "classified_at": "2026-08-09T16:54:11Z",
+  "extracted_at": "2026-08-09T16:46:50Z",
+  "nodes": {
+    "build": {
+      "classification": "write",
+      "content_hash": "29525d8f68651c52",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or rebuilds a Docker node image locally; modifies Docker state but is bounded and reversible.",
+      "source": "llm"
+    },
+    "create": {
+      "classification": "write",
+      "content_hash": "675bfd5c316d69b4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a local Kubernetes cluster using Docker containers; modifies state but is expected, bounded, and reversible via delete.",
+      "source": "llm"
+    },
+    "delete": {
+      "classification": "dangerous",
+      "content_hash": "308db32d6a8ae8b2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Destroys Kubernetes cluster infrastructure irreversibly; high-blast-radius deletion operation.",
+      "source": "llm"
+    },
+    "export": {
+      "classification": "read_only",
+      "content_hash": "ef46519d7db7b8fe",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Exports kubeconfig and logs; only reads and copies existing data without modification.",
+      "source": "llm"
+    },
+    "get": {
+      "classification": "read_only",
+      "content_hash": "c002400252844f79",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists clusters, nodes, and retrieves kubeconfig; all read-only inspection operations.",
+      "source": "llm"
+    },
+    "load": {
+      "classification": "write",
+      "content_hash": "0eb56e86076392b3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Loads Docker images into cluster nodes; modifies cluster state but is bounded and reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:32:09Z",
+  "truncated": false,
+  "version": "kind version 0.33.0-alpha+d6009ccba8df27"
+}

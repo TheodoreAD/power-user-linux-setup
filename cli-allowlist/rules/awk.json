@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:37:43Z",
+  "extracted_at": "2026-08-09T17:34:24Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "60fece49dd74c9bf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "awk reads and processes text from input files or stdin, writing results to stdout; it does not modify files, delete data, or make irreversible changes to the system.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:26:07Z",
+  "truncated": false,
+  "version": "mawk 1.3.4 20240123"
+}

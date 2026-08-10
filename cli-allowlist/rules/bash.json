@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:37:59Z",
+  "extracted_at": "2026-08-09T17:34:24Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "e4003ab33d6f1c07",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Bash can execute arbitrary commands with unlimited blast radius, including irreversible destructive operations (deletion, overwriting, system modification, credential compromise), without normal confirmation steps.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:26:12Z",
+  "truncated": false,
+  "version": "GNU bash, version 5.2.21(1)-release (x86_64-pc-linux-gnu)"
+}

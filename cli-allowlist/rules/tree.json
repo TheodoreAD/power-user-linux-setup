@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:46:20Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "81a4e07cb8b7e45a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "tree only inspects and displays directory structures; even file output (-o) just captures read-only metadata without modifying any existing state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:11Z",
+  "truncated": false,
+  "version": "tree v2.1.1 \u00a9 1996 - 2023 by Steve Baker, Thomas Moore, Francesc Rocher, Florian Sesser, Kyosuke Tokoro"
+}

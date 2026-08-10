@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:19:19Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "505826d287dfa8cb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Permanently destroys file contents when truncating to a smaller size; data loss is irreversible without external backups, making it unsafe for an unattended agent.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:13Z",
+  "truncated": false,
+  "version": "truncate (GNU coreutils) 9.4"
+}

@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:48:29Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "3482ba19ce138088",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Unrestricted shell interpreter allowing execution of arbitrary commands with unbounded effects; requires case-by-case human review to prevent destructive operations.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:35Z",
+  "truncated": false,
+  "version": "zsh 5.8 (x86_64-pc-linux-gnu)"
+}

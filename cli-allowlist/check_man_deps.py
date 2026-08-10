@@ -1,14 +1,18 @@
 """Maintenance check, not part of the `inv allowlist.*` pipeline: does any registered tool's help
-invocation secretly depend on a separately-installed man-pages package?
+invocation secretly depend on a separately-installed man-page-rendering package?
 
 Text formatting alone can't answer this — gcloud's --help mimics a man page's NAME/SYNOPSIS/
-DESCRIPTION layout with its own self-contained renderer, no `man` involved. The only reliable
-signal is watching what actually execs during the call. Run after adding a tool to tools.toml, or
-periodically to catch a tool that changed its help backend:
+DESCRIPTION layout with its own self-contained renderer, no external process involved. The only
+reliable signal is watching what actually execs during the call. Checks for `man` itself and for
+`groff`/`troff` (confirmed via this same strace technique: `aws help` doesn't invoke `man`, but
+pipes through `groff -m man -T ascii` -> `troff` -> `grotty` to produce its formatted output — the
+same "only works because a package happens to be installed" risk as git's original git-man
+dependency, just a different package). Run after adding a tool to tools.toml, or periodically to
+catch a tool that changed its help backend:
 
     python3 cli-allowlist/check_man_deps.py
 
-Exit status is nonzero if anything invokes `man` — CI-friendly, though there's no CI here yet.
+Exit status is nonzero if anything invokes one of these — CI-friendly, though there's no CI here yet.
 """
 import subprocess
 import sys
@@ -49,12 +53,14 @@ def main() -> int:
                 continue
             log_text = Path(log.name).read_text()
 
-        if 'execve("/usr/bin/man"' in log_text or 'execve("/bin/man"' in log_text:
+        binaries = ["/usr/bin/man", "/bin/man", "/usr/bin/groff", "/usr/bin/troff"]
+        hit = next((b for b in binaries if f'execve("{b}"' in log_text), None)
+        if hit:
             offenders.append(name)
-            print(f"{name}: invokes man — needs a fix (alternate flag, like git's -h) or a note")
+            print(f"{name}: invokes {hit} — needs a fix (alternate flag, like git's -h) or a note")
 
     if not offenders:
-        print(f"checked {len(registry)} registered tools — none invoke man")
+        print(f"checked {len(registry)} registered tools — none invoke man/groff/troff")
         return 0
     print(f"\n{len(offenders)} tool(s) depend on man: {', '.join(offenders)}")
     return 1

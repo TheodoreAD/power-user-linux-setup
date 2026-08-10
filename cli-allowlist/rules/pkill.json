@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:17:25Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "b2ab5156f30963c0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Sends signals to terminate or control processes matching a pattern; irreversible and can cause data loss or system instability if critical processes are terminated.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:42Z",
+  "truncated": false,
+  "version": "pkill from procps-ng 4.0.4"
+}

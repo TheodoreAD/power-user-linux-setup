@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:39:50Z",
+  "extracted_at": "2026-08-09T17:34:24Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "50cbfcbfc0e37455",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "fzf filters and interactively selects from input without modifying any files, directories, or system state \u2014 it only reads and outputs to stdout.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:29:39Z",
+  "truncated": false,
+  "version": "0.44.1 (debian)"
+}

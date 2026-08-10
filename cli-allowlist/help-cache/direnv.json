@@ -1,14 +1,43 @@
 {
-  "commands": {
-    "_top": "direnv v2.32.1\nUsage: direnv COMMAND [...ARGS]\n\nAvailable commands\n------------------\nallow [PATH_TO_RC]:\npermit [PATH_TO_RC]:\ngrant [PATH_TO_RC]:\n  Grants direnv permission to load the given .envrc or .env file.\nblock [PATH_TO_RC]:\ndeny [PATH_TO_RC]:\nrevoke [PATH_TO_RC]:\n  Revokes the authorization of a given .envrc or .env file.\nedit [PATH_TO_RC]:\n  Opens PATH_TO_RC or the current .envrc or .env into an $EDITOR and allow\n  the file to be loaded afterwards.\nexec DIR COMMAND [...ARGS]:\n  Executes a command after loading the first .envrc or .env found in DIR\nfetchurl <url> [<integrity-hash>]:\n  Fetches a given URL into direnv's CAS\nhelp [SHOW_PRIVATE]:\n  shows this help\nhook SHELL:\n  Used to setup the shell hook\nprune:\n  removes old allowed files\nreload:\n  triggers an env reload\nstatus:\n  prints some debug status information\nstdlib:\n  Displays the stdlib available in the .envrc execution context\nversion [VERSION_AT_LEAST]:\n  prints the version or checks that direnv is older than VERSION_AT_LEAST.",
-    "allow": "\u001b[31mdirenv: error lstat /home/tdumitrescu/projects/github.com-personal/power-user-linux-setup/--help: no such file or directory\u001b[0m",
-    "deny": "\u001b[31mdirenv: error lstat /home/tdumitrescu/projects/github.com-personal/power-user-linux-setup/--help: no such file or directory\u001b[0m",
-    "dump": "\u001b[31mdirenv: error unknown target shell '--help'\u001b[0m",
-    "edit": "xdg-open - opens a file or URL in the user's preferred application\n\nSynopsis\n\nxdg-open { file | URL }\n\nxdg-open { --help | --manual | --version }\n\nUse 'man xdg-open' or 'xdg-open --manual' for additional info.\n\u001b[31mdirenv: $EDITOR not found.\u001b[0m",
-    "reload": "\u001b[31mdirenv: error .envrc not found\u001b[0m",
-    "status": "direnv exec path /usr/bin/direnv\nDIRENV_CONFIG /home/tdumitrescu/.config/direnv\nbash_path /usr/bin/bash\ndisable_stdin false\nwarn_timeout 5s\nwhitelist.prefix []\nwhitelist.exact map[]\nNo .envrc or .env loaded\nNo .envrc or .env found"
-  },
-  "extracted_at": "2026-08-09T16:37:08Z",
+  "extracted_at": "2026-08-09T23:05:30Z",
   "interactive": false,
+  "nodes": {
+    "_top": {
+      "children": [],
+      "content_hash": "3651de29262edb3d",
+      "help_text": "direnv v2.32.1\nUsage: direnv COMMAND [...ARGS]\n\nAvailable commands\n------------------\nallow [PATH_TO_RC]:\npermit [PATH_TO_RC]:\ngrant [PATH_TO_RC]:\n  Grants direnv permission to load the given .envrc or .env file.\nblock [PATH_TO_RC]:\ndeny [PATH_TO_RC]:\nrevoke [PATH_TO_RC]:\n  Revokes the authorization of a given .envrc or .env file.\nedit [PATH_TO_RC]:\n  Opens PATH_TO_RC or the current .envrc or .env into an $EDITOR and allow\n  the file to be loaded afterwards.\nexec DIR COMMAND [...ARGS]:\n  Executes a command after loading the first .envrc or .env found in DIR\nfetchurl <url> [<integrity-hash>]:\n  Fetches a given URL into direnv's CAS\nhelp [SHOW_PRIVATE]:\n  shows this help\nhook SHELL:\n  Used to setup the shell hook\nprune:\n  removes old allowed files\nreload:\n  triggers an env reload\nstatus:\n  prints some debug status information\nstdlib:\n  Displays the stdlib available in the .envrc execution context\nversion [VERSION_AT_LEAST]:\n  prints the version or checks that direnv is older than VERSION_AT_LEAST."
+    },
+    "allow": {
+      "children": [],
+      "content_hash": "c3f107276651899a",
+      "help_text": "\u001b[31mdirenv: error lstat /home/tdumitrescu/projects/github.com-personal/power-user-linux-setup/--help: no such file or directory\u001b[0m"
+    },
+    "deny": {
+      "children": [],
+      "content_hash": "c3f107276651899a",
+      "help_text": "\u001b[31mdirenv: error lstat /home/tdumitrescu/projects/github.com-personal/power-user-linux-setup/--help: no such file or directory\u001b[0m"
+    },
+    "dump": {
+      "children": [],
+      "content_hash": "ba86ff41445a782c",
+      "help_text": "\u001b[31mdirenv: error unknown target shell '--help'\u001b[0m"
+    },
+    "edit": {
+      "children": [],
+      "content_hash": "09b466ac754d35ec",
+      "help_text": "xdg-open - opens a file or URL in the user's preferred application\n\nSynopsis\n\nxdg-open { file | URL }\n\nxdg-open { --help | --manual | --version }\n\nUse 'man xdg-open' or 'xdg-open --manual' for additional info.\n\u001b[31mdirenv: $EDITOR not found.\u001b[0m"
+    },
+    "reload": {
+      "children": [],
+      "content_hash": "f2a68642cf03ecb0",
+      "help_text": "\u001b[31mdirenv: error .envrc not found\u001b[0m"
+    },
+    "status": {
+      "children": [],
+      "content_hash": "2df1618c11683806",
+      "help_text": "direnv exec path /usr/bin/direnv\nDIRENV_CONFIG /home/tdumitrescu/.config/direnv\nbash_path /usr/bin/bash\ndisable_stdin false\nwarn_timeout 5s\nwhitelist.prefix []\nwhitelist.exact map[]\nNo .envrc or .env loaded\nNo .envrc or .env found"
+    }
+  },
+  "truncated": false,
   "version": "2.32.1"
 }

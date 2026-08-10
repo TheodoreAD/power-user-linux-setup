@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:20:12Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "648369772bcae387",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compresses/decompresses files (creates output, optionally deletes inputs), but effects are bounded, expected, and reversible; test/list modes are read-only; force-overwrite requires explicit flag.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:31Z",
+  "truncated": false,
+  "version": "xz (XZ Utils) 5.4.5"
+}

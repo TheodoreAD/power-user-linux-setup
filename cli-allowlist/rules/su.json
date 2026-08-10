@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:18:20Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "1eb9e8cb64320855",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Privilege escalation tool that grants access to another user's identity (defaulting to root), enabling irreversible system-wide modifications and bypassing normal access controls.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:42Z",
+  "truncated": false,
+  "version": "su from util-linux 2.39.3"
+}

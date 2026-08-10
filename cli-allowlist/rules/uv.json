@@ -1,0 +1,90 @@
+{
+  "classified_at": "2026-08-09T16:59:20Z",
+  "extracted_at": "2026-08-09T16:46:56Z",
+  "nodes": {
+    "add": {
+      "classification": "write",
+      "content_hash": "92e7e08074d0017d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds dependencies to pyproject.toml; reversible via remove.",
+      "source": "llm"
+    },
+    "build": {
+      "classification": "write",
+      "content_hash": "79570dfc83e9311b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates build artifacts in output directory; reversible via deletion.",
+      "source": "llm"
+    },
+    "init": {
+      "classification": "write",
+      "content_hash": "c18680878e6ad2a5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates new project files and directories; reversible via deletion.",
+      "source": "llm"
+    },
+    "pip": {
+      "classification": "write",
+      "content_hash": "28fcbb90bbb431b1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs/manages/syncs packages; modifies package environment.",
+      "source": "llm"
+    },
+    "python": {
+      "classification": "write",
+      "content_hash": "47ec9777fbbac333",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs/manages/upgrades/removes Python versions; modifies system Python installations.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "write",
+      "content_hash": "6e9dac1cd7f80ea8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Executes scripts/commands that may modify state; depends on script content.",
+      "source": "llm"
+    },
+    "sync": {
+      "classification": "write",
+      "content_hash": "65a1c2df4cd6445a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates project environment with dependencies; reversible by re-syncing.",
+      "source": "llm"
+    },
+    "tool": {
+      "classification": "write",
+      "content_hash": "0e6fb4bfb04ec996",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs/manages/upgrades/removes tools; modifies tool installations.",
+      "source": "llm"
+    },
+    "tree": {
+      "classification": "read_only",
+      "content_hash": "a065efd073800ff1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays dependency tree information without modifying state.",
+      "source": "llm"
+    },
+    "venv": {
+      "classification": "write",
+      "content_hash": "c66781932fd457ff",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates virtual environments; reversible via deletion.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:26Z",
+  "truncated": false,
+  "version": "uv 0.11.19 (x86_64-unknown-linux-gnu)"
+}

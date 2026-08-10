@@ -1,0 +1,74 @@
+{
+  "classified_at": "2026-08-09T16:57:28Z",
+  "extracted_at": "2026-08-09T16:46:55Z",
+  "nodes": {
+    "ci": {
+      "classification": "write",
+      "content_hash": "d5d4613bf8251e4b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Builds container images and deploys services to Kubernetes/Docker Compose following the Tiltfile, modifying infrastructure in expected and bounded ways.",
+      "source": "llm"
+    },
+    "doctor": {
+      "classification": "read_only",
+      "content_hash": "08ce567f8eb6e049",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints diagnostic information about the Tilt environment without modifying any state.",
+      "source": "llm"
+    },
+    "down": {
+      "classification": "dangerous",
+      "content_hash": "1187121f9bb54289",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes Kubernetes resources and optionally namespaces/volumes, which is irreversible and has broad blast radius.",
+      "source": "llm"
+    },
+    "dump": {
+      "classification": "read_only",
+      "content_hash": "db63bd1b2fa133c0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Exports internal Tilt state and diagnostic information to stdout without modifying anything.",
+      "source": "llm"
+    },
+    "get": {
+      "classification": "read_only",
+      "content_hash": "bece614ffb6b5400",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Queries and displays Tilt resources without modifying them.",
+      "source": "llm"
+    },
+    "logs": {
+      "classification": "read_only",
+      "content_hash": "63895c98633354a9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves and optionally streams logs from a running Tilt instance without modifying state.",
+      "source": "llm"
+    },
+    "status": {
+      "classification": "read_only",
+      "content_hash": "db376174b8936a76",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Not a valid tilt command; attempting to run it produces an error and has no effect.",
+      "source": "llm"
+    },
+    "up": {
+      "classification": "write",
+      "content_hash": "68ac3319e4c0d66e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Starts Tilt and runs services defined in the Tiltfile, modifying infrastructure through container builds and resource application.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:00Z",
+  "truncated": false,
+  "version": "v0.37.3, built 2026-04-30"
+}

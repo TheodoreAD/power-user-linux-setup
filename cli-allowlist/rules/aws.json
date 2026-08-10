@@ -1,0 +1,138 @@
+{
+  "classified_at": "2026-08-10T15:37:29Z",
+  "extracted_at": "2026-08-09T23:05:30Z",
+  "nodes": {
+    "cloudformation": {
+      "classification": "write",
+      "content_hash": "f5fce8348136a06c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector that enables infrastructure lifecycle operations (create/update/delete stacks); risk depends on specific subcommands but the service itself performs state-modifying deployments.",
+      "source": "llm"
+    },
+    "configure": {
+      "classification": "write",
+      "content_hash": "73e0eda84be58950",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies local AWS CLI configuration files (~/.aws/config, ~/.aws/credentials) with user credentials and settings.",
+      "source": "llm"
+    },
+    "dynamodb": {
+      "classification": "write",
+      "content_hash": "31f23f7594ca7e30",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector that enables database operations including table creation/deletion and data writes; risk varies by subcommand.",
+      "source": "llm"
+    },
+    "ec2": {
+      "classification": "write",
+      "content_hash": "27a0625f3199be51",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector that enables compute instance lifecycle operations (launch/terminate/reboot); risk varies by subcommand from read to dangerous.",
+      "source": "llm"
+    },
+    "ecr": {
+      "classification": "write",
+      "content_hash": "bb8f4641144361e3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for container registry operations including image push/delete and repository management.",
+      "source": "llm"
+    },
+    "ecs": {
+      "classification": "write",
+      "content_hash": "6c1ed9d38f2ef28d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for container orchestration operations including service deployment and task management.",
+      "source": "llm"
+    },
+    "iam": {
+      "classification": "dangerous",
+      "content_hash": "3e4da8dc28dba971",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for identity/access management; enables creation/modification/deletion of users, roles, policies, and credentials\u2014security-critical operations.",
+      "source": "llm"
+    },
+    "lambda": {
+      "classification": "write",
+      "content_hash": "938e5185c055b990",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector that enables function lifecycle operations including creation, deletion, and permission management.",
+      "source": "llm"
+    },
+    "logs": {
+      "classification": "read_only",
+      "content_hash": "41b04488f4ab42c9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for CloudWatch Logs, primarily used to query and retrieve log data with minimal write operations.",
+      "source": "llm"
+    },
+    "rds": {
+      "classification": "write",
+      "content_hash": "ff39cb4019932a1b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for relational database operations including instance creation/deletion and configuration changes.",
+      "source": "llm"
+    },
+    "s3": {
+      "classification": "write",
+      "content_hash": "4fbbee4070e4d62b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "High-level S3 commands for object and bucket operations; enables uploads, deletions, and data transfers.",
+      "source": "llm"
+    },
+    "s3api": {
+      "classification": "write",
+      "content_hash": "e03007d3846d2f3a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Low-level S3 API commands for granular object/bucket manipulation including puts, deletes, and policy changes.",
+      "source": "llm"
+    },
+    "sns": {
+      "classification": "write",
+      "content_hash": "6715f3b1e33b899d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for SNS operations including topic/subscription creation and message publishing.",
+      "source": "llm"
+    },
+    "sqs": {
+      "classification": "write",
+      "content_hash": "d0831f5c0acad519",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for SQS queue operations including queue creation/deletion and message send/receive.",
+      "source": "llm"
+    },
+    "ssm": {
+      "classification": "write",
+      "content_hash": "8cca5dba9c6516a1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Service selector for Systems Manager operations including parameter store modifications and automation document management.",
+      "source": "llm"
+    },
+    "sts": {
+      "classification": "read_only",
+      "content_hash": "b276650d0761aae2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The 'sts' command without a subcommand displays help and lists available Security Token Service operations; it performs no state modifications.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:50:28Z",
+  "truncated": false,
+  "version": "aws-cli/2.0.57 Python/3.7.3 Linux/6.8.0-137-generic exe/x86_64.ubuntu.24"
+}
