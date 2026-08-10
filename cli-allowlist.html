@@ -1514,6 +1514,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Recursive tree extraction — <code>_build_tree</code>, and what broke on the first pass
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-flag-ratings-same-call-no-extra-invocations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Per-flag ratings — same call, no extra invocations
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deterministic-extraction-has-more-sharp-edges-than-it-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1529,6 +1551,39 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Classification via headless Claude
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules-storage-one-file-per-tool-not-one-monolithic-rulesjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rules storage — one file per tool, not one monolithic <code>rules.json</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reconfirm-resolving-needs_review-with-the-specific-concern-in-hand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>reconfirm</code> — resolving <code>needs_review</code> with the specific concern in hand
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Three real bugs found running this at scale (community resweep + reconfirm)
       </span>
     </span>
   </a>
@@ -2036,6 +2091,28 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Recursive tree extraction — <code>_build_tree</code>, and what broke on the first pass
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#per-flag-ratings-same-call-no-extra-invocations" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Per-flag ratings — same call, no extra invocations
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#deterministic-extraction-has-more-sharp-edges-than-it-looks-like" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2051,6 +2128,39 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Classification via headless Claude
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#rules-storage-one-file-per-tool-not-one-monolithic-rulesjson" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Rules storage — one file per tool, not one monolithic <code>rules.json</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#reconfirm-resolving-needs_review-with-the-specific-concern-in-hand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>reconfirm</code> — resolving <code>needs_review</code> with the specific concern in hand
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Three real bugs found running this at scale (community resweep + reconfirm)
       </span>
     </span>
   </a>
@@ -2218,16 +2328,19 @@ it with an LLM instead of guessing, and keeps a human in the loop before anythin
 not vendor material) and <code>tasks/allowlist.py</code> (<code>inv allowlist.*</code>). This page is the durable
 explanation of <em>why</em> it&rsquo;s built the way it is; the code docstrings cover the <em>how</em>.</p>
 <h2 id="architecture-extract-classify-review-apply">Architecture: extract → classify → review → apply<a class="headerlink" href="#architecture-extract-classify-review-apply" title="Permanent link">&para;</a></h2>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv allowlist.extract   deterministic, no LLM      captures --help text, version-gated
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv allowlist.classify  LLM (headless claude -p)    read_only / write / dangerous per subcommand
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv allowlist.review    human gate                  you look at what changed, mark it reviewed
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>inv allowlist.apply     deterministic, no LLM       merges reviewed rules into ~/.claude/settings.json
+<div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv allowlist.extract   deterministic, no LLM      captures --help text, recursing into the
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                                    subcommand tree where a tool opts in
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv allowlist.classify  LLM (headless claude -p)    read_only / write / dangerous per node, plus
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>                                                    per-flag ratings for risk-relevant options
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>inv allowlist.review    human gate                  you look at what changed, mark it reviewed
+</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>inv allowlist.apply     deterministic, no LLM       merges reviewed rules into ~/.claude/settings.json
 </span></code></pre></div>
 <p>Each stage is independently re-runnable and cheap to re-run when nothing changed — that&rsquo;s the
 point. <code>extract</code> is skipped per-tool when <code>--version</code> output hasn&rsquo;t changed; <code>classify</code> is skipped
-per-tool when the extracted help text hasn&rsquo;t changed (content-hash-gated); <code>apply</code> is a no-op when
-the computed rule set already matches what&rsquo;s live. A routine re-run after <code>apt upgrade</code> costs
-close to nothing and makes zero LLM calls unless a tool&rsquo;s actual command surface changed.</p>
+<strong>per node</strong> when that node&rsquo;s own help text hasn&rsquo;t changed (content-hash-gated, not a whole-tool
+hash — see below); <code>apply</code> is a no-op when the computed rule set already matches what&rsquo;s live. A
+routine re-run after <code>apt upgrade</code> costs close to nothing and makes zero LLM calls unless a tool&rsquo;s
+actual command surface changed.</p>
 <h3 id="toolstoml-the-registry"><code>tools.toml</code> — the registry<a class="headerlink" href="#toolstoml-the-registry" title="Permanent link">&para;</a></h3>
 <p><code>cli-allowlist/tools.toml</code> lists every tool <code>extract</code> probes, one <code>[tool]</code> section per binary.
 Most CLIs are <code>&lt;tool&gt; &lt;subcommand&gt; --help</code> cobra/click/argparse programs and need no special
@@ -2254,6 +2367,141 @@ guessed:</p>
 (coreutils, util-linux, diffutils, procps, tar/gzip/bzip2/xz), audited via <code>dpkg -L coreutils</code> etc.
 rather than from memory, since an agent reaches for <code>cat</code>/<code>cp</code>/<code>rm</code>/<code>dd</code> just as often as anything
 PULSE explicitly installs.</p>
+<p>Three more fields exist specifically for recursion:</p>
+<ul>
+<li><strong><code>max_depth</code></strong> — how many levels deep to walk the subcommand tree (default <code>1</code>, today&rsquo;s
+  original single-level behavior). <code>2</code> also probes each direct subcommand&rsquo;s own <code>--help</code> for a
+  further command listing (<code>git remote add</code>, <code>docker network create</code>, <code>gh secret set</code>). Opt-in per
+  tool — most tools&rsquo; real risk lives at depth 1 and recursing needlessly just costs LLM calls for
+  no new signal. Currently on for <code>git</code>, <code>gh</code>, <code>glab</code>, <code>kubectl</code>, <code>helm</code>, <code>docker</code>, <code>terraform</code>,
+  <code>go</code>, <code>npm</code> — the tools where a bare subcommand name genuinely blends distinct risk levels
+  (<code>docker network</code> alone can&rsquo;t tell you <code>ls</code> is read-only and <code>rm</code> is dangerous).</li>
+<li><strong><code>max_nodes</code></strong> — total node budget for the whole tree, breadth-first (default <code>60</code>). Only
+  matters once <code>max_depth &gt; 1</code>. <code>docker</code> and <code>gh</code> needed <code>200</code> — their real trees measured
+  ~160–175 nodes; <code>150</code> silently truncated the least-common branches (breadth-first truncation
+  drops whatever hasn&rsquo;t been reached yet, not a random subset, so it&rsquo;s at least legible in
+  <code>status</code>&rsquo;s <code>truncated</code> flag, not a silent gap).</li>
+<li><strong><code>cloud_cli</code></strong> — marks a tool whose real command surface is structurally too large to
+  auto-discover (<code>gcloud</code>, <code>aws</code>: <code>&lt;tool&gt; &lt;service&gt; &lt;resource&gt; &lt;verb&gt;</code>, thousands of leaf commands,
+  3 levels deep by construction). These intentionally stay at <code>max_depth = 1</code> with a hand-picked
+  top-level <code>subcommands</code> list. This is a documented non-goal, not a gap <code>max_depth</code> will
+  eventually close — recursing a provider CLI&rsquo;s full surface isn&rsquo;t worth the node/LLM-call budget
+  for commands that will almost never be run.</li>
+</ul>
+<h3 id="recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass">Recursive tree extraction — <code>_build_tree</code>, and what broke on the first pass<a class="headerlink" href="#recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass" title="Permanent link">&para;</a></h3>
+<p>Depth isn&rsquo;t just &ldquo;run <code>_discover_subcommands</code> again on the child&rsquo;s help text&rdquo; — every one of the
+following was found by actually running it against real tools, not by inspecting one tool&rsquo;s
+<code>--help</code> and assuming the shape generalizes:</p>
+<ol>
+<li><strong>Nested help text often doesn&rsquo;t look like the top level&rsquo;s.</strong> <code>git</code>&rsquo;s top-level <code>-h</code> has a
+   <code>Commands:</code>-style heading; <code>git remote -h</code> / <code>git stash -h</code> / etc. render as docopt-style usage
+   synopses instead (<code>usage: git remote add ...</code>, <code>or: git remote [-v] show ...</code>) with no heading
+   at all. <code>_discover_subcommands</code> tries the heading-based regex first and falls back to a
+   synopsis parser (<code>_discover_from_synopsis</code>) only when that finds nothing <em>and</em> a tool+path
+   context is available (i.e. only at nested levels, never at the top, where the heading style
+   reliably applies). The fallback walks each <code>usage:</code>/<code>or:</code> line token by token, skips
+   (possibly-nested) <code>[...]</code> bracket groups, and takes the next token <em>only if it&rsquo;s a bare
+   lowercase identifier</em> — a positional-arg placeholder right after the known path
+   (<code>&lt;pathspec&gt;</code>, <code>&lt;commit&gt;...&lt;commit&gt;</code>, or docker&rsquo;s bare-ALL-CAPS convention <code>CONTAINER</code>) means
+   this command takes arguments directly rather than nesting further, and is deliberately left
+   unmatched rather than sanitized into a fake subcommand. It fails closed: a synopsis it can&rsquo;t
+   parse confidently yields no verb from that line, not a wrong one. (An earlier version stripped
+   punctuation before validating and fabricated nodes like <code>add pathspec</code>, <code>branch branch-name</code>,
+   <code>diff commitcommit</code>, and merged git bisect&rsquo;s <code>(good|bad)</code> alternation into <code>bisect goodbad</code> —
+   caught by inspecting the actual discovered tree, not by trusting the regex.)</li>
+<li><strong>A cobra-style tool can format nested listings differently from its own top level.</strong> <code>gh</code>&rsquo;s
+   nested help suffixes each name with a colon (<code>create:        Create a pull request</code>) where
+   the top-level listing has no colon — <code>_SUBCOMMAND_LINE</code>&rsquo;s trailing <code>:?</code> exists specifically for
+   this; without it, <code>gh</code>&rsquo;s entire depth-2 tree silently discovered zero children.</li>
+<li><strong>A subcommand that no longer exists can silently echo its parent&rsquo;s help instead of erroring.</strong>
+   Confirmed at two different tree levels: <code>docker trust --help</code> (root-level, deprecated in this
+   docker build, exits <code>0</code>, dumps <code>docker --help</code>) — recursing into that would treat the <em>entire</em>
+   command surface as <code>trust</code>&rsquo;s children and blow the node budget on a duplicate of the whole tree
+   (this is what first exposed the bug: <code>docker</code>&rsquo;s <code>truncated</code> node count didn&rsquo;t match reality, and
+   <code>trust</code> had 40 &ldquo;children&rdquo; that were really just the rest of docker). <code>_build_tree</code> detects this
+   by content hash — a node&rsquo;s help text byte-identical to its <em>immediate parent&rsquo;s</em> (not just the
+   tool&rsquo;s root; see point 4) — and suppresses further recursion into it.</li>
+</ol>
+<p>Whether duplicate content also means &ldquo;not a real command&rdquo; turned out to hinge on <strong>how many
+   siblings were discovered alongside it, not on where the name came from</strong> — the first version of
+   this check used &ldquo;explicit <code>subcommands =</code> list vs auto-discovered&rdquo; as the signal, which is
+   wrong: <code>git submodule &lt;verb&gt; -h</code> returns the exact same combined usage block for 9 of its 10
+   auto-discovered children (only <code>absorbgitdirs</code> differs), and all 9 are real, safety-distinct
+   commands (<code>submodule deinit</code> is very different from <code>submodule sync</code>) that just happen to share
+   undifferentiated help text — the same situation as <code>nvm</code>&rsquo;s shell function, one level deeper. A
+   <em>lone</em> duplicate — the only child discovered for its parent at all — has nothing corroborating
+   it; a duplicate inside a multi-member group discovered the same way as its non-duplicating
+   siblings does. So: a node whose content matches its parent <strong>and</strong> was the only child found in
+   its discovery batch gets marked <code>likely_invalid</code> at extract time and never even reaches the LLM
+   (see point 4); everything else with duplicate content — <code>docker trust</code>, <code>nvm</code>&rsquo;s whole list,
+   <code>git submodule</code>&rsquo;s 9 — keeps being classified normally, worst case producing a rule that never
+   matches anything real (<code>docker trust</code>) rather than losing real coverage (<code>nvm</code>, <code>git submodule</code>).
+4. <strong>Some extraction weirdness doesn&rsquo;t show up as duplicate content at all</strong>, and no deterministic
+   heuristic was going to anticipate every shape it can take — so <code>classify</code>&rsquo;s LLM call carries a
+   4<sup>th</sup> classification tier, <code>invalid</code>, specifically for &ldquo;this path isn&rsquo;t a genuine, distinct
+   command&rdquo; (rubric excerpt: matched a line from an example/sample-output table, a config snippet,
+   or other incidental text; content doesn&rsquo;t describe what this specific path does). This is a
+   deliberate second layer on top of point 3&rsquo;s deterministic check, not a duplicate of it — proven
+   live on <code>helm</code>: the deterministic check caught <code>list maudlin-arachnid</code> (a sample-output table
+   row — <code>maudlin-arachnid    Mon May 9 16:07:08 2016    alpine-0.1.0</code> — matched by the same
+   heading-shaped regex that finds real subcommands, the lone-child case from point 3), while the
+   LLM independently caught <code>diff</code> (a real, 18-member root-level entry — not a lone duplicate, so
+   point 3&rsquo;s check doesn&rsquo;t touch it — but <code>helm diff</code> is a third-party plugin not installed here;
+   <code>helm diff --help</code> silently dumps generic top-level Helm help, content that &ldquo;looks like&rdquo; a
+   plausible response, not a duplicate signal, but doesn&rsquo;t actually describe a <code>diff</code> subcommand).
+   Neither layer alone would have caught both. A third variety turned up later, at full-registry
+   scale: <code>gh extension exec</code> and <code>direnv dump</code> both captured a literal CLI error message
+   (<code>extension "--help" not found</code>) as their node&rsquo;s help text — not a duplicate of anything, not
+   generic fallback content, just an error string — and the LLM correctly flagged both <code>invalid</code>
+   on sight without any rubric change, which is really the point of having a judgment-based second
+   layer at all: each new shape of extraction weirdness found so far has been a <em>different</em> one,
+   not a repeat, and a deterministic check can only ever cover the ones already seen. <code>invalid</code>-tier
+   nodes are excluded from <code>render</code>/<code>apply</code> output automatically (the pattern-building code already
+   only branches on <code>read_only</code>/<code>write</code>/<code>dangerous</code>) and shown in their own section in <code>review</code>,
+   separate from the normal per-node dump, so they read as &ldquo;not a command, ignore it&rdquo; rather than a
+   4<sup>th</sup> risk tier.</p>
+<h3 id="per-flag-ratings-same-call-no-extra-invocations">Per-flag ratings — same call, no extra invocations<a class="headerlink" href="#per-flag-ratings-same-call-no-extra-invocations" title="Permanent link">&para;</a></h3>
+<p>Flags don&rsquo;t get their own <code>--help</code>; they&rsquo;re already sitting in the help text <code>extract</code> captured
+for a node. <code>_parse_flags</code> pulls <code>-f, --force  &lt;description&gt;</code>-style lines out of that text
+(best-effort, not load-bearing the way subcommand discovery is — a missed flag is one fewer
+candidate offered to the classifier, not a broken tree). Rating literally every flag on every node
+would be mostly noise (<code>--verbose</code>, <code>--output</code>, <code>--color</code> never affect risk) for real token/cost
+overhead, so <code>_candidate_flags</code> pre-filters by name against two heuristic token sets — one for
+flags that plausibly <em>escalate</em> risk (<code>force</code>, <code>recursive</code>, <code>all</code>, <code>yes</code>, <code>hard</code>, <code>global</code>,
+<code>cascade</code>, &hellip;, extending the same <code>_DANGEROUS_VERBS</code> set already used for the subcommand-name
+backstop) and one for flags that plausibly <em>de-escalate</em> it (<code>dry-run</code>, <code>check</code>, <code>plan-only</code>,
+<code>preview</code>, &hellip;). Only the matches get sent to the LLM as &ldquo;candidate flags — rate ONLY these&rdquo; for
+that node, in the same call as the subcommand&rsquo;s own classification (no extra API calls).</p>
+<p>Flags are rated on the same three-tier scale as subcommands, but as an <strong>absolute resulting tier</strong>
+for command+flag together, not a delta from the base — <code>git push</code> is <code>write</code>, <code>git push --force</code>
+is <code>dangerous</code>; <code>git clean</code> is <code>dangerous</code>, <code>git clean --dry-run</code> is <code>read_only</code>. This was a
+deliberate framing choice: an absolute tier is directly comparable to the base classification and
+one the model can reason about consistently, versus an abstract &ldquo;escalates/mitigates&rdquo; concept that
+would need its own interpretation layer downstream. A flag missing from a node&rsquo;s <code>flags</code> map simply
+wasn&rsquo;t offered as a candidate — treat it as &ldquo;no signal that it changes the base tier,&rdquo; not &ldquo;rated
+and found neutral.&rdquo;</p>
+<p>Flags get the same read_only-name-vs-dangerous-token backstop as subcommands
+(<code>_looks_dangerous_flag</code>), and it caught a real false positive of its own: <code>--dry-run</code> tokenizes to
+<code>{"dry", "run"}</code>, and <code>"run"</code> is in <code>_DANGEROUS_VERBS</code> (added for <code>nvm run</code> as a <em>subcommand</em>, which
+does execute arbitrary code) — so the single most common safety-signaling flag in the entire
+candidate set was getting downgraded to <code>needs_review</code> on sight, confirmed live on git&rsquo;s <code>notes
+prune --dry-run</code> / <code>remote prune --dry-run</code> (both correctly rated <code>read_only</code> by the model, then
+immediately flipped). The fix isn&rsquo;t &ldquo;remove <code>run</code> from the dangerous set&rdquo; (it&rsquo;s a correct catch for
+the subcommand case) — it&rsquo;s a whole-name check first: if a flag&rsquo;s full name (not its individual
+tokens) matches something in the <em>safe</em>-flag hint set, that wins the tiebreak before tokenizing ever
+loses the &ldquo;dry-&rdquo; context (<code>_flag_matches_hints</code>, shared by both the candidate-selection filter and
+the backstop). A pure token-set comparison can&rsquo;t make this distinction on its own — <code>"dry-run"</code> as a
+whole phrase and <code>"run"</code> as an isolated token need to be checked as genuinely different things.</p>
+<p><strong>Important limitation, not a TODO</strong>: this data doesn&rsquo;t drive <code>render</code>/<code>apply</code> yet, and structurally
+can&rsquo;t with the current mechanism. Claude&rsquo;s Bash permission rules are literal-prefix globs
+(<code>Bash(git push:*)</code>), and flags can appear in any order/position in a real invocation — there&rsquo;s no
+clean prefix-based way to express &ldquo;allow this subcommand except with <code>--force</code>&rdquo;. <code>write</code> and
+<code>dangerous</code> still both render as <code>ask</code> either way (see below), so today a flag escalating from
+write to dangerous doesn&rsquo;t even change the rendered rule. Per-flag data is analysis/review value
+right now — exactly what motivated building it — and a foundation for a future consumer (e.g. a
+PreToolUse hook, which unlike a prefix glob <em>can</em> parse flags order-independently — deliberately
+not built yet, see the <code>render</code>/<code>apply</code> section below) rather than something <code>render</code> acts on
+today.</p>
 <h3 id="deterministic-extraction-has-more-sharp-edges-than-it-looks-like">Deterministic extraction has more sharp edges than it looks like<a class="headerlink" href="#deterministic-extraction-has-more-sharp-edges-than-it-looks-like" title="Permanent link">&para;</a></h3>
 <p>Two real, empirically-confirmed problems, not hypothetical ones:</p>
 <ol>
@@ -2262,11 +2510,16 @@ PULSE explicitly installs.</p>
    installed on the machine this was built on, which made the bug invisible until tested with a
    stripped environment. Fixed by using <code>git -h</code> instead — a self-contained synopsis with no
    package dependency. <code>cli-allowlist/check_man_deps.py</code> runs every registered tool&rsquo;s help
-   invocation under <code>strace -f -e trace=execve</code> and checks for a child <code>exec</code> of <code>/usr/bin/man</code> —
-   the only reliable way to tell &ldquo;renders like a man page&rdquo; (<code>gcloud</code>, which mimics man&rsquo;s
-   NAME/SYNOPSIS/DESCRIPTION layout with its own self-contained renderer, no <code>man</code> involved) apart
-   from &ldquo;actually shells out to man&rdquo; (<code>git</code>, the one real case found so far). Re-run it
-   (<code>python3 cli-allowlist/check_man_deps.py</code>) after registering a new tool.</li>
+   invocation under <code>strace -f -e trace=execve</code> and checks for a child <code>exec</code> of <code>man</code>, <code>groff</code>, or
+   <code>troff</code> — the only reliable way to tell &ldquo;renders like a man page&rdquo; (<code>gcloud</code>, which mimics man&rsquo;s
+   NAME/SYNOPSIS/DESCRIPTION layout with its own self-contained renderer, nothing external
+   involved) apart from &ldquo;actually shells out to a formatter&rdquo; (<code>git</code> depends on <code>man</code> itself; <code>aws</code>
+   — added when the cloud-CLI recursion boundary was drawn — depends on <code>groff</code>/<code>troff</code>/<code>grotty</code>
+   for <code>aws help</code>&rsquo;s formatted output, same risk class, different package, caught the same way). Any
+   tool in this category only extracts correctly because that package happens to be installed on
+   this machine; there&rsquo;s no portable fix for <code>aws</code> the way <code>-h</code> was for <code>git</code> (no flag skips the
+   groff pipeline), so it&rsquo;s accepted and documented in <code>tools.toml</code> rather than worked around. Re-run
+   the check (<code>python3 cli-allowlist/check_man_deps.py</code>) after registering a new tool.</li>
 <li><strong>Extraction must be portable, not just correct on the machine that wrote it.</strong> <code>PAGER</code>,
    <code>MANPAGER</code>, <code>GIT_PAGER</code>, and <code>BROWSER</code> are neutralized (<code>cat</code>/<code>true</code>) for every extraction call
    — the actual defense here isn&rsquo;t &ldquo;nothing tries to page or open a browser,&rdquo; it&rsquo;s that the
@@ -2294,38 +2547,189 @@ judgment call without new infrastructure&rdquo;: reuse what&rsquo;s already paid
   (<code>--mode</code>, <code>--run</code>, &hellip;) instead of one verdict for the tool. Fixed by asking explicitly for a
   single entry under a fixed key (<code>_default_</code>), with a conservative fallback (take the most
   cautious of whatever came back) if a future tool&rsquo;s help text confuses it the same way again.</li>
-<li><strong>Cost is dominated by fixed per-call overhead, not prompt size.</strong> A single trivial 2-item
-  classification call cost ~$0.026 and ~12s at Haiku — a real tool with 15-25 subcommands costs
-  roughly the same ballpark. Classifying the ~70 tools not already covered by a community-sourced
-  seed (see below) cost under $2 total, one time; steady-state re-runs are close to free because of
-  the content-hash gate.</li>
+<li><strong>Cost is dominated by fixed per-call overhead, not prompt size — up to a point.</strong> A single
+  trivial 2-item classification call cost ~$0.026 and ~12s at Haiku; a real tool with 15-25
+  subcommands stayed in roughly the same ballpark. That stopped holding once per-flag ratings were
+  added and trees got deeper: a 20-node batch (subcommand + candidate-flag ratings) measured
+  ~$0.08 and ~92s — close enough to both <code>--max-budget-usd</code> and the process timeout that a tool
+  with 50+ new nodes in one call (routine once <code>max_depth &gt; 1</code> is on) would blow past one or the
+  other. <code>classify</code> batches <code>_CLASSIFY_CHUNK_SIZE</code> (15) nodes per call instead of the whole tool at
+  once — still far fewer calls than one-per-node, just bounded per call. Classifying the ~70 tools
+  not already covered by a community-sourced seed cost under $2 total the first time this pipeline
+  existed; enabling recursion on 9 tools added a comparable one-time cost for their new nodes.
+  Steady-state re-runs are close to free either way, because of the (now per-node) content-hash
+  gate.</li>
 <li><strong>A deterministic safety backstop runs after every LLM call, at no extra cost</strong>: any subcommand
   the model marks <code>read_only</code> gets re-checked against a small set of dangerous-sounding verb tokens
   in the subcommand <em>name itself</em> (<code>delete</code>, <code>destroy</code>, <code>rm</code>, <code>force</code>, <code>run</code>, <code>exec</code>, &hellip;) — a
   match downgrades it to <code>needs_review</code> regardless of what the model said. <code>run</code>/<code>exec</code> were added
   to this list after the model classified <code>nvm run</code>/<code>nvm exec</code> as <code>read_only</code>, which is wrong —
-  they execute arbitrary commands. (This does cause one known, accepted false positive: <code>gh run</code>
-  — the noun, GitHub Actions run history, not a verb — also gets flagged. Harmless: it just means
-  that one entry falls back to a normal prompt instead of being pre-approved, same as any other
-  <code>needs_review</code> entry.)</li>
+  they execute arbitrary commands. This does cause real false positives, though — the check has no
+  understanding of context, it just matches words: <code>gh run</code> is a noun (GitHub Actions run history),
+  not a verb, and <code>--all</code> on a listing command broadens what&rsquo;s <em>shown</em>, not what&rsquo;s destroyed. Left
+  unresolved, <code>needs_review</code> entries stay excluded from both <code>allow</code> and <code>ask</code> forever (see
+  &ldquo;Review&rdquo;, below) — <code>inv allowlist.reconfirm</code> is the second pass that resolves them; see its own
+  section further down.</li>
 </ul>
-<p>Six tools (<code>git</code>*, <code>gh</code>, <code>kubectl</code>, <code>helm</code>, <code>docker</code>, <code>terraform</code>, <code>gcloud</code>) were seeded from a
-cloned community allowlist repo rather than classified fresh — <code>source: "community"</code> in
-<code>rules.json</code> — on the theory that a well-covered, actively-maintained community list is a fine
-starting point for stable, widely-used tools. (* <code>git</code> was later reclassified via LLM anyway,
-after switching its <code>help_flag</code> to <code>-h</code> changed the extracted text enough to invalidate the seed&rsquo;s
-hash — an expected one-time cost of that fix, not a bug.)</p>
+<p>Six tools (<code>git</code>*, <code>gh</code>, <code>kubectl</code>, <code>helm</code>, <code>docker</code>, <code>terraform</code>, <code>gcloud</code>) were originally seeded
+from a cloned community allowlist repo rather than classified fresh — <code>source: "community"</code> on
+that node — on the theory that a well-covered, actively-maintained community list is a fine
+starting point for stable, widely-used tools while this pipeline&rsquo;s own rubric was still new. (*
+<code>git</code> was reclassified via LLM early on anyway, after switching its <code>help_flag</code> to <code>-h</code> changed the
+extracted text enough to invalidate the seed&rsquo;s hash.)</p>
+<p><code>source</code> lives on each <em>node</em>, not on the tool as a whole — originally because of recursion (five
+of the six also gained <code>max_depth = 2</code>, so their depth-1 nodes stayed <code>source: "community"</code> while
+their new depth-2 nodes, never covered by the seed at all, came back <code>source: "llm"</code>), but it also
+turned out to matter for a second reason: <strong>community data is now deliberately self-liquidating</strong>.
+<code>classify</code> sweeps every node with <code>source: "community"</code> back into reclassification on every run,
+content hash notwithstanding — once the pipeline had matured (its own rubric, per-flag ratings, the
+invalid-node backstop, chunked prompts), there was no remaining reason to trust an external seed
+over a fresh judgment from the exact same model/rubric everything else here is classified with. A
+few nodes get upgraded to real LLM output on each <code>classify</code> run at no cost to the nodes that are
+already fresh, until nothing <code>community</code>-sourced is left. As of this writing, all six tools have
+been fully swept — <code>source: "community"</code> shouldn&rsquo;t appear anywhere in <code>cli-allowlist/rules/</code>
+anymore, though the sweep logic stays in place in case a future community-seed addition happens.</p>
+<h3 id="rules-storage-one-file-per-tool-not-one-monolithic-rulesjson">Rules storage — one file per tool, not one monolithic <code>rules.json</code><a class="headerlink" href="#rules-storage-one-file-per-tool-not-one-monolithic-rulesjson" title="Permanent link">&para;</a></h3>
+<p><code>cli-allowlist/rules/&lt;tool&gt;.json</code>, one file per tool (mirroring <code>help-cache/&lt;tool&gt;.json</code>), each
+holding a path-keyed <code>nodes</code> map — replaced a single <code>rules.json</code> once trees got deep enough that
+one tool&rsquo;s reclassification would otherwise rewrite (and diff-noise) every other tool&rsquo;s data in
+the same file on every run. Each node carries its own <code>content_hash</code> (not a single hash for the
+whole tool): <code>classify</code> diffs <em>per node</em>, so a new <code>docker network</code> child doesn&rsquo;t force
+reclassifying <code>docker</code>&rsquo;s other 160 unrelated nodes, and a routine re-run only ever pays for what
+actually changed.</p>
+<h3 id="reconfirm-resolving-needs_review-with-the-specific-concern-in-hand"><code>reconfirm</code> — resolving <code>needs_review</code> with the specific concern in hand<a class="headerlink" href="#reconfirm-resolving-needs_review-with-the-specific-concern-in-hand" title="Permanent link">&para;</a></h3>
+<p>The verb-token backstop (above) is deliberately dumb — a cheap, deterministic string match with no
+context — which means it both catches real risks the first classify pass might have missed <em>and</em>
+flags real false positives (<code>gh run</code>, <code>--all</code> on a listing command). Leaving those stuck at
+<code>needs_review</code> forever (excluded from both <code>allow</code> and <code>ask</code>, so they&rsquo;d always fall back to
+whatever Claude&rsquo;s own default is) throws away commands that a closer look would clear.</p>
+<p><code>inv allowlist.reconfirm</code> is a second, targeted LLM pass over exactly the current <code>needs_review</code>
+set (subcommands and flags both) — different from a normal <code>classify</code> re-run in two ways: it tells
+the model precisely which word triggered suspicion (<code>_dangerous_tokens_in</code>/<code>_dangerous_flag_tokens</code>
+report the matched token, not just a bool, specifically so this prompt can cite it), and it trusts
+whatever the model comes back with directly — a reconfirmed <code>read_only</code> does <strong>not</strong> get run back
+through the same backstop that flagged it in the first place, which would just recreate the
+original problem. The rubric leans on the model instead: it&rsquo;s told this verdict is trusted
+unchecked, so if the help text doesn&rsquo;t clearly settle whether the flagged word applies in its
+dangerous sense here, it should answer <code>write</code>/<code>dangerous</code> rather than guess <code>read_only</code> — wrong in
+the cautious direction just means one more prompt, wrong in the other direction is the actual
+failure mode.</p>
+<p>Resolved nodes are stored with <code>source: "llm-reconfirmed"</code> (distinct from plain <code>"llm"</code>, so it&rsquo;s
+visible in review/audit that this one took a second pass) and the tool is marked unreviewed again,
+same as any other classification change — a human still signs off on the resolved verdict before it
+renders into a rule. Idempotent by construction and needs no <code>--force</code>: once an item resolves to a
+real classification it&rsquo;s no longer <code>needs_review</code>, so nothing is left for the next run to touch.</p>
+<p>Verified it isn&rsquo;t just rubber-stamping everything <code>read_only</code>: <code>nvm exec</code>/<code>nvm run</code> — the exact
+case the backstop&rsquo;s <code>run</code>/<code>exec</code> tokens were added to catch — correctly came back <code>write</code> with a
+rationale distinguishing &ldquo;the safe sense of execute-code&rdquo; from &ldquo;the shell builtin&rdquo;, not blindly
+cleared because they were being reconfirmed at all.</p>
+<h3 id="three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm">Three real bugs found running this at scale (community resweep + reconfirm)<a class="headerlink" href="#three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm" title="Permanent link">&para;</a></h3>
+<p>Making <code>classify</code> always resweep <code>source: "community"</code> nodes (below) meant, for the first time,
+sending every depth-1 node of five well-known, actively-maintained CLIs (<code>docker</code>, <code>gh</code>, <code>kubectl</code>,
+<code>helm</code>, <code>terraform</code>) through this pipeline in one push. That surfaced three real bugs that smaller,
+one-tool-at-a-time runs hadn&rsquo;t hit:</p>
+<ol>
+<li><strong>A failed <em>or merely incomplete</em> chunk silently dropped nodes from the ruleset, not just left
+   them stale.</strong> Community nodes are always routed into <code>to_classify</code> (never <code>carried</code>, by design —
+   see below), so when a key never showed up in a chunk&rsquo;s result, it wasn&rsquo;t in <code>verdict</code> <em>or</em>
+   <code>carried</code>, and the old <code>if result is None: continue</code> in the node-building loop meant it simply
+   never made it into <code>new_nodes</code>. First confirmed losing 21 root-level <code>gh</code> nodes (<code>gh pr</code>, <code>gh
+   issue</code>, <code>gh secret</code>, &hellip;) from <code>rules/gh.json</code> entirely after one explicitly failed chunk — worse
+   than the state before the resweep, which at least had the community data. But checking every
+   recursive tool&rsquo;s <code>help-cache</code> keys against its <code>rules</code> keys (not just the one that printed a
+   &ldquo;chunk failed&rdquo; message) turned up the same gap, silently, with <strong>no error printed at all</strong>, on
+   <code>docker</code> (7 nodes), <code>gcloud</code> (4), <code>git</code> (2), and <code>aws</code> (1) — a chunk can report success while
+   still covering only some of what it was asked for, which is exactly what point 2&rsquo;s scope-creep
+   bug does when it burns output budget on unrequested items before finishing the requested ones. A
+   clean-looking <code>classify</code> run was not sufficient evidence that nothing was lost. Fixed: on a
+   missing result, fall back to whatever was in <code>existing_nodes</code> for that key (if anything) instead
+   of dropping it — it&rsquo;s still not in <code>carried</code>, so it stays eligible for <code>to_classify</code> again next
+   run, but nothing is lost in the meantime.</li>
+<li><strong>The model doesn&rsquo;t reliably stay in scope for a tool it has extensive prior knowledge of.</strong>
+   Asked to classify 20 specific <code>gh</code> nodes, Haiku used its own training knowledge of the GitHub
+   CLI and classified 134 — the entire tool&rsquo;s surface, most of it never requested. Confirmed by
+   reproducing the exact call directly: 131s runtime and $0.12 versus 56s/$0.06 for the same 20
+   nodes once fixed. This explains the intermittent chunk failures during the resweep: generating
+   ~6x the necessary output routinely pushed calls right up against <code>_CLASSIFY_TIMEOUT</code>. Not a
+   token-budget-only problem, since <code>--max-budget-usd</code> didn&rsquo;t reliably catch it either — fixed by
+   making the rubric explicit that only the listed paths should be classified and that recognizing
+   a well-known tool&rsquo;s other subcommands isn&rsquo;t an invitation to include them.</li>
+<li><strong>A chunk can &ldquo;succeed&rdquo; while still returning nothing usable, via a subtle key mismatch.</strong> After
+   fix #2, <code>reconfirm</code> calls for <code>gcloud</code>/<code>gh</code>/<code>helm</code>/<code>kubectl</code> still came back with <code>resolved: 0</code>
+   despite <code>_classify_via_claude</code> returning a non-empty, well-formed result — because the model
+   prefixed every key with the tool name (<code>"gh run list"</code> instead of the requested <code>"run list"</code>),
+   and a straight <code>verdict.get(key)</code> lookup by the original key silently found nothing for any of
+   them. The rubric already asked for &ldquo;the exact key strings given&rdquo; — that instruction just isn&rsquo;t
+   airtight either. Fixed defensively rather than by rubric-tuning alone: <code>_strip_tool_prefix</code>
+   strips a leading <code>"&lt;tool&gt; "</code> from every returned key before it&rsquo;s used for lookup, in both
+   <code>classify</code> and <code>reconfirm</code> — free when the model behaved, a real recovery when it didn&rsquo;t.</li>
+</ol>
+<p>None of these were hypothetical hardening — each was caught by actually running the resweep across
+six tools and checking <code>help-cache</code> node keys against <code>rules</code> node keys for gaps, not by reading
+the code and assuming it was right.</p>
 <h3 id="review-the-human-gate">Review — the human gate<a class="headerlink" href="#review-the-human-gate" title="Permanent link">&para;</a></h3>
-<p><code>inv allowlist.review</code> shows what&rsquo;s new or changed since the last reviewed snapshot and, on
-confirmation, marks a tool <code>reviewed: true</code>. <strong>Nothing downstream trusts an unreviewed entry</strong> —
-<code>render</code> and <code>apply</code> silently exclude any tool that hasn&rsquo;t been through this. This is a
-per-<em>tool</em> gate, not per-subcommand: there&rsquo;s no mechanism (yet) to individually override a single
-subcommand&rsquo;s classification without re-running the LLM step, which is why <code>needs_review</code> entries
-stay excluded even after their tool is marked reviewed.</p>
+<p><code>inv allowlist.review</code> shows what&rsquo;s new or changed since the last reviewed snapshot — printed as an
+indented tree (nested subcommands under their parent, candidate flags under their node) rather than
+a flat list, since a 150+ node tool is unreadable any other way — and, on confirmation, marks a
+tool <code>reviewed: true</code>. The nesting isn&rsquo;t stored structurally anywhere — <code>rules/&lt;tool&gt;.json</code> is a
+flat dict keyed by full path — it&rsquo;s reconstructed at print time two ways at once: sorting paths
+alphabetically naturally clusters every node under its parent already, since a path is literally
+<code>"&lt;parent&gt; &lt;child&gt;"</code> and a child&rsquo;s string always sorts immediately after its parent and before the
+parent&rsquo;s next sibling; and only the <em>trailing</em> segment of each path is printed as the label; with
+indentation carrying the depth (<code>path.count(" ")</code>), the result reads as an actual tree (<code>network</code>
+then indented <code>create</code>/<code>rm</code>/<code>ls</code>) instead of the full path repeated at every line (<code>network</code>,
+<code>network create</code>, <code>network rm</code>, &hellip;), which is what an early version did and what prompted this —
+it read as a flat, oddly-doubled list rather than a hierarchy, especially once a rationale routinely
+ran past one line and, without a deliberate hanging indent (<code>_wrap</code>, using <code>textwrap.fill</code> with
+<code>subsequent_indent</code>), wrapped back to column 0 instead of staying aligned under its entry.</p>
+<p><strong>Nothing downstream trusts an unreviewed entry</strong> — <code>render</code> and <code>apply</code>
+silently exclude any tool that hasn&rsquo;t been through this. This is a per-<em>tool</em> gate, not per-node:
+there&rsquo;s no mechanism to individually override a single node&rsquo;s (or flag&rsquo;s) classification without
+re-running the LLM step (<code>reconfirm</code> for <code>needs_review</code> specifically, a normal <code>classify --force</code>
+for anything else) — which is why unresolved <code>needs_review</code> entries stay excluded even after their
+tool is marked reviewed.</p>
+<p><code>--only=dangerous,needs_review</code> (comma-separated classification tiers) narrows the per-node dump to
+just those tiers — useful for triaging a large tree without reading past every <code>read_only</code> entry
+first. Command/classification names print in color (tier-coded: green/yellow/red for
+read_only/write/dangerous, magenta for needs_review, gray for invalid) when stdout is a real
+terminal and <code>NO_COLOR</code> isn&rsquo;t set; rationale text is deliberately left in the default color so it
+doesn&rsquo;t compete for attention, and every line wraps to the terminal width with a hanging indent
+instead of running to the edge and wrapping back to column 0.</p>
 <h3 id="render-apply-where-the-classified-data-goes"><code>render</code> / <code>apply</code> — where the classified data goes<a class="headerlink" href="#render-apply-where-the-classified-data-goes" title="Permanent link">&para;</a></h3>
 <p><code>render --target=claude|copilot</code> is pure, deterministic, output-only: turns the reviewed subset of
-<code>rules.json</code> into Claude <code>Bash(...)</code> glob-prefix rules or Copilot <code>chat.tools.terminal.autoApprove</code>
-regex rules. It never writes anywhere by itself.</p>
+<code>rules/*.json</code> into Claude <code>Bash(...)</code> glob-prefix rules or Copilot <code>chat.tools.terminal.autoApprove</code>
+regex rules — one rule per node, using its full path (<code>Bash(docker network rm:*)</code> for a depth-2
+node, same as <code>Bash(git status:*)</code> for a depth-1 one — the pattern-building code doesn&rsquo;t need to
+know how deep a node is, a path is just a path). Per-flag ratings aren&rsquo;t rendered here at all — see
+the &ldquo;important limitation&rdquo; note above. It never writes anywhere by itself.</p>
+<p>One deliberate exception to &ldquo;one rule per node&rdquo;: a <code>read_only</code> node that has children of its own
+(checked against <code>help-cache/&lt;tool&gt;.json</code>&rsquo;s <code>children</code> list, not <code>rules/</code>, since that&rsquo;s where tree
+structure actually lives) is skipped entirely. Its read_only verdict describes the <em>bare</em>
+invocation (<code>docker network</code> with no further args just lists/describes, like any other read_only
+command), but real usage always goes through a child (<code>docker network rm</code>, <code>docker network
+create</code>), each already getting its own, independently-correct rule. Rendering a rule for the bare
+parent too would be pure noise, not a safety gap: Claude Code&rsquo;s permission precedence is
+deny &gt; ask &gt; allow with <strong>no specificity tiebreak</strong> — confirmed against the actual docs
+(<a href="https://code.claude.com/docs/en/permissions.md">https://code.claude.com/docs/en/permissions.md</a>), not assumed — so a stricter rule for a child
+always wins over a looser <code>allow</code> for its parent regardless of whether the parent&rsquo;s rule exists at
+all. The one behavior change from omitting it: a bare invocation with no subcommand at all (rare)
+falls through to Claude&rsquo;s own default instead of being pre-approved — typically still a prompt, not
+silent approval and not silent denial.</p>
+<p>A second, unrelated exception: <strong><code>cloud_cli</code> tools never get an <code>allow</code> rule, full stop</strong>, whatever
+their own classification says. This one <em>is</em> a real safety gap that was caught before it ever
+reached <code>apply</code>, not a theoretical one — worth walking through, because it&rsquo;s the flip side of the
+container-omission logic above and easy to miss. <code>gcloud</code>/<code>aws</code> never recurse (that&rsquo;s the entire
+point of <code>cloud_cli</code>), so every one of their nodes is a bare top-level service-group command,
+classified on what running <em>that</em> with no arguments does — almost always &ldquo;shows help/lists things,&rdquo;
+hence <code>read_only</code>. But unlike a recursed tool, there&rsquo;s no child node to correct for that: <code>gcloud
+storage</code>, <code>sql</code>, <code>secrets</code>, and <code>run</code> all came back <code>read_only</code> this way, and all four have genuinely
+destructive real subcommands (<code>storage rm -r</code>, <code>sql instances delete</code>, <code>secrets versions destroy</code>,
+<code>run services delete</code>) with no narrower rule anywhere to catch them — a <code>Bash(gcloud storage:*)</code>
+allow rule is a plain prefix match, so it would have covered the destructive form too. Caught by
+reading the <code>render --dry-run</code>-equivalent diff before running a real <code>apply</code>, not by reasoning about
+it in the abstract. Fixed at <code>_compute_claude_rules</code>, not in the rubric: any node belonging to a
+tool with <code>cloud_cli = true</code> in <code>tools.toml</code> is capped at <code>ask</code> regardless of what its own
+classification says — the one place a node&rsquo;s classification is capped rather than trusted outright.</p>
 <p><code>apply</code> (Claude only, so far) is what actually makes the rules take effect: it merges the
 <code>allow</code>/<code>ask</code> output into <strong><code>~/.claude/settings.json</code></strong>, the global per-user config that applies to
 every project on this machine. Two things make this safe to run repeatedly without either
@@ -2377,24 +2781,41 @@ freshly-set-up install) — this was a preference call, not a fix.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># after installing a new tool, or periodically (e.g. after apt upgrade):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>allowlist.extract
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>allowlist.classify
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>allowlist.review<span class="w">      </span><span class="c1"># look at what&#39;s new/changed, approve it</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>inv<span class="w"> </span>allowlist.apply<span class="w">       </span><span class="c1"># merge into ~/.claude/settings.json</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>inv<span class="w"> </span>allowlist.status<span class="w">                        </span><span class="c1"># what&#39;s tracked, stale, or still unreviewed</span>
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>inv<span class="w"> </span>allowlist.render<span class="w"> </span>--target<span class="o">=</span>copilot<span class="w">       </span><span class="c1"># Copilot&#39;s format instead — still print-only, no apply yet</span>
-</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>python3<span class="w"> </span>cli-allowlist/check_man_deps.py<span class="w">     </span><span class="c1"># re-check for new man-page dependencies</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>allowlist.reconfirm<span class="w">   </span><span class="c1"># resolve needs_review items with their specific flagged word in context</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a>inv<span class="w"> </span>allowlist.review<span class="w">      </span><span class="c1"># look at what&#39;s new/changed, approve it</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>inv<span class="w"> </span>allowlist.apply<span class="w">       </span><span class="c1"># merge into ~/.claude/settings.json</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>inv<span class="w"> </span>allowlist.status<span class="w">                        </span><span class="c1"># what&#39;s tracked, stale, or still unreviewed</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>inv<span class="w"> </span>allowlist.render<span class="w"> </span>--target<span class="o">=</span>copilot<span class="w">       </span><span class="c1"># Copilot&#39;s format instead — still print-only, no apply yet</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>python3<span class="w"> </span>cli-allowlist/check_man_deps.py<span class="w">     </span><span class="c1"># re-check for new man-page dependencies</span>
 </span></code></pre></div>
 <h2 id="known-gaps-deliberately-not-built">Known gaps / deliberately not built<a class="headerlink" href="#known-gaps-deliberately-not-built" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong><code>apply</code> only targets Claude&rsquo;s <code>settings.json</code>.</strong> Copilot&rsquo;s <code>chat.tools.terminal.autoApprove</code>
-  still needs manual copy-paste from <code>render --target=copilot</code>.</li>
+  still needs manual copy-paste from <code>render --target=copilot</code>. The read_only-parent-with-children
+  omission (see <code>render</code>/<code>apply</code> above) is Claude-specific for the same reason — it leans on a
+  verified deny &gt; ask &gt; allow, no-specificity-tiebreak precedence that hasn&rsquo;t been confirmed for
+  Copilot&rsquo;s own rule resolution, so <code>_render_copilot</code> doesn&rsquo;t apply the same skip.</li>
 <li><strong>No sandboxing integration</strong> (<code>/sandbox</code>, OS-level filesystem/network isolation) — a stronger,
   orthogonal control considered out of scope for this pass.</li>
 <li><strong>No PreToolUse hook</strong> — see the <code>render</code>/<code>apply</code> section above for why this was a deliberate
   rejection, not a TODO.</li>
-<li><strong>No subcommand-level review override</strong> — <code>needs_review</code> entries (currently just <code>nvm run</code> /
-  <code>nvm exec</code>) stay excluded from both <code>allow</code> and <code>ask</code> until the underlying classification changes
-  and gets re-run through the LLM step; there&rsquo;s no way to manually promote one without that.</li>
+<li><strong>No node-level review override beyond <code>needs_review</code>.</strong> <code>reconfirm</code> closes this gap
+  specifically for the verb-backstop&rsquo;s <code>needs_review</code> tier; there&rsquo;s still no way to manually
+  promote/demote an ordinary <code>read_only</code>/<code>write</code>/<code>dangerous</code> verdict without a full
+  <code>classify --force</code> re-run for that tool.</li>
+<li><strong>Per-flag ratings aren&rsquo;t consumed by <code>render</code>/<code>apply</code>.</strong> Deliberate, not an oversight — see the
+  &ldquo;Per-flag ratings&rdquo; section above for why prefix-glob rules structurally can&rsquo;t express
+  &ldquo;allow this subcommand except with <code>--force</code>&rdquo;. The data exists for <code>review</code> and for a future
+  consumer that can actually act on it order-independently.</li>
+<li><strong>Recursion stops at <code>max_depth = 2</code> for every opted-in tool so far</strong>, and cloud-provider CLIs
+  (<code>gcloud</code>, <code>aws</code>) don&rsquo;t recurse at all (<code>cloud_cli = true</code>, hand-curated top-level list instead).
+  Both are a documented scope boundary — deep-diving <code>gcloud</code>&rsquo;s or <code>aws</code>&rsquo;s actual command surface,
+  or going to depth 3 for e.g. <code>kubectl create &lt;kind&gt;</code>, would be a real node/cost/review-burden
+  increase for command shapes that are almost never run unattended by an agent.</li>
+<li><strong>Truncated trees (<code>max_nodes</code> exceeded) are flagged but not resolved automatically.</strong> <code>status</code>
+  and <code>review</code> surface a <code>truncated</code> marker; raising <code>max_nodes</code> for that specific tool in
+  <code>tools.toml</code> and re-extracting is a manual follow-up, not something the pipeline does on its own.</li>
 </ul>
 
 
