@@ -40,13 +40,15 @@ Zensical's file discovery uses plain `walkdir` (confirmed in the Rust source, `C
 inside `docs_dir` gets walked and built as if it were site content, warnings and all.
 
 This bit us directly: `docs/reference/` (gitignored vendor-repo clones and PDFs — research
-material cloned via `git clone --depth 1 <url> reference/repos/<name>`, not site content) used to
-live inside `docs/`. It worked in CI only by accident — gitignored, so absent from a clean
-checkout — but every *local*
-`zensical build`/`serve` walked straight into cloned repos like `gnome-shell` and either produced
-hundreds of broken-link warnings or hung outright. Fixed by moving it to repo-root `reference/`,
-outside `docs_dir` entirely, 2026-08-08. **Takeaway: never put anything under `docs_dir` that
-isn't meant to be a site page, even if it's gitignored.**
+material, not site content) used to live inside `docs/`. It worked in CI only by accident —
+gitignored, so absent from a clean checkout — but every *local* `zensical build`/`serve` walked
+straight into cloned repos like `gnome-shell` and either produced hundreds of broken-link
+warnings or hung outright. Fixed by moving it to repo-root `reference/`, outside `docs_dir`
+entirely, 2026-08-08. **Takeaway: never put anything under `docs_dir` that isn't meant to be a
+site page, even if it's gitignored.** (That material has since moved again, out of this repo
+entirely, to a machine-wide `$RESEARCH_HOME` shared across projects — see
+`reference/research-library-plan.md` — so this repo no longer has a `reference/repos/` at all;
+the `docs_dir`-walking lesson still applies to anything non-content placed under `docs/`.)
 
 ## `plugins:` — a small native allowlist, not the mkdocs plugin ecosystem
 
