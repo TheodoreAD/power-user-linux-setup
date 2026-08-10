@@ -28,6 +28,16 @@ def is_wsl() -> bool:
         return False
 
 
+def is_docker_desktop_wsl_integration() -> bool:
+    """True if the `docker` CLI is present but there's no local `dockerd` — Docker Desktop's WSL
+    integration, not a native install. In that case the daemon isn't running inside this distro at
+    all (it's Windows-side), so docker.py's daemon.json/systemctl calls have nothing to act on —
+    manage Docker Desktop's own settings from Windows instead. Previously duplicated independently
+    in tasks/docker.py and tasks/wsl.py; factored out here so the two checks can't drift.
+    """
+    return command_exists("docker") and not command_exists("dockerd")
+
+
 def is_devcontainer() -> bool:
     """True if running inside a dev container / Codespace — used by tasks/proxy.py to skip
     systemd-`--user`-daemon assumptions and prefer the Windows/host-proxy discovery path over
