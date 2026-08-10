@@ -54,6 +54,22 @@ def confirm(question: str, default: bool = True) -> bool:
         print("Please answer y or n.")
 
 
+def prompt_text(question: str, default: str | None = None) -> str | None:
+    """Prompt for a line of free text on stdin. Returns `default` unmodified (may be None) if
+    stdin isn't a real terminal — same non-interactive gate as confirm(); call interactive()
+    yourself first if the caller needs to skip prompting entirely. Re-prompts on an empty answer
+    unless a default is given, so callers never get "" back for a required field.
+    """
+    if not sys.stdin.isatty():
+        return default
+    suffix = f" [{default}] " if default else " "
+    while True:
+        answer = input(question + suffix).strip()
+        if answer:
+            return answer
+        if default is not None:
+            return default
+        print("This can't be empty.")
 
 
 def _marker(name: str, open_: bool) -> str:
@@ -103,7 +119,8 @@ def load_identity() -> dict:
     if not _IDENTITY_PATH.exists():
         raise FileNotFoundError(
             f"Identity file not found: {_IDENTITY_PATH}\n"
-            f"Copy config/identity.toml.example to {_IDENTITY_PATH} and fill in your details."
+            "Run `inv identity.init` (interactive wizard) or copy config/identity.toml.example "
+            f"to {_IDENTITY_PATH} and fill in your details by hand."
         )
     with open(_IDENTITY_PATH, "rb") as f:
         return tomllib.load(f)

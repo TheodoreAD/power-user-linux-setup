@@ -100,8 +100,9 @@ def print_next_steps(extra_note: str | None = None) -> None:
 
     if not _IDENTITY_PATH.exists():
         ui.block(
-            f"1. cp config/identity.toml.example {_IDENTITY_PATH}",
-            "   — edit it with your name/email/GitHub account details",
+            "1. inv identity.init",
+            "   — interactive wizard; offers a quick single-identity setup or, for multiple",
+            "   directories/accounts, points you at a hand-edited config/identity.toml.example",
             "2. Then re-run this command to continue.",
             label="next steps",
         )

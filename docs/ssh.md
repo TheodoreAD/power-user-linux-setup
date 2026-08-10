@@ -4,13 +4,27 @@
 
 SSH keys and config are driven by `~/.config/pulse/identity.toml` — a personal file that is never committed to the repo.
 
-Copy the example and fill in your details:
+**Quick start** — one email, one key per host you pick (GitHub/GitLab):
+
+```shell
+inv identity.init
+```
+
+Interactive wizard; walks through name/email and which hosts to key for, and writes
+`identity.toml` for you. Pick "advanced" inside it if you need multiple accounts/hosts/aliases
+from the start (see [git.md](git.md) for what that looks like).
+
+**Advanced / manual** — for multiple accounts, aliases, or non-git server hosts, copy the example
+and hand-edit it:
 
 ```shell
 mkdir -p ~/.config/pulse
 cp config/identity.toml.example ~/.config/pulse/identity.toml
 # edit ~/.config/pulse/identity.toml
 ```
+
+Both paths produce the same `identity.toml` schema, so you can always add more `[[ssh_hosts]]`
+entries by hand later — nothing about the simple path locks you out of the advanced features.
 
 Then run the tasks in order:
 
