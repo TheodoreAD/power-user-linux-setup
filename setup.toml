@@ -182,10 +182,20 @@
 # Default Python for all uv tool installs — uv downloads it if not already managed.
 # Read by bootstrap.sh via grep; keep the value on the same line as the key.
 # Override per-package with a python field in the [packages.X] section.
-uv_python_default = "3.11"
+# Change with `inv python.set-default <version>` rather than hand-editing — it also keeps
+# uv_python_extra and [packages.uv-env]'s UV_PYTHON value in sync. See docs/python.md.
+uv_python_default = "3.14"
 # Additional Python versions for uv to install and manage (e.g. for project virtualenvs).
 # Read by bootstrap.sh; each version is installed but not set as default.
-uv_python_extra   = ["3.12", "3.13", "3.14"]
+uv_python_extra   = ["3.11", "3.12", "3.13"]
+# Whether bootstrap.sh also installs unversioned `python`/`python3` for uv_python_default, via
+# uv's `--default` flag (https://docs.astral.sh/uv/concepts/python-versions/). Convenient — bare
+# `python` is what venvs and Windows both use — but `~/.local/bin` precedes `/usr/bin` on PATH, so
+# this also shadows apt's /usr/bin/python3 for anything that resolves `python3` via PATH rather
+# than an absolute shebang (most system tooling uses absolute `#!/usr/bin/python3` and is
+# unaffected either way — see docs/python.md). Set to false to leave python/python3 fully
+# system/apt-owned.
+uv_python_set_default = true
 
 # ---------------------------------------------------------------------------
 # Font configuration — read by inv fonts.install and inv fonts.configure.
@@ -1273,6 +1283,12 @@ export GOPATH="${HOME}/go"
 export PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
 """
 
+[packages.python-keyring]
+description = "Python keyring library — CLI and API for storing/retrieving secrets in the OS-native credential store (Secret Service/GNOME Keyring, macOS Keychain, ...)"
+method      = "uv-tool"
+package     = "keyring"
+check_cmd   = "keyring"
+
 [packages.nox]
 description = "Python session-based test automation, similar to tox"
 method      = "uv-tool"
@@ -1322,7 +1338,7 @@ package     = "zensical"
 [packages.uv-env]
 description = "UV_PYTHON shell default and completions — keep UV_PYTHON in sync with settings.uv_python_default"
 method      = "zsh"
-zshenv      = 'export UV_PYTHON="3.11"'
+zshenv      = 'export UV_PYTHON="3.14"'
 zshrc       = """
 eval "$(uv generate-shell-completion zsh)"
 eval "$(uvx --generate-shell-completion zsh)"
