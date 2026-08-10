@@ -21,23 +21,56 @@ To change which versions are installed, edit `setup.toml`:
 
 ```toml
 [settings]
-uv_python_default = "3.11"
-uv_python_extra   = ["3.12", "3.13", "3.14"]
+uv_python_default     = "3.14"
+uv_python_extra       = ["3.11", "3.12", "3.13"]
+uv_python_set_default = true
 ```
+
+Prefer `inv python.set-default <version>` (below) over hand-editing `uv_python_default` — it
+also keeps `uv_python_extra` and `[packages.uv-env]`'s `UV_PYTHON` value in sync, both of which
+otherwise have to be updated by hand alongside it.
 
 ## Python version shims
 
-After bootstrap, uv creates versioned shims in `~/.local/bin`:
+After bootstrap, uv creates versioned shims in `~/.local/bin` for every installed version:
 
 ```
 ~/.local/bin/python3.11  ->  ~/.local/share/uv/python/cpython-3.11-linux-x86_64-gnu/bin/python3.11
-~/.local/bin/python3.12  ->  ...
+~/.local/bin/python3.14  ->  ...
 ```
 
 These are available in any shell where `~/.local/bin` precedes `/usr/bin` on `PATH`.
-The unversioned `python` and `python3` remain as the OS-level system Python — this
-keeps system tools happy while all dev work uses explicit versioned commands or uv's
-own resolution.
+
+`bootstrap.sh` also passes `--default` to `uv python install` for `uv_python_default` (gated by
+the `uv_python_set_default` setting, on by default), which makes uv additionally install
+*unversioned* `~/.local/bin/python` and `~/.local/bin/python3`, pointing at that same version.
+This matters because plain `python` doesn't exist anywhere else on a stock Ubuntu box — apt never
+ships an unversioned `python`, and until this was added neither did uv — so anything assuming bare
+`python` works (extremely common: it's the only name that exists on Windows, and it's what every
+`venv`/`uv venv` creates internally — confirmed via `uv venv`: its `bin/python` is the real
+symlink target, `bin/python3`/`bin/python3.X` just point at it) would fail outside an activated
+venv.
+
+The trade-off: since `~/.local/bin` precedes `/usr/bin` on `PATH`, the unversioned `python3` shim
+also shadows apt's own `/usr/bin/python3` — but only for things that resolve `python3` *via*
+`PATH` (an interactive shell, or a script shebanged `#!/usr/bin/env python3`). It does **not**
+touch `/usr/bin/python3` itself, and has no effect on the majority of system tooling
+(`apt-add-repository`, `unattended-upgrade`, and ~25 others checked on a real Ubuntu 24.04 box),
+which hardcodes an absolute `#!/usr/bin/python3` shebang and bypasses `PATH` entirely regardless
+of this setting. Set `uv_python_set_default = false` in `setup.toml` to opt back into a fully
+system/apt-owned `python`/`python3` and skip the `--default` flag.
+
+## Changing the default Python version
+
+```shell
+inv python.set-default 3.14
+```
+
+Updates `uv_python_default` in `setup.toml`, moves the old default into `uv_python_extra` (so it
+stays installed rather than being dropped), keeps `[packages.uv-env]`'s `UV_PYTHON` value in
+sync, installs the new version if it isn't already managed, and re-points the unversioned
+`python`/`python3` shims at it (skipped if `uv_python_set_default` is `false`). Run `inv
+zsh.configure` afterward and open a new terminal to pick up the new `UV_PYTHON` shell default.
 
 ## Shell default
 
@@ -54,7 +87,7 @@ under `method = "uv-tool"`. Install or upgrade all of them with:
 inv python.tools
 ```
 
-Current tools: `nox`, `mkdocs` (with `mkdocs-material`), `twine`, `glances`, `nuitka`, `zensical`.
+Current tools: `nox`, `mkdocs` (with `mkdocs-material`), `twine`, `glances`, `nuitka`, `zensical`, `keyring`.
 (`invoke` itself is installed by `bootstrap.sh`, not this task.)
 
 `mkdocs`/`mkdocs-material` is no longer what builds *this* repo's docs site (see
@@ -101,13 +134,15 @@ each other or with the OS:
 
 ```mermaid
 graph TD
-    apt["apt-installed /usr/bin/python3<br/>OS package manager owns it, untouched by uv"]
+    apt["apt-installed /usr/bin/python3<br/>OS package manager owns the file — never overwritten"]
 
     subgraph interpreters["uv python install (shared interpreter builds)"]
         direction TB
         cpython["~/.local/share/uv/python/cpython-3.11 / 3.12 / 3.13 / 3.14"]
         shims["~/.local/bin/python3.11, python3.12, ...<br/>versioned shims"]
+        unversioned["~/.local/bin/python, python3<br/>unversioned — from --default, uv_python_default only"]
         cpython --> shims
+        cpython --> unversioned
     end
 
     subgraph tools["uv tool install TOOL (system-wide tools)"]
@@ -126,8 +161,9 @@ graph TD
     cpython -. interpreter .-> venv
 
     shims --> path(("$PATH<br/>~/.local/bin before /usr/bin"))
+    unversioned --> path
     toolbin --> path
-    apt -. plain python / python3, never shadowed .-> path
+    apt -. "absolute #!/usr/bin/python3 shebangs only —<br/>bypass PATH, reach this directly" .-> path
 ```
 
 - **Interpreters** (`uv python install`) are just Python builds — no packages of their own beyond
@@ -139,8 +175,12 @@ graph TD
   symlink to `~/.local/share/uv/tools/zensical/bin/zensical` rather than a real binary.
 - **Project venvs** (`uv venv`, `uv sync`, `uv run`) are scoped to a single project directory and
   are never put on `PATH` directly — you either activate one or prefix commands with `uv run`.
-- The **system Python** (`/usr/bin/python3`) is never touched or shadowed by any of the above;
-  `~/.local/bin` only ever adds versioned shims and tool entrypoints ahead of it on `PATH`.
+- The **system Python** (`/usr/bin/python3`) file is never overwritten by any of the above. But
+  once `uv_python_set_default` installs the unversioned `python`/`python3` shims, they sit ahead
+  of it on `PATH` — so anything resolving `python3` *via* `PATH` (an interactive shell, or a
+  `#!/usr/bin/env python3` shebang) reaches uv's build instead. Absolute-shebang system scripts
+  (the majority) bypass `PATH` entirely and always reach `/usr/bin/python3` directly, regardless
+  of this setting.
 
 ## Private PyPI
 
@@ -182,5 +222,5 @@ python -m nuitka --module mypackage --include-package=mypackage
 ```
 
 !!! NOTE
-    Nuitka uses the Python it was invoked with. Run it via `python3.11 -m nuitka` or
+    Nuitka uses the Python it was invoked with. Run it via `python3.14 -m nuitka` or
     activate the project's venv first to control which interpreter is used.
