@@ -119,3 +119,8 @@ already cached) each time the container restarts, e.g. from `postCreateCommand`.
 - **`Proxy-Authenticate` header shape** — the parser handles both a repeated header per scheme and
   a single comma-joined header (RFC 7235 permits either), but which form any given real corporate
   proxy actually sends hasn't been observed firsthand.
+
+## See also
+
+- [certs.md](certs.md) — the separate concern of trusting a TLS-inspection root CA. Proxy auth
+  (this page) and CA trust are unrelated; a network can have either, both, or neither.

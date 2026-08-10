@@ -125,6 +125,7 @@ nav:
       - ssh.md
       - networking.md
       - corporate-proxy.md
+      - certs.md
   - AI:
       - ai.md
       - claude-code.md

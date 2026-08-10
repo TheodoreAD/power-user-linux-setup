@@ -4,11 +4,13 @@ Most of `tasks/*.py` isn't realistically unit-testable: it shells out to `apt`/`
 `gsettings` and mutates a real system, which is why this repo has otherwise relied on
 `PULSE_DRY_RUN=1` (see `docs/index.md`) plus manual runs instead of a test suite.
 
-Two exceptions, both pure logic with no direct system calls: `tasks/phases.py` (pure
-orchestration — calls whatever task functions it's given and branches on their captured output)
-and `tasks/proxy.py`'s parsing helpers (`_parse_proxy_authenticate`, `_parse_env_proxy`,
+Three exceptions, all pure logic with no direct system calls: `tasks/phases.py` (pure
+orchestration — calls whatever task functions it's given and branches on their captured output),
+`tasks/proxy.py`'s parsing helpers (`_parse_proxy_authenticate`, `_parse_env_proxy`,
 `_parse_etc_environment`, `_split_host_port` — string/env parsing with no subprocess/filesystem
-calls of their own, unlike the rest of that module).
+calls of their own, unlike the rest of that module), and `tasks/certs.py`'s `_split_pem_certs`
+(regex-splits a PEM blob into individual cert blocks, no subprocess/filesystem calls — everything
+else in that module shells out to openssl/keytool or touches the trust store).
 
 Run with:
 

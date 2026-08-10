@@ -151,6 +151,16 @@ def load_proxy_override() -> dict:
         return tomllib.load(f).get("proxy", {})
 
 
+def load_certs_override() -> dict:
+    """Optional [certs] table from ~/.config/pulse/identity.toml (corporate CA bundle path(s)).
+    Same tolerant-of-missing-file, not-cached rationale as load_proxy_override() — see there.
+    """
+    if not _IDENTITY_PATH.exists():
+        return {}
+    with open(_IDENTITY_PATH, "rb") as f:
+        return tomllib.load(f).get("certs", {})
+
+
 def _excluded_tags() -> set[str]:
     val = os.environ.get("PULSE_EXCLUDE_TAGS", "")
     if not val:
