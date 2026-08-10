@@ -177,6 +177,7 @@ GNOME extensions require manual installation — see [gnome_extensions.md](gnome
 ### Phase 5 — Authentication *(interactive, last)*
 
 ```shell
+inv identity.init                # wizard: writes ~/.config/pulse/identity.toml (simple or advanced)
 inv git.configure git.settings   # per-directory git identity + global settings from identity.toml
 inv ssh.keys                     # one ed25519 key per unique email — prompts for a passphrase each
 inv ssh.configure                # write ~/.ssh/config
@@ -184,8 +185,10 @@ inv ssh.add                      # load this node's keys into ssh-agent
 gh auth login                    # GitHub CLI — opens browser, not automatable
 ```
 
-All of the above (except `gh auth login`) need `~/.config/pulse/identity.toml` filled in first — see
-[git.md](git.md) and [ssh.md](ssh.md). `next_steps.print_next_steps()` (above) guides you through
-this exact sequence, one command at a time, once identity.toml exists.
+Everything after `inv identity.init` (except `gh auth login`) needs `~/.config/pulse/identity.toml`
+filled in first — either via the wizard above (simple: one identity, one `~/projects/<dir>/`) or by
+hand for multiple directories/accounts, see [git.md](git.md) and [ssh.md](ssh.md).
+`next_steps.print_next_steps()` (above) guides you through this exact sequence, one command at a
+time, once identity.toml exists.
 
 For gcloud: see [gcloud.md](gcloud.md).

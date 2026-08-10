@@ -4,13 +4,26 @@
 
 Git identity is driven by `~/.config/pulse/identity.toml` — a personal file that is never committed to the repo.
 
-Copy the example and fill in your details:
+**Quick start** — one name/email, one `~/projects/<dir>/` directory:
+
+```shell
+inv identity.init
+```
+
+Interactive wizard; answer a few prompts and it writes `identity.toml` for you. Choose the
+"advanced" option inside it if you want multiple directories/accounts from the start.
+
+**Advanced / manual** — for multiple directories or accounts, copy the example and hand-edit it:
 
 ```shell
 mkdir -p ~/.config/pulse
 cp config/identity.toml.example ~/.config/pulse/identity.toml
 # edit ~/.config/pulse/identity.toml
 ```
+
+Either way produces the same file format — `inv identity.init`'s simple mode just writes the
+minimal instance of it (one `[[git_profiles]]` entry), and you can always add more
+`[[git_profiles]]`/`[[ssh_hosts]]` entries by hand later if you outgrow a single identity.
 
 Then apply:
 
