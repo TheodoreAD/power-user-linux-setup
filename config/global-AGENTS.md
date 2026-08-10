@@ -65,6 +65,15 @@ independent ones can run in parallel in the same turn anyway. A multi-step pipel
 yourself reaching for often is a signal it may be worth its own explicit allowlist entry
 (`inv allowlist.review`) rather than eating the prompt indefinitely.
 
+**"Run in parallel" means separate tool-call blocks, not a chained command string.** The harness's
+own guidance to maximize parallel tool calls is about issuing multiple independent Bash (or other
+tool) invocations in the same response — it is not license to glue them into one command with `;`
+or `&&`. Conflating the two is the most common way this rule actually gets broken in practice: two
+throwaway read-only lookups (e.g. `rg foo; fd bar`) feel like a single "quick check" and get typed
+as one command out of habit, even though each half is independently allowlisted and would incur
+zero extra cost as two separate calls. If a second command occurs to you while typing the first,
+that's the signal to stop and issue it as its own call, not to append it.
+
 ## Preferred search tools
 
 When shelling out via Bash — not the dedicated Grep/Glob tools, which are already preferred by
