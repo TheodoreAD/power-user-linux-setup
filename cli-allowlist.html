@@ -2317,7 +2317,7 @@
   
 
 
-<h1 id="cli-permission-allowlist">CLI permission allowlist<a class="headerlink" href="#cli-permission-allowlist" title="Permanent link">&para;</a></h1>
+<h1 id="cli-permission-allowlist">CLI permission allowlist</h1>
 <p>Claude Code (and similar agent harnesses) prompt for approval on most Bash commands. Most of what
 gets run in a typical session is safe — inspecting, listing, describing — and approving the same
 <code>kubectl get</code>/<code>git log</code>/<code>docker ps</code> shape of command over and over is pure friction. The fix isn&rsquo;t
@@ -2327,7 +2327,7 @@ it with an LLM instead of guessing, and keeps a human in the loop before anythin
 <p>That pipeline lives in <code>cli-allowlist/</code> (tracked in git — this is original derived project config,
 not vendor material) and <code>tasks/allowlist.py</code> (<code>inv allowlist.*</code>). This page is the durable
 explanation of <em>why</em> it&rsquo;s built the way it is; the code docstrings cover the <em>how</em>.</p>
-<h2 id="architecture-extract-classify-review-apply">Architecture: extract → classify → review → apply<a class="headerlink" href="#architecture-extract-classify-review-apply" title="Permanent link">&para;</a></h2>
+<h2 id="architecture-extract-classify-review-apply">Architecture: extract → classify → review → apply</h2>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv allowlist.extract   deterministic, no LLM      captures --help text, recursing into the
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>                                                    subcommand tree where a tool opts in
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv allowlist.classify  LLM (headless claude -p)    read_only / write / dangerous per node, plus
@@ -2341,7 +2341,7 @@ point. <code>extract</code> is skipped per-tool when <code>--version</code> outp
 hash — see below); <code>apply</code> is a no-op when the computed rule set already matches what&rsquo;s live. A
 routine re-run after <code>apt upgrade</code> costs close to nothing and makes zero LLM calls unless a tool&rsquo;s
 actual command surface changed.</p>
-<h3 id="toolstoml-the-registry"><code>tools.toml</code> — the registry<a class="headerlink" href="#toolstoml-the-registry" title="Permanent link">&para;</a></h3>
+<h3 id="toolstoml-the-registry"><code>tools.toml</code> — the registry</h3>
 <p><code>cli-allowlist/tools.toml</code> lists every tool <code>extract</code> probes, one <code>[tool]</code> section per binary.
 Most CLIs are <code>&lt;tool&gt; &lt;subcommand&gt; --help</code> cobra/click/argparse programs and need no special
 handling, but the registry has escape hatches for the ones that aren&rsquo;t, discovered by testing, not
@@ -2388,7 +2388,7 @@ PULSE explicitly installs.</p>
   eventually close — recursing a provider CLI&rsquo;s full surface isn&rsquo;t worth the node/LLM-call budget
   for commands that will almost never be run.</li>
 </ul>
-<h3 id="recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass">Recursive tree extraction — <code>_build_tree</code>, and what broke on the first pass<a class="headerlink" href="#recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass" title="Permanent link">&para;</a></h3>
+<h3 id="recursive-tree-extraction-_build_tree-and-what-broke-on-the-first-pass">Recursive tree extraction — <code>_build_tree</code>, and what broke on the first pass</h3>
 <p>Depth isn&rsquo;t just &ldquo;run <code>_discover_subcommands</code> again on the child&rsquo;s help text&rdquo; — every one of the
 following was found by actually running it against real tools, not by inspecting one tool&rsquo;s
 <code>--help</code> and assuming the shape generalizes:</p>
@@ -2460,7 +2460,7 @@ following was found by actually running it against real tools, not by inspecting
    only branches on <code>read_only</code>/<code>write</code>/<code>dangerous</code>) and shown in their own section in <code>review</code>,
    separate from the normal per-node dump, so they read as &ldquo;not a command, ignore it&rdquo; rather than a
    4<sup>th</sup> risk tier.</p>
-<h3 id="per-flag-ratings-same-call-no-extra-invocations">Per-flag ratings — same call, no extra invocations<a class="headerlink" href="#per-flag-ratings-same-call-no-extra-invocations" title="Permanent link">&para;</a></h3>
+<h3 id="per-flag-ratings-same-call-no-extra-invocations">Per-flag ratings — same call, no extra invocations</h3>
 <p>Flags don&rsquo;t get their own <code>--help</code>; they&rsquo;re already sitting in the help text <code>extract</code> captured
 for a node. <code>_parse_flags</code> pulls <code>-f, --force  &lt;description&gt;</code>-style lines out of that text
 (best-effort, not load-bearing the way subcommand discovery is — a missed flag is one fewer
@@ -2502,7 +2502,7 @@ right now — exactly what motivated building it — and a foundation for a futu
 PreToolUse hook, which unlike a prefix glob <em>can</em> parse flags order-independently — deliberately
 not built yet, see the <code>render</code>/<code>apply</code> section below) rather than something <code>render</code> acts on
 today.</p>
-<h3 id="deterministic-extraction-has-more-sharp-edges-than-it-looks-like">Deterministic extraction has more sharp edges than it looks like<a class="headerlink" href="#deterministic-extraction-has-more-sharp-edges-than-it-looks-like" title="Permanent link">&para;</a></h3>
+<h3 id="deterministic-extraction-has-more-sharp-edges-than-it-looks-like">Deterministic extraction has more sharp edges than it looks like</h3>
 <p>Two real, empirically-confirmed problems, not hypothetical ones:</p>
 <ol>
 <li><strong>A tool&rsquo;s <code>--help</code> can depend on a separately-installed package.</strong> <code>git status --help</code>
@@ -2525,7 +2525,7 @@ today.</p>
    — the actual defense here isn&rsquo;t &ldquo;nothing tries to page or open a browser,&rdquo; it&rsquo;s that the
    captured text can&rsquo;t depend on this machine&rsquo;s interactive shell configuration.</li>
 </ol>
-<h3 id="classification-via-headless-claude">Classification via headless Claude<a class="headerlink" href="#classification-via-headless-claude" title="Permanent link">&para;</a></h3>
+<h3 id="classification-via-headless-claude">Classification via headless Claude</h3>
 <p><code>classify</code> shells out to the <code>claude</code> CLI already installed on this machine (<code>-p</code>/<code>--print</code>,
 <code>--model haiku</code>, <code>--output-format json</code>, <code>--json-schema</code> for enforced structure) rather than
 standing up separate Anthropic API billing. This was the answer to &ldquo;how do you automate the LLM
@@ -2589,7 +2589,7 @@ few nodes get upgraded to real LLM output on each <code>classify</code> run at n
 already fresh, until nothing <code>community</code>-sourced is left. As of this writing, all six tools have
 been fully swept — <code>source: "community"</code> shouldn&rsquo;t appear anywhere in <code>cli-allowlist/rules/</code>
 anymore, though the sweep logic stays in place in case a future community-seed addition happens.</p>
-<h3 id="rules-storage-one-file-per-tool-not-one-monolithic-rulesjson">Rules storage — one file per tool, not one monolithic <code>rules.json</code><a class="headerlink" href="#rules-storage-one-file-per-tool-not-one-monolithic-rulesjson" title="Permanent link">&para;</a></h3>
+<h3 id="rules-storage-one-file-per-tool-not-one-monolithic-rulesjson">Rules storage — one file per tool, not one monolithic <code>rules.json</code></h3>
 <p><code>cli-allowlist/rules/&lt;tool&gt;.json</code>, one file per tool (mirroring <code>help-cache/&lt;tool&gt;.json</code>), each
 holding a path-keyed <code>nodes</code> map — replaced a single <code>rules.json</code> once trees got deep enough that
 one tool&rsquo;s reclassification would otherwise rewrite (and diff-noise) every other tool&rsquo;s data in
@@ -2597,7 +2597,7 @@ the same file on every run. Each node carries its own <code>content_hash</code> 
 whole tool): <code>classify</code> diffs <em>per node</em>, so a new <code>docker network</code> child doesn&rsquo;t force
 reclassifying <code>docker</code>&rsquo;s other 160 unrelated nodes, and a routine re-run only ever pays for what
 actually changed.</p>
-<h3 id="reconfirm-resolving-needs_review-with-the-specific-concern-in-hand"><code>reconfirm</code> — resolving <code>needs_review</code> with the specific concern in hand<a class="headerlink" href="#reconfirm-resolving-needs_review-with-the-specific-concern-in-hand" title="Permanent link">&para;</a></h3>
+<h3 id="reconfirm-resolving-needs_review-with-the-specific-concern-in-hand"><code>reconfirm</code> — resolving <code>needs_review</code> with the specific concern in hand</h3>
 <p>The verb-token backstop (above) is deliberately dumb — a cheap, deterministic string match with no
 context — which means it both catches real risks the first classify pass might have missed <em>and</em>
 flags real false positives (<code>gh run</code>, <code>--all</code> on a listing command). Leaving those stuck at
@@ -2623,7 +2623,7 @@ real classification it&rsquo;s no longer <code>needs_review</code>, so nothing i
 case the backstop&rsquo;s <code>run</code>/<code>exec</code> tokens were added to catch — correctly came back <code>write</code> with a
 rationale distinguishing &ldquo;the safe sense of execute-code&rdquo; from &ldquo;the shell builtin&rdquo;, not blindly
 cleared because they were being reconfirmed at all.</p>
-<h3 id="three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm">Three real bugs found running this at scale (community resweep + reconfirm)<a class="headerlink" href="#three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm" title="Permanent link">&para;</a></h3>
+<h3 id="three-real-bugs-found-running-this-at-scale-community-resweep-reconfirm">Three real bugs found running this at scale (community resweep + reconfirm)</h3>
 <p>Making <code>classify</code> always resweep <code>source: "community"</code> nodes (below) meant, for the first time,
 sending every depth-1 node of five well-known, actively-maintained CLIs (<code>docker</code>, <code>gh</code>, <code>kubectl</code>,
 <code>helm</code>, <code>terraform</code>) through this pipeline in one push. That surfaced three real bugs that smaller,
@@ -2667,7 +2667,7 @@ one-tool-at-a-time runs hadn&rsquo;t hit:</p>
 <p>None of these were hypothetical hardening — each was caught by actually running the resweep across
 six tools and checking <code>help-cache</code> node keys against <code>rules</code> node keys for gaps, not by reading
 the code and assuming it was right.</p>
-<h3 id="review-the-human-gate">Review — the human gate<a class="headerlink" href="#review-the-human-gate" title="Permanent link">&para;</a></h3>
+<h3 id="review-the-human-gate">Review — the human gate</h3>
 <p><code>inv allowlist.review</code> shows what&rsquo;s new or changed since the last reviewed snapshot — printed as an
 indented tree (nested subcommands under their parent, candidate flags under their node) rather than
 a flat list, since a 150+ node tool is unreadable any other way — and, on confirmation, marks a
@@ -2695,7 +2695,7 @@ read_only/write/dangerous, magenta for needs_review, gray for invalid) when stdo
 terminal and <code>NO_COLOR</code> isn&rsquo;t set; rationale text is deliberately left in the default color so it
 doesn&rsquo;t compete for attention, and every line wraps to the terminal width with a hanging indent
 instead of running to the edge and wrapping back to column 0.</p>
-<h3 id="render-apply-where-the-classified-data-goes"><code>render</code> / <code>apply</code> — where the classified data goes<a class="headerlink" href="#render-apply-where-the-classified-data-goes" title="Permanent link">&para;</a></h3>
+<h3 id="render-apply-where-the-classified-data-goes"><code>render</code> / <code>apply</code> — where the classified data goes</h3>
 <p><code>render --target=claude|copilot</code> is pure, deterministic, output-only: turns the reviewed subset of
 <code>rules/*.json</code> into Claude <code>Bash(...)</code> glob-prefix rules or Copilot <code>chat.tools.terminal.autoApprove</code>
 regex rules — one rule per node, using its full path (<code>Bash(docker network rm:*)</code> for a depth-2
@@ -2763,21 +2763,21 @@ a declarative <code>ask</code> rule, for a benefit (catching a dangerous command
 it, vs. after) that didn&rsquo;t seem worth the added complexity of a custom interception script. What
 matters is that dangerous-tier commands still surface a real, interactively-approvable prompt
 instead of running silently — plain <code>ask</code> rules already get that.</p>
-<h3 id="end-to-end-confirmed-live">End-to-end confirmed live<a class="headerlink" href="#end-to-end-confirmed-live" title="Permanent link">&para;</a></h3>
+<h3 id="end-to-end-confirmed-live">End-to-end confirmed live</h3>
 <p>This isn&rsquo;t just tested in isolation — after <code>apply</code>, the actual rules were exercised in a live
 Claude Code session: <code>allow</code>-tier commands (<code>git status</code>, <code>cat</code>, <code>jq --version</code>) ran without any
 visible prompt; <code>ask</code>-tier commands (<code>rm --help</code>, <code>git add --help</code>, <code>npm install --help</code> — chosen
 so they&rsquo;re harmless to execute either way) triggered real permission prompts. Confirmed by the
 user watching the session, since a silent auto-approval and an instantly-approved prompt look
 identical from the agent&rsquo;s own side.</p>
-<h2 id="retention-policy-note">Retention policy note<a class="headerlink" href="#retention-policy-note" title="Permanent link">&para;</a></h2>
+<h2 id="retention-policy-note">Retention policy note</h2>
 <p>While reviewing the global <code>~/.claude/settings.json</code> for this work, <code>cleanupPeriodDays</code> (governs
 how long session transcripts, <code>tasks/</code>, <code>shell-snapshots/</code>, and <code>backups/</code> under <code>~/.claude/</code> are
 kept before cleanup) was checked and deliberately left at <strong>365</strong> — the default is 30; other users
 in the wild range from 60 to effectively-unlimited (99999). Not a disk problem at the time this was
 reviewed (~52M total under <code>~/.claude/</code>, oldest transcript only a couple of days old on a
 freshly-set-up install) — this was a preference call, not a fix.</p>
-<h2 id="operating-it">Operating it<a class="headerlink" href="#operating-it" title="Permanent link">&para;</a></h2>
+<h2 id="operating-it">Operating it</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># after installing a new tool, or periodically (e.g. after apt upgrade):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>allowlist.extract
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>allowlist.classify
@@ -2789,7 +2789,7 @@ freshly-set-up install) — this was a preference call, not a fix.</p>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>inv<span class="w"> </span>allowlist.render<span class="w"> </span>--target<span class="o">=</span>copilot<span class="w">       </span><span class="c1"># Copilot&#39;s format instead — still print-only, no apply yet</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>python3<span class="w"> </span>cli-allowlist/check_man_deps.py<span class="w">     </span><span class="c1"># re-check for new man-page dependencies</span>
 </span></code></pre></div>
-<h2 id="known-gaps-deliberately-not-built">Known gaps / deliberately not built<a class="headerlink" href="#known-gaps-deliberately-not-built" title="Permanent link">&para;</a></h2>
+<h2 id="known-gaps-deliberately-not-built">Known gaps / deliberately not built</h2>
 <ul>
 <li><strong><code>apply</code> only targets Claude&rsquo;s <code>settings.json</code>.</strong> Copilot&rsquo;s <code>chat.tools.terminal.autoApprove</code>
   still needs manual copy-paste from <code>render --target=copilot</code>. The read_only-parent-with-children
