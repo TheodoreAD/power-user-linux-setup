@@ -224,20 +224,19 @@ def check(c):
         )
 
     # Docker — native dockerd (systemctl-manageable) vs Docker Desktop's WSL integration (CLI only)
-    if util.command_exists("docker"):
-        if util.command_exists("dockerd"):
-            print("[wsl] docker: native dockerd found ✓ (docker.configure's systemctl calls apply normally)")
-        else:
-            print(
-                "[wsl] docker: `docker` CLI found but no local dockerd — this looks like Docker "
-                "Desktop's WSL integration.  ← docker.configure's `systemctl restart docker` will fail: "
-                "there is no local docker.service to manage.\n"
-                "       Either leave [packages.docker] excluded (workstation tag) and manage Docker "
-                "Desktop settings from Windows, or install docker-ce natively in this distro "
-                "(don't exclude the workstation tag) to use docker.configure as-is."
-            )
-    else:
+    if not util.command_exists("docker"):
         print("[wsl] docker: not installed — nothing to check")
+    elif util.is_docker_desktop_wsl_integration():
+        print(
+            "[wsl] docker: `docker` CLI found but no local dockerd — this looks like Docker "
+            "Desktop's WSL integration.  ← docker.configure's `systemctl restart docker` will fail: "
+            "there is no local docker.service to manage.\n"
+            "       Either leave [packages.docker] excluded (workstation tag) and manage Docker "
+            "Desktop settings from Windows, or install docker-ce natively in this distro "
+            "(don't exclude the workstation tag) to use docker.configure as-is."
+        )
+    else:
+        print("[wsl] docker: native dockerd found ✓ (docker.configure's systemctl calls apply normally)")
 
     # WSLg — gates GUI apps and Wayland clipboard
     if _wslg_available():

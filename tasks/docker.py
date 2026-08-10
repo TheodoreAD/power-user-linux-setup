@@ -49,7 +49,7 @@ def _ensure_running(c) -> None:
 @task
 def configure(c):
     """Merge log limits and DNS into /etc/docker/daemon.json, add user to docker group."""
-    if util.command_exists("docker") and not util.command_exists("dockerd"):
+    if util.is_docker_desktop_wsl_integration():
         print(
             "[docker] `docker` CLI found but no local dockerd — nothing to configure here. "
             "This looks like Docker Desktop's WSL integration: there is no local docker.service, "
