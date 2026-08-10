@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:46:34Z",
+  "extracted_at": "2026-08-09T17:35:25Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "2f473264d2212895",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Extracts archive contents to the filesystem, creating/modifying files in a bounded and typically reversible way; deserves human oversight to approve extraction targets.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:22Z",
+  "truncated": false,
+  "version": "UnZip 6.00 of 20 April 2009, by Debian. Original by Info-ZIP."
+}

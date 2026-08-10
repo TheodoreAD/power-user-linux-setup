@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:43:59Z",
+  "extracted_at": "2026-08-09T17:34:27Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "c02dbbef1441c77e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Arbitrary JavaScript code execution with broad system capabilities (filesystem, network, process spawning) without human review of the specific code being run.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:04Z",
+  "truncated": false,
+  "version": "v24.16.0"
+}

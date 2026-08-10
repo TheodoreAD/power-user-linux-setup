@@ -1,0 +1,354 @@
+{
+  "classified_at": "2026-08-10T15:10:32Z",
+  "extracted_at": "2026-08-10T13:10:38Z",
+  "nodes": {
+    "create": {
+      "classification": "write",
+      "content_hash": "db737d10c408e961",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new chart directory and files locally on the filesystem in a bounded, reversible manner.",
+      "source": "llm"
+    },
+    "diff": {
+      "classification": "invalid",
+      "content_hash": "6d19913ba96e0511",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Provided help text is generic Helm output, not documentation for the diff subcommand; extraction heuristic misfired and captured truncated help output instead of diff-specific documentation.",
+      "source": "llm"
+    },
+    "env": {
+      "classification": "read_only",
+      "content_hash": "4f01d1aa8a050c2e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints environment information used by Helm without modifying any state.",
+      "source": "llm"
+    },
+    "get": {
+      "classification": "read_only",
+      "content_hash": "71c512df47d5008c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves and displays extended information about a release (values, manifest, notes, hooks) without modification.",
+      "source": "llm"
+    },
+    "get all": {
+      "classification": "read_only",
+      "content_hash": "bdbec886b5db75e6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints information about a release; 'all' means display all information (notes, hooks, values, manifest), not destroy anything.",
+      "source": "llm-reconfirmed"
+    },
+    "get hooks": {
+      "classification": "read_only",
+      "content_hash": "fc730e061f222e54",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads and displays hook information for a release without modifying anything.",
+      "source": "llm"
+    },
+    "get manifest": {
+      "classification": "read_only",
+      "content_hash": "2190cb25f4e0c199",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Fetches and displays the generated manifest for a release without making changes.",
+      "source": "llm"
+    },
+    "get notes": {
+      "classification": "read_only",
+      "content_hash": "122ad37b4c53bd50",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays notes from a release's chart without modifying state.",
+      "source": "llm"
+    },
+    "get values": {
+      "classification": "read_only",
+      "content_hash": "114274a67e1b78c7",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Downloads and displays values for a release; '--all' means show all computed values, not delete or modify anything."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Downloads and displays values for a release without modifying anything.",
+      "source": "llm"
+    },
+    "history": {
+      "classification": "read_only",
+      "content_hash": "b7c2791e5b4b57b7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays historical revision information for a release without modifying state.",
+      "source": "llm"
+    },
+    "install": {
+      "classification": "write",
+      "content_hash": "c9250bd8fef8a2f6",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates the install without making any actual changes to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deploys a chart to Kubernetes, modifying cluster state in a reversible manner.",
+      "source": "llm"
+    },
+    "lint": {
+      "classification": "read_only",
+      "content_hash": "834a276b9c4c1303",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Validates chart format and structure by running tests without modifying anything.",
+      "source": "llm"
+    },
+    "list": {
+      "classification": "read_only",
+      "content_hash": "cb7b601897daa7b4",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists releases across different statuses; '--all' broadens what is shown (deployed, failed, uninstalled), not what is deleted."
+        },
+        "--all-namespaces": {
+          "classification": "read_only",
+          "rationale": "Lists releases across namespaces; '--all-namespaces' broadens the scope of what is displayed, not what is destroyed."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists releases in a namespace; filtering flags do not modify state.",
+      "source": "llm"
+    },
+    "list maudlin-arachnid": {
+      "classification": "invalid",
+      "content_hash": "cb7b601897daa7b4",
+      "flags": {},
+      "rationale": "Auto-discovered but duplicates its parent's help text verbatim \u2014 likely a false-positive match (e.g. example/sample output mistaken for a subcommand listing), not a real distinct command.",
+      "source": "heuristic"
+    },
+    "package": {
+      "classification": "write",
+      "content_hash": "e82d7af33ac74588",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Packages a chart into a versioned archive file, creating new files locally in a bounded, reversible manner.",
+      "source": "llm"
+    },
+    "plugin": {
+      "classification": "write",
+      "content_hash": "8ee5555b99d25cc3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages client-side Helm plugins; subcommands install, uninstall, and update all modify local plugin state.",
+      "source": "llm"
+    },
+    "plugin install": {
+      "classification": "write",
+      "content_hash": "ff228551d46c8827",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs a plugin to the local system, modifying helm's installed plugins in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "plugin list": {
+      "classification": "read_only",
+      "content_hash": "d5e636121188c94c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays list of installed plugins without modifying anything.",
+      "source": "llm"
+    },
+    "plugin uninstall": {
+      "classification": "write",
+      "content_hash": "41a838c99580169b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes a plugin from the local system, a deletion that is reversible by reinstalling.",
+      "source": "llm"
+    },
+    "plugin update": {
+      "classification": "write",
+      "content_hash": "971b593266e612dc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates an installed plugin, modifying it in a reversible manner.",
+      "source": "llm"
+    },
+    "repo": {
+      "classification": "write",
+      "content_hash": "e14c8be4d3f7dc14",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages chart repositories; subcommands add, remove, index, and update all modify local repository configuration and cache.",
+      "source": "llm"
+    },
+    "repo add": {
+      "classification": "write",
+      "content_hash": "a8a0c4179b8780a6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a chart repository to helm configuration, modifying local state in a reversible way.",
+      "source": "llm"
+    },
+    "repo index": {
+      "classification": "write",
+      "content_hash": "8765a941ad6f389b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Generates or updates an index file for charts, modifying a file in a reversible manner.",
+      "source": "llm"
+    },
+    "repo list": {
+      "classification": "read_only",
+      "content_hash": "45189390aaae0183",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays list of configured chart repositories without modifying state.",
+      "source": "llm"
+    },
+    "repo remove": {
+      "classification": "write",
+      "content_hash": "588b6dbb2e1349be",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes a chart repository configuration, a deletion that is reversible by re-adding.",
+      "source": "llm"
+    },
+    "repo update": {
+      "classification": "write",
+      "content_hash": "cc6b0a6f5f2d5cdd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates cached information about charts from repositories, modifying local cache in a reversible way.",
+      "source": "llm"
+    },
+    "rollback": {
+      "classification": "write",
+      "content_hash": "cbfd01f1eb6de364",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates a rollback without making any actual changes to the cluster."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Forces resource update through delete/recreate, which can be destructive and irreversible if resources have persistent state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Rolls back a release to a previous revision, modifying the deployed application state in Kubernetes reversibly.",
+      "source": "llm"
+    },
+    "search": {
+      "classification": "read_only",
+      "content_hash": "b44720d36a963897",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for charts in Helm Hub or chart repositories without modifying any state.",
+      "source": "llm"
+    },
+    "search hub": {
+      "classification": "read_only",
+      "content_hash": "90cf968288395ed9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches a remote Helm repository index for charts without modifying any state.",
+      "source": "llm"
+    },
+    "search repo": {
+      "classification": "read_only",
+      "content_hash": "221a3e107225c63f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches configured local repository metadata for matching charts without modifying any state.",
+      "source": "llm"
+    },
+    "show": {
+      "classification": "read_only",
+      "content_hash": "37d3ce122a1b63f2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays information about a chart (definition, values, README) without modifying anything.",
+      "source": "llm"
+    },
+    "show all": {
+      "classification": "read_only",
+      "content_hash": "8b43aef596d67dbf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Inspects and displays all chart content (values, metadata, README); 'all' means show all sections, not modify or delete.",
+      "source": "llm-reconfirmed"
+    },
+    "show chart": {
+      "classification": "read_only",
+      "content_hash": "7b40e991de4f4930",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays chart metadata from Charts.yaml file without modifying any state.",
+      "source": "llm"
+    },
+    "show readme": {
+      "classification": "read_only",
+      "content_hash": "d85f9532bf280750",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays chart README file without modifying any state.",
+      "source": "llm"
+    },
+    "show values": {
+      "classification": "read_only",
+      "content_hash": "9b0d4bbdc269fe39",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays chart default values from values.yaml file without modifying any state.",
+      "source": "llm"
+    },
+    "status": {
+      "classification": "read_only",
+      "content_hash": "6398277a30dbda76",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows the status and details of a named release without modifying any state.",
+      "source": "llm"
+    },
+    "template": {
+      "classification": "read_only",
+      "content_hash": "97e2b47e3618a206",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Template already operates as a local simulation; this flag does not change the read-only nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Renders chart templates locally with faked values and displays output without deploying or modifying anything.",
+      "source": "llm"
+    },
+    "uninstall": {
+      "classification": "dangerous",
+      "content_hash": "559616b628ee9c99",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly removes all cluster resources associated with a release and deletes the release history.",
+      "source": "llm"
+    },
+    "upgrade": {
+      "classification": "write",
+      "content_hash": "69ea7d9de3a84175",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates an existing release to a new chart version, modifying cluster resources in a bounded and reversible manner.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:53:17Z",
+  "truncated": false,
+  "version": "v3.1.0+gb29d20b"
+}

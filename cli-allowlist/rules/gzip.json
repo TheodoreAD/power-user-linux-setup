@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:14:53Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "62075fedd308c0cf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compresses files and replaces originals with .gz versions (or outputs to stdout with -c), modifying filesystem state in a bounded, expected, and reversible manner.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:31:35Z",
+  "truncated": false,
+  "version": "gzip 1.12"
+}

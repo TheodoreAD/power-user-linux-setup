@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:44:48Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "737bed8c04fdbe7d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Synchronizes and copies files between local/remote locations, modifying the destination filesystem; effect is bounded and reversible without explicit deletion flags like --delete.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:50Z",
+  "truncated": false,
+  "version": "rsync  version 3.2.7  protocol version 31"
+}

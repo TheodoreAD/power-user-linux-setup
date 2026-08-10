@@ -1,8 +1,13 @@
 {
-  "commands": {
-    "*": "Wez's Terminal Emulator\nhttp://github.com/wezterm/wezterm\n\nUsage: wezterm [OPTIONS] [COMMAND]\n\nCommands:\n  start                  Start the GUI, optionally running an alternative program [aliases: -e]\n  ssh                    Establish an ssh session\n  serial                 Open a serial port\n  connect                Connect to wezterm multiplexer\n  ls-fonts               Display information about fonts\n  show-keys              Show key assignments\n  cli                    Interact with experimental mux server\n  imgcat                 Output an image to the terminal\n  set-working-directory  Advise the terminal of the current working directory by emitting an OSC 7 escape sequence\n  record                 Record a terminal session as an asciicast\n  replay                 Replay an asciicast terminal session\n  shell-completion       Generate shell completion information\n  help                   Print this message or the help of the given subcommand(s)\n\nOptions:\n  -n, --skip-config                Skip loading wezterm.lua\n      --config-file <CONFIG_FILE>  Specify the configuration file to use, overrides the normal configuration file resolution\n      --config <name=value>        Override specific configuration values\n  -h, --help                       Print help\n  -V, --version                    Print version"
-  },
-  "extracted_at": "2026-08-09T17:34:28Z",
+  "extracted_at": "2026-08-09T23:06:14Z",
   "interactive": false,
+  "nodes": {
+    "*": {
+      "children": [],
+      "content_hash": "aca4aad06bb21dc3",
+      "help_text": "Wez's Terminal Emulator\nhttp://github.com/wezterm/wezterm\n\nUsage: wezterm [OPTIONS] [COMMAND]\n\nCommands:\n  start                  Start the GUI, optionally running an alternative program [aliases: -e]\n  ssh                    Establish an ssh session\n  serial                 Open a serial port\n  connect                Connect to wezterm multiplexer\n  ls-fonts               Display information about fonts\n  show-keys              Show key assignments\n  cli                    Interact with experimental mux server\n  imgcat                 Output an image to the terminal\n  set-working-directory  Advise the terminal of the current working directory by emitting an OSC 7 escape sequence\n  record                 Record a terminal session as an asciicast\n  replay                 Replay an asciicast terminal session\n  shell-completion       Generate shell completion information\n  help                   Print this message or the help of the given subcommand(s)\n\nOptions:\n  -n, --skip-config                Skip loading wezterm.lua\n      --config-file <CONFIG_FILE>  Specify the configuration file to use, overrides the normal configuration file resolution\n      --config <name=value>        Override specific configuration values\n  -h, --help                       Print help\n  -V, --version                    Print version"
+    }
+  },
+  "truncated": false,
   "version": "wezterm 20260607-082427-8afe0ad3"
 }

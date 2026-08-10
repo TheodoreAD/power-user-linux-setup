@@ -1,17 +1,58 @@
 {
-  "commands": {
-    "_top": "usage: tmux [-2CDlNuVv] [-c shell-command] [-f file] [-L socket-name]\n            [-S socket-path] [-T features] [command [flags]]",
-    "display-message": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "kill-server": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "kill-session": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "list-panes": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "list-sessions": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "list-windows": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "new-session": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "send-keys": "error connecting to /tmp/tmux-1000/default (No such file or directory)",
-    "show-options": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
-  },
-  "extracted_at": "2026-08-09T16:48:13Z",
+  "extracted_at": "2026-08-09T23:06:13Z",
   "interactive": false,
+  "nodes": {
+    "_top": {
+      "children": [],
+      "content_hash": "afecf3ab69062438",
+      "help_text": "usage: tmux [-2CDlNuVv] [-c shell-command] [-f file] [-L socket-name]\n            [-S socket-path] [-T features] [command [flags]]"
+    },
+    "display-message": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "kill-server": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "kill-session": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "list-panes": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "list-sessions": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "list-windows": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "new-session": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "send-keys": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    },
+    "show-options": {
+      "children": [],
+      "content_hash": "8ec1b846923c37ee",
+      "help_text": "error connecting to /tmp/tmux-1000/default (No such file or directory)"
+    }
+  },
+  "truncated": false,
   "version": "tmux 3.4"
 }

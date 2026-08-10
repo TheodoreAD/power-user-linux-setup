@@ -1,0 +1,1786 @@
+{
+  "classified_at": "2026-08-10T15:36:09Z",
+  "extracted_at": "2026-08-10T13:10:44Z",
+  "nodes": {
+    "build": {
+      "classification": "write",
+      "content_hash": "2eeb26a9ff297317",
+      "flags": {
+        "--check": {
+          "classification": "read_only",
+          "rationale": "Validates the Dockerfile and build configuration without creating an image."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates Docker images from Dockerfiles, modifying the local Docker daemon state; reversible by deletion.",
+      "source": "llm"
+    },
+    "buildx": {
+      "classification": "read_only",
+      "content_hash": "9e0c0d0a8b594053",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command for BuildKit; displays help and subcommand options when run without arguments.",
+      "source": "llm"
+    },
+    "buildx bake": {
+      "classification": "write",
+      "content_hash": "13aa7ee0169268ea",
+      "flags": {
+        "--check": {
+          "classification": "read_only",
+          "rationale": "Only validates the build definition without executing the build."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates Docker images from a build definition file, modifying the local image store.",
+      "source": "llm"
+    },
+    "buildx build": {
+      "classification": "write",
+      "content_hash": "9b7acb149520a998",
+      "flags": {
+        "--check": {
+          "classification": "read_only",
+          "rationale": "Only validates the build configuration without executing the build."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Starts a build process that creates or modifies Docker images.",
+      "source": "llm"
+    },
+    "buildx create": {
+      "classification": "write",
+      "content_hash": "312e8de7fa4f4a79",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new builder instance, modifying Docker's builder configuration state.",
+      "source": "llm"
+    },
+    "buildx dap": {
+      "classification": "write",
+      "content_hash": "9ca479f692232e5d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Starts a debug adapter protocol interface that can trigger build execution through the debugger.",
+      "source": "llm"
+    },
+    "buildx dial-stdio": {
+      "classification": "read_only",
+      "content_hash": "157d5afa2d74d27d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Proxies stdio streams to a builder instance without modifying any persistent state.",
+      "source": "llm"
+    },
+    "buildx du": {
+      "classification": "read_only",
+      "content_hash": "20473c29a8a40404",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays disk usage information about the builder cache.",
+      "source": "llm"
+    },
+    "buildx history": {
+      "classification": "read_only",
+      "content_hash": "d070544fc74060d5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command group for viewing and inspecting build records.",
+      "source": "llm"
+    },
+    "buildx imagetools": {
+      "classification": "read_only",
+      "content_hash": "ea60ed77be7bf717",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command group for inspecting images in registry; base command is informational.",
+      "source": "llm"
+    },
+    "buildx inspect": {
+      "classification": "read_only",
+      "content_hash": "b0aa5027cc7ca57f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Inspects and displays information about a builder instance without modification.",
+      "source": "llm"
+    },
+    "buildx ls": {
+      "classification": "read_only",
+      "content_hash": "9905bd4622065970",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists builder instances without modifying any state.",
+      "source": "llm"
+    },
+    "buildx policy": {
+      "classification": "read_only",
+      "content_hash": "4027ab3701fe4732",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command group for build policies; base command provides access to evaluation and testing only.",
+      "source": "llm"
+    },
+    "buildx prune": {
+      "classification": "dangerous",
+      "content_hash": "6ea27499eca79fb7",
+      "flags": {
+        "--all": {
+          "classification": "dangerous",
+          "rationale": "Expands pruning scope to include internal/frontend images, increasing destructiveness."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for unattended deletion of build cache."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes build cache data, a destructive and irreversible operation.",
+      "source": "llm"
+    },
+    "buildx rm": {
+      "classification": "dangerous",
+      "content_hash": "bf07a5f4adb0005e",
+      "flags": {
+        "--all-inactive": {
+          "classification": "dangerous",
+          "rationale": "Deletes multiple builder instances at once, broadening the destructive scope."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for unattended removal of builders."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes builder instances, a destructive and irreversible operation.",
+      "source": "llm"
+    },
+    "buildx stop": {
+      "classification": "write",
+      "content_hash": "755a2737411feacb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Stops a builder instance, a reversible operation (can be restarted later).",
+      "source": "llm"
+    },
+    "buildx use": {
+      "classification": "write",
+      "content_hash": "8002c1162effd325",
+      "flags": {
+        "--global": {
+          "classification": "write",
+          "rationale": "Persists builder setting changes across contexts in configuration."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Changes the active builder instance in local configuration.",
+      "source": "llm"
+    },
+    "compose": {
+      "classification": "read_only",
+      "content_hash": "5e5201b55b12f8e7",
+      "flags": {
+        "--all-resources": {
+          "classification": "read_only",
+          "rationale": "The --all flag broadens what resources are displayed in output, not what is deleted or modified."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates operations without actually executing them, ensuring no state modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Management command for multi-container applications; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "compose attach": {
+      "classification": "read_only",
+      "content_hash": "1586adcd1fad0fcc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Attaches to a running container's streams without modifying container or compose state.",
+      "source": "llm"
+    },
+    "compose bridge": {
+      "classification": "read_only",
+      "content_hash": "c0c6a87bbf4ddd03",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Converts compose files to other formats (Kubernetes, Helm) for inspection.",
+      "source": "llm"
+    },
+    "compose build": {
+      "classification": "write",
+      "content_hash": "919b6d7322cf7beb",
+      "flags": {
+        "--check": {
+          "classification": "read_only",
+          "rationale": "Validates build configuration without executing the build."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates build process without creating images."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates or rebuilds Docker images for services.",
+      "source": "llm"
+    },
+    "compose commit": {
+      "classification": "write",
+      "content_hash": "6f30f502a6b99863",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new image from container changes, producing a new Docker artifact.",
+      "source": "llm"
+    },
+    "compose config": {
+      "classification": "read_only",
+      "content_hash": "094f41ec56b3c066",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parses, resolves, and displays compose file configuration.",
+      "source": "llm"
+    },
+    "compose cp": {
+      "classification": "write",
+      "content_hash": "4380542586c597cc",
+      "flags": {
+        "--all": {
+          "classification": "write",
+          "rationale": "Includes additional containers in copy scope but still only copies files."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates file copy without actually transferring files."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Copies files between container and local filesystem, modifying state on either side.",
+      "source": "llm"
+    },
+    "compose create": {
+      "classification": "write",
+      "content_hash": "96806ab850b8da94",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates container creation without actually creating them."
+        },
+        "--force-recreate": {
+          "classification": "write",
+          "rationale": "Forces container recreation even if unchanged; still a standard write operation."
+        },
+        "--remove-orphans": {
+          "classification": "dangerous",
+          "rationale": "Deletes containers for services not defined in the compose file."
+        },
+        "--yes": {
+          "classification": "write",
+          "rationale": "Bypasses prompts but does not change the scope or nature of container creation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates containers for services.",
+      "source": "llm"
+    },
+    "compose down": {
+      "classification": "dangerous",
+      "content_hash": "617b8ad74bb2c166",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates shutdown without actually stopping or removing containers/networks."
+        },
+        "--remove-orphans": {
+          "classification": "dangerous",
+          "rationale": "Deletes orphan containers as part of the down operation."
+        },
+        "--rmi": {
+          "classification": "dangerous",
+          "rationale": "Additionally removes Docker images, further destructive than base down command."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Stops and removes containers and networks, which is destructive and deletes infrastructure.",
+      "source": "llm"
+    },
+    "compose events": {
+      "classification": "read_only",
+      "content_hash": "0b9f73b082e75655",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Streams real-time events from containers without modifying state.",
+      "source": "llm"
+    },
+    "compose exec": {
+      "classification": "write",
+      "content_hash": "427244697059e27b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates command execution without actually running the command."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Executes commands inside a running container, which can modify container state.",
+      "source": "llm"
+    },
+    "compose export": {
+      "classification": "read_only",
+      "content_hash": "ffd550cd7e55f04d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Exports container filesystem as a tar archive without modifying container or Docker state.",
+      "source": "llm"
+    },
+    "compose images": {
+      "classification": "read_only",
+      "content_hash": "153c2a0e56697484",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists images used by containers without modifying state.",
+      "source": "llm"
+    },
+    "compose kill": {
+      "classification": "write",
+      "content_hash": "ffa4a300e31393ca",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates killing containers without actually stopping them."
+        },
+        "--remove-orphans": {
+          "classification": "dangerous",
+          "rationale": "Deletes orphan containers in addition to stopping others."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Force-stops containers, modifying their state (reversible by restart).",
+      "source": "llm"
+    },
+    "compose logs": {
+      "classification": "read_only",
+      "content_hash": "9e48858169c94dd3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Views and streams container logs without modifying state.",
+      "source": "llm"
+    },
+    "compose ls": {
+      "classification": "read_only",
+      "content_hash": "cc92c294b8743154",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The --all flag extends the listing to include stopped projects, a filtering operation on displayed state only."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates listing without output."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists running (or all) compose projects without modifying state.",
+      "source": "llm"
+    },
+    "compose pause": {
+      "classification": "write",
+      "content_hash": "8ed5ea48923c425a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode executes in simulation without making changes."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Pauses running services (reversible state change).",
+      "source": "llm"
+    },
+    "compose port": {
+      "classification": "read_only",
+      "content_hash": "709c2da09d675f4b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run of a read-only operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Only prints public port information for a service port binding.",
+      "source": "llm"
+    },
+    "compose ps": {
+      "classification": "read_only",
+      "content_hash": "bb60ff5d43736021",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The --all flag shows additional containers in the list output, not a destructive operation."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run of a read-only operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists containers (read-only inspection).",
+      "source": "llm"
+    },
+    "compose publish": {
+      "classification": "dangerous",
+      "content_hash": "4dd46da3da55c006",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode executes in simulation without publishing."
+        },
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompts when publishing to external registry."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Publishes compose application to a registry, modifying shared external state.",
+      "source": "llm"
+    },
+    "compose pull": {
+      "classification": "write",
+      "content_hash": "c0a78774f9c4111f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates pull without downloading."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Downloads and modifies local image state.",
+      "source": "llm"
+    },
+    "compose push": {
+      "classification": "dangerous",
+      "content_hash": "5c326dc7ea82488f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates push without uploading."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Publishes images to external registry, modifying shared state.",
+      "source": "llm"
+    },
+    "compose restart": {
+      "classification": "write",
+      "content_hash": "2695583c0ac3cda7",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates restart without making changes."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Restarts service containers (reversible state change).",
+      "source": "llm"
+    },
+    "compose rm": {
+      "classification": "dangerous",
+      "content_hash": "4062df77123ff93b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates removal without deleting."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for irreversible deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes stopped containers and optionally volumes (irreversible deletion).",
+      "source": "llm"
+    },
+    "compose run": {
+      "classification": "write",
+      "content_hash": "d93c2719af085c3a",
+      "flags": {
+        "--cap-drop": {
+          "classification": "write",
+          "rationale": "Runs container with modified Linux capabilities; still creates and runs a container."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates the run without creating a container."
+        },
+        "--remove-orphans": {
+          "classification": "write",
+          "rationale": "Removes orphaned containers but bounded to services not in compose file."
+        },
+        "--rm": {
+          "classification": "write",
+          "rationale": "Auto-removes container after execution; still creates and runs a container."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates and runs a one-off container (bounded state change).",
+      "source": "llm"
+    },
+    "compose scale": {
+      "classification": "write",
+      "content_hash": "f3bd5b9f350a0f05",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates scaling without making changes."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Scales service replicas (reversible deployment state change).",
+      "source": "llm"
+    },
+    "compose start": {
+      "classification": "write",
+      "content_hash": "ac08f7bc9abe754b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates startup without starting services."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Starts services (reversible state change).",
+      "source": "llm"
+    },
+    "compose stats": {
+      "classification": "read_only",
+      "content_hash": "8bf858b2fa5d5c84",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The --all flag displays statistics for more containers, a reporting operation that doesn't modify state."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run of a read-only operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays container resource usage statistics (read-only monitoring).",
+      "source": "llm"
+    },
+    "compose stop": {
+      "classification": "write",
+      "content_hash": "dd234588ff657fd3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates stop without stopping services."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Stops services (reversible state change).",
+      "source": "llm"
+    },
+    "compose top": {
+      "classification": "read_only",
+      "content_hash": "eb3ad8d23462c9e8",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run of a read-only operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays running processes (read-only inspection).",
+      "source": "llm"
+    },
+    "compose unpause": {
+      "classification": "write",
+      "content_hash": "9ca5514737b1b6bf",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run mode simulates unpause without making changes."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Unpauses services (reversible state change).",
+      "source": "llm"
+    },
+    "compose up": {
+      "classification": "write",
+      "content_hash": "437e3f67b843fbb3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates execution without creating or starting containers."
+        },
+        "--force-recreate": {
+          "classification": "write",
+          "rationale": "Recreates containers (modifies state, but does not delete)."
+        },
+        "--remove-orphans": {
+          "classification": "dangerous",
+          "rationale": "Deletes orphaned containers; deletion is irreversible."
+        },
+        "--yes": {
+          "classification": "write",
+          "rationale": "Bypasses interactive prompts but does not change the operation itself."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates and starts containers, modifying running state.",
+      "source": "llm"
+    },
+    "compose volumes": {
+      "classification": "read_only",
+      "content_hash": "1b68e626efb88c92",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still only lists volumes; no state modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists volumes without modifying any state.",
+      "source": "llm"
+    },
+    "compose wait": {
+      "classification": "read_only",
+      "content_hash": "98bc8ee47a483e02",
+      "flags": {
+        "--down-project": {
+          "classification": "write",
+          "rationale": "Stops and removes the project; modifies running state."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates waiting without modifying state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Blocks until containers stop; does not modify state on its own.",
+      "source": "llm"
+    },
+    "compose watch": {
+      "classification": "write",
+      "content_hash": "dc95efd4b196cd5a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Simulates watching without rebuilding or refreshing containers."
+        },
+        "--prune": {
+          "classification": "dangerous",
+          "rationale": "Deletes dangling images; deletion is irreversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Rebuilds and refreshes containers on file changes; modifies running state.",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "read_only",
+      "content_hash": "63ac8977a13a3c69",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command for Swarm configs; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "config create": {
+      "classification": "write",
+      "content_hash": "818787f9d73a14c2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new config object in Docker.",
+      "source": "llm"
+    },
+    "config inspect": {
+      "classification": "read_only",
+      "content_hash": "d909f0171d5ac1e6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed config information without modification.",
+      "source": "llm"
+    },
+    "config ls": {
+      "classification": "read_only",
+      "content_hash": "3ca054d1436b4be0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists configs without modification.",
+      "source": "llm"
+    },
+    "config rm": {
+      "classification": "dangerous",
+      "content_hash": "adb78128ad64c155",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes configs; deletion is irreversible.",
+      "source": "llm"
+    },
+    "context": {
+      "classification": "read_only",
+      "content_hash": "b9c5c144e4ab9da7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command for Docker contexts; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "context create": {
+      "classification": "write",
+      "content_hash": "d6c977cbbcf4927b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new Docker context.",
+      "source": "llm"
+    },
+    "context export": {
+      "classification": "read_only",
+      "content_hash": "60fb6a049b681ec0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Exports context to a file or stdout; reads Docker state without modification.",
+      "source": "llm"
+    },
+    "context import": {
+      "classification": "write",
+      "content_hash": "4c52c4a3e1802fe8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Imports and creates/modifies a Docker context.",
+      "source": "llm"
+    },
+    "context inspect": {
+      "classification": "read_only",
+      "content_hash": "b2bc7d1c4af4f612",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed context information without modification.",
+      "source": "llm"
+    },
+    "context ls": {
+      "classification": "read_only",
+      "content_hash": "fdb40d4085fa17be",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists contexts without modification.",
+      "source": "llm"
+    },
+    "context rm": {
+      "classification": "dangerous",
+      "content_hash": "e0bd6913089da917",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses safety check that prevents removing in-use contexts; bypasses confirmation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes contexts; deletion is irreversible.",
+      "source": "llm"
+    },
+    "context show": {
+      "classification": "read_only",
+      "content_hash": "2a9f0cdca11ca587",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the current context name without modification.",
+      "source": "llm"
+    },
+    "context update": {
+      "classification": "write",
+      "content_hash": "077f229bc11ec387",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies Docker context configuration (endpoint settings, TLS certs) in reversible, expected ways.",
+      "source": "llm"
+    },
+    "context use": {
+      "classification": "write",
+      "content_hash": "ba4e479e256a6542",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes which Docker context is active in the local configuration, reversible.",
+      "source": "llm"
+    },
+    "diff": {
+      "classification": "read_only",
+      "content_hash": "3a2cbb18198214ca",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Inspects changes to container filesystem without modifying the container state.",
+      "source": "llm"
+    },
+    "events": {
+      "classification": "read_only",
+      "content_hash": "d016a7b087e5f818",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Streams real-time Docker events without modifying any state.",
+      "source": "llm"
+    },
+    "exec": {
+      "classification": "write",
+      "content_hash": "538764feb04dfb1a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Executes a command in a running container, creating processes and potentially modifying container state.",
+      "source": "llm"
+    },
+    "image": {
+      "classification": "read_only",
+      "content_hash": "eefa673351ee5e6f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command for images; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "image build": {
+      "classification": "write",
+      "content_hash": "2eeb26a9ff297317",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Builds and creates Docker images locally; state is reversible (images can be deleted).",
+      "source": "llm"
+    },
+    "image history": {
+      "classification": "read_only",
+      "content_hash": "484b2857c854fea7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the history of an image; pure inspection operation.",
+      "source": "llm"
+    },
+    "image import": {
+      "classification": "write",
+      "content_hash": "5cb9237809150810",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new filesystem image from tarball contents; state is reversible.",
+      "source": "llm"
+    },
+    "image inspect": {
+      "classification": "read_only",
+      "content_hash": "b488126d312fc734",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed image information; pure inspection operation.",
+      "source": "llm"
+    },
+    "image load": {
+      "classification": "write",
+      "content_hash": "bd281b6d8cd8346e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Loads images into the local system from tar archives; state is reversible.",
+      "source": "llm"
+    },
+    "image ls": {
+      "classification": "read_only",
+      "content_hash": "2bc73175cf47c3c5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists local images; pure inspection operation.",
+      "source": "llm"
+    },
+    "image prune": {
+      "classification": "dangerous",
+      "content_hash": "4accaf2458163a4a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes images (unused/dangling); destructive and irreversible operation.",
+      "source": "llm"
+    },
+    "image pull": {
+      "classification": "write",
+      "content_hash": "2b5a15e71c69b54a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads and adds images to local system from a registry; state is reversible.",
+      "source": "llm"
+    },
+    "image push": {
+      "classification": "dangerous",
+      "content_hash": "679a383bd4fd015d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Publishes images to a registry, broadcasting to external systems; harder to fully reverse.",
+      "source": "llm"
+    },
+    "image rm": {
+      "classification": "dangerous",
+      "content_hash": "47854582d35e06e0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes images from the local system; destructive and irreversible.",
+      "source": "llm"
+    },
+    "image save": {
+      "classification": "read_only",
+      "content_hash": "20eefa7e3cb410e6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Exports images to tar archive without modifying system state; inspection/export operation.",
+      "source": "llm"
+    },
+    "image tag": {
+      "classification": "write",
+      "content_hash": "d195c3f3f8181cbc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or modifies image tags (metadata); state is reversible.",
+      "source": "llm"
+    },
+    "images": {
+      "classification": "read_only",
+      "content_hash": "18d39070aa6faa71",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The --all flag broadens the image listing to include intermediate and dangling images, a display-only operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists Docker images without modifying state.",
+      "source": "llm"
+    },
+    "info": {
+      "classification": "read_only",
+      "content_hash": "9a51bc06de9c5d3d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays system-wide Docker information without modifying state.",
+      "source": "llm"
+    },
+    "inspect": {
+      "classification": "read_only",
+      "content_hash": "13aa01259208b9bf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Returns detailed information about Docker objects without modifying state.",
+      "source": "llm"
+    },
+    "logs": {
+      "classification": "read_only",
+      "content_hash": "d6c7fa6a7940c3e0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Fetches and displays container logs without modifying state.",
+      "source": "llm"
+    },
+    "manifest": {
+      "classification": "read_only",
+      "content_hash": "374551dcab7103a8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command for image manifests; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "manifest annotate": {
+      "classification": "write",
+      "content_hash": "9f2d6afd7a338ddd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds metadata to a local image manifest; state is reversible.",
+      "source": "llm"
+    },
+    "manifest create": {
+      "classification": "write",
+      "content_hash": "8c34818b96cb95e8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a local manifest list, modifying local Docker state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "manifest inspect": {
+      "classification": "read_only",
+      "content_hash": "96ffe2b45898102d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays manifest information without modifying any state.",
+      "source": "llm"
+    },
+    "manifest push": {
+      "classification": "write",
+      "content_hash": "09e1515c968a83cd",
+      "flags": {
+        "--purge": {
+          "classification": "dangerous",
+          "rationale": "Combines remote push with local deletion, irreversibly destroying the local manifest list after publishing."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Publishes a manifest list to a remote registry, modifying remote state in an expected and bounded way.",
+      "source": "llm"
+    },
+    "manifest rm": {
+      "classification": "dangerous",
+      "content_hash": "1952f2def3b0a354",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes one or more manifest lists from local storage, irreversibly destroying data.",
+      "source": "llm"
+    },
+    "network": {
+      "classification": "read_only",
+      "content_hash": "877b3b6c98d639b7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management command for networks; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "network connect": {
+      "classification": "write",
+      "content_hash": "271842b7c5b7166d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Connects a container to a network, modifying container state in a reversible way.",
+      "source": "llm"
+    },
+    "network create": {
+      "classification": "write",
+      "content_hash": "784d7f1459c8f89b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new network, modifying Docker state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "network disconnect": {
+      "classification": "write",
+      "content_hash": "a594bd886e927b67",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Forces immediate disconnection, but still a reversible network operation that can be reconnected."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Disconnects a container from a network, modifying container state in a reversible way.",
+      "source": "llm"
+    },
+    "network inspect": {
+      "classification": "read_only",
+      "content_hash": "8ed00db863b648d9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed network information without modifying state.",
+      "source": "llm"
+    },
+    "network ls": {
+      "classification": "read_only",
+      "content_hash": "cd0683af9859300b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists networks without modifying state.",
+      "source": "llm"
+    },
+    "network prune": {
+      "classification": "dangerous",
+      "content_hash": "65dc0bb4c0af793b",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Removes all unused networks while bypassing the confirmation prompt, combining destructive operation with removed safety check."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes all unused networks, a broad destructive operation that could break container connectivity.",
+      "source": "llm"
+    },
+    "network rm": {
+      "classification": "dangerous",
+      "content_hash": "93d54ab93819de6b",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Deletes networks without erroring on missing ones, still an irreversible destructive operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes one or more networks, irreversibly destroying Docker infrastructure resources.",
+      "source": "llm"
+    },
+    "node": {
+      "classification": "write",
+      "content_hash": "8dc9ec672de0e5d4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management group containing operations that modify swarm cluster state (demote, promote, update nodes, remove nodes); reversible and expected management operations.",
+      "source": "llm"
+    },
+    "node demote": {
+      "classification": "write",
+      "content_hash": "278dfa17132878bc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Demotes nodes from manager role in Docker swarm, modifying cluster state in a reversible way.",
+      "source": "llm"
+    },
+    "node inspect": {
+      "classification": "read_only",
+      "content_hash": "58636e01c8c76ed9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays node information without modifying state.",
+      "source": "llm"
+    },
+    "node ls": {
+      "classification": "read_only",
+      "content_hash": "fc346349bdcee03b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists swarm nodes without modifying state.",
+      "source": "llm"
+    },
+    "node promote": {
+      "classification": "write",
+      "content_hash": "ce95602245ad21db",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Promotes nodes to manager role in Docker swarm, modifying cluster state in a reversible way.",
+      "source": "llm"
+    },
+    "node ps": {
+      "classification": "read_only",
+      "content_hash": "b5b37ebc44bc923b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists tasks running on nodes; pure inspection without modification.",
+      "source": "llm"
+    },
+    "node rm": {
+      "classification": "dangerous",
+      "content_hash": "bf1b20718c9e462b",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Force flag still irreversibly removes node; bypasses normal checks but doesn't change destructive nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly removes nodes from the swarm, affecting cluster state.",
+      "source": "llm"
+    },
+    "node update": {
+      "classification": "write",
+      "content_hash": "da5b08f742b84964",
+      "flags": {
+        "--label-rm": {
+          "classification": "write",
+          "rationale": "Removes a node label; reversible state modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies node availability, labels, or role, but changes are reversible.",
+      "source": "llm"
+    },
+    "plugin": {
+      "classification": "write",
+      "content_hash": "e351424fa4f40e16",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Management group for plugin lifecycle operations (install, enable, disable, upgrade, remove); modifications are reversible via reinstall/reconfiguration.",
+      "source": "llm"
+    },
+    "plugin create": {
+      "classification": "write",
+      "content_hash": "743d7d74ccf2cffb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a plugin artifact; reversible by removal.",
+      "source": "llm"
+    },
+    "plugin disable": {
+      "classification": "write",
+      "content_hash": "dc9eeaa3f193298a",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Force flag bypasses checks but disable remains reversible via enable."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Disables a plugin; reversible state change that can be re-enabled.",
+      "source": "llm"
+    },
+    "plugin enable": {
+      "classification": "write",
+      "content_hash": "cfde3e8658b27627",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Enables a plugin; reversible state change.",
+      "source": "llm"
+    },
+    "plugin inspect": {
+      "classification": "read_only",
+      "content_hash": "2e2c4cfc98f1ec0e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed plugin information; inspection only.",
+      "source": "llm"
+    },
+    "plugin install": {
+      "classification": "write",
+      "content_hash": "960f9333f167a1fd",
+      "flags": {
+        "--grant-all-permissions": {
+          "classification": "write",
+          "rationale": "Grants permissions during install; reversible by modifying plugin permissions or uninstalling."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Installs a plugin; reversible by uninstall.",
+      "source": "llm"
+    },
+    "plugin ls": {
+      "classification": "read_only",
+      "content_hash": "fe348ec6c5a3ee38",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists plugins; pure inspection without modification.",
+      "source": "llm"
+    },
+    "plugin push": {
+      "classification": "dangerous",
+      "content_hash": "4730b97b1766b3d3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Publishes plugin to external registry; affects external state and is effectively irreversible.",
+      "source": "llm"
+    },
+    "plugin rm": {
+      "classification": "dangerous",
+      "content_hash": "4f5e8c0ac1d8b792",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Force flag still irreversibly removes plugin; bypasses checks but doesn't change destructive nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly removes a plugin, deleting the artifact.",
+      "source": "llm"
+    },
+    "plugin set": {
+      "classification": "write",
+      "content_hash": "56d3c901408554a1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes plugin settings; reversible by changing settings back.",
+      "source": "llm"
+    },
+    "plugin upgrade": {
+      "classification": "write",
+      "content_hash": "98f66f9b3eab765c",
+      "flags": {
+        "--grant-all-permissions": {
+          "classification": "write",
+          "rationale": "Grants permissions during upgrade; reversible via permission modification or uninstall."
+        },
+        "--skip-remote-check": {
+          "classification": "write",
+          "rationale": "Skips validation check but upgrade remains reversible via reinstall or downgrade."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Upgrades plugin to new version; reversible via reinstall or downgrade.",
+      "source": "llm"
+    },
+    "port": {
+      "classification": "read_only",
+      "content_hash": "6d8873eb4dc545c4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists port mappings for a container, read-only inspection only.",
+      "source": "llm"
+    },
+    "ps": {
+      "classification": "read_only",
+      "content_hash": "8f7d243ba01a64d7",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The --all flag shows additional containers in the listing, a view-broadening operation without modifications."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists containers, read-only inspection only.",
+      "source": "llm"
+    },
+    "rm": {
+      "classification": "dangerous",
+      "content_hash": "ba999f7d9550e44a",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Still removes containers, just forces removal of running ones; deletion is still irreversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Permanently removes one or more containers, irreversible deletion.",
+      "source": "llm"
+    },
+    "rmi": {
+      "classification": "dangerous",
+      "content_hash": "cdee9c93142a108c",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Still removes images, just forces removal even when in use; deletion is still irreversible."
+        },
+        "--no-prune": {
+          "classification": "dangerous",
+          "rationale": "Still removes images, affects cleanup behavior but deletion remains irreversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Permanently removes one or more images, irreversible deletion.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "write",
+      "content_hash": "45577d389f1bbaca",
+      "flags": {
+        "--cap-drop": {
+          "classification": "write",
+          "rationale": "Restricts Linux capabilities on the container being created, modifying it in a bounded way."
+        },
+        "--oom-kill-disable": {
+          "classification": "write",
+          "rationale": "Disables OOM killer for the container, a configuration change on the bounded container resource."
+        },
+        "--publish-all": {
+          "classification": "write",
+          "rationale": "Publishes container ports, modifying network exposure for this specific container in a bounded way."
+        },
+        "--rm": {
+          "classification": "write",
+          "rationale": "Auto-removes the container after exit, still just managing the lifecycle of this single container."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates and runs a new container, modifying system state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "secret": {
+      "classification": "dangerous",
+      "content_hash": "7b7d7d89756b55a9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes secret removal (docker secret rm), which permanently deletes secrets and cannot be recovered\u2014an irreversible operation even if the same secret can be recreated.",
+      "source": "llm"
+    },
+    "secret create": {
+      "classification": "write",
+      "content_hash": "9fe1ec235ac9f239",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new secret; reversible by deletion.",
+      "source": "llm"
+    },
+    "secret inspect": {
+      "classification": "read_only",
+      "content_hash": "4f933c8f8ab27427",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays secret information; inspection only.",
+      "source": "llm"
+    },
+    "secret ls": {
+      "classification": "read_only",
+      "content_hash": "c86f85d18507bd53",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists secrets without modification.",
+      "source": "llm"
+    },
+    "secret rm": {
+      "classification": "dangerous",
+      "content_hash": "126b0f53cdb9844d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes secrets, which is irreversible and affects system state broadly.",
+      "source": "llm"
+    },
+    "service": {
+      "classification": "write",
+      "content_hash": "3f645b626465e9a4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages Swarm service lifecycle (create, update, scale, remove); operations modify orchestration state but are reversible through redeploy or reconfiguration.",
+      "source": "llm"
+    },
+    "service create": {
+      "classification": "write",
+      "content_hash": "1eb4c20cbe4d7d20",
+      "flags": {
+        "--cap-drop": {
+          "classification": "write",
+          "rationale": "Dropping capabilities during service creation is a normal, reversible configuration choice."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new service, modifying cluster state in an expected and reversible way.",
+      "source": "llm"
+    },
+    "service inspect": {
+      "classification": "read_only",
+      "content_hash": "7004e14419ea54e0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays service details without modification.",
+      "source": "llm"
+    },
+    "service logs": {
+      "classification": "read_only",
+      "content_hash": "eff77493b86a2279",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Fetches and displays service logs without modification.",
+      "source": "llm"
+    },
+    "service ls": {
+      "classification": "read_only",
+      "content_hash": "067526bba4098ca2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists services without modification.",
+      "source": "llm"
+    },
+    "service ps": {
+      "classification": "read_only",
+      "content_hash": "34e2ade807e76cc0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists service tasks without modification.",
+      "source": "llm"
+    },
+    "service rm": {
+      "classification": "dangerous",
+      "content_hash": "6247c83185922b97",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes services, which is irreversible and has broad impact.",
+      "source": "llm"
+    },
+    "service rollback": {
+      "classification": "write",
+      "content_hash": "265b3fd7518c31c6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reverts a service to previous configuration in an expected, reversible manner.",
+      "source": "llm"
+    },
+    "service scale": {
+      "classification": "write",
+      "content_hash": "8b2761cb83ae3e91",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes service replica count in a reversible, expected way.",
+      "source": "llm"
+    },
+    "service update": {
+      "classification": "write",
+      "content_hash": "5a89e867ba6dc7fd",
+      "flags": {
+        "--cap-drop": {
+          "classification": "write",
+          "rationale": "Dropping capabilities is a reversible configuration change."
+        },
+        "--config-rm": {
+          "classification": "write",
+          "rationale": "Removing a config from a service is reversible via re-adding it."
+        },
+        "--constraint-rm": {
+          "classification": "write",
+          "rationale": "Removing a constraint is reversible via re-adding it."
+        },
+        "--container-label-rm": {
+          "classification": "write",
+          "rationale": "Removing a label is reversible via re-adding it."
+        },
+        "--dns-option-rm": {
+          "classification": "write",
+          "rationale": "Removing a DNS option is reversible via re-adding it."
+        },
+        "--dns-rm": {
+          "classification": "write",
+          "rationale": "Removing a DNS server is reversible via re-adding it."
+        },
+        "--dns-search-rm": {
+          "classification": "write",
+          "rationale": "Removing a DNS search domain is reversible via re-adding it."
+        },
+        "--env-rm": {
+          "classification": "write",
+          "rationale": "Removing an environment variable is reversible via re-adding it."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Forces an update bypassing normal confirmation checks and safeguards."
+        },
+        "--generic-resource-rm": {
+          "classification": "write",
+          "rationale": "Removing a resource is reversible via re-adding it."
+        },
+        "--group-rm": {
+          "classification": "write",
+          "rationale": "Removing a group is reversible via re-adding it."
+        },
+        "--host-rm": {
+          "classification": "write",
+          "rationale": "Removing a host entry is reversible via re-adding it."
+        },
+        "--label-rm": {
+          "classification": "write",
+          "rationale": "Removing a label is reversible via re-adding it."
+        },
+        "--mount-rm": {
+          "classification": "write",
+          "rationale": "Removing a mount is reversible via re-adding it."
+        },
+        "--network-rm": {
+          "classification": "write",
+          "rationale": "Removing a network from a service is reversible via re-adding it."
+        },
+        "--placement-pref-rm": {
+          "classification": "write",
+          "rationale": "Removing a placement preference is reversible via re-adding it."
+        },
+        "--publish-rm": {
+          "classification": "write",
+          "rationale": "Removing a published port is reversible via re-publishing it."
+        },
+        "--secret-rm": {
+          "classification": "write",
+          "rationale": "Removing a secret reference from a service is reversible via re-adding it."
+        },
+        "--sysctl-rm": {
+          "classification": "write",
+          "rationale": "Removing a sysctl option is reversible via re-adding it."
+        },
+        "--ulimit-rm": {
+          "classification": "write",
+          "rationale": "Removing a ulimit option is reversible via re-adding it."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Updates service configuration in a reversible, expected way.",
+      "source": "llm"
+    },
+    "stack": {
+      "classification": "dangerous",
+      "content_hash": "0c27f3f8b47d1930",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes stack removal (docker stack rm), which permanently destroys a deployed stack and its associated resources\u2014an irreversible state change.",
+      "source": "llm"
+    },
+    "stack config": {
+      "classification": "read_only",
+      "content_hash": "df5cfd175973ce98",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Outputs merged configuration without modification.",
+      "source": "llm"
+    },
+    "stack deploy": {
+      "classification": "write",
+      "content_hash": "f71d85da1e1f5586",
+      "flags": {
+        "--prune": {
+          "classification": "dangerous",
+          "rationale": "Removes services no longer referenced, which is irreversible deletion during deployment."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deploys or updates a stack, modifying state in an expected, reversible way.",
+      "source": "llm"
+    },
+    "stack ls": {
+      "classification": "read_only",
+      "content_hash": "f9aab65f06a016ed",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists stacks without modification.",
+      "source": "llm"
+    },
+    "stack ps": {
+      "classification": "read_only",
+      "content_hash": "eeca71bcc3e8a6ea",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists stack tasks without modification.",
+      "source": "llm"
+    },
+    "stack rm": {
+      "classification": "dangerous",
+      "content_hash": "43092d6ddc869671",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly removes one or more stacks, which destroys infrastructure and resources.",
+      "source": "llm"
+    },
+    "stack services": {
+      "classification": "read_only",
+      "content_hash": "eb243aa475c4c54d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists services in a stack without modifying anything.",
+      "source": "llm"
+    },
+    "stats": {
+      "classification": "read_only",
+      "content_hash": "12e0481ce59a5c8e",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The --all flag displays resource statistics for more containers, an observation-only operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays live container resource usage statistics, read-only inspection only.",
+      "source": "llm"
+    },
+    "system": {
+      "classification": "dangerous",
+      "content_hash": "59ff53e421c2caa4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes docker system prune, which permanently removes unused images, containers, networks, and volumes\u2014irreversible data deletion.",
+      "source": "llm"
+    },
+    "system df": {
+      "classification": "read_only",
+      "content_hash": "9d71051259b9eb7f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays disk usage information without modifying state.",
+      "source": "llm"
+    },
+    "system events": {
+      "classification": "read_only",
+      "content_hash": "11a1ecd54a9d2f86",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Streams real-time events from the server without modifying anything.",
+      "source": "llm"
+    },
+    "system info": {
+      "classification": "read_only",
+      "content_hash": "c0f311086b3a20fb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays system-wide information without modifying state.",
+      "source": "llm"
+    },
+    "system prune": {
+      "classification": "dangerous",
+      "content_hash": "d73c55d31d7e57ef",
+      "flags": {
+        "--all": {
+          "classification": "dangerous",
+          "rationale": "Extends pruning to all unused images, not just dangling ones; still irreversibly destructive."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt, removing the normal confirmation step for destructive operations."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly removes unused Docker data including images and volumes.",
+      "source": "llm"
+    },
+    "top": {
+      "classification": "read_only",
+      "content_hash": "a7e1f9aa68b17fe2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays running processes in a container, read-only inspection only.",
+      "source": "llm"
+    },
+    "trust": {
+      "classification": "invalid",
+      "content_hash": "e92990a5f6d59ed3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The provided text is a copy of the main Docker help output, not actual trust subcommand documentation; appears to be an extraction heuristic misfire.",
+      "source": "llm"
+    },
+    "volume": {
+      "classification": "dangerous",
+      "content_hash": "87da3efebfe955ea",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes volume removal (docker volume rm, docker volume prune), which permanently deletes volume data\u2014irreversible data loss.",
+      "source": "llm"
+    },
+    "volume create": {
+      "classification": "write",
+      "content_hash": "9b4f1017c4f55aae",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new volume, modifying state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "volume inspect": {
+      "classification": "read_only",
+      "content_hash": "7231e236410a4c8b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays detailed information about volumes without modifying anything.",
+      "source": "llm"
+    },
+    "volume ls": {
+      "classification": "read_only",
+      "content_hash": "e04732788fd796df",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists volumes without modifying anything.",
+      "source": "llm"
+    },
+    "volume prune": {
+      "classification": "dangerous",
+      "content_hash": "93c237bd58921be7",
+      "flags": {
+        "--all": {
+          "classification": "dangerous",
+          "rationale": "Extends pruning to all unused volumes, not just anonymous ones; still irreversibly destructive."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt, removing the normal confirmation step for destructive operations."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly removes unused local volumes.",
+      "source": "llm"
+    },
+    "volume rm": {
+      "classification": "dangerous",
+      "content_hash": "ca3675ce68d75307",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Force-removes volumes even with conflicts or in-use constraints; force flag for destructive operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly removes one or more volumes.",
+      "source": "llm"
+    },
+    "wait": {
+      "classification": "read_only",
+      "content_hash": "ebb282eda1fa2938",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Blocks until containers stop and prints exit codes; observes state without modifying anything.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:51:48Z",
+  "truncated": false,
+  "version": "Docker version 29.7.2, build a7dcaa6"
+}

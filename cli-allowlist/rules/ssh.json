@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:46:10Z",
+  "extracted_at": "2026-08-09T17:35:25Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "925c4d6a7a6befc7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "SSH enables arbitrary remote code execution on any accessible host; requires human approval to prevent unintended modification or destruction of systems.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:41Z",
+  "truncated": false,
+  "version": "OpenSSH_9.6p1 Ubuntu-3ubuntu13.18, OpenSSL 3.0.13 30 Jan 2024"
+}

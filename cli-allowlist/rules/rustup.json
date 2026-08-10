@@ -1,0 +1,74 @@
+{
+  "classified_at": "2026-08-09T17:45:30Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "check": {
+      "classification": "read_only",
+      "content_hash": "42b8fbd2c9c95d54",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only checks for available updates without modifying toolchains or configuration.",
+      "source": "llm"
+    },
+    "component": {
+      "classification": "write",
+      "content_hash": "c93565d914f25b5c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages installed components by adding and removing them from toolchains.",
+      "source": "llm"
+    },
+    "default": {
+      "classification": "write",
+      "content_hash": "852c0aa096e8803d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Sets the default Rust toolchain, modifying system configuration.",
+      "source": "llm"
+    },
+    "override": {
+      "classification": "write",
+      "content_hash": "590127744a68c331",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Configures directory-specific toolchain overrides, modifying configuration state.",
+      "source": "llm"
+    },
+    "show": {
+      "classification": "read_only",
+      "content_hash": "da8e442159ba4601",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays information about installed toolchains and profiles without modification.",
+      "source": "llm"
+    },
+    "target": {
+      "classification": "write",
+      "content_hash": "c726e8abf07beba0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages compilation targets for toolchains by adding and removing them.",
+      "source": "llm"
+    },
+    "toolchain": {
+      "classification": "write",
+      "content_hash": "78e1cc282add737e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs, uninstalls, and manages Rust toolchains, modifying the local installation.",
+      "source": "llm"
+    },
+    "update": {
+      "classification": "write",
+      "content_hash": "a3e3a72cc6de5b4b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates Rust toolchains and rustup itself, modifying the installed software.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:33Z",
+  "truncated": false,
+  "version": "rustup 1.29.0 (28d1352db 2026-03-05)"
+}

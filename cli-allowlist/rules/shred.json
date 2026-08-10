@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:18:05Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "571185b788af1b03",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly overwrites and destroys file contents; -u/--remove flags delete files entirely; data loss cannot be undone.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:39Z",
+  "truncated": false,
+  "version": "shred (GNU coreutils) 9.4"
+}

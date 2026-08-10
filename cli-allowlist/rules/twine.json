@@ -1,0 +1,34 @@
+{
+  "classified_at": "2026-08-09T16:58:02Z",
+  "extracted_at": "2026-08-09T16:46:56Z",
+  "nodes": {
+    "check": {
+      "classification": "read_only",
+      "content_hash": "8bc2b3a856030022",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Validates distribution files locally; only inspects metadata, no side effects.",
+      "source": "llm"
+    },
+    "register": {
+      "classification": "dangerous",
+      "content_hash": "e3ec434818b87832",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Publishes package metadata to a remote package registry (irreversible, affects public state).",
+      "source": "llm"
+    },
+    "upload": {
+      "classification": "dangerous",
+      "content_hash": "ba093efd34823cfc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Publishes distribution files to a remote package registry (irreversible, affects public state, released to package consumers).",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:16Z",
+  "truncated": false,
+  "version": "twine version 6.2.0 (keyring: 25.7.0, packaging: 26.2, requests: 2.34.2,"
+}

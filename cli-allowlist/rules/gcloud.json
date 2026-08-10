@@ -1,0 +1,179 @@
+{
+  "classified_at": "2026-08-10T15:36:45Z",
+  "extracted_at": "2026-08-09T23:05:48Z",
+  "nodes": {
+    "artifacts": {
+      "classification": "write",
+      "content_hash": "51615504a8d99489",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages artifact uploads, versions, and files in Artifact Registry; deletion of artifacts is possible but not critical since versions can be rebuilt.",
+      "source": "llm"
+    },
+    "auth": {
+      "classification": "dangerous",
+      "content_hash": "a1d85e77dbdf709f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages OAuth2 credentials and authentication, granting and revoking authorization \u2014 security-critical operations with broad impact.",
+      "source": "llm"
+    },
+    "billing": {
+      "classification": "write",
+      "content_hash": "46163765372e384d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Links and unlinks billing accounts to projects; changes are reversible through unlinking.",
+      "source": "llm"
+    },
+    "compute": {
+      "classification": "dangerous",
+      "content_hash": "1df85a439ff43804",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, modifies, and deletes Compute Engine VMs and infrastructure; deletion causes outages.",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "write",
+      "content_hash": "6f8aeafab9b311ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Views and edits local gcloud CLI configuration; changes affect only local state and are easily reversible.",
+      "source": "llm"
+    },
+    "container": {
+      "classification": "dangerous",
+      "content_hash": "397b9beb6d40b223",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deploys, manages, and destroys Kubernetes Engine clusters; deletion destroys cluster infrastructure and workloads.",
+      "source": "llm"
+    },
+    "dns": {
+      "classification": "dangerous",
+      "content_hash": "df6f55523388a8ad",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, modifies, and deletes DNS zones and records; deletion or misconfiguration breaks DNS resolution.",
+      "source": "llm"
+    },
+    "functions": {
+      "classification": "dangerous",
+      "content_hash": "630ba4d80bd6ce6a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deploys, manages, and deletes Cloud Functions; deletion causes service outages if functions are in production use.",
+      "source": "llm"
+    },
+    "iam": {
+      "classification": "dangerous",
+      "content_hash": "e03b57042e261964",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages service accounts, keys, and IAM permissions \u2014 security-critical operations with broad impact on access control.",
+      "source": "llm"
+    },
+    "info": {
+      "classification": "read_only",
+      "content_hash": "cdb65678b100c7bc",
+      "flags": {
+        "--anonymize": {
+          "classification": "read_only",
+          "rationale": "Anonymizes displayed information; still read-only."
+        },
+        "--check-certs": {
+          "classification": "read_only",
+          "rationale": "Checks certificate verification for a specific hostname; still read-only."
+        },
+        "--run-diagnostics": {
+          "classification": "read_only",
+          "rationale": "The '--run-diagnostics' flag executes diagnostic checks on the environment; 'run' here means 'perform diagnostics', which is a read-only inspection operation that only reports information."
+        },
+        "--show-log": {
+          "classification": "read_only",
+          "rationale": "Shows log entries; still read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays gcloud environment information and runs diagnostics without modifying any state.",
+      "source": "llm"
+    },
+    "logging": {
+      "classification": "dangerous",
+      "content_hash": "ad88c4b63ed740a1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages Cloud Logging buckets, logs, and retention policies; deletion of logs is irreversible data loss.",
+      "source": "llm"
+    },
+    "monitoring": {
+      "classification": "dangerous",
+      "content_hash": "d9b69c7bd9510f10",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages dashboards, alert policies, and snoozes; deletion of alert policies disables critical monitoring.",
+      "source": "llm"
+    },
+    "projects": {
+      "classification": "dangerous",
+      "content_hash": "78fc3ee57b8cbead",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates projects and manages IAM policies; modification of access policies grants or revokes broad permissions.",
+      "source": "llm"
+    },
+    "pubsub": {
+      "classification": "dangerous",
+      "content_hash": "206cdc3102cab3e1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, manages, and deletes Pub/Sub topics and subscriptions; deletion of topics causes message data loss.",
+      "source": "llm"
+    },
+    "redis": {
+      "classification": "dangerous",
+      "content_hash": "e501b8af1c5bacd3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, manages, and deletes Memorystore Redis instances; deletion causes permanent data loss.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "read_only",
+      "content_hash": "156883137d235f23",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The word 'run' in 'gcloud run' is part of the service name 'Cloud Run' (Google's serverless platform), not a dangerous verb; invoked without arguments, the command displays help.",
+      "source": "llm-reconfirmed"
+    },
+    "secrets": {
+      "classification": "read_only",
+      "content_hash": "41db92b1cbafd433",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Group/namespace command; running without a subcommand displays help and lists available subcommands.",
+      "source": "llm"
+    },
+    "sql": {
+      "classification": "read_only",
+      "content_hash": "31bdb30221d52065",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Group/namespace command; running without a subcommand displays help and lists available subcommands.",
+      "source": "llm"
+    },
+    "storage": {
+      "classification": "read_only",
+      "content_hash": "c3be090628286cc4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Group/namespace command; running without a subcommand displays help and lists available subcommands.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:52:04Z",
+  "truncated": false,
+  "version": "Google Cloud SDK 571.0.0"
+}

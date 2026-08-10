@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:45:46Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "d35f63878ef87c14",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies files in place with -i flag; changes are bounded to specified files, expected, and reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:37Z",
+  "truncated": false,
+  "version": "sed (GNU sed) 4.9"
+}

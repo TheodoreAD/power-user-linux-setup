@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:14:07Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "5744a6dfa18916dd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "dd can irreversibly write to raw device files (/dev/sda, /dev/sdb, etc.) and destroy disk partitions, lacks built-in confirmation steps, and mistakes have catastrophic consequences that cannot be recovered.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:37Z",
+  "truncated": false,
+  "version": "dd (coreutils) 9.4"
+}

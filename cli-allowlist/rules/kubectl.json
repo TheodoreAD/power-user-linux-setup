@@ -1,0 +1,648 @@
+{
+  "classified_at": "2026-08-10T15:12:37Z",
+  "extracted_at": "2026-08-10T13:10:37Z",
+  "nodes": {
+    "api-resources": {
+      "classification": "read_only",
+      "content_hash": "bb97c2fea8269ab3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints supported API resources on the server without modifying anything.",
+      "source": "llm"
+    },
+    "api-versions": {
+      "classification": "read_only",
+      "content_hash": "2b4eca5d237105df",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints supported API versions on the server without modifying anything.",
+      "source": "llm"
+    },
+    "apply": {
+      "classification": "write",
+      "content_hash": "18a51ceffa7797ff",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Applies configuration to create or update resources on the cluster; reversible via subsequent operations or deletion.",
+      "source": "llm"
+    },
+    "apply edit-last-applied": {
+      "classification": "write",
+      "content_hash": "8ac229d180ab3d5f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Opens editor to modify last-applied-configuration annotations on server resources.",
+      "source": "llm"
+    },
+    "apply set-last-applied": {
+      "classification": "write",
+      "content_hash": "ac8d398b32643918",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates the last-applied-configuration annotation on resources to match file contents.",
+      "source": "llm"
+    },
+    "apply view-last-applied": {
+      "classification": "read_only",
+      "content_hash": "124d61752111b59f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the last-applied-configuration annotation; no modification occurs.",
+      "source": "llm"
+    },
+    "auth": {
+      "classification": "read_only",
+      "content_hash": "baa896a747b3fad1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Inspects authorization information without modifying cluster state.",
+      "source": "llm"
+    },
+    "auth can-i": {
+      "classification": "read_only",
+      "content_hash": "6117ad0ed848d61b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Checks and reports whether an action is permitted; inspects RBAC rules without modifying.",
+      "source": "llm"
+    },
+    "auth reconcile": {
+      "classification": "write",
+      "content_hash": "587b9e3ff428b72c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates missing RBAC objects and updates existing roles/bindings to match input specifications.",
+      "source": "llm"
+    },
+    "auth whoami": {
+      "classification": "read_only",
+      "content_hash": "f72dc2595b7b460d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays current user identity and group attributes; inspection only.",
+      "source": "llm"
+    },
+    "cluster-info": {
+      "classification": "read_only",
+      "content_hash": "70026ada1bee3733",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays cluster addresses and service information without modification.",
+      "source": "llm"
+    },
+    "cluster-info dump": {
+      "classification": "read_only",
+      "content_hash": "7a7cdc0fe1f7aad4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Gathers and outputs cluster state, resource info, and pod logs to stdout or directory for inspection.",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "write",
+      "content_hash": "18f4d866c72af5ce",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies kubeconfig files to configure kubectl access; effects are reversible.",
+      "source": "llm"
+    },
+    "config current-context": {
+      "classification": "read_only",
+      "content_hash": "ce35d061bd1df107",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the currently active context name from kubeconfig.",
+      "source": "llm"
+    },
+    "config delete-cluster": {
+      "classification": "dangerous",
+      "content_hash": "5cc537d0e070bab8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly removes a cluster entry from kubeconfig; destructive operation.",
+      "source": "llm"
+    },
+    "config delete-context": {
+      "classification": "dangerous",
+      "content_hash": "2a04f52e2e5d76c6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly removes a context entry from kubeconfig; can affect the current-context.",
+      "source": "llm"
+    },
+    "config delete-user": {
+      "classification": "dangerous",
+      "content_hash": "a647632031d5dd1c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly removes a user entry from kubeconfig; destructive operation.",
+      "source": "llm"
+    },
+    "config get-clusters": {
+      "classification": "read_only",
+      "content_hash": "3774cc61c19825cd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists clusters defined in kubeconfig; inspection only.",
+      "source": "llm"
+    },
+    "config get-contexts": {
+      "classification": "read_only",
+      "content_hash": "450c5068a402d384",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists contexts from kubeconfig; inspection only.",
+      "source": "llm"
+    },
+    "config get-users": {
+      "classification": "read_only",
+      "content_hash": "fb8f61133c1fedee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists users defined in kubeconfig; inspection only.",
+      "source": "llm"
+    },
+    "config rename-context": {
+      "classification": "write",
+      "content_hash": "e559531965d90910",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies context name in kubeconfig and updates current-context if the renamed context is active.",
+      "source": "llm"
+    },
+    "config set": {
+      "classification": "write",
+      "content_hash": "269ec03c81a635e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies individual values in kubeconfig file, bounded and reversible.",
+      "source": "llm"
+    },
+    "config set-cluster": {
+      "classification": "write",
+      "content_hash": "9d6e625d49dded18",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies cluster entry in kubeconfig, bounded and reversible.",
+      "source": "llm"
+    },
+    "config set-context": {
+      "classification": "write",
+      "content_hash": "ab2585564059e35f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies context entry in kubeconfig, bounded and reversible.",
+      "source": "llm"
+    },
+    "config set-credentials": {
+      "classification": "write",
+      "content_hash": "cb1b07b6c15e7ecc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies user entry in kubeconfig, bounded and reversible.",
+      "source": "llm"
+    },
+    "config unset": {
+      "classification": "write",
+      "content_hash": "8f22b4ef69a40217",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes values from kubeconfig file, bounded and reversible.",
+      "source": "llm"
+    },
+    "config use-context": {
+      "classification": "write",
+      "content_hash": "ae0733b347fc1003",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes active context in kubeconfig file, bounded and reversible.",
+      "source": "llm"
+    },
+    "config view": {
+      "classification": "read_only",
+      "content_hash": "caa694410ac316c5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays kubeconfig settings without modification.",
+      "source": "llm"
+    },
+    "cordon": {
+      "classification": "write",
+      "content_hash": "8eb58ae88a0c3357",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Marks nodes as unschedulable to prevent new pod scheduling; reversible with uncordon.",
+      "source": "llm"
+    },
+    "create": {
+      "classification": "write",
+      "content_hash": "ab2f0cecd51eed60",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates new Kubernetes resources from configuration; resources can be deleted or replaced.",
+      "source": "llm"
+    },
+    "create clusterrole": {
+      "classification": "write",
+      "content_hash": "902684254f48f706",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates cluster role resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create clusterrolebinding": {
+      "classification": "write",
+      "content_hash": "f2c53080a0552b59",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates cluster role binding in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create configmap": {
+      "classification": "write",
+      "content_hash": "0a1b768311cd515d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates config map resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create cronjob": {
+      "classification": "write",
+      "content_hash": "6d2f99a205a9ca4c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates cron job resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create deployment": {
+      "classification": "write",
+      "content_hash": "4f2801c80330a242",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates deployment resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create ingress": {
+      "classification": "write",
+      "content_hash": "ff38d2333b22cb2a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates ingress resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create job": {
+      "classification": "write",
+      "content_hash": "11b3913ee821ecf4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates job resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create namespace": {
+      "classification": "write",
+      "content_hash": "78675a7e63c3b84a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Validates the object without persisting it to the cluster."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates namespace resource in the cluster, standard bounded operation.",
+      "source": "llm"
+    },
+    "create poddisruptionbudget": {
+      "classification": "write",
+      "content_hash": "8ff27fb0c167c761",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new pod disruption budget resource, modifying cluster state but reversibly.",
+      "source": "llm"
+    },
+    "create priorityclass": {
+      "classification": "write",
+      "content_hash": "0eb73d5cfcd3c437",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new priority class resource, modifying cluster configuration but reversibly.",
+      "source": "llm"
+    },
+    "create quota": {
+      "classification": "write",
+      "content_hash": "ae0b9df283d7fdfd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new resource quota, modifying cluster resource limits but reversibly.",
+      "source": "llm"
+    },
+    "create role": {
+      "classification": "write",
+      "content_hash": "0cdd32c6c4669760",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new RBAC role resource, modifying cluster permissions but reversibly.",
+      "source": "llm"
+    },
+    "create rolebinding": {
+      "classification": "write",
+      "content_hash": "67811f6bf61ceb55",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new role binding, modifying cluster RBAC assignments but reversibly.",
+      "source": "llm"
+    },
+    "create secret": {
+      "classification": "write",
+      "content_hash": "4c418a24351d717c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new secret resource, modifying cluster state but reversibly.",
+      "source": "llm"
+    },
+    "create service": {
+      "classification": "write",
+      "content_hash": "1828ee26c7a35faa",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new service resource, modifying cluster networking state but reversibly.",
+      "source": "llm"
+    },
+    "create serviceaccount": {
+      "classification": "write",
+      "content_hash": "ae9ae2231f7121c6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new service account, modifying cluster identity state but reversibly.",
+      "source": "llm"
+    },
+    "create token": {
+      "classification": "read_only",
+      "content_hash": "9888c556ef164644",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Generates an ephemeral authentication token without creating persistent cluster resources.",
+      "source": "llm"
+    },
+    "delete": {
+      "classification": "dangerous",
+      "content_hash": "3876cd5976af78f7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Permanently deletes Kubernetes resources from the cluster; irreversible without backup restoration.",
+      "source": "llm"
+    },
+    "describe": {
+      "classification": "read_only",
+      "content_hash": "eb6a535f34c66465",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows detailed information about resources without modifying them.",
+      "source": "llm"
+    },
+    "diff": {
+      "classification": "read_only",
+      "content_hash": "98d76d340c5e7e7c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compares current configuration with what would be applied; displays differences without making changes.",
+      "source": "llm"
+    },
+    "drain": {
+      "classification": "dangerous",
+      "content_hash": "6723eca1a0cc0d5c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Evicts or deletes pods from a node, causing workload disruption; irreversible without pod recreation.",
+      "source": "llm"
+    },
+    "edit": {
+      "classification": "write",
+      "content_hash": "8b6e894e135a1607",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies Kubernetes resources via an editor and applies changes to the cluster; effects are reversible.",
+      "source": "llm"
+    },
+    "events": {
+      "classification": "read_only",
+      "content_hash": "beabc912d2ebdff8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays cluster events without modifying any state.",
+      "source": "llm"
+    },
+    "exec": {
+      "classification": "write",
+      "content_hash": "cd554d3b4f9b17ee",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Executes arbitrary commands in containers, which can modify container state or read container contents.",
+      "source": "llm"
+    },
+    "explain": {
+      "classification": "read_only",
+      "content_hash": "44f42ad056773bd1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves and displays documentation about Kubernetes resource fields from the server without modifying any state.",
+      "source": "llm"
+    },
+    "get": {
+      "classification": "read_only",
+      "content_hash": "6dba70dbefc6b541",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays resources and their properties from the cluster; purely a query operation with no modifications.",
+      "source": "llm"
+    },
+    "kustomize": {
+      "classification": "read_only",
+      "content_hash": "94bd1b99b7bd0627",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Builds Kubernetes resources from a kustomization.yaml file and outputs the result without applying to the cluster.",
+      "source": "llm"
+    },
+    "logs": {
+      "classification": "read_only",
+      "content_hash": "28974a8174688eac",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves and displays logs from containers in pods; read-only inspection of existing state.",
+      "source": "llm"
+    },
+    "patch": {
+      "classification": "write",
+      "content_hash": "5441bea9d223e854",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies resource fields on the server using strategic merge patch, JSON merge patch, or JSON patch.",
+      "source": "llm"
+    },
+    "port-forward": {
+      "classification": "read_only",
+      "content_hash": "41585867f22383b8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Establishes a temporary port-forwarding tunnel to access a pod without modifying any cluster resources or state.",
+      "source": "llm"
+    },
+    "rollout": {
+      "classification": "write",
+      "content_hash": "3b42d83ad9dbe65d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages resource rollouts through operations like undo, restart, pause, and resume which modify cluster state but are reversible.",
+      "source": "llm"
+    },
+    "rollout history": {
+      "classification": "read_only",
+      "content_hash": "719fa6ef2492bfa6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays deployment rollout history without modifying cluster state.",
+      "source": "llm"
+    },
+    "rollout pause": {
+      "classification": "write",
+      "content_hash": "b1644ef6b44f73ae",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Pauses a deployment preventing further updates, modifying its state but reversibly.",
+      "source": "llm"
+    },
+    "rollout restart": {
+      "classification": "write",
+      "content_hash": "96d0a76303a5d109",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Triggers a new deployment rollout, restarting resources but reversibly.",
+      "source": "llm"
+    },
+    "rollout resume": {
+      "classification": "write",
+      "content_hash": "f39c7babae2c46ed",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Resumes a paused deployment, re-enabling reconciliation but reversibly.",
+      "source": "llm"
+    },
+    "rollout status": {
+      "classification": "read_only",
+      "content_hash": "7618a140093878ea",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays current rollout status and watches progress without modifying cluster state.",
+      "source": "llm"
+    },
+    "rollout undo": {
+      "classification": "write",
+      "content_hash": "54e3dc0adfcd25ec",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Rolls back to a previous deployment revision, modifying active resources but reversibly.",
+      "source": "llm"
+    },
+    "scale": {
+      "classification": "write",
+      "content_hash": "6d6ce2e2e28dd389",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies the number of replicas for deployments, replica sets, and stateful sets.",
+      "source": "llm"
+    },
+    "top": {
+      "classification": "read_only",
+      "content_hash": "1902599f955f0fd8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays CPU and memory usage metrics for cluster nodes or pods; read-only inspection of resource consumption data.",
+      "source": "llm"
+    },
+    "top node": {
+      "classification": "read_only",
+      "content_hash": "5a03ec8b68cc7977",
+      "flags": {
+        "--no-headers": {
+          "classification": "read_only",
+          "rationale": "Only affects output formatting; does not modify state."
+        },
+        "--selector": {
+          "classification": "read_only",
+          "rationale": "Filters displayed nodes by label selector; does not modify state."
+        },
+        "--show-capacity": {
+          "classification": "read_only",
+          "rationale": "Changes which metrics are displayed (Capacity vs Allocatable); does not modify state."
+        },
+        "--sort-by": {
+          "classification": "read_only",
+          "rationale": "Only affects output ordering; does not modify state."
+        },
+        "-l": {
+          "classification": "read_only",
+          "rationale": "Filters displayed nodes by label selector; does not modify state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays node resource metrics (CPU/memory usage) without modifying any cluster state.",
+      "source": "llm"
+    },
+    "top pod": {
+      "classification": "read_only",
+      "content_hash": "7b399f3553fda88b",
+      "flags": {
+        "--all-namespaces": {
+          "classification": "read_only",
+          "rationale": "The 'all' in --all-namespaces expands the scope of what metrics are displayed across namespaces, not what is deleted or destroyed; 'top' is purely a read/display command with no side effects."
+        },
+        "-A": {
+          "classification": "read_only",
+          "rationale": "Expands query scope to all namespaces; still only reads metrics, does not modify state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays pod resource metrics (CPU/memory usage) without modifying any cluster state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:53:29Z",
+  "truncated": false,
+  "version": "Client Version: v1.33.13"
+}

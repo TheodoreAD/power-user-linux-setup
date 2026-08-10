@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:44:34Z",
+  "extracted_at": "2026-08-09T17:34:28Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "aec5ff6b67abfd3e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "ripgrep only searches and inspects files; it cannot modify any state, even indirectly, regardless of flags or options.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:46Z",
+  "truncated": false,
+  "version": "ripgrep 14.1.0"
+}

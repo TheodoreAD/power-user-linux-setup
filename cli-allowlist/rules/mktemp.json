@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:16:32Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "de07a849fd0e6bca",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates new temporary files or directories on the filesystem; the effect is bounded to a single new file/dir, reversible, and the expected safe behavior of the tool.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:32:58Z",
+  "truncated": false,
+  "version": "mktemp (GNU coreutils) 9.4"
+}

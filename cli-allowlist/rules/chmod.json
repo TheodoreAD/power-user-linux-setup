@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:12:32Z",
+  "extracted_at": "2026-08-09T18:11:18Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "68fb12cc1c975a07",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies file permissions (state change) in a bounded, reversible way; typical for development tasks like making scripts executable.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:22Z",
+  "truncated": false,
+  "version": "chmod (GNU coreutils) 9.4"
+}

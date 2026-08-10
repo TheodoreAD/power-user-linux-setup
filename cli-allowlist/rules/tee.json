@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:18:55Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "d818c70ed4d7cc17",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Writes to specified files (creates or appends content), modifying local state, but effects are bounded to those files and fully reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:34:44Z",
+  "truncated": false,
+  "version": "tee (GNU coreutils) 9.4"
+}

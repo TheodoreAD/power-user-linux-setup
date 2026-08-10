@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:17:14Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "be92c90269d5add2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Moves or renames files/directories with reversible, bounded effects; typical usage prompts before overwriting.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:03Z",
+  "truncated": false,
+  "version": "mv (GNU coreutils) 9.4"
+}

@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:16:19Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "2a7e9aff0535e2da",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates directories on the filesystem; modifies state but is bounded to explicitly requested paths and fully reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:32:50Z",
+  "truncated": false,
+  "version": "mkdir (GNU coreutils) 9.4"
+}

@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T17:02:06Z",
+  "extracted_at": "2026-08-09T16:46:54Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "6f5d51c4202aa2c1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Compiles Python source to binaries/artifacts and writes output files to disk; bounded, expected, and reversible (artifacts can be deleted).",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:33:25Z",
+  "truncated": false,
+  "version": "4.1.2"
+}

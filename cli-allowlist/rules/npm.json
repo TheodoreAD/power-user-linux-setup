@@ -1,0 +1,122 @@
+{
+  "classified_at": "2026-08-10T13:14:00Z",
+  "extracted_at": "2026-08-10T13:10:47Z",
+  "nodes": {
+    "audit": {
+      "classification": "read_only",
+      "content_hash": "3eac6a637c168d1f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Inspects packages for security vulnerabilities without modifying.",
+      "source": "llm"
+    },
+    "ci": {
+      "classification": "write",
+      "content_hash": "dc2ef2fd5bdd3bc6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs dependencies from lock file, modifying node_modules.",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "write",
+      "content_hash": "0c6189ed2a7be82f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages npm configuration files via set, delete, and edit operations.",
+      "source": "llm"
+    },
+    "explain": {
+      "classification": "read_only",
+      "content_hash": "f838debfe9822180",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Explains dependency relationships without modifying anything.",
+      "source": "llm"
+    },
+    "info": {
+      "classification": "read_only",
+      "content_hash": "59f3bf927f8a79e3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Queries and displays package metadata from the npm registry without modifying any state.",
+      "source": "llm"
+    },
+    "install": {
+      "classification": "write",
+      "content_hash": "d226cf2fa81a6a4e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs packages and modifies node_modules and lock files.",
+      "source": "llm"
+    },
+    "list": {
+      "classification": "read_only",
+      "content_hash": "968ef00ac924e9ae",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists installed packages without modifying any state.",
+      "source": "llm"
+    },
+    "outdated": {
+      "classification": "read_only",
+      "content_hash": "594e97c6f490d24a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Checks for outdated packages without modifying.",
+      "source": "llm"
+    },
+    "publish": {
+      "classification": "dangerous",
+      "content_hash": "eea35023d78316d8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Publishes a package version to the public npm registry, irreversible.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "write",
+      "content_hash": "7961cd14a943eea3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Runs arbitrary package scripts which may modify local state.",
+      "source": "llm"
+    },
+    "search": {
+      "classification": "read_only",
+      "content_hash": "f1d8177220722e4c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches the npm registry for packages without modifying.",
+      "source": "llm"
+    },
+    "unpublish": {
+      "classification": "dangerous",
+      "content_hash": "33573c8e511f481e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes package versions from npm registry; with --force bypasses protections.",
+      "source": "llm"
+    },
+    "update": {
+      "classification": "write",
+      "content_hash": "426c627fe843a8e9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates packages to newer versions in node_modules and lock files.",
+      "source": "llm"
+    },
+    "view": {
+      "classification": "read_only",
+      "content_hash": "59f3bf927f8a79e3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows package registry information without modifying.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T14:52:47Z",
+  "truncated": false,
+  "version": "11.13.0"
+}

@@ -1,0 +1,715 @@
+{
+  "classified_at": "2026-08-10T15:37:00Z",
+  "extracted_at": "2026-08-10T13:10:29Z",
+  "nodes": {
+    "add": {
+      "classification": "write",
+      "content_hash": "9979ed09552561f8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Stages files for commit but is fully reversible with reset.",
+      "source": "llm"
+    },
+    "bisect": {
+      "classification": "write",
+      "content_hash": "161b5b0fdb531310",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Performs binary search to find commits but session is reversible with bisect reset.",
+      "source": "llm"
+    },
+    "bisect log": {
+      "classification": "read_only",
+      "content_hash": "785dcc219aa3acf3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays bisect session history without modifying state.",
+      "source": "llm"
+    },
+    "bisect next": {
+      "classification": "write",
+      "content_hash": "a547e00fa5fad77e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Advances bisect by checking out the next candidate commit.",
+      "source": "llm"
+    },
+    "bisect replay": {
+      "classification": "write",
+      "content_hash": "9042bdc2957049e8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Replays a bisect session from a file, modifying bisect state.",
+      "source": "llm"
+    },
+    "bisect reset": {
+      "classification": "write",
+      "content_hash": "dfe76ac2670efe4b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Stops bisect and checks out the original branch, modifying working tree.",
+      "source": "llm"
+    },
+    "bisect run": {
+      "classification": "write",
+      "content_hash": "e3b0c44298fc1c14",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Runs a script to automate bisect, modifying working tree and state.",
+      "source": "llm"
+    },
+    "bisect skip": {
+      "classification": "write",
+      "content_hash": "86419f557d1b63f2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Marks a commit as untestable in bisect, modifying bisect state.",
+      "source": "llm"
+    },
+    "bisect start": {
+      "classification": "write",
+      "content_hash": "4e73af3f2da1c84f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates local bisect state to track a binary search; fully reversible via git bisect reset.",
+      "source": "llm"
+    },
+    "bisect terms": {
+      "classification": "read_only",
+      "content_hash": "4274068a74a9d51d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the term definitions used in bisect without modification.",
+      "source": "llm"
+    },
+    "bisect visualize": {
+      "classification": "read_only",
+      "content_hash": "e3b0c44298fc1c14",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows bisect visualization without modifying state.",
+      "source": "llm"
+    },
+    "blame": {
+      "classification": "read_only",
+      "content_hash": "599fd0442b87c077",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Annotates file content with authorship information without modifying state.",
+      "source": "llm"
+    },
+    "branch": {
+      "classification": "write",
+      "content_hash": "00732df7793cbc98",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates, lists, and renames branches; deletion requires explicit -d flag.",
+      "source": "llm"
+    },
+    "checkout": {
+      "classification": "write",
+      "content_hash": "6e78a6c12345939e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Switches branches or restores files but changes are reversible.",
+      "source": "llm"
+    },
+    "clean": {
+      "classification": "dangerous",
+      "content_hash": "69bb16dfd0c66cfd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Destructively removes untracked files from the working tree.",
+      "source": "llm"
+    },
+    "commit": {
+      "classification": "write",
+      "content_hash": "048874835c9777c0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates commits which are reversible via revert or reset.",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "write",
+      "content_hash": "400a1570be9463e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies configuration settings which are reversible.",
+      "source": "llm"
+    },
+    "diff": {
+      "classification": "read_only",
+      "content_hash": "325cedfa7a854f79",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows differences between commits or files without modifying state.",
+      "source": "llm"
+    },
+    "fsck": {
+      "classification": "read_only",
+      "content_hash": "ea258c7fcadab1e8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Checks repository integrity and reports issues without modifying state.",
+      "source": "llm"
+    },
+    "grep": {
+      "classification": "read_only",
+      "content_hash": "87e26197738a0ea6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for patterns in tracked files without modifying state.",
+      "source": "llm"
+    },
+    "log": {
+      "classification": "read_only",
+      "content_hash": "034dc1c4464344f5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays commit history without modifying state.",
+      "source": "llm"
+    },
+    "ls-files": {
+      "classification": "read_only",
+      "content_hash": "c2932884cab052d3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists tracked and staged files without modifying state.",
+      "source": "llm"
+    },
+    "ls-remote": {
+      "classification": "read_only",
+      "content_hash": "19e23f6b7ba530a7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists remote repository refs without modifying state.",
+      "source": "llm"
+    },
+    "merge": {
+      "classification": "write",
+      "content_hash": "fd8a276186682d3b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Merges branches but merge conflicts and history can be reverted.",
+      "source": "llm"
+    },
+    "notes": {
+      "classification": "write",
+      "content_hash": "ca468d43933515b6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds annotations to commits which can be edited or removed.",
+      "source": "llm"
+    },
+    "notes add": {
+      "classification": "write",
+      "content_hash": "06108257e379ca36",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a note to a commit, creating new metadata.",
+      "source": "llm"
+    },
+    "notes append": {
+      "classification": "write",
+      "content_hash": "6178e28d0c96fd22",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Appends to an existing commit note, modifying metadata.",
+      "source": "llm"
+    },
+    "notes copy": {
+      "classification": "write",
+      "content_hash": "6e7acaec272918e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Copies a note between commits, creating or modifying note metadata.",
+      "source": "llm"
+    },
+    "notes edit": {
+      "classification": "write",
+      "content_hash": "5c8d15027853cb44",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Edits an existing commit note, modifying metadata.",
+      "source": "llm"
+    },
+    "notes get-ref": {
+      "classification": "read_only",
+      "content_hash": "9d8d03e86f5ba7f2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Returns the git ref used for notes without modification.",
+      "source": "llm"
+    },
+    "notes merge": {
+      "classification": "write",
+      "content_hash": "e916e1eb32ac0554",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Merges notes from different branches, modifying note state.",
+      "source": "llm"
+    },
+    "notes prune": {
+      "classification": "dangerous",
+      "content_hash": "75b0704a0d26dd54",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be removed without actually removing anything."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes notes from the repository irreversibly.",
+      "source": "llm"
+    },
+    "notes remove": {
+      "classification": "dangerous",
+      "content_hash": "506ba5821f530d6d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly deletes a note from the repository.",
+      "source": "llm"
+    },
+    "notes show": {
+      "classification": "read_only",
+      "content_hash": "57d0f336b6ce700b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays a note without modifying any state.",
+      "source": "llm"
+    },
+    "pull": {
+      "classification": "write",
+      "content_hash": "d3f291d93a3b4c5f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Fetches and merges remote changes; merge state is reversible.",
+      "source": "llm"
+    },
+    "push": {
+      "classification": "write",
+      "content_hash": "24994644736b0764",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Pushes commits to remote repository; changes are reversible by convention.",
+      "source": "llm"
+    },
+    "rebase": {
+      "classification": "write",
+      "content_hash": "2d6ce99bc08943f4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Rewrites commit history but is reversible via reflog.",
+      "source": "llm"
+    },
+    "remote": {
+      "classification": "write",
+      "content_hash": "55e6cbc812bc8cb1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds, removes, or configures remote repositories which changes are reversible.",
+      "source": "llm"
+    },
+    "remote add": {
+      "classification": "write",
+      "content_hash": "d55bda77bb770062",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a new remote to the repository configuration.",
+      "source": "llm"
+    },
+    "remote get-url": {
+      "classification": "read_only",
+      "content_hash": "2f22b3165126cdb3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves and displays remote URLs without modifying state.",
+      "source": "llm"
+    },
+    "remote prune": {
+      "classification": "dangerous",
+      "content_hash": "8783dafcf3824842",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be pruned without actually removing anything."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes stale remote-tracking branches irreversibly.",
+      "source": "llm"
+    },
+    "remote remove": {
+      "classification": "dangerous",
+      "content_hash": "91f930917fbc418a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly deletes a remote from repository configuration.",
+      "source": "llm"
+    },
+    "remote rename": {
+      "classification": "write",
+      "content_hash": "96ce0684ae015819",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Renames a remote in repository configuration.",
+      "source": "llm"
+    },
+    "remote set-branches": {
+      "classification": "write",
+      "content_hash": "2715f8b06eb65bf1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies which branches are tracked from a remote.",
+      "source": "llm"
+    },
+    "remote set-head": {
+      "classification": "write",
+      "content_hash": "d5c1bc4c808a9234",
+      "flags": {
+        "--delete": {
+          "classification": "dangerous",
+          "rationale": "Irreversibly deletes the remote HEAD reference."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sets the default branch for a remote in repository configuration.",
+      "source": "llm"
+    },
+    "remote set-url": {
+      "classification": "write",
+      "content_hash": "a0da8e536c25ddb2",
+      "flags": {
+        "--delete": {
+          "classification": "dangerous",
+          "rationale": "Irreversibly deletes a remote URL."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies the URL of a remote in repository configuration.",
+      "source": "llm"
+    },
+    "remote show": {
+      "classification": "read_only",
+      "content_hash": "8c3d4e1564fc8160",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays information about a remote without modifying state.",
+      "source": "llm"
+    },
+    "remote update": {
+      "classification": "write",
+      "content_hash": "afb16212289b4d45",
+      "flags": {
+        "--prune": {
+          "classification": "dangerous",
+          "rationale": "Updates remote-tracking branches and irreversibly removes stale ones."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Updates remote-tracking branches by fetching from remotes.",
+      "source": "llm"
+    },
+    "reset": {
+      "classification": "write",
+      "content_hash": "65b69c0d4041e5f1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Default --mixed mode moves HEAD and resets index while preserving changes.",
+      "source": "llm"
+    },
+    "rev-parse": {
+      "classification": "read_only",
+      "content_hash": "8f751fed22ff2a95",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parses git revisions and references without modifying state.",
+      "source": "llm"
+    },
+    "show": {
+      "classification": "read_only",
+      "content_hash": "034dc1c4464344f5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays commit and object details without modifying state.",
+      "source": "llm"
+    },
+    "stash": {
+      "classification": "write",
+      "content_hash": "4122834ac298863d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Temporarily saves and restores changes which can be applied or discarded.",
+      "source": "llm"
+    },
+    "stash apply": {
+      "classification": "write",
+      "content_hash": "2339eb957650f6f1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Applies a stash to the working tree, modifying files and potentially the index.",
+      "source": "llm"
+    },
+    "stash branch": {
+      "classification": "write",
+      "content_hash": "39a467786198a92d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new branch and applies a stash to it, modifying repository structure and working tree.",
+      "source": "llm"
+    },
+    "stash clear": {
+      "classification": "dangerous",
+      "content_hash": "a185c2313dbe9610",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly deletes all stashed changes without confirmation.",
+      "source": "llm"
+    },
+    "stash create": {
+      "classification": "write",
+      "content_hash": "4b2f0143d307d0f4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a stash entry without modifying the working tree; reversible and bounded to local storage.",
+      "source": "llm"
+    },
+    "stash drop": {
+      "classification": "dangerous",
+      "content_hash": "9f97cc8e8d0c1407",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly removes a specific stash; destroys stored changes.",
+      "source": "llm"
+    },
+    "stash list": {
+      "classification": "read_only",
+      "content_hash": "e0e369ad16269aef",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists stashes without modifying any state.",
+      "source": "llm"
+    },
+    "stash pop": {
+      "classification": "write",
+      "content_hash": "f4349aee6e33ad31",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Applies stash to working tree and removes it; normal reversible workflow.",
+      "source": "llm"
+    },
+    "stash save": {
+      "classification": "write",
+      "content_hash": "fbf144cdf71dd486",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates and stores stashed changes; normal, reversible operation.",
+      "source": "llm"
+    },
+    "stash show": {
+      "classification": "read_only",
+      "content_hash": "e8cbe3695b9c25c6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays stash differences without modification.",
+      "source": "llm"
+    },
+    "stash store": {
+      "classification": "write",
+      "content_hash": "5d8bb044b221a3dc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Stores a commit object as a stash entry; modifies state but reversible.",
+      "source": "llm"
+    },
+    "status": {
+      "classification": "read_only",
+      "content_hash": "8365baf9a267e4d0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows working tree and index status without modifying state.",
+      "source": "llm"
+    },
+    "submodule": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds, initializes, and updates submodules; changes are reversible.",
+      "source": "llm"
+    },
+    "submodule absorbgitdirs": {
+      "classification": "write",
+      "content_hash": "d2d57567644993e6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Restructures git directories; modifies git internals but is reversible.",
+      "source": "llm"
+    },
+    "submodule add": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds submodule to repository; normal, reversible operation.",
+      "source": "llm"
+    },
+    "submodule deinit": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Unregisters submodules from config; reversible by running init again.",
+      "source": "llm"
+    },
+    "submodule foreach": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Executes commands in submodules; can modify submodule state depending on command passed.",
+      "source": "llm"
+    },
+    "submodule init": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Initializes submodule configuration; normal, reversible operation.",
+      "source": "llm"
+    },
+    "submodule set-branch": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes tracked branch for submodule; reversible operation.",
+      "source": "llm"
+    },
+    "submodule set-url": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes submodule repository URL; reversible operation.",
+      "source": "llm"
+    },
+    "submodule status": {
+      "classification": "read_only",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only inspects and displays the status of submodules without modifying any state.",
+      "source": "llm"
+    },
+    "submodule summary": {
+      "classification": "read_only",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only displays a summary of submodules without modifying any state.",
+      "source": "llm"
+    },
+    "submodule sync": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Synchronizes submodule URLs with .gitmodules, a bounded configuration update.",
+      "source": "llm"
+    },
+    "submodule update": {
+      "classification": "write",
+      "content_hash": "594b54c13483a2e4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates submodules to specified commits, a normal bounded working tree modification.",
+      "source": "llm"
+    },
+    "tag": {
+      "classification": "write",
+      "content_hash": "a660f40feca94730",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates and lists tags; deletion requires explicit -d flag.",
+      "source": "llm"
+    },
+    "worktree": {
+      "classification": "write",
+      "content_hash": "8871b60f972ddfcd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates and manages additional working trees which can be removed.",
+      "source": "llm"
+    },
+    "worktree add": {
+      "classification": "write",
+      "content_hash": "4338aec1eb039137",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new working tree directory and git state, a bounded and reversible operation.",
+      "source": "llm"
+    },
+    "worktree list": {
+      "classification": "read_only",
+      "content_hash": "de37b97b070f25b2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only lists and displays information about working trees without modifying any state.",
+      "source": "llm"
+    },
+    "worktree lock": {
+      "classification": "write",
+      "content_hash": "66df5ce298307ff9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies working tree metadata by adding a lock, a bounded and reversible operation.",
+      "source": "llm"
+    },
+    "worktree move": {
+      "classification": "write",
+      "content_hash": "7badba15fda71dc4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Relocates a working tree to a new path, a bounded and reversible operation.",
+      "source": "llm"
+    },
+    "worktree prune": {
+      "classification": "dangerous",
+      "content_hash": "1bac3f7458483141",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes working tree directories and administrative files for dead worktrees, a destructive operation.",
+      "source": "llm"
+    },
+    "worktree remove": {
+      "classification": "dangerous",
+      "content_hash": "3dc248918169625b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes a working tree directory and its contents, an irreversible destructive operation.",
+      "source": "llm"
+    },
+    "worktree repair": {
+      "classification": "write",
+      "content_hash": "4d821502919d97d4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Repairs working tree administrative files to fix corrupted state, a bounded maintenance operation.",
+      "source": "llm"
+    },
+    "worktree unlock": {
+      "classification": "write",
+      "content_hash": "34e01bb56b09860a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes a lock from a working tree, allowing normal operations to resume, a bounded and reversible operation.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:53:07Z",
+  "truncated": false,
+  "version": "git version 2.43.0"
+}

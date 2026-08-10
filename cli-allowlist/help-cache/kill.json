@@ -1,8 +1,13 @@
 {
-  "commands": {
-    "*": "Usage:\n kill [options] <pid> [...]\n\nOptions:\n <pid> [...]            send signal to every <pid> listed\n -<signal>, -s, --signal <signal>\n                        specify the <signal> to be sent\n -q, --queue <value>    integer value to be sent with the signal\n -l, --list=[<signal>]  list all signal names, or convert one to a name\n -L, --table            list all signal names in a nice table\n\n -h, --help     display this help and exit\n -V, --version  output version information and exit\n\nFor more details see kill(1)."
-  },
-  "extracted_at": "2026-08-09T18:11:19Z",
+  "extracted_at": "2026-08-09T23:05:57Z",
   "interactive": false,
+  "nodes": {
+    "*": {
+      "children": [],
+      "content_hash": "05727202813f6c0b",
+      "help_text": "Usage:\n kill [options] <pid> [...]\n\nOptions:\n <pid> [...]            send signal to every <pid> listed\n -<signal>, -s, --signal <signal>\n                        specify the <signal> to be sent\n -q, --queue <value>    integer value to be sent with the signal\n -l, --list=[<signal>]  list all signal names, or convert one to a name\n -L, --table            list all signal names in a nice table\n\n -h, --help     display this help and exit\n -V, --version  output version information and exit\n\nFor more details see kill(1)."
+    }
+  },
+  "truncated": false,
   "version": "kill from procps-ng 4.0.4"
 }

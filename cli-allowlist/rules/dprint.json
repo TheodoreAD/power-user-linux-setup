@@ -1,0 +1,42 @@
+{
+  "classified_at": "2026-08-09T16:51:23Z",
+  "extracted_at": "2026-08-09T16:46:35Z",
+  "nodes": {
+    "check": {
+      "classification": "read_only",
+      "content_hash": "988d0be66913f0de",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only inspects files and reports formatting violations without modifying anything.",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "write",
+      "content_hash": "c04a91e1a1a9123e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parent command for configuration management; its subcommands (init, update, add, edit) all modify the configuration file.",
+      "source": "llm"
+    },
+    "fmt": {
+      "classification": "write",
+      "content_hash": "cd73656a31cececa",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reformats source files in place; effect is expected, bounded by file patterns, and reversible via git or re-running.",
+      "source": "llm"
+    },
+    "output-file-paths": {
+      "classification": "read_only",
+      "content_hash": "b7673c4bb772217d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Prints resolved file paths for inspection based on configuration without modifying state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:29:09Z",
+  "truncated": false,
+  "version": "dprint 0.54.0"
+}

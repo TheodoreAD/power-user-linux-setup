@@ -1,0 +1,26 @@
+{
+  "classified_at": "2026-08-09T16:59:33Z",
+  "extracted_at": "2026-08-09T16:46:57Z",
+  "nodes": {
+    "build": {
+      "classification": "write",
+      "content_hash": "923fb0bcd35776c9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Generates and writes compiled static site output files to disk, a bounded and reversible operation.",
+      "source": "llm"
+    },
+    "serve": {
+      "classification": "write",
+      "content_hash": "1eb32fd6843c3605",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Builds the project (writes output files) and starts a local dev server; bounded and reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:33Z",
+  "truncated": false,
+  "version": "0.0.44"
+}

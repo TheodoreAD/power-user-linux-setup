@@ -1,8 +1,13 @@
 {
-  "commands": {
-    "*": "GNU bash, version 5.2.21(1)-release-(x86_64-pc-linux-gnu)\nUsage:\tbash [GNU long option] [option] ...\n\tbash [GNU long option] [option] script-file ...\nGNU long options:\n\t--debug\n\t--debugger\n\t--dump-po-strings\n\t--dump-strings\n\t--help\n\t--init-file\n\t--login\n\t--noediting\n\t--noprofile\n\t--norc\n\t--posix\n\t--pretty-print\n\t--rcfile\n\t--restricted\n\t--verbose\n\t--version\nShell options:\n\t-ilrsD or -c command or -O shopt_option\t\t(invocation only)\n\t-abefhkmnptuvxBCEHPT or -o option\nType `bash -c \"help set\"' for more information about shell options.\nType `bash -c help' for more information about shell builtin commands.\nUse the `bashbug' command to report bugs.\n\nbash home page: <http://www.gnu.org/software/bash>\nGeneral help using GNU software: <http://www.gnu.org/gethelp/>"
-  },
-  "extracted_at": "2026-08-09T17:34:24Z",
+  "extracted_at": "2026-08-09T23:05:30Z",
   "interactive": false,
+  "nodes": {
+    "*": {
+      "children": [],
+      "content_hash": "e4003ab33d6f1c07",
+      "help_text": "GNU bash, version 5.2.21(1)-release-(x86_64-pc-linux-gnu)\nUsage:\tbash [GNU long option] [option] ...\n\tbash [GNU long option] [option] script-file ...\nGNU long options:\n\t--debug\n\t--debugger\n\t--dump-po-strings\n\t--dump-strings\n\t--help\n\t--init-file\n\t--login\n\t--noediting\n\t--noprofile\n\t--norc\n\t--posix\n\t--pretty-print\n\t--rcfile\n\t--restricted\n\t--verbose\n\t--version\nShell options:\n\t-ilrsD or -c command or -O shopt_option\t\t(invocation only)\n\t-abefhkmnptuvxBCEHPT or -o option\nType `bash -c \"help set\"' for more information about shell options.\nType `bash -c help' for more information about shell builtin commands.\nUse the `bashbug' command to report bugs.\n\nbash home page: <http://www.gnu.org/software/bash>\nGeneral help using GNU software: <http://www.gnu.org/gethelp/>"
+    }
+  },
+  "truncated": false,
   "version": "GNU bash, version 5.2.21(1)-release (x86_64-pc-linux-gnu)"
 }

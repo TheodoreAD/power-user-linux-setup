@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:12:18Z",
+  "extracted_at": "2026-08-09T18:11:18Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "454a6615e78abc81",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads and displays file contents to stdout without modifying any state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:14Z",
+  "truncated": false,
+  "version": "cat (GNU coreutils) 9.4"
+}

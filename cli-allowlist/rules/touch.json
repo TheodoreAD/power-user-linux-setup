@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:19:04Z",
+  "extracted_at": "2026-08-09T18:11:20Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "c1d86c7bcee2afd2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or modifies file timestamps/metadata on specified files \u2014 bounded, expected modifications that are reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:35:10Z",
+  "truncated": false,
+  "version": "touch (GNU coreutils) 9.4"
+}

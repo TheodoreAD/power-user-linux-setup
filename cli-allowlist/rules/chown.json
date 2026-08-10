@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-09T18:12:47Z",
+  "extracted_at": "2026-08-09T18:11:19Z",
+  "nodes": {
+    "*": {
+      "classification": "dangerous",
+      "content_hash": "04406da23c4ac0d6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Irreversibly changes file ownership and can affect multiple files recursively; misspecified paths or `-R` flags could unintentionally alter system files or break shared access, and the change cannot be easily reversed without knowing the original owner.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-09T18:27:25Z",
+  "truncated": false,
+  "version": "chown (GNU coreutils) 9.4"
+}

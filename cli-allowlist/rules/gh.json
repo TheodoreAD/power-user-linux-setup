@@ -1,0 +1,1666 @@
+{
+  "classified_at": "2026-08-10T15:33:42Z",
+  "extracted_at": "2026-08-10T13:10:34Z",
+  "nodes": {
+    "attestation": {
+      "classification": "read_only",
+      "content_hash": "9168cfbeb417464f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only downloads and verifies artifact attestations without modifying any state.",
+      "source": "llm"
+    },
+    "attestation download": {
+      "classification": "read_only",
+      "content_hash": "2c9c3c095d0509cd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads attestations for offline verification without modifying any state.",
+      "source": "llm"
+    },
+    "attestation trusted-root": {
+      "classification": "read_only",
+      "content_hash": "4a039bb4974773c5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Outputs trusted root file contents for verification purposes without modification.",
+      "source": "llm"
+    },
+    "attestation verify": {
+      "classification": "read_only",
+      "content_hash": "24acb0eb9b79b4c4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Verifies integrity and provenance of artifacts without modifying any resources.",
+      "source": "llm"
+    },
+    "auth": {
+      "classification": "write",
+      "content_hash": "b866e1660cd61a48",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies local authentication credentials (login, logout, refresh, setup-git) but all changes are reversible.",
+      "source": "llm"
+    },
+    "auth login": {
+      "classification": "write",
+      "content_hash": "342201267e1b67b4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Authenticates and stores credentials locally; reversible via logout.",
+      "source": "llm"
+    },
+    "auth logout": {
+      "classification": "write",
+      "content_hash": "f4502cf07b7a0b48",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes stored authentication locally; reversible via login.",
+      "source": "llm"
+    },
+    "auth refresh": {
+      "classification": "write",
+      "content_hash": "f7dd133ddbd322a3",
+      "flags": {
+        "--remove-scopes": {
+          "classification": "write",
+          "rationale": "Removes scopes from credentials; reversible by re-adding them."
+        },
+        "--reset-scopes": {
+          "classification": "write",
+          "rationale": "Resets scopes to defaults; reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies authentication scopes locally; reversible.",
+      "source": "llm"
+    },
+    "auth setup-git": {
+      "classification": "write",
+      "content_hash": "86256f51c79446ac",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses validation check but still just modifies git config reversibly."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Configures git credential helper; reversible.",
+      "source": "llm"
+    },
+    "auth status": {
+      "classification": "read_only",
+      "content_hash": "812c40af7af65c7a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays authentication status without modifying anything.",
+      "source": "llm"
+    },
+    "auth switch": {
+      "classification": "write",
+      "content_hash": "1d732b992dd28881",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes active account locally; reversible by switching back.",
+      "source": "llm"
+    },
+    "auth token": {
+      "classification": "read_only",
+      "content_hash": "780766df9cd593c9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Outputs authentication token for display without modification.",
+      "source": "llm"
+    },
+    "codespace": {
+      "classification": "dangerous",
+      "content_hash": "675ea23662681f07",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete subcommand for permanent removal of codespaces.",
+      "source": "llm"
+    },
+    "codespace code": {
+      "classification": "read_only",
+      "content_hash": "c50ff33250b2bd30",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Opens a codespace in an editor without modifying any state.",
+      "source": "llm"
+    },
+    "codespace cp": {
+      "classification": "write",
+      "content_hash": "c737d3629b1c8939",
+      "flags": {
+        "--recursive": {
+          "classification": "write",
+          "rationale": "Recursively copies directories; modifies state but reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Copies files between local and remote systems; modifies file state but reversible.",
+      "source": "llm"
+    },
+    "codespace create": {
+      "classification": "write",
+      "content_hash": "16a3bd155b5a852f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new codespace resource; reversible via deletion.",
+      "source": "llm"
+    },
+    "codespace delete": {
+      "classification": "dangerous",
+      "content_hash": "ab9df0c7be5a8d11",
+      "flags": {
+        "--all": {
+          "classification": "dangerous",
+          "rationale": "Deletes all codespaces with broad blast-radius; irreversible."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for deletion; increases risk of unintended destruction."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes codespace resources irreversibly.",
+      "source": "llm"
+    },
+    "codespace edit": {
+      "classification": "write",
+      "content_hash": "fdcafd51ccc671b8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies codespace configuration properties; reversible.",
+      "source": "llm"
+    },
+    "codespace jupyter": {
+      "classification": "read_only",
+      "content_hash": "b8fec93f18e3c2a9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Opens an existing codespace in JupyterLab without modifying codespace state.",
+      "source": "llm"
+    },
+    "codespace list": {
+      "classification": "read_only",
+      "content_hash": "5fc546043a4c67ad",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists codespaces; only reads/displays existing state.",
+      "source": "llm"
+    },
+    "codespace logs": {
+      "classification": "read_only",
+      "content_hash": "08a6a2beed75c439",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads and streams codespace logs; does not modify any state even with --follow.",
+      "source": "llm"
+    },
+    "codespace ports": {
+      "classification": "read_only",
+      "content_hash": "cff45738c446f097",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists ports in a codespace; only reads/displays state.",
+      "source": "llm"
+    },
+    "codespace rebuild": {
+      "classification": "write",
+      "content_hash": "3bd9650707e74376",
+      "flags": {
+        "--full": {
+          "classification": "write",
+          "rationale": "Performs a full rebuild with cache removal; still bounded, reversible modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies codespace infrastructure by recreating it, but preserves code and is fully reversible.",
+      "source": "llm"
+    },
+    "codespace ssh": {
+      "classification": "read_only",
+      "content_hash": "5ca76fcfd6daecc4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Connects to an existing codespace; only creates local SSH keys if needed, does not modify the codespace.",
+      "source": "llm"
+    },
+    "codespace stop": {
+      "classification": "write",
+      "content_hash": "5007e5fb9b1b868a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Stops a codespace but does not destroy it; fully reversible by restarting.",
+      "source": "llm"
+    },
+    "codespace view": {
+      "classification": "read_only",
+      "content_hash": "579e73006e3f7d62",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Views/displays codespace details; only reads state.",
+      "source": "llm"
+    },
+    "extension": {
+      "classification": "write",
+      "content_hash": "516014d20777e76c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Installs and manages optional CLI extensions without affecting core functionality or important data.",
+      "source": "llm"
+    },
+    "extension browse": {
+      "classification": "write",
+      "content_hash": "94a4af9796b1e2d7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Interactive UI that can add/remove extensions; bounded local operation that is reversible.",
+      "source": "llm"
+    },
+    "extension create": {
+      "classification": "write",
+      "content_hash": "def3335c7a10fef8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates local extension files/directories; bounded, reversible file creation.",
+      "source": "llm"
+    },
+    "extension exec": {
+      "classification": "invalid",
+      "content_hash": "3e950313fbaaca02",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Help text is an error message ('extension \"--help\" not found') rather than documentation describing the subcommand, indicating it does not exist or is not recognized on this system.",
+      "source": "llm"
+    },
+    "extension install": {
+      "classification": "write",
+      "content_hash": "45788da26fa29620",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Forces upgrade or ignores if already installed; still just a local install/update operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Installs extension code locally; bounded, reversible operation.",
+      "source": "llm"
+    },
+    "extension list": {
+      "classification": "read_only",
+      "content_hash": "9aafaa89ffcbccc1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists installed extensions; only reads local state.",
+      "source": "llm"
+    },
+    "extension remove": {
+      "classification": "write",
+      "content_hash": "71604871feaa3a0e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes an installed extension; local deletion that is fully reversible by reinstalling.",
+      "source": "llm"
+    },
+    "extension search": {
+      "classification": "read_only",
+      "content_hash": "ce7fe6729b2a0613",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for available extensions; only reads remote index, does not modify any state.",
+      "source": "llm"
+    },
+    "extension upgrade": {
+      "classification": "write",
+      "content_hash": "7eaa92330659467d",
+      "flags": {
+        "--all": {
+          "classification": "write",
+          "rationale": "Upgrades all extensions together; modifies multiple tools but is a standard maintenance operation."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Only displays what upgrades would happen without applying any changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Forces upgrade past safety checks but does not perform destructive deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Upgrades installed extensions, modifying local tools but changes are bounded and reversible.",
+      "source": "llm"
+    },
+    "gist": {
+      "classification": "dangerous",
+      "content_hash": "767a858fc9ceca0c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete subcommand for permanent removal of gists.",
+      "source": "llm"
+    },
+    "gist clone": {
+      "classification": "write",
+      "content_hash": "016f0702c5d69276",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Clones a gist to local filesystem, creating new files and directories.",
+      "source": "llm"
+    },
+    "gist create": {
+      "classification": "write",
+      "content_hash": "bb4736d233a957dc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new gist on GitHub, adding a new remote resource.",
+      "source": "llm"
+    },
+    "gist delete": {
+      "classification": "dangerous",
+      "content_hash": "c2b63ed664a41e99",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for deletion, enabling unattended destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a gist from GitHub, an irreversible destruction of a remote resource.",
+      "source": "llm"
+    },
+    "gist edit": {
+      "classification": "write",
+      "content_hash": "122c792b822061ef",
+      "flags": {
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes a file from a gist but does not destroy the gist itself and is reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies gist content on GitHub; changes are bounded and reversible.",
+      "source": "llm"
+    },
+    "gist list": {
+      "classification": "read_only",
+      "content_hash": "eed09a4a68aa44aa",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists gists from user account, only reads and inspects state.",
+      "source": "llm"
+    },
+    "gist rename": {
+      "classification": "write",
+      "content_hash": "3f55a8b4550cf8bf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Renames a file in a gist, a bounded and reversible modification.",
+      "source": "llm"
+    },
+    "gist view": {
+      "classification": "read_only",
+      "content_hash": "83c0b7460cfa5cca",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Views or displays gist content, only reads and inspects state.",
+      "source": "llm"
+    },
+    "gpg-key": {
+      "classification": "dangerous",
+      "content_hash": "144735a95818e114",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete subcommand for permanent removal of GPG keys from GitHub account.",
+      "source": "llm"
+    },
+    "gpg-key add": {
+      "classification": "write",
+      "content_hash": "cadb103a4484418b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a GPG key to GitHub account; modifies account credentials but is reversible via deletion.",
+      "source": "llm"
+    },
+    "gpg-key delete": {
+      "classification": "dangerous",
+      "content_hash": "078981b52c52d072",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for credential deletion, enabling unattended destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a GPG key from GitHub account, an irreversible removal of security credentials.",
+      "source": "llm"
+    },
+    "gpg-key list": {
+      "classification": "read_only",
+      "content_hash": "7ce4f4aa42cfa97d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists GPG keys in GitHub account, only reads and inspects state.",
+      "source": "llm"
+    },
+    "issue": {
+      "classification": "dangerous",
+      "content_hash": "a1211936c5dcab0f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete subcommand for permanent removal of issues.",
+      "source": "llm"
+    },
+    "issue close": {
+      "classification": "write",
+      "content_hash": "c205aeaffdbe5fa7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Closes an issue on GitHub, a bounded and reversible state change.",
+      "source": "llm"
+    },
+    "issue comment": {
+      "classification": "write",
+      "content_hash": "5019fa86e2f8b54d",
+      "flags": {
+        "--delete-last": {
+          "classification": "write",
+          "rationale": "Deletes the last comment of the user; modifies issue state but user can re-add the comment."
+        },
+        "--yes": {
+          "classification": "write",
+          "rationale": "Skips confirmation when deleting a comment, but the change remains reversible by re-adding it."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Adds a comment to an issue, modifying remote state in a bounded way.",
+      "source": "llm"
+    },
+    "issue create": {
+      "classification": "write",
+      "content_hash": "e9cc88cf50383fbb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new issue on GitHub, adds a new remote resource in a bounded way.",
+      "source": "llm"
+    },
+    "issue delete": {
+      "classification": "dangerous",
+      "content_hash": "02c0d12d1992598f",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt for issue deletion, enabling unattended destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes an issue from GitHub, an irreversible destruction of a remote resource.",
+      "source": "llm"
+    },
+    "issue develop": {
+      "classification": "write",
+      "content_hash": "e6c9832d2d5a7424",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new development branch linked to an issue, modifying repository state.",
+      "source": "llm"
+    },
+    "issue edit": {
+      "classification": "write",
+      "content_hash": "947338f54a390931",
+      "flags": {
+        "--remove-assignee": {
+          "classification": "write",
+          "rationale": "Removes assignees from an issue; modifies metadata but is reversible."
+        },
+        "--remove-blocked-by": {
+          "classification": "write",
+          "rationale": "Removes blocking relationships; reversible metadata modification."
+        },
+        "--remove-blocking": {
+          "classification": "write",
+          "rationale": "Removes blocking relationships; reversible metadata modification."
+        },
+        "--remove-label": {
+          "classification": "write",
+          "rationale": "Removes labels from an issue; reversible metadata modification."
+        },
+        "--remove-milestone": {
+          "classification": "write",
+          "rationale": "Removes milestone association; reversible metadata modification."
+        },
+        "--remove-parent": {
+          "classification": "write",
+          "rationale": "Removes parent issue relationship; reversible metadata modification."
+        },
+        "--remove-project": {
+          "classification": "write",
+          "rationale": "Removes issue from projects; reversible metadata modification."
+        },
+        "--remove-sub-issue": {
+          "classification": "write",
+          "rationale": "Removes sub-issue relationships; reversible metadata modification."
+        },
+        "--remove-type": {
+          "classification": "write",
+          "rationale": "Removes issue type; reversible metadata modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies issue metadata (assignees, labels, milestones, blocking relationships, etc.).",
+      "source": "llm"
+    },
+    "issue list": {
+      "classification": "read_only",
+      "content_hash": "2c60b2b969769298",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists issues matching search criteria; only reads/filters existing state.",
+      "source": "llm"
+    },
+    "issue lock": {
+      "classification": "write",
+      "content_hash": "6a66c9706948d091",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Locks issue conversation, changing issue state and restricting interactions.",
+      "source": "llm"
+    },
+    "issue pin": {
+      "classification": "write",
+      "content_hash": "1130f9cc63b2a01c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Pins an issue to a repository, modifying which issues are pinned.",
+      "source": "llm"
+    },
+    "issue reopen": {
+      "classification": "write",
+      "content_hash": "ab1bbf5d6bef9dd5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reopens a closed issue, changing its state from closed to open.",
+      "source": "llm"
+    },
+    "issue status": {
+      "classification": "read_only",
+      "content_hash": "21d03969a2a321a9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Shows status of relevant issues; only reads and formats existing issue state.",
+      "source": "llm"
+    },
+    "issue transfer": {
+      "classification": "write",
+      "content_hash": "d99177770dd1f282",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Transfers an issue to another repository, moving it between repos (reversible via re-transfer).",
+      "source": "llm"
+    },
+    "issue unlock": {
+      "classification": "write",
+      "content_hash": "2b0ca60d417a03d8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Unlocks issue conversation, restoring the ability to comment and interact.",
+      "source": "llm"
+    },
+    "issue unpin": {
+      "classification": "write",
+      "content_hash": "09147fa6f17af8b6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Unpins an issue from a repository, modifying which issues are pinned.",
+      "source": "llm"
+    },
+    "issue view": {
+      "classification": "read_only",
+      "content_hash": "2651edea877c3079",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays issue information and metadata; only reads and displays existing state.",
+      "source": "llm"
+    },
+    "label": {
+      "classification": "dangerous",
+      "content_hash": "b699482b81124c0a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete subcommand for permanent removal of labels from repositories.",
+      "source": "llm"
+    },
+    "label clone": {
+      "classification": "write",
+      "content_hash": "1f4bc4fc20618734",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Overwrites existing labels in the destination; still a bounded, reversible modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Copies labels from one repository to another, modifying labels in the destination.",
+      "source": "llm"
+    },
+    "label create": {
+      "classification": "write",
+      "content_hash": "091e94cb2cdac27d",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Updates an existing label instead of skipping; still a bounded metadata modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new label on a repository.",
+      "source": "llm"
+    },
+    "label delete": {
+      "classification": "dangerous",
+      "content_hash": "7c8fe51f75270bff",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Confirms deletion without prompting, bypassing user confirmation for a destructive operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a label from a repository; destructive operation that removes data.",
+      "source": "llm"
+    },
+    "label edit": {
+      "classification": "write",
+      "content_hash": "896373bbdca67906",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Updates label properties (color, description, name); reversible metadata modification.",
+      "source": "llm"
+    },
+    "label list": {
+      "classification": "read_only",
+      "content_hash": "2ad1e064dbc8f797",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only lists labels, does not modify anything.",
+      "source": "llm"
+    },
+    "org": {
+      "classification": "read_only",
+      "content_hash": "6b874975876e4b8e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only lists organizations for authenticated user; no modifications possible.",
+      "source": "llm"
+    },
+    "org list": {
+      "classification": "read_only",
+      "content_hash": "3f7765bb8af867d2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only lists organizations, does not modify anything.",
+      "source": "llm"
+    },
+    "pr": {
+      "classification": "write",
+      "content_hash": "9695a2a95aab3a55",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Manages pull requests including merge and revert operations, which are reversible state changes on the repository.",
+      "source": "llm"
+    },
+    "pr checkout": {
+      "classification": "write",
+      "content_hash": "ac99d7c077d6d262",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Force flag that overwrites local branch state, discarding uncommitted changes and bypassing normal safety checks."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates or updates a local git branch, reversible by switching branches or deleting.",
+      "source": "llm"
+    },
+    "pr checks": {
+      "classification": "read_only",
+      "content_hash": "d9c6752845c9fe5a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only displays CI status and check results, does not modify anything.",
+      "source": "llm"
+    },
+    "pr close": {
+      "classification": "write",
+      "content_hash": "79a32e1df0394602",
+      "flags": {
+        "--delete-branch": {
+          "classification": "dangerous",
+          "rationale": "Deletes the branch after close, a destructive operation that removes the branch reference."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Closes a pull request on GitHub, reversible by reopening.",
+      "source": "llm"
+    },
+    "pr comment": {
+      "classification": "write",
+      "content_hash": "b7d9a5bd608db2f5",
+      "flags": {
+        "--delete-last": {
+          "classification": "dangerous",
+          "rationale": "Deletes the user's last comment, a destructive operation."
+        },
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Skips delete confirmation prompt when used with --delete-last, bypassing safety confirmation for a destructive operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Adds a comment to a pull request, reversible by deleting the comment.",
+      "source": "llm"
+    },
+    "pr create": {
+      "classification": "write",
+      "content_hash": "86feda6e6372627a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints details without creating the PR, only showing what would be created without making changes."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new pull request on GitHub, reversible by closing it.",
+      "source": "llm"
+    },
+    "pr diff": {
+      "classification": "read_only",
+      "content_hash": "833038da81746e8e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Views changes/diff in a pull request, does not modify anything.",
+      "source": "llm"
+    },
+    "pr edit": {
+      "classification": "write",
+      "content_hash": "9b7131a1d9202fbc",
+      "flags": {
+        "--remove-assignee": {
+          "classification": "write",
+          "rationale": "Removes assignee metadata, modifies PR state but is reversible."
+        },
+        "--remove-label": {
+          "classification": "write",
+          "rationale": "Removes label metadata, modifies PR state but is reversible."
+        },
+        "--remove-milestone": {
+          "classification": "write",
+          "rationale": "Removes milestone metadata, modifies PR state but is reversible."
+        },
+        "--remove-project": {
+          "classification": "write",
+          "rationale": "Removes PR from project, modifies PR state but is reversible."
+        },
+        "--remove-reviewer": {
+          "classification": "write",
+          "rationale": "Removes reviewer, modifies PR state but is reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Edits PR metadata on GitHub, reversible by editing back.",
+      "source": "llm"
+    },
+    "pr list": {
+      "classification": "read_only",
+      "content_hash": "ea5e5218257f9bb6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists pull requests in a repository, does not modify anything.",
+      "source": "llm"
+    },
+    "pr lock": {
+      "classification": "write",
+      "content_hash": "f8597399b350b990",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Locks PR conversation, modifying its state but reversible by unlocking.",
+      "source": "llm"
+    },
+    "pr merge": {
+      "classification": "write",
+      "content_hash": "6b14acf4a7eb42ab",
+      "flags": {
+        "--delete-branch": {
+          "classification": "dangerous",
+          "rationale": "Deletes the branch after merge, a destructive operation that removes the branch reference."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Merges a pull request on GitHub, modifying git history but reversible via revert commit.",
+      "source": "llm"
+    },
+    "pr ready": {
+      "classification": "write",
+      "content_hash": "427125e6869bf4c3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Marks PR as ready for review, modifies PR state but reversible by marking as draft.",
+      "source": "llm"
+    },
+    "pr reopen": {
+      "classification": "write",
+      "content_hash": "fb4f4f281829605f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reopens a closed pull request, modifies PR state but reversible by closing it again.",
+      "source": "llm"
+    },
+    "pr revert": {
+      "classification": "write",
+      "content_hash": "4805eb2a9740de02",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new PR that reverts changes, modifies state on GitHub but reversible by closing the revert PR.",
+      "source": "llm"
+    },
+    "pr review": {
+      "classification": "write",
+      "content_hash": "e39d9c91cfae8b44",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a review (approve/comment/request-changes) to a PR, modifying state but bounded and expected.",
+      "source": "llm"
+    },
+    "pr status": {
+      "classification": "read_only",
+      "content_hash": "280b3af8ffb86d6c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays pull request status and CI information without modification.",
+      "source": "llm"
+    },
+    "pr unlock": {
+      "classification": "write",
+      "content_hash": "703da8ddf4f8ebaa",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Unlocks PR conversation, modifying state but reversible (can be re-locked).",
+      "source": "llm"
+    },
+    "pr view": {
+      "classification": "read_only",
+      "content_hash": "6340f8a8db327eff",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays PR title, body, and metadata without modification.",
+      "source": "llm"
+    },
+    "project": {
+      "classification": "dangerous",
+      "content_hash": "4e56046b20c32700",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete operations for permanent removal of projects and project items.",
+      "source": "llm"
+    },
+    "project close": {
+      "classification": "write",
+      "content_hash": "a4b95dbe2926cca3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Closes a project, modifying state but reversible via the --undo flag.",
+      "source": "llm"
+    },
+    "project copy": {
+      "classification": "write",
+      "content_hash": "fdc676f3ab287ab7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a copy of an existing project, a bounded state modification.",
+      "source": "llm"
+    },
+    "project create": {
+      "classification": "write",
+      "content_hash": "2733e15024d5c750",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new project, a bounded state modification.",
+      "source": "llm"
+    },
+    "project delete": {
+      "classification": "dangerous",
+      "content_hash": "57687e6920ce3189",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes a project entirely, which is irreversible and destructive.",
+      "source": "llm"
+    },
+    "project edit": {
+      "classification": "write",
+      "content_hash": "e1a9d9eb9471ea75",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies project metadata (title, description, visibility), a bounded state change.",
+      "source": "llm"
+    },
+    "project field-create": {
+      "classification": "write",
+      "content_hash": "a33e4d0e59334a9e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new field in a project, a bounded state modification.",
+      "source": "llm"
+    },
+    "project field-delete": {
+      "classification": "dangerous",
+      "content_hash": "de128464ce04ed9e",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes a field from the project, which is irreversible and affects all items in that project.",
+      "source": "llm"
+    },
+    "project field-list": {
+      "classification": "read_only",
+      "content_hash": "b4e3cdc6a6371841",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists project fields without modification.",
+      "source": "llm"
+    },
+    "project item-add": {
+      "classification": "write",
+      "content_hash": "1425af5c5b06a232",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds an existing issue or PR to a project, a bounded state modification.",
+      "source": "llm"
+    },
+    "project item-archive": {
+      "classification": "write",
+      "content_hash": "1a4c000a5d9d9c83",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Archives a project item, modifying state but reversible via the --undo flag.",
+      "source": "llm"
+    },
+    "project item-create": {
+      "classification": "write",
+      "content_hash": "2103d9c6888fb342",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a draft issue item in a project, a bounded state modification.",
+      "source": "llm"
+    },
+    "project item-delete": {
+      "classification": "dangerous",
+      "content_hash": "fee5955384b91591",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes a project item by ID, which is irreversible.",
+      "source": "llm"
+    },
+    "project item-edit": {
+      "classification": "write",
+      "content_hash": "3e56050b901db234",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies a project item's properties or draft issue content, which is reversible.",
+      "source": "llm"
+    },
+    "project item-list": {
+      "classification": "read_only",
+      "content_hash": "674f4c2cd48cdceb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists items in a project without modifying state.",
+      "source": "llm"
+    },
+    "project link": {
+      "classification": "write",
+      "content_hash": "fa88a9ee279633b9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates an association between a project and a repository or team, which is reversible via unlink.",
+      "source": "llm"
+    },
+    "project list": {
+      "classification": "read_only",
+      "content_hash": "fd66320a0cdfcd97",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists projects for an owner without modifying state.",
+      "source": "llm"
+    },
+    "project unlink": {
+      "classification": "write",
+      "content_hash": "e8e2317673dd8157",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes an association between a project and a repository or team, which is reversible via link.",
+      "source": "llm"
+    },
+    "project view": {
+      "classification": "read_only",
+      "content_hash": "833e47ca4104d69a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays project details without modifying state.",
+      "source": "llm"
+    },
+    "release": {
+      "classification": "dangerous",
+      "content_hash": "2ae69615f21f726c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete and delete-asset subcommands for permanent removal of releases and their assets.",
+      "source": "llm"
+    },
+    "release create": {
+      "classification": "write",
+      "content_hash": "092a237510082324",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new release and optionally uploads assets, which is reversible by deleting the release.",
+      "source": "llm"
+    },
+    "release delete": {
+      "classification": "dangerous",
+      "content_hash": "0baf1b9c2844e327",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation prompt but still irreversibly deletes a release."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a release, which is irreversible.",
+      "source": "llm"
+    },
+    "release delete-asset": {
+      "classification": "dangerous",
+      "content_hash": "9780a5fa894b9b8b",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation prompt but still irreversibly deletes an asset."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes an asset file from a release, which is irreversible.",
+      "source": "llm"
+    },
+    "release download": {
+      "classification": "read_only",
+      "content_hash": "5274069d9050eb81",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads release assets to the local filesystem without modifying any GitHub state.",
+      "source": "llm"
+    },
+    "release edit": {
+      "classification": "write",
+      "content_hash": "2bc7e56884d09d8d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies release metadata (notes, title, draft status, prerelease flag), which is reversible.",
+      "source": "llm"
+    },
+    "release list": {
+      "classification": "read_only",
+      "content_hash": "fef9c57da60dc102",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists releases in a repository without modifying state.",
+      "source": "llm"
+    },
+    "release upload": {
+      "classification": "write",
+      "content_hash": "c6deb8420a04315b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Uploads or updates asset files in a release, which is reversible by deleting the assets.",
+      "source": "llm"
+    },
+    "release verify": {
+      "classification": "read_only",
+      "content_hash": "74a883bec68262ad",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Verifies a release's cryptographic attestation and prints metadata without modifying state.",
+      "source": "llm"
+    },
+    "release verify-asset": {
+      "classification": "read_only",
+      "content_hash": "db44d33ce6fc2d6b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Verifies authenticity of release assets using cryptographic signatures without modifying any state.",
+      "source": "llm"
+    },
+    "release view": {
+      "classification": "read_only",
+      "content_hash": "27e3f4055c0c5ad1",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays release information without modifying state.",
+      "source": "llm"
+    },
+    "repo": {
+      "classification": "dangerous",
+      "content_hash": "1711cda047cc6464",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Includes delete and archive subcommands for permanent removal or read-only modification of repositories.",
+      "source": "llm"
+    },
+    "repo archive": {
+      "classification": "write",
+      "content_hash": "06cbab7952f7b8f4",
+      "flags": {
+        "--yes": {
+          "classification": "write",
+          "rationale": "Skips confirmation prompt but does not change the reversible nature of archiving."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Archives a repository, reversibly hiding it from listings.",
+      "source": "llm"
+    },
+    "repo autolink": {
+      "classification": "dangerous",
+      "content_hash": "0624ed41ac34ab06",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parent command enabling deletion of autolink references through subcommands.",
+      "source": "llm"
+    },
+    "repo clone": {
+      "classification": "write",
+      "content_hash": "0d417496a5708542",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Clones repository locally; modifies local filesystem but is reversible.",
+      "source": "llm"
+    },
+    "repo create": {
+      "classification": "write",
+      "content_hash": "a6bae93fd269924b",
+      "flags": {
+        "--include-all-branches": {
+          "classification": "write",
+          "rationale": "Includes branches from template but still creates a reversible repository."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a repository on GitHub; reversible by deleting it.",
+      "source": "llm"
+    },
+    "repo delete": {
+      "classification": "dangerous",
+      "content_hash": "0ce4a44222e7c831",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation but does not change the irreversible destructive nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Permanently deletes a GitHub repository; irreversible destructive operation.",
+      "source": "llm"
+    },
+    "repo deploy-key": {
+      "classification": "dangerous",
+      "content_hash": "6c8187c0ccd122f6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parent command enabling deletion of deploy keys through subcommands.",
+      "source": "llm"
+    },
+    "repo edit": {
+      "classification": "write",
+      "content_hash": "2e45c33c3ec02053",
+      "flags": {
+        "--delete-branch-on-merge": {
+          "classification": "write",
+          "rationale": "Configures a repository setting; reversible."
+        },
+        "--remove-topic": {
+          "classification": "write",
+          "rationale": "Removes a topic from repository; reversible by adding it back."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Edits repository settings; reversible by editing back.",
+      "source": "llm"
+    },
+    "repo fork": {
+      "classification": "write",
+      "content_hash": "d0046ae6356fcce5",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a fork of a repository; reversible by deleting it.",
+      "source": "llm"
+    },
+    "repo gitignore": {
+      "classification": "read_only",
+      "content_hash": "44f33ac6399a328d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parent command for listing and viewing gitignore templates only.",
+      "source": "llm"
+    },
+    "repo license": {
+      "classification": "read_only",
+      "content_hash": "2de6828b828befa6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Parent command for listing and viewing license information only.",
+      "source": "llm"
+    },
+    "repo list": {
+      "classification": "read_only",
+      "content_hash": "1ec1388396ec298a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists repositories without modifying state.",
+      "source": "llm"
+    },
+    "repo read-dir": {
+      "classification": "read_only",
+      "content_hash": "30f4fb0b5f77ae3c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads directory contents without cloning or modifying state.",
+      "source": "llm"
+    },
+    "repo read-file": {
+      "classification": "read_only",
+      "content_hash": "26f0352f5980d3fc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Reads file contents without cloning or modifying state.",
+      "source": "llm"
+    },
+    "repo rename": {
+      "classification": "write",
+      "content_hash": "82d1d6bfcddbaaa3",
+      "flags": {
+        "--yes": {
+          "classification": "write",
+          "rationale": "Skips confirmation prompt but the operation remains bounded and reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies the repository name on GitHub; bounded, expected, and reversible operation.",
+      "source": "llm"
+    },
+    "repo set-default": {
+      "classification": "read_only",
+      "content_hash": "56c3eb7c83b66cbd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only configures local gh settings about which repository to use for API queries; does not modify any GitHub state.",
+      "source": "llm"
+    },
+    "repo sync": {
+      "classification": "write",
+      "content_hash": "0562f6a4e17a3279",
+      "flags": {
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Hard reset overwrites destination branch history, irreversibly losing commits."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Syncs destination repository from source using fast-forward merge, bounded and reversible.",
+      "source": "llm"
+    },
+    "repo unarchive": {
+      "classification": "write",
+      "content_hash": "0022b8218a912de0",
+      "flags": {
+        "--yes": {
+          "classification": "write",
+          "rationale": "Skips confirmation prompt but the operation remains bounded and reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Unarchives a repository, toggling its archived state; bounded and reversible.",
+      "source": "llm"
+    },
+    "repo view": {
+      "classification": "read_only",
+      "content_hash": "f7b0a1867f87f6a7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays repository metadata and README or opens in browser; only reads state.",
+      "source": "llm"
+    },
+    "ruleset": {
+      "classification": "read_only",
+      "content_hash": "68e338f5779c5f84",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only checks, lists, and views repository rulesets; no modifications possible.",
+      "source": "llm"
+    },
+    "ruleset check": {
+      "classification": "read_only",
+      "content_hash": "70063ba448f7d9d8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Inspects rules that would apply to a branch; only reads configuration state.",
+      "source": "llm"
+    },
+    "ruleset list": {
+      "classification": "read_only",
+      "content_hash": "13d7f3abe398bca2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists rulesets for a repository or organization; only reads information.",
+      "source": "llm"
+    },
+    "ruleset view": {
+      "classification": "read_only",
+      "content_hash": "2d37907b295d8188",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays details of a specific ruleset; only reads state.",
+      "source": "llm"
+    },
+    "run": {
+      "classification": "dangerous",
+      "content_hash": "f2ff9d5ae757a638",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Can delete workflow runs, which is an irreversible destruction of run history data.",
+      "source": "llm"
+    },
+    "run cancel": {
+      "classification": "write",
+      "content_hash": "3b127bad167880a8",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Forces cancellation but remains a bounded, reversible operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Cancels a workflow run; bounded and reversible (the run can be re-executed).",
+      "source": "llm"
+    },
+    "run delete": {
+      "classification": "dangerous",
+      "content_hash": "4a685c7273a80e06",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Permanently deletes a workflow run and its logs; irreversible destructive operation.",
+      "source": "llm"
+    },
+    "run download": {
+      "classification": "read_only",
+      "content_hash": "0b5f69281f2821bf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "The 'run' here is a noun referring to a GitHub Actions workflow run; downloading artifacts is a pure retrieval operation with no state modification.",
+      "source": "llm-reconfirmed"
+    },
+    "run list": {
+      "classification": "read_only",
+      "content_hash": "e048331086472c12",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The '--all' flag broadens what is displayed/listed (includes disabled workflows), not what is deleted or destroyed."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists workflow runs (observation only); 'run' is a noun, not a verb action.",
+      "source": "llm-reconfirmed"
+    },
+    "run rerun": {
+      "classification": "write",
+      "content_hash": "dc6c38df8d28dd44",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Triggers a new execution of a workflow run or re-runs failed jobs; bounded and reversible.",
+      "source": "llm"
+    },
+    "run view": {
+      "classification": "read_only",
+      "content_hash": "717e62db6e2226d4",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Views a summary of a workflow run; 'run' is a noun and this is pure observation with no state modification.",
+      "source": "llm-reconfirmed"
+    },
+    "run watch": {
+      "classification": "read_only",
+      "content_hash": "f5149bc50df9a900",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Watches/monitors the progress of a workflow run until completion; 'run' is a noun and this is observation only, not execution.",
+      "source": "llm-reconfirmed"
+    },
+    "search": {
+      "classification": "read_only",
+      "content_hash": "6e3676ee44d6968d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches across GitHub; read-only query operation without modifying any state.",
+      "source": "llm"
+    },
+    "search code": {
+      "classification": "read_only",
+      "content_hash": "80aff0f4de9a2d49",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches GitHub repositories for code and outputs matching results without modifying any state.",
+      "source": "llm"
+    },
+    "search commits": {
+      "classification": "read_only",
+      "content_hash": "4f933e0ed2374f5c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for commits on GitHub and outputs results without modifying any state.",
+      "source": "llm"
+    },
+    "search issues": {
+      "classification": "read_only",
+      "content_hash": "ef17fe68146616de",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for issues on GitHub and outputs results without modifying any state.",
+      "source": "llm"
+    },
+    "search prs": {
+      "classification": "read_only",
+      "content_hash": "0b4eea65b0895036",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for pull requests on GitHub and outputs results without modifying any state.",
+      "source": "llm"
+    },
+    "search repos": {
+      "classification": "read_only",
+      "content_hash": "5f231a4fc8b2421a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Searches for repositories on GitHub and outputs results without modifying any state.",
+      "source": "llm"
+    },
+    "secret": {
+      "classification": "dangerous",
+      "content_hash": "337a57f8ecf1c8d3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Can delete GitHub Actions secrets, which is destructive and could break CI/CD pipelines if required secrets are removed.",
+      "source": "llm"
+    },
+    "secret delete": {
+      "classification": "dangerous",
+      "content_hash": "ec60c33d5170f0f0",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses the confirmation prompt for secret deletion, removing a safety checkpoint before irreversible destruction."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes secrets irreversibly from GitHub, a destructive operation that cannot be undone.",
+      "source": "llm"
+    },
+    "secret list": {
+      "classification": "read_only",
+      "content_hash": "77f51fb17c694787",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists secrets without modification; only inspects what secrets exist.",
+      "source": "llm"
+    },
+    "secret set": {
+      "classification": "write",
+      "content_hash": "a2d9dac67690bacf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or updates a secret value, modifying state in a bounded and reversible manner (can be deleted or changed later).",
+      "source": "llm"
+    },
+    "ssh-key": {
+      "classification": "dangerous",
+      "content_hash": "cef1f30b821163be",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Can delete SSH keys from the GitHub account, which is irreversible and could lock out or affect the user's authentication.",
+      "source": "llm"
+    },
+    "ssh-key add": {
+      "classification": "write",
+      "content_hash": "eb5993268d5f418a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds an SSH key to a GitHub account, modifying state in a bounded and reversible manner (key can be deleted later).",
+      "source": "llm"
+    },
+    "ssh-key delete": {
+      "classification": "dangerous",
+      "content_hash": "f28148ec3de3f792",
+      "flags": {
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses the confirmation prompt for SSH key deletion, removing a safety checkpoint before irreversible destruction."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes an SSH key from a GitHub account, an irreversible destructive operation.",
+      "source": "llm"
+    },
+    "ssh-key list": {
+      "classification": "read_only",
+      "content_hash": "d4464318dddf4257",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists SSH keys in a GitHub account without modification; only inspects what keys exist.",
+      "source": "llm"
+    },
+    "variable": {
+      "classification": "dangerous",
+      "content_hash": "f9424d86e39fe444",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Can delete GitHub Actions variables, which is destructive and could break CI/CD pipeline configurations.",
+      "source": "llm"
+    },
+    "variable delete": {
+      "classification": "dangerous",
+      "content_hash": "c45dfc1d4897623d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Deletes a variable irreversibly from GitHub Actions or Dependabot configuration, a destructive operation.",
+      "source": "llm"
+    },
+    "variable get": {
+      "classification": "read_only",
+      "content_hash": "a374101e1e1d7719",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves a variable value without modification; only inspects and outputs the variable.",
+      "source": "llm"
+    },
+    "variable list": {
+      "classification": "read_only",
+      "content_hash": "f3ca1a1ad2cfd05b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists variables without modification; only inspects what variables exist.",
+      "source": "llm"
+    },
+    "variable set": {
+      "classification": "write",
+      "content_hash": "e410e99c9b41638b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or updates a variable value, modifying state in a bounded and reversible manner (can be changed or deleted later).",
+      "source": "llm"
+    },
+    "workflow": {
+      "classification": "write",
+      "content_hash": "9649f1bfc24958c2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Can enable, disable, or trigger workflows, which modifies CI/CD state in bounded and expected ways without destructive operations.",
+      "source": "llm"
+    },
+    "workflow disable": {
+      "classification": "write",
+      "content_hash": "80cdeb95e2bb0c04",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies workflow enabled/disabled state, but the change is reversible and bounded to a single workflow.",
+      "source": "llm"
+    },
+    "workflow enable": {
+      "classification": "write",
+      "content_hash": "ad60f77c78c6a1b7",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies workflow enabled/disabled state, but the change is reversible and bounded to a single workflow.",
+      "source": "llm"
+    },
+    "workflow list": {
+      "classification": "read_only",
+      "content_hash": "3f4965fc35029f57",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "The '--all' flag expands the listing to include disabled workflows (show more results), not delete or modify anything."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Only lists and inspects workflow metadata without modifying any state.",
+      "source": "llm"
+    },
+    "workflow run": {
+      "classification": "write",
+      "content_hash": "0b23e08889a652bd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a workflow dispatch event that triggers a workflow run, modifying state but the effect is reversible and bounded to a single workflow.",
+      "source": "llm"
+    },
+    "workflow view": {
+      "classification": "read_only",
+      "content_hash": "7881901a3ccae188",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only reads and displays workflow information or opens it in a browser for viewing.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-10T15:52:53Z",
+  "truncated": false,
+  "version": "gh version 2.97.0 (2026-07-31)"
+}

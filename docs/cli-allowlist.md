@@ -14,17 +14,20 @@ explanation of *why* it's built the way it is; the code docstrings cover the *ho
 ## Architecture: extract → classify → review → apply
 
 ```
-inv allowlist.extract   deterministic, no LLM      captures --help text, version-gated
-inv allowlist.classify  LLM (headless claude -p)    read_only / write / dangerous per subcommand
+inv allowlist.extract   deterministic, no LLM      captures --help text, recursing into the
+                                                    subcommand tree where a tool opts in
+inv allowlist.classify  LLM (headless claude -p)    read_only / write / dangerous per node, plus
+                                                    per-flag ratings for risk-relevant options
 inv allowlist.review    human gate                  you look at what changed, mark it reviewed
 inv allowlist.apply     deterministic, no LLM       merges reviewed rules into ~/.claude/settings.json
 ```
 
 Each stage is independently re-runnable and cheap to re-run when nothing changed — that's the
 point. `extract` is skipped per-tool when `--version` output hasn't changed; `classify` is skipped
-per-tool when the extracted help text hasn't changed (content-hash-gated); `apply` is a no-op when
-the computed rule set already matches what's live. A routine re-run after `apt upgrade` costs
-close to nothing and makes zero LLM calls unless a tool's actual command surface changed.
+**per node** when that node's own help text hasn't changed (content-hash-gated, not a whole-tool
+hash — see below); `apply` is a no-op when the computed rule set already matches what's live. A
+routine re-run after `apt upgrade` costs close to nothing and makes zero LLM calls unless a tool's
+actual command surface changed.
 
 ### `tools.toml` — the registry
 
@@ -54,6 +57,148 @@ Coverage isn't limited to what `setup.toml` installs — it also includes the ba
 rather than from memory, since an agent reaches for `cat`/`cp`/`rm`/`dd` just as often as anything
 PULSE explicitly installs.
 
+Three more fields exist specifically for recursion:
+
+- **`max_depth`** — how many levels deep to walk the subcommand tree (default `1`, today's
+  original single-level behavior). `2` also probes each direct subcommand's own `--help` for a
+  further command listing (`git remote add`, `docker network create`, `gh secret set`). Opt-in per
+  tool — most tools' real risk lives at depth 1 and recursing needlessly just costs LLM calls for
+  no new signal. Currently on for `git`, `gh`, `glab`, `kubectl`, `helm`, `docker`, `terraform`,
+  `go`, `npm` — the tools where a bare subcommand name genuinely blends distinct risk levels
+  (`docker network` alone can't tell you `ls` is read-only and `rm` is dangerous).
+- **`max_nodes`** — total node budget for the whole tree, breadth-first (default `60`). Only
+  matters once `max_depth > 1`. `docker` and `gh` needed `200` — their real trees measured
+  ~160–175 nodes; `150` silently truncated the least-common branches (breadth-first truncation
+  drops whatever hasn't been reached yet, not a random subset, so it's at least legible in
+  `status`'s `truncated` flag, not a silent gap).
+- **`cloud_cli`** — marks a tool whose real command surface is structurally too large to
+  auto-discover (`gcloud`, `aws`: `<tool> <service> <resource> <verb>`, thousands of leaf commands,
+  3 levels deep by construction). These intentionally stay at `max_depth = 1` with a hand-picked
+  top-level `subcommands` list. This is a documented non-goal, not a gap `max_depth` will
+  eventually close — recursing a provider CLI's full surface isn't worth the node/LLM-call budget
+  for commands that will almost never be run.
+
+### Recursive tree extraction — `_build_tree`, and what broke on the first pass
+
+Depth isn't just "run `_discover_subcommands` again on the child's help text" — every one of the
+following was found by actually running it against real tools, not by inspecting one tool's
+`--help` and assuming the shape generalizes:
+
+1. **Nested help text often doesn't look like the top level's.** `git`'s top-level `-h` has a
+   `Commands:`-style heading; `git remote -h` / `git stash -h` / etc. render as docopt-style usage
+   synopses instead (`usage: git remote add ...`, `or: git remote [-v] show ...`) with no heading
+   at all. `_discover_subcommands` tries the heading-based regex first and falls back to a
+   synopsis parser (`_discover_from_synopsis`) only when that finds nothing *and* a tool+path
+   context is available (i.e. only at nested levels, never at the top, where the heading style
+   reliably applies). The fallback walks each `usage:`/`or:` line token by token, skips
+   (possibly-nested) `[...]` bracket groups, and takes the next token *only if it's a bare
+   lowercase identifier* — a positional-arg placeholder right after the known path
+   (`<pathspec>`, `<commit>...<commit>`, or docker's bare-ALL-CAPS convention `CONTAINER`) means
+   this command takes arguments directly rather than nesting further, and is deliberately left
+   unmatched rather than sanitized into a fake subcommand. It fails closed: a synopsis it can't
+   parse confidently yields no verb from that line, not a wrong one. (An earlier version stripped
+   punctuation before validating and fabricated nodes like `add pathspec`, `branch branch-name`,
+   `diff commitcommit`, and merged git bisect's `(good|bad)` alternation into `bisect goodbad` —
+   caught by inspecting the actual discovered tree, not by trusting the regex.)
+2. **A cobra-style tool can format nested listings differently from its own top level.** `gh`'s
+   nested help suffixes each name with a colon (`  create:        Create a pull request`) where
+   the top-level listing has no colon — `_SUBCOMMAND_LINE`'s trailing `:?` exists specifically for
+   this; without it, `gh`'s entire depth-2 tree silently discovered zero children.
+3. **A subcommand that no longer exists can silently echo its parent's help instead of erroring.**
+   Confirmed at two different tree levels: `docker trust --help` (root-level, deprecated in this
+   docker build, exits `0`, dumps `docker --help`) — recursing into that would treat the *entire*
+   command surface as `trust`'s children and blow the node budget on a duplicate of the whole tree
+   (this is what first exposed the bug: `docker`'s `truncated` node count didn't match reality, and
+   `trust` had 40 "children" that were really just the rest of docker). `_build_tree` detects this
+   by content hash — a node's help text byte-identical to its *immediate parent's* (not just the
+   tool's root; see point 4) — and suppresses further recursion into it.
+
+   Whether duplicate content also means "not a real command" turned out to hinge on **how many
+   siblings were discovered alongside it, not on where the name came from** — the first version of
+   this check used "explicit `subcommands =` list vs auto-discovered" as the signal, which is
+   wrong: `git submodule <verb> -h` returns the exact same combined usage block for 9 of its 10
+   auto-discovered children (only `absorbgitdirs` differs), and all 9 are real, safety-distinct
+   commands (`submodule deinit` is very different from `submodule sync`) that just happen to share
+   undifferentiated help text — the same situation as `nvm`'s shell function, one level deeper. A
+   *lone* duplicate — the only child discovered for its parent at all — has nothing corroborating
+   it; a duplicate inside a multi-member group discovered the same way as its non-duplicating
+   siblings does. So: a node whose content matches its parent **and** was the only child found in
+   its discovery batch gets marked `likely_invalid` at extract time and never even reaches the LLM
+   (see point 4); everything else with duplicate content — `docker trust`, `nvm`'s whole list,
+   `git submodule`'s 9 — keeps being classified normally, worst case producing a rule that never
+   matches anything real (`docker trust`) rather than losing real coverage (`nvm`, `git submodule`).
+4. **Some extraction weirdness doesn't show up as duplicate content at all**, and no deterministic
+   heuristic was going to anticipate every shape it can take — so `classify`'s LLM call carries a
+   4th classification tier, `invalid`, specifically for "this path isn't a genuine, distinct
+   command" (rubric excerpt: matched a line from an example/sample-output table, a config snippet,
+   or other incidental text; content doesn't describe what this specific path does). This is a
+   deliberate second layer on top of point 3's deterministic check, not a duplicate of it — proven
+   live on `helm`: the deterministic check caught `list maudlin-arachnid` (a sample-output table
+   row — `maudlin-arachnid    Mon May 9 16:07:08 2016    alpine-0.1.0` — matched by the same
+   heading-shaped regex that finds real subcommands, the lone-child case from point 3), while the
+   LLM independently caught `diff` (a real, 18-member root-level entry — not a lone duplicate, so
+   point 3's check doesn't touch it — but `helm diff` is a third-party plugin not installed here;
+   `helm diff --help` silently dumps generic top-level Helm help, content that "looks like" a
+   plausible response, not a duplicate signal, but doesn't actually describe a `diff` subcommand).
+   Neither layer alone would have caught both. A third variety turned up later, at full-registry
+   scale: `gh extension exec` and `direnv dump` both captured a literal CLI error message
+   (`extension "--help" not found`) as their node's help text — not a duplicate of anything, not
+   generic fallback content, just an error string — and the LLM correctly flagged both `invalid`
+   on sight without any rubric change, which is really the point of having a judgment-based second
+   layer at all: each new shape of extraction weirdness found so far has been a *different* one,
+   not a repeat, and a deterministic check can only ever cover the ones already seen. `invalid`-tier
+   nodes are excluded from `render`/`apply` output automatically (the pattern-building code already
+   only branches on `read_only`/`write`/`dangerous`) and shown in their own section in `review`,
+   separate from the normal per-node dump, so they read as "not a command, ignore it" rather than a
+   4th risk tier.
+
+### Per-flag ratings — same call, no extra invocations
+
+Flags don't get their own `--help`; they're already sitting in the help text `extract` captured
+for a node. `_parse_flags` pulls `-f, --force  <description>`-style lines out of that text
+(best-effort, not load-bearing the way subcommand discovery is — a missed flag is one fewer
+candidate offered to the classifier, not a broken tree). Rating literally every flag on every node
+would be mostly noise (`--verbose`, `--output`, `--color` never affect risk) for real token/cost
+overhead, so `_candidate_flags` pre-filters by name against two heuristic token sets — one for
+flags that plausibly *escalate* risk (`force`, `recursive`, `all`, `yes`, `hard`, `global`,
+`cascade`, ..., extending the same `_DANGEROUS_VERBS` set already used for the subcommand-name
+backstop) and one for flags that plausibly *de-escalate* it (`dry-run`, `check`, `plan-only`,
+`preview`, ...). Only the matches get sent to the LLM as "candidate flags — rate ONLY these" for
+that node, in the same call as the subcommand's own classification (no extra API calls).
+
+Flags are rated on the same three-tier scale as subcommands, but as an **absolute resulting tier**
+for command+flag together, not a delta from the base — `git push` is `write`, `git push --force`
+is `dangerous`; `git clean` is `dangerous`, `git clean --dry-run` is `read_only`. This was a
+deliberate framing choice: an absolute tier is directly comparable to the base classification and
+one the model can reason about consistently, versus an abstract "escalates/mitigates" concept that
+would need its own interpretation layer downstream. A flag missing from a node's `flags` map simply
+wasn't offered as a candidate — treat it as "no signal that it changes the base tier," not "rated
+and found neutral."
+
+Flags get the same read_only-name-vs-dangerous-token backstop as subcommands
+(`_looks_dangerous_flag`), and it caught a real false positive of its own: `--dry-run` tokenizes to
+`{"dry", "run"}`, and `"run"` is in `_DANGEROUS_VERBS` (added for `nvm run` as a *subcommand*, which
+does execute arbitrary code) — so the single most common safety-signaling flag in the entire
+candidate set was getting downgraded to `needs_review` on sight, confirmed live on git's `notes
+prune --dry-run` / `remote prune --dry-run` (both correctly rated `read_only` by the model, then
+immediately flipped). The fix isn't "remove `run` from the dangerous set" (it's a correct catch for
+the subcommand case) — it's a whole-name check first: if a flag's full name (not its individual
+tokens) matches something in the *safe*-flag hint set, that wins the tiebreak before tokenizing ever
+loses the "dry-" context (`_flag_matches_hints`, shared by both the candidate-selection filter and
+the backstop). A pure token-set comparison can't make this distinction on its own — `"dry-run"` as a
+whole phrase and `"run"` as an isolated token need to be checked as genuinely different things.
+
+**Important limitation, not a TODO**: this data doesn't drive `render`/`apply` yet, and structurally
+can't with the current mechanism. Claude's Bash permission rules are literal-prefix globs
+(`Bash(git push:*)`), and flags can appear in any order/position in a real invocation — there's no
+clean prefix-based way to express "allow this subcommand except with `--force`". `write` and
+`dangerous` still both render as `ask` either way (see below), so today a flag escalating from
+write to dangerous doesn't even change the rendered rule. Per-flag data is analysis/review value
+right now — exactly what motivated building it — and a foundation for a future consumer (e.g. a
+PreToolUse hook, which unlike a prefix glob *can* parse flags order-independently — deliberately
+not built yet, see the `render`/`apply` section below) rather than something `render` acts on
+today.
+
 ### Deterministic extraction has more sharp edges than it looks like
 
 Two real, empirically-confirmed problems, not hypothetical ones:
@@ -63,11 +208,16 @@ Two real, empirically-confirmed problems, not hypothetical ones:
    installed on the machine this was built on, which made the bug invisible until tested with a
    stripped environment. Fixed by using `git -h` instead — a self-contained synopsis with no
    package dependency. `cli-allowlist/check_man_deps.py` runs every registered tool's help
-   invocation under `strace -f -e trace=execve` and checks for a child `exec` of `/usr/bin/man` —
-   the only reliable way to tell "renders like a man page" (`gcloud`, which mimics man's
-   NAME/SYNOPSIS/DESCRIPTION layout with its own self-contained renderer, no `man` involved) apart
-   from "actually shells out to man" (`git`, the one real case found so far). Re-run it
-   (`python3 cli-allowlist/check_man_deps.py`) after registering a new tool.
+   invocation under `strace -f -e trace=execve` and checks for a child `exec` of `man`, `groff`, or
+   `troff` — the only reliable way to tell "renders like a man page" (`gcloud`, which mimics man's
+   NAME/SYNOPSIS/DESCRIPTION layout with its own self-contained renderer, nothing external
+   involved) apart from "actually shells out to a formatter" (`git` depends on `man` itself; `aws`
+   — added when the cloud-CLI recursion boundary was drawn — depends on `groff`/`troff`/`grotty`
+   for `aws help`'s formatted output, same risk class, different package, caught the same way). Any
+   tool in this category only extracts correctly because that package happens to be installed on
+   this machine; there's no portable fix for `aws` the way `-h` was for `git` (no flag skips the
+   groff pipeline), so it's accepted and documented in `tools.toml` rather than worked around. Re-run
+   the check (`python3 cli-allowlist/check_man_deps.py`) after registering a new tool.
 2. **Extraction must be portable, not just correct on the machine that wrote it.** `PAGER`,
    `MANPAGER`, `GIT_PAGER`, and `BROWSER` are neutralized (`cat`/`true`) for every extraction call
    — the actual defense here isn't "nothing tries to page or open a browser," it's that the
@@ -97,42 +247,207 @@ Things that weren't obvious until tested:
   (`--mode`, `--run`, ...) instead of one verdict for the tool. Fixed by asking explicitly for a
   single entry under a fixed key (`_default_`), with a conservative fallback (take the most
   cautious of whatever came back) if a future tool's help text confuses it the same way again.
-- **Cost is dominated by fixed per-call overhead, not prompt size.** A single trivial 2-item
-  classification call cost ~$0.026 and ~12s at Haiku — a real tool with 15-25 subcommands costs
-  roughly the same ballpark. Classifying the ~70 tools not already covered by a community-sourced
-  seed (see below) cost under $2 total, one time; steady-state re-runs are close to free because of
-  the content-hash gate.
+- **Cost is dominated by fixed per-call overhead, not prompt size — up to a point.** A single
+  trivial 2-item classification call cost ~$0.026 and ~12s at Haiku; a real tool with 15-25
+  subcommands stayed in roughly the same ballpark. That stopped holding once per-flag ratings were
+  added and trees got deeper: a 20-node batch (subcommand + candidate-flag ratings) measured
+  ~$0.08 and ~92s — close enough to both `--max-budget-usd` and the process timeout that a tool
+  with 50+ new nodes in one call (routine once `max_depth > 1` is on) would blow past one or the
+  other. `classify` batches `_CLASSIFY_CHUNK_SIZE` (15) nodes per call instead of the whole tool at
+  once — still far fewer calls than one-per-node, just bounded per call. Classifying the ~70 tools
+  not already covered by a community-sourced seed cost under $2 total the first time this pipeline
+  existed; enabling recursion on 9 tools added a comparable one-time cost for their new nodes.
+  Steady-state re-runs are close to free either way, because of the (now per-node) content-hash
+  gate.
 - **A deterministic safety backstop runs after every LLM call, at no extra cost**: any subcommand
   the model marks `read_only` gets re-checked against a small set of dangerous-sounding verb tokens
   in the subcommand *name itself* (`delete`, `destroy`, `rm`, `force`, `run`, `exec`, ...) — a
   match downgrades it to `needs_review` regardless of what the model said. `run`/`exec` were added
   to this list after the model classified `nvm run`/`nvm exec` as `read_only`, which is wrong —
-  they execute arbitrary commands. (This does cause one known, accepted false positive: `gh run`
-  — the noun, GitHub Actions run history, not a verb — also gets flagged. Harmless: it just means
-  that one entry falls back to a normal prompt instead of being pre-approved, same as any other
-  `needs_review` entry.)
+  they execute arbitrary commands. This does cause real false positives, though — the check has no
+  understanding of context, it just matches words: `gh run` is a noun (GitHub Actions run history),
+  not a verb, and `--all` on a listing command broadens what's *shown*, not what's destroyed. Left
+  unresolved, `needs_review` entries stay excluded from both `allow` and `ask` forever (see
+  "Review", below) — `inv allowlist.reconfirm` is the second pass that resolves them; see its own
+  section further down.
 
-Six tools (`git`\*, `gh`, `kubectl`, `helm`, `docker`, `terraform`, `gcloud`) were seeded from a
-cloned community allowlist repo rather than classified fresh — `source: "community"` in
-`rules.json` — on the theory that a well-covered, actively-maintained community list is a fine
-starting point for stable, widely-used tools. (\* `git` was later reclassified via LLM anyway,
-after switching its `help_flag` to `-h` changed the extracted text enough to invalidate the seed's
-hash — an expected one-time cost of that fix, not a bug.)
+Six tools (`git`\*, `gh`, `kubectl`, `helm`, `docker`, `terraform`, `gcloud`) were originally seeded
+from a cloned community allowlist repo rather than classified fresh — `source: "community"` on
+that node — on the theory that a well-covered, actively-maintained community list is a fine
+starting point for stable, widely-used tools while this pipeline's own rubric was still new. (\*
+`git` was reclassified via LLM early on anyway, after switching its `help_flag` to `-h` changed the
+extracted text enough to invalidate the seed's hash.)
+
+`source` lives on each *node*, not on the tool as a whole — originally because of recursion (five
+of the six also gained `max_depth = 2`, so their depth-1 nodes stayed `source: "community"` while
+their new depth-2 nodes, never covered by the seed at all, came back `source: "llm"`), but it also
+turned out to matter for a second reason: **community data is now deliberately self-liquidating**.
+`classify` sweeps every node with `source: "community"` back into reclassification on every run,
+content hash notwithstanding — once the pipeline had matured (its own rubric, per-flag ratings, the
+invalid-node backstop, chunked prompts), there was no remaining reason to trust an external seed
+over a fresh judgment from the exact same model/rubric everything else here is classified with. A
+few nodes get upgraded to real LLM output on each `classify` run at no cost to the nodes that are
+already fresh, until nothing `community`-sourced is left. As of this writing, all six tools have
+been fully swept — `source: "community"` shouldn't appear anywhere in `cli-allowlist/rules/`
+anymore, though the sweep logic stays in place in case a future community-seed addition happens.
+
+### Rules storage — one file per tool, not one monolithic `rules.json`
+
+`cli-allowlist/rules/<tool>.json`, one file per tool (mirroring `help-cache/<tool>.json`), each
+holding a path-keyed `nodes` map — replaced a single `rules.json` once trees got deep enough that
+one tool's reclassification would otherwise rewrite (and diff-noise) every other tool's data in
+the same file on every run. Each node carries its own `content_hash` (not a single hash for the
+whole tool): `classify` diffs *per node*, so a new `docker network` child doesn't force
+reclassifying `docker`'s other 160 unrelated nodes, and a routine re-run only ever pays for what
+actually changed.
+
+### `reconfirm` — resolving `needs_review` with the specific concern in hand
+
+The verb-token backstop (above) is deliberately dumb — a cheap, deterministic string match with no
+context — which means it both catches real risks the first classify pass might have missed *and*
+flags real false positives (`gh run`, `--all` on a listing command). Leaving those stuck at
+`needs_review` forever (excluded from both `allow` and `ask`, so they'd always fall back to
+whatever Claude's own default is) throws away commands that a closer look would clear.
+
+`inv allowlist.reconfirm` is a second, targeted LLM pass over exactly the current `needs_review`
+set (subcommands and flags both) — different from a normal `classify` re-run in two ways: it tells
+the model precisely which word triggered suspicion (`_dangerous_tokens_in`/`_dangerous_flag_tokens`
+report the matched token, not just a bool, specifically so this prompt can cite it), and it trusts
+whatever the model comes back with directly — a reconfirmed `read_only` does **not** get run back
+through the same backstop that flagged it in the first place, which would just recreate the
+original problem. The rubric leans on the model instead: it's told this verdict is trusted
+unchecked, so if the help text doesn't clearly settle whether the flagged word applies in its
+dangerous sense here, it should answer `write`/`dangerous` rather than guess `read_only` — wrong in
+the cautious direction just means one more prompt, wrong in the other direction is the actual
+failure mode.
+
+Resolved nodes are stored with `source: "llm-reconfirmed"` (distinct from plain `"llm"`, so it's
+visible in review/audit that this one took a second pass) and the tool is marked unreviewed again,
+same as any other classification change — a human still signs off on the resolved verdict before it
+renders into a rule. Idempotent by construction and needs no `--force`: once an item resolves to a
+real classification it's no longer `needs_review`, so nothing is left for the next run to touch.
+
+Verified it isn't just rubber-stamping everything `read_only`: `nvm exec`/`nvm run` — the exact
+case the backstop's `run`/`exec` tokens were added to catch — correctly came back `write` with a
+rationale distinguishing "the safe sense of execute-code" from "the shell builtin", not blindly
+cleared because they were being reconfirmed at all.
+
+### Three real bugs found running this at scale (community resweep + reconfirm)
+
+Making `classify` always resweep `source: "community"` nodes (below) meant, for the first time,
+sending every depth-1 node of five well-known, actively-maintained CLIs (`docker`, `gh`, `kubectl`,
+`helm`, `terraform`) through this pipeline in one push. That surfaced three real bugs that smaller,
+one-tool-at-a-time runs hadn't hit:
+
+1. **A failed *or merely incomplete* chunk silently dropped nodes from the ruleset, not just left
+   them stale.** Community nodes are always routed into `to_classify` (never `carried`, by design —
+   see below), so when a key never showed up in a chunk's result, it wasn't in `verdict` *or*
+   `carried`, and the old `if result is None: continue` in the node-building loop meant it simply
+   never made it into `new_nodes`. First confirmed losing 21 root-level `gh` nodes (`gh pr`, `gh
+   issue`, `gh secret`, ...) from `rules/gh.json` entirely after one explicitly failed chunk — worse
+   than the state before the resweep, which at least had the community data. But checking every
+   recursive tool's `help-cache` keys against its `rules` keys (not just the one that printed a
+   "chunk failed" message) turned up the same gap, silently, with **no error printed at all**, on
+   `docker` (7 nodes), `gcloud` (4), `git` (2), and `aws` (1) — a chunk can report success while
+   still covering only some of what it was asked for, which is exactly what point 2's scope-creep
+   bug does when it burns output budget on unrequested items before finishing the requested ones. A
+   clean-looking `classify` run was not sufficient evidence that nothing was lost. Fixed: on a
+   missing result, fall back to whatever was in `existing_nodes` for that key (if anything) instead
+   of dropping it — it's still not in `carried`, so it stays eligible for `to_classify` again next
+   run, but nothing is lost in the meantime.
+2. **The model doesn't reliably stay in scope for a tool it has extensive prior knowledge of.**
+   Asked to classify 20 specific `gh` nodes, Haiku used its own training knowledge of the GitHub
+   CLI and classified 134 — the entire tool's surface, most of it never requested. Confirmed by
+   reproducing the exact call directly: 131s runtime and $0.12 versus 56s/$0.06 for the same 20
+   nodes once fixed. This explains the intermittent chunk failures during the resweep: generating
+   ~6x the necessary output routinely pushed calls right up against `_CLASSIFY_TIMEOUT`. Not a
+   token-budget-only problem, since `--max-budget-usd` didn't reliably catch it either — fixed by
+   making the rubric explicit that only the listed paths should be classified and that recognizing
+   a well-known tool's other subcommands isn't an invitation to include them.
+3. **A chunk can "succeed" while still returning nothing usable, via a subtle key mismatch.** After
+   fix #2, `reconfirm` calls for `gcloud`/`gh`/`helm`/`kubectl` still came back with `resolved: 0`
+   despite `_classify_via_claude` returning a non-empty, well-formed result — because the model
+   prefixed every key with the tool name (`"gh run list"` instead of the requested `"run list"`),
+   and a straight `verdict.get(key)` lookup by the original key silently found nothing for any of
+   them. The rubric already asked for "the exact key strings given" — that instruction just isn't
+   airtight either. Fixed defensively rather than by rubric-tuning alone: `_strip_tool_prefix`
+   strips a leading `"<tool> "` from every returned key before it's used for lookup, in both
+   `classify` and `reconfirm` — free when the model behaved, a real recovery when it didn't.
+
+None of these were hypothetical hardening — each was caught by actually running the resweep across
+six tools and checking `help-cache` node keys against `rules` node keys for gaps, not by reading
+the code and assuming it was right.
 
 ### Review — the human gate
 
-`inv allowlist.review` shows what's new or changed since the last reviewed snapshot and, on
-confirmation, marks a tool `reviewed: true`. **Nothing downstream trusts an unreviewed entry** —
-`render` and `apply` silently exclude any tool that hasn't been through this. This is a
-per-*tool* gate, not per-subcommand: there's no mechanism (yet) to individually override a single
-subcommand's classification without re-running the LLM step, which is why `needs_review` entries
-stay excluded even after their tool is marked reviewed.
+`inv allowlist.review` shows what's new or changed since the last reviewed snapshot — printed as an
+indented tree (nested subcommands under their parent, candidate flags under their node) rather than
+a flat list, since a 150+ node tool is unreadable any other way — and, on confirmation, marks a
+tool `reviewed: true`. The nesting isn't stored structurally anywhere — `rules/<tool>.json` is a
+flat dict keyed by full path — it's reconstructed at print time two ways at once: sorting paths
+alphabetically naturally clusters every node under its parent already, since a path is literally
+`"<parent> <child>"` and a child's string always sorts immediately after its parent and before the
+parent's next sibling; and only the *trailing* segment of each path is printed as the label; with
+indentation carrying the depth (`path.count(" ")`), the result reads as an actual tree (`network`
+then indented `create`/`rm`/`ls`) instead of the full path repeated at every line (`network`,
+`network create`, `network rm`, ...), which is what an early version did and what prompted this —
+it read as a flat, oddly-doubled list rather than a hierarchy, especially once a rationale routinely
+ran past one line and, without a deliberate hanging indent (`_wrap`, using `textwrap.fill` with
+`subsequent_indent`), wrapped back to column 0 instead of staying aligned under its entry.
+
+**Nothing downstream trusts an unreviewed entry** — `render` and `apply`
+silently exclude any tool that hasn't been through this. This is a per-*tool* gate, not per-node:
+there's no mechanism to individually override a single node's (or flag's) classification without
+re-running the LLM step (`reconfirm` for `needs_review` specifically, a normal `classify --force`
+for anything else) — which is why unresolved `needs_review` entries stay excluded even after their
+tool is marked reviewed.
+
+`--only=dangerous,needs_review` (comma-separated classification tiers) narrows the per-node dump to
+just those tiers — useful for triaging a large tree without reading past every `read_only` entry
+first. Command/classification names print in color (tier-coded: green/yellow/red for
+read_only/write/dangerous, magenta for needs_review, gray for invalid) when stdout is a real
+terminal and `NO_COLOR` isn't set; rationale text is deliberately left in the default color so it
+doesn't compete for attention, and every line wraps to the terminal width with a hanging indent
+instead of running to the edge and wrapping back to column 0.
 
 ### `render` / `apply` — where the classified data goes
 
 `render --target=claude|copilot` is pure, deterministic, output-only: turns the reviewed subset of
-`rules.json` into Claude `Bash(...)` glob-prefix rules or Copilot `chat.tools.terminal.autoApprove`
-regex rules. It never writes anywhere by itself.
+`rules/*.json` into Claude `Bash(...)` glob-prefix rules or Copilot `chat.tools.terminal.autoApprove`
+regex rules — one rule per node, using its full path (`Bash(docker network rm:*)` for a depth-2
+node, same as `Bash(git status:*)` for a depth-1 one — the pattern-building code doesn't need to
+know how deep a node is, a path is just a path). Per-flag ratings aren't rendered here at all — see
+the "important limitation" note above. It never writes anywhere by itself.
+
+One deliberate exception to "one rule per node": a `read_only` node that has children of its own
+(checked against `help-cache/<tool>.json`'s `children` list, not `rules/`, since that's where tree
+structure actually lives) is skipped entirely. Its read_only verdict describes the *bare*
+invocation (`docker network` with no further args just lists/describes, like any other read_only
+command), but real usage always goes through a child (`docker network rm`, `docker network
+create`), each already getting its own, independently-correct rule. Rendering a rule for the bare
+parent too would be pure noise, not a safety gap: Claude Code's permission precedence is
+deny > ask > allow with **no specificity tiebreak** — confirmed against the actual docs
+(<https://code.claude.com/docs/en/permissions.md>), not assumed — so a stricter rule for a child
+always wins over a looser `allow` for its parent regardless of whether the parent's rule exists at
+all. The one behavior change from omitting it: a bare invocation with no subcommand at all (rare)
+falls through to Claude's own default instead of being pre-approved — typically still a prompt, not
+silent approval and not silent denial.
+
+A second, unrelated exception: **`cloud_cli` tools never get an `allow` rule, full stop**, whatever
+their own classification says. This one *is* a real safety gap that was caught before it ever
+reached `apply`, not a theoretical one — worth walking through, because it's the flip side of the
+container-omission logic above and easy to miss. `gcloud`/`aws` never recurse (that's the entire
+point of `cloud_cli`), so every one of their nodes is a bare top-level service-group command,
+classified on what running *that* with no arguments does — almost always "shows help/lists things,"
+hence `read_only`. But unlike a recursed tool, there's no child node to correct for that: `gcloud
+storage`, `sql`, `secrets`, and `run` all came back `read_only` this way, and all four have genuinely
+destructive real subcommands (`storage rm -r`, `sql instances delete`, `secrets versions destroy`,
+`run services delete`) with no narrower rule anywhere to catch them — a `Bash(gcloud storage:*)`
+allow rule is a plain prefix match, so it would have covered the destructive form too. Caught by
+reading the `render --dry-run`-equivalent diff before running a real `apply`, not by reasoning about
+it in the abstract. Fixed at `_compute_claude_rules`, not in the rubric: any node belonging to a
+tool with `cloud_cli = true` in `tools.toml` is capped at `ask` regardless of what its own
+classification says — the one place a node's classification is capped rather than trusted outright.
 
 `apply` (Claude only, so far) is what actually makes the rules take effect: it merges the
 `allow`/`ask` output into **`~/.claude/settings.json`**, the global per-user config that applies to
@@ -193,6 +508,7 @@ freshly-set-up install) — this was a preference call, not a fix.
 # after installing a new tool, or periodically (e.g. after apt upgrade):
 inv allowlist.extract
 inv allowlist.classify
+inv allowlist.reconfirm   # resolve needs_review items with their specific flagged word in context
 inv allowlist.review      # look at what's new/changed, approve it
 inv allowlist.apply       # merge into ~/.claude/settings.json
 
@@ -204,11 +520,27 @@ python3 cli-allowlist/check_man_deps.py     # re-check for new man-page dependen
 ## Known gaps / deliberately not built
 
 - **`apply` only targets Claude's `settings.json`.** Copilot's `chat.tools.terminal.autoApprove`
-  still needs manual copy-paste from `render --target=copilot`.
+  still needs manual copy-paste from `render --target=copilot`. The read_only-parent-with-children
+  omission (see `render`/`apply` above) is Claude-specific for the same reason — it leans on a
+  verified deny > ask > allow, no-specificity-tiebreak precedence that hasn't been confirmed for
+  Copilot's own rule resolution, so `_render_copilot` doesn't apply the same skip.
 - **No sandboxing integration** (`/sandbox`, OS-level filesystem/network isolation) — a stronger,
   orthogonal control considered out of scope for this pass.
 - **No PreToolUse hook** — see the `render`/`apply` section above for why this was a deliberate
   rejection, not a TODO.
-- **No subcommand-level review override** — `needs_review` entries (currently just `nvm run` /
-  `nvm exec`) stay excluded from both `allow` and `ask` until the underlying classification changes
-  and gets re-run through the LLM step; there's no way to manually promote one without that.
+- **No node-level review override beyond `needs_review`.** `reconfirm` closes this gap
+  specifically for the verb-backstop's `needs_review` tier; there's still no way to manually
+  promote/demote an ordinary `read_only`/`write`/`dangerous` verdict without a full
+  `classify --force` re-run for that tool.
+- **Per-flag ratings aren't consumed by `render`/`apply`.** Deliberate, not an oversight — see the
+  "Per-flag ratings" section above for why prefix-glob rules structurally can't express
+  "allow this subcommand except with `--force`". The data exists for `review` and for a future
+  consumer that can actually act on it order-independently.
+- **Recursion stops at `max_depth = 2` for every opted-in tool so far**, and cloud-provider CLIs
+  (`gcloud`, `aws`) don't recurse at all (`cloud_cli = true`, hand-curated top-level list instead).
+  Both are a documented scope boundary — deep-diving `gcloud`'s or `aws`'s actual command surface,
+  or going to depth 3 for e.g. `kubectl create <kind>`, would be a real node/cost/review-burden
+  increase for command shapes that are almost never run unattended by an agent.
+- **Truncated trees (`max_nodes` exceeded) are flagged but not resolved automatically.** `status`
+  and `review` surface a `truncated` marker; raising `max_nodes` for that specific tool in
+  `tools.toml` and re-extracting is a manual follow-up, not something the pipeline does on its own.
