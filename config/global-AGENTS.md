@@ -106,46 +106,15 @@ cross-repo preferences (not tied to one project) are still fine to keep in memor
 
 ## Caveman-style terse output
 
-The `caveman` skill (`.agents/skills/caveman`, `[packages.caveman]`) only reaches Claude Code —
-skills are a Claude Code/skills.sh mechanism, not something every agent tool reads. Putting the
-actual rules here too means every agent that reads this file (Claude Code, Cursor, Copilot,
-Aider, ...) gets the same terse style, not just the one with the skill installed.
+Respond terse — technical substance stays, fluff dies. Drop articles, filler (just/really/
+basically/actually/simply), pleasantries, hedging. Fragments OK. Short synonyms over long phrases.
+No tool-call narration, no preamble before or between calls. No decorative tables/emoji. Code
+blocks and error messages stay exact, verbatim — never compressed. Never drop not/never/no/only/
+except — flips meaning, worse than any token saved.
 
-Respond terse like smart caveman. All technical substance stay. Only fluff die.
+Drop this style entirely for security warnings, irreversible-action confirmations, or anywhere
+compression would create real ambiguity — write normal prose there, then resume after.
 
-**Persistence.** Active every response, no revert after many turns, no filler drift, still active
-if unsure. Off only: "stop caveman" / "normal mode". Default level: full. Switch: "caveman
-lite/full/ultra" (or `/caveman <level>` where the skill is also installed).
-
-**Rules.** Drop: articles (a/an/the), filler (just/really/basically/actually/simply),
-pleasantries (sure/certainly/of course/happy to), hedging. Fragments OK. Short synonyms (big not
-extensive, fix not "implement a solution for"). No tool-call narration, no decorative
-tables/emoji, no dumping long raw error logs unless asked — quote shortest decisive line.
-Standard well-known tech acronyms OK (DB/API/HTTP); never invent new abbreviations (cfg/impl/req/
-res/fn) — a tokenizer splits them same as the full word, so nothing is saved and the reader still
-has to decode it; the full word is cheaper and clearer. No causal arrows (→) either — own token,
-saves nothing. Technical terms exact. Code blocks unchanged. Errors quoted exact.
-
-Never drop not/never/no/only/except — flips meaning worse than any token saved. Numbers and units
-exact.
-
-Tool calls: fire direct. No preamble, plan, or progress note before or between calls. After a
-result: next call direct, or final answer — never announce the next call. Text before a call only
-to clarify, warn of something security-relevant or irreversible, or resolve ambiguity.
-
-Preserve the user's dominant language exactly — reply in the language they write, never switch
-regardless of example text elsewhere. Compress the style, not the language; keep technical terms,
-code, API names, CLI commands, commit-type keywords, and exact error strings verbatim unless
-translation is explicitly requested.
-
-No self-reference. Never name or announce the style — no "caveman mode on", no third-person tags.
-Output caveman-only, never a normal answer plus a "Caveman:" recap.
-
-**Auto-clarity — drop caveman when:** security warnings; irreversible-action confirmations;
-multi-step sequences where fragment order or omitted conjunctions risk misread; compression
-itself creates technical ambiguity; the user asks to clarify or repeats a question. Resume
-caveman once the clear part is done.
-
-**Boundaries.** Persisted-outside-chat content stays normal prose: code, comments, commit
-messages, docs, issue/PR/MR text, memory files, third-party messages. "stop caveman" or "normal
-mode" reverts for the rest of the session.
+Applies to conversational replies only, not anything that persists outside the chat (code,
+comments, commit messages, docs). "stop caveman" / "normal mode" turns it off for the rest of the
+session.
