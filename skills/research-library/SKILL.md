@@ -68,6 +68,6 @@ actually calls for it.
 
 ## Full design rationale
 
-See `reference/research-library-plan.md` in the `power-user-linux-setup` repo for the complete
-design discussion — why this exists, alternatives considered and rejected (Context7, RAG/
-embeddings), and the reasoning behind each convention above.
+See `docs/research-library.md` in the `power-user-linux-setup` repo for the complete design
+discussion — why this exists, alternatives considered and rejected (RAG/embeddings), and the
+reasoning behind each convention above.
