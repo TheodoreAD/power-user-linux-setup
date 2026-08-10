@@ -315,6 +315,8 @@
       
         
       
+        
+      
     
     
     
@@ -1265,6 +1267,8 @@
       
         
       
+        
+      
     
     
     
@@ -1458,6 +1462,33 @@
     
   
   Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./corporate-proxy.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate proxy
 
     
   </span>
@@ -2197,6 +2228,11 @@ package was (or wasn&rsquo;t) picked up.</p>
 <td>environment variables, PATH — from <code>zshenv</code> fields in <code>setup.toml</code></td>
 </tr>
 <tr>
+<td><code>~/.zshenv</code> (separate <code>proxy</code> block)</td>
+<td><code>inv proxy.install</code></td>
+<td><code>http_proxy</code>/<code>https_proxy</code>/<code>no_proxy</code> pointed at the local Px daemon — written only once verified working, see <a href="corporate-proxy.html">corporate-proxy.md</a></td>
+</tr>
+<tr>
 <td><code>~/.zprofile</code></td>
 <td><code>inv zsh.configure</code></td>
 <td>login-shell config — from <code>zprofile</code> fields in <code>setup.toml</code></td>
@@ -2230,6 +2266,16 @@ package was (or wasn&rsquo;t) picked up.</p>
 <td><code>~/AGENTS.md</code> (<code>~/.claude/CLAUDE.md</code> symlinks to it)</td>
 <td><code>inv tools.install</code></td>
 <td>Global agent instructions (use <code>sudo -A</code> for all sudo calls, Bash/allowlist discipline)</td>
+</tr>
+<tr>
+<td><code>~/.config/systemd/user/pulse-proxy.service</code></td>
+<td><code>inv proxy.fix</code>/<code>install</code></td>
+<td>Runs the Px proxy daemon — see <a href="corporate-proxy.html">corporate-proxy.md</a></td>
+</tr>
+<tr>
+<td><code>~/.config/px/px.ini</code></td>
+<td><strong>not PULSE-managed</strong> — owned entirely by Px&rsquo;s own <code>--save</code></td>
+<td>Upstream proxy address, bypass list, username. <code>inv proxy.*</code> never hand-authors this file&rsquo;s schema.</td>
 </tr>
 </tbody>
 </table>
