@@ -38,6 +38,8 @@ PULSE owns config files through named sentinel blocks rather than overwriting wh
 | `~/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it) | `inv tools.install` | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline) |
 | `~/.config/systemd/user/pulse-proxy.service` | `inv proxy.fix`/`install` | Runs the Px proxy daemon — see [corporate-proxy.md](corporate-proxy.md) |
 | `~/.config/px/px.ini` | **not PULSE-managed** — owned entirely by Px's own `--save` | Upstream proxy address, bypass list, username. `inv proxy.*` never hand-authors this file's schema. |
+| `/usr/local/share/ca-certificates/pulse-corporate.crt` | `inv certs.install` | Corporate CA bundle, auto-converted to PEM from whatever format IT provided — feeds `update-ca-certificates`, see [certs.md](certs.md) |
+| `~/.zshenv` (separate `certs` block) | `inv certs.install` | `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`/`AWS_CA_BUNDLE`, pointed at the rebuilt system trust bundle — written only after `update-ca-certificates` succeeds, see [certs.md](certs.md) |
 
 ### Adding a new block
 

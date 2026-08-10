@@ -74,3 +74,16 @@ email    = "jane.smith@work.com"
 # host    = "proxy.corp.example.com"
 # port    = 8080
 # noproxy = "*.corp.example.com,10.0.0.0/8"
+
+# Optional — corporate TLS-inspection root CA, if this network has one (`inv certs.install`).
+# Auto-detected by content, not file extension: PEM (-----BEGIN CERTIFICATE-----), raw DER, or a
+# Windows PKCS#7 .p7b/.p7c (common from AD Certificate Services) are all accepted as-is.
+# See docs/certs.md.
+# [certs]
+# bundle = "/home/jsmith/Downloads/CorporateRootCA.crt"
+#
+# Root + a separate intermediate — use a list instead:
+# bundle = [
+#   "/home/jsmith/Downloads/CorporateRootCA.crt",
+#   "/home/jsmith/Downloads/CorporateIntermediateCA.crt",
+# ]
