@@ -1,4 +1,5 @@
 import os
+import pwd
 import shutil
 import subprocess
 import sys
@@ -36,6 +37,25 @@ def is_docker_desktop_wsl_integration() -> bool:
     in tasks/docker.py and tasks/wsl.py; factored out here so the two checks can't drift.
     """
     return command_exists("docker") and not command_exists("dockerd")
+
+
+def current_user() -> str:
+    """Best-effort real (non-root) username: SUDO_USER when running under sudo, else $USER,
+    else the actual name of the current UID. The env-var-only version of this (duplicated
+    across tasks/zsh.py, tasks/docker.py, tasks/next_steps.py before being factored out here)
+    raises KeyError from pwd.getpwnam("") in environments with neither var set — a plain
+    `docker build` doesn't set $USER at all, only $HOME.
+    """
+    return os.environ.get("SUDO_USER") or os.environ.get("USER") or pwd.getpwuid(os.getuid()).pw_name
+
+
+def has_systemd() -> bool:
+    """True if systemd is the running init system — the same check require_systemd() uses to
+    decide whether to abort. False for containers with no init system, WSL1, and WSL2 with
+    systemd=true unset in /etc/wsl.conf. Used by setup() to skip the system/desktop phases
+    instead of letting require_systemd() raise partway through them.
+    """
+    return Path("/run/systemd/system").is_dir()
 
 
 def is_devcontainer() -> bool:
@@ -214,7 +234,7 @@ def require_systemd() -> None:
     /etc/wsl.conf, or a minimal/container environment with no init system. This repo only
     supports WSL2 with systemd enabled; WSL1 is not a supported target.
     """
-    if not Path("/run/systemd/system").is_dir():
+    if not has_systemd():
         raise RuntimeError(
             "systemd is not running (no /run/systemd/system) — this task shells out to "
             "systemctl/localectl and needs it.\n"

@@ -64,7 +64,7 @@ inv setup             # runs the full setup — see configuration.md for what th
 PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
 
 # Headless / container install — no GUI or hardware-specific packages
-PULSE_EXCLUDE_TAGS=gui,workstation inv apt.repos apt.base
+PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome inv setup
 ```
 
 Curious what `inv setup` actually runs, phase by phase, or how config files and tags work under the hood? See [How it works](configuration.md).
@@ -98,3 +98,18 @@ inv apt.upgrade-debs
 This re-downloads and reinstalls each `deb-github` package. `dpkg` handles version comparison —
 reinstalling the same version is safe. For packages using `tag = "nightly"`, this always fetches
 the latest nightly build.
+
+### Reclaiming disk space (apt/uv/npm/cargo/Docker caches)
+
+```shell
+inv cleanup.all          # conservative: keeps caches that speed up your next install
+inv cleanup.all-full     # full wipe: reclaims more, next install of each is slower
+```
+
+Opt-in only — neither runs as part of `inv setup`, since a persistent workstation usually wants
+to _keep_ these caches. Each covers apt's `.deb` archive cache, uv's build/wheel cache, npm's
+package cache, cargo's registry cache (if rust is installed), and Docker images/containers/build
+cache (if Docker is installed) — see [dev-container.md](dev-container.md#cleanup-reclaiming-image-layer-space)
+for the full breakdown and the reasoning behind the conservative/full split. `inv cleanup.caches`/
+`inv cleanup.caches-full` run the same set minus Docker, if you just want the package-manager
+caches.

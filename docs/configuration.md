@@ -78,6 +78,8 @@ Every `[packages.*]` entry has two independent, unrelated ways to be skipped:
 
 This split is exactly what [wsl.md](wsl.md) and [dev-container.md](dev-container.md) rely on — when building a new environment profile, check which bucket the task you're skipping falls into before assuming a tag exclusion is enough.
 
+**A third bucket: tasks that don't read `setup.toml` at all.** `apt.clean-cache(-full)`, `python.clean-cache(-full)`, `node.clean-cache(-full)`, `tools.clean-cache(-full)`, `docker.clean(-full)`, and the `cleanup.*` umbrella tasks that depend on them operate on whatever's actually on disk for that tool (apt's archive cache, `~/.cache/uv`, `~/.npm`, cargo's registry, Docker images) — `enabled`/`tags` are irrelevant to them since there's no `[packages.*]` entry being consulted in the first place. Excluding a tag stops something from being _installed_; it has no bearing on whether that tool's cache-cleanup task has anything to do.
+
 **Tag catalog** — only seven tags currently gate anything (used across the exclusion recipes in this repo):
 
 | Tag              | Excludes                                                                                                                                                                                                 |
@@ -103,6 +105,11 @@ What `inv setup` actually runs, in order. One interruption: a single logout at t
 Under WSL, `inv setup` detects it (`util.is_wsl()`) and delegates straight to `inv wsl.install`
 instead of the phases below — different tag exclusions, DNS handling, and it skips
 `docker.configure`/`fonts.*` by default. See [wsl.md](wsl.md) for what that runs instead.
+
+In a container or any other environment with no systemd and not WSL, `inv setup` detects that too
+(`util.has_systemd()`) and skips Phase 1 and Phase 4 below entirely — `system.locale`/
+`system.dns` need `systemctl`/`localectl`, and fonts have no meaning in a headless container.
+Phases 2 and 3 run as normal. See [dev-container.md](dev-container.md) for the tested Dockerfile.
 
 Each phase below is a group of task calls run through `tasks/phases.py`'s `run()` helper, which
 prints a labeled banner naming the phase before it starts. Before running for real, it probes the

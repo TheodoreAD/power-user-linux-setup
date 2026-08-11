@@ -37,8 +37,9 @@
 #                 reason to run the Linux build too; skip under WSL to avoid install/config
 #                 surface that isn't earning its keep (see docs/wsl.md)
 #
-# For dev container / Dockerfile builds, exclude: PULSE_EXCLUDE_TAGS=gui,workstation,corporate
-# See docs/dev-container.md for the full Dockerfile approach and which invoke tasks to skip.
+# For dev container / Dockerfile builds, exclude: PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome
+# `RUN inv setup` works directly in a plain Dockerfile — it self-skips the system/desktop phases
+# when there's no systemd. See docs/dev-container.md for the tested Dockerfile and cache cleanup.
 #
 # For WSL with WSLg (default on current Windows 11 builds — GUI Linux apps, clipboard, and GPU
 # accel all work through it): PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate
@@ -842,6 +843,9 @@ description = "Claude Code CLI — Anthropic's terminal coding agent, via the na
 method = "script"
 tags = ["ai"]
 script_url = "https://claude.ai/install.sh"
+# Installer uses bash-only syntax — the "script" method's default shell ("sh", i.e. dash on
+# Ubuntu/Debian) fails on it with a syntax error. bash is always present (essential package).
+shell = "bash"
 check_cmd = "claude"
 
 [packages.claude-global-md]

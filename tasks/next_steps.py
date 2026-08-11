@@ -1,4 +1,3 @@
-import os
 import pwd
 import shutil
 import subprocess
@@ -10,9 +9,8 @@ _IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
 
 
 def _current_shell() -> str:
-    current_user = os.environ.get("SUDO_USER") or os.environ.get("USER", "")
     try:
-        return pwd.getpwnam(current_user).pw_shell if current_user else ""
+        return pwd.getpwnam(util.current_user()).pw_shell
     except KeyError:
         return ""
 

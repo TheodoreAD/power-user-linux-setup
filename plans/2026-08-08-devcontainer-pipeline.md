@@ -19,6 +19,14 @@ tasks, same `setup.toml`, no separate artifact to keep in sync, no registry to p
 build/smoke-test passes** — never an unpinned `master`/`HEAD` reference (that would be
 running untested, possibly-broken instructions from strangers' `postCreateCommand`s).
 
+**Prerequisite (landed):** `inv setup`/the granular task list this pipeline drives both used to
+crash immediately in a plain, non-systemd container — `system.locale`/`system.dns` called
+`util.require_systemd()` unconditionally, and plenty of devcontainer base images don't run
+systemd. `tasks/setup.py` now detects this (`util.has_systemd()`) and skips the `system`/
+`desktop` phases automatically instead of raising; see `tasks/util.py`'s `has_systemd()` and
+`docs/dev-container.md`. `bootstrap-devcontainer.sh` below can call `inv setup` (or the
+granular task list) without hitting that crash.
+
 ## Design
 
 ### 1. `bootstrap-devcontainer.sh` (new, repo root, alongside existing `bootstrap.sh`)
