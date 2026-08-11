@@ -2111,9 +2111,9 @@
   
 
 
-<h1 id="scala">Scala</h1>
+<h1 id="scala">Scala<a class="headerlink" href="#scala" title="Permanent link">&para;</a></h1>
 <p>Scala is not in <code>setup.toml</code> — it is optional and the Coursier launcher runs a self-configuring install that does not fit the standard package methods.</p>
-<h2 id="install-via-coursier">Install via Coursier</h2>
+<h2 id="install-via-coursier">Install via Coursier<a class="headerlink" href="#install-via-coursier" title="Permanent link">&para;</a></h2>
 <p><a href="https://get-coursier.io/">Coursier</a> is the standard Scala artifact and tool manager. It bootstraps itself and then installs <code>scala</code>, <code>scalac</code>, <code>sbt</code>, and other toolchain components.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">SCALA_CLI_SETUP</span><span class="o">=</span><span class="s2">&quot;</span><span class="k">$(</span>mktemp<span class="k">)</span><span class="s2">&quot;</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span><span class="s2">&quot;https://github.com/coursier/launchers/raw/master/cs-x86_64-pc-linux.gz&quot;</span><span class="w"> </span><span class="se">\</span>
@@ -2123,12 +2123,12 @@
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>rm<span class="w"> </span><span class="s2">&quot;</span><span class="si">${</span><span class="nv">SCALA_CLI_SETUP</span><span class="si">}</span><span class="s2">&quot;</span>
 </span></code></pre></div>
 <p>This installs <code>cs</code> to <code>~/.local/share/coursier/bin</code> and adds it to PATH (via <code>~/.profile</code> update). Open a new shell after install.</p>
-<h2 id="metals-vs-code-extension">Metals (VS Code extension)</h2>
+<h2 id="metals-vs-code-extension">Metals (VS Code extension)<a class="headerlink" href="#metals-vs-code-extension" title="Permanent link">&para;</a></h2>
 <p>For VS Code, install the <strong>Metals</strong> extension. It needs the Java home path from Coursier:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>cs<span class="w"> </span>java<span class="w"> </span>-XshowSettings:properties<span class="w"> </span>-version<span class="w"> </span><span class="m">2</span>&gt;<span class="p">&amp;</span><span class="m">1</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span><span class="s2">&quot;java.home&quot;</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>sed<span class="w"> </span><span class="s1">&#39;s/.*= *//&#39;</span>
 </span></code></pre></div>
 <p>Paste this path into VS Code settings under <code>metals.javaHome</code>.</p>
-<h2 id="updating">Updating</h2>
+<h2 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>cs<span class="w"> </span>update
 </span></code></pre></div>
 
