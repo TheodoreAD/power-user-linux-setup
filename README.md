@@ -42,16 +42,18 @@ inv setup             # runs the full setup
 
 Not a requirement — just a sizing guideline for what this setup assumes you're comfortable running:
 
-| Tier | Spec |
-|---|---|
-| Minimum | 8GB RAM, 1× 27" FHD display |
-| Regular | 16GB RAM, 2× 27" FHD displays |
+| Tier       | Spec                             |
+| ---------- | -------------------------------- |
+| Minimum    | 8GB RAM, 1× 27" FHD display      |
+| Regular    | 16GB RAM, 2× 27" FHD displays    |
 | Power user | 32GB RAM, 1× 42"+ 4K UHD display |
 
-***
+---
 
 This is just a short overview. For everything else — use-case walkthroughs, the full package
 catalog, how the config system and tags work, and per-topic reference docs (shell, languages,
 Docker/Kubernetes, GNOME, WSL, troubleshooting, ...) — see the docs site:
 
 **[theodoread.github.io/power-user-linux-setup](https://theodoread.github.io/power-user-linux-setup/)**
+
+Working on this repo itself, rather than just using it? See [CONTRIBUTING.md](CONTRIBUTING.md).
