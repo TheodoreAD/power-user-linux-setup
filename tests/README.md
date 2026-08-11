@@ -14,13 +14,26 @@ else in that module shells out to openssl/keytool or touches the trust store), a
 `tasks/wsl.py`'s `_dns_query_packet` (builds a raw DNS query packet in memory — no socket I/O,
 unlike `_query_dns_server`/`_public_dns_reachable`, which actually send it).
 
-Run with:
+Set up once after cloning:
 
 ```shell
-uv run --with pytest --with invoke python -m pytest tests/
+inv python.dev-venv
 ```
 
-`--with invoke` is needed because importing `tasks.phases` imports the whole `tasks` package
-(`tasks/__init__.py`), and every task module imports `invoke` for the `@task` decorator. `python -m
-pytest` (not the bare `pytest` command) is what puts the repo root on `sys.path` so `import tasks`
-resolves — run it from the repo root.
+This runs `uv sync` (creates `.venv/` from `pyproject.toml`'s `dev` dependency group —
+`pytest`/`invoke` — and editable-installs `tasks` as a real package so `import tasks` just works,
+no `sys.path` tricks needed) and `direnv allow`, so the repo's `.envrc` auto-exports
+`VIRTUAL_ENV`/`PATH` whenever direnv's shell hook fires (`[packages.direnv]` in `setup.toml`). Then
+just `cd` into the repo and run tests the plain way, same as any other Python project — no
+`uv run` prefix, no manual activation:
+
+```shell
+pytest tests/
+```
+
+This also works unmodified from a Claude Code (or other agent) session in this repo, once
+`.envrc`/`direnv allow` have been done at least once: Claude Code captures a shell snapshot once
+per session and replays it for every Bash-tool command instead of re-sourcing dotfiles each time,
+so a *new* session's snapshot already has `.venv/bin` on `PATH` — no explicit activation needed.
+A session whose snapshot predates `.envrc`/`direnv allow` existing won't see it retroactively
+(the snapshot doesn't refresh mid-session); start a new session if that happens.

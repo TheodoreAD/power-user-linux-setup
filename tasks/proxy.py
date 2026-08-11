@@ -352,10 +352,10 @@ def _capture_credential(c) -> str | None:
         print(f"[proxy] would save keyring credential for {username}")
         return username
     # Password goes over stdin to a short-lived subprocess, never argv (visible in `ps`) or a
-    # file — `uv run --with keyring` matches this repo's existing one-off-dependency idiom (see
-    # tests/README.md's `uv run --with pytest --with invoke`). subprocess.run directly, not
-    # c.run: invoke's Runner doesn't offer a clean way to pass stdin bytes without echoing them
-    # through the terminal-mirroring machinery it otherwise provides.
+    # file — `uv run --with keyring` is a one-off dependency needed only for this single call,
+    # not worth adding to the project's `pyproject.toml`. subprocess.run directly, not c.run:
+    # invoke's Runner doesn't offer a clean way to pass stdin bytes without echoing them through
+    # the terminal-mirroring machinery it otherwise provides.
     proc = subprocess.run(
         [
             "uv", "run", "--with", "keyring", "python", "-c",
