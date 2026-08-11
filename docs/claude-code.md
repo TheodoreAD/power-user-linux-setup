@@ -29,7 +29,7 @@ to use `$SUDO_ASKPASS` instead of prompting on a TTY that doesn't exist. Plain `
 **git over SSH** — `SSH_ASKPASS` + `SSH_ASKPASS_REQUIRE=prefer` fixes a related but separate
 failure: this machine's SSH keys are passphrase-protected and managed by `keychain` (see
 [ssh.md](ssh.md#keychain-persistent-agent-across-logins)), which loads a key into the agent
-*lazily*, the first time it's actually used each session (`AddKeysToAgent yes` in `~/.ssh/config`).
+_lazily_, the first time it's actually used each session (`AddKeysToAgent yes` in `~/.ssh/config`).
 If Claude Code runs the first `git fetch`/`git push` of the day before anything else has triggered
 that lazy load, `ssh` needs the passphrase to unlock the key — and with no TTY, that fails as
 `Permission denied (publickey)`, indistinguishable from an actual auth problem. `SSH_ASKPASS` makes
@@ -95,13 +95,13 @@ Several conventions live there too, deliberately global rather than repeated per
   that breaks the allow-rule match the same way `cd &&` does. Also prefer several simple, separate
   Bash calls over one chained/piped/env-prefixed command. Both come from the same mechanism: `inv allowlist.*`
   (see [`cli-allowlist.md`](cli-allowlist.md)) generates permission rules that match on a literal
-  command *prefix*, and a `cd x && cmd`/`cmd1 && cmd2`-style compound string can't match a prefix
+  command _prefix_, and a `cd x && cmd`/`cmd1 && cmd2`-style compound string can't match a prefix
   rule that was written for the plain command alone — so it prompts every time even when every
   individual piece is already allowlisted.
 
 ## `~/.claude/settings.json` — permissions merged in by `inv allowlist.apply`
 
-Unlike `~/.claude/CLAUDE.md` above, `~/.claude/settings.json` is *not* fully PULSE-owned — it's a
+Unlike `~/.claude/CLAUDE.md` above, `~/.claude/settings.json` is _not_ fully PULSE-owned — it's a
 partial merge. `inv allowlist.apply` (see [`cli-allowlist.md`](cli-allowlist.md) for the full
 pipeline this is the last step of) rewrites only the `permissions.allow`/`permissions.ask` arrays,
 tracking what it wrote via a local manifest so it never touches a rule you added by hand, or any
@@ -114,7 +114,7 @@ building the allowlist pipeline, not something PULSE enforces or will change on 
 
 `.agents/skills/` is the emerging cross-tool convention for Agent Skills, but Claude Code itself
 currently only discovers skills from `~/.claude/skills/` and `<project>/.claude/skills/` — not
-`.agents/skills/` directly. To get both the cross-tool convention *and* a working Claude Code setup,
+`.agents/skills/` directly. To get both the cross-tool convention _and_ a working Claude Code setup,
 PULSE symlinks `.claude/skills` to `.agents/skills`:
 
 - `inv ai.skills [--dir PATH]` — ensures `.agents/skills/` exists and `.claude/skills` is symlinked
@@ -135,11 +135,11 @@ and safe to point at a project that already has hand-written `AGENTS.md`/`CLAUDE
 Any `setup.toml` package entry can carry a `skills` list, checked by `inv ai.skills` regardless of
 that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zprofile`. Two sources:
 
-- **`{ source = "local", path = "skills/<name>" }`** — for skills authored *in this repo*.
+- **`{ source = "local", path = "skills/<name>" }`** — for skills authored _in this repo_.
   Real skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references,
   assets) live under `skills/` at the repo root, tracked by git like any other repo content —
   deliberately not gitignored `reference/`, and not nested under this repo's own `.agents/skills/`
-  (that's the *deployed*, tool-agnostic location on a given machine; this repo is where some
+  (that's the _deployed_, tool-agnostic location on a given machine; this repo is where some
   skills happen to be authored, not where they run from). `inv ai.skills` **copies** the repo's
   `skills/<name>/` to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching
   how the `npx` source below behaves (it copies too). A `.pulse-source` marker file inside the
@@ -148,7 +148,7 @@ that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zpro
   an `inv ai.skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
   `[packages.research-library]` is the example: its `skills` field points at
   `skills/research-library/`, which documents `$RESEARCH_HOME` (see
-  `docs/research-library.md`).
+  `contributing/research-library.md`).
 - **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — for skills
   published on GitHub. Installed via the real `skills` CLI (`[packages.node].global_packages`,
   [skills.sh](https://skills.sh)): `skills add <repo> --global --skill <names...> --agent
@@ -169,7 +169,7 @@ skill) before being trusted for `research-library`'s own `local` source — but 
 ended up living in `~/AGENTS.md` instead (see "Caveman-style terse output" in
 `config/global-AGENTS.md`), not as an installed skill: a skill only reaches Claude Code, and the
 simpler, always-on AGENTS.md version covers every agent tool on this machine for less overall
-complexity than keeping both. `docs/research-library.md` has the fuller review notes.
+complexity than keeping both. `contributing/research-library.md` has the fuller review notes.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 
@@ -194,7 +194,7 @@ library instead of fetching things ad hoc.
 `github.copilot-*` VS Code extension and, if found, prints a note rather than guessing: research
 turned up `chat.tools.terminal.autoApprove` (terminal commands — already handled by
 `inv allowlist.render --target=copilot`) and `chat.tools.urls.autoApprove` (URL fetches), but no
-confirmed, documented Copilot setting for path-scoped *file-read* auto-approval the way Claude's
+confirmed, documented Copilot setting for path-scoped _file-read_ auto-approval the way Claude's
 `Read(pattern)` rules work — only a global, all-or-nothing
 `github.copilot.chat.agent.autoApproveFileChanges` boolean, which governs edits, not reads, and
 isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse

@@ -47,15 +47,18 @@ for internal mirrors belongs in this daemon's own config, not duplicated per too
 licensed, actively maintained, cross-platform (Windows/Linux/macOS), Python-only.
 
 **Install (Windows):**
+
 ```
 scoop bucket add extras
 scoop install extras/px
 ```
+
 Also installable via `pip install px-proxy` / `pipx install px-proxy` / `uv tool install px-proxy`
 (confirmed from the project's README) on any platform, Python ≥ 3.10. Not built into Windows —
 third-party.
 
 **Mechanism, per protocol:**
+
 - **Plain HTTP**: app sends the request to Px → Px forwards it to the real corporate proxy →
   corporate proxy responds `407 Proxy Authentication Required` → Px performs the auth handshake
   (see below) → retries with auth headers attached → relays the final response back to the app.
@@ -65,7 +68,7 @@ third-party.
   brokers the tunnel.
 
 **Auth, Windows specifically:** for NTLM/Kerberos-authenticating proxies, Px uses Windows **SSPI**
-to transparently pass through the *currently logged-in Windows session's* identity — the same
+to transparently pass through the _currently logged-in Windows session's_ identity — the same
 mechanism behind Integrated Windows Authentication for intranet sites. No password is ever typed
 into Px or stored by it for this path. This requires Px to run **as the user**, not as SYSTEM —
 set it up as a per-user Scheduled Task or Startup-folder entry at logon, not a `services.msc`
@@ -96,7 +99,9 @@ Send an unauthenticated request through the candidate proxy and read the `407`'s
 curl -sv -o /dev/null --proxy http://<proxy-host>:<port> http://example.com 2>&1 \
   | grep -i 'proxy-authenticate\|< HTTP'
 ```
+
 No credentials sent, read-only, safe to run against an unknown proxy. Interpreting the result:
+
 - **`Negotiate` present** → Kerberos/SPNEGO supported, best case (no stored password needed at
   all if a ticket is already held — `klist` to check, `kinit user@REALM` to obtain one; test with
   `curl --proxy-negotiate --proxy-user : --proxy http://proxy:port URL`, the `:` being a required
@@ -117,6 +122,7 @@ No credentials sent, read-only, safe to run against an unknown proxy. Interpreti
 ## How apps point at Px
 
 Same as any ordinary, unauthenticated proxy — no userinfo in the URL:
+
 - Env vars: `HTTP_PROXY=http://127.0.0.1:3128`, `HTTPS_PROXY=http://127.0.0.1:3128`
 - Per-tool config: `npm config set proxy http://127.0.0.1:3128`, `pip.ini`'s `proxy =` line,
   `git config --global http.proxy http://127.0.0.1:3128`, Docker Desktop's Settings → Resources →

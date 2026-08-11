@@ -1,6 +1,7 @@
 # Google Cloud CLI
 
 !!! NOTE
+
     Only needed for GCP work — large install (~1GB). Disabled by default in `setup.toml`.
 
 ## Why not apt?
@@ -38,6 +39,7 @@ gcloud auth configure-docker REGION-docker.pkg.dev
 ```
 
 !!! WARNING
+
     `gcloud auth configure-docker` does not work with Docker installed via Snap.
     Use the apt-installed Docker from `[packages.docker]` in `setup.toml`.
 

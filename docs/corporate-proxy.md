@@ -1,7 +1,7 @@
 # Corporate proxy
 
 Many corporate networks require an authenticating HTTP(S) proxy for external traffic while
-routing internal artifact mirrors (apt, npm, PyPI, etc.) *directly* — a blanket system-wide proxy
+routing internal artifact mirrors (apt, npm, PyPI, etc.) _directly_ — a blanket system-wide proxy
 setting breaks the second half of that. The common ways people solve the first half are both
 bad: embedding the credential in the proxy URL (`http_proxy=http://user:pass@proxy:8080`) leaks
 it everywhere a process's environment is visible (`/proc/<pid>/environ`, `ps eww`, `docker
@@ -94,7 +94,7 @@ credential.
 That means the Windows host needs its own Px running first — this repo doesn't provision the
 Windows side (it's Linux/WSL-guest-only in scope). On Windows: `scoop bucket add extras && scoop
 install extras/px`, run as a per-user Scheduled Task or Startup-folder entry (not a SYSTEM
-service — it needs to run *as the user* so Windows SSPI can transparently pass through the logged-
+service — it needs to run _as the user_ so Windows SSPI can transparently pass through the logged-
 in session's identity for NTLM/Kerberos proxies, no stored password needed on that side at all).
 
 ## Dev container
@@ -108,10 +108,9 @@ already cached) each time the container restarts, e.g. from `postCreateCommand`.
 ## Genuine limitations
 
 - **NTLM and Kerberos/Negotiate paths are not verified against real infra** — there's no
-  corporate proxy available to test against while building this (see the "Genuine unknowns"
-  section of `plans/2026-08-10-corporate-proxy-daemon.md`). The Basic-auth path *is* verified
-  end to end against a disposable local Squid instance with `auth_param basic`. Treat the
-  NTLM/Kerberos code paths as reviewed-and-defensive, not proven.
+  corporate proxy available to test against. The Basic-auth path _is_ verified end to end against
+  a disposable local Squid instance with `auth_param basic`. Treat the NTLM/Kerberos code paths as
+  reviewed-and-defensive, not proven.
 - **Secret Service availability varies** — `keyring`'s SecretService backend needs a running
   provider (`gnome-keyring-daemon` on most desktop distros). A minimal WSL2 install or a
   from-scratch dev container may not have one; `keyring.set_password`/Px's own lookup will fail

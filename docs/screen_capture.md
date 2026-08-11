@@ -11,21 +11,21 @@ GNOME 46 keeps these bindings in `org.gnome.shell.keybindings`, not the older
 
 ### Keyboard shortcuts
 
-| Shortcut | gsettings key | Action |
-|---|---|---|
-| `PrtSc` | `show-screenshot-ui` | Interactive mode — choose area, window, or full screen |
-| `Shift+PrtSc` | `screenshot` | Full screen, instant |
-| `Alt+PrtSc` | `screenshot-window` | Active window, instant |
-| `Ctrl+Shift+Alt+R` | `show-screen-recording-ui` | Screencast (interactive) |
+| Shortcut           | gsettings key              | Action                                                 |
+| ------------------ | -------------------------- | ------------------------------------------------------ |
+| `PrtSc`            | `show-screenshot-ui`       | Interactive mode — choose area, window, or full screen |
+| `Shift+PrtSc`      | `screenshot`               | Full screen, instant                                   |
+| `Alt+PrtSc`        | `screenshot-window`        | Active window, instant                                 |
+| `Ctrl+Shift+Alt+R` | `show-screen-recording-ui` | Screencast (interactive)                               |
 
-**Every one of the 3 screenshot actions already saves to disk *and* copies to the clipboard —
+**Every one of the 3 screenshot actions already saves to disk _and_ copies to the clipboard —
 there's no separate "clipboard-only" shortcut to look for.** This is confirmed straight from
 `gnome-shell` 46.0 source (`js/ui/screenshot.js`, cloned into
 `$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-shell` for reference — a shared,
-cross-project clone outside this repo, see `docs/research-library.md`): `screenshot`
+cross-project clone outside this repo, see `contributing/research-library.md`): `screenshot`
 and `screenshot-window` both
-call a shared `_storeScreenshot()`, whose docstring is literally *"Stores a PNG-encoded
-screenshot into the clipboard and a file"*; the interactive picker's capture button
+call a shared `_storeScreenshot()`, whose docstring is literally _"Stores a PNG-encoded
+screenshot into the clipboard and a file"_; the interactive picker's capture button
 (`_onCaptureButtonClicked`) goes through the same function. So this is already the "always save +
 clipboard, no dialog" behavior — no configuration needed.
 
@@ -57,12 +57,12 @@ flameshot`. Two real bugs were found and fixed getting this working on this mach
    `org.freedesktop.portal.Screenshot` D-Bus interface. `xdg-desktop-portal-gnome` — the backend
    that actually implements it for GNOME — wasn't installed on this machine (only the generic
    `xdg-desktop-portal-gtk` was). Without it, the request has no backend to answer it and hangs
-   forever with *no error at all* (confirmed with `busctl --user monitor`). Now declared as its
-   own `[packages.xdg-desktop-portal-gnome]` apt package — required for *any* portal-based
+   forever with _no error at all_ (confirmed with `busctl --user monitor`). Now declared as its
+   own `[packages.xdg-desktop-portal-gnome]` apt package — required for _any_ portal-based
    screenshot/screencast tool, not just Flameshot.
 2. **Flameshot v12.1.0 (Ubuntu's apt package) itself hangs on capture.** Even after fixing (1),
    `flameshot full`/`gui` still hung indefinitely. `gdb` + `busctl monitor` together showed GNOME
-   *does* send back a correct, successful `Response` with the capture — Flameshot's own Qt6/D-Bus
+   _does_ send back a correct, successful `Response` with the capture — Flameshot's own Qt6/D-Bus
    signal handling in v12.1.0 just never processes it. This matches a long history of similar
    hang/freeze reports across Flameshot versions and distros with no single clean fix. Upgrading
    to **v14.0.0** (installed from GitHub releases, since Ubuntu noble-updates only ships 12.1.0)
@@ -81,16 +81,16 @@ window" primitive anywhere in the source). The screencast shortcut is untouched 
 has no recording/video code path at all, confirmed by grepping the whole source tree.
 
 Flameshot's `-p/--path` and `-c/--clipboard` flags are independent and combine in one invocation
-(verified in `src/main.cpp`'s `gui`/`full` handlers): passing both always does *both* — saves to
+(verified in `src/main.cpp`'s `gui`/`full` handlers): passing both always does _both_ — saves to
 the given directory and copies to the clipboard, no save dialog, matching the built-in tool's
 behavior exactly.
 
-| Shortcut | Command |
-|---|---|
-| `PrtSc` | `flameshot gui -p ~/Pictures/Screenshots -c` — interactive area/window/full + annotate → save & clipboard |
-| `Shift+PrtSc` | `flameshot full -p ~/Pictures/Screenshots -c` — all monitors, instant → save & clipboard |
-| `Alt+PrtSc` | *(untouched — GNOME's `screenshot-window`, already save + clipboard)* |
-| `Ctrl+Shift+Alt+R` | *(untouched — GNOME screencast; Flameshot has no video capability)* |
+| Shortcut           | Command                                                                                                   |
+| ------------------ | --------------------------------------------------------------------------------------------------------- |
+| `PrtSc`            | `flameshot gui -p ~/Pictures/Screenshots -c` — interactive area/window/full + annotate → save & clipboard |
+| `Shift+PrtSc`      | `flameshot full -p ~/Pictures/Screenshots -c` — all monitors, instant → save & clipboard                  |
+| `Alt+PrtSc`        | _(untouched — GNOME's `screenshot-window`, already save + clipboard)_                                     |
+| `Ctrl+Shift+Alt+R` | _(untouched — GNOME screencast; Flameshot has no video capability)_                                       |
 
 **Wayland note:** older Flameshot builds (Qt5, e.g. the apt-shipped v12.1.0) default to XWayland
 and can't communicate with the Wayland screenshot portal ("Unable to capture screen"); the fix is

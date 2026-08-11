@@ -55,12 +55,12 @@ CaskaydiaCove Nerd Font is the Nerd Fonts project's patched version of Microsoft
 
 `inv fonts.configure` sets it as the default in three places:
 
-| Context | Font | Why |
-|---|---|---|
+| Context                        | Font                            | Why                                                                               |
+| ------------------------------ | ------------------------------- | --------------------------------------------------------------------------------- |
 | System monospace (`gsettings`) | CaskaydiaCove Nerd Font Mono 13 | Used by GNOME Terminal, gedit, and all GTK apps that respect the system monospace |
-| GNOME Terminal profile | CaskaydiaCove Nerd Font Mono 13 | Explicit override; single-width icons fit the terminal cell grid |
-| VS Code editor | CaskaydiaCove Nerd Font | Default variant; double-width icons render correctly, ligatures enabled |
-| VS Code integrated terminal | CaskaydiaCove Nerd Font Mono | Mono for the terminal grid inside VS Code |
+| GNOME Terminal profile         | CaskaydiaCove Nerd Font Mono 13 | Explicit override; single-width icons fit the terminal cell grid                  |
+| VS Code editor                 | CaskaydiaCove Nerd Font         | Default variant; double-width icons render correctly, ligatures enabled           |
+| VS Code integrated terminal    | CaskaydiaCove Nerd Font Mono    | Mono for the terminal grid inside VS Code                                         |
 
 For JetBrains IDEs: Settings → Editor → Font → set **CaskaydiaCove Nerd Font** (or Mono for the embedded terminal under Tools → Terminal).
 
@@ -68,11 +68,11 @@ For JetBrains IDEs: Settings → Editor → Font → set **CaskaydiaCove Nerd Fo
 
 Each family ships three variants per weight:
 
-| Variant | Filename suffix | Best for |
-|---|---|---|
-| Default | `NerdFont` | Editors — icons use full visual width, ligatures work correctly |
-| Mono | `NerdFontMono` | Terminals — icons forced to exactly one cell width |
-| Propo | `NerdFontPropo` | Proportional contexts (rare) |
+| Variant | Filename suffix | Best for                                                        |
+| ------- | --------------- | --------------------------------------------------------------- |
+| Default | `NerdFont`      | Editors — icons use full visual width, ligatures work correctly |
+| Mono    | `NerdFontMono`  | Terminals — icons forced to exactly one cell width              |
+| Propo   | `NerdFontPropo` | Proportional contexts (rare)                                    |
 
 `inv fonts.install` installs all three variants for every family so you can switch freely without re-running the installer.
 
@@ -80,10 +80,10 @@ Each family ships three variants per weight:
 
 Two distributions of the same upstream font exist:
 
-| Name | Source | Notes |
-|---|---|---|
-| **CaskaydiaCove Nerd Font** | Nerd Fonts project (`CascadiaCode.zip`) | Renamed due to OFL RFN; bundled with all other Nerd Font families |
-| **Cascadia Code NF** | Microsoft (official, since April 2024) | Microsoft's own first-party Nerd Font variant; not subject to RFN since they own it |
+| Name                        | Source                                  | Notes                                                                               |
+| --------------------------- | --------------------------------------- | ----------------------------------------------------------------------------------- |
+| **CaskaydiaCove Nerd Font** | Nerd Fonts project (`CascadiaCode.zip`) | Renamed due to OFL RFN; bundled with all other Nerd Font families                   |
+| **Cascadia Code NF**        | Microsoft (official, since April 2024)  | Microsoft's own first-party Nerd Font variant; not subject to RFN since they own it |
 
 This setup uses CaskaydiaCove because it ships in the same zip as all other families and is updated in sync with them. The Microsoft variant is equally valid — to use it instead, replace the `CascadiaCode` entry in `setup.toml` with the Microsoft release URL and an appropriate `check` glob.
 
@@ -91,24 +91,24 @@ This setup uses CaskaydiaCove because it ships in the same zip as all other fami
 
 Families are declared in `setup.toml` under `[[settings.fonts.families]]`. Each entry has:
 
-| Field | Purpose |
-|---|---|
-| `zip` | Release asset stem — downloaded from `/releases/latest/download/<zip>.zip` |
+| Field    | Purpose                                                                                                                                                            |
+| -------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `zip`    | Release asset stem — downloaded from `/releases/latest/download/<zip>.zip`                                                                                         |
 | `family` | Substring matched against `fc-list` output (case-insensitive); used for dry-run status. Works for both v2 and v3. Can be a list for families with OFL RFN renames. |
-| `check` | Glob matched against `~/.local/share/fonts/`; detects v3 files specifically (v2 filenames don't match). If no match, legacy cleanup + download runs. |
-| `legacy` | List of globs for v2 files to remove before installing v3. Safe to run when empty (nothing to remove). |
+| `check`  | Glob matched against `~/.local/share/fonts/`; detects v3 files specifically (v2 filenames don't match). If no match, legacy cleanup + download runs.               |
+| `legacy` | List of globs for v2 files to remove before installing v3. Safe to run when empty (nothing to remove).                                                             |
 
-| `zip` | Installed as | Notes |
-|---|---|---|
-| `CascadiaCode` | CaskaydiaCove Nerd Font | **Default everywhere** — ligatures, all three variants |
-| `JetBrainsMono` | JetBrainsMono Nerd Font | Clean, no ligatures by default |
-| `SourceCodePro` | SauceCodePro Nerd Font | Adobe → renamed via OFL RFN |
-| `Meslo` | MesloLG Nerd Font | Popular for Powerlevel10k |
-| `RobotoMono` | RobotoMono Nerd Font | — |
-| `FiraCode` | FiraCode Nerd Font | Strong ligature set |
-| `FiraMono` | FiraMono Nerd Font | FiraCode without ligatures; v3 ships `.otf` not `.ttf` |
-| `Ubuntu` | Ubuntu Nerd Font | Ubuntu system font, patched |
-| `UbuntuMono` | UbuntuMono Nerd Font | — |
+| `zip`           | Installed as            | Notes                                                  |
+| --------------- | ----------------------- | ------------------------------------------------------ |
+| `CascadiaCode`  | CaskaydiaCove Nerd Font | **Default everywhere** — ligatures, all three variants |
+| `JetBrainsMono` | JetBrainsMono Nerd Font | Clean, no ligatures by default                         |
+| `SourceCodePro` | SauceCodePro Nerd Font  | Adobe → renamed via OFL RFN                            |
+| `Meslo`         | MesloLG Nerd Font       | Popular for Powerlevel10k                              |
+| `RobotoMono`    | RobotoMono Nerd Font    | —                                                      |
+| `FiraCode`      | FiraCode Nerd Font      | Strong ligature set                                    |
+| `FiraMono`      | FiraMono Nerd Font      | FiraCode without ligatures; v3 ships `.otf` not `.ttf` |
+| `Ubuntu`        | Ubuntu Nerd Font        | Ubuntu system font, patched                            |
+| `UbuntuMono`    | UbuntuMono Nerd Font    | —                                                      |
 
 To add a family, append a `[[settings.fonts.families]]` entry to `setup.toml`.
 

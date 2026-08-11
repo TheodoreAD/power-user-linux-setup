@@ -52,8 +52,8 @@ theme:
   # Material theme favicon doesn't use the stock mkdocs favicon workflow
   # Default: assets/images/favicon.png
   # https://icons8.com/icon/set/heli/all
-#  favicon: 'img/favicon.ico'
-#  logo: 'img/logo.svg'
+  #  favicon: 'img/favicon.ico'
+  #  logo: 'img/logo.svg'
   # TODO: research what language does
   language: en
   # TODO: check out other color combinations
@@ -138,7 +138,6 @@ nav:
       - citrix.md
       - webex.md
       - locale.md
-      - zensical.md
       - troubleshooting.md
 
 markdown_extensions:
@@ -233,9 +232,9 @@ markdown_extensions:
   # Create tabbed fenced code blocks
   # Specify custom fences for flowcharts, sequence diagrams, or other custom blocks
   - pymdownx.superfences:
-    # zensical's built-in mermaid support (bundle.js) only auto-mounts <pre class="mermaid">
-    # elements — that's what fence_code_format produces. fence_div_format (<div>) is invisible
-    # to it. See https://zensical.org/docs/authoring/diagrams/
+      # zensical's built-in mermaid support (bundle.js) only auto-mounts <pre class="mermaid">
+      # elements — that's what fence_code_format produces. fence_div_format (<div>) is invisible
+      # to it. See https://zensical.org/docs/authoring/diagrams/
       custom_fences:
         - name: mermaid
           class: mermaid
@@ -262,9 +261,9 @@ markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/extensions/codehilite/
   # syntax highlighting, grouped code blocks, highlighted lines in code blocks
   # TODO: see if this is useful with pymdownx.highlight enabled
-#  - markdown.extensions.codehilite:
-#     guess_lang: false
-#     linenums: true
+  #  - markdown.extensions.codehilite:
+  #     guess_lang: false
+  #     linenums: true
 
   # https://facelessuser.github.io/pymdown-extensions/extensions/inlinehilite/
   # inline code highlighting
@@ -283,12 +282,12 @@ markdown_extensions:
       emoji_generator: !!python/name:materialx.emoji.to_svg
       alt: short
       options:
-          attributes:
-              align: top
-              height: 20px
-              width: 20px
-          # image_path: https://assets-cdn.github.com/images/icons/emoji/unicode/
-          # non_standard_image_path: https://assets-cdn.github.com/images/icons/emoji/
+        attributes:
+          align: top
+          height: 20px
+          width: 20px
+        # image_path: https://assets-cdn.github.com/images/icons/emoji/unicode/
+        # non_standard_image_path: https://assets-cdn.github.com/images/icons/emoji/
 
 plugins:
   - search

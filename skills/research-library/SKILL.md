@@ -1,6 +1,6 @@
 ---
 name: research-library
-description: 'Use when working with, adding to, or updating the shared cross-project research library at $RESEARCH_HOME (vendor repo clones, reference PDFs/epubs, mirrored docs pages) — before fetching the same material from the web, when cloning a reference repo for a project, or when asked to update/refresh the library.'
+description: "Use when working with, adding to, or updating the shared cross-project research library at $RESEARCH_HOME (vendor repo clones, reference PDFs/epubs, mirrored docs pages) — before fetching the same material from the web, when cloning a reference repo for a project, or when asked to update/refresh the library."
 ---
 
 # Research library
@@ -68,6 +68,6 @@ actually calls for it.
 
 ## Full design rationale
 
-See `docs/research-library.md` in the `power-user-linux-setup` repo for the complete design
+See `contributing/research-library.md` in the `power-user-linux-setup` repo for the complete design
 discussion — why this exists, alternatives considered and rejected (RAG/embeddings), and the
 reasoning behind each convention above.

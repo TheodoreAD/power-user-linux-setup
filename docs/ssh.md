@@ -36,7 +36,7 @@ inv ssh.add        # add all keys for this machine to ssh-agent
 ```
 
 **Migrating a machine with an existing hand-written `~/.ssh/config`** (not managed by PULSE, no
-sentinel markers): `inv ssh.configure` only *appends* a new PULSE block via `ensure_block` — it
+sentinel markers): `inv ssh.configure` only _appends_ a new PULSE block via `ensure_block` — it
 won't touch or remove existing hand-written blocks. That's safe in general, but if a new
 `ssh_hosts` alias collides with an existing hand-written `Host` entry (e.g. both define
 `github.com`), the old block wins, since SSH config resolution is first-match-wins per keyword.

@@ -27,8 +27,8 @@ nvm ls                     # list installed versions
 
 Global npm packages are declared in `setup.toml` under `global_packages` and installed by `inv node.install`. Currently:
 
-| Package | What it does |
-|---|---|
+| Package  | What it does                                                                 |
+| -------- | ---------------------------------------------------------------------------- |
 | `skills` | Install Claude Code slash commands from GitHub — `skills add <owner>/<repo>` |
 
 ### Global installs vs uv tool install

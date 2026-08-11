@@ -2,7 +2,7 @@
 
 Design record, not usage docs — for how this actually works today, see
 [`docs/corporate-proxy.md`](../docs/corporate-proxy.md) and `tasks/proxy.py` directly. This file
-exists to preserve *why* the design landed here: what was considered and rejected, and what was
+exists to preserve _why_ the design landed here: what was considered and rejected, and what was
 genuinely unknown going in vs. what testing resolved.
 
 ## Context
@@ -11,7 +11,7 @@ PULSE currently has zero proxy story: `docs/networking.md` covers DNS only, no `
 module touches proxying, and `reference/corporate-proxy-auth.md` (gitignored scratch notes from
 this conversation) is the only trace of the idea. The goal, worked out over the conversation: many
 corporate networks require going through an authenticating HTTP(S) proxy for external traffic
-while *not* wanting that proxy applied to internal artifact mirrors, and the common ways people
+while _not_ wanting that proxy applied to internal artifact mirrors, and the common ways people
 handle the credential (`http://user:pass@proxy:8080` embedded in `http_proxy`, or a keyring call on
 every shell startup) are both bad — the former leaks the secret everywhere (`/proc/<pid>/environ`,
 `ps eww`, `docker inspect`, tool `-v` logging), the latter is slow/fragile per terminal.

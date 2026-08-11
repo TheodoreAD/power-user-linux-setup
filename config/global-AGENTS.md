@@ -27,7 +27,7 @@ machine to enter the passphrase it will time out rather than hang forever.
 
 ## Bash tool discipline: work with the CLI allowlist, not against it
 
-Claude Code's Bash permission rules match on the literal command *prefix* (`Bash(git status:*)`,
+Claude Code's Bash permission rules match on the literal command _prefix_ (`Bash(git status:*)`,
 see `power-user-linux-setup`'s `cli-allowlist/` pipeline and `docs/cli-allowlist.md`) — anything
 that changes the leading text of the command, even when harmless, produces a string that can no
 longer match an already-allowlisted rule and forces an approval prompt.
@@ -42,7 +42,7 @@ it was chained onto.
 
 Don't reach for a directory-scoping flag (`git -C path`, `npm --prefix dir`, `docker --context
 ctx`, `kubectl --kubeconfig f`) as a reflexive substitute either — for tools whose allow rules
-match `<tool> <subcommand>` as a literal prefix, a flag placed *before* the subcommand breaks the
+match `<tool> <subcommand>` as a literal prefix, a flag placed _before_ the subcommand breaks the
 match exactly the same way `cd &&` does (`git -C path status` no longer starts with `git status`).
 Only reach for one of these when you genuinely need to target a directory other than your current
 one (rare — you're normally already at the project root), and even then expect that call not to

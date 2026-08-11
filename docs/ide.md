@@ -9,13 +9,13 @@ version was removed in favour of the deb.
 
 **Why deb over snap:**
 
-| Issue | Snap | Deb |
-|---|---|---|
-| Startup crashes after auto-update | Known on 24.04 (issue #224112) | Not affected |
-| SSH Remote Dev | Sandbox can break extension host | Full filesystem access |
-| File system access | Restricted by classic confinement | Full |
-| Wayland GPU acceleration | Broken (issues #105729, #224112) | Works |
-| Update delivery | Automatic background | Via `apt upgrade` |
+| Issue                             | Snap                              | Deb                    |
+| --------------------------------- | --------------------------------- | ---------------------- |
+| Startup crashes after auto-update | Known on 24.04 (issue #224112)    | Not affected           |
+| SSH Remote Dev                    | Sandbox can break extension host  | Full filesystem access |
+| File system access                | Restricted by classic confinement | Full                   |
+| Wayland GPU acceleration          | Broken (issues #105729, #224112)  | Works                  |
+| Update delivery                   | Automatic background              | Via `apt upgrade`      |
 
 The machine runs Wayland (switched 2026-06-08), so the GPU acceleration and sandbox
 issues apply directly in addition to the startup crash and SSH Remote Dev concerns.
@@ -24,9 +24,9 @@ issues apply directly in addition to the startup crash and SSH Remote Dev concer
 
 ```toml
 [packages.vscode]
-method      = "apt-repo"
-gpg_url     = "https://packages.microsoft.com/keys/microsoft.asc"
-gpg_path    = "/usr/share/keyrings/microsoft-vscode.gpg"
+method = "apt-repo"
+gpg_url = "https://packages.microsoft.com/keys/microsoft.asc"
+gpg_path = "/usr/share/keyrings/microsoft-vscode.gpg"
 sources_path = "/etc/apt/sources.list.d/vscode.list"
 sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://packages.microsoft.com/repos/code stable main"
 ```
@@ -81,13 +81,13 @@ with `Cannot load libjvm.so` because it looks for `jre/` relative to its own pat
 
 ```toml
 [packages.jetbrains-toolbox]
-method           = "archive"
-check_path       = "~/.local/share/jetbrains-toolbox/jetbrains-toolbox"
-download_url     = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-{version}.tar.gz"
-extract_to       = "~/.local/share/jetbrains-toolbox"
-install_dir      = "~/.local/share/jetbrains-toolbox"
+method = "archive"
+check_path = "~/.local/share/jetbrains-toolbox/jetbrains-toolbox"
+download_url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-{version}.tar.gz"
+extract_to = "~/.local/share/jetbrains-toolbox"
+install_dir = "~/.local/share/jetbrains-toolbox"
 strip_components = 2
-symlinks         = [{ src = "jetbrains-toolbox", dst = "jetbrains-toolbox" }]
+symlinks = [{ src = "jetbrains-toolbox", dst = "jetbrains-toolbox" }]
 ```
 
 `version_cmd` queries the JetBrains releases API for the current build string (JetBrains
@@ -182,6 +182,7 @@ GPU-accelerated terminal with native Lua config, split panes, tabs, and SSH mult
 
 **Config:** `config/wezterm.lua` — copied to `~/.config/wezterm/wezterm.lua` on first install.
 Features:
+
 - CaskaydiaCove NFM, 12pt
 - Startup: maximized window, two equal vertical panes (right pane active)
 
@@ -200,6 +201,7 @@ Classic GTK terminal with split panes, profiles, and GNOME integration.
 
 **Config:** `config/terminator.conf` — copied to `~/.config/terminator/config` on first
 install. Profile settings:
+
 - CaskaydiaCove Nerd Font Mono 12
 - Infinite scrollback
 - Purple title bar (`#613583`) — Adwaita-compatible accent, easy on the eyes

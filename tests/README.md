@@ -34,6 +34,6 @@ pytest tests/
 This also works unmodified from a Claude Code (or other agent) session in this repo, once
 `.envrc`/`direnv allow` have been done at least once: Claude Code captures a shell snapshot once
 per session and replays it for every Bash-tool command instead of re-sourcing dotfiles each time,
-so a *new* session's snapshot already has `.venv/bin` on `PATH` — no explicit activation needed.
+so a _new_ session's snapshot already has `.venv/bin` on `PATH` — no explicit activation needed.
 A session whose snapshot predates `.envrc`/`direnv allow` existing won't see it retroactively
 (the snapshot doesn't refresh mid-session); start a new session if that happens.
