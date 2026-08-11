@@ -2160,9 +2160,9 @@
   
 
 
-<h1 id="input-devices">Input devices</h1>
-<h2 id="kinesis-advantage-360">Kinesis Advantage 360</h2>
-<h3 id="current-layout-profile-6-layout6txt">Current layout (Profile 6 / <code>layout6.txt</code>)</h3>
+<h1 id="input-devices">Input devices<a class="headerlink" href="#input-devices" title="Permanent link">&para;</a></h1>
+<h2 id="kinesis-advantage-360">Kinesis Advantage 360<a class="headerlink" href="#kinesis-advantage-360" title="Permanent link">&para;</a></h2>
+<h3 id="current-layout-profile-6-layout6txt">Current layout (Profile 6 / <code>layout6.txt</code>)<a class="headerlink" href="#current-layout-profile-6-layout6txt" title="Permanent link">&para;</a></h3>
 <p>This is the layout currently deployed to the keyboard. <code>[rwin]&gt;[lwin]</code> under <code>&lt;base&gt;</code> fixes GNOME&rsquo;s
 tap-to-open-overview gesture not firing on a tap of the right Super key — see &ldquo;Tap-to-open
 Activities&rdquo; below for why. Confirmed working: the right Super key now works correctly everywhere
@@ -2232,14 +2232,14 @@ verify these bindings are still useful or remap them before applying this layout
 </span><span id="__span-1-35"><a id="__codelineno-1-35" name="__codelineno-1-35" href="#__codelineno-1-35"></a>
 </span><span id="__span-1-36"><a id="__codelineno-1-36" name="__codelineno-1-36" href="#__codelineno-1-36"></a>&lt;function3&gt;
 </span></code></pre></div>
-<h3 id="applying-a-layout">Applying a layout</h3>
+<h3 id="applying-a-layout">Applying a layout<a class="headerlink" href="#applying-a-layout" title="Permanent link">&para;</a></h3>
 <ul>
 <li>access the Direct Programming mode using the <code>SmartSet</code>+<code>V-Drive</code> keys</li>
 <li>place the custom configuration above in <code>layouts/layout6.txt</code> and save the file</li>
 <li>eject the drive and press the <code>SmartSet</code>+<code>V-Drive</code> keys</li>
 <li>if that fails and the keyboard isn&rsquo;t responsive, disconnect the keyboard cable and reconnect it</li>
 </ul>
-<h3 id="tap-to-open-activities-does-nothing-super-key-swallowed">Tap-to-open Activities does nothing (Super key swallowed)</h3>
+<h3 id="tap-to-open-activities-does-nothing-super-key-swallowed">Tap-to-open Activities does nothing (Super key swallowed)<a class="headerlink" href="#tap-to-open-activities-does-nothing-super-key-swallowed" title="Permanent link">&para;</a></h3>
 <p>GNOME&rsquo;s tap-to-open-overview gesture (<code>gsettings get org.gnome.mutter overlay-key</code>) is hardcoded
 to the <code>Super_L</code> keysym only — it does not also listen for <code>Super_R</code>. If the Kinesis&rsquo;s thumb-cluster
 key(s) that act as &ldquo;Windows/Super&rdquo; are mapped to the right-hand keysym, tapping them does nothing
@@ -2256,7 +2256,7 @@ remapping required on top of it.</p>
 <p>Verify with <code>gsettings get org.gnome.mutter overlay-key</code> (should stay <code>'Super_L'</code>) and a bare tap
 of the key. See <a href="keybindings.html">keybindings.md</a> for the full set of Super-based bindings this
 affects.</p>
-<h3 id="smartset-direct-programming-syntax-reference">SmartSet direct-programming syntax reference</h3>
+<h3 id="smartset-direct-programming-syntax-reference">SmartSet direct-programming syntax reference<a class="headerlink" href="#smartset-direct-programming-syntax-reference" title="Permanent link">&para;</a></h3>
 <p>Reference PDFs (large, not checked in — see <code>reference/kinesis/</code>, which is gitignored;
 re-download from <a href="https://kinesis-ergo.com/support/kb360/">https://kinesis-ergo.com/support/kb360/</a> if missing):</p>
 <ul>
@@ -2299,7 +2299,7 @@ a leading <code>*</code>, which <em>disables</em> an otherwise-valid code line �
 and the guide warns that bad syntax &ldquo;could cause temporary problems with even basic keyboard
 operation.&rdquo; So actual layout files are kept comment-free; explanations live in this doc instead,
 as annotated copies placed next to the pasteable block above.</p>
-<h3 id="references">References</h3>
+<h3 id="references">References<a class="headerlink" href="#references" title="Permanent link">&para;</a></h3>
 <ul>
 <li><a href="https://kinesis-ergo.com/support/kb360/">https://kinesis-ergo.com/support/kb360/</a></li>
 <li><a href="https://kinesis-ergo.com/wp-content/uploads/Advantage360-SmartSet-KB360-Users-Manual-v10-12-22.pdf">https://kinesis-ergo.com/wp-content/uploads/Advantage360-SmartSet-KB360-Users-Manual-v10-12-22.pdf</a></li>

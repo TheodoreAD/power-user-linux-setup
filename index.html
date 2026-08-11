@@ -597,6 +597,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#reclaiming-disk-space-aptuvnpmcargodocker-caches" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reclaiming disk space (apt/uv/npm/cargo/Docker caches)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2049,6 +2060,17 @@
   
 </li>
         
+          <li class="md-nav__item">
+  <a href="#reclaiming-disk-space-aptuvnpmcargodocker-caches" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reclaiming disk space (apt/uv/npm/cargo/Docker caches)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
       </ul>
     </nav>
   
@@ -2080,7 +2102,7 @@
   
 
 
-<h1 id="pulse-power-user-linux-setup">PULSE — Power User Linux Setup</h1>
+<h1 id="pulse-power-user-linux-setup">PULSE — Power User Linux Setup<a class="headerlink" href="#pulse-power-user-linux-setup" title="Permanent link">&para;</a></h1>
 <p><strong>PULSE</strong> (Power User Linux Setup) is an opinionated, reproducible workstation setup for Ubuntu 24.04, driven by a single <code>setup.toml</code> and <a href="https://www.pyinvoke.org/"><code>invoke</code></a> tasks. Clone, run <code>bootstrap.sh</code>, run <code>inv setup</code> — no step-by-step walkthrough required for the golden path.</p>
 <div class="grid cards">
 <ul>
@@ -2108,7 +2130,7 @@
 <p>A read-only diagnostic task plus a documented tag profile for Windows/WSL2 setups.</p>
 <p><a href="wsl.html"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> WSL guide</a></p>
 </div>
-<h2 id="quick-start">Quick start</h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>~
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>projects
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>projects
@@ -2118,7 +2140,7 @@
 </span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>inv<span class="w"> </span>setup<span class="w">             </span><span class="c1"># runs the full setup — see configuration.md for what that covers, phase by phase</span>
 </span></code></pre></div>
 <p><code>inv setup</code> does not cover everything — see <strong>Manual steps</strong> below for what still requires human input.</p>
-<h3 id="environment-variables">Environment variables</h3>
+<h3 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2141,10 +2163,10 @@
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base<span class="w"> </span>apt.deb<span class="w"> </span>tools.install<span class="w"> </span>fonts.install
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Headless / container install — no GUI or hardware-specific packages</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation<span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation,corporate,ide,gnome<span class="w"> </span>inv<span class="w"> </span>setup
 </span></code></pre></div>
 <p>Curious what <code>inv setup</code> actually runs, phase by phase, or how config files and tags work under the hood? See <a href="configuration.html">How it works</a>.</p>
-<h2 id="manual-steps">Manual steps</h2>
+<h2 id="manual-steps">Manual steps<a class="headerlink" href="#manual-steps" title="Permanent link">&para;</a></h2>
 <p>These cannot be automated — they require hardware knowledge, a browser, or interactive auth:</p>
 <table>
 <thead>
@@ -2188,8 +2210,8 @@
 </tr>
 </tbody>
 </table>
-<h2 id="maintenance">Maintenance</h2>
-<h3 id="updating-deb-github-packages">Updating deb-github packages</h3>
+<h2 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h2>
+<h3 id="updating-deb-github-packages">Updating deb-github packages<a class="headerlink" href="#updating-deb-github-packages" title="Permanent link">&para;</a></h3>
 <p>Packages installed via <code>deb-github</code> (e.g. wezterm nightly) are not updated by <code>apt upgrade</code>.
 To upgrade all of them to the latest release:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>apt.upgrade-debs
@@ -2197,6 +2219,17 @@ To upgrade all of them to the latest release:</p>
 <p>This re-downloads and reinstalls each <code>deb-github</code> package. <code>dpkg</code> handles version comparison —
 reinstalling the same version is safe. For packages using <code>tag = "nightly"</code>, this always fetches
 the latest nightly build.</p>
+<h3 id="reclaiming-disk-space-aptuvnpmcargodocker-caches">Reclaiming disk space (apt/uv/npm/cargo/Docker caches)<a class="headerlink" href="#reclaiming-disk-space-aptuvnpmcargodocker-caches" title="Permanent link">&para;</a></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>cleanup.all<span class="w">          </span><span class="c1"># conservative: keeps caches that speed up your next install</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>cleanup.all-full<span class="w">     </span><span class="c1"># full wipe: reclaims more, next install of each is slower</span>
+</span></code></pre></div>
+<p>Opt-in only — neither runs as part of <code>inv setup</code>, since a persistent workstation usually wants
+to <em>keep</em> these caches. Each covers apt&rsquo;s <code>.deb</code> archive cache, uv&rsquo;s build/wheel cache, npm&rsquo;s
+package cache, cargo&rsquo;s registry cache (if rust is installed), and Docker images/containers/build
+cache (if Docker is installed) — see <a href="dev-container.html#cleanup-reclaiming-image-layer-space">dev-container.md</a>
+for the full breakdown and the reasoning behind the conservative/full split. <code>inv cleanup.caches</code>/
+<code>inv cleanup.caches-full</code> run the same set minus Docker, if you just want the package-manager
+caches.</p>
 
 
 

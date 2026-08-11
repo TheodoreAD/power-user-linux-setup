@@ -2102,26 +2102,26 @@
   
 
 
-<h1 id="go">Go</h1>
+<h1 id="go">Go<a class="headerlink" href="#go" title="Permanent link">&para;</a></h1>
 <p><a href="https://go.dev/doc/install">https://go.dev/doc/install</a>
 <a href="https://github.com/golang-standards/project-layout">https://github.com/golang-standards/project-layout</a></p>
 <p>Installed via <code>inv tools.install</code> (archive method — downloads the official tarball from go.dev and extracts to <code>~/.local/share/go</code>). Shell environment is written to <code>~/.zshrc</code> by <code>inv zsh.configure</code>.</p>
-<h2 id="environment">Environment</h2>
+<h2 id="environment">Environment<a class="headerlink" href="#environment" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nv">GOROOT</span><span class="o">=</span>~/.local/share/go<span class="w">   </span><span class="c1"># Go installation (binaries, stdlib)</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nv">GOPATH</span><span class="o">=</span>~/go<span class="w">                </span><span class="c1"># workspace (go install puts binaries in ~/go/bin)</span>
 </span></code></pre></div>
 <p>Both are set automatically by the <code>zshrc</code> snippet in <code>setup.toml</code>.</p>
-<h2 id="version-management">Version management</h2>
+<h2 id="version-management">Version management<a class="headerlink" href="#version-management" title="Permanent link">&para;</a></h2>
 <p>Go 1.21+ has built-in per-project version management. A <code>go.mod</code> declaring:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>toolchain go1.26.4
 </span></code></pre></div>
 <p>will cause the <code>go</code> command to automatically download and use that exact version when you enter the project. <code>GOTOOLCHAIN=auto</code> (the default since 1.21) enables this behaviour — no extra tool needed.</p>
 <p>Install one bootstrap version via <code>inv tools.install</code> and let projects pull their own toolchains as needed.</p>
-<h2 id="to-update-the-bootstrap-install">To update the bootstrap install</h2>
+<h2 id="to-update-the-bootstrap-install">To update the bootstrap install<a class="headerlink" href="#to-update-the-bootstrap-install" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>rm<span class="w"> </span>-rf<span class="w"> </span>~/.local/share/go
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>tools.install
 </span></code></pre></div>
-<h2 id="verify">Verify</h2>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>go<span class="w"> </span>version
 </span></code></pre></div>
 
