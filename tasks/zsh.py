@@ -1,4 +1,3 @@
-import os
 import pwd
 import re
 import shutil
@@ -11,12 +10,8 @@ from . import util
 _REPO_ROOT = Path(__file__).parent.parent
 
 
-def _current_user() -> str:
-    return os.environ.get("SUDO_USER") or os.environ.get("USER", "")
-
-
 def _current_shell() -> str:
-    return pwd.getpwnam(_current_user()).pw_shell
+    return pwd.getpwnam(util.current_user()).pw_shell
 
 
 def _shell_is_zsh(shell_path: str) -> bool:
@@ -127,7 +122,7 @@ def set_default_shell(c):
     if _shell_is_zsh(_current_shell()):
         print(f"[zsh] default shell already zsh ({_current_shell()}) — nothing to do")
         return
-    c.run(f"{util.SUDO} usermod -s {zsh_path} {_current_user()}")
+    c.run(f"{util.SUDO} usermod -s {zsh_path} {util.current_user()}")
     print(f"[zsh] default shell set to {zsh_path} — close this terminal and open a new one for it to take effect")
 
 

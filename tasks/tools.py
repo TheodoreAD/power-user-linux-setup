@@ -175,3 +175,54 @@ def install(c):
         _install_git_clone(c, name, cfg)
     for name, cfg in util.packages_by_method("wrapper-script").items():
         _install_wrapper_script(c, name, cfg)
+
+
+# Matches [packages.rust]'s CARGO_HOME in setup.toml. Only the registry (downloaded crate
+# sources/index) is reclaimable cache — the sibling `bin/` under the same CARGO_HOME holds the
+# actual cargo/rustc/clippy/rustfmt binaries and must not be touched.
+_CARGO_REGISTRY = Path.home() / ".local/share/cargo/registry"
+# Compressed .crate downloads — cheap to refetch, no local rebuild cost. The rest of registry/
+# (extracted `src/`, the git/sparse `index/`) is slower to reconstruct, so it's left alone by the
+# conservative variant.
+_CARGO_REGISTRY_CACHE = _CARGO_REGISTRY / "cache"
+
+
+def _du(c, path: Path) -> str:
+    result = c.run(f"du -sh {path}", hide=True, warn=True)
+    return result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
+
+
+@task
+def clean_cache(c):
+    """Remove cargo's compressed crate-download cache (~/.local/share/cargo/registry/cache), if
+    rust is installed — conservative, leaves the extracted sources and index alone (slower to
+    rebuild than a plain re-download). Opt-in, not part of `inv setup`/`tools.install` — see
+    `inv cleanup.caches`. For a full wipe of the whole registry instead, see
+    `tools.clean-cache-full`.
+    """
+    if not _CARGO_REGISTRY_CACHE.exists():
+        print("[tools.clean-cache] cargo download cache not found — nothing to do")
+        return
+    if util.DRY_RUN:
+        print(f"[tools.clean-cache] cargo download cache: {_du(c, _CARGO_REGISTRY_CACHE)}")
+        return
+    shutil.rmtree(_CARGO_REGISTRY_CACHE)
+    print(f"[tools.clean-cache] removed {_CARGO_REGISTRY_CACHE}")
+
+
+@task
+def clean_cache_full(c):
+    """Remove cargo's entire registry cache (~/.local/share/cargo/registry) — compressed
+    downloads, extracted sources, and index — if rust is installed. Safe any time — cargo
+    re-fetches and re-syncs as needed; doesn't touch the installed rustc/cargo/clippy/rustfmt
+    toolchain itself. Opt-in, not part of `inv setup`/`tools.install` — see
+    `inv cleanup.all-full`.
+    """
+    if not _CARGO_REGISTRY.exists():
+        print("[tools.clean-cache-full] cargo registry cache not found — nothing to do")
+        return
+    if util.DRY_RUN:
+        print(f"[tools.clean-cache-full] cargo registry cache: {_du(c, _CARGO_REGISTRY)}")
+        return
+    shutil.rmtree(_CARGO_REGISTRY)
+    print(f"[tools.clean-cache-full] removed {_CARGO_REGISTRY}")

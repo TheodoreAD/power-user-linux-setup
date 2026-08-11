@@ -158,8 +158,12 @@ def repos(c):
     # lsb_release (package lsb-release) isn't guaranteed present on a fresh/minimal install, and
     # this runs before apt.base — which is where setup.toml's other apt packages get installed —
     # ever gets a chance to. Not declared as a [packages.*] entry for that reason: it wouldn't
-    # install in time to help here anyway, so it's just ensured directly.
+    # install in time to help here anyway, so it's just ensured directly. `apt update` first
+    # since a minimal/container base image (or one that's had /var/lib/apt/lists cleaned in an
+    # earlier Docker layer) may have no package index at all yet — `apt install` would 404 on
+    # "Unable to locate package" otherwise.
     if not util.command_exists("lsb_release"):
+        c.run(f"{util.SUDO} apt update")
         c.run(f"{util.SUDO} apt install -y lsb-release")
     codename = c.run("lsb_release -cs", hide=True).stdout.strip()
 
@@ -244,7 +248,8 @@ def _dpkg_install(c, name: str, cfg: dict, version: str) -> bool:
         c.run(f"{util.SUDO} dpkg -i {deb}", warn=True)
         c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
     else:
-        c.run(f"{util.SUDO} dpkg -i {downloaded} && rm {downloaded}", warn=True)
+        c.run(f"{util.SUDO} dpkg -i {downloaded}", warn=True)
+        c.run(f"rm -f {downloaded}")
     return True
 
 
@@ -299,6 +304,39 @@ def _install_deb_url(c, name: str, cfg: dict) -> None:
     c.run(f'curl -fsSL "{url}" -o {deb}')
     c.run(f"{util.SUDO} dpkg -i {deb} && rm {deb}")
     print(f"[{name}] installed")
+
+
+@task
+def clean_cache(c):
+    """Remove apt's downloaded .deb cache for packages no longer available at their cached
+    version (`apt-get autoclean`) — conservative, keeps .debs for currently-installed versions
+    cached for reinstall. Opt-in, not part of `inv setup`/`apt.base` — see `inv cleanup.caches`.
+    For a full wipe of /var/cache/apt/archives instead, see `apt.clean-cache-full`.
+    """
+    util.require_apt()
+    if util.DRY_RUN:
+        result = c.run("du -sh /var/cache/apt/archives", hide=True, warn=True)
+        size = result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
+        print(f"[apt.clean-cache] archive cache: {size}")
+        return
+    c.run(f"{util.SUDO} apt-get autoclean")
+    print("[apt.clean-cache] obsolete entries removed from /var/cache/apt/archives")
+
+
+@task
+def clean_cache_full(c):
+    """Remove apt's entire downloaded .deb cache (/var/cache/apt/archives), including .debs for
+    currently-installed packages — apt just re-downloads them if reinstalled. Opt-in, not part of
+    `inv setup`/`apt.base` — see `inv cleanup.all-full`.
+    """
+    util.require_apt()
+    if util.DRY_RUN:
+        result = c.run("du -sh /var/cache/apt/archives", hide=True, warn=True)
+        size = result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
+        print(f"[apt.clean-cache-full] archive cache: {size}")
+        return
+    c.run(f"{util.SUDO} apt-get clean")
+    print("[apt.clean-cache-full] /var/cache/apt/archives cleared")
 
 
 @task

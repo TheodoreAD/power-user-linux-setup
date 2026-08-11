@@ -1,5 +1,4 @@
 import json
-import os
 import tempfile
 from pathlib import Path
 
@@ -62,7 +61,7 @@ def configure(c):
         if not util.command_exists("docker"):
             print("[docker] MISSING")
             return
-        user = os.environ.get("SUDO_USER") or os.environ.get("USER")
+        user = util.current_user()
         in_group = "docker" in c.run(f"id -nG {user}", hide=True).stdout.split()
         existing = (
             json.loads(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout) if _DAEMON_JSON.exists() else {}
@@ -75,7 +74,7 @@ def configure(c):
         print("[docker] not installed — skipping")
         return
 
-    user = os.environ.get("SUDO_USER") or os.environ.get("USER")
+    user = util.current_user()
     groups = c.run(f"id -nG {user}", hide=True).stdout.split()
     if "docker" not in groups:
         c.run(f"{util.SUDO} usermod -aG docker {user}")
@@ -95,3 +94,37 @@ def configure(c):
     c.run(f"{util.SUDO} mkdir -p {_DAEMON_JSON.parent} && {util.SUDO} cp {tmp} {_DAEMON_JSON} && rm {tmp}")
     _ensure_running(c)
     print("[docker] daemon.json updated, daemon restarted")
+
+
+@task
+def clean(c):
+    """Prune stopped containers, dangling images, and unused networks/build cache
+    (`docker system prune -f`). Conservative on purpose: doesn't remove images that are tagged
+    but unused by any container — see `docker.clean-full` for that. Neither touches volumes —
+    those can hold irreplaceable data, a different risk class than a rebuildable cache. Opt-in,
+    not part of `inv setup` — see `inv cleanup.all`.
+    """
+    if not util.command_exists("docker"):
+        print("[docker.clean] docker not installed — nothing to do")
+        return
+    if util.DRY_RUN:
+        c.run("docker system df", warn=True)
+        return
+    c.run("docker system prune -f")
+    print("[docker.clean] pruned stopped containers, dangling images, unused networks/build cache")
+
+
+@task
+def clean_full(c):
+    """Prune everything `docker.clean` does, plus all images not currently used by a container
+    — tagged or not (`docker system prune -af`). Still doesn't touch volumes — see `docker.clean`
+    for why. Opt-in, not part of `inv setup` — see `inv cleanup.all-full`.
+    """
+    if not util.command_exists("docker"):
+        print("[docker.clean-full] docker not installed — nothing to do")
+        return
+    if util.DRY_RUN:
+        c.run("docker system df", warn=True)
+        return
+    c.run("docker system prune -af")
+    print("[docker.clean-full] pruned stopped containers, all unused images, unused networks/build cache")

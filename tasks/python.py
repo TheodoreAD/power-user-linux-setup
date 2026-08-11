@@ -65,6 +65,41 @@ def tools(c):
         print(f"[{name}] ok")
 
 
+@task
+def clean_cache(c):
+    """Prune unreachable entries from uv's build/wheel cache (~/.cache/uv) — conservative, keeps
+    entries still reachable from any installed environment. Opt-in, not part of `inv setup`/
+    `python.tools` — see `inv cleanup.caches`. For a full wipe instead, see
+    `python.clean-cache-full`.
+    """
+    if not util.command_exists("uv"):
+        print("[python.clean-cache] uv not found — nothing to do")
+        return
+    if util.DRY_RUN:
+        result = c.run("uv cache dir", hide=True, warn=True)
+        print(f"[python.clean-cache] uv cache: {result.stdout.strip() if result.ok else 'unknown'}")
+        return
+    c.run("uv cache prune")
+    print("[python.clean-cache] unreachable uv cache entries pruned")
+
+
+@task
+def clean_cache_full(c):
+    """Wipe uv's entire build/wheel cache (~/.cache/uv). Safe any time — uv re-populates it as
+    needed; only affects install speed, not what's installed. Opt-in, not part of `inv setup`/
+    `python.tools` — see `inv cleanup.all-full`.
+    """
+    if not util.command_exists("uv"):
+        print("[python.clean-cache-full] uv not found — nothing to do")
+        return
+    if util.DRY_RUN:
+        result = c.run("uv cache dir", hide=True, warn=True)
+        print(f"[python.clean-cache-full] uv cache: {result.stdout.strip() if result.ok else 'unknown'}")
+        return
+    c.run("uv cache clean")
+    print("[python.clean-cache-full] uv cache cleared")
+
+
 @task(help={"force": "Recreate dprint.json even if it already exists, re-pinning plugin versions"})
 def dev_venv(c, force=False):
     """Set up this repo's own dev/test venv (uv sync) and let direnv auto-activate it.
