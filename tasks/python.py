@@ -3,7 +3,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import util
+from . import ai, util
 
 _REPO_ROOT = Path(__file__).parent.parent
 _SETUP_TOML = _REPO_ROOT / "setup.toml"
@@ -72,9 +72,9 @@ def dev_venv(c, force=False):
     Run once after cloning — see tests/README.md. Creates .venv/ from pyproject.toml's dev
     dependency group (pytest, invoke, ruff), then runs `direnv allow` so the .envrc in this repo's
     root auto-exports VIRTUAL_ENV/PATH whenever direnv's shell hook fires (interactive shells and
-    IDEs — see [packages.direnv] in setup.toml). direnv's hook only fires on an interactive
-    prompt cycle or an actual `cd`, so it does not activate for one-shot non-interactive shells
-    (e.g. Claude Code's Bash tool) — those still need `source .venv/bin/activate` explicitly.
+    IDEs — see [packages.direnv] in setup.toml), and `inv ai.claude-direnv-hook` so Claude Code's
+    Bash tool picks it up too — that tool runs non-interactive `zsh -c` shells where direnv's
+    normal hook never fires (see docs/claude-code.md).
 
     Also idempotently creates dprint.json (skipped if it already exists, unless --force).
     """
@@ -86,12 +86,14 @@ def dev_venv(c, force=False):
         print(f"[python] .venv: {'ok' if venv_ok else 'MISSING'}")
         print(f"[python] direnv: {'ok' if direnv_ok else 'MISSING'}")
         print(f"[python] dprint.json: {'ok' if _DPRINT_JSON.exists() else 'MISSING'}")
+        ai.claude_direnv_hook(c, dir=str(_SETUP_TOML.parent))
         return
     c.run("uv sync")
     _ensure_dprint_config(c, force)
     if direnv_ok:
         c.run("direnv allow")
-        print("[python] .venv ready — direnv will auto-activate it in interactive shells")
+        ai.claude_direnv_hook(c, dir=str(_SETUP_TOML.parent))
+        print("[python] .venv ready — direnv will auto-activate it in interactive shells and Claude Code")
     else:
         print(
             "[python] .venv ready — direnv not found, so no shell auto-activation; "
