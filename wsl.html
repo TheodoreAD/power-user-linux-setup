@@ -2391,67 +2391,82 @@ one is for and why it&rsquo;s excluded by default.</p>
 <code>[packages.clipboard]</code> (<code>wl-clipboard</code>) and <code>[packages.google-chrome]</code> — see below for why those
 two specifically earn their place.</p>
 <h2 id="prerequisites-etcwslconf">Prerequisites — <code>/etc/wsl.conf</code></h2>
-<p>Two settings gate most of the rest. Both require a full WSL restart to take effect
+<p>One setting gates most of the rest, and requires a full WSL restart to take effect
 (<code>wsl.exe --shutdown</code> from Windows, then reopen the terminal):</p>
 <div class="language-ini highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[boot]</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="na">systemd</span><span class="o">=</span><span class="s">true</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="k">[network]</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="na">generateResolvConf</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s">false</span>
 </span></code></pre></div>
-<p>Set both at once with:</p>
+<p>Set it with:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>wsl.fix
 </span></code></pre></div>
-<p>It edits <code>/etc/wsl.conf</code> in place — adding whichever of the two keys is missing or wrong, without
-touching any other section you already have in that file (it&rsquo;s user-owned config, not something
-PULSE fully manages) — then reminds you to restart. Idempotent: running it again once both are
-already set does nothing. This is the only kind of WSL misconfiguration <code>inv wsl.fix</code> can address:
-it edits a file inside the distro, so it only covers settings that live there. Distro choice, WSL1
-vs WSL2, and WSLg availability all require action from the Windows side instead — <code>inv wsl.check</code>
-still reports on those, but there&rsquo;s nothing to write from inside WSL to fix them.</p>
+<p>It edits <code>/etc/wsl.conf</code> in place — adding the key if it&rsquo;s missing or wrong, without touching any
+other section you already have in that file (it&rsquo;s user-owned config, not something PULSE fully
+manages) — then reminds you to restart. Idempotent: running it again once already set does nothing.
+This is the only kind of WSL misconfiguration <code>inv wsl.fix</code> can address: it edits a file inside the
+distro, so it only covers settings that live there. Distro choice, WSL1 vs WSL2, and WSLg
+availability all require action from the Windows side instead — <code>inv wsl.check</code> still reports on
+those, but there&rsquo;s nothing to write from inside WSL to fix them.</p>
 <p><strong><code>systemd=true</code></strong> — Ubuntu 24.04&rsquo;s WSL image ships with this by default, but confirm it.
 <code>system.locale</code> (<code>localectl</code>), <code>system.dns</code> and <code>system.journal-size</code> (<code>systemctl</code>), and
 <code>docker.configure</code>&rsquo;s daemon restart all shell out to systemd and now abort immediately via
 <code>util.require_systemd()</code> if it isn&rsquo;t running, rather than failing partway through. <code>inv wsl.check</code>
 verifies <code>/run/systemd/system</code> is actually mounted, not just that the config file says so.</p>
-<p><strong><code>generateResolvConf = false</code></strong> — without it, WSL regenerates <code>/etc/resolv.conf</code> from the Windows
-host&rsquo;s DNS settings on every restart, silently discarding whatever <code>inv system.dns</code> wrote.</p>
-<p>Setting it doesn&rsquo;t finish the job by itself, though: on stock Ubuntu <code>/etc/resolv.conf</code> is a
-symlink to systemd-resolved&rsquo;s stub (<code>/run/systemd/resolve/stub-resolv.conf</code>), and <code>inv system.dns</code>
-(same as on bare metal) only ever edits systemd-resolved&rsquo;s own drop-in config — it never touches
-<code>/etc/resolv.conf</code> itself. WSL&rsquo;s <code>generateResolvConf</code> replaces that symlink with a plain file, and
-disabling the setting only stops WSL from touching the file <em>going forward</em> — it does not restore
-the symlink. So after <code>wsl.exe --shutdown</code> and reopening, <code>/etc/resolv.conf</code> is still the stale
-plain file WSL last wrote, <code>inv system.dns</code> has nothing to point at, and DNS resolution breaks
-(<code>curl: (6) Could not resolve host</code>, etc.) until the symlink is put back:</p>
+<p><strong><code>generateResolvConf</code></strong> — WSL&rsquo;s own default (<code>true</code>) regenerates <code>/etc/resolv.conf</code> from the
+Windows host&rsquo;s DNS settings on every restart, and <code>inv wsl.fix</code>/<code>inv wsl.install</code> leave it there by
+default too: it&rsquo;s the safe choice (see <a href="#if-public-dns-is-blocked-on-this-network">If public DNS is blocked</a>
+below for why), and it needs nothing further — DNS just works, mirroring whatever Windows itself
+resolves. Nothing here is required unless you&rsquo;re opting into the public-DNS override
+(<code>--dns=yes</code>/<code>inv wsl.fix --dns</code>), in which case <code>generateResolvConf=false</code> is set and <code>inv
+system.dns</code> writes a systemd-resolved drop-in — but setting it doesn&rsquo;t finish the job by itself: on
+stock Ubuntu <code>/etc/resolv.conf</code> is a symlink to systemd-resolved&rsquo;s stub
+(<code>/run/systemd/resolve/stub-resolv.conf</code>), and <code>inv system.dns</code> (same as on bare metal) only ever
+edits systemd-resolved&rsquo;s own drop-in config — it never touches <code>/etc/resolv.conf</code> itself. WSL&rsquo;s
+<code>generateResolvConf</code> replaces that symlink with a plain file, and disabling the setting only stops
+WSL from touching the file <em>going forward</em> — it does not restore the symlink. So after <code>wsl.exe
+--shutdown</code> and reopening, <code>/etc/resolv.conf</code> is still the stale plain file WSL last wrote, <code>inv
+system.dns</code> has nothing to point at, and DNS resolution breaks (<code>curl: (6) Could not resolve
+host</code>, etc.) until the symlink is put back:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/stub-resolv.conf<span class="w"> </span>/etc/resolv.conf
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>inv<span class="w"> </span>system.dns
 </span></code></pre></div>
-<p><code>inv wsl.install</code> does this relink automatically; <code>inv wsl.check</code> detects and reports whichever of
-these three states you&rsquo;re in (WSL still generating it, generated-but-frozen without the symlink,
-or correctly symlinked) if you&rsquo;re running the steps by hand instead.</p>
+<p><code>inv wsl.install --dns=yes</code> does this relink automatically; <code>inv wsl.check</code> detects and reports
+whichever of these three states you&rsquo;re in (WSL still generating it, generated-but-frozen without
+the symlink, or correctly symlinked) if you&rsquo;re running the steps by hand instead.</p>
 <h3 id="if-public-dns-is-blocked-on-this-network">If public DNS is blocked on this network</h3>
-<p>Everything above assumes <code>1.1.1.1</code>/<code>1.0.0.1</code>/<code>8.8.8.8</code> (what <code>inv system.dns</code> configures) are
-actually reachable. On some corporate networks they aren&rsquo;t — a VPN client or firewall allows
-general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver. The
-signature: <code>ping 1.1.1.1</code> works, but nothing resolves, even against <code>/etc/resolv.conf</code> pointed
-<em>directly</em> at <code>1.1.1.1</code> (no systemd-resolved involved at all). If that&rsquo;s what you&rsquo;re seeing, no
-amount of correctly configuring public DNS servers will fix it — <code>inv wsl.install</code> detects this
-itself (tests real resolution after configuring DNS, falls back to a static resolv.conf, and warns
-if even that doesn&rsquo;t resolve) rather than silently leaving you with a broken config.</p>
-<p>The actual fix is to <em>not</em> override WSL&rsquo;s own DNS handling: <code>generateResolvConf=true</code> (WSL&rsquo;s
-default) makes WSL regenerate <code>/etc/resolv.conf</code> from whatever DNS server Windows itself is
-configured to use — which, on a locked-down network, is presumably the internal resolver the
-firewall actually allows through. Run:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--dns<span class="o">=</span>no
+<p><code>generateResolvConf=true</code> (WSL&rsquo;s own default, and <code>inv wsl.fix</code>/<code>inv wsl.install</code>&rsquo;s default too —
+see below) makes WSL regenerate <code>/etc/resolv.conf</code> on every restart from whatever DNS server
+Windows itself is configured to use. Overriding that (<code>generateResolvConf=false</code>, what
+<code>--dns=yes</code>/<code>inv wsl.fix --dns</code> does) points <code>/etc/resolv.conf</code> at public resolvers
+(<code>1.1.1.1</code>/<code>1.0.0.1</code>/<code>8.8.8.8</code>, what <code>inv system.dns</code> configures) instead — and that&rsquo;s not risk-free
+even when those resolvers are reachable:</p>
+<ul>
+<li><strong>They might not be reachable at all.</strong> On some corporate networks a VPN client or firewall
+  allows general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver.
+  The signature: <code>ping 1.1.1.1</code> works, but nothing resolves, even against <code>/etc/resolv.conf</code> pointed
+  <em>directly</em> at <code>1.1.1.1</code> (no systemd-resolved involved at all). <code>inv wsl.check</code> and
+  <code>inv wsl.install --dns=auto</code> both run a direct, non-destructive probe (a raw DNS query straight
+  to <code>1.1.1.1</code>/<code>8.8.8.8</code>, bypassing whatever&rsquo;s currently in <code>/etc/resolv.conf</code>) before touching any
+  config, specifically to catch this case without a write + restart cycle. <code>inv wsl.install</code> also
+  still verifies real resolution after configuring DNS and falls back to a static resolv.conf (and
+  warns if even that doesn&rsquo;t resolve) as a second layer, in case the network&rsquo;s behavior changes
+  between the probe and the actual configure step.</li>
+<li><strong>Even when reachable, it can still break things.</strong> A corporate resolver often knows about
+  internal/VPN-only hostnames (an internal git server, an internal package mirror, a split-DNS VPN
+  zone) that <code>1.1.1.1</code> never will. Overriding WSL&rsquo;s own DNS trades &ldquo;correct for this network&rdquo; for
+  &ldquo;correct for the public internet&rdquo; — reachability alone doesn&rsquo;t tell you which one you need.</li>
+</ul>
+<p>Because of the second point, <strong>the default is to leave WSL&rsquo;s own DNS alone regardless of whether
+public DNS is reachable</strong> — <code>inv wsl.install --dns=auto</code> (the default) and a bare <code>inv wsl.fix</code>
+both default to declining the override; the reachability probe only changes the explanation shown,
+never the default answer. Only opt in if you know you don&rsquo;t need any internal-only hostnames:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--dns<span class="o">=</span>yes
 </span></code></pre></div>
-<p>This sets <code>generateResolvConf=true</code> in <code>/etc/wsl.conf</code> (reverting it if <code>wsl.fix</code>/<code>wsl.install</code>
-had already set it to <code>false</code>) and skips the relink/<code>system.dns</code>/fallback dance entirely, letting
-WSL manage <code>/etc/resolv.conf</code> itself. Needs the usual <code>wsl.exe --shutdown</code> + reopen to take
-effect. <strong>Pass <code>--dns=no</code> on every future <code>inv wsl.install</code> run on this machine</strong> — without it,
-<code>wsl.fix</code> will flip <code>generateResolvConf</code> back to <code>false</code> again and DNS breaks again. (In a real
-terminal, <code>wsl.install</code> asks this exact question interactively before doing anything if you leave
-<code>--dns</code> unset — see <a href="#interactive-prompts">Interactive prompts</a> below.)</p>
+<p>Needs the usual <code>wsl.exe --shutdown</code> + reopen to take effect, and does the relink/<code>system.dns</code>/
+fallback dance described above. <strong>Pass <code>--dns=yes</code> on every future <code>inv wsl.install</code> run on this
+machine</strong> — without it, <code>--dns=auto</code>&rsquo;s default reverts <code>generateResolvConf</code> back to <code>true</code> and the
+override is gone again. (In a real terminal, <code>wsl.install</code> asks this exact question interactively
+before doing anything if you leave <code>--dns</code> unset — see <a href="#interactive-prompts">Interactive
+prompts</a> below.)</p>
 <h2 id="docker">Docker</h2>
 <p><code>[packages.docker]</code> is tagged <code>workstation</code>, so it&rsquo;s excluded by the recommended tag set above by
 default. Two ways to get Docker working, matching the split in <a href="dev-container.html">docs/dev-container.md</a>:</p>
@@ -2575,7 +2590,8 @@ always uses their defaults).</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>inv<span class="w"> </span>wsl.install<span class="w">              </span><span class="c1"># auto-detects WSLg, excludes workstation/corporate/ide/... per the table above</span>
 </span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--wslg<span class="o">=</span>no<span class="w">    </span><span class="c1"># force the no-WSLg tag set instead of auto-detecting</span>
 </span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--docker<span class="w">     </span><span class="c1"># also keep the workstation tag (installs Docker natively)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--dns<span class="o">=</span>no<span class="w">     </span><span class="c1"># public DNS blocked on this network — see &quot;If public DNS is blocked&quot; above</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--dns<span class="o">=</span>yes<span class="w">    </span><span class="c1"># opt into the public-DNS override — see &quot;If public DNS is blocked&quot; above</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">                              </span><span class="c1"># (--dns=no is the default and needs no flag; shown here for clarity)</span>
 </span></code></pre></div>
 <p>It calls <code>wsl.check</code> and <code>wsl.fix</code> first, then <code>system.locale</code>/<code>system.dns</code> (only if systemd/DNS
 are actually live yet — skipped with a message otherwise, if <code>wsl.fix</code> just changed
@@ -2604,20 +2620,23 @@ any point aborts the whole thing.</p>
 <p>In a real terminal (not piped, scripted, or CI — checked via <code>sys.stdin.isatty()</code>), <code>wsl.install</code>
 asks before doing anything:</p>
 <ul>
-<li>If <code>--dns</code> was left at its default (<code>auto</code>), the exact &ldquo;does this network block public DNS&rdquo;
-  question from <a href="#if-public-dns-is-blocked-on-this-network">If public DNS is blocked</a> above,
-  defaulting to &ldquo;try public DNS&rdquo; (safe either way — it verifies and falls back automatically).</li>
+<li>If <code>--dns</code> was left at its default (<code>auto</code>), a probe result line (public DNS reachable or not —
+  see <a href="#if-public-dns-is-blocked-on-this-network">If public DNS is blocked</a> above) followed by the
+  override question, <strong>defaulting to &ldquo;no&rdquo;</strong> regardless of what the probe found — declining on
+  Enter leaves WSL&rsquo;s own DNS alone.</li>
 <li>A one-line summary of what&rsquo;s about to happen (given your answer above, plus <code>--wslg</code>/<code>--docker</code>),
   then a final &ldquo;Proceed?&rdquo; — answering no aborts before touching anything.</li>
 <li>Once running, the <strong>packages</strong> and <strong>shell</strong> phases each ask &ldquo;Already looks complete — skip this
   phase?&rdquo; if their own dry-run probe found nothing missing — see <a href="#recommended-sequence">Recommended
   sequence</a> above.</li>
 </ul>
-<p>All of these default to yes (proceed / skip) on Enter, so <code>yes | inv wsl.install</code> still works
-non-interactively if you ever need it scripted; a genuinely non-interactive invocation (piped,
-cron, CI) skips every prompt entirely — <code>--dns=auto</code> behaves as it always has (try public DNS, fall
-back automatically), and any phase whose probe came back clean is skipped silently rather than
-redone.</p>
+<p>The DNS question defaults to &ldquo;no&rdquo; (decline the override) on Enter; the rest default to &ldquo;yes&rdquo;
+(proceed / skip). <code>yes | inv wsl.install</code> still works non-interactively if you ever need it
+scripted, since piping <code>yes</code> answers every prompt affirmatively regardless of its own default. A
+genuinely non-interactive invocation (piped, cron, CI) skips every prompt entirely and takes each
+one&rsquo;s default — so <code>--dns=auto</code> there now means &ldquo;no&rdquo; (WSL-managed DNS; pass <code>--dns=yes</code> explicitly
+if a scripted run needs the override instead), and any phase whose probe came back clean is skipped
+silently rather than redone.</p>
 <p>Summaries, warnings, doc pointers, and these prompts all render as bordered blocks — via
 <code>tasks/ui.py</code>, a small formatting library (<code>ui.block</code>/<code>ui.note</code>/<code>ui.warn</code>/<code>ui.ask</code>) that&rsquo;s what
 actually makes them stand out from the apt/dpkg/curl/gpg output scrolling past in the same run.
@@ -2643,34 +2662,36 @@ to do:</p>
 <p>Safe to re-run after doing whatever it suggests — it&rsquo;s checking, not remembering.</p>
 <p>If you want to run the phases individually instead — e.g. to stop and inspect state between
 steps — here&rsquo;s the same sequence by hand:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>wsl.check<span class="w">   </span><span class="c1"># do this first — tells you whether WSLg is available</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>inv<span class="w"> </span>wsl.fix<span class="w">     </span><span class="c1"># sets systemd=true / generateResolvConf=false in /etc/wsl.conf if needed</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="c1"># then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="c1"># and reopen your terminal before continuing</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>wsl.check<span class="w">   </span><span class="c1"># do this first — tells you whether WSLg is available, and whether public DNS</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">                </span><span class="c1"># (1.1.1.1/8.8.8.8) is even reachable on this network</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>inv<span class="w"> </span>wsl.fix<span class="w">     </span><span class="c1"># sets systemd=true; leaves generateResolvConf=true (WSL-managed DNS, the safe</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">                </span><span class="c1"># default — see &quot;If public DNS is blocked&quot; above). Pass --dns to override with</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">                </span><span class="c1"># public DNS instead: `inv wsl.fix --dns`</span>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># fix locale/DNS *before* anything below that needs network access — on a re-run after a restart</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># with generateResolvConf=false already active, DNS is broken until this runs (see Prerequisites):</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># and reopen your terminal before continuing</span>
 </span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
 </span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># only if /etc/wsl.conf has systemd=true:</span>
 </span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>inv<span class="w"> </span>system.locale
 </span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1"># only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c1"># restoring first, see &quot;Prerequisites&quot; above for why:</span>
+</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1"># only if you ran `inv wsl.fix --dns` (generateResolvConf=false) — fix DNS *before* anything below</span>
+</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c1"># that needs network access, and restore the symlink WSL replaced first, see &quot;Prerequisites&quot; above:</span>
 </span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/stub-resolv.conf<span class="w"> </span>/etc/resolv.conf
 </span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>inv<span class="w"> </span>system.dns
-</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a>
-</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="c1"># with WSLg (default on current Windows 11):</span>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gnome,ide,windows-native,workstation,corporate<span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base<span class="w"> </span>apt.deb
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="c1"># without WSLg:</span>
-</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb</span>
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a>inv<span class="w"> </span>tools.install
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>inv<span class="w"> </span>ai.skills
-</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>inv<span class="w"> </span>python.tools
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>inv<span class="w"> </span>node.install
-</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.p10k-configure
-</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">   </span><span class="c1"># usermod -s — takes a new terminal to actually apply</span>
+</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="c1"># if you didn&#39;t run `inv wsl.fix --dns`, skip both lines above — WSL is already managing</span>
+</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="c1"># /etc/resolv.conf itself and DNS works out of the box</span>
+</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>
+</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="c1"># with WSLg (default on current Windows 11):</span>
+</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gnome,ide,windows-native,workstation,corporate<span class="w"> </span>inv<span class="w"> </span>apt.repos<span class="w"> </span>apt.base<span class="w"> </span>apt.deb
+</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># without WSLg:</span>
+</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb</span>
+</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
+</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>inv<span class="w"> </span>tools.install
+</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>inv<span class="w"> </span>ai.skills
+</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>inv<span class="w"> </span>python.tools
+</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>inv<span class="w"> </span>node.install
+</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.p10k-configure
+</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">   </span><span class="c1"># usermod -s — takes a new terminal to actually apply</span>
 </span></code></pre></div>
 <p><code>gnome.*</code> and <code>screenshot.*</code> tasks are never called by <code>inv setup</code> and have no meaning under WSL —
 just don&rsquo;t invoke them.</p>
