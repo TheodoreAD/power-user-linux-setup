@@ -19,7 +19,7 @@ Nothing universal is repeated below — only what's specific to this repo.
 
 `inv ai.skills` and `inv ai.init` scaffold the conventions this repo already follows — a minimal
 `AGENTS.md`, a `CLAUDE.md` symlinked to it, and `.agents/skills/` with `.claude/skills` symlinked to
-it (Claude Code doesn't read `.agents/skills/` natively, only the symlink target) — for *other*
+it (Claude Code doesn't read `.agents/skills/` natively, only the symlink target) — for _other_
 projects on this machine, not just this one. Both tasks check for existing files/symlinks first and
 never overwrite hand-written content. `init`'s `CLAUDE.md` symlink means nothing can be appended
 below it the way the old `@AGENTS.md`-import form allowed — a genuinely Claude-specific addendum
@@ -66,12 +66,13 @@ can be generated from real `--help` output instead of hand-written guesses, and 
 allowlist.apply` can keep `~/.claude/settings.json` current from it automatically. `tasks/
 allowlist.py` implements it as `inv allowlist.{extract,classify,review,render,apply,status}`.
 
-**Full writeup, including every gotcha the first implementation pass hit and how testing (not
-code review) caught each one, is [`docs/cli-allowlist.md`](docs/cli-allowlist.md) — read that
-before re-deriving this architecture from scratch or "fixing" something that was already a
-deliberate tradeoff** (why there's no PreToolUse hook, why dangerous/write tiers render as `ask`
-rather than `deny`, why `--bare` isn't used for the classify step, why the `apply` manifest lives
-outside the repo).
+[`docs/cli-allowlist.md`](docs/cli-allowlist.md) is the published "what it is / how to run it"
+page. **Full writeup, including every gotcha the first implementation pass hit and how testing
+(not code review) caught each one, is [`contributing/cli-allowlist.md`](contributing/cli-allowlist.md)
+— read that before re-deriving this architecture from scratch or "fixing" something that was
+already a deliberate tradeoff** (why there's no PreToolUse hook, why dangerous/write tiers render
+as `ask` rather than `deny`, why `--bare` isn't used for the classify step, why the `apply`
+manifest lives outside the repo).
 
 ## Running the test suite
 
@@ -81,10 +82,32 @@ cloning (`uv sync` + `direnv allow`), then plain `pytest`/`python` — not `uv r
 (`.envrc` + `[packages.direnv]` in `setup.toml`) puts `.venv/bin` on `PATH` automatically — no
 `sys.path` trick or `uv run` wrapper needed for any command in this repo, including from an
 agent's Bash tool. The one gotcha: Claude Code replays a shell snapshot captured once per session
-instead of re-sourcing dotfiles per command, so a session started *before* `.envrc`/`direnv allow`
+instead of re-sourcing dotfiles per command, so a session started _before_ `.envrc`/`direnv allow`
 existed won't pick this up retroactively — that's a stale-snapshot timing issue, not a reason to
 add manual activation back in. If `pytest`/`python` aren't resolving from `.venv/bin` in an agent
 session, the fix is a new session, not `source .venv/bin/activate` workarounds.
+
+## Code quality
+
+Before considering a change done, run:
+
+```shell
+inv quality.fix   # apply (ruff --fix, ruff format, dprint fmt), then check — must pass clean
+```
+
+**Never call `ruff` or `dprint` directly** — always go through `inv quality.*`. They bake in
+required flags (e.g. `dprint`'s `--config-discovery=ignore-descendants`, needed because
+`cli-allowlist/rules/dprint.json` — an unrelated per-tool classification file — would otherwise get
+misread as a nested dprint sub-project config and abort the whole run) so the correct invocation
+lives in one place instead of every contributor's/agent's memory. Same principle for anything else
+in this repo an `inv` task already exists for — prefer the task over the bare command it wraps
+(exception: the test suite, see below — `pytest`/`python` direct is the documented convention
+there, not something this rule overrides).
+
+Full details (rule selection, `dprint.json`, the individual `lint_check`/`lint_apply`/
+`format_check`/`format_apply`/`test`/`apply`/`check` tasks) are in
+[CONTRIBUTING.md](CONTRIBUTING.md) — read that rather than re-deriving the tasks/quality.py setup
+from scratch.
 
 ## Git workflow
 
