@@ -1,6 +1,7 @@
 """Unit tests for tasks/phases.py — the only part of tasks/*.py that's pure orchestration (no
 direct system calls), so it's the only part worth an automated test. See tests/README.md.
 """
+
 import sys
 
 import pytest

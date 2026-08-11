@@ -14,6 +14,7 @@ catch a tool that changed its help backend:
 
 Exit status is nonzero if anything invokes one of these — CI-friendly, though there's no CI here yet.
 """
+
 import subprocess
 import sys
 import tempfile
@@ -27,7 +28,8 @@ _ENV_OVERRIDES = {"PAGER": "cat", "MANPAGER": "cat", "GIT_PAGER": "cat", "LESS":
 def main() -> int:
     import os
 
-    registry = tomllib.load(open(_ROOT / "tools.toml", "rb"))
+    with (_ROOT / "tools.toml").open("rb") as f:
+        registry = tomllib.load(f)
     env = {**os.environ, **_ENV_OVERRIDES}
     offenders = []
 
@@ -46,7 +48,11 @@ def main() -> int:
             try:
                 subprocess.run(
                     ["strace", "-f", "-e", "trace=execve", "-o", log.name, *cmd],
-                    capture_output=True, text=True, timeout=10, env=env, stdin=subprocess.DEVNULL,
+                    capture_output=True,
+                    text=True,
+                    timeout=10,
+                    env=env,
+                    stdin=subprocess.DEVNULL,
                 )
             except subprocess.TimeoutExpired:
                 print(f"{name}: TIMEOUT (couldn't determine)")

@@ -8,10 +8,10 @@ from invoke import task
 
 from . import ai, apt, next_steps, node, phases, python, system, tools, ui, util, zsh
 
-_WSL_CONF   = Path("/etc/wsl.conf")
+_WSL_CONF = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
 _STUB_RESOLV_CONF = Path("/run/systemd/resolve/stub-resolv.conf")
-_OSRELEASE     = Path("/proc/sys/kernel/osrelease")
+_OSRELEASE = Path("/proc/sys/kernel/osrelease")
 
 
 def _is_wsl2() -> bool:
@@ -276,14 +276,14 @@ def check(c):
     if _public_dns_reachable():
         print(
             "[wsl] public DNS (1.1.1.1/8.8.8.8): reachable — a direct UDP/53 query got an answer.\n"
-            "       Still worth reading \"If public DNS is blocked\" in docs/wsl.md before opting "
+            '       Still worth reading "If public DNS is blocked" in docs/wsl.md before opting '
             "into the override (`inv wsl.install --dns=yes` / `inv wsl.fix --dns`): reachability "
             "alone doesn't rule out breaking internal/VPN-only hostnames on a corporate network."
         )
     else:
         print(
             "[wsl] public DNS (1.1.1.1/8.8.8.8): NOT reachable from here (direct UDP/53 query "
-            "timed out) — the corporate-VPN/firewall signature described in \"If public DNS is "
+            'timed out) — the corporate-VPN/firewall signature described in "If public DNS is '
             "blocked\" in docs/wsl.md. `inv wsl.install`'s default already leaves WSL's own DNS "
             "alone for this reason; the override isn't usable on this network."
         )
@@ -308,7 +308,7 @@ def check(c):
         print(
             "[wsl] WSLg: available ✓ — gui/desktop packages work, but install as little as "
             "possible: PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate\n"
-            "       See docs/wsl.md, \"GUI, WSLg, and clipboard\" for why."
+            '       See docs/wsl.md, "GUI, WSLg, and clipboard" for why.'
         )
     else:
         print(
@@ -477,8 +477,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     check(c)
 
     ui.block(
-        "/etc/wsl.conf: systemd, DNS mode. Requires a full WSL restart (wsl.exe --shutdown) to "
-        "take effect.",
+        "/etc/wsl.conf: systemd, DNS mode. Requires a full WSL restart (wsl.exe --shutdown) to take effect.",
         label="phase: wsl config",
     )
     pre = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
@@ -497,8 +496,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     # already live, DNS is broken (stale resolv.conf, see _resolv_conf_symlinked_to_stub) until
     # this runs — doing it last meant every one of those steps hit the same DNS failure first.
     ui.block(
-        "Locale and DNS — skipped automatically below until systemd/DNS are actually live "
-        "post-restart.",
+        "Locale and DNS — skipped automatically below until systemd/DNS are actually live post-restart.",
         label="phase: system config",
     )
     if _systemd_running():
@@ -566,14 +564,15 @@ def install(c, wslg="auto", docker=False, dns="auto"):
         print(f"[wsl.install] PULSE_EXCLUDE_TAGS={os.environ['PULSE_EXCLUDE_TAGS']}")
 
     phases.run(
-        c, "packages",
+        c,
+        "packages",
         [apt.repos, apt.base, apt.deb, tools.install, ai.skills, python.tools, node.install],
-        note="apt repos/packages, script/binary tools, AI agent skills scaffolding, Python and "
-             "Node.js",
+        note="apt repos/packages, script/binary tools, AI agent skills scaffolding, Python and Node.js",
     )
 
     phases.run(
-        c, "shell",
+        c,
+        "shell",
         [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell],
         note="Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell",
     )

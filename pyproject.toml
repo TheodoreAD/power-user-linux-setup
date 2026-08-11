@@ -6,8 +6,9 @@ dependencies = []
 
 [dependency-groups]
 dev = [
-    "invoke",
-    "pytest",
+  "invoke",
+  "pytest",
+  "ruff",
 ]
 
 [build-system]
@@ -17,5 +18,36 @@ build-backend = "hatchling.build"
 [tool.hatch.build.targets.wheel]
 packages = ["tasks"]
 
+[tool.ruff]
+target-version = "py311"
+line-length = 120
+
+[tool.ruff.lint]
+# ruff 0.16 (2026-07) changed its own default from the narrow E4/E7/E9/F set (59 rules) to a much
+# broader 413-rule default — extend-select would pile these on top of that new default and land
+# near-ALL (~966 rules, including bandit/pylint/async-safety noise never intended here). Pin an
+# explicit select instead: the old default (E4, E7, E9, F) plus this repo's curated additions.
+select = [
+  # old ruff default (pycodestyle subset + pyflakes)
+  "E4",
+  "E7",
+  "E9",
+  "F",
+  "E501", # line too long — formatter doesn't wrap comments/docstrings/strings
+  "I", # isort — import sorting
+  "UP", # pyupgrade — modern syntax for the target version
+  "B", # flake8-bugbear — common bug patterns
+  "C4", # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "PTH", # flake8-use-pathlib
+  "RET", # flake8-return
+  "TID", # flake8-tidy-imports
+]
+
+[tool.ruff.lint.isort]
+known-first-party = ["tasks"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
+
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+addopts = "-ra --strict-markers --strict-config"

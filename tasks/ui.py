@@ -19,6 +19,7 @@ All degrade to plain, uncolored text when stdout isn't a real terminal (piped, r
 never emits raw ANSI escapes into a log file. `ask()` also folds in util.interactive()'s gate:
 non-interactive callers get `default` back with no box and no prompt at all.
 """
+
 import shutil
 import sys
 import textwrap

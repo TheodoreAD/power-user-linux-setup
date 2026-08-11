@@ -64,7 +64,9 @@ def configure(c):
             return
         user = os.environ.get("SUDO_USER") or os.environ.get("USER")
         in_group = "docker" in c.run(f"id -nG {user}", hide=True).stdout.split()
-        existing = json.loads(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout) if _DAEMON_JSON.exists() else {}
+        existing = (
+            json.loads(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout) if _DAEMON_JSON.exists() else {}
+        )
         cfg_ok = _is_subset(_DEFAULTS, existing)
         print(f"[docker] group:{'ok' if in_group else 'MISSING'}  daemon.json:{'ok' if cfg_ok else 'MISSING'}")
         return

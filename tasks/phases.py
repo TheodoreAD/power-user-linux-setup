@@ -5,6 +5,7 @@ per item (see apt.py, tools.py, node.py, python.py, zsh.py, system.py, docker.py
 existing convention is reused here as the "is this phase already done" probe, rather than inventing
 a second detection mechanism.
 """
+
 import io
 from contextlib import redirect_stdout
 
@@ -38,9 +39,12 @@ def run(c, label, funcs, note=None):
     every phase's diagnostics rather than silently skipping phases that look done.
     """
     ui.block(note or label, label=f"phase: {label}")
-    if not util.DRY_RUN and "MISSING" not in _probe(c, funcs):
-        if ui.ask("Already looks complete — skip this phase?", default=True):
-            print(f"[{label}] skipped")
-            return
+    if (
+        not util.DRY_RUN
+        and "MISSING" not in _probe(c, funcs)
+        and ui.ask("Already looks complete — skip this phase?", default=True)
+    ):
+        print(f"[{label}] skipped")
+        return
     for f in funcs:
         f(c)

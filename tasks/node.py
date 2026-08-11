@@ -19,7 +19,7 @@ def install(c):
         if nvm_dir.exists():
             for pkg in global_packages:
                 result = c.run(
-                    f'bash -c \'{nvm_sh} && npm list -g {pkg} --depth=0\'',
+                    f"bash -c '{nvm_sh} && npm list -g {pkg} --depth=0'",
                     hide=True,
                     warn=True,
                 )
@@ -32,18 +32,18 @@ def install(c):
     if not nvm_dir.exists():
         nvm_dir.mkdir(parents=True, exist_ok=True)
         c.run(
-            'curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh | bash',
+            "curl -o- https://raw.githubusercontent.com/nvm-sh/nvm/HEAD/install.sh | bash",
             env={"NVM_DIR": str(nvm_dir), "PROFILE": "/dev/null"},
         )
     else:
         print("[nvm] already installed")
 
-    c.run(f'bash -c \'{nvm_sh} && nvm install --{version} && nvm alias default {version}/*\'')
+    c.run(f"bash -c '{nvm_sh} && nvm install --{version} && nvm alias default {version}/*'")
 
     for pkg in global_packages:
-        result = c.run(f'bash -c \'{nvm_sh} && npm list -g {pkg} --depth=0\'', hide=True, warn=True)
+        result = c.run(f"bash -c '{nvm_sh} && npm list -g {pkg} --depth=0'", hide=True, warn=True)
         if result.ok:
             print(f"[{pkg}] already installed globally")
         else:
-            c.run(f'bash -c \'{nvm_sh} && npm install -g {pkg}\'')
+            c.run(f"bash -c '{nvm_sh} && npm install -g {pkg}'")
             print(f"[{pkg}] installed")

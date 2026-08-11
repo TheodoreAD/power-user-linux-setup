@@ -13,6 +13,7 @@ No JDK is installed or managed here — the Java cacerts step is purely conditio
 already being on PATH, a no-op if none is present, self-activating for free if one is added
 independently later.
 """
+
 import re
 import shlex
 import tempfile
@@ -22,9 +23,9 @@ from invoke import task
 
 from . import util
 
-_CA_CERT_FILE  = Path("/usr/local/share/ca-certificates/pulse-corporate.crt")
+_CA_CERT_FILE = Path("/usr/local/share/ca-certificates/pulse-corporate.crt")
 _SYSTEM_BUNDLE = "/etc/ssl/certs/ca-certificates.crt"  # what update-ca-certificates produces
-_ZSHENV        = Path.home() / ".zshenv"
+_ZSHENV = Path.home() / ".zshenv"
 
 _CERT_RE = re.compile(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", re.DOTALL)
 
@@ -61,6 +62,7 @@ def _resolve_paths(bundle: str | None) -> list[Path]:
 
 # ---------------------------------------------------------------------------
 # Format detection/conversion — the extension is never trusted, only openssl's own parse result.
+
 
 def _try_convert(c, path: Path) -> str | None:
     """Detect the bundle's actual encoding by content and return it normalized to a clean,
@@ -116,6 +118,7 @@ def _desired_bundle_text(c, paths: list[Path]) -> str:
 # ---------------------------------------------------------------------------
 # Java cacerts — purely conditional, never installs a JDK. See module docstring.
 
+
 def _cacerts_path(c) -> str | None:
     result = c.run("readlink -f $(command -v java)", hide=True, warn=True)
     if not result.ok or not result.stdout.strip():
@@ -127,7 +130,8 @@ def _cacerts_path(c) -> str | None:
 def _keytool_alias_exists(c, cacerts: str, alias: str) -> bool:
     return c.run(
         f"{util.SUDO} keytool -list -alias {alias} -keystore {shlex.quote(cacerts)} -storepass changeit",
-        hide=True, warn=True,
+        hide=True,
+        warn=True,
     ).ok
 
 
@@ -177,6 +181,7 @@ def _configure_java(c, desired: str) -> None:
 # ~/.zshenv env vars — unconditional (inert exports, no "wrong" state to guard against the way
 # the Java import above must be gated on keytool actually existing before it acts).
 
+
 def _env_block_content() -> str:
     return (
         f'export SSL_CERT_FILE="{_SYSTEM_BUNDLE}"\n'
@@ -212,6 +217,7 @@ def _missing_source_message(command: str) -> str:
 
 # ---------------------------------------------------------------------------
 # Tasks
+
 
 @task
 def check(c, bundle=None):

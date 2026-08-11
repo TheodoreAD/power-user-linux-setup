@@ -17,24 +17,34 @@ def setup(c):
         wsl.install(c)
         return
 
-    phases.run(c, "system", [system.locale, system.curlrc, system.dns],
-               note="locale, curl config, DNS")
+    phases.run(c, "system", [system.locale, system.curlrc, system.dns], note="locale, curl config, DNS")
 
     phases.run(
-        c, "packages",
-        [apt.configure, apt.repos, apt.base, docker.configure, apt.deb,
-         tools.install, ai.skills, system.apparmor_profiles, python.tools, node.install],
+        c,
+        "packages",
+        [
+            apt.configure,
+            apt.repos,
+            apt.base,
+            docker.configure,
+            apt.deb,
+            tools.install,
+            ai.skills,
+            system.apparmor_profiles,
+            python.tools,
+            node.install,
+        ],
         note="apt config/repos/packages, Docker, .deb packages, script/binary tools, "
-             "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools",
+        "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools",
     )
 
     phases.run(
-        c, "shell",
+        c,
+        "shell",
         [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell],
         note="Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell",
     )
 
-    phases.run(c, "desktop", [fonts.install, fonts.configure],
-               note="Nerd Fonts, monospace font config")
+    phases.run(c, "desktop", [fonts.install, fonts.configure], note="Nerd Fonts, monospace font config")
 
     next_steps.print_next_steps()

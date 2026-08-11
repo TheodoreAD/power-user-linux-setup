@@ -4,7 +4,7 @@ Keeps `cli-allowlist/rules/<tool>.json` (read_only/write/dangerous per subcomman
 risk-relevant flag, for every CLI tool this machine actually has installed) current without
 hand-maintaining it, and merges the reviewed result into `~/.claude/settings.json`. Full design
 rationale, every gotcha found while building this, and why several things here are deliberate
-tradeoffs rather than TODOs: `docs/cli-allowlist.md`.
+tradeoffs rather than TODOs: `contributing/cli-allowlist.md`.
 
     inv allowlist.extract    deterministic: capture --help text per tool, recursing into the
                               subcommand tree where a tool opts in (tools.toml's max_depth),
@@ -20,6 +20,7 @@ tradeoffs rather than TODOs: `docs/cli-allowlist.md`.
 `render` only prints — `apply` is the only task that writes anywhere, and it only ever touches
 `~/.claude/settings.json`'s `permissions` block (see its docstring for the merge safety design).
 """
+
 import hashlib
 import json
 import os
@@ -30,7 +31,7 @@ import sys
 import tempfile
 import textwrap
 import tomllib
-from datetime import datetime, timezone
+from datetime import UTC, datetime
 from pathlib import Path
 
 from invoke import task
@@ -68,8 +69,13 @@ _CLASSIFY_MAX_BUDGET_USD = "0.15"
 # could theoretically block waiting for input despite stdin already being closed. None of this
 # is hypothetical tightening: git's dependency on git-man was confirmed empirically here.
 _DETERMINISTIC_ENV = {
-    "PAGER": "cat", "MANPAGER": "cat", "GIT_PAGER": "cat", "LESS": "FRX",
-    "BROWSER": "true", "NO_COLOR": "1", "CLICOLOR": "0",
+    "PAGER": "cat",
+    "MANPAGER": "cat",
+    "GIT_PAGER": "cat",
+    "LESS": "FRX",
+    "BROWSER": "true",
+    "NO_COLOR": "1",
+    "CLICOLOR": "0",
 }
 
 # Verb-ish tokens that force a "needs_review" downgrade even if the LLM said read_only — checked
@@ -78,11 +84,40 @@ _DETERMINISTIC_ENV = {
 # Deliberately checked against the name/path itself, not the help text, to avoid false positives
 # from a read-only command's help text merely mentioning "delete" while describing something else.
 _DANGEROUS_VERBS = {
-    "delete", "destroy", "drop", "rm", "rmi", "remove", "purge", "uninstall", "prune",
-    "truncate", "kill", "drain", "cordon", "reset", "clean", "yank", "unpublish", "force",
-    "wipe", "erase", "flush", "revoke", "down", "run", "exec", "eval",
+    "delete",
+    "destroy",
+    "drop",
+    "rm",
+    "rmi",
+    "remove",
+    "purge",
+    "uninstall",
+    "prune",
+    "truncate",
+    "kill",
+    "drain",
+    "cordon",
+    "reset",
+    "clean",
+    "yank",
+    "unpublish",
+    "force",
+    "wipe",
+    "erase",
+    "flush",
+    "revoke",
+    "down",
+    "run",
+    "exec",
+    "eval",
     # flag-specific additions — not naturally subcommand-shaped, but just as dangerous as a modifier
-    "recursive", "all", "yes", "hard", "global", "cascade", "overwrite",
+    "recursive",
+    "all",
+    "yes",
+    "hard",
+    "global",
+    "cascade",
+    "overwrite",
 }
 
 # Flag-name tokens that make a flag worth asking the LLM to rate at all — most of a command's
@@ -148,34 +183,36 @@ Respond with a JSON object shaped {"classifications": {"<path>": {"classificatio
 "..."}}}}} covering every path listed below, using the exact path strings given as keys — and ONLY \
 those paths, nothing more. Omit "flags" (or leave it empty) for paths with no candidate flags."""
 
-_SCHEMA = json.dumps({
-    "type": "object",
-    "properties": {
-        "classifications": {
-            "type": "object",
-            "additionalProperties": {
+_SCHEMA = json.dumps(
+    {
+        "type": "object",
+        "properties": {
+            "classifications": {
                 "type": "object",
-                "properties": {
-                    "classification": {"type": "string", "enum": ["read_only", "write", "dangerous", "invalid"]},
-                    "rationale": {"type": "string"},
-                    "flags": {
-                        "type": "object",
-                        "additionalProperties": {
+                "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                        "classification": {"type": "string", "enum": ["read_only", "write", "dangerous", "invalid"]},
+                        "rationale": {"type": "string"},
+                        "flags": {
                             "type": "object",
-                            "properties": {
-                                "classification": {"type": "string", "enum": ["read_only", "write", "dangerous"]},
-                                "rationale": {"type": "string"},
+                            "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                    "classification": {"type": "string", "enum": ["read_only", "write", "dangerous"]},
+                                    "rationale": {"type": "string"},
+                                },
+                                "required": ["classification", "rationale"],
                             },
-                            "required": ["classification", "rationale"],
                         },
                     },
+                    "required": ["classification", "rationale"],
                 },
-                "required": ["classification", "rationale"],
             },
         },
-    },
-    "required": ["classifications"],
-})
+        "required": ["classifications"],
+    }
+)
 
 _RECONFIRM_RUBRIC = """You are re-examining CLI commands/flags that were tentatively classified \
 read_only but overridden to "needs_review" by an automated safety check, purely because their \
@@ -206,38 +243,53 @@ Respond with a JSON object shaped {"classifications": {"<key>": {"classification
 "rationale": "<one short sentence, mention the flagged word>"}}} covering every key listed below, \
 using the exact key strings given."""
 
-_RECONFIRM_SCHEMA = json.dumps({
-    "type": "object",
-    "properties": {
-        "classifications": {
-            "type": "object",
-            "additionalProperties": {
+_RECONFIRM_SCHEMA = json.dumps(
+    {
+        "type": "object",
+        "properties": {
+            "classifications": {
                 "type": "object",
-                "properties": {
-                    "classification": {"type": "string", "enum": ["read_only", "write", "dangerous"]},
-                    "rationale": {"type": "string"},
+                "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                        "classification": {"type": "string", "enum": ["read_only", "write", "dangerous"]},
+                        "rationale": {"type": "string"},
+                    },
+                    "required": ["classification", "rationale"],
                 },
-                "required": ["classification", "rationale"],
             },
         },
-    },
-    "required": ["classifications"],
-})
+        "required": ["classifications"],
+    }
+)
 
 
 def _now() -> str:
-    return datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
+    return datetime.now(UTC).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 _COLOR_ENABLED = sys.stdout.isatty() and not os.environ.get("NO_COLOR")
-_ANSI = {"reset": "\033[0m", "bold": "\033[1m", "dim": "\033[2m", "green": "\033[32m",
-         "yellow": "\033[33m", "red": "\033[31m", "magenta": "\033[35m", "gray": "\033[90m"}
+_ANSI = {
+    "reset": "\033[0m",
+    "bold": "\033[1m",
+    "dim": "\033[2m",
+    "green": "\033[32m",
+    "yellow": "\033[33m",
+    "red": "\033[31m",
+    "magenta": "\033[35m",
+    "gray": "\033[90m",
+}
 # read_only/write/dangerous mirror the rubric's own risk ordering (safe -> caution -> danger);
 # needs_review and invalid aren't risk tiers at all (needs_review = ambiguous, unresolved by the
 # verb backstop; invalid = not a real command) so they get their own non-risk colors instead of
 # implying a place on the read_only-write-dangerous scale.
-_CLASS_COLOR = {"read_only": "green", "write": "yellow", "dangerous": "red",
-                "needs_review": "magenta", "invalid": "gray"}
+_CLASS_COLOR = {
+    "read_only": "green",
+    "write": "yellow",
+    "dangerous": "red",
+    "needs_review": "magenta",
+    "invalid": "gray",
+}
 
 
 def _colorize(text: str, color: str | None) -> str:
@@ -259,11 +311,15 @@ def _wrap(prefix: str, text: str, colored_prefix: str | None = None) -> str:
     rationale itself is deliberately never colored, only the name/classification are."""
     width = max(shutil.get_terminal_size(fallback=(100, 24)).columns - 1, 40)
     wrapped = textwrap.fill(
-        text, width=width, initial_indent=prefix, subsequent_indent=" " * len(prefix),
-        break_long_words=False, break_on_hyphens=False,
+        text,
+        width=width,
+        initial_indent=prefix,
+        subsequent_indent=" " * len(prefix),
+        break_long_words=False,
+        break_on_hyphens=False,
     )
     if colored_prefix and _COLOR_ENABLED:
-        wrapped = colored_prefix + wrapped[len(prefix):]
+        wrapped = colored_prefix + wrapped[len(prefix) :]
     return wrapped
 
 
@@ -272,12 +328,14 @@ def _node_prefix(indent: str, label: str, classification: str, suffix: str = "")
     tier color, everything else (indent, punctuation, source annotation) left in the terminal's
     default color so it doesn't compete for attention with the two things worth scanning for."""
     plain = f"{indent}{label}: {classification}{suffix} — "
-    colored = f"{indent}{_colorize(label, 'bold')}: {_colorize(classification, _CLASS_COLOR.get(classification))}{suffix} — "
+    colored = (
+        f"{indent}{_colorize(label, 'bold')}: {_colorize(classification, _CLASS_COLOR.get(classification))}{suffix} — "
+    )
     return plain, colored
 
 
 def _load_registry() -> dict:
-    with open(_TOOLS_TOML, "rb") as f:
+    with _TOOLS_TOML.open("rb") as f:
         return tomllib.load(f)
 
 
@@ -355,7 +413,9 @@ def _tool_version(tool: str, version_flag: str, cfg: dict | None = None) -> str:
     return text.splitlines()[0].strip()
 
 
-def _discover_subcommands(help_text: str, max_n: int, tool: str | None = None, path: list[str] | None = None) -> list[str]:
+def _discover_subcommands(
+    help_text: str, max_n: int, tool: str | None = None, path: list[str] | None = None
+) -> list[str]:
     """Primary discovery: a "Commands:"-style heading (`_SUBCOMMAND_LINE`), same as the top level.
     A nested command's own help text often doesn't have one — confirmed empirically on git, whose
     `git remote -h` / `git stash -h` / etc. render as docopt-style usage synopses ("or: git remote
@@ -403,9 +463,9 @@ def _discover_from_synopsis(help_text: str, tool: str, path: list[str], max_n: i
         if not m:
             continue
         tokens = m.group(1).split()
-        if tokens[:len(prefix)] != prefix:
+        if tokens[: len(prefix)] != prefix:
             continue
-        rest = tokens[len(prefix):]
+        rest = tokens[len(prefix) :]
         i = 0
         while i < len(rest) and rest[i].startswith("["):
             depth = rest[i].count("[") - rest[i].count("]")
@@ -564,7 +624,8 @@ def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style:
         likely_invalid = duplicates_parent and sibling_count == 1
         child_names = (
             _discover_subcommands(text, breadth_cap, tool=name, path=path)
-            if depth < max_depth and not duplicates_parent else []
+            if depth < max_depth and not duplicates_parent
+            else []
         )
         nodes[key] = {
             "help_text": text,
@@ -598,7 +659,9 @@ def extract(c, tool=None, force=False):
             continue
 
         if cfg.get("skip_interactive"):
-            _save_cache(name, {"interactive": True, "version": None, "extracted_at": _now(), "nodes": {}, "truncated": False})
+            _save_cache(
+                name, {"interactive": True, "version": None, "extracted_at": _now(), "nodes": {}, "truncated": False}
+            )
             print(f"[allowlist] {name}: interactive-only, no help captured")
             continue
 
@@ -621,9 +684,23 @@ def extract(c, tool=None, force=False):
 
         truncated = False
         if cfg.get("no_subcommands"):
-            nodes = {"*": {"help_text": top_help, "content_hash": _hash_text(top_help), "children": [], "likely_invalid": False}}
+            nodes = {
+                "*": {
+                    "help_text": top_help,
+                    "content_hash": _hash_text(top_help),
+                    "children": [],
+                    "likely_invalid": False,
+                }
+            }
         else:
-            nodes = {"_top": {"help_text": top_help, "content_hash": _hash_text(top_help), "children": [], "likely_invalid": False}}
+            nodes = {
+                "_top": {
+                    "help_text": top_help,
+                    "content_hash": _hash_text(top_help),
+                    "children": [],
+                    "likely_invalid": False,
+                }
+            }
             tree_nodes, truncated = _build_tree(name, cfg, top_help, help_flag, help_style)
             nodes.update(tree_nodes)
 
@@ -631,15 +708,20 @@ def extract(c, tool=None, force=False):
             print(f"[allowlist] {name}: no output at all — likely not installed on this machine, skipping")
             continue
 
-        _save_cache(name, {
-            "interactive": False,
-            "version": version,
-            "extracted_at": _now(),
-            "nodes": nodes,
-            "truncated": truncated,
-        })
+        _save_cache(
+            name,
+            {
+                "interactive": False,
+                "version": version,
+                "extracted_at": _now(),
+                "nodes": nodes,
+                "truncated": truncated,
+            },
+        )
         classifiable = len([k for k in nodes if k != "_top"])
-        note = " [truncated at max_nodes — increase tools.toml's max_nodes for this tool if needed]" if truncated else ""
+        note = (
+            " [truncated at max_nodes — increase tools.toml's max_nodes for this tool if needed]" if truncated else ""
+        )
         print(f"[allowlist] {name}: extracted ({version or 'unknown version'}, {classifiable} node(s)){note}")
 
 
@@ -657,20 +739,22 @@ def _build_prompt(tool: str, nodes: dict[str, dict], top_help: str) -> str:
             f"This tool has no subcommands — it's invoked as a single flat command "
             f"(`{tool} [options] ...`), not `{tool} <subcommand> ...`. Its --help text is below. "
             f"Ignore informational flags like --help/--version — judge the tool's own primary "
-            f"purpose when run normally. Respond with exactly one entry in \"classifications\", "
-            f"keyed literally \"{_FLAT_KEY}\", covering the tool as a whole (omit \"flags\").\n\n"
+            f'purpose when run normally. Respond with exactly one entry in "classifications", '
+            f'keyed literally "{_FLAT_KEY}", covering the tool as a whole (omit "flags").\n\n'
             f"--help output:\n{nodes['*']['help_text'][:1500]}\n"
         )
 
     parts = [_RUBRIC, "", f"Tool: {tool}", ""]
     if top_help:
-        parts.append(f"Top-level --help (context only — this is not itself something to classify):\n{top_help[:1000]}\n")
+        parts.append(
+            f"Top-level --help (context only — this is not itself something to classify):\n{top_help[:1000]}\n"
+        )
     for path, node in nodes.items():
         parts.append(f"### {path}\n{node['help_text'][:800]}")
         candidates = _candidate_flags(node["help_text"])
         if candidates:
             flag_lines = "\n".join(f"  {f}: {d}" for f, d in candidates.items())
-            parts.append(f"Candidate flags for \"{path}\" — rate ONLY these:\n{flag_lines}")
+            parts.append(f'Candidate flags for "{path}" — rate ONLY these:\n{flag_lines}')
         parts.append("")
     return "\n".join(parts)
 
@@ -680,15 +764,25 @@ def _classify_via_claude(prompt: str, model: str, schema: str = _SCHEMA) -> dict
         try:
             result = subprocess.run(
                 [
-                    "claude", "-p", "--strict-mcp-config",
-                    "--disallowedTools", "Edit,Write,NotebookEdit,Bash,Agent",
-                    "--model", model,
-                    "--output-format", "json",
-                    "--json-schema", schema,
-                    "--max-budget-usd", _CLASSIFY_MAX_BUDGET_USD,
+                    "claude",
+                    "-p",
+                    "--strict-mcp-config",
+                    "--disallowedTools",
+                    "Edit,Write,NotebookEdit,Bash,Agent",
+                    "--model",
+                    model,
+                    "--output-format",
+                    "json",
+                    "--json-schema",
+                    schema,
+                    "--max-budget-usd",
+                    _CLASSIFY_MAX_BUDGET_USD,
                     prompt,
                 ],
-                capture_output=True, text=True, timeout=_CLASSIFY_TIMEOUT, cwd=scratch,
+                capture_output=True,
+                text=True,
+                timeout=_CLASSIFY_TIMEOUT,
+                cwd=scratch,
                 stdin=subprocess.DEVNULL,
             )
         except subprocess.TimeoutExpired:
@@ -710,7 +804,7 @@ def _strip_tool_prefix(verdict: dict, tool: str) -> dict:
     by the original (unprefixed) key came back empty. Stripping a leading "<tool> " prefix when
     present costs nothing when the model behaved, and recovers the result when it didn't."""
     prefix = f"{tool} "
-    return {(k[len(prefix):] if k.startswith(prefix) else k): v for k, v in verdict.items()}
+    return {(k[len(prefix) :] if k.startswith(prefix) else k): v for k, v in verdict.items()}
 
 
 def _resolve_flat_verdict(verdict: dict) -> dict:
@@ -724,11 +818,13 @@ def _resolve_flat_verdict(verdict: dict) -> dict:
         return verdict
     order = {"read_only": 0, "write": 1, "dangerous": 2}
     worst = max(verdict.values(), key=lambda v: order.get(v.get("classification"), 1))
-    return {"*": {
-        "classification": worst.get("classification", "write"),
-        "rationale": f"inferred conservatively — model split this flat tool into "
-                     f"multiple parts instead of one verdict ({worst.get('rationale', '')})",
-    }}
+    return {
+        "*": {
+            "classification": worst.get("classification", "write"),
+            "rationale": f"inferred conservatively — model split this flat tool into "
+            f"multiple parts instead of one verdict ({worst.get('rationale', '')})",
+        }
+    }
 
 
 def _classify_flag_result(flag: str, result: dict, base_classification: str) -> dict:
@@ -761,12 +857,19 @@ def classify(c, tool=None, force=False, model="haiku"):
             continue
 
         if cached.get("interactive"):
-            _save_rule(name, {
-                "version": None, "extracted_at": cached.get("extracted_at"),
-                "classified_at": _now(), "reviewed": True, "reviewed_at": _now(),
-                "note": "interactive-only TUI, no non-interactive command surface to classify",
-                "truncated": False, "nodes": {},
-            })
+            _save_rule(
+                name,
+                {
+                    "version": None,
+                    "extracted_at": cached.get("extracted_at"),
+                    "classified_at": _now(),
+                    "reviewed": True,
+                    "reviewed_at": _now(),
+                    "note": "interactive-only TUI, no non-interactive command surface to classify",
+                    "truncated": False,
+                    "nodes": {},
+                },
+            )
             print(f"[allowlist] {name}: interactive-only — marked reviewed, nothing to classify")
             continue
 
@@ -797,8 +900,7 @@ def classify(c, tool=None, force=False, model="haiku"):
             # real LLM output, a few nodes at a time, at no cost to already-fresh nodes.
             is_community = bool(prior) and prior.get("source") == "community"
             unchanged = (
-                not force and not is_community
-                and bool(prior) and prior.get("content_hash") == node["content_hash"]
+                not force and not is_community and bool(prior) and prior.get("content_hash") == node["content_hash"]
             )
             if node.get("likely_invalid"):
                 if unchanged and prior.get("classification") == "invalid":
@@ -821,7 +923,7 @@ def classify(c, tool=None, force=False, model="haiku"):
         failed_chunks = 0
         items = list(to_classify.items())
         for i in range(0, len(items), _CLASSIFY_CHUNK_SIZE):
-            chunk = dict(items[i:i + _CLASSIFY_CHUNK_SIZE])
+            chunk = dict(items[i : i + _CLASSIFY_CHUNK_SIZE])
             chunk_verdict = _classify_via_claude(_build_prompt(name, chunk, top_help), model=model)
             if chunk_verdict is None:
                 failed_chunks += 1
@@ -835,8 +937,10 @@ def classify(c, tool=None, force=False, model="haiku"):
             continue
         if failed_chunks:
             missing = sum(1 for key in to_classify if key not in verdict)
-            print(f"[allowlist] {name}: {failed_chunks} chunk(s) failed — {missing} node(s) left "
-                  f"unclassified, will retry on the next run")
+            print(
+                f"[allowlist] {name}: {failed_chunks} chunk(s) failed — {missing} node(s) left "
+                f"unclassified, will retry on the next run"
+            )
 
         new_nodes = dict(carried)
         for key, node in new_invalid.items():
@@ -844,8 +948,8 @@ def classify(c, tool=None, force=False, model="haiku"):
                 "content_hash": node["content_hash"],
                 "classification": "invalid",
                 "rationale": "Auto-discovered but duplicates its parent's help text verbatim — "
-                              "likely a false-positive match (e.g. example/sample output mistaken "
-                              "for a subcommand listing), not a real distinct command.",
+                "likely a false-positive match (e.g. example/sample output mistaken "
+                "for a subcommand listing), not a real distinct command.",
                 "source": "heuristic",
                 "flags": {},
             }
@@ -887,19 +991,24 @@ def classify(c, tool=None, force=False, model="haiku"):
                 "flags": flags,
             }
 
-        _save_rule(name, {
-            "version": cached.get("version"),
-            "extracted_at": cached.get("extracted_at"),
-            "classified_at": _now(),
-            "reviewed": False,
-            "reviewed_at": None,
-            "truncated": cached.get("truncated", False),
-            "nodes": new_nodes,
-        })
+        _save_rule(
+            name,
+            {
+                "version": cached.get("version"),
+                "extracted_at": cached.get("extracted_at"),
+                "classified_at": _now(),
+                "reviewed": False,
+                "reviewed_at": None,
+                "truncated": cached.get("truncated", False),
+                "nodes": new_nodes,
+            },
+        )
         flag_count = sum(len(n.get("flags", {})) for n in new_nodes.values())
         invalid_note = f", {len(new_invalid)} flagged invalid (no LLM call)" if new_invalid else ""
-        print(f"[allowlist] {name}: classified {len(to_classify)} new/changed node(s) "
-              f"({flag_count} flag rating(s) total), carried {len(carried)} unchanged{invalid_note} via {model}")
+        print(
+            f"[allowlist] {name}: classified {len(to_classify)} new/changed node(s) "
+            f"({flag_count} flag rating(s) total), carried {len(carried)} unchanged{invalid_note} via {model}"
+        )
 
 
 def _build_reconfirm_prompt(tool: str, candidates: dict[str, dict]) -> str:
@@ -946,14 +1055,17 @@ def reconfirm(c, tool=None, model="haiku"):
                 candidates[path] = {
                     "help_text": cache_nodes.get(path, {}).get("help_text", ""),
                     "tokens": _dangerous_tokens_in(path),
-                    "kind": "node", "path": path,
+                    "kind": "node",
+                    "path": path,
                 }
             for flag, fv in v.get("flags", {}).items():
                 if fv.get("classification") == "needs_review":
                     candidates[f"{path} {flag}"] = {
                         "help_text": cache_nodes.get(path, {}).get("help_text", ""),
                         "tokens": _dangerous_flag_tokens(flag),
-                        "kind": "flag", "path": path, "flag": flag,
+                        "kind": "flag",
+                        "path": path,
+                        "flag": flag,
                     }
 
         if not candidates:
@@ -963,9 +1075,11 @@ def reconfirm(c, tool=None, model="haiku"):
         verdict: dict = {}
         items = list(candidates.items())
         for i in range(0, len(items), _CLASSIFY_CHUNK_SIZE):
-            chunk = dict(items[i:i + _CLASSIFY_CHUNK_SIZE])
+            chunk = dict(items[i : i + _CLASSIFY_CHUNK_SIZE])
             chunk_verdict = _classify_via_claude(
-                _build_reconfirm_prompt(name, chunk), model=model, schema=_RECONFIRM_SCHEMA,
+                _build_reconfirm_prompt(name, chunk),
+                model=model,
+                schema=_RECONFIRM_SCHEMA,
             )
             if chunk_verdict:
                 verdict.update(_strip_tool_prefix(chunk_verdict, name))
@@ -983,7 +1097,8 @@ def reconfirm(c, tool=None, model="haiku"):
                 nodes[meta["path"]]["source"] = "llm-reconfirmed"
             else:
                 nodes[meta["path"]]["flags"][meta["flag"]] = {
-                    "classification": classification, "rationale": rationale,
+                    "classification": classification,
+                    "rationale": rationale,
                 }
             resolved += 1
 
@@ -1079,7 +1194,7 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
     globs, and flags can appear in any order/position in a real invocation, so there's no clean
     prefix-based way to carve out just "this subcommand, except with --force" — that data stays
     analysis/review-only until there's an actual consumer that can act on it (e.g. a future
-    PreToolUse hook, deliberately not built yet — see docs/cli-allowlist.md).
+    PreToolUse hook, deliberately not built yet — see contributing/cli-allowlist.md).
 
     A read_only node that has children of its own is skipped entirely — deliberately, not an
     oversight. Its read_only verdict describes what happens when it's invoked *bare* (`docker
@@ -1148,7 +1263,8 @@ def render(c, target="claude", out=None):
     rules = _load_all_rules()
     unreviewed = [name for name, entry in rules.items() if not entry.get("reviewed")]
     if unreviewed:
-        print(f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded from output: {', '.join(sorted(unreviewed))}")
+        joined = ", ".join(sorted(unreviewed))
+        print(f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded from output: {joined}")
 
     if target == "claude":
         text = _render_claude(rules)
@@ -1184,7 +1300,9 @@ def apply(c):
     rules = _load_all_rules()
     unreviewed = [name for name, entry in rules.items() if not entry.get("reviewed")]
     if unreviewed:
-        print(f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded: {', '.join(sorted(unreviewed))}")
+        print(
+            f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded: {', '.join(sorted(unreviewed))}"
+        )
 
     allow, ask = _compute_claude_rules(rules)
     new_set = set(allow) | set(ask)

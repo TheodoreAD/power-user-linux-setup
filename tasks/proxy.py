@@ -11,6 +11,7 @@ plans/2026-08-10-corporate-proxy-daemon.md). The credential path specifically wa
 end against a disposable local Squid instance, not assumed from Px's --help text alone — see
 _capture_credential's docstring for what that testing found and corrected.
 """
+
 import getpass
 import os
 import re
@@ -50,6 +51,7 @@ WantedBy=default.target
 # ---------------------------------------------------------------------------
 # Pure helpers — unit-tested in tests/test_proxy.py, see tests/README.md for why these and not
 # the rest of this module (everything else shells out or touches the filesystem/keyring).
+
 
 def _parse_proxy_authenticate(curl_verbose_output: str) -> list[str]:
     """Extract auth scheme tokens (Basic/NTLM/Negotiate/Digest/...) from `curl -v`'s stderr.
@@ -108,6 +110,7 @@ def _parse_etc_environment(text: str) -> tuple[str, int] | None:
 # ---------------------------------------------------------------------------
 # Environment + address discovery (shells out — not unit-tested, see tests/README.md)
 
+
 def _wsl_host_ip(c) -> str | None:
     result = c.run("ip route show default", hide=True, warn=True)
     if not result.ok:
@@ -163,9 +166,7 @@ def _discover_candidate(c) -> tuple[str, int, str] | None:
     env = _parse_env_proxy(os.environ)
     if env:
         return (*env, "environment")
-    etc_env = _parse_etc_environment(
-        Path("/etc/environment").read_text() if Path("/etc/environment").exists() else ""
-    )
+    etc_env = _parse_etc_environment(Path("/etc/environment").read_text() if Path("/etc/environment").exists() else "")
     if etc_env:
         return (*etc_env, "/etc/environment")
     gnome = _gsettings_proxy(c)
@@ -182,7 +183,8 @@ def _probe(c, host: str, port: int) -> list[str] | None:
     """
     result = c.run(
         f"curl -sv -o /dev/null --max-time 3 --proxy http://{host}:{port} http://example.com",
-        hide=True, warn=True,
+        hide=True,
+        warn=True,
     )
     if not result.ok:
         return None
@@ -208,6 +210,7 @@ def _probe_with_retries(c, host: str, port: int, attempts: int = 5, delay: float
 
 # ---------------------------------------------------------------------------
 # Px install / config / daemon lifecycle
+
 
 def _install_px(c) -> None:
     if util.DRY_RUN:
@@ -294,6 +297,7 @@ def _restart_daemon(c) -> None:
 # ---------------------------------------------------------------------------
 # Credential capture (proxy.install only — proxy.fix never prompts)
 
+
 def _capture_password(prompt: str) -> str | None:
     """GUI prompt (askpass-zenity, if installed and a display is present) with a getpass()
     fallback for a real terminal. Returns None in a non-interactive context (headless/CI/
@@ -334,9 +338,7 @@ def _capture_credential(c) -> str | None:
     real upstream proxy).
     """
     default_user = os.environ.get("USER", "")
-    username = util.prompt_text(
-        "Corporate proxy username (domain\\username, or just username):", default=default_user
-    )
+    username = util.prompt_text("Corporate proxy username (domain\\username, or just username):", default=default_user)
     if not username:
         print("[proxy] no username given — aborting credential capture")
         return None
@@ -358,11 +360,18 @@ def _capture_credential(c) -> str | None:
     # the terminal-mirroring machinery it otherwise provides.
     proc = subprocess.run(
         [
-            "uv", "run", "--with", "keyring", "python", "-c",
+            "uv",
+            "run",
+            "--with",
+            "keyring",
+            "python",
+            "-c",
             "import keyring, sys; keyring.set_password('Px', sys.argv[1], sys.stdin.read())",
             username,
         ],
-        input=password, capture_output=True, text=True,
+        input=password,
+        capture_output=True,
+        text=True,
     )
     if proc.returncode != 0:
         print(f"[proxy] keyring write failed:\n{proc.stderr}")
@@ -379,6 +388,7 @@ def _has_kerberos_ticket(c) -> bool:
 
 # ---------------------------------------------------------------------------
 # Tasks
+
 
 @task
 def check(c, proxy="auto"):

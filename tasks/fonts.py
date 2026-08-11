@@ -1,26 +1,27 @@
 import json
 import re
-
-# Match either a quoted string (kept) or a // line comment (removed).
-_JSONC_COMMENT_RE = re.compile(r'"(?:[^"\\]|\\.)*"|(//.*)' )
-_TRAILING_COMMA_RE = re.compile(r',(\s*[}\]])')
-
-
-def _load_jsonc(text: str) -> dict:
-    """Parse JSON-with-comments (JSONC) as used by VS Code settings.json."""
-    text = _JSONC_COMMENT_RE.sub(lambda m: '' if m.group(1) else m.group(0), text)
-    text = _TRAILING_COMMA_RE.sub(r'\1', text)
-    return json.loads(text)
 import subprocess
 import urllib.request
 import zipfile
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
 
 from invoke import task
 
 from . import util
+
+# Match either a quoted string (kept) or a // line comment (removed).
+_JSONC_COMMENT_RE = re.compile(r'"(?:[^"\\]|\\.)*"|(//.*)')
+_TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
+
+
+def _load_jsonc(text: str) -> dict:
+    """Parse JSON-with-comments (JSONC) as used by VS Code settings.json."""
+    text = _JSONC_COMMENT_RE.sub(lambda m: "" if m.group(1) else m.group(0), text)
+    text = _TRAILING_COMMA_RE.sub(r"\1", text)
+    return json.loads(text)
+
 
 _FONTS_DIR = Path.home() / ".local" / "share" / "fonts"
 _BASE_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download"
@@ -39,10 +40,7 @@ def _load_vscode_settings(path: Path) -> dict:
     if not text:
         return {}
     # Strip // line comments
-    cleaned = "\n".join(
-        line for line in text.splitlines()
-        if not line.lstrip().startswith("//")
-    )
+    cleaned = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("//"))
     # Strip trailing commas before } or ]
     cleaned = re.sub(r",(\s*[}\]])", r"\1", cleaned)
     return json.loads(cleaned)
@@ -56,7 +54,7 @@ def _families() -> list[dict]:
     return _cfg().get("families", [])
 
 
-@lru_cache(maxsize=None)
+@cache
 def _fc_list() -> str:
     """Return full fc-list output, lower-cased. Cached — called once per process."""
     return subprocess.run(["fc-list"], capture_output=True, text=True).stdout.lower()
@@ -155,7 +153,8 @@ def configure(c):
     if util.DRY_RUN:
         mono_result = c.run(
             "gsettings get org.gnome.desktop.interface monospace-font-name",
-            hide=True, warn=True,
+            hide=True,
+            warn=True,
         )
         current_mono = mono_result.stdout.strip().strip("'") if mono_result.ok else "not set"
         mono_ok = current_mono == monospace
@@ -163,14 +162,12 @@ def configure(c):
 
         term_result = c.run(
             "gsettings get org.gnome.Terminal.ProfilesList default",
-            hide=True, warn=True,
+            hide=True,
+            warn=True,
         )
         if term_result.ok:
             profile = term_result.stdout.strip().strip("'")
-            schema = (
-                f"org.gnome.Terminal.Legacy.Profile:"
-                f"/org/gnome/terminal/legacy/profiles/:/{profile}/"
-            )
+            schema = f"org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles/:/{profile}/"
             font_result = c.run(f"gsettings get {schema} font", hide=True, warn=True)
             current_term = font_result.stdout.strip().strip("'") if font_result.ok else "not set"
             term_ok = current_term == terminal
@@ -205,10 +202,7 @@ def configure(c):
     )
     if result.ok:
         profile = result.stdout.strip().strip("'")
-        schema = (
-            f"org.gnome.Terminal.Legacy.Profile:"
-            f"/org/gnome/terminal/legacy/profiles/:/{profile}/"
-        )
+        schema = f"org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles/:/{profile}/"
         c.run(f"gsettings set {schema} use-system-font false", hide=True)
         c.run(f'gsettings set {schema} font "{terminal}"', hide=True)
         print(f"[fonts] GNOME Terminal → {terminal}")
@@ -221,9 +215,7 @@ def configure(c):
         if settings_path.exists() and settings_path.stat().st_size > 0:
             existing = _load_jsonc(settings_path.read_text())
         if not all(existing.get(k) == v for k, v in vscode_settings.items()):
-            settings_path.write_text(
-                json.dumps({**existing, **vscode_settings}, indent=2) + "\n"
-            )
+            settings_path.write_text(json.dumps({**existing, **vscode_settings}, indent=2) + "\n")
             print(f"[fonts] VS Code → {settings_path}")
         else:
             print("[fonts] VS Code already configured")

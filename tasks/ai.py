@@ -126,12 +126,14 @@ def _apply_static_claude_permissions() -> None:
     rules, not CLI-classification output, and keeping the two mechanisms' manifests separate means
     neither can ever remove a rule the other one owns.
     """
-    declared = sorted({
-        rule
-        for cfg in util.load_config()["packages"].values()
-        if cfg.get("enabled", True)
-        for rule in cfg.get("claude_permissions_allow", [])
-    })
+    declared = sorted(
+        {
+            rule
+            for cfg in util.load_config()["packages"].values()
+            if cfg.get("enabled", True)
+            for rule in cfg.get("claude_permissions_allow", [])
+        }
+    )
 
     settings = json.loads(_CLAUDE_SETTINGS.read_text()) if _CLAUDE_SETTINGS.exists() else {}
     existing_allow = settings.get("permissions", {}).get("allow", [])
