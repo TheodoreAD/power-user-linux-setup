@@ -79,30 +79,27 @@ two specifically earn their place.
 
 ## Prerequisites — `/etc/wsl.conf`
 
-Two settings gate most of the rest. Both require a full WSL restart to take effect
+One setting gates most of the rest, and requires a full WSL restart to take effect
 (`wsl.exe --shutdown` from Windows, then reopen the terminal):
 
 ```ini
 [boot]
 systemd=true
-
-[network]
-generateResolvConf = false
 ```
 
-Set both at once with:
+Set it with:
 
 ```shell
 inv wsl.fix
 ```
 
-It edits `/etc/wsl.conf` in place — adding whichever of the two keys is missing or wrong, without
-touching any other section you already have in that file (it's user-owned config, not something
-PULSE fully manages) — then reminds you to restart. Idempotent: running it again once both are
-already set does nothing. This is the only kind of WSL misconfiguration `inv wsl.fix` can address:
-it edits a file inside the distro, so it only covers settings that live there. Distro choice, WSL1
-vs WSL2, and WSLg availability all require action from the Windows side instead — `inv wsl.check`
-still reports on those, but there's nothing to write from inside WSL to fix them.
+It edits `/etc/wsl.conf` in place — adding the key if it's missing or wrong, without touching any
+other section you already have in that file (it's user-owned config, not something PULSE fully
+manages) — then reminds you to restart. Idempotent: running it again once already set does nothing.
+This is the only kind of WSL misconfiguration `inv wsl.fix` can address: it edits a file inside the
+distro, so it only covers settings that live there. Distro choice, WSL1 vs WSL2, and WSLg
+availability all require action from the Windows side instead — `inv wsl.check` still reports on
+those, but there's nothing to write from inside WSL to fix them.
 
 **`systemd=true`** — Ubuntu 24.04's WSL image ships with this by default, but confirm it.
 `system.locale` (`localectl`), `system.dns` and `system.journal-size` (`systemctl`), and
@@ -110,54 +107,70 @@ still reports on those, but there's nothing to write from inside WSL to fix them
 `util.require_systemd()` if it isn't running, rather than failing partway through. `inv wsl.check`
 verifies `/run/systemd/system` is actually mounted, not just that the config file says so.
 
-**`generateResolvConf = false`** — without it, WSL regenerates `/etc/resolv.conf` from the Windows
-host's DNS settings on every restart, silently discarding whatever `inv system.dns` wrote.
-
-Setting it doesn't finish the job by itself, though: on stock Ubuntu `/etc/resolv.conf` is a
-symlink to systemd-resolved's stub (`/run/systemd/resolve/stub-resolv.conf`), and `inv system.dns`
-(same as on bare metal) only ever edits systemd-resolved's own drop-in config — it never touches
-`/etc/resolv.conf` itself. WSL's `generateResolvConf` replaces that symlink with a plain file, and
-disabling the setting only stops WSL from touching the file *going forward* — it does not restore
-the symlink. So after `wsl.exe --shutdown` and reopening, `/etc/resolv.conf` is still the stale
-plain file WSL last wrote, `inv system.dns` has nothing to point at, and DNS resolution breaks
-(`curl: (6) Could not resolve host`, etc.) until the symlink is put back:
+**`generateResolvConf`** — WSL's own default (`true`) regenerates `/etc/resolv.conf` from the
+Windows host's DNS settings on every restart, and `inv wsl.fix`/`inv wsl.install` leave it there by
+default too: it's the safe choice (see [If public DNS is blocked](#if-public-dns-is-blocked-on-this-network)
+below for why), and it needs nothing further — DNS just works, mirroring whatever Windows itself
+resolves. Nothing here is required unless you're opting into the public-DNS override
+(`--dns=yes`/`inv wsl.fix --dns`), in which case `generateResolvConf=false` is set and `inv
+system.dns` writes a systemd-resolved drop-in — but setting it doesn't finish the job by itself: on
+stock Ubuntu `/etc/resolv.conf` is a symlink to systemd-resolved's stub
+(`/run/systemd/resolve/stub-resolv.conf`), and `inv system.dns` (same as on bare metal) only ever
+edits systemd-resolved's own drop-in config — it never touches `/etc/resolv.conf` itself. WSL's
+`generateResolvConf` replaces that symlink with a plain file, and disabling the setting only stops
+WSL from touching the file *going forward* — it does not restore the symlink. So after `wsl.exe
+--shutdown` and reopening, `/etc/resolv.conf` is still the stale plain file WSL last wrote, `inv
+system.dns` has nothing to point at, and DNS resolution breaks (`curl: (6) Could not resolve
+host`, etc.) until the symlink is put back:
 
 ```shell
 sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 inv system.dns
 ```
 
-`inv wsl.install` does this relink automatically; `inv wsl.check` detects and reports whichever of
-these three states you're in (WSL still generating it, generated-but-frozen without the symlink,
-or correctly symlinked) if you're running the steps by hand instead.
+`inv wsl.install --dns=yes` does this relink automatically; `inv wsl.check` detects and reports
+whichever of these three states you're in (WSL still generating it, generated-but-frozen without
+the symlink, or correctly symlinked) if you're running the steps by hand instead.
 
 ### If public DNS is blocked on this network
 
-Everything above assumes `1.1.1.1`/`1.0.0.1`/`8.8.8.8` (what `inv system.dns` configures) are
-actually reachable. On some corporate networks they aren't — a VPN client or firewall allows
-general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver. The
-signature: `ping 1.1.1.1` works, but nothing resolves, even against `/etc/resolv.conf` pointed
-*directly* at `1.1.1.1` (no systemd-resolved involved at all). If that's what you're seeing, no
-amount of correctly configuring public DNS servers will fix it — `inv wsl.install` detects this
-itself (tests real resolution after configuring DNS, falls back to a static resolv.conf, and warns
-if even that doesn't resolve) rather than silently leaving you with a broken config.
+`generateResolvConf=true` (WSL's own default, and `inv wsl.fix`/`inv wsl.install`'s default too —
+see below) makes WSL regenerate `/etc/resolv.conf` on every restart from whatever DNS server
+Windows itself is configured to use. Overriding that (`generateResolvConf=false`, what
+`--dns=yes`/`inv wsl.fix --dns` does) points `/etc/resolv.conf` at public resolvers
+(`1.1.1.1`/`1.0.0.1`/`8.8.8.8`, what `inv system.dns` configures) instead — and that's not risk-free
+even when those resolvers are reachable:
 
-The actual fix is to *not* override WSL's own DNS handling: `generateResolvConf=true` (WSL's
-default) makes WSL regenerate `/etc/resolv.conf` from whatever DNS server Windows itself is
-configured to use — which, on a locked-down network, is presumably the internal resolver the
-firewall actually allows through. Run:
+- **They might not be reachable at all.** On some corporate networks a VPN client or firewall
+  allows general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver.
+  The signature: `ping 1.1.1.1` works, but nothing resolves, even against `/etc/resolv.conf` pointed
+  *directly* at `1.1.1.1` (no systemd-resolved involved at all). `inv wsl.check` and
+  `inv wsl.install --dns=auto` both run a direct, non-destructive probe (a raw DNS query straight
+  to `1.1.1.1`/`8.8.8.8`, bypassing whatever's currently in `/etc/resolv.conf`) before touching any
+  config, specifically to catch this case without a write + restart cycle. `inv wsl.install` also
+  still verifies real resolution after configuring DNS and falls back to a static resolv.conf (and
+  warns if even that doesn't resolve) as a second layer, in case the network's behavior changes
+  between the probe and the actual configure step.
+- **Even when reachable, it can still break things.** A corporate resolver often knows about
+  internal/VPN-only hostnames (an internal git server, an internal package mirror, a split-DNS VPN
+  zone) that `1.1.1.1` never will. Overriding WSL's own DNS trades "correct for this network" for
+  "correct for the public internet" — reachability alone doesn't tell you which one you need.
+
+Because of the second point, **the default is to leave WSL's own DNS alone regardless of whether
+public DNS is reachable** — `inv wsl.install --dns=auto` (the default) and a bare `inv wsl.fix`
+both default to declining the override; the reachability probe only changes the explanation shown,
+never the default answer. Only opt in if you know you don't need any internal-only hostnames:
 
 ```shell
-inv wsl.install --dns=no
+inv wsl.install --dns=yes
 ```
 
-This sets `generateResolvConf=true` in `/etc/wsl.conf` (reverting it if `wsl.fix`/`wsl.install`
-had already set it to `false`) and skips the relink/`system.dns`/fallback dance entirely, letting
-WSL manage `/etc/resolv.conf` itself. Needs the usual `wsl.exe --shutdown` + reopen to take
-effect. **Pass `--dns=no` on every future `inv wsl.install` run on this machine** — without it,
-`wsl.fix` will flip `generateResolvConf` back to `false` again and DNS breaks again. (In a real
-terminal, `wsl.install` asks this exact question interactively before doing anything if you leave
-`--dns` unset — see [Interactive prompts](#interactive-prompts) below.)
+Needs the usual `wsl.exe --shutdown` + reopen to take effect, and does the relink/`system.dns`/
+fallback dance described above. **Pass `--dns=yes` on every future `inv wsl.install` run on this
+machine** — without it, `--dns=auto`'s default reverts `generateResolvConf` back to `true` and the
+override is gone again. (In a real terminal, `wsl.install` asks this exact question interactively
+before doing anything if you leave `--dns` unset — see [Interactive
+prompts](#interactive-prompts) below.)
 
 ## Docker
 
@@ -305,7 +318,8 @@ always uses their defaults).
 inv wsl.install              # auto-detects WSLg, excludes workstation/corporate/ide/... per the table above
 inv wsl.install --wslg=no    # force the no-WSLg tag set instead of auto-detecting
 inv wsl.install --docker     # also keep the workstation tag (installs Docker natively)
-inv wsl.install --dns=no     # public DNS blocked on this network — see "If public DNS is blocked" above
+inv wsl.install --dns=yes    # opt into the public-DNS override — see "If public DNS is blocked" above
+                              # (--dns=no is the default and needs no flag; shown here for clarity)
 ```
 
 It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS
@@ -339,20 +353,23 @@ any point aborts the whole thing.
 In a real terminal (not piped, scripted, or CI — checked via `sys.stdin.isatty()`), `wsl.install`
 asks before doing anything:
 
-- If `--dns` was left at its default (`auto`), the exact "does this network block public DNS"
-  question from [If public DNS is blocked](#if-public-dns-is-blocked-on-this-network) above,
-  defaulting to "try public DNS" (safe either way — it verifies and falls back automatically).
+- If `--dns` was left at its default (`auto`), a probe result line (public DNS reachable or not —
+  see [If public DNS is blocked](#if-public-dns-is-blocked-on-this-network) above) followed by the
+  override question, **defaulting to "no"** regardless of what the probe found — declining on
+  Enter leaves WSL's own DNS alone.
 - A one-line summary of what's about to happen (given your answer above, plus `--wslg`/`--docker`),
   then a final "Proceed?" — answering no aborts before touching anything.
 - Once running, the **packages** and **shell** phases each ask "Already looks complete — skip this
   phase?" if their own dry-run probe found nothing missing — see [Recommended
   sequence](#recommended-sequence) above.
 
-All of these default to yes (proceed / skip) on Enter, so `yes | inv wsl.install` still works
-non-interactively if you ever need it scripted; a genuinely non-interactive invocation (piped,
-cron, CI) skips every prompt entirely — `--dns=auto` behaves as it always has (try public DNS, fall
-back automatically), and any phase whose probe came back clean is skipped silently rather than
-redone.
+The DNS question defaults to "no" (decline the override) on Enter; the rest default to "yes"
+(proceed / skip). `yes | inv wsl.install` still works non-interactively if you ever need it
+scripted, since piping `yes` answers every prompt affirmatively regardless of its own default. A
+genuinely non-interactive invocation (piped, cron, CI) skips every prompt entirely and takes each
+one's default — so `--dns=auto` there now means "no" (WSL-managed DNS; pass `--dns=yes` explicitly
+if a scripted run needs the override instead), and any phase whose probe came back clean is skipped
+silently rather than redone.
 
 Summaries, warnings, doc pointers, and these prompts all render as bordered blocks — via
 `tasks/ui.py`, a small formatting library (`ui.block`/`ui.note`/`ui.warn`/`ui.ask`) that's what
@@ -384,22 +401,24 @@ If you want to run the phases individually instead — e.g. to stop and inspect 
 steps — here's the same sequence by hand:
 
 ```shell
-inv wsl.check   # do this first — tells you whether WSLg is available
-inv wsl.fix     # sets systemd=true / generateResolvConf=false in /etc/wsl.conf if needed
+inv wsl.check   # do this first — tells you whether WSLg is available, and whether public DNS
+                # (1.1.1.1/8.8.8.8) is even reachable on this network
+inv wsl.fix     # sets systemd=true; leaves generateResolvConf=true (WSL-managed DNS, the safe
+                # default — see "If public DNS is blocked" above). Pass --dns to override with
+                # public DNS instead: `inv wsl.fix --dns`
 
 # then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —
 # and reopen your terminal before continuing
 
-# fix locale/DNS *before* anything below that needs network access — on a re-run after a restart
-# with generateResolvConf=false already active, DNS is broken until this runs (see Prerequisites):
-
 # only if /etc/wsl.conf has systemd=true:
 inv system.locale
 
-# only if /etc/wsl.conf also has generateResolvConf = false — the symlink WSL replaced needs
-# restoring first, see "Prerequisites" above for why:
+# only if you ran `inv wsl.fix --dns` (generateResolvConf=false) — fix DNS *before* anything below
+# that needs network access, and restore the symlink WSL replaced first, see "Prerequisites" above:
 sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
 inv system.dns
+# if you didn't run `inv wsl.fix --dns`, skip both lines above — WSL is already managing
+# /etc/resolv.conf itself and DNS works out of the box
 
 # with WSLg (default on current Windows 11):
 PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos apt.base apt.deb
