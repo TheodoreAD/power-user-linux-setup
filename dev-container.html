@@ -411,8 +411,6 @@
       
         
       
-        
-      
     
     
     
@@ -1759,8 +1757,6 @@
       
         
       
-        
-      
     
     
     
@@ -1900,33 +1896,6 @@
     
   
   Locale
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="./zensical.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Zensical (docs site engine)
 
     
   </span>
@@ -2145,9 +2114,9 @@
   
 
 
-<h1 id="dev-container">Dev Container<a class="headerlink" href="#dev-container" title="Permanent link">&para;</a></h1>
+<h1 id="dev-container">Dev Container</h1>
 <p>The same <code>setup.toml</code> and invoke tasks that configure a workstation can be used to build a dev container image. The difference is which tasks you run and which tags you exclude.</p>
-<h2 id="tags-to-exclude">Tags to exclude<a class="headerlink" href="#tags-to-exclude" title="Permanent link">&para;</a></h2>
+<h2 id="tags-to-exclude">Tags to exclude</h2>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation,corporate
 </span></code></pre></div>
 <table>
@@ -2172,7 +2141,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="tasks-to-skip">Tasks to skip<a class="headerlink" href="#tasks-to-skip" title="Permanent link">&para;</a></h2>
+<h2 id="tasks-to-skip">Tasks to skip</h2>
 <p>These tasks configure the physical machine and have no meaning in a container:</p>
 <ul>
 <li><code>system.locale</code> — calls <code>localectl</code>, which requires systemd</li>
@@ -2182,7 +2151,7 @@
 <li><code>system.initramfs_compression</code> — initramfs, irrelevant inside a container</li>
 </ul>
 <p><code>zsh.omz_configure</code> and <code>zsh.configure</code> are fine to include if you want an interactive shell in the container.</p>
-<h2 id="dockerfile-outline">Dockerfile outline<a class="headerlink" href="#dockerfile-outline" title="Permanent link">&para;</a></h2>
+<h2 id="dockerfile-outline">Dockerfile outline</h2>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">ubuntu:24.04</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="c"># Install bootstrap dependencies</span>
@@ -2206,13 +2175,13 @@
 </span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="k">RUN</span><span class="w"> </span>inv<span class="w"> </span>node.install
 </span><span id="__span-1-22"><a id="__codelineno-1-22" name="__codelineno-1-22" href="#__codelineno-1-22"></a><span class="k">RUN</span><span class="w"> </span>inv<span class="w"> </span>zsh.omz-configure<span class="w"> </span>zsh.configure
 </span></code></pre></div>
-<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
+<h2 id="docker">Docker</h2>
 <p><code>[packages.docker]</code> is tagged <code>workstation</code> and excluded by default. It installs the full daemon (<code>docker-ce</code>, <code>containerd.io</code>) whose apt postinstall hooks try to start the service via systemctl — this fails in a container build. The <code>usermod -aG docker</code> post-install step is also meaningless inside a container.</p>
 <p>If you need Docker CLI tooling inside the container (e.g. for socket passthrough from the host), install just the CLI packages manually in your Dockerfile instead:</p>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>docker-ce-cli<span class="w"> </span>docker-compose-plugin<span class="w"> </span>docker-buildx-plugin
 </span></code></pre></div>
 <p>The OMZ <code>docker</code> and <code>docker-compose</code> plugins will still be loaded if you do this, since they come from <code>[packages.docker].omz_plugin</code> — but that entry is excluded, so you&rsquo;d need to add those plugins via a separate mechanism or accept they won&rsquo;t load. Alternatively, mount the host socket and use the host Docker installation directly.</p>
-<h2 id="other-notes">Other notes<a class="headerlink" href="#other-notes" title="Permanent link">&para;</a></h2>
+<h2 id="other-notes">Other notes</h2>
 <ul>
 <li>Tasks use <code>sudo</code> internally; either run as root or ensure <code>sudo</code> is installed and the build user is in sudoers</li>
 <li><code>apt.base</code> and <code>apt.repos</code> call <code>apt-get</code> — run <code>apt-get update</code> first if the base image cache is stale</li>

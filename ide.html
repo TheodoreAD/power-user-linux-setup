@@ -411,8 +411,6 @@
       
         
       
-        
-      
     
     
     
@@ -1843,8 +1841,6 @@
       
         
       
-        
-      
     
     
     
@@ -1984,33 +1980,6 @@
     
   
   Locale
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="./zensical.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Zensical (docs site engine)
 
     
   </span>
@@ -2325,9 +2294,9 @@
   
 
 
-<h1 id="ides">IDEs<a class="headerlink" href="#ides" title="Permanent link">&para;</a></h1>
-<h2 id="vs-code">VS Code<a class="headerlink" href="#vs-code" title="Permanent link">&para;</a></h2>
-<h3 id="install-method-apt-deb-not-snap">Install method: apt deb (not snap)<a class="headerlink" href="#install-method-apt-deb-not-snap" title="Permanent link">&para;</a></h3>
+<h1 id="ides">IDEs</h1>
+<h2 id="vs-code">VS Code</h2>
+<h3 id="install-method-apt-deb-not-snap">Install method: apt deb (not snap)</h3>
 <p>VS Code is installed via the Microsoft apt repo, managed by <code>inv apt.repos</code>. The snap
 version was removed in favour of the deb.</p>
 <p><strong>Why deb over snap:</strong></p>
@@ -2371,9 +2340,9 @@ version was removed in favour of the deb.</p>
 issues apply directly in addition to the startup crash and SSH Remote Dev concerns.</p>
 <p><strong>Setup:</strong></p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[packages.vscode]</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">method</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;apt-repo&quot;</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">gpg_url</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;https://packages.microsoft.com/keys/microsoft.asc&quot;</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">gpg_path</span><span class="w">    </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/share/keyrings/microsoft-vscode.gpg&quot;</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;apt-repo&quot;</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">gpg_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;https://packages.microsoft.com/keys/microsoft.asc&quot;</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">gpg_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/usr/share/keyrings/microsoft-vscode.gpg&quot;</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="n">sources_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;/etc/apt/sources.list.d/vscode.list&quot;</span>
 </span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a><span class="n">sources_entry</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;deb [arch=amd64 signed-by={gpg_path}] https://packages.microsoft.com/repos/code stable main&quot;</span>
 </span></code></pre></div>
@@ -2385,13 +2354,13 @@ issues apply directly in addition to the startup crash and SSH Remote Dev concer
 </span></code></pre></div>
 <p>Settings/extensions are preserved because both snap (classic confinement) and deb use
 <code>~/.config/Code/User/</code> for the user profile.</p>
-<h3 id="font-configuration">Font configuration<a class="headerlink" href="#font-configuration" title="Permanent link">&para;</a></h3>
+<h3 id="font-configuration">Font configuration</h3>
 <p>Run <code>inv fonts.configure</code> to set CaskaydiaCove Nerd Font Mono 12 in VS Code. The settings
 written are declared in <code>setup.toml</code> under <code>[settings.fonts.vscode]</code> and include both
 <code>editor.fontSize</code> and <code>terminal.integrated.fontSize</code> (both 12).</p>
 <hr />
-<h2 id="jetbrains">JetBrains<a class="headerlink" href="#jetbrains" title="Permanent link">&para;</a></h2>
-<h3 id="jetbrains-toolbox">JetBrains Toolbox<a class="headerlink" href="#jetbrains-toolbox" title="Permanent link">&para;</a></h3>
+<h2 id="jetbrains">JetBrains</h2>
+<h3 id="jetbrains-toolbox">JetBrains Toolbox</h3>
 <p>Toolbox is installed via <code>inv tools.install</code> using the <code>archive</code> method. It downloads the
 full Toolbox archive, extracts it to <code>~/.local/share/jetbrains-toolbox/</code>, and symlinks the
 binary to <code>~/.local/bin/jetbrains-toolbox</code>.</p>
@@ -2409,13 +2378,13 @@ binary to <code>~/.local/bin/jetbrains-toolbox</code>.</p>
 only the binary, silently leaving the JRE behind — Toolbox launched but immediately failed
 with <code>Cannot load libjvm.so</code> because it looks for <code>jre/</code> relative to its own path.</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">[packages.jetbrains-toolbox]</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">method</span><span class="w">           </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;archive&quot;</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">check_path</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;~/.local/share/jetbrains-toolbox/jetbrains-toolbox&quot;</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">download_url</span><span class="w">     </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;https://download.jetbrains.com/toolbox/jetbrains-toolbox-{version}.tar.gz&quot;</span>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">extract_to</span><span class="w">       </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;~/.local/share/jetbrains-toolbox&quot;</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">install_dir</span><span class="w">      </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;~/.local/share/jetbrains-toolbox&quot;</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;archive&quot;</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="n">check_path</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;~/.local/share/jetbrains-toolbox/jetbrains-toolbox&quot;</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="n">download_url</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;https://download.jetbrains.com/toolbox/jetbrains-toolbox-{version}.tar.gz&quot;</span>
+</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="n">extract_to</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;~/.local/share/jetbrains-toolbox&quot;</span>
+</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="n">install_dir</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;~/.local/share/jetbrains-toolbox&quot;</span>
 </span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="n">strip_components</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">2</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">symlinks</span><span class="w">         </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;jetbrains-toolbox&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;jetbrains-toolbox&quot;</span><span class="w"> </span><span class="p">}]</span>
+</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="n">symlinks</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;jetbrains-toolbox&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;jetbrains-toolbox&quot;</span><span class="w"> </span><span class="p">}]</span>
 </span></code></pre></div>
 <p><code>version_cmd</code> queries the JetBrains releases API for the current build string (JetBrains
 dropped the versionless URL in favour of versioned filenames like <code>jetbrains-toolbox-3.5.0.84344.tar.gz</code>).</p>
@@ -2423,7 +2392,7 @@ dropped the versionless URL in favour of versioned filenames like <code>jetbrain
 self-manages IDE installs and updates. No further <code>inv</code> tasks needed for IDEs.</p>
 <p><strong>Data directory:</strong> <code>~/.local/share/JetBrains/</code> (~12 GB) — contains IDE local history,
 caches, and plugin state. Kept intentionally across reinstalls.</p>
-<h3 id="pycharm-professional">PyCharm Professional<a class="headerlink" href="#pycharm-professional" title="Permanent link">&para;</a></h3>
+<h3 id="pycharm-professional">PyCharm Professional</h3>
 <p>Install via JetBrains Toolbox (see above). The snap version (<code>pycharm-professional</code>) has a
 known Wayland issue on Ubuntu 24.04 — it starts but fails to flush the Wayland display
 socket, producing a flood of <code>Wayland display error flushing data out to the server</code> warnings
@@ -2448,7 +2417,7 @@ after <code>inv tools.install</code>. Two AppArmor profiles are installed to <co
 </ul>
 <p>Both use <code>include if exists &lt;local/chrome&gt;</code> so any site-local Chrome rules are inherited
 if that file is ever created (e.g. by installing Google Chrome&rsquo;s AppArmor profile).</p>
-<h3 id="font-configuration_1">Font configuration<a class="headerlink" href="#font-configuration_1" title="Permanent link">&para;</a></h3>
+<h3 id="font-configuration_1">Font configuration</h3>
 <p>JetBrains IDEs do not pick up the system monospace font. For PyCharm, run:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>inv<span class="w"> </span>ide.pycharm-configure
 </span></code></pre></div>
@@ -2459,7 +2428,7 @@ spacing, ligatures enabled. The task globs <code>PyCharm*</code> and picks the m
 directory, so it survives version upgrades.</p>
 <p>For other JetBrains IDEs (IntelliJ, GoLand, etc.), set manually:
 <strong>Settings → Editor → Font → Font:</strong> <code>CaskaydiaCove Nerd Font Mono</code>, size 12.</p>
-<h3 id="rust-plugin">Rust plugin<a class="headerlink" href="#rust-plugin" title="Permanent link">&para;</a></h3>
+<h3 id="rust-plugin">Rust plugin</h3>
 <p>PyCharm has no built-in Rust support — install the
 <a href="https://plugins.jetbrains.com/plugin/22407-rust">Rust plugin</a> from <strong>Settings → Plugins →
 Marketplace</strong> (search &ldquo;Rust&rdquo;). Like other JetBrains plugins, this is a manual Marketplace
@@ -2476,29 +2445,33 @@ inherit the <code>~/.zshenv</code> <code>PATH</code> export, so if the plugin do
 it explicitly: <strong>Settings → Languages &amp; Frameworks → Rust → Toolchain location</strong> →
 <code>~/.local/share/cargo/bin</code>.</p>
 <hr />
-<h2 id="terminal-emulators">Terminal emulators<a class="headerlink" href="#terminal-emulators" title="Permanent link">&para;</a></h2>
+<h2 id="terminal-emulators">Terminal emulators</h2>
 <p>Two terminal emulators are configured in PULSE. Both use CaskaydiaCove Nerd Font Mono 12
 and have their configs tracked in the repo.</p>
-<h3 id="wezterm">WezTerm<a class="headerlink" href="#wezterm" title="Permanent link">&para;</a></h3>
+<h3 id="wezterm">WezTerm</h3>
 <p>GPU-accelerated terminal with native Lua config, split panes, tabs, and SSH multiplexing.</p>
 <p><strong>Install:</strong> <code>inv apt.deb</code> — method <code>deb-github</code>, nightly rolling release from <code>wez/wezterm</code>.</p>
 <p><strong>Config:</strong> <code>config/wezterm.lua</code> — copied to <code>~/.config/wezterm/wezterm.lua</code> on first install.
-Features:
-- CaskaydiaCove NFM, 12pt
-- Startup: maximized window, two equal vertical panes (right pane active)</p>
+Features:</p>
+<ul>
+<li>CaskaydiaCove NFM, 12pt</li>
+<li>Startup: maximized window, two equal vertical panes (right pane active)</li>
+</ul>
 <p><strong>Updates:</strong> <code>inv apt.upgrade-debs</code> re-downloads and reinstalls all <code>deb-github</code> packages
 including wezterm nightly (see <a href="index.html">index.md</a> — Maintenance).</p>
 <p><strong>Package note:</strong> the nightly release is tagged <code>nightly</code> with asset
 <code>wezterm-nightly.Ubuntu24.04.deb</code>. The installed package name is <code>wezterm-nightly</code>; the
 binary installs as <code>/usr/bin/wezterm</code>.</p>
-<h3 id="terminator">Terminator<a class="headerlink" href="#terminator" title="Permanent link">&para;</a></h3>
+<h3 id="terminator">Terminator</h3>
 <p>Classic GTK terminal with split panes, profiles, and GNOME integration.</p>
 <p><strong>Install:</strong> <code>inv apt.base</code> — method <code>apt</code>.</p>
 <p><strong>Config:</strong> <code>config/terminator.conf</code> — copied to <code>~/.config/terminator/config</code> on first
-install. Profile settings:
-- CaskaydiaCove Nerd Font Mono 12
-- Infinite scrollback
-- Purple title bar (<code>#613583</code>) — Adwaita-compatible accent, easy on the eyes</p>
+install. Profile settings:</p>
+<ul>
+<li>CaskaydiaCove Nerd Font Mono 12</li>
+<li>Infinite scrollback</li>
+<li>Purple title bar (<code>#613583</code>) — Adwaita-compatible accent, easy on the eyes</li>
+</ul>
 
 
 

@@ -411,8 +411,6 @@
       
         
       
-        
-      
     
     
     
@@ -1484,17 +1482,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verify" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Verify
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#genuine-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -1814,8 +1801,6 @@
       
         
       
-        
-      
     
     
     
@@ -1955,33 +1940,6 @@
     
   
   Locale
-
-    
-  </span>
-  
-  
-
-      </a>
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="./zensical.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Zensical (docs site engine)
 
     
   </span>
@@ -2146,17 +2104,6 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#verify" class="md-nav__link">
-    <span class="md-ellipsis">
-      <span class="md-typeset">
-        Verify
-      </span>
-    </span>
-  </a>
-  
-</li>
-      
-        <li class="md-nav__item">
   <a href="#genuine-limitations" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2267,7 +2214,7 @@
   
 
 
-<h1 id="corporate-ca-bundle">Corporate CA bundle<a class="headerlink" href="#corporate-ca-bundle" title="Permanent link">&para;</a></h1>
+<h1 id="corporate-ca-bundle">Corporate CA bundle</h1>
 <p>Many corporate networks run a TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, etc.) that
 terminates HTTPS and re-signs it with its own root CA. Every TLS client on the machine needs to
 trust that CA, or verification fails everywhere (<code>SSL: CERTIFICATE_VERIFY_FAILED</code>, <code>x509:
@@ -2276,13 +2223,13 @@ into the OS trust store alone isn&rsquo;t enough — several common tools vendor
 instead of reading the OS one: Python (<code>certifi</code>), Node/npm, and the AWS CLI.</p>
 <p><code>inv certs.*</code> installs an IT-provided bundle into the OS trust store via
 <code>update-ca-certificates</code>, then points those tools at the resulting merged bundle.</p>
-<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<h2 id="quick-start">Quick start</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>certs.check<span class="w">      </span><span class="c1"># read-only — bundle/env-var/Java status, changes nothing</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>certs.install<span class="w">     </span><span class="c1"># installs into the OS trust store, exports env vars for python/node/awscli</span>
 </span></code></pre></div>
 <p>On a personal machine with no corporate CA configured, both exit cleanly with &ldquo;nothing to
 configure&rdquo; — expected, not a failure.</p>
-<h2 id="config">Config<a class="headerlink" href="#config" title="Permanent link">&para;</a></h2>
+<h2 id="config">Config</h2>
 <p>Add a <code>[certs]</code> section to <code>~/.config/pulse/identity.toml</code> (see
 <code>config/identity.toml.example</code>):</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[certs]</span>
@@ -2290,7 +2237,7 @@ configure&rdquo; — expected, not a failure.</p>
 </span></code></pre></div>
 <p>A root + separate intermediate can be given as a list instead. <code>--bundle=path</code> on either task
 overrides this for a one-off run without editing the file.</p>
-<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
+<h2 id="what-gets-installed">What gets installed</h2>
 <ol>
 <li>Each configured file is format-detected and normalized to PEM (see below), then written to
    <code>/usr/local/share/ca-certificates/pulse-corporate.crt</code>.</li>
@@ -2302,7 +2249,7 @@ overrides this for a one-off run without editing the file.</p>
 </ol>
 <p>Re-running <code>inv certs.install</code> is idempotent: it compares the desired bundle text against what&rsquo;s
 already installed and skips <code>update-ca-certificates</code> entirely when nothing changed.</p>
-<h2 id="format-detection">Format detection<a class="headerlink" href="#format-detection" title="Permanent link">&para;</a></h2>
+<h2 id="format-detection">Format detection</h2>
 <p>The bundle&rsquo;s file extension is not trusted — <code>.crt</code>/<code>.cer</code>/<code>.pem</code> are filename conventions, not a
 format guarantee, and IT-issued files show up as ASCII PEM, raw binary DER, or a Windows PKCS#7
 <code>.p7b</code>/<code>.p7c</code> (common from AD Certificate Services) with no reliable way to tell from the name
@@ -2319,7 +2266,7 @@ This is a deliberate departure from <code>update-ca-certificates</code>&rsquo;s 
 a file it can&rsquo;t parse (just a warning), so a plain reinstall attempt with a bad file would
 otherwise &ldquo;succeed&rdquo; while TLS verification keeps failing with no clear signal why. Inspect a
 rejected file manually with <code>file &lt;path&gt;</code> or <code>openssl asn1parse -in &lt;path&gt;</code>.</p>
-<h2 id="java">Java<a class="headerlink" href="#java" title="Permanent link">&para;</a></h2>
+<h2 id="java">Java</h2>
 <p>No JDK is installed or managed by this repo — Scala tooling uses Coursier&rsquo;s own private JVM
 instead (see <a href="scala.html">scala.md</a>), and nothing else here needs one. The <code>cacerts</code> import step is
 purely conditional on <code>keytool</code> already being on <code>PATH</code>: a no-op today, and it activates
@@ -2327,7 +2274,7 @@ automatically without any further changes if a JDK is added independently later.
 <p>If a JDK is present, each cert in the bundle is imported into <code>$JAVA_HOME/lib/security/cacerts</code>
 under aliases <code>pulse-corporate-0</code>, <code>pulse-corporate-1</code>, etc. (idempotent — checked via <code>keytool
 -list</code> first, <code>storepass</code> is the Java default <code>changeit</code>).</p>
-<h2 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h2>
+<h2 id="wsl">WSL</h2>
 <p>WSL2&rsquo;s trust store is fully independent of Windows&rsquo; own. IT populating the Windows certificate
 store via Group Policy/Intune does <strong>not</strong> carry over into WSL — <code>update-ca-certificates</code> still
 has to run inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an
@@ -2335,7 +2282,7 @@ OS-trust-store issue, not a networking one). If the bundle needs to be pulled of
 first, that&rsquo;s a one-time manual copy (e.g. via <code>/mnt/c</code>) — this repo has no automation for reading
 the Windows certificate store or shelling out to <code>certutil.exe</code>/<code>powershell.exe</code>; usually simplest
 to just ask IT for the raw file directly.</p>
-<h2 id="uninstall-rotation">Uninstall / rotation<a class="headerlink" href="#uninstall-rotation" title="Permanent link">&para;</a></h2>
+<h2 id="uninstall-rotation">Uninstall / rotation</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/share/ca-certificates/pulse-corporate.crt
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>update-ca-certificates
 </span></code></pre></div>
@@ -2347,44 +2294,10 @@ remove by hand:</p>
 <li>Any <code>pulse-corporate-*</code> Java aliases: <code>sudo keytool -delete -alias pulse-corporate-0 -keystore
   "$JAVA_HOME/lib/security/cacerts" -storepass changeit</code> (repeat per alias).</li>
 </ul>
-<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
-<p>Run this in a disposable container or VM, not the primary workstation — <code>certs.install</code> makes
-real, persistent, root-owned changes to the system trust store, and a real corporate CA isn&rsquo;t
-available outside a corporate network to test against anyway.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>docker<span class="w"> </span>run<span class="w"> </span>--rm<span class="w"> </span>-it<span class="w"> </span>-v<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$PWD</span><span class="s2">&quot;</span>:/repo<span class="w"> </span>-w<span class="w"> </span>/repo<span class="w"> </span>ubuntu:24.04<span class="w"> </span>bash
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>openssl<span class="w"> </span>ca-certificates<span class="w"> </span>python3
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="c1"># Fixtures for each detection branch</span>
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>openssl<span class="w"> </span>req<span class="w"> </span>-x509<span class="w"> </span>-newkey<span class="w"> </span>rsa:2048<span class="w"> </span>-sha256<span class="w"> </span>-days<span class="w"> </span><span class="m">3650</span><span class="w"> </span>-nodes<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a><span class="w">  </span>-keyout<span class="w"> </span>/tmp/test-ca.key<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-subj<span class="w"> </span><span class="s2">&quot;/CN=Test Corp Root CA&quot;</span>
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-in<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-outform<span class="w"> </span>DER<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca.der
-</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>openssl<span class="w"> </span>crl2pkcs7<span class="w"> </span>-nocrl<span class="w"> </span>-certfile<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca.p7b
-</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>openssl<span class="w"> </span>crl2pkcs7<span class="w"> </span>-nocrl<span class="w"> </span>-certfile<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-outform<span class="w"> </span>DER<span class="w"> </span>-out<span class="w"> </span>/tmp/test-ca-der.p7b
-</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a><span class="nb">printf</span><span class="w"> </span><span class="s1">&#39;not a cert&#39;</span><span class="w"> </span>&gt;<span class="w"> </span>/tmp/garbage.txt<span class="w">   </span><span class="c1"># must fail loudly, not silently</span>
-</span><span id="__span-3-11"><a id="__codelineno-3-11" name="__codelineno-3-11" href="#__codelineno-3-11"></a>
-</span><span id="__span-3-12"><a id="__codelineno-3-12" name="__codelineno-3-12" href="#__codelineno-3-12"></a><span class="c1"># End to end, no real corporate CA needed</span>
-</span><span id="__span-3-13"><a id="__codelineno-3-13" name="__codelineno-3-13" href="#__codelineno-3-13"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem
-</span><span id="__span-3-14"><a id="__codelineno-3-14" name="__codelineno-3-14" href="#__codelineno-3-14"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem
-</span><span id="__span-3-15"><a id="__codelineno-3-15" name="__codelineno-3-15" href="#__codelineno-3-15"></a>
-</span><span id="__span-3-16"><a id="__codelineno-3-16" name="__codelineno-3-16" href="#__codelineno-3-16"></a><span class="c1"># Prove it actually works, not just that files were written</span>
-</span><span id="__span-3-17"><a id="__codelineno-3-17" name="__codelineno-3-17" href="#__codelineno-3-17"></a>openssl<span class="w"> </span>genrsa<span class="w"> </span>-out<span class="w"> </span>/tmp/leaf.key<span class="w"> </span><span class="m">2048</span>
-</span><span id="__span-3-18"><a id="__codelineno-3-18" name="__codelineno-3-18" href="#__codelineno-3-18"></a>openssl<span class="w"> </span>req<span class="w"> </span>-new<span class="w"> </span>-key<span class="w"> </span>/tmp/leaf.key<span class="w"> </span>-subj<span class="w"> </span><span class="s2">&quot;/CN=test.example.com&quot;</span><span class="w"> </span>-out<span class="w"> </span>/tmp/leaf.csr
-</span><span id="__span-3-19"><a id="__codelineno-3-19" name="__codelineno-3-19" href="#__codelineno-3-19"></a>openssl<span class="w"> </span>x509<span class="w"> </span>-req<span class="w"> </span>-in<span class="w"> </span>/tmp/leaf.csr<span class="w"> </span>-CA<span class="w"> </span>/tmp/test-ca.pem<span class="w"> </span>-CAkey<span class="w"> </span>/tmp/test-ca.key<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-3-20"><a id="__codelineno-3-20" name="__codelineno-3-20" href="#__codelineno-3-20"></a><span class="w">  </span>-CAcreateserial<span class="w"> </span>-out<span class="w"> </span>/tmp/leaf.pem<span class="w"> </span>-days<span class="w"> </span><span class="m">365</span><span class="w"> </span>-sha256
-</span><span id="__span-3-21"><a id="__codelineno-3-21" name="__codelineno-3-21" href="#__codelineno-3-21"></a>openssl<span class="w"> </span>verify<span class="w"> </span>-CAfile<span class="w"> </span>/etc/ssl/certs/ca-certificates.crt<span class="w"> </span>/tmp/leaf.pem<span class="w">   </span><span class="c1"># expect: OK</span>
-</span><span id="__span-3-22"><a id="__codelineno-3-22" name="__codelineno-3-22" href="#__codelineno-3-22"></a>
-</span><span id="__span-3-23"><a id="__codelineno-3-23" name="__codelineno-3-23" href="#__codelineno-3-23"></a><span class="c1"># Idempotency</span>
-</span><span id="__span-3-24"><a id="__codelineno-3-24" name="__codelineno-3-24" href="#__codelineno-3-24"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem<span class="w">   </span><span class="c1"># expect &quot;already up to date&quot;, zshenv:ok not added</span>
-</span><span id="__span-3-25"><a id="__codelineno-3-25" name="__codelineno-3-25" href="#__codelineno-3-25"></a>
-</span><span id="__span-3-26"><a id="__codelineno-3-26" name="__codelineno-3-26" href="#__codelineno-3-26"></a><span class="c1"># Optional: Java branch</span>
-</span><span id="__span-3-27"><a id="__codelineno-3-27" name="__codelineno-3-27" href="#__codelineno-3-27"></a>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>default-jdk-headless
-</span><span id="__span-3-28"><a id="__codelineno-3-28" name="__codelineno-3-28" href="#__codelineno-3-28"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--bundle<span class="o">=</span>/tmp/test-ca.pem
-</span><span id="__span-3-29"><a id="__codelineno-3-29" name="__codelineno-3-29" href="#__codelineno-3-29"></a>keytool<span class="w"> </span>-list<span class="w"> </span>-alias<span class="w"> </span>pulse-corporate-0<span class="w"> </span>-keystore<span class="w"> </span><span class="s2">&quot;</span><span class="nv">$JAVA_HOME</span><span class="s2">/lib/security/cacerts&quot;</span><span class="w"> </span>-storepass<span class="w"> </span>changeit
-</span></code></pre></div>
-<h2 id="genuine-limitations">Genuine limitations<a class="headerlink" href="#genuine-limitations" title="Permanent link">&para;</a></h2>
+<h2 id="genuine-limitations">Genuine limitations</h2>
 <ul>
-<li><strong>Real Windows-issued PKCS#7 bundles are untested</strong> — only locally-generated <code>openssl</code>
-  fixtures were used to build and verify the four detection branches (see Verify above).</li>
+<li><strong>Real Windows-issued PKCS#7 bundles are untested</strong> — only locally-generated test fixtures were
+  used to build and verify the four detection branches.</li>
 <li><strong>The Java <code>cacerts</code> step is untested against a real JDK</strong> — no JDK is present anywhere in this
   environment (see Java above). Reviewed-and-defensive, not proven.</li>
 <li><strong><code>update-ca-certificates --fresh</code> interaction with other manually-added local certs is out of
@@ -2394,7 +2307,7 @@ available outside a corporate network to test against anyway.</p>
   see <a href="docker.html#corporate-registriesmirrors-not-automated-yet">docker.md</a> for the mechanism
   (tracked as a follow-up, not covered by this task).</li>
 </ul>
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="corporate-proxy.html">corporate-proxy.md</a> — the separate concern of authenticating <em>through</em> a
   corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA;
