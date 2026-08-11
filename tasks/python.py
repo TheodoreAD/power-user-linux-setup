@@ -34,6 +34,35 @@ def tools(c):
         print(f"[{name}] ok")
 
 
+@task
+def dev_venv(c):
+    """Set up this repo's own dev/test venv (uv sync) and let direnv auto-activate it.
+
+    Run once after cloning — see tests/README.md. Creates .venv/ from pyproject.toml's dev
+    dependency group (pytest, invoke), then runs `direnv allow` so the .envrc in this repo's root
+    auto-exports VIRTUAL_ENV/PATH whenever direnv's shell hook fires (interactive shells and
+    IDEs — see [packages.direnv] in setup.toml). direnv's hook only fires on an interactive
+    prompt cycle or an actual `cd`, so it does not activate for one-shot non-interactive shells
+    (e.g. Claude Code's Bash tool) — those still need `source .venv/bin/activate` explicitly.
+    """
+    if not util.command_exists("uv"):
+        raise RuntimeError("uv not found — run ./bootstrap.sh first")
+    direnv_ok = util.command_exists("direnv")
+    if util.DRY_RUN:
+        venv_ok = (_SETUP_TOML.parent / ".venv").exists()
+        print(f"[python] .venv: {'ok' if venv_ok else 'MISSING'}")
+        print(f"[python] direnv: {'ok' if direnv_ok else 'MISSING'}")
+        return
+    c.run("uv sync")
+    if direnv_ok:
+        c.run("direnv allow")
+        print("[python] .venv ready — direnv will auto-activate it in interactive shells")
+    else:
+        print("[python] .venv ready — direnv not found, so no shell auto-activation; "
+              "install it (see [packages.direnv] in setup.toml) or `source .venv/bin/activate` "
+              "manually")
+
+
 @task(help={"version": "Python version to make the new default, e.g. 3.14"})
 def set_default(c, version):
     """Change settings.uv_python_default in setup.toml and re-point the live python/python3

@@ -73,6 +73,19 @@ deliberate tradeoff** (why there's no PreToolUse hook, why dangerous/write tiers
 rather than `deny`, why `--bare` isn't used for the classify step, why the `apply` manifest lives
 outside the repo).
 
+## Running the test suite
+
+`tests/README.md` has the exact commands. Short version: `inv python.dev-venv` once after
+cloning (`uv sync` + `direnv allow`), then plain `pytest`/`python` — not `uv run pytest`/
+`uv run python`. `tasks` is editable-installed into `.venv` via `pyproject.toml`, and direnv
+(`.envrc` + `[packages.direnv]` in `setup.toml`) puts `.venv/bin` on `PATH` automatically — no
+`sys.path` trick or `uv run` wrapper needed for any command in this repo, including from an
+agent's Bash tool. The one gotcha: Claude Code replays a shell snapshot captured once per session
+instead of re-sourcing dotfiles per command, so a session started *before* `.envrc`/`direnv allow`
+existed won't pick this up retroactively — that's a stale-snapshot timing issue, not a reason to
+add manual activation back in. If `pytest`/`python` aren't resolving from `.venv/bin` in an agent
+session, the fix is a new session, not `source .venv/bin/activate` workarounds.
+
 ## Git workflow
 
 Direct, focused commits straight to `master` are the normal way to land changes here — the owner

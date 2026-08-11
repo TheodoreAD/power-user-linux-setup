@@ -83,6 +83,8 @@ ipython_config.py
 
 # pyenv
 .python-version
+# ...except this repo's own uv-managed pin, which we do want committed for reproducibility
+!/.python-version
 
 # pipenv
 #   According to pypa/pipenv#598, it is recommended to include Pipfile.lock in version control.
@@ -135,6 +137,9 @@ dmypy.json
 
 # direnv
 .envrc
+# ...except this repo's own .envrc, which is generic ($PWD-relative, no secrets) and is meant
+# to ship so a fresh clone gets auto-activation via `inv python.dev-venv`
+!/.envrc
 
 # Downloaded vendor reference docs (large binaries, not needed by other contributors)
 # Lives outside docs/ so the docs-site build (zensical/mkdocs) never walks into it —
