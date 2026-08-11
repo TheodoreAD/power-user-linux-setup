@@ -8,11 +8,11 @@ The same `setup.toml` and invoke tasks that configure a workstation can be used 
 ENV PULSE_EXCLUDE_TAGS=gui,workstation,corporate
 ```
 
-| Tag | Excludes |
-|---|---|
-| `gui` | Wayland/X11 apps, desktop tools, browsers |
+| Tag           | Excludes                                                             |
+| ------------- | -------------------------------------------------------------------- |
+| `gui`         | Wayland/X11 apps, desktop tools, browsers                            |
 | `workstation` | Hardware sensors (`lm-sensors`), local terminal multiplexer (`tmux`) |
-| `corporate` | Webex, Citrix, and other work-specific tools |
+| `corporate`   | Webex, Citrix, and other work-specific tools                         |
 
 ## Tasks to skip
 

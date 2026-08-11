@@ -73,11 +73,11 @@ this network has a corporate registry mirror and/or TLS-inspecting proxy:
 
 - **Registry pull-through mirror** (Docker Hub only) — `registry-mirrors` in `/etc/docker/daemon.json`,
   same merge mechanism `inv docker.configure` already uses for `log-driver`/`dns` above.
-- **Daemon's own outbound proxy** — dockerd is a systemd service and does *not* inherit the
+- **Daemon's own outbound proxy** — dockerd is a systemd service and does _not_ inherit the
   shell's `http_proxy`/`https_proxy`. Needs its own systemd drop-in:
   `/etc/systemd/system/docker.service.d/http-proxy.conf` with `Environment="HTTPS_PROXY=..."`,
   then `systemctl daemon-reload && systemctl restart docker`.
-- **Containers' own proxy** (so processes *inside* containers see it too) — not a daemon setting,
+- **Containers' own proxy** (so processes _inside_ containers see it too) — not a daemon setting,
   goes in `~/.docker/config.json`'s `proxies` key.
 
 **Cert-wise**, this is separate from `inv certs.install` — Docker doesn't read the OS trust store

@@ -13,6 +13,7 @@ Python versions defined in `setup.toml`:
 ```
 
 This installs:
+
 - uv itself into `~/.local/bin/uv`
 - Python versions via uv — default (`uv_python_default`) plus extras (`uv_python_extra`)
 - invoke (the task runner) under the default Python version
@@ -21,8 +22,8 @@ To change which versions are installed, edit `setup.toml`:
 
 ```toml
 [settings]
-uv_python_default     = "3.14"
-uv_python_extra       = ["3.11", "3.12", "3.13"]
+uv_python_default = "3.14"
+uv_python_extra = ["3.11", "3.12", "3.13"]
 uv_python_set_default = true
 ```
 
@@ -43,7 +44,7 @@ These are available in any shell where `~/.local/bin` precedes `/usr/bin` on `PA
 
 `bootstrap.sh` also passes `--default` to `uv python install` for `uv_python_default` (gated by
 the `uv_python_set_default` setting, on by default), which makes uv additionally install
-*unversioned* `~/.local/bin/python` and `~/.local/bin/python3`, pointing at that same version.
+_unversioned_ `~/.local/bin/python` and `~/.local/bin/python3`, pointing at that same version.
 This matters because plain `python` doesn't exist anywhere else on a stock Ubuntu box — apt never
 ships an unversioned `python`, and until this was added neither did uv — so anything assuming bare
 `python` works (extremely common: it's the only name that exists on Windows, and it's what every
@@ -52,7 +53,7 @@ symlink target, `bin/python3`/`bin/python3.X` just point at it) would fail outsi
 venv.
 
 The trade-off: since `~/.local/bin` precedes `/usr/bin` on `PATH`, the unversioned `python3` shim
-also shadows apt's own `/usr/bin/python3` — but only for things that resolve `python3` *via*
+also shadows apt's own `/usr/bin/python3` — but only for things that resolve `python3` _via_
 `PATH` (an interactive shell, or a script shebanged `#!/usr/bin/env python3`). It does **not**
 touch `/usr/bin/python3` itself, and has no effect on the majority of system tooling
 (`apt-add-repository`, `unattended-upgrade`, and ~25 others checked on a real Ubuntu 24.04 box),
@@ -90,15 +91,14 @@ inv python.tools
 Current tools: `nox`, `mkdocs` (with `mkdocs-material`), `twine`, `glances`, `nuitka`, `zensical`, `keyring`.
 (`invoke` itself is installed by `bootstrap.sh`, not this task.)
 
-`mkdocs`/`mkdocs-material` is no longer what builds *this* repo's docs site (see
-[zensical.md](zensical.md) — that migrated to `zensical` 2026-08-08) but is kept installed
-system-wide for other projects that still use it.
+`mkdocs`/`mkdocs-material` is no longer what builds _this_ repo's docs site (migrated to
+`zensical` 2026-08-08) but is kept installed system-wide for other projects that still use it.
 
 To add a new tool, add a section to `setup.toml`:
 
 ```toml
 [packages.mytool]
-method  = "uv-tool"
+method = "uv-tool"
 package = "mytool"
 ```
 
@@ -177,7 +177,7 @@ graph TD
   are never put on `PATH` directly — you either activate one or prefix commands with `uv run`.
 - The **system Python** (`/usr/bin/python3`) file is never overwritten by any of the above. But
   once `uv_python_set_default` installs the unversioned `python`/`python3` shims, they sit ahead
-  of it on `PATH` — so anything resolving `python3` *via* `PATH` (an interactive shell, or a
+  of it on `PATH` — so anything resolving `python3` _via_ `PATH` (an interactive shell, or a
   `#!/usr/bin/env python3` shebang) reaches uv's build instead. Absolute-shebang system scripts
   (the majority) bypass `PATH` entirely and always reach `/usr/bin/python3` directly, regardless
   of this setting.
@@ -196,11 +196,11 @@ Or in `~/.config/uv/uv.toml` for a persistent user-level config:
 
 ```toml
 [[index]]
-url      = "https://your-private-pypi/simple"
-default  = true
+url = "https://your-private-pypi/simple"
+default = true
 
 [[index]]
-url      = "https://pypi.org/simple"
+url = "https://pypi.org/simple"
 ```
 
 ## Nuitka
@@ -222,5 +222,6 @@ python -m nuitka --module mypackage --include-package=mypackage
 ```
 
 !!! NOTE
+
     Nuitka uses the Python it was invoked with. Run it via `python3.14 -m nuitka` or
     activate the project's venv first to control which interpreter is used.

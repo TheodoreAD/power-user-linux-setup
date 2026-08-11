@@ -22,12 +22,12 @@ ollama serve                     # starts the API server (auto-started on instal
 
 **Recommended models by use case:**
 
-| Use case | Model |
-|---|---|
-| Autocomplete (fast) | `qwen2.5-coder:7b` |
-| Chat / refactoring | `qwen2.5-coder:32b` or `deepseek-coder-v2` |
+| Use case            | Model                                          |
+| ------------------- | ---------------------------------------------- |
+| Autocomplete (fast) | `qwen2.5-coder:7b`                             |
+| Chat / refactoring  | `qwen2.5-coder:32b` or `deepseek-coder-v2`     |
 | Completions quality | `codestral` (Mistral, free for non-commercial) |
-| General assistant | `llama3.3` or `mistral-small3.2` |
+| General assistant   | `llama3.3` or `mistral-small3.2`               |
 
 ---
 
@@ -192,10 +192,10 @@ docker run -it \
 
 ## Recommended combinations
 
-| Scenario | Stack |
-|---|---|
+| Scenario                          | Stack                                                                     |
+| --------------------------------- | ------------------------------------------------------------------------- |
 | Daily coding, mixed local + cloud | Copilot Pro ($10/mo) for autocomplete + Claude Code for complex refactors |
-| Fully local / air-gapped | Ollama + Continue.dev (autocomplete) + Aider (agent) |
-| Team, shared inference | Tabby server + Continue.dev on each workstation |
-| Autonomous tasks, offline-capable | Ollama + Goose |
-| VS Code power user | Cline + Ollama (local) with Claude fallback |
+| Fully local / air-gapped          | Ollama + Continue.dev (autocomplete) + Aider (agent)                      |
+| Team, shared inference            | Tabby server + Continue.dev on each workstation                           |
+| Autonomous tasks, offline-capable | Ollama + Goose                                                            |
+| VS Code power user                | Cline + Ollama (local) with Claude fallback                               |

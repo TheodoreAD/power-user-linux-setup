@@ -7,6 +7,7 @@
 ### What works out of the box
 
 Temperature data is available via two hwmon drivers loaded automatically:
+
 - `gigabyte_wmi` (hwmon2) — 6 system temps from BIOS WMI (VRM, PCH, etc.)
 - `coretemp` (hwmon3) — 7 readings: CPU Package + 6 individual cores
 

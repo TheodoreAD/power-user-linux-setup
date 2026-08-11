@@ -46,10 +46,10 @@ For multiple accounts on the same platform (e.g. two GitHub accounts), use a dis
 
 ```toml
 [[ssh_hosts]]
-user     = "git"
-alias    = "github-work"
+user = "git"
+alias = "github-work"
 hostname = "github.com"
-email    = "jane.smith@work.com"
+email = "jane.smith@work.com"
 ```
 
 Then clone via the alias instead of the real hostname:
@@ -64,18 +64,18 @@ SSH will route through the alias and use the correct key. See [ssh.md](ssh.md) f
 
 Applied by `inv git.settings`:
 
-| Setting | Value | Purpose |
-|---|---|---|
-| `core.autocrlf` | `input` | Normalise CRLF on commit; leave LF alone on checkout |
-| `core.fileMode` | `true` | Track executable bit |
-| `core.ignorecase` | `false` | Case-sensitive filenames |
-| `core.preloadindex` | `true` | Parallel index preload for faster diffs |
-| `core.editor` | `code --wait` | VS Code as commit message editor |
-| `push.default` | `current` | Push current branch to same-name remote branch |
-| `push.autoSetupRemote` | `true` | Automatically set upstream on first push |
-| `pull.rebase` | `false` | Merge on pull (not rebase) |
-| `rebase.autoStash` | `true` | Auto-stash dirty working tree before rebase |
-| `log.decorate` | `auto` | Show branch/tag names in `git log` |
+| Setting                | Value         | Purpose                                              |
+| ---------------------- | ------------- | ---------------------------------------------------- |
+| `core.autocrlf`        | `input`       | Normalise CRLF on commit; leave LF alone on checkout |
+| `core.fileMode`        | `true`        | Track executable bit                                 |
+| `core.ignorecase`      | `false`       | Case-sensitive filenames                             |
+| `core.preloadindex`    | `true`        | Parallel index preload for faster diffs              |
+| `core.editor`          | `code --wait` | VS Code as commit message editor                     |
+| `push.default`         | `current`     | Push current branch to same-name remote branch       |
+| `push.autoSetupRemote` | `true`        | Automatically set upstream on first push             |
+| `pull.rebase`          | `false`       | Merge on pull (not rebase)                           |
+| `rebase.autoStash`     | `true`        | Auto-stash dirty working tree before rebase          |
+| `log.decorate`         | `auto`        | Show branch/tag names in `git log`                   |
 
 ## PyCharm diff and merge tools
 
@@ -95,4 +95,5 @@ git config --global mergetool.pycharm-professional.keepBackup false
 ```
 
 !!! WARNING
+
     The Toolbox path changes on IDE version upgrades — re-run when upgrading PyCharm.

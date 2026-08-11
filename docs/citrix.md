@@ -31,12 +31,13 @@ On Windows, the web portal automatically downloads and launches `nglauncher.exe`
 
 Two packages exist, both from Cloud Software Group (Citrix):
 
-| Package | Role | Installs to |
-|---|---|---|
-| `nsginstaller64.deb` | VPN client — standalone GUI app | `/opt/Citrix/NSGClient/` |
-| `nsepa.deb` | Endpoint Analysis (posture checks, equiv. of nglauncher) | `/opt/Citrix/Browser-EPA/` |
+| Package              | Role                                                     | Installs to                |
+| -------------------- | -------------------------------------------------------- | -------------------------- |
+| `nsginstaller64.deb` | VPN client — standalone GUI app                          | `/opt/Citrix/NSGClient/`   |
+| `nsepa.deb`          | Endpoint Analysis (posture checks, equiv. of nglauncher) | `/opt/Citrix/Browser-EPA/` |
 
 Download from:
+
 - VPN client: https://www.citrix.com/downloads/citrix-secure-access/plug-ins/Citrix-Gateway-VPN-EPA-Clients-Ubuntu.html
 - EPA client: https://www.citrix.com/downloads/citrix-endpoint-analysis/plug-ins/EPA-Clients-Linux.html
 
@@ -113,10 +114,13 @@ Investigation confirmed that the software side is correct — the protocol handl
 The EPA binary receives `nsgcepa://nsgcepa` with no host or token appended, logs `URL not present`, and exits. Without a token the scan cannot complete, so the gateway denies access.
 
 Evidence from `~/.citrix/nssslvpn.txt`:
+
 ```
 ERROR | URL not present.
 ```
+
 And from NSGClient's standalone attempt:
+
 ```
 ERROR | Webview: Invalid URL. `_result=` not found in the URL. Cannot proceed with login.
 ```

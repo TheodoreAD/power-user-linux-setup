@@ -2,12 +2,12 @@
 
 ## Context
 
-PULSE already documents a way to build a *custom Docker image* from `setup.toml`
+PULSE already documents a way to build a _custom Docker image_ from `setup.toml`
 (`docs/dev-container.md`), but that forces every consumer onto one image and one set of
 package choices baked at build time — the user explicitly doesn't want that (security
 surface of a maintained image, and other people shouldn't be forced onto the same base
 image as this machine). What's missing is a distribution path that layers PULSE's curated
-CLI tooling onto *whatever* base image a consumer already uses, expressed as plain
+CLI tooling onto _whatever_ base image a consumer already uses, expressed as plain
 `devcontainer.json`, plus a pipeline that keeps that recipe correct as `setup.toml` and
 `tasks/*.py` evolve.
 
@@ -31,6 +31,7 @@ below), `--ref <git-ref>` (default `stable`), `--local` (skip cloning; assume al
 inside a checkout — used by this repo's own `.devcontainer/devcontainer.json`).
 
 Behavior:
+
 - If not `--local`: shallow `git clone --branch <ref> --depth 1` this repo into
   `~/.local/share/pulse-devcontainer-src` (matches the existing XDG-under-`~/.local/share`
   convention used everywhere else in this repo), `cd` there.
@@ -84,7 +85,8 @@ Dogfoods the setup for this repo itself and doubles as the exact artifact CI smo
   (item 2), not hand-maintained prose.
 
 ### 5. `.github/workflows/devcontainer.yml` (new — repo has one existing workflow,
-   `publish_on_push.yml` for docs, to follow as a style reference)
+
+`publish_on_push.yml` for docs, to follow as a style reference)
 
 - **Trigger**: push to `master` touching `setup.toml`, `tasks/**`, or
   `bootstrap-devcontainer.sh`/`bootstrap.sh`; plus `workflow_dispatch`.
@@ -96,7 +98,7 @@ Dogfoods the setup for this repo itself and doubles as the exact artifact CI smo
   consumers point their own `postCreateCommand` at, not a hand-rolled substitute. Follow-up
   `exec` step asserts a handful of representative installed binaries exist.
 - **Job `publish-stable`** (`needs: smoke-test`, master only): force-moves the `stable` git
-  tag to the current commit and pushes it. This is an intentionally *moving* tag (git's
+  tag to the current commit and pushes it. This is an intentionally _moving_ tag (git's
   equivalent of a `:latest` image tag) — flagging explicitly since it's a force-push to a
   ref other tooling/people may reference, done automatically by CI on every green build.
 - **Job `docs`**: runs `inv devcontainer.render-docs`; if it produced a diff, commits it

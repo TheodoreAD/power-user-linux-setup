@@ -1,10 +1,10 @@
 # Research library (`$RESEARCH_HOME`)
 
 Design rationale for the shared, cross-project reference material store at `~/research/` —
-vendor repo clones, PDFs/epubs, mirrored docs pages. What it *is* and how to use it are covered
+vendor repo clones, PDFs/epubs, mirrored docs pages. What it _is_ and how to use it are covered
 by `skills/research-library/SKILL.md` (the deployed skill) and `~/research/README.md` (the
 portable copy that travels with the library itself, since this doc doesn't). This page is the
-*why*, kept here because it's durable knowledge that belongs in a tracked, reviewable file, not
+_why_, kept here because it's durable knowledge that belongs in a tracked, reviewable file, not
 a local scratch note.
 
 ## Why it exists
@@ -16,7 +16,7 @@ Before this, reference material (vendor repo clones, PDFs) lived in this repo's 
    (an Explore agent, `grep -r`, "read the whole repo") walks straight into third-party cloned
    code/docs and treats their content as trusted project context — the vector prompt-injection-
    via-cloned-repo attacks use. Moving the content fully outside any repo directory takes it out
-   of the *default* blast radius of repo-scoped operations; it only enters an agent's context when
+   of the _default_ blast radius of repo-scoped operations; it only enters an agent's context when
    a task explicitly names the external path — deliberate, not ambient.
 2. **Not shareable.** Every repo that wanted the same reference material (GNOME internals, Claude
    Code allowlist research) re-cloned it into its own gitignored `reference/`, duplicating disk
@@ -46,7 +46,7 @@ full host, not a generic label like `gitlab` — that avoids ambiguity between `
 self-hosted instances.
 
 **Location: plain `~/research/`, not `~/.local/share/research/`.** The XDG-paths convention this
-machine otherwise follows ("user tool installs go to `~/.local/share/<tool>`") is about *tool*
+machine otherwise follows ("user tool installs go to `~/.local/share/<tool>`") is about _tool_
 installs cluttering `$HOME`; this is human-facing content opened directly (PDFs, epubs) — more
 like `~/Documents` than a tool's data dir.
 
@@ -95,18 +95,18 @@ stale.
 ## Discoverability: two layers, not one
 
 - **A global skill** (`skills/research-library/SKILL.md`, deployed to
-  `~/.agents/skills/research-library`) teaches the *mechanism* — where `$RESEARCH_HOME` is, the
+  `~/.agents/skills/research-library`) teaches the _mechanism_ — where `$RESEARCH_HOME` is, the
   naming convention, how to add/update entries. Applies in every project automatically.
 - **Each project's own `AGENTS.md` still needs a short, project-specific pointer** — e.g. "for
   GNOME Shell extension behavior, check `$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-
-  shell` before reading anything online" — because *which* library entries matter to a given
+  shell` before reading anything online" — because _which_ library entries matter to a given
   project is knowledge the global skill can't have on its own. This is also what makes the
   convention visible to non-Claude `AGENTS.md` readers (Cursor, Copilot, Aider) with no
   equivalent global-skill discovery of their own.
 
 The instruction that actually delivers "avoid reading lots of files off the internet" lives in
-both: the skill says *how* to check the library; each project's `AGENTS.md` says *prefer the
-local copy over `WebFetch`* as a standing rule, not a one-off suggestion.
+both: the skill says _how_ to check the library; each project's `AGENTS.md` says _prefer the
+local copy over `WebFetch`_ as a standing rule, not a one-off suggestion.
 
 ## Docs sites (not just repos)
 
@@ -148,7 +148,7 @@ too large to hand the model wholesale, and it matches on meaning rather than exa
 the cost of a whole pipeline (chunker, embedding model, vector store, re-embed-on-update) to
 build and keep in sync.
 
-**2026 consensus:** the industry has moved *away* from vector-DB RAG for code specifically —
+**2026 consensus:** the industry has moved _away_ from vector-DB RAG for code specifically —
 multiple sources describe Anthropic/Claude Code itself moving off a vector-RAG pipeline toward
 agentic search (grep, glob, file reads, symbol navigation), because code questions are usually
 literal ("where is `X` defined") and exact-match search answers them better and cheaper. RAG
@@ -169,7 +169,7 @@ preemptively.
 are a single novel at a time (themes/characters/style) or a handful of papers/books on one topic
 — not hundreds of documents with repeated queries, the scenario where RAG's cost/recall numbers
 actually apply. At that scale the corpus fits in a single context window outright (no retrieval
-step needed), and for the novel case specifically, chunked retrieval would work *against* the
+step needed), and for the novel case specifically, chunked retrieval would work _against_ the
 task — themes and style are properties of the whole book, and top-k retrieval severs the
 cross-chapter connections that kind of analysis depends on.
 
@@ -185,7 +185,7 @@ declared via `setup.toml`'s `skills = [{ source = "local", path = "..." }]` fiel
 real copy — not a symlink — by `inv ai.skills`; full mechanism documented in
 `docs/claude-code.md`). That `npx`-source path (installing a skill straight from a GitHub repo
 via the `skills` CLI) was validated end-to-end against a real package,
-[caveman](https://github.com/JuliusBrussee/caveman) — worth recording why it *isn't* installed
+[caveman](https://github.com/JuliusBrussee/caveman) — worth recording why it _isn't_ installed
 that way today, since the reasoning generalizes:
 
 Caveman ships terse-communication-style rules. Installed first as a skill, then also duplicated

@@ -10,6 +10,7 @@ Activities" below for why. Confirmed working: the right Super key now works corr
 (both as a tap and as a modifier) with no OS-level (GNOME/X11/Wayland) remapping needed.
 
 !!! WARNING
+
     `hk3` and `hk4` send `Super+Alt+KP0` and `Super+Shift+KP0` respectively — these were likely
     gTile window tiling shortcuts. gTile has been replaced by Tiling Shell / Tiling Assistant;
     verify these bindings are still useful or remap them before applying this layout.
@@ -94,7 +95,7 @@ in GNOME even though the same physical key works fine as a modifier (e.g. in `Su
 GNOME binds to both `Super_L` and `Super_R`).
 
 Fix: remap `rwin` to `lwin` under `<base>` only (see the layout above). A layout file stores only
-the *diffs* from the factory defaults (§4.0 of the guide), and a key left unmapped on
+the _diffs_ from the factory defaults (§4.0 of the guide), and a key left unmapped on
 `<function1>`/`<function2>`/`<function3>` falls through to whatever `<base>` says for that key —
 so one line under `<base>` covers every layer, with nothing to keep in sync elsewhere.
 
@@ -157,7 +158,7 @@ Action-sequence tokens:
   `NNN` ms (Kinesis recommends 250ms; not recommended for alphanumeric keys).
 
 **No comment syntax exists**, inline or line-level. The only documented "inert line" mechanism is
-a leading `*`, which *disables* an otherwise-valid code line — it doesn't let you attach free text,
+a leading `*`, which _disables_ an otherwise-valid code line — it doesn't let you attach free text,
 and the guide warns that bad syntax "could cause temporary problems with even basic keyboard
 operation." So actual layout files are kept comment-free; explanations live in this doc instead,
 as annotated copies placed next to the pasteable block above.

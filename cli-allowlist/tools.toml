@@ -37,7 +37,7 @@
 #                     gap, not hypothetical: `gcloud storage`/`sql`/`secrets`/`run` all classified
 #                     read_only this way despite having genuinely destructive subcommands
 #                     (`storage rm -r`, `sql instances delete`, ...) with no narrower rule to catch
-#                     them. See docs/cli-allowlist.md's "render / apply" section.
+#                     them. See contributing/cli-allowlist.md's "render / apply" section.
 #
 # Tree discovery can surface a node that isn't actually a real command — a discovery regex
 # matching a sample-output table row, a deprecated/plugin subcommand whose --help silently echoes
@@ -46,10 +46,10 @@
 # `invalid` classification tier the LLM can assign at classify time for weirdness that isn't a
 # content duplicate at all) and excluded from render/apply automatically. Full writeup with the two
 # real examples that drove this (`helm list maudlin-arachnid`, `helm diff`) is in
-# docs/cli-allowlist.md under "Recursive tree extraction".
+# contributing/cli-allowlist.md under "Recursive tree extraction".
 #
 # Three more things worth knowing before touching classify/render, all documented in full in
-# docs/cli-allowlist.md:
+# contributing/cli-allowlist.md:
 #   - `render` skips a read_only node that has children of its own (`docker network` when
 #     `docker network rm`/`create`/... already exist) — see "render / apply".
 #   - `classify` always re-sweeps any node with `source: "community"` back into fresh LLM
@@ -85,44 +85,123 @@
 # `inv allowlist.review` like everything else.
 
 [git]
-help_flag = "-h"  # not --help: that renders through `man`, which depends on git-man being installed
-max_depth = 2  # real per-verb risk lives one level down: remote add/rm, stash pop/drop, worktree remove
+help_flag = "-h" # not --help: that renders through `man`, which depends on git-man being installed
+max_depth = 2 # real per-verb risk lives one level down: remote add/rm, stash pop/drop, worktree remove
 max_nodes = 100
 subcommands = [
-  "status", "log", "diff", "show", "blame", "grep", "branch", "tag", "remote", "config",
-  "stash", "submodule", "worktree", "notes", "bisect", "rev-parse", "ls-files", "ls-remote",
-  "fsck", "commit", "add", "merge", "rebase", "checkout", "push", "pull", "clean", "reset",
+  "status",
+  "log",
+  "diff",
+  "show",
+  "blame",
+  "grep",
+  "branch",
+  "tag",
+  "remote",
+  "config",
+  "stash",
+  "submodule",
+  "worktree",
+  "notes",
+  "bisect",
+  "rev-parse",
+  "ls-files",
+  "ls-remote",
+  "fsck",
+  "commit",
+  "add",
+  "merge",
+  "rebase",
+  "checkout",
+  "push",
+  "pull",
+  "clean",
+  "reset",
 ]
 
 [gh]
-max_depth = 2  # pr create/merge, secret set/remove, release delete, etc. are the real distinctions
-max_nodes = 200  # real tree measured ~170+ nodes at depth 2; 150 truncated it
+max_depth = 2 # pr create/merge, secret set/remove, release delete, etc. are the real distinctions
+max_nodes = 200 # real tree measured ~170+ nodes at depth 2; 150 truncated it
 subcommands = [
-  "auth", "pr", "issue", "repo", "release", "run", "workflow", "search", "project", "label",
-  "secret", "variable", "ssh-key", "gpg-key", "ruleset", "org", "codespace", "gist",
-  "attestation", "extension",
+  "auth",
+  "pr",
+  "issue",
+  "repo",
+  "release",
+  "run",
+  "workflow",
+  "search",
+  "project",
+  "label",
+  "secret",
+  "variable",
+  "ssh-key",
+  "gpg-key",
+  "ruleset",
+  "org",
+  "codespace",
+  "gist",
+  "attestation",
+  "extension",
 ]
 
 [glab]
-max_depth = 2  # mr create/merge, ci run/trace
+max_depth = 2 # mr create/merge, ci run/trace
 subcommands = ["mr", "issue", "ci", "repo", "release", "pipeline", "label", "variable", "auth"]
 
 [kubectl]
 version_flag = "version --client"
-max_depth = 2  # config use-context/delete-context, rollout undo/restart, create <kind> are the real leaves
+max_depth = 2 # config use-context/delete-context, rollout undo/restart, create <kind> are the real leaves
 max_nodes = 90
 subcommands = [
-  "get", "describe", "logs", "top", "events", "rollout", "diff", "kustomize", "auth",
-  "api-resources", "api-versions", "explain", "cluster-info", "config", "apply", "create",
-  "patch", "edit", "scale", "exec", "port-forward", "delete", "drain", "cordon",
+  "get",
+  "describe",
+  "logs",
+  "top",
+  "events",
+  "rollout",
+  "diff",
+  "kustomize",
+  "auth",
+  "api-resources",
+  "api-versions",
+  "explain",
+  "cluster-info",
+  "config",
+  "apply",
+  "create",
+  "patch",
+  "edit",
+  "scale",
+  "exec",
+  "port-forward",
+  "delete",
+  "drain",
+  "cordon",
 ]
 
 [helm]
 version_flag = "version --short"
-max_depth = 2  # repo add/remove, plugin install/uninstall
+max_depth = 2 # repo add/remove, plugin install/uninstall
 subcommands = [
-  "list", "status", "history", "get", "show", "template", "lint", "diff", "repo", "search",
-  "plugin", "env", "install", "upgrade", "rollback", "create", "package", "uninstall",
+  "list",
+  "status",
+  "history",
+  "get",
+  "show",
+  "template",
+  "lint",
+  "diff",
+  "repo",
+  "search",
+  "plugin",
+  "env",
+  "install",
+  "upgrade",
+  "rollback",
+  "create",
+  "package",
+  "uninstall",
 ]
 
 [kind]
@@ -135,63 +214,156 @@ subcommands = ["get", "logs", "status", "dump", "doctor", "up", "down", "ci"]
 skip_interactive = true
 
 [docker]
-max_depth = 2  # this is where docker's real danger lives: network/volume/image/context rm vs ls
-max_nodes = 200  # real tree measured ~160-170 nodes at depth 2; 150 truncated it
+max_depth = 2 # this is where docker's real danger lives: network/volume/image/context rm vs ls
+max_nodes = 200 # real tree measured ~160-170 nodes at depth 2; 150 truncated it
 subcommands = [
-  "ps", "inspect", "logs", "top", "stats", "port", "diff", "events", "wait", "images",
-  "image", "network", "volume", "info", "system", "manifest", "trust", "config", "secret",
-  "plugin", "context", "buildx", "compose", "service", "stack", "node", "run", "build",
-  "exec", "rm", "rmi",
+  "ps",
+  "inspect",
+  "logs",
+  "top",
+  "stats",
+  "port",
+  "diff",
+  "events",
+  "wait",
+  "images",
+  "image",
+  "network",
+  "volume",
+  "info",
+  "system",
+  "manifest",
+  "trust",
+  "config",
+  "secret",
+  "plugin",
+  "context",
+  "buildx",
+  "compose",
+  "service",
+  "stack",
+  "node",
+  "run",
+  "build",
+  "exec",
+  "rm",
+  "rmi",
 ]
 
 [terraform]
-max_depth = 2  # state rm/mv, workspace delete are meaningfully different from state show/list
+max_depth = 2 # state rm/mv, workspace delete are meaningfully different from state show/list
 subcommands = [
-  "validate", "fmt", "plan", "show", "output", "state", "providers", "workspace", "graph",
-  "apply", "destroy", "init", "import",
+  "validate",
+  "fmt",
+  "plan",
+  "show",
+  "output",
+  "state",
+  "providers",
+  "workspace",
+  "graph",
+  "apply",
+  "destroy",
+  "init",
+  "import",
 ]
 
 [gcloud]
 version_flag = "version"
-cloud_cli = true  # thousands of leaf commands, 3 levels deep (gcloud <group> <resource> <verb>) —
-                   # recursion is a non-goal here, not a gap; stays at this hand-picked top-level list
+cloud_cli = true # thousands of leaf commands, 3 levels deep (gcloud <group> <resource> <verb>) —
+# recursion is a non-goal here, not a gap; stays at this hand-picked top-level list
 subcommands = [
-  "auth", "config", "info", "projects", "compute", "container", "run", "functions",
-  "storage", "iam", "sql", "redis", "pubsub", "secrets", "artifacts", "dns", "logging",
-  "monitoring", "billing",
+  "auth",
+  "config",
+  "info",
+  "projects",
+  "compute",
+  "container",
+  "run",
+  "functions",
+  "storage",
+  "iam",
+  "sql",
+  "redis",
+  "pubsub",
+  "secrets",
+  "artifacts",
+  "dns",
+  "logging",
+  "monitoring",
+  "billing",
 ]
 max_subcommands = 25
 
 [aws]
-cloud_cli = true  # same shape of problem as gcloud: aws <service> <operation>, hundreds of services
-help_flag = "help"  # not --help: aws uses a literal `help` pseudo-subcommand (pager-rendered)
+cloud_cli = true # same shape of problem as gcloud: aws <service> <operation>, hundreds of services
+help_flag = "help" # not --help: aws uses a literal `help` pseudo-subcommand (pager-rendered)
 # Unlike git, there's no alternate flag that avoids this: `aws help` pipes through groff/troff/
 # grotty for its formatted output (confirmed via check_man_deps.py's strace check) on every
 # invocation — extraction only works here because groff happens to be installed on this machine,
 # same risk class as git's original git-man dependency, just with no workaround available.
 subcommands = [
-  "s3", "s3api", "ec2", "iam", "lambda", "cloudformation", "ecs", "ecr", "rds", "sts",
-  "ssm", "logs", "sns", "sqs", "dynamodb", "configure",
+  "s3",
+  "s3api",
+  "ec2",
+  "iam",
+  "lambda",
+  "cloudformation",
+  "ecs",
+  "ecr",
+  "rds",
+  "sts",
+  "ssm",
+  "logs",
+  "sns",
+  "sqs",
+  "dynamodb",
+  "configure",
 ]
 
 [go]
 version_flag = "version"
-help_flag = "help"  # not --help: `go <sub> --help` is a stub ("Run 'go help list' for details")
+help_flag = "help" # not --help: `go <sub> --help` is a stub ("Run 'go help list' for details")
 help_style = "prefix"
-max_depth = 2  # mod tidy/vendor vs mod download are meaningfully different
+max_depth = 2 # mod tidy/vendor vs mod download are meaningfully different
 subcommands = ["list", "mod", "version", "env", "build", "run", "install", "get", "clean", "generate"]
 
 [npm]
-max_depth = 2  # config get/list (read) vs config set/delete (write) are meaningfully different
+max_depth = 2 # config get/list (read) vs config set/delete (write) are meaningfully different
 subcommands = [
-  "list", "info", "view", "outdated", "audit", "search", "config", "explain", "install",
-  "update", "ci", "run", "publish", "unpublish",
+  "list",
+  "info",
+  "view",
+  "outdated",
+  "audit",
+  "search",
+  "config",
+  "explain",
+  "install",
+  "update",
+  "ci",
+  "run",
+  "publish",
+  "unpublish",
 ]
 
 [cargo]
 subcommands = [
-  "tree", "search", "metadata", "verify-project", "pkgid", "check", "clippy", "test",
-  "build", "run", "clean", "install", "update", "publish", "yank",
+  "tree",
+  "search",
+  "metadata",
+  "verify-project",
+  "pkgid",
+  "check",
+  "clippy",
+  "test",
+  "build",
+  "run",
+  "clean",
+  "install",
+  "update",
+  "publish",
+  "yank",
 ]
 
 [uv]
@@ -203,8 +375,15 @@ no_subcommands = true
 [tmux]
 version_flag = "-V"
 subcommands = [
-  "list-sessions", "list-windows", "list-panes", "show-options", "display-message",
-  "new-session", "kill-session", "kill-server", "send-keys",
+  "list-sessions",
+  "list-windows",
+  "list-panes",
+  "show-options",
+  "display-message",
+  "new-session",
+  "kill-session",
+  "kill-server",
+  "send-keys",
 ]
 
 [direnv]
@@ -322,8 +501,18 @@ subcommands = ["show", "toolchain", "target", "component", "update", "default", 
 # setup.toml's [packages.node].nvm_dir if that's ever changed from the default — update here too).
 shell_prefix = 'export NVM_DIR="$HOME/.local/share/nvm" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
 subcommands = [
-  "install", "uninstall", "use", "alias", "unalias", "list", "list-remote", "current",
-  "which", "run", "exec", "deactivate",
+  "install",
+  "uninstall",
+  "use",
+  "alias",
+  "unalias",
+  "list",
+  "list-remote",
+  "current",
+  "which",
+  "run",
+  "exec",
+  "deactivate",
 ]
 
 # ---------------------------------------------------------------------------

@@ -18,8 +18,7 @@ directly; see [Prerequisites](#prerequisites-etcwslconf) below. Everything else 
 (distro choice, WSL1 vs WSL2, WSLg availability) needs action from the Windows side instead, so
 there's no task for it. Everything below is the detail behind what it checks.
 
-For the install itself, prefer `inv wsl.install` over copy-pasting the [Recommended
-sequence](#recommended-sequence) below by hand — see that section for why.
+For the install itself, prefer `inv wsl.install` over copy-pasting the [Recommended sequence](#recommended-sequence) below by hand — see that section for why.
 
 This isn't just advisory, either: the tasks that actually need systemd or apt/dpkg check for them
 directly (`util.require_systemd()` / `util.require_apt()` in [tasks/util.py](../tasks/util.py)) and
@@ -42,7 +41,7 @@ copy to context-switch between for no reason. Default to the smallest set, and o
 something deliberately, once you have a concrete reason.
 
 If WSLg is available (default on current Windows 11 builds — check with `inv wsl.check`), `gui`/
-`desktop` packages *can* install and work (see [GUI, WSLg, and clipboard](#gui-wslg-and-clipboard)
+`desktop` packages _can_ install and work (see [GUI, WSLg, and clipboard](#gui-wslg-and-clipboard)
 below), but most of them shouldn't, by default — see
 [IDEs: edit from Windows instead](#ides-edit-from-windows-instead) for `ide`, and
 [Windows-native duplicates](#windows-native-duplicates) for `windows-native`:
@@ -58,15 +57,15 @@ Without WSLg — no display server at all — exclude the full GUI set instead (
 PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb tools.install
 ```
 
-| Tag | Excludes |
-|---|---|
-| `gui` | Wayland/X11 apps, desktop tools, browsers |
-| `desktop` | Anything depending on a desktop session (e.g. Wayland clipboard) |
-| `gnome` | Anything needing a *live GNOME Shell*, not just a display server: GNOME Shell extensions, `gnome-extensions-cli`, and GNOME-only `xdg-desktop-portal` backends (`xdg-desktop-portal-gnome`, and `flameshot` — its capture path routes through that portal) |
-| `ide` | Full IDEs and their support profiles: `vscode`, `jetbrains-toolbox`, `apparmor-jbr-cef` |
-| `windows-native` | GUI apps with no Linux-specific reason to duplicate under WSL: `terminator`, `wezterm`, `freelens`, `font-manager`, `claude-desktop`, `edge` |
-| `workstation` | Hardware sensors, local terminal multiplexer, **and Docker** (see below) |
-| `corporate` | Webex, Citrix, and other work-specific tools |
+| Tag              | Excludes                                                                                                                                                                                                                                                   |
+| ---------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gui`            | Wayland/X11 apps, desktop tools, browsers                                                                                                                                                                                                                  |
+| `desktop`        | Anything depending on a desktop session (e.g. Wayland clipboard)                                                                                                                                                                                           |
+| `gnome`          | Anything needing a _live GNOME Shell_, not just a display server: GNOME Shell extensions, `gnome-extensions-cli`, and GNOME-only `xdg-desktop-portal` backends (`xdg-desktop-portal-gnome`, and `flameshot` — its capture path routes through that portal) |
+| `ide`            | Full IDEs and their support profiles: `vscode`, `jetbrains-toolbox`, `apparmor-jbr-cef`                                                                                                                                                                    |
+| `windows-native` | GUI apps with no Linux-specific reason to duplicate under WSL: `terminator`, `wezterm`, `freelens`, `font-manager`, `claude-desktop`, `edge`                                                                                                               |
+| `workstation`    | Hardware sensors, local terminal multiplexer, **and Docker** (see below)                                                                                                                                                                                   |
+| `corporate`      | Webex, Citrix, and other work-specific tools                                                                                                                                                                                                               |
 
 Drop `workstation` from the list if you want Docker installed natively inside the distro — see
 [Docker](#docker) below. Drop `ide`/`windows-native` selectively if you have an actual reason to
@@ -118,7 +117,7 @@ stock Ubuntu `/etc/resolv.conf` is a symlink to systemd-resolved's stub
 (`/run/systemd/resolve/stub-resolv.conf`), and `inv system.dns` (same as on bare metal) only ever
 edits systemd-resolved's own drop-in config — it never touches `/etc/resolv.conf` itself. WSL's
 `generateResolvConf` replaces that symlink with a plain file, and disabling the setting only stops
-WSL from touching the file *going forward* — it does not restore the symlink. So after `wsl.exe
+WSL from touching the file _going forward_ — it does not restore the symlink. So after `wsl.exe
 --shutdown` and reopening, `/etc/resolv.conf` is still the stale plain file WSL last wrote, `inv
 system.dns` has nothing to point at, and DNS resolution breaks (`curl: (6) Could not resolve
 host`, etc.) until the symlink is put back:
@@ -144,7 +143,7 @@ even when those resolvers are reachable:
 - **They might not be reachable at all.** On some corporate networks a VPN client or firewall
   allows general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver.
   The signature: `ping 1.1.1.1` works, but nothing resolves, even against `/etc/resolv.conf` pointed
-  *directly* at `1.1.1.1` (no systemd-resolved involved at all). `inv wsl.check` and
+  _directly_ at `1.1.1.1` (no systemd-resolved involved at all). `inv wsl.check` and
   `inv wsl.install --dns=auto` both run a direct, non-destructive probe (a raw DNS query straight
   to `1.1.1.1`/`8.8.8.8`, bypassing whatever's currently in `/etc/resolv.conf`) before touching any
   config, specifically to catch this case without a write + restart cycle. `inv wsl.install` also
@@ -169,8 +168,7 @@ Needs the usual `wsl.exe --shutdown` + reopen to take effect, and does the relin
 fallback dance described above. **Pass `--dns=yes` on every future `inv wsl.install` run on this
 machine** — without it, `--dns=auto`'s default reverts `generateResolvConf` back to `true` and the
 override is gone again. (In a real terminal, `wsl.install` asks this exact question interactively
-before doing anything if you leave `--dns` unset — see [Interactive
-prompts](#interactive-prompts) below.)
+before doing anything if you leave `--dns` unset — see [Interactive prompts](#interactive-prompts) below.)
 
 ## Docker
 
@@ -199,7 +197,7 @@ windows onto the Windows desktop over an RDP-based channel — not a full remote
 per-window compositing. GPU access comes through virtio passthrough (`/dev/dxg`) mapped to the
 Windows GPU driver, so both rendering and compute get real acceleration, not software fallback.
 
-Practically, that means `gui`/`desktop`-tagged packages *install and run* normally under WSLg — no
+Practically, that means `gui`/`desktop`-tagged packages _install and run_ normally under WSLg — no
 separate X server (VcXsrv/X410), no manual clipboard bridge. But "would work" isn't the bar; the
 bar is "is there a reason to run the Linux build specifically." Two packages clear it:
 
@@ -258,7 +256,7 @@ client that already runs better on the Windows side:
 - **JetBrains IDEs**: same idea via **JetBrains Gateway** (or a JetBrains IDE's built-in WSL remote
   target) instead of installing `jetbrains-toolbox` inside the distro.
 - **`apparmor-jbr-cef`** exists to let JetBrains' embedded Chromium (JCEF) sandbox itself — it's
-  only relevant if a JetBrains IDE is actually running *inside* the distro, so it has nothing to do
+  only relevant if a JetBrains IDE is actually running _inside_ the distro, so it has nothing to do
   if you're using Gateway/remote targets from Windows. It would likely need extra troubleshooting
   under WSL2 regardless: the profile requires a live AppArmor LSM (`apparmor_parser -r` against
   `/etc/apparmor.d/`), and stock WSL2 kernels don't always ship AppArmor enabled — `inv wsl.check`
@@ -274,7 +272,7 @@ WSLg, but there's no Linux-specific reason to, and you almost certainly already 
 rather have) the same tool on the Windows side:
 
 - **`[packages.terminator]`, `[packages.wezterm]`** — terminal emulators. You're necessarily
-  already inside *some* terminal to reach a WSL shell in the first place (Windows Terminal, or
+  already inside _some_ terminal to reach a WSL shell in the first place (Windows Terminal, or
   Windows-side WezTerm), so launching a second terminal emulator from within that session via
   WSLg mostly just adds a redundant window, not new capability.
 - **`[packages.freelens]`** — a Kubernetes GUI. It only needs network reachability to a cluster
@@ -282,7 +280,7 @@ rather have) the same tool on the Windows side:
   same cluster.
 - **`[packages.claude-desktop]`** — an Electron chat client with no OS-specific behavior to test.
   Install once, on Windows.
-- **`[packages.font-manager]`** — previews fonts already present in the *WSL-side* filesystem,
+- **`[packages.font-manager]`** — previews fonts already present in the _WSL-side_ filesystem,
   which per [Fonts](#fonts) below usually isn't where the fonts your terminal actually renders
   live anyway, so it's previewing the wrong set more often than not.
 - **`[packages.edge]`** — see the browser discussion above: same engine as `google-chrome`, so it
@@ -293,7 +291,7 @@ e.g. you want WezTerm's Linux build specifically to test its GPU passthrough beh
 
 ## Fonts
 
-`inv fonts.install` installs Nerd Fonts into `~/.local/share/fonts` *inside the WSL filesystem*.
+`inv fonts.install` installs Nerd Fonts into `~/.local/share/fonts` _inside the WSL filesystem_.
 If your terminal is Windows Terminal (or anything else running on the Windows side, not through
 WSLg), it can't see fonts installed there — install the Nerd Font on the Windows side separately.
 This isn't something PULSE can automate from inside WSL; there's no supported way to reach across
@@ -324,7 +322,7 @@ inv wsl.install --dns=yes    # opt into the public-DNS override — see "If publ
 
 It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS
 are actually live yet — skipped with a message otherwise, if `wsl.fix` just changed
-`/etc/wsl.conf` and you haven't restarted WSL), *then* two named phases run through
+`/etc/wsl.conf` and you haven't restarted WSL), _then_ two named phases run through
 `tasks/phases.py`: **packages** (`apt.repos`/`apt.base`/`apt.deb`/`tools.install`/`ai.skills`/
 `python.tools`/`node.install`) and **shell** (`zsh.omz-configure`/`zsh.configure`/
 `zsh.p10k-configure`/`zsh.set-default-shell`). DNS has to be fixed before the packages/shell
@@ -343,7 +341,7 @@ real outstanding work is never gated behind a prompt — it just runs.
 
 This is the one worth using instead of pasting the equivalent multi-line block below into a
 terminal: that block is a series of separate `inv` invocations one per line, so if one hangs (a
-network problem mid-`apt`, say) and you hit Ctrl-C, the shell only kills *that* command — it then
+network problem mid-`apt`, say) and you hit Ctrl-C, the shell only kills _that_ command — it then
 reads the next already-pasted line from its input buffer and keeps going, which looks like Ctrl-C
 "did nothing" and skipped ahead. `wsl.install` runs everything in one process instead, so Ctrl-C at
 any point aborts the whole thing.
@@ -360,8 +358,7 @@ asks before doing anything:
 - A one-line summary of what's about to happen (given your answer above, plus `--wslg`/`--docker`),
   then a final "Proceed?" — answering no aborts before touching anything.
 - Once running, the **packages** and **shell** phases each ask "Already looks complete — skip this
-  phase?" if their own dry-run probe found nothing missing — see [Recommended
-  sequence](#recommended-sequence) above.
+  phase?" if their own dry-run probe found nothing missing — see [Recommended sequence](#recommended-sequence) above.
 
 The DNS question defaults to "no" (decline the override) on Enter; the rest default to "yes"
 (proceed / skip). `yes | inv wsl.install` still works non-interactively if you ever need it

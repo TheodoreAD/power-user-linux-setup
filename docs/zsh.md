@@ -22,18 +22,19 @@ Config is saved to `~/.p10k.zsh`. Re-run any time to change the prompt layout.
 
 ## What gets installed
 
-| Package | Method | Destination |
-|---|---|---|
-| Oh My Zsh | script (official installer, `--unattended`) | `~/.oh-my-zsh` |
-| Powerlevel10k | git-clone `--depth=1` | `~/.oh-my-zsh/custom/themes/powerlevel10k` |
-| zsh-autosuggestions | git-clone | `~/.oh-my-zsh/custom/plugins/zsh-autosuggestions` |
-| zsh-syntax-highlighting | git-clone | `~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting` |
+| Package                 | Method                                      | Destination                                           |
+| ----------------------- | ------------------------------------------- | ----------------------------------------------------- |
+| Oh My Zsh               | script (official installer, `--unattended`) | `~/.oh-my-zsh`                                        |
+| Powerlevel10k           | git-clone `--depth=1`                       | `~/.oh-my-zsh/custom/themes/powerlevel10k`            |
+| zsh-autosuggestions     | git-clone                                   | `~/.oh-my-zsh/custom/plugins/zsh-autosuggestions`     |
+| zsh-syntax-highlighting | git-clone                                   | `~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting` |
 
 ## Plugins
 
 Applied by `inv zsh.omz-configure`, which rewrites the `plugins=(...)` block in `~/.zshrc` in-place. `zsh-syntax-highlighting` is always kept last — it post-processes already-parsed input.
 
 The final plugins list is assembled from two sources:
+
 - **Base plugins** in `[packages.oh-my-zsh].plugins` — always included, no external dependency
 - **Tool plugins** via `omz_plugin` on each package entry — only included when that package is enabled
 
@@ -41,25 +42,25 @@ This means enabling `[packages.gcloud]` automatically adds the `gcloud` OMZ plug
 
 **Always-on (base):**
 
-| Plugin | What it provides |
-|---|---|
-| `git` | ~60 aliases: `gs` (status), `ga` (add), `gc!` (commit --amend), `gp` (push), `gl` (pull), etc. |
-| `rsync` | Aliases for common rsync invocations (rsync is a Ubuntu standard default) |
-| `dirhistory` | Ctrl+Up/Down to navigate `cd` history |
-| `history` | `h` alias for `history`; `hsi` for history grep |
-| `web-search` | `google term`, `bing term`, etc. open browser searches |
-| `zsh-autosuggestions` | Fish-style inline suggestions from history as you type |
-| `zsh-syntax-highlighting` | Real-time command syntax highlighting in the prompt |
+| Plugin                    | What it provides                                                                               |
+| ------------------------- | ---------------------------------------------------------------------------------------------- |
+| `git`                     | ~60 aliases: `gs` (status), `ga` (add), `gc!` (commit --amend), `gp` (push), `gl` (pull), etc. |
+| `rsync`                   | Aliases for common rsync invocations (rsync is a Ubuntu standard default)                      |
+| `dirhistory`              | Ctrl+Up/Down to navigate `cd` history                                                          |
+| `history`                 | `h` alias for `history`; `hsi` for history grep                                                |
+| `web-search`              | `google term`, `bing term`, etc. open browser searches                                         |
+| `zsh-autosuggestions`     | Fish-style inline suggestions from history as you type                                         |
+| `zsh-syntax-highlighting` | Real-time command syntax highlighting in the prompt                                            |
 
 **Tool-coupled (via `omz_plugin` on the package entry):**
 
-| Plugin | Package | What it provides |
-|---|---|---|
-| `kubectl` | `[packages.kubectl]` | Tab completions; `k` alias |
-| `helm` | `[packages.helm]` | Tab completions |
-| `docker`, `docker-compose` | `[packages.docker]` *(workstation tag)* | Tab completions |
-| `nvm` | `[packages.node]` | `.nvmrc` auto-detection on `cd` |
-| `gcloud` | `[packages.gcloud]` *(disabled)* | Completions when gcloud is installed |
+| Plugin                     | Package                                 | What it provides                     |
+| -------------------------- | --------------------------------------- | ------------------------------------ |
+| `kubectl`                  | `[packages.kubectl]`                    | Tab completions; `k` alias           |
+| `helm`                     | `[packages.helm]`                       | Tab completions                      |
+| `docker`, `docker-compose` | `[packages.docker]` _(workstation tag)_ | Tab completions                      |
+| `nvm`                      | `[packages.node]`                       | `.nvmrc` auto-detection on `cd`      |
+| `gcloud`                   | `[packages.gcloud]` _(disabled)_        | Completions when gcloud is installed |
 
 The `nvm` plugin lazy-loads nvm on first use but is kept for `.nvmrc` auto-detection. The `[packages.node]` sentinel block in `~/.zshrc` also eagerly sources `nvm.sh` — they coexist without conflict.
 
@@ -69,19 +70,19 @@ The `jsontools` plugin was removed — `ppjson`, `isjson`, `urlencode`, and `url
 
 No custom bindings — OMZ uses emacs mode (`bindkey -e`) which covers everything via `Alt` (or `Esc`) combinations:
 
-| Key | Action |
-|---|---|
-| Home / End | `beginning-of-line` / `end-of-line` |
-| Ctrl+Right / Ctrl+Left | `forward-word` / `backward-word` |
-| Alt+Backspace | `backward-kill-word` |
-| Alt+D | `kill-word` |
-| Alt+U | `up-case-word` |
-| Alt+L | `down-case-word` |
-| Alt+' | `quote-line` |
-| Alt+" | `quote-region` |
-| Ctrl+L | `clear-screen` |
-| Ctrl+R | incremental history search backward |
-| Ctrl+X Ctrl+E | edit current command in `$EDITOR` |
+| Key                    | Action                              |
+| ---------------------- | ----------------------------------- |
+| Home / End             | `beginning-of-line` / `end-of-line` |
+| Ctrl+Right / Ctrl+Left | `forward-word` / `backward-word`    |
+| Alt+Backspace          | `backward-kill-word`                |
+| Alt+D                  | `kill-word`                         |
+| Alt+U                  | `up-case-word`                      |
+| Alt+L                  | `down-case-word`                    |
+| Alt+'                  | `quote-line`                        |
+| Alt+"                  | `quote-region`                      |
+| Ctrl+L                 | `clear-screen`                      |
+| Ctrl+R                 | incremental history search backward |
+| Ctrl+X Ctrl+E          | edit current command in `$EDITOR`   |
 
 ## Aliases
 
@@ -97,22 +98,22 @@ No custom bindings — OMZ uses emacs mode (`bindkey -e`) which covers everythin
 
 Declared in `[packages.clipboard]` in `setup.toml`. Requires `wl-clipboard` (apt). **Wayland only — does not work over SSH or in X11-only sessions.**
 
-| Command | Action |
-|---|---|
-| `xcc` | Pipe stdin to clipboard: `cat file \| xcc` |
-| `xc "text"` | Copy argument to clipboard |
-| `xv` | Paste clipboard to stdout |
+| Command     | Action                                     |
+| ----------- | ------------------------------------------ |
+| `xcc`       | Pipe stdin to clipboard: `cat file \| xcc` |
+| `xc "text"` | Copy argument to clipboard                 |
+| `xv`        | Paste clipboard to stdout                  |
 
 ## Completions
 
 Sourced as sentinel blocks in `~/.zshrc` after `source $ZSH/oh-my-zsh.sh`:
 
-| Tool | Source |
-|---|---|
-| `fzf` | `/usr/share/doc/fzf/examples/` (key bindings + completions) |
-| `uv`, `uvx` | `uv generate-shell-completion zsh` |
-| `kind` | `kind completion zsh` |
-| `tilt` | `tilt completion zsh` |
+| Tool        | Source                                                      |
+| ----------- | ----------------------------------------------------------- |
+| `fzf`       | `/usr/share/doc/fzf/examples/` (key bindings + completions) |
+| `uv`, `uvx` | `uv generate-shell-completion zsh`                          |
+| `kind`      | `kind completion zsh`                                       |
+| `tilt`      | `tilt completion zsh`                                       |
 
 OMZ calls `compinit` internally — no manual `autoload -Uz compinit && compinit` needed.
 
@@ -208,14 +209,14 @@ vim $(rg --files | fzf)
 
 ### Navigation inside fzf
 
-| Key | Action |
-|---|---|
-| Type | filter results |
-| `↑` / `↓` | move selection |
-| `Enter` | accept |
-| `Esc` / `Ctrl+C` | cancel |
-| `Ctrl+/` | toggle preview pane (where configured) |
-| `Tab` | mark multiple items (where multi-select is enabled) |
+| Key              | Action                                              |
+| ---------------- | --------------------------------------------------- |
+| Type             | filter results                                      |
+| `↑` / `↓`        | move selection                                      |
+| `Enter`          | accept                                              |
+| `Esc` / `Ctrl+C` | cancel                                              |
+| `Ctrl+/`         | toggle preview pane (where configured)              |
+| `Tab`            | mark multiple items (where multi-select is enabled) |
 
 **When enabling Atuin:** remove the `key-bindings.zsh` source from `[packages.fzf]` in `setup.toml` (keep `completion.zsh`) to avoid the `Ctrl+R` conflict. `Ctrl+T`, `Alt+C`, and `**` completion are unaffected.
 
@@ -223,11 +224,11 @@ vim $(rg --files | fzf)
 
 PATH is controlled entirely through `setup.toml` sentinel blocks written to `~/.zshenv` (loaded for all zsh instances):
 
-| Entry | Adds |
-|---|---|
-| `[packages.zsh-path]` | `~/.local/bin` prepended — user tools shadow system tools |
-| `[packages.go]` | `$GOROOT/bin` (`go`, `gofmt`), `$GOPATH/bin` (go-installed tools) |
-| `[packages.gcloud]` *(disabled)* | `~/.local/share/google-cloud-sdk/bin` |
+| Entry                            | Adds                                                              |
+| -------------------------------- | ----------------------------------------------------------------- |
+| `[packages.zsh-path]`            | `~/.local/bin` prepended — user tools shadow system tools         |
+| `[packages.go]`                  | `$GOROOT/bin` (`go`, `gofmt`), `$GOPATH/bin` (go-installed tools) |
+| `[packages.gcloud]` _(disabled)_ | `~/.local/share/google-cloud-sdk/bin`                             |
 
 `~/.local/bin` goes in `~/.zshenv` rather than `~/.zshrc` so they are available to all zsh instances, including non-interactive scripts. `/usr/local/bin` is already in the system PATH via `/etc/environment` and is not duplicated here.
 

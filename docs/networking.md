@@ -20,17 +20,18 @@ inv system.dns --primary=9.9.9.9 --secondary=149.112.112.112 --fallback=8.8.8.8
 
 ### Default servers
 
-| Server | IP | Why |
-|---|---|---|
-| Primary | `1.1.1.1` (Cloudflare) | Fastest globally, no query logging, no filtering |
-| Secondary | `1.0.0.1` (Cloudflare) | Same, alternate |
-| Fallback | `8.8.8.8` (Google) | Reliable fallback if Cloudflare unreachable |
+| Server    | IP                     | Why                                              |
+| --------- | ---------------------- | ------------------------------------------------ |
+| Primary   | `1.1.1.1` (Cloudflare) | Fastest globally, no query logging, no filtering |
+| Secondary | `1.0.0.1` (Cloudflare) | Same, alternate                                  |
+| Fallback  | `8.8.8.8` (Google)     | Reliable fallback if Cloudflare unreachable      |
 
 Cloudflare is preferred over Google for privacy: Cloudflare does not log queries or sell DNS data.
 
 ### Why DNSSEC is disabled
 
 `DNSSEC=no` is intentional. DNSSEC breaks:
+
 - Corporate VPNs and split-horizon DNS
 - Docker's internal DNS resolver (`127.0.0.11`)
 - Some self-signed local services

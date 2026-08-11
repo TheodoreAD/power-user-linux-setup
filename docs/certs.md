@@ -40,7 +40,7 @@ overrides this for a one-off run without editing the file.
 2. `update-ca-certificates` merges it with the public CA set into
    `/etc/ssl/certs/ca-certificates.crt`.
 3. A `PULSE::certs` block in `~/.zshenv` exports `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`,
-   `NODE_EXTRA_CA_CERTS`, and `AWS_CA_BUNDLE`, all pointed at that *merged* bundle — not a
+   `NODE_EXTRA_CA_CERTS`, and `AWS_CA_BUNDLE`, all pointed at that _merged_ bundle — not a
    corporate-only file, since those tools still need the public CAs too.
 
 Re-running `inv certs.install` is idempotent: it compares the desired bundle text against what's
@@ -60,7 +60,7 @@ alone. `certs.install` probes with `openssl` in this order and uses the first th
    AD CS — extension alone doesn't say which armor).
 
 If none of the four parse, `certs.install` **fails loudly** rather than installing anything.
-This is a deliberate departure from `update-ca-certificates`'s own behavior: it silently *skips*
+This is a deliberate departure from `update-ca-certificates`'s own behavior: it silently _skips_
 a file it can't parse (just a warning), so a plain reinstall attempt with a bad file would
 otherwise "succeed" while TLS verification keeps failing with no clear signal why. Inspect a
 rejected file manually with `file <path>` or `openssl asn1parse -in <path>`.
@@ -93,7 +93,7 @@ sudo rm /usr/local/share/ca-certificates/pulse-corporate.crt
 sudo update-ca-certificates
 ```
 
-Don't pass `--fresh` — it rebuilds the trust store from scratch and would also drop any *other*
+Don't pass `--fresh` — it rebuilds the trust store from scratch and would also drop any _other_
 locally-added certs, not just this one. Neither task prunes stale config on its own, so also
 remove by hand:
 
@@ -101,48 +101,10 @@ remove by hand:
 - Any `pulse-corporate-*` Java aliases: `sudo keytool -delete -alias pulse-corporate-0 -keystore
   "$JAVA_HOME/lib/security/cacerts" -storepass changeit` (repeat per alias).
 
-## Verify
-
-Run this in a disposable container or VM, not the primary workstation — `certs.install` makes
-real, persistent, root-owned changes to the system trust store, and a real corporate CA isn't
-available outside a corporate network to test against anyway.
-
-```shell
-docker run --rm -it -v "$PWD":/repo -w /repo ubuntu:24.04 bash
-apt update && apt install -y openssl ca-certificates python3
-
-# Fixtures for each detection branch
-openssl req -x509 -newkey rsa:2048 -sha256 -days 3650 -nodes \
-  -keyout /tmp/test-ca.key -out /tmp/test-ca.pem -subj "/CN=Test Corp Root CA"
-openssl x509 -in /tmp/test-ca.pem -outform DER -out /tmp/test-ca.der
-openssl crl2pkcs7 -nocrl -certfile /tmp/test-ca.pem -out /tmp/test-ca.p7b
-openssl crl2pkcs7 -nocrl -certfile /tmp/test-ca.pem -outform DER -out /tmp/test-ca-der.p7b
-printf 'not a cert' > /tmp/garbage.txt   # must fail loudly, not silently
-
-# End to end, no real corporate CA needed
-PULSE_DRY_RUN=1 inv certs.install --bundle=/tmp/test-ca.pem
-inv certs.install --bundle=/tmp/test-ca.pem
-
-# Prove it actually works, not just that files were written
-openssl genrsa -out /tmp/leaf.key 2048
-openssl req -new -key /tmp/leaf.key -subj "/CN=test.example.com" -out /tmp/leaf.csr
-openssl x509 -req -in /tmp/leaf.csr -CA /tmp/test-ca.pem -CAkey /tmp/test-ca.key \
-  -CAcreateserial -out /tmp/leaf.pem -days 365 -sha256
-openssl verify -CAfile /etc/ssl/certs/ca-certificates.crt /tmp/leaf.pem   # expect: OK
-
-# Idempotency
-inv certs.install --bundle=/tmp/test-ca.pem   # expect "already up to date", zshenv:ok not added
-
-# Optional: Java branch
-apt install -y default-jdk-headless
-inv certs.install --bundle=/tmp/test-ca.pem
-keytool -list -alias pulse-corporate-0 -keystore "$JAVA_HOME/lib/security/cacerts" -storepass changeit
-```
-
 ## Genuine limitations
 
-- **Real Windows-issued PKCS#7 bundles are untested** — only locally-generated `openssl`
-  fixtures were used to build and verify the four detection branches (see Verify above).
+- **Real Windows-issued PKCS#7 bundles are untested** — only locally-generated test fixtures were
+  used to build and verify the four detection branches.
 - **The Java `cacerts` step is untested against a real JDK** — no JDK is present anywhere in this
   environment (see Java above). Reviewed-and-defensive, not proven.
 - **`update-ca-certificates --fresh` interaction with other manually-added local certs is out of
@@ -154,6 +116,6 @@ keytool -list -alias pulse-corporate-0 -keystore "$JAVA_HOME/lib/security/cacert
 
 ## See also
 
-- [corporate-proxy.md](corporate-proxy.md) — the separate concern of authenticating *through* a
+- [corporate-proxy.md](corporate-proxy.md) — the separate concern of authenticating _through_ a
   corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA;
   proxy auth is unrelated and doesn't require one to imply the other.

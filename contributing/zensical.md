@@ -3,8 +3,8 @@
 This site is built with [zensical](https://zensical.org/) (`requirements-docs.txt` pins
 `zensical==0.0.44`), not `mkdocs` + `mkdocs-material` anymore (migrated 2026-08-08).
 `mkdocs`/`mkdocs-material` is still installed machine-wide as a `uv tool` (`setup.toml`, see
-[python.md](python.md#system-wide-tools)) for other projects that still use it — it's just not
-what builds *this* repo's docs anymore.
+[docs/python.md](../docs/python.md#system-wide-tools)) for other projects that still use it — it's
+just not what builds _this_ repo's docs anymore.
 Same author as Material for MkDocs, Rust core, still early alpha. This page tracks what's
 actually been verified about how it behaves — as opposed to what the docs say — so the next
 person (or session) checking whether a newer zensical version changes any of this has a concrete
@@ -41,13 +41,13 @@ inside `docs_dir` gets walked and built as if it were site content, warnings and
 
 This bit us directly: `docs/reference/` (gitignored vendor-repo clones and PDFs — research
 material, not site content) used to live inside `docs/`. It worked in CI only by accident —
-gitignored, so absent from a clean checkout — but every *local* `zensical build`/`serve` walked
+gitignored, so absent from a clean checkout — but every _local_ `zensical build`/`serve` walked
 straight into cloned repos like `gnome-shell` and either produced hundreds of broken-link
 warnings or hung outright. Fixed by moving it to repo-root `reference/`, outside `docs_dir`
 entirely, 2026-08-08. **Takeaway: never put anything under `docs_dir` that isn't meant to be a
 site page, even if it's gitignored.** (That material has since moved again, out of this repo
 entirely, to a machine-wide `$RESEARCH_HOME` shared across projects — see
-`docs/research-library.md` — so this repo no longer has a `reference/repos/` at all;
+`contributing/research-library.md` — so this repo no longer has a `reference/repos/` at all;
 the `docs_dir`-walking lesson still applies to anything non-content placed under `docs/`.)
 
 ## `plugins:` — a small native allowlist, not the mkdocs plugin ecosystem
@@ -71,7 +71,7 @@ Zensical ships a `DEFAULT_MARKDOWN_EXTENSIONS` dict with sensible defaults (`abb
 (`config.get("markdown_extensions", DEFAULT_MARKDOWN_EXTENSIONS)` — plain dict `.get`, not a
 merge). Since our `mkdocs.yml` declares the key explicitly, none of zensical's defaults apply for
 free; everything wanted has to be listed. As of 2026-08-08 our file's extension list has been
-brought in line with zensical's own default *values* where they overlap (`pymdownx.tabbed`
+brought in line with zensical's own default _values_ where they overlap (`pymdownx.tabbed`
 alternate style, `pymdownx.tasklist` custom checkbox, `pymdownx.highlight` anchor/line-span
 options, added `md_in_html` + `pymdownx.betterem`) — see git history on this file for the exact
 diff if checking whether a newer zensical version's defaults have changed further.
@@ -96,14 +96,14 @@ pymdownx.superfences:
   custom_fences:
     - name: mermaid
       class: mermaid
-      format: !!python/name:pymdownx.superfences.fence_div_format   # <div> — wrong for zensical
+      format: !!python/name:pymdownx.superfences.fence_div_format # <div> — wrong for zensical
 ```
 
 which zensical's native mount point never finds. **The build succeeds with zero warnings either
 way** — this fails completely silently. The only symptom is the diagram not rendering in a
 browser (or, worse, rendering because a leftover manual `extra_javascript: unpkg.com/mermaid/...`
 script happens to run mermaid's own legacy `startOnLoad` auto-scan — which is what was actually
-happening here before the fix, and which used mermaid's *default light theme*, clashing visibly
+happening here before the fix, and which used mermaid's _default light theme_, clashing visibly
 with our dark site palette). The correct config for zensical:
 
 ```yaml
@@ -111,7 +111,7 @@ pymdownx.superfences:
   custom_fences:
     - name: mermaid
       class: mermaid
-      format: !!python/name:pymdownx.superfences.fence_code_format   # <pre> — what zensical mounts
+      format: !!python/name:pymdownx.superfences.fence_code_format # <pre> — what zensical mounts
 ```
 
 This matches zensical's own `zensical new` bootstrap template. Verified end-to-end with headless
