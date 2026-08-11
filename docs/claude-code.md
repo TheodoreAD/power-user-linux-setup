@@ -49,6 +49,61 @@ The askpass script itself shows the caller's actual prompt (`$1` — sudo passes
 `[sudo] password for user:`, ssh passes `Enter passphrase for key '...':`) instead of a hardcoded
 string, so the dialog text is accurate regardless of which one triggered it.
 
+## direnv auto-activation in the Bash tool — `inv ai.claude-direnv-hook`
+
+A second consequence of the Bash tool's execution model (see "The core problem: no TTY" above),
+separate from the askpass issue: direnv (`[packages.direnv]`, e.g. a project's `.envrc` activating
+its Python `.venv`) doesn't auto-activate for Claude Code's Bash tool the way it does in a real
+terminal, even after `direnv allow`. Two things stack:
+
+1. Each Bash tool call runs as `zsh -c 'source <captured-shell-snapshot> && ... && eval "<cmd>"'`.
+   direnv's normal hook (`eval "$(direnv hook zsh)"` in `~/.zshrc`, from `[packages.direnv]`) fires
+   on `precmd` — a real interactive prompt cycle — which never happens in this non-interactive,
+   one-shot `zsh -c`. Writing the export to `~/.zshenv` instead doesn't help either: `.zshenv` _is_
+   sourced unconditionally, but the snapshot sourced right after it carries its own hardcoded
+   `export PATH=...` (captured from whatever shell state existed when the snapshot was taken),
+   which clobbers it before the real command runs.
+2. Separately, this environment can carry stale `DIRENV_DIR`/`DIRENV_WATCHES` inherited from before
+   `direnv allow` was ever run (e.g. baked into a GUI app's launch environment), which makes
+   `direnv export` silently no-op even when invoked correctly — `unset`ting those first forces a
+   correct recompute.
+
+The fix uses `CLAUDE_ENV_FILE` (a Claude Code environment variable naming a file it sources before
+each Bash command — its documented purpose is exactly this: persisting environment changes across
+tool calls) paired with a `PreToolUse` hook on the Bash tool that keeps that file fresh from
+`direnv export zsh` before every single call, so `cd`/`.envrc` changes are picked up too, not just
+whatever was true at session start.
+
+`inv ai.claude-direnv-hook [--dir PATH]` (`tasks/ai.py`) writes this into `<dir>/.claude/settings.json`:
+
+```json
+{
+  "env": { "CLAUDE_ENV_FILE": "~/.cache/claude-code/<sanitized-abs-path>-direnv-env" },
+  "hooks": {
+    "PreToolUse": [{
+      "matcher": "Bash",
+      "hooks": [{
+        "type": "command",
+        "command": "unset DIRENV_DIR DIRENV_WATCHES DIRENV_DIFF DIRENV_FILE; direnv export zsh > <that file> 2>/dev/null || true"
+      }]
+    }]
+  }
+}
+```
+
+The env-file path is derived the same way Claude Code's own auto-memory directory is
+(`~/.claude/projects/<sanitized-cwd>/memory/`) — the repo's absolute path with `/` → `-` — so two
+repos sharing a basename never collide. No-ops if `<dir>/.envrc` doesn't exist (nothing to
+activate), and merges into an existing `settings.json` (appending to a `Bash` `PreToolUse` group if
+one already exists, adding one if not) rather than overwriting, so hand-written hooks survive a
+re-run. `python.dev-venv` calls it for this repo's own `.venv` automatically; run it directly
+against any other project — `inv ai.claude-direnv-hook --dir ~/projects/foo` — to set the same
+thing up there.
+
+Caveat: `env` values in `settings.json` are only read at Claude Code process launch, unlike hooks,
+which are read fresh per call — so this needs a session restart (or VS Code window reload) to take
+effect after first being configured, even though the hook itself starts firing immediately.
+
 ## Installing the CLI
 
 `[packages.claude-code]` installs the `claude` binary itself via `inv tools.install`, using

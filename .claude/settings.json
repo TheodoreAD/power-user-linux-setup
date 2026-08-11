@@ -1,0 +1,18 @@
+{
+  "env": {
+    "CLAUDE_ENV_FILE": "/home/tdumitrescu/.cache/claude-code/home-tdumitrescu-projects-github.com-personal-power-user-linux-setup-direnv-env"
+  },
+  "hooks": {
+    "PreToolUse": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "unset DIRENV_DIR DIRENV_WATCHES DIRENV_DIFF DIRENV_FILE; direnv export zsh > /home/tdumitrescu/.cache/claude-code/home-tdumitrescu-projects-github.com-personal-power-user-linux-setup-direnv-env 2>/dev/null || true"
+          }
+        ]
+      }
+    ]
+  }
+}
