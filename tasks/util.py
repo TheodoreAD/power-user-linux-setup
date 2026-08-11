@@ -3,7 +3,7 @@ import shutil
 import subprocess
 import sys
 import tomllib
-from functools import lru_cache
+from functools import cache
 from pathlib import Path
 
 DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "yes")
@@ -95,17 +95,17 @@ def prompt_text(question: str, default: str | None = None) -> str | None:
 
 def _marker(name: str, open_: bool) -> str:
     tl, tr = ("╔", "╗") if open_ else ("╚", "╝")
-    label  = f" PULSE::{name} "
-    fill   = _PULSE_WIDTH - 2 - 2 - len(label)
-    left   = fill // 2
-    right  = fill - left
+    label = f" PULSE::{name} "
+    fill = _PULSE_WIDTH - 2 - 2 - len(label)
+    left = fill // 2
+    right = fill - left
     return f"# {tl}{'═' * left}{label}{'═' * right}{tr}"
 
 
 def ensure_block_text(text: str, name: str, content: str) -> tuple[str, str]:
     """Return (new_text, status) with a named PULSE block applied. Does not write."""
     start = _marker(name, open_=True)
-    end   = _marker(name, open_=False)
+    end = _marker(name, open_=False)
     block = f"{start}\n{content.strip()}\n{end}"
     if start in text:
         s = text.index(start)
@@ -125,17 +125,18 @@ def ensure_block(path: Path, name: str, content: str) -> str:
         path.write_text(new_text)
     return status
 
-_CONFIG_PATH   = Path(__file__).parent.parent / "setup.toml"
+
+_CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
 _IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_config() -> dict:
-    with open(_CONFIG_PATH, "rb") as f:
+    with _CONFIG_PATH.open("rb") as f:
         return tomllib.load(f)
 
 
-@lru_cache(maxsize=None)
+@cache
 def load_identity() -> dict:
     if not _IDENTITY_PATH.exists():
         raise FileNotFoundError(
@@ -143,7 +144,7 @@ def load_identity() -> dict:
             "Run `inv identity.init` (interactive wizard) or copy config/identity.toml.example "
             f"to {_IDENTITY_PATH} and fill in your details by hand."
         )
-    with open(_IDENTITY_PATH, "rb") as f:
+    with _IDENTITY_PATH.open("rb") as f:
         return tomllib.load(f)
 
 
@@ -157,7 +158,7 @@ def load_proxy_override() -> dict:
     """
     if not _IDENTITY_PATH.exists():
         return {}
-    with open(_IDENTITY_PATH, "rb") as f:
+    with _IDENTITY_PATH.open("rb") as f:
         return tomllib.load(f).get("proxy", {})
 
 
@@ -167,7 +168,7 @@ def load_certs_override() -> dict:
     """
     if not _IDENTITY_PATH.exists():
         return {}
-    with open(_IDENTITY_PATH, "rb") as f:
+    with _IDENTITY_PATH.open("rb") as f:
         return tomllib.load(f).get("certs", {})
 
 
@@ -183,9 +184,7 @@ def packages_by_method(method: str) -> dict:
     return {
         name: cfg
         for name, cfg in load_config()["packages"].items()
-        if cfg.get("method") == method
-        and cfg.get("enabled", True)
-        and not (excluded & set(cfg.get("tags", [])))
+        if cfg.get("method") == method and cfg.get("enabled", True) and not (excluded & set(cfg.get("tags", [])))
     }
 
 

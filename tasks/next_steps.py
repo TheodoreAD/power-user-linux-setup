@@ -43,12 +43,7 @@ def _ssh_config_applied(identity: dict) -> bool:
     blocks = []
     for h in identity.get("ssh_hosts", []):
         key = ssh._key_path(h["email"], node)
-        blocks.append(
-            f"Host {h['alias']}\n"
-            f"  HostName {h['hostname']}\n"
-            f"  IdentityFile {key}\n"
-            f"  User {h['user']}"
-        )
+        blocks.append(f"Host {h['alias']}\n  HostName {h['hostname']}\n  IdentityFile {key}\n  User {h['user']}")
     blocks.append(ssh._HOST_STAR)
     content = "\n\n".join(blocks)
     text = ssh._SSH_CONFIG.read_text()

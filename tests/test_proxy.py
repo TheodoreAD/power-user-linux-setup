@@ -1,25 +1,22 @@
 """Unit tests for tasks/proxy.py's pure parsing helpers — the only part of that module that
 doesn't shell out or touch the filesystem/keyring. See tests/README.md.
 """
+
 from tasks.proxy import _parse_env_proxy, _parse_etc_environment, _parse_proxy_authenticate, _split_host_port
 
 
 def test_parse_proxy_authenticate_single_scheme():
-    raw = "< HTTP/1.1 407 Proxy Authentication Required\n< Proxy-Authenticate: Basic realm=\"proxy\"\n"
+    raw = '< HTTP/1.1 407 Proxy Authentication Required\n< Proxy-Authenticate: Basic realm="proxy"\n'
     assert _parse_proxy_authenticate(raw) == ["Basic"]
 
 
 def test_parse_proxy_authenticate_repeated_headers():
-    raw = (
-        "< Proxy-Authenticate: Negotiate\n"
-        "< Proxy-Authenticate: NTLM\n"
-        "< Proxy-Authenticate: Basic realm=\"proxy\"\n"
-    )
+    raw = '< Proxy-Authenticate: Negotiate\n< Proxy-Authenticate: NTLM\n< Proxy-Authenticate: Basic realm="proxy"\n'
     assert _parse_proxy_authenticate(raw) == ["Negotiate", "NTLM", "Basic"]
 
 
 def test_parse_proxy_authenticate_comma_joined():
-    raw = "< Proxy-Authenticate: Negotiate, NTLM, Basic realm=\"proxy\"\n"
+    raw = '< Proxy-Authenticate: Negotiate, NTLM, Basic realm="proxy"\n'
     assert _parse_proxy_authenticate(raw) == ["Negotiate", "NTLM", "Basic"]
 
 

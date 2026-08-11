@@ -1,6 +1,7 @@
 """Unit tests for tasks/certs.py's pure helpers — the only part of that module that doesn't shell
 out to openssl/keytool or touch the filesystem/trust store. See tests/README.md.
 """
+
 from tasks.certs import _split_pem_certs
 
 _CERT_A = "-----BEGIN CERTIFICATE-----\nAAAA\nAAAA\n-----END CERTIFICATE-----"

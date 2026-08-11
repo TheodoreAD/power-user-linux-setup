@@ -1,6 +1,29 @@
 from invoke import Collection
 
-from . import ai, allowlist, apt, certs, docker, docs, fonts, git, gnome, ide, identity, node, proxy, python, screenshot, setup, ssh, system, tools, wsl, zsh
+from . import (
+    ai,
+    allowlist,
+    apt,
+    certs,
+    docker,
+    docs,
+    fonts,
+    git,
+    gnome,
+    ide,
+    identity,
+    node,
+    proxy,
+    python,
+    quality,
+    screenshot,
+    setup,
+    ssh,
+    system,
+    tools,
+    wsl,
+    zsh,
+)
 
 namespace = Collection(
     setup.setup,
@@ -17,6 +40,7 @@ namespace = Collection(
     Collection.from_module(ide),
     Collection.from_module(proxy),
     Collection.from_module(python),
+    Collection.from_module(quality),
     Collection.from_module(screenshot),
     Collection.from_module(ssh),
     Collection.from_module(system),

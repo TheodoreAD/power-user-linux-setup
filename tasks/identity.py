@@ -5,7 +5,7 @@ from invoke import task
 from . import ui, util
 
 _IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
-_EXAMPLE_PATH  = Path(__file__).parent.parent / "config" / "identity.toml.example"
+_EXAMPLE_PATH = Path(__file__).parent.parent / "config" / "identity.toml.example"
 
 # label -> real hostname; simple mode uses the hostname itself as the ssh_hosts alias since
 # there's only ever one account per host in this mode (no need to disambiguate with a custom
@@ -63,8 +63,7 @@ def init(c):
     ui.block(
         "Simple: one name/email, one ~/projects/<dir>/ directory. Quick, and easy to expand "
         "into more directories/hosts later by hand.",
-        "Advanced: hand-edit identity.toml yourself for multiple directories, accounts, or "
-        "server hosts right away.",
+        "Advanced: hand-edit identity.toml yourself for multiple directories, accounts, or server hosts right away.",
         label="identity setup",
     )
     if not ui.ask("Use the simple single-identity setup?", default=True):
@@ -72,13 +71,12 @@ def init(c):
         print("[identity] then edit it by hand — see docs/git.md and docs/ssh.md.")
         return
 
-    if _IDENTITY_PATH.exists():
-        if not ui.ask(f"{_IDENTITY_PATH} already exists — overwrite it?", default=False):
-            print("[identity] left existing file untouched.")
-            return
+    if _IDENTITY_PATH.exists() and not ui.ask(f"{_IDENTITY_PATH} already exists — overwrite it?", default=False):
+        print("[identity] left existing file untouched.")
+        return
 
-    name      = util.prompt_text("Full name (for git commits)")
-    email     = util.prompt_text("Email address")
+    name = util.prompt_text("Full name (for git commits)")
+    email = util.prompt_text("Email address")
     directory = util.prompt_text("Projects subdirectory name (~/projects/<this>/)", default="default")
 
     hosts = [label for label in _HOSTS if ui.ask(f"Set up SSH/git for {label}?", default=label == "GitHub")]

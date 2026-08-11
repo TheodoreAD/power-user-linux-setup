@@ -58,6 +58,7 @@ def _bindings() -> list[dict]:
 # ini file surgery (flameshot.ini uses Qt's QSettings ini format, not stdlib configparser-safe)
 # ---------------------------------------------------------------------------
 
+
 def _set_ini_key(path: Path, key: str, value: str) -> bool:
     """Idempotently set `key=value` under [General] in a Qt-style ini file. Returns True if changed."""
     text = path.read_text() if path.exists() else ""
@@ -88,6 +89,7 @@ def _read_ini_key(path: Path, key: str) -> str | None:
 # gsettings custom-keybindings list (shared across all GNOME custom shortcuts, not just ours)
 # ---------------------------------------------------------------------------
 
+
 def _get_custom_keybindings(c) -> list[str]:
     result = c.run(f"gsettings get {_MEDIA_KEYS_SCHEMA} custom-keybindings", hide=True, warn=True)
     stdout = (result.stdout or "").strip()
@@ -98,7 +100,7 @@ def _get_custom_keybindings(c) -> list[str]:
 
 def _set_custom_keybindings(c, paths: list[str]) -> None:
     literal = "[" + ", ".join(f"'{p}'" for p in paths) + "]" if paths else "@as []"
-    c.run(f"gsettings set {_MEDIA_KEYS_SCHEMA} custom-keybindings \"{literal}\"", hide=True)
+    c.run(f'gsettings set {_MEDIA_KEYS_SCHEMA} custom-keybindings "{literal}"', hide=True)
 
 
 def _slot_name(c, path: str) -> str:
@@ -117,6 +119,7 @@ def _next_free_index(paths: list[str]) -> int:
 # ---------------------------------------------------------------------------
 # tasks
 # ---------------------------------------------------------------------------
+
 
 @task
 def enable(c):
@@ -192,7 +195,11 @@ def disable(c):
         paths = _get_custom_keybindings(c)
         names = {b["name"] for b in _bindings()}
         bound = [p for p in paths if _slot_name(c, p) in names]
-        print(f"[screenshot] would remove {len(bound)} custom keybinding(s)" if bound else "[screenshot] no custom keybindings to remove")
+        print(
+            f"[screenshot] would remove {len(bound)} custom keybinding(s)"
+            if bound
+            else "[screenshot] no custom keybindings to remove"
+        )
         for key in _MANAGED_SHELL_KEYS:
             print(f"[screenshot] would reset GNOME default: {key}")
         return

@@ -1,6 +1,7 @@
 """Unit tests for tasks/wsl.py's _dns_query_packet — the only part of its DNS-reachability probe
 that doesn't open a real socket. See tests/README.md.
 """
+
 import struct
 
 from tasks.wsl import _dns_query_packet

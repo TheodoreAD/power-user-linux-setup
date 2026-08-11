@@ -30,11 +30,14 @@ def _install_script(c, name: str, cfg: dict) -> None:
     env = {k: _expand(v) for k, v in cfg.get("env", {}).items()}
     shell = cfg.get("shell", "sh")
     print(f"[{name}] installing...")
-    c.run(f'curl -fsSL {cfg["script_url"]} | {shell}', env=env)
+    c.run(f"curl -fsSL {cfg['script_url']} | {shell}", env=env)
 
-    if not cfg.get("single_binary") and (src := cfg.get("symlink_from")):
-        if util.ensure_symlink_path(src, cfg.get("check_cmd", name)):
-            print(f"[{name}] symlink created in ~/.local/bin")
+    if (
+        not cfg.get("single_binary")
+        and (src := cfg.get("symlink_from"))
+        and util.ensure_symlink_path(src, cfg.get("check_cmd", name))
+    ):
+        print(f"[{name}] symlink created in ~/.local/bin")
 
     if post_install := cfg.get("post_install"):
         c.run(post_install, env=env)
@@ -53,7 +56,7 @@ def _install_binary(c, name: str, cfg: dict) -> None:
     dest = Path.home() / ".local" / "bin" / check_cmd
     dest.parent.mkdir(parents=True, exist_ok=True)
     print(f"[{name}] installing...")
-    c.run(f'curl -fsSL {cfg["url"]} -o {dest}')
+    c.run(f"curl -fsSL {cfg['url']} -o {dest}")
     c.run(f"chmod +x {dest}")
     print(f"[{name}] installed")
 
@@ -69,7 +72,7 @@ def _install_git_clone(c, name: str, cfg: dict) -> None:
     depth = cfg.get("depth")
     depth_flag = f"--depth={depth} " if depth else ""
     print(f"[{name}] installing...")
-    c.run(f'git clone {depth_flag}{cfg["repo"]} {dest}')
+    c.run(f"git clone {depth_flag}{cfg['repo']} {dest}")
     print(f"[{name}] installed")
 
 
@@ -122,7 +125,7 @@ def _install_archive(c, name: str, cfg: dict) -> None:
         if version_cmd := cfg.get("version_cmd"):
             version = c.run(version_cmd, hide=True).stdout.strip()
         else:
-            version = c.run(f'curl -fsSL {cfg["version_url"]} | head -1', hide=True).stdout.strip()
+            version = c.run(f"curl -fsSL {cfg['version_url']} | head -1", hide=True).stdout.strip()
         url = url.format(version=version)
 
     print(f"[{name}] installing...")
@@ -134,7 +137,10 @@ def _install_archive(c, name: str, cfg: dict) -> None:
             c.run(f'curl -fsSL "{url}" | tar -zx -C {dest.parent} {bin_pick}')
         else:
             strip = cfg.get("strip_components", 1)
-            c.run(f'curl -fsSL "{url}" | tar -zx --strip-components={strip} -C {dest.parent} --wildcards --wildcards-match-slash "*/{bin_pick}"')
+            c.run(
+                f'curl -fsSL "{url}" | tar -zx --strip-components={strip} -C {dest.parent} '
+                f'--wildcards --wildcards-match-slash "*/{bin_pick}"'
+            )
         c.run(f"chmod +x {dest}")
     else:
         install_dir = Path(cfg["install_dir"]).expanduser()
@@ -150,9 +156,7 @@ def _install_archive(c, name: str, cfg: dict) -> None:
             c.run(f'curl -fsSL "{url}" | tar -zx --directory {extract_to}')
 
     for lnk in cfg.get("symlinks", []):
-        if util.ensure_symlink_path(
-            Path(cfg["install_dir"]).expanduser() / lnk["src"], lnk["dst"]
-        ):
+        if util.ensure_symlink_path(Path(cfg["install_dir"]).expanduser() / lnk["src"], lnk["dst"]):
             print(f"[{name}] symlink: ~/.local/bin/{lnk['dst']}")
 
     print(f"[{name}] installed")

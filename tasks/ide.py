@@ -3,7 +3,7 @@ from pathlib import Path
 from invoke import task
 
 _CONFIG_FILES = [
-    ("config/pycharm/editor-font.xml",   "options/editor-font.xml"),
+    ("config/pycharm/editor-font.xml", "options/editor-font.xml"),
     ("config/pycharm/terminal-font.xml", "options/terminal-font.xml"),
 ]
 

@@ -40,16 +40,16 @@ def omz_configure(c):
     theme = cfg.get("theme", "powerlevel10k/powerlevel10k")
 
     if util.DRY_RUN:
-        m = re.search(r'^ZSH_THEME=(.*)$', text, flags=re.MULTILINE)
+        m = re.search(r"^ZSH_THEME=(.*)$", text, flags=re.MULTILINE)
         current_theme = m.group(1).strip('"') if m else None
         theme_ok = current_theme == theme
-        plugins_present = bool(re.search(r'^plugins=\(', text, flags=re.MULTILINE))
+        plugins_present = bool(re.search(r"^plugins=\(", text, flags=re.MULTILINE))
         print(f"[oh-my-zsh] theme: {'ok' if theme_ok else f'MISSING  (current: {current_theme!r})'}")
         print(f"[oh-my-zsh] plugins block: {'ok' if plugins_present else 'MISSING'}")
         return
 
     changed = False
-    new_text = re.sub(r'^ZSH_THEME=.*$', f'ZSH_THEME="{theme}"', text, flags=re.MULTILINE)
+    new_text = re.sub(r"^ZSH_THEME=.*$", f'ZSH_THEME="{theme}"', text, flags=re.MULTILINE)
     if new_text != text:
         text = new_text
         changed = True
@@ -135,7 +135,7 @@ def set_default_shell(c):
 def history_fix(c):
     """Recover a corrupt ~/.zsh_history using strings(1) to strip non-printable bytes."""
     hist = Path.home() / ".zsh_history"
-    bad  = Path.home() / ".zsh_history_bad"
+    bad = Path.home() / ".zsh_history_bad"
     if not hist.exists():
         print("[zsh-history] ~/.zsh_history not found — nothing to fix")
         return
@@ -146,7 +146,7 @@ def history_fix(c):
     c.run(f"strings {bad} > {hist}")
     c.run(f"fc -R {hist}", warn=True)
     bad.unlink()
-    print(f"[zsh-history] recovered — corrupt backup removed")
+    print("[zsh-history] recovered — corrupt backup removed")
 
 
 @task

@@ -59,7 +59,7 @@ def extensions(c):
         if _user_extensions_disabled(c):
             print("[gnome-extensions] WARNING: disable-user-extensions = true — all user extensions suppressed")
         installed = _installed_uuids(c)
-        enabled   = _enabled_uuids(c)
+        enabled = _enabled_uuids(c)
         for name, cfg in pkgs.items():
             uuid = cfg.get("uuid", "")
             if not uuid:
@@ -90,7 +90,7 @@ def extensions(c):
         c.run("gsettings set org.gnome.shell disable-user-extensions false", warn=True)
 
     installed = _installed_uuids(c)
-    enabled   = _enabled_uuids(c)
+    enabled = _enabled_uuids(c)
 
     for name, cfg in pkgs.items():
         uuid = cfg.get("uuid") or str(cfg.get("ego_id", ""))
@@ -142,7 +142,7 @@ def enable(c):
             c.run("gsettings set org.gnome.shell disable-user-extensions false", warn=True)
 
     installed = _installed_uuids(c)
-    enabled   = _enabled_uuids(c)
+    enabled = _enabled_uuids(c)
 
     for name, cfg in pkgs.items():
         uuid = cfg.get("uuid", "")
@@ -210,9 +210,7 @@ def status(c):
 
     active = _enabled_uuids(c)
     all_configs = {
-        name: cfg
-        for name, cfg in util.load_config()["packages"].items()
-        if cfg.get("method") == "gnome-extension"
+        name: cfg for name, cfg in util.load_config()["packages"].items() if cfg.get("method") == "gnome-extension"
     }
 
     print("\nPULSE extensions (all declared):")
@@ -236,9 +234,7 @@ def status(c):
         marker = "[ ]" if not want else "[x]"
         print(f"  {marker} {name}: {state}")
 
-    conflicts_active = [
-        uuid for uuids in CONFLICTS.values() for uuid in uuids if uuid in active
-    ]
+    conflicts_active = [uuid for uuids in CONFLICTS.values() for uuid in uuids if uuid in active]
     if conflicts_active:
         print(f"\nActive conflicts: {', '.join(conflicts_active)}")
         print("  → run inv gnome.extensions to resolve")
@@ -247,11 +243,7 @@ def status(c):
 @task
 def clean(c):
     """Remove user extensions not enabled in setup.toml (system/apt extensions are untouched)."""
-    keep = {
-        cfg["uuid"]
-        for _, cfg in util.packages_by_method("gnome-extension").items()
-        if cfg.get("uuid")
-    }
+    keep = {cfg["uuid"] for _, cfg in util.packages_by_method("gnome-extension").items() if cfg.get("uuid")}
 
     if not _USER_EXT_DIR.exists():
         print("[gnome-clean] ~/.local/share/gnome-shell/extensions not found — nothing to do")

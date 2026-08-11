@@ -6,8 +6,8 @@ from invoke import task
 
 from . import util
 
-_SYSCTL_CONF      = Path("/etc/sysctl.conf")
-_APPARMOR_DIR     = Path("/etc/apparmor.d")
+_SYSCTL_CONF = Path("/etc/sysctl.conf")
+_APPARMOR_DIR = Path("/etc/apparmor.d")
 _INITRAMFS_CONF = Path("/etc/initramfs-tools/initramfs.conf")
 _JOURNALD_CONF_DIR = Path("/etc/systemd/journald.conf.d")
 _JOURNALD_SIZE_CONF = _JOURNALD_CONF_DIR / "size.conf"

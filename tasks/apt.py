@@ -6,10 +6,12 @@ from invoke import task
 from . import util
 
 # Ubuntu system keys that legitimately live in trusted.gpg.d — everything else is old-style.
-_SYSTEM_TRUSTED_D = frozenset({
-    "ubuntu-keyring-2012-cdimage.gpg",
-    "ubuntu-keyring-2018-archive.gpg",
-})
+_SYSTEM_TRUSTED_D = frozenset(
+    {
+        "ubuntu-keyring-2012-cdimage.gpg",
+        "ubuntu-keyring-2018-archive.gpg",
+    }
+)
 
 _KEYRINGS_DIRS = [Path("/etc/apt/keyrings"), Path("/usr/share/keyrings")]
 
@@ -21,12 +23,16 @@ _APT_CONF_CONTENT = 'DPkg::Progress-Fancy "false";\n'
 # apt configuration
 # ---------------------------------------------------------------------------
 
+
 @task
 def configure(c):
     """Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars."""
     util.require_apt()
     if util.DRY_RUN:
-        ok = _APT_CONF.exists() and c.run(f"{util.SUDO} cat {_APT_CONF}", hide=True, warn=True).stdout == _APT_CONF_CONTENT
+        ok = (
+            _APT_CONF.exists()
+            and c.run(f"{util.SUDO} cat {_APT_CONF}", hide=True, warn=True).stdout == _APT_CONF_CONTENT
+        )
         print(f"[apt.configure] {'ok' if ok else 'MISSING'}")
         return
     current = c.run(f"{util.SUDO} cat {_APT_CONF}", hide=True, warn=True).stdout if _APT_CONF.exists() else ""
@@ -44,6 +50,7 @@ def configure(c):
 # ---------------------------------------------------------------------------
 # apt (base packages)
 # ---------------------------------------------------------------------------
+
 
 def _install_apt(c, name: str, cfg: dict) -> None:
     packages = util.apt_packages(name, cfg)
@@ -72,11 +79,7 @@ def base(c):
         for name, cfg in pkgs.items():
             _install_apt(c, name, cfg)
         return
-    needs_update = any(
-        not util.apt_installed(p)
-        for name, cfg in pkgs.items()
-        for p in util.apt_packages(name, cfg)
-    )
+    needs_update = any(not util.apt_installed(p) for name, cfg in pkgs.items() for p in util.apt_packages(name, cfg))
     if needs_update:
         c.run(f"{util.SUDO} apt update")
     for name, cfg in pkgs.items():
@@ -87,6 +90,7 @@ def base(c):
 # apt-repo (external repos)
 # ---------------------------------------------------------------------------
 
+
 def _register_repo(c, name: str, cfg: dict, codename: str) -> bool:
     """Write GPG key and sources entry. Returns True if apt update is needed."""
     gpg = Path(cfg["gpg_path"])
@@ -95,7 +99,7 @@ def _register_repo(c, name: str, cfg: dict, codename: str) -> bool:
 
     if not gpg.exists():
         result = c.run(
-            f'curl -fsSL {cfg["gpg_url"]} | {util.SUDO} gpg --dearmor -o {gpg}',
+            f"curl -fsSL {cfg['gpg_url']} | {util.SUDO} gpg --dearmor -o {gpg}",
             warn=True,
         )
         if not result.ok:
@@ -175,6 +179,7 @@ def repos(c):
 # Config file deployment (shared across methods)
 # ---------------------------------------------------------------------------
 
+
 def _apply_config_files(name: str, cfg: dict) -> None:
     """Copy config_files entries to their destinations, skipping any that already exist."""
     for mapping in cfg.get("config_files", []):
@@ -190,13 +195,14 @@ def _apply_config_files(name: str, cfg: dict) -> None:
 # deb-github / deb-url
 # ---------------------------------------------------------------------------
 
+
 def _resolve_version(c, name: str, cfg: dict) -> str | None:
     """Return the version/tag string for a deb-github package, or None on failure."""
     if "tag" in cfg:
         return cfg["tag"]
     result = c.run(
-        f'curl -fsSL https://api.github.com/repos/{cfg["repo"]}/releases/latest'
-        ' | grep \'"tag_name"\''
+        f"curl -fsSL https://api.github.com/repos/{cfg['repo']}/releases/latest"
+        " | grep '\"tag_name\"'"
         ' | sed -E \'s/.*"v?([^"]+)".*/\\1/\'',
         hide=True,
         warn=True,
@@ -218,7 +224,7 @@ def _dpkg_install(c, name: str, cfg: dict, version: str) -> bool:
     asset = cfg["asset"].format(version=version)
     downloaded = f"/tmp/{asset}"
     result = c.run(
-        f'curl -fsSL https://github.com/{cfg["repo"]}/releases/download/{tag_prefix}{version}/{asset} -o {downloaded}',
+        f"curl -fsSL https://github.com/{cfg['repo']}/releases/download/{tag_prefix}{version}/{asset} -o {downloaded}",
         warn=True,
     )
     if not result.ok:
@@ -376,7 +382,7 @@ def refresh_keys(c):
     """Re-download GPG keys for all enabled apt-repo sources."""
     for name, cfg in util.packages_by_method("apt-repo").items():
         gpg = Path(cfg["gpg_path"])
-        c.run(f'curl -fsSL {cfg["gpg_url"]} | {util.SUDO} gpg --dearmor -o {gpg}')
+        c.run(f"curl -fsSL {cfg['gpg_url']} | {util.SUDO} gpg --dearmor -o {gpg}")
         print(f"[{name}] key refreshed → {gpg}")
 
 
@@ -394,9 +400,10 @@ def audit_keys(c):
     if trusted.exists() and trusted.stat().st_size > 0:
         result = c.run(
             f"gpg --no-default-keyring --keyring {trusted} --list-keys 2>/dev/null",
-            hide=True, warn=True,
+            hide=True,
+            warn=True,
         )
-        count = len([l for l in result.stdout.splitlines() if l.startswith("pub ")])
+        count = len([line for line in result.stdout.splitlines() if line.startswith("pub ")])
         clean = False
         if util.DRY_RUN:
             print(f"[apt/keys] trusted.gpg: {count} key(s) present — should be empty (trusts all repos)")

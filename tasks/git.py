@@ -8,16 +8,16 @@ from . import util
 _PROJECTS_ROOT = Path.home() / "projects"
 
 _SETTINGS = {
-    "core.autocrlf":        "input",
-    "core.fileMode":        "true",
-    "core.ignorecase":      "false",
-    "core.preloadindex":    "true",
-    "core.editor":          "code --wait",
-    "push.default":         "current",
+    "core.autocrlf": "input",
+    "core.fileMode": "true",
+    "core.ignorecase": "false",
+    "core.preloadindex": "true",
+    "core.editor": "code --wait",
+    "push.default": "current",
     "push.autoSetupRemote": "true",
-    "pull.rebase":          "false",
-    "rebase.autoStash":     "true",
-    "log.decorate":         "auto",
+    "pull.rebase": "false",
+    "rebase.autoStash": "true",
+    "log.decorate": "auto",
 }
 
 
@@ -28,7 +28,8 @@ def settings(c):
         for key, want in _SETTINGS.items():
             result = subprocess.run(
                 ["git", "config", "--global", key],
-                capture_output=True, text=True,
+                capture_output=True,
+                text=True,
             )
             current = result.stdout.strip()
             status = "ok" if current == want else f"WRONG (current: {current!r})"

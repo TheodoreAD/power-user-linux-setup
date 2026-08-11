@@ -5,7 +5,7 @@ from invoke import task
 
 from . import util
 
-_SSH_DIR    = Path.home() / ".ssh"
+_SSH_DIR = Path.home() / ".ssh"
 _SSH_CONFIG = _SSH_DIR / "config"
 
 _HOST_STAR = """\
@@ -30,13 +30,13 @@ def _key_path(email: str, node: str) -> Path:
 def keys(c):
     """Create ed25519 SSH keys for each unique email in identity.toml (skips existing)."""
     identity = util.load_identity()
-    hosts    = identity.get("ssh_hosts", [])
-    emails   = sorted({h["email"] for h in hosts})
-    node     = _node()
+    hosts = identity.get("ssh_hosts", [])
+    emails = sorted({h["email"] for h in hosts})
+    node = _node()
 
     if util.DRY_RUN:
         for email in emails:
-            key    = _key_path(email, node)
+            key = _key_path(email, node)
             status = "ok" if key.exists() else "MISSING"
             print(f"[ssh] key {key.name}: {status}")
         return
@@ -55,8 +55,8 @@ def keys(c):
 def configure(c):
     """Write ~/.ssh/config from identity.toml (idempotent PULSE block)."""
     identity = util.load_identity()
-    hosts    = identity.get("ssh_hosts", [])
-    node     = _node()
+    hosts = identity.get("ssh_hosts", [])
+    node = _node()
 
     if util.DRY_RUN:
         for h in hosts:
@@ -69,12 +69,7 @@ def configure(c):
     blocks = []
     for h in hosts:
         key = _key_path(h["email"], node)
-        blocks.append(
-            f"Host {h['alias']}\n"
-            f"  HostName {h['hostname']}\n"
-            f"  IdentityFile {key}\n"
-            f"  User {h['user']}"
-        )
+        blocks.append(f"Host {h['alias']}\n  HostName {h['hostname']}\n  IdentityFile {key}\n  User {h['user']}")
     blocks.append(_HOST_STAR)
 
     status = util.ensure_block(_SSH_CONFIG, "ssh", "\n\n".join(blocks))
@@ -85,9 +80,9 @@ def configure(c):
 @task
 def forward(c):
     """Copy public keys to remote (non-git) server hosts from identity.toml."""
-    identity     = util.load_identity()
+    identity = util.load_identity()
     server_hosts = [h for h in identity.get("ssh_hosts", []) if h["user"] != "git"]
-    node         = _node()
+    node = _node()
 
     if not server_hosts:
         print("[ssh] no server hosts to forward keys to")
@@ -104,6 +99,6 @@ def forward(c):
 @task
 def add(c):
     """Add all SSH keys for this node to ssh-agent."""
-    node    = _node()
+    node = _node()
     pattern = str(_SSH_DIR / f"*{node}_ed25519")
     c.run(f"ssh-add {pattern}", warn=True)

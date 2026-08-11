@@ -5,10 +5,41 @@ from invoke import task
 
 from . import util
 
-_SETUP_TOML = Path(__file__).parent.parent / "setup.toml"
+_REPO_ROOT = Path(__file__).parent.parent
+_SETUP_TOML = _REPO_ROOT / "setup.toml"
 _DEFAULT_RE = re.compile(r'(?m)^(\s*uv_python_default\s*=\s*)"[^"]*"')
-_EXTRA_RE   = re.compile(r'(?m)^(\s*uv_python_extra\s*=\s*)\[[^\]]*\]')
-_UV_ENV_RE  = re.compile(r'(UV_PYTHON=")[^"]*(")')
+_EXTRA_RE = re.compile(r"(?m)^(\s*uv_python_extra\s*=\s*)\[[^\]]*\]")
+_UV_ENV_RE = re.compile(r'(UV_PYTHON=")[^"]*(")')
+
+_DPRINT_JSON = _REPO_ROOT / "dprint.json"
+# keep in sync with setup.toml's [packages.dprint].plugins
+_DPRINT_PLUGINS = ["json", "toml", "markdown", "g-plane/pretty_yaml", "dockerfile"]
+_DPRINT_SKELETON = """{
+  "$schema": "https://dprint.dev/schemas/v0.json",
+  "lineWidth": 120,
+  "markdown": {
+    "textWrap": "maintain"
+  },
+  "excludes": [
+    "cli-allowlist/help-cache", ".vscode", "uv.lock"
+  ],
+  "plugins": []
+}
+"""
+
+
+def _ensure_dprint_config(c, force):
+    if _DPRINT_JSON.exists() and not force:
+        print("[python] dprint.json: ok")
+        return
+    if not util.command_exists("dprint"):
+        print("[python] dprint not found — skipping dprint.json (see [packages.dprint] in setup.toml)")
+        return
+    _DPRINT_JSON.write_text(_DPRINT_SKELETON)
+    # dprint's own non-interactive `config add` pins each plugin to its latest real URL,
+    # unlike the interactive `dprint init` prompt.
+    c.run(f"dprint config add {' '.join(_DPRINT_PLUGINS)}")
+    print(f"[python] dprint.json {'recreated' if force else 'created'}: {', '.join(_DPRINT_PLUGINS)}")
 
 
 @task
@@ -34,16 +65,18 @@ def tools(c):
         print(f"[{name}] ok")
 
 
-@task
-def dev_venv(c):
+@task(help={"force": "Recreate dprint.json even if it already exists, re-pinning plugin versions"})
+def dev_venv(c, force=False):
     """Set up this repo's own dev/test venv (uv sync) and let direnv auto-activate it.
 
     Run once after cloning — see tests/README.md. Creates .venv/ from pyproject.toml's dev
-    dependency group (pytest, invoke), then runs `direnv allow` so the .envrc in this repo's root
-    auto-exports VIRTUAL_ENV/PATH whenever direnv's shell hook fires (interactive shells and
+    dependency group (pytest, invoke, ruff), then runs `direnv allow` so the .envrc in this repo's
+    root auto-exports VIRTUAL_ENV/PATH whenever direnv's shell hook fires (interactive shells and
     IDEs — see [packages.direnv] in setup.toml). direnv's hook only fires on an interactive
     prompt cycle or an actual `cd`, so it does not activate for one-shot non-interactive shells
     (e.g. Claude Code's Bash tool) — those still need `source .venv/bin/activate` explicitly.
+
+    Also idempotently creates dprint.json (skipped if it already exists, unless --force).
     """
     if not util.command_exists("uv"):
         raise RuntimeError("uv not found — run ./bootstrap.sh first")
@@ -52,15 +85,19 @@ def dev_venv(c):
         venv_ok = (_SETUP_TOML.parent / ".venv").exists()
         print(f"[python] .venv: {'ok' if venv_ok else 'MISSING'}")
         print(f"[python] direnv: {'ok' if direnv_ok else 'MISSING'}")
+        print(f"[python] dprint.json: {'ok' if _DPRINT_JSON.exists() else 'MISSING'}")
         return
     c.run("uv sync")
+    _ensure_dprint_config(c, force)
     if direnv_ok:
         c.run("direnv allow")
         print("[python] .venv ready — direnv will auto-activate it in interactive shells")
     else:
-        print("[python] .venv ready — direnv not found, so no shell auto-activation; "
-              "install it (see [packages.direnv] in setup.toml) or `source .venv/bin/activate` "
-              "manually")
+        print(
+            "[python] .venv ready — direnv not found, so no shell auto-activation; "
+            "install it (see [packages.direnv] in setup.toml) or `source .venv/bin/activate` "
+            "manually"
+        )
 
 
 @task(help={"version": "Python version to make the new default, e.g. 3.14"})
@@ -98,10 +135,10 @@ def set_default(c, version):
     if not _DEFAULT_RE.search(text):
         raise RuntimeError("uv_python_default not found in setup.toml")
     text = _DEFAULT_RE.sub(rf'\1"{version}"', text, count=1)
-    text = _EXTRA_RE.sub(rf'\g<1>{extras_literal}', text, count=1)
-    text = _UV_ENV_RE.sub(rf'\g<1>{version}\g<2>', text, count=1)
+    text = _EXTRA_RE.sub(rf"\g<1>{extras_literal}", text, count=1)
+    text = _UV_ENV_RE.sub(rf"\g<1>{version}\g<2>", text, count=1)
     _SETUP_TOML.write_text(text)
-    print(f"[python] setup.toml: uv_python_default = \"{version}\", uv_python_extra = {extras_literal}")
+    print(f'[python] setup.toml: uv_python_default = "{version}", uv_python_extra = {extras_literal}')
 
     c.run(f"uv python install {version}")
     if settings.get("uv_python_set_default", True):
