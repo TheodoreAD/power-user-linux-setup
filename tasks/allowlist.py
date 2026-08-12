@@ -32,11 +32,36 @@ import tempfile
 import textwrap
 import tomllib
 from datetime import UTC, datetime
+from enum import StrEnum
 from pathlib import Path
 
 from invoke import task
 
 from . import util
+
+
+class Classification(StrEnum):
+    """A node's (or flag's) risk tier — see _RUBRIC for what each one means. Matches the
+    "classification" enum values in _SCHEMA/_RECONFIRM_SCHEMA and the values stored in
+    cli-allowlist/rules/*.json. needs_review and invalid aren't tiers the LLM assigns directly
+    (read_only/write/dangerous/invalid are) — needs_review is applied locally by the
+    dangerous-verb backstop."""
+
+    READ_ONLY = "read_only"
+    WRITE = "write"
+    DANGEROUS = "dangerous"
+    NEEDS_REVIEW = "needs_review"
+    INVALID = "invalid"
+
+
+class Source(StrEnum):
+    """Where a node's classification came from — stored alongside it in cli-allowlist/rules/*.json."""
+
+    COMMUNITY = "community"
+    HEURISTIC = "heuristic"
+    LLM = "llm"
+    LLM_RECONFIRMED = "llm-reconfirmed"
+
 
 _ROOT = Path(__file__).parent.parent / "cli-allowlist"
 _TOOLS_TOML = _ROOT / "tools.toml"
@@ -284,11 +309,11 @@ _ANSI = {
 # verb backstop; invalid = not a real command) so they get their own non-risk colors instead of
 # implying a place on the read_only-write-dangerous scale.
 _CLASS_COLOR = {
-    "read_only": "green",
-    "write": "yellow",
-    "dangerous": "red",
-    "needs_review": "magenta",
-    "invalid": "gray",
+    Classification.READ_ONLY: "green",
+    Classification.WRITE: "yellow",
+    Classification.DANGEROUS: "red",
+    Classification.NEEDS_REVIEW: "magenta",
+    Classification.INVALID: "gray",
 }
 
 
@@ -685,7 +710,7 @@ def extract(c, tool=None, force=False):
         truncated = False
         if cfg.get("no_subcommands"):
             nodes = {
-                "*": {
+                _NO_SUBCOMMANDS_KEY: {
                     "help_text": top_help,
                     "content_hash": _hash_text(top_help),
                     "children": [],
@@ -694,7 +719,7 @@ def extract(c, tool=None, force=False):
             }
         else:
             nodes = {
-                "_top": {
+                _TOP_HELP_KEY: {
                     "help_text": top_help,
                     "content_hash": _hash_text(top_help),
                     "children": [],
@@ -718,18 +743,20 @@ def extract(c, tool=None, force=False):
                 "truncated": truncated,
             },
         )
-        classifiable = len([k for k in nodes if k != "_top"])
+        classifiable = len([k for k in nodes if k != _TOP_HELP_KEY])
         note = (
             " [truncated at max_nodes — increase tools.toml's max_nodes for this tool if needed]" if truncated else ""
         )
         print(f"[allowlist] {name}: extracted ({version or 'unknown version'}, {classifiable} node(s)){note}")
 
 
+_NO_SUBCOMMANDS_KEY = "*"  # nodes dict key for a flat, no-subcommand-tree tool's single verdict
+_TOP_HELP_KEY = "_top"  # nodes dict key for the tool's own top-level --help text (not classifiable)
 _FLAT_KEY = "_default_"
 
 
 def _build_prompt(tool: str, nodes: dict[str, dict], top_help: str) -> str:
-    if list(nodes) == ["*"]:
+    if list(nodes) == [_NO_SUBCOMMANDS_KEY]:
         # No subcommand tree — first attempt asked the model to classify a heading literally
         # named "*", which it read as "find distinct things to classify" and broke a flags-heavy
         # --help into individual flag verdicts instead of one verdict for the tool. Ask explicitly
@@ -813,14 +840,14 @@ def _resolve_flat_verdict(verdict: dict) -> dict:
     fall back to the most cautious of whatever it returned rather than an arbitrary one —
     consistent with the verb backstop's "when in doubt, don't assume safe" stance."""
     if _FLAT_KEY in verdict:
-        return {"*": verdict[_FLAT_KEY]}
+        return {_NO_SUBCOMMANDS_KEY: verdict[_FLAT_KEY]}
     if not verdict:
         return verdict
-    order = {"read_only": 0, "write": 1, "dangerous": 2}
+    order = {Classification.READ_ONLY: 0, Classification.WRITE: 1, Classification.DANGEROUS: 2}
     worst = max(verdict.values(), key=lambda v: order.get(v.get("classification"), 1))
     return {
-        "*": {
-            "classification": worst.get("classification", "write"),
+        _NO_SUBCOMMANDS_KEY: {
+            "classification": worst.get("classification", Classification.WRITE),
             "rationale": f"inferred conservatively — model split this flat tool into "
             f"multiple parts instead of one verdict ({worst.get('rationale', '')})",
         }
@@ -829,8 +856,8 @@ def _resolve_flat_verdict(verdict: dict) -> dict:
 
 def _classify_flag_result(flag: str, result: dict, base_classification: str) -> dict:
     classification = result.get("classification", base_classification)
-    if classification == "read_only" and _looks_dangerous_flag(flag):
-        classification = "needs_review"
+    if classification == Classification.READ_ONLY and _looks_dangerous_flag(flag):
+        classification = Classification.NEEDS_REVIEW
     return {"classification": classification, "rationale": result.get("rationale", "")}
 
 
@@ -874,8 +901,8 @@ def classify(c, tool=None, force=False, model="haiku"):
             continue
 
         cache_nodes = cached.get("nodes", {})
-        classifiable_keys = [k for k in cache_nodes if k != "_top"]
-        top_help = cache_nodes.get("_top", {}).get("help_text", "")
+        classifiable_keys = [k for k in cache_nodes if k != _TOP_HELP_KEY]
+        top_help = cache_nodes.get(_TOP_HELP_KEY, {}).get("help_text", "")
 
         existing = _load_rule(name)
         existing_nodes = (existing or {}).get("nodes", {})
@@ -898,12 +925,12 @@ def classify(c, tool=None, force=False, model="haiku"):
             # from the same model/rubric everything else here is classified with. This makes
             # community data self-liquidating — every classify() run upgrades whatever's left to
             # real LLM output, a few nodes at a time, at no cost to already-fresh nodes.
-            is_community = bool(prior) and prior.get("source") == "community"
+            is_community = bool(prior) and prior.get("source") == Source.COMMUNITY
             unchanged = (
                 not force and not is_community and bool(prior) and prior.get("content_hash") == node["content_hash"]
             )
             if node.get("likely_invalid"):
-                if unchanged and prior.get("classification") == "invalid":
+                if unchanged and prior.get("classification") == Classification.INVALID:
                     carried[key] = prior
                 else:
                     new_invalid[key] = node
@@ -928,7 +955,7 @@ def classify(c, tool=None, force=False, model="haiku"):
             if chunk_verdict is None:
                 failed_chunks += 1
                 continue
-            if list(chunk) == ["*"]:
+            if list(chunk) == [_NO_SUBCOMMANDS_KEY]:
                 chunk_verdict = _resolve_flat_verdict(chunk_verdict)
             verdict.update(_strip_tool_prefix(chunk_verdict, name))
 
@@ -946,11 +973,11 @@ def classify(c, tool=None, force=False, model="haiku"):
         for key, node in new_invalid.items():
             new_nodes[key] = {
                 "content_hash": node["content_hash"],
-                "classification": "invalid",
+                "classification": Classification.INVALID,
                 "rationale": "Auto-discovered but duplicates its parent's help text verbatim — "
                 "likely a false-positive match (e.g. example/sample output mistaken "
                 "for a subcommand listing), not a real distinct command.",
-                "source": "heuristic",
+                "source": Source.HEURISTIC,
                 "flags": {},
             }
         for key, node in to_classify.items():
@@ -965,19 +992,19 @@ def classify(c, tool=None, force=False, model="haiku"):
                 if key in existing_nodes:
                     new_nodes[key] = existing_nodes[key]
                 continue
-            classification = result.get("classification", "write")
-            if classification == "invalid":
+            classification = result.get("classification", Classification.WRITE)
+            if classification == Classification.INVALID:
                 new_nodes[key] = {
                     "content_hash": node["content_hash"],
-                    "classification": "invalid",
+                    "classification": Classification.INVALID,
                     "rationale": result.get("rationale", ""),
-                    "source": "llm",
+                    "source": Source.LLM,
                     "model": model,
                     "flags": {},
                 }
                 continue
-            if classification == "read_only" and _looks_dangerous(key):
-                classification = "needs_review"
+            if classification == Classification.READ_ONLY and _looks_dangerous(key):
+                classification = Classification.NEEDS_REVIEW
             flags = {
                 flag: _classify_flag_result(flag, fresult, classification)
                 for flag, fresult in (result.get("flags") or {}).items()
@@ -986,7 +1013,7 @@ def classify(c, tool=None, force=False, model="haiku"):
                 "content_hash": node["content_hash"],
                 "classification": classification,
                 "rationale": result.get("rationale", ""),
-                "source": "llm",
+                "source": Source.LLM,
                 "model": model,
                 "flags": flags,
             }
@@ -1051,7 +1078,7 @@ def reconfirm(c, tool=None, model="haiku"):
         # real subcommand path segment never starts with "-", only a flag token does.
         candidates: dict[str, dict] = {}
         for path, v in nodes.items():
-            if v.get("classification") == "needs_review":
+            if v.get("classification") == Classification.NEEDS_REVIEW:
                 candidates[path] = {
                     "help_text": cache_nodes.get(path, {}).get("help_text", ""),
                     "tokens": _dangerous_tokens_in(path),
@@ -1059,7 +1086,7 @@ def reconfirm(c, tool=None, model="haiku"):
                     "path": path,
                 }
             for flag, fv in v.get("flags", {}).items():
-                if fv.get("classification") == "needs_review":
+                if fv.get("classification") == Classification.NEEDS_REVIEW:
                     candidates[f"{path} {flag}"] = {
                         "help_text": cache_nodes.get(path, {}).get("help_text", ""),
                         "tokens": _dangerous_flag_tokens(flag),
@@ -1089,12 +1116,12 @@ def reconfirm(c, tool=None, model="haiku"):
             result = verdict.get(key)
             if result is None:
                 continue
-            classification = result.get("classification", "needs_review")
+            classification = result.get("classification", Classification.NEEDS_REVIEW)
             rationale = result.get("rationale", "")
             if meta["kind"] == "node":
                 nodes[meta["path"]]["classification"] = classification
                 nodes[meta["path"]]["rationale"] = rationale
-                nodes[meta["path"]]["source"] = "llm-reconfirmed"
+                nodes[meta["path"]]["source"] = Source.LLM_RECONFIRMED
             else:
                 nodes[meta["path"]]["flags"][meta["flag"]] = {
                     "classification": classification,
@@ -1137,7 +1164,7 @@ def review(c, apply_all=False, only=None):
 
     for name, entry in sorted(pending.items()):
         nodes = entry.get("nodes", {})
-        invalid = [k for k, v in nodes.items() if v.get("classification") == "invalid"]
+        invalid = [k for k, v in nodes.items() if v.get("classification") == Classification.INVALID]
         invalid_note = f", {len(invalid)} excluded as invalid" if invalid else ""
         print(f"\n[allowlist] {name} ({len(nodes)} node(s){invalid_note})")
         if entry.get("note"):
@@ -1164,13 +1191,13 @@ def review(c, apply_all=False, only=None):
         # rm", ...), which just looked like a flat list once paths got mixed with unrelated ones.
         for path in sorted(nodes):
             v = nodes[path]
-            if v.get("classification") == "invalid":
+            if v.get("classification") == Classification.INVALID:
                 continue
             if only_set and v["classification"] not in only_set:
                 continue
             indent = "    " + "  " * path.count(" ")
             label = path.rsplit(" ", 1)[-1]
-            source = f" ({v['source']})" if v.get("source") == "community" else ""
+            source = f" ({v['source']})" if v.get("source") == Source.COMMUNITY else ""
             plain, colored = _node_prefix(indent, label, v["classification"], source)
             print(_wrap(plain, v["rationale"], colored))
             for flag, fv in sorted(v.get("flags", {}).items()):
@@ -1227,12 +1254,14 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
         cache_nodes = (_load_cache(name) or {}).get("nodes", {})
         for path, v in sorted(entry.get("nodes", {}).items()):
             classification = v["classification"]
-            if classification == "read_only" and cache_nodes.get(path, {}).get("children"):
+            if classification == Classification.READ_ONLY and cache_nodes.get(path, {}).get("children"):
                 continue
-            pattern = f"Bash({name}:*)" if path == "*" else f"Bash({name} {path}:*)"
-            if classification == "read_only" and not is_cloud_cli:
+            pattern = f"Bash({name}:*)" if path == _NO_SUBCOMMANDS_KEY else f"Bash({name} {path}:*)"
+            if classification == Classification.READ_ONLY and not is_cloud_cli:
                 allow.append(pattern)
-            elif classification in ("write", "dangerous") or (classification == "read_only" and is_cloud_cli):
+            elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
+                classification == Classification.READ_ONLY and is_cloud_cli
+            ):
                 ask.append(pattern)
     return allow, ask
 
@@ -1248,8 +1277,12 @@ def _render_copilot(rules: dict) -> str:
         if not entry.get("reviewed"):
             continue
         for path, v in sorted(entry.get("nodes", {}).items()):
-            key = f"/^{re.escape(name)}\\b.*/" if path == "*" else f"/^{re.escape(name)} {re.escape(path)}\\b.*/"
-            auto_approve[key] = v["classification"] == "read_only"
+            key = (
+                f"/^{re.escape(name)}\\b.*/"
+                if path == _NO_SUBCOMMANDS_KEY
+                else f"/^{re.escape(name)} {re.escape(path)}\\b.*/"
+            )
+            auto_approve[key] = v["classification"] == Classification.READ_ONLY
     return json.dumps({"chat.tools.terminal.autoApprove": auto_approve}, indent=2)
 
 
@@ -1394,10 +1427,10 @@ def status(c):
             flags.append("truncated")
         if cfg.get("cloud_cli"):
             flags.append("cloud-cli (depth capped intentionally)")
-        invalid_count = sum(1 for v in nodes.values() if v.get("classification") == "invalid")
+        invalid_count = sum(1 for v in nodes.values() if v.get("classification") == Classification.INVALID)
         if invalid_count:
             flags.append(f"{invalid_count} invalid (excluded)")
-        needs_review = sum(1 for v in nodes.values() if v.get("classification") == "needs_review")
+        needs_review = sum(1 for v in nodes.values() if v.get("classification") == Classification.NEEDS_REVIEW)
         if needs_review:
             flags.append(f"{needs_review} needs_review")
         flag_str = f" [{', '.join(flags)}]" if flags else ""

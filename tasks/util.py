@@ -3,7 +3,9 @@ import pwd
 import shutil
 import subprocess
 import sys
+import tempfile
 import tomllib
+from enum import StrEnum
 from functools import cache
 from pathlib import Path
 
@@ -16,6 +18,11 @@ SUDO: str = "sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo"
 _PULSE_WIDTH = 78
 
 _PROC_VERSION = Path("/proc/version")
+
+
+def ok_label(ok: bool) -> str:
+    """The repo-wide "ok"/"MISSING" status word used in every task's dry-run and status output."""
+    return "ok" if ok else "MISSING"
 
 
 def is_wsl() -> bool:
@@ -122,7 +129,13 @@ def _marker(name: str, open_: bool) -> str:
     return f"# {tl}{'═' * left}{label}{'═' * right}{tr}"
 
 
-def ensure_block_text(text: str, name: str, content: str) -> tuple[str, str]:
+class BlockStatus(StrEnum):
+    OK = "ok"
+    ADDED = "added"
+    UPDATED = "updated"
+
+
+def ensure_block_text(text: str, name: str, content: str) -> tuple[str, BlockStatus]:
     """Return (new_text, status) with a named PULSE block applied. Does not write."""
     start = _marker(name, open_=True)
     end = _marker(name, open_=False)
@@ -131,19 +144,37 @@ def ensure_block_text(text: str, name: str, content: str) -> tuple[str, str]:
         s = text.index(start)
         e = text.index(end) + len(end)
         if text[s:e] == block:
-            return text, "ok"
-        return text[:s] + block + text[e:], "updated"
-    return text.rstrip("\n") + f"\n\n{block}\n", "added"
+            return text, BlockStatus.OK
+        return text[:s] + block + text[e:], BlockStatus.UPDATED
+    return text.rstrip("\n") + f"\n\n{block}\n", BlockStatus.ADDED
 
 
-def ensure_block(path: Path, name: str, content: str) -> str:
-    """Idempotently write a named PULSE block to a file. Returns 'added', 'updated', or 'ok'."""
+def ensure_block(path: Path, name: str, content: str) -> BlockStatus:
+    """Idempotently write a named PULSE block to a file. Returns BlockStatus.{ADDED,UPDATED,OK}."""
     text = path.read_text() if path.exists() else ""
     new_text, status = ensure_block_text(text, name, content)
-    if status != "ok":
+    if status != BlockStatus.OK:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(new_text)
     return status
+
+
+def sudo_write(c, path: Path, text: str) -> None:
+    """Write `text` to a root-owned `path` via a tempfile + `sudo cp` — direct `path.write_text()`
+    can't reach root-owned locations, and `sudo tee` from Python would need the text piped through
+    a subprocess shell instead of written directly."""
+    with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
+        f.write(text)
+        tmp = f.name
+    c.run(f"{SUDO} cp {tmp} {path} && rm {tmp}")
+
+
+def sudo_read(c, path: Path) -> str:
+    """Read a root-owned `path` via `sudo cat`, or "" if it doesn't exist / can't be read."""
+    if not path.exists():
+        return ""
+    result = c.run(f"{SUDO} cat {path}", hide=True, warn=True)
+    return result.stdout if result.ok else ""
 
 
 _CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
@@ -199,7 +230,26 @@ def _excluded_tags() -> set[str]:
     return {t.strip() for t in val.split(",") if t.strip()}
 
 
-def packages_by_method(method: str) -> dict:
+class PackageMethod(StrEnum):
+    """The `method` field of a `[packages.*]` section in setup.toml — see its header comment for
+    what each one means."""
+
+    APT = "apt"
+    APT_REPO = "apt-repo"
+    DEB_GITHUB = "deb-github"
+    DEB_URL = "deb-url"
+    APPARMOR_PROFILE = "apparmor-profile"
+    ARCHIVE = "archive"
+    UV_TOOL = "uv-tool"
+    NVM = "nvm"
+    SCRIPT = "script"
+    BINARY = "binary"
+    GIT_CLONE = "git-clone"
+    WRAPPER_SCRIPT = "wrapper-script"
+    GNOME_EXTENSION = "gnome-extension"
+
+
+def packages_by_method(method: PackageMethod) -> dict:
     excluded = _excluded_tags()
     return {
         name: cfg

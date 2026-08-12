@@ -21,7 +21,7 @@ def _check_tool(name: str, cfg: dict) -> bool:
 
 def _install_script(c, name: str, cfg: dict) -> None:
     if util.DRY_RUN:
-        print(f"[{name}] {'ok' if _check_tool(name, cfg) else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(_check_tool(name, cfg))}")
         return
     if _check_tool(name, cfg):
         print(f"[{name}] already installed")
@@ -48,7 +48,7 @@ def _install_script(c, name: str, cfg: dict) -> None:
 def _install_binary(c, name: str, cfg: dict) -> None:
     check_cmd = cfg.get("check_cmd", name)
     if util.DRY_RUN:
-        print(f"[{name}] {'ok' if util.command_exists(check_cmd) else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(util.command_exists(check_cmd))}")
         return
     if util.command_exists(check_cmd):
         print(f"[{name}] already installed")
@@ -64,7 +64,7 @@ def _install_binary(c, name: str, cfg: dict) -> None:
 def _install_git_clone(c, name: str, cfg: dict) -> None:
     dest = Path(cfg["dest"]).expanduser()
     if util.DRY_RUN:
-        print(f"[{name}] {'ok' if dest.exists() else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(dest.exists())}")
         return
     if dest.exists():
         print(f"[{name}] already installed")
@@ -88,7 +88,7 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
 
     if util.DRY_RUN:
         ok = dest.exists() and dest.read_text() == content and link_ok
-        print(f"[{name}] {'ok' if ok else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(ok)}")
         return
 
     if dest.exists() and dest.read_text() == content:
@@ -114,7 +114,7 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
 
 def _install_archive(c, name: str, cfg: dict) -> None:
     if util.DRY_RUN:
-        print(f"[{name}] {'ok' if _check_tool(name, cfg) else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(_check_tool(name, cfg))}")
         return
     if _check_tool(name, cfg):
         print(f"[{name}] already installed")
@@ -165,15 +165,15 @@ def _install_archive(c, name: str, cfg: dict) -> None:
 @task
 def install(c):
     """Install tools that use official installer scripts, direct binary downloads, or archives."""
-    for name, cfg in util.packages_by_method("script").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.SCRIPT).items():
         _install_script(c, name, cfg)
-    for name, cfg in util.packages_by_method("binary").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.BINARY).items():
         _install_binary(c, name, cfg)
-    for name, cfg in util.packages_by_method("archive").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.ARCHIVE).items():
         _install_archive(c, name, cfg)
-    for name, cfg in util.packages_by_method("git-clone").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.GIT_CLONE).items():
         _install_git_clone(c, name, cfg)
-    for name, cfg in util.packages_by_method("wrapper-script").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.WRAPPER_SCRIPT).items():
         _install_wrapper_script(c, name, cfg)
 
 

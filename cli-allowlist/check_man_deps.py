@@ -18,31 +18,29 @@ Exit status is nonzero if anything invokes one of these — CI-friendly, though 
 import subprocess
 import sys
 import tempfile
-import tomllib
 from pathlib import Path
 
-_ROOT = Path(__file__).parent
-_ENV_OVERRIDES = {"PAGER": "cat", "MANPAGER": "cat", "GIT_PAGER": "cat", "LESS": "FRX", "BROWSER": "true"}
+from tasks import util
+from tasks.allowlist import _DETERMINISTIC_ENV, _invocation, _load_registry
 
 
 def main() -> int:
     import os
 
-    with (_ROOT / "tools.toml").open("rb") as f:
-        registry = tomllib.load(f)
-    env = {**os.environ, **_ENV_OVERRIDES}
+    registry = _load_registry()
+    env = {**os.environ, **_DETERMINISTIC_ENV}
     offenders = []
 
     for name, cfg in sorted(registry.items()):
         if cfg.get("skip_interactive"):
             continue
         prefix = cfg.get("shell_prefix")
-        if not prefix and subprocess.run(["which", name], capture_output=True).returncode != 0:
+        if not prefix and not util.command_exists(name):
             continue
 
         help_flag = cfg.get("help_flag", "--help")
         args = help_flag.split()
-        cmd = ["bash", "-c", f"{prefix} && {' '.join([name, *args])}"] if prefix else [name, *args]
+        cmd = _invocation(name, args, cfg)
 
         with tempfile.NamedTemporaryFile(prefix="strace-", suffix=".log") as log:
             try:

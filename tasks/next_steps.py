@@ -46,7 +46,7 @@ def _ssh_config_applied(identity: dict) -> bool:
     content = "\n\n".join(blocks)
     text = ssh._SSH_CONFIG.read_text()
     _, status = util.ensure_block_text(text, "ssh", content)
-    return status == "ok"
+    return status == util.BlockStatus.OK
 
 
 def _ssh_keys_loaded() -> bool:

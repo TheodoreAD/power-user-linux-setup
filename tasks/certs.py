@@ -141,7 +141,7 @@ def _java_status(c) -> str:
     cacerts = _cacerts_path(c)
     if not cacerts:
         return "MISSING"
-    return "ok" if _keytool_alias_exists(c, cacerts, "pulse-corporate-0") else "MISSING"
+    return util.ok_label(_keytool_alias_exists(c, cacerts, "pulse-corporate-0"))
 
 
 def _configure_java(c, desired: str) -> None:
@@ -194,14 +194,14 @@ def _env_block_content() -> str:
 def _zshenv_status() -> str:
     text = _ZSHENV.read_text() if _ZSHENV.exists() else ""
     _, status = util.ensure_block_text(text, "certs", _env_block_content())
-    return "ok" if status == "ok" else "MISSING"
+    return util.ok_label(status == util.BlockStatus.OK)
 
 
 def _status(c, paths: list[Path]) -> dict[str, str]:
     bundle_status = "MISSING"
     try:
         desired = _desired_bundle_text(c, paths)
-        bundle_status = "ok" if _sudo_read(c, _CA_CERT_FILE) == desired else "MISSING"
+        bundle_status = util.ok_label(_sudo_read(c, _CA_CERT_FILE) == desired)
     except RuntimeError as e:
         print(f"[certs] bundle format error: {e}")
     return {"bundle": bundle_status, "zshenv": _zshenv_status(), "java": _java_status(c)}
@@ -284,7 +284,7 @@ def install(c, bundle=None):
         print("[certs] bundle installed, update-ca-certificates run")
 
     zshenv_status = util.ensure_block(_ZSHENV, "certs", _env_block_content())
-    print(f"[certs] ~/.zshenv certs block: {zshenv_status}")
+    print(f"[certs] ~/.zshenv certs block: {zshenv_status.value}")
 
     _configure_java(c, desired)
 

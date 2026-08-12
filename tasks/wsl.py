@@ -352,8 +352,8 @@ def fix(c, dns=False):
     new_text, dns_changed = _ensure_wsl_conf_kv(new_text, "network", "generateResolvConf", dns_target)
 
     if util.DRY_RUN:
-        print(f"[wsl.fix] systemd=true: {'MISSING' if systemd_changed else 'ok'}")
-        print(f"[wsl.fix] generateResolvConf={dns_target}: {'MISSING' if dns_changed else 'ok'}")
+        print(f"[wsl.fix] systemd=true: {util.ok_label(not systemd_changed)}")
+        print(f"[wsl.fix] generateResolvConf={dns_target}: {util.ok_label(not dns_changed)}")
         return
 
     if not (systemd_changed or dns_changed):

@@ -50,11 +50,11 @@ def tools(c):
 
     default_python = util.load_config().get("settings", {}).get("uv_python_default", "")
 
-    for name, cfg in util.packages_by_method("uv-tool").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.UV_TOOL).items():
         package = cfg["package"]
         if util.DRY_RUN:
             ok = util.command_exists(cfg.get("check_cmd", name))
-            print(f"[{name}] {'ok' if ok else 'MISSING'}  ({package})")
+            print(f"[{name}] {util.ok_label(ok)}  ({package})")
             continue
         python = cfg.get("python", default_python)
         extras = cfg.get("extras", [])
@@ -118,9 +118,9 @@ def dev_venv(c, force=False):
     direnv_ok = util.command_exists("direnv")
     if util.DRY_RUN:
         venv_ok = (_SETUP_TOML.parent / ".venv").exists()
-        print(f"[python] .venv: {'ok' if venv_ok else 'MISSING'}")
-        print(f"[python] direnv: {'ok' if direnv_ok else 'MISSING'}")
-        print(f"[python] dprint.json: {'ok' if _DPRINT_JSON.exists() else 'MISSING'}")
+        print(f"[python] .venv: {util.ok_label(venv_ok)}")
+        print(f"[python] direnv: {util.ok_label(direnv_ok)}")
+        print(f"[python] dprint.json: {util.ok_label(_DPRINT_JSON.exists())}")
         ai.claude_direnv_hook(c, dir=str(_SETUP_TOML.parent))
         return
     c.run("uv sync")

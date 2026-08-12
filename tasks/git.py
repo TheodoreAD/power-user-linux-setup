@@ -52,7 +52,7 @@ def configure(c):
     if util.DRY_RUN:
         for p in profiles:
             project_dir = _PROJECTS_ROOT / p["directory"]
-            exists = "ok" if project_dir.exists() else "MISSING"
+            exists = util.ok_label(project_dir.exists())
             print(f"[git] {p['directory']} ({exists}) → {p['name']} <{p['email']}>")
         return
 

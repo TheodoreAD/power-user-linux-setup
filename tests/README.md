@@ -4,15 +4,20 @@ Most of `tasks/*.py` isn't realistically unit-testable: it shells out to `apt`/`
 `gsettings` and mutates a real system, which is why this repo has otherwise relied on
 `PULSE_DRY_RUN=1` (see `docs/index.md`) plus manual runs instead of a test suite.
 
-Four exceptions, all pure logic with no direct system calls: `tasks/phases.py` (pure
-orchestration — calls whatever task functions it's given and branches on their captured output),
-`tasks/proxy.py`'s parsing helpers (`_parse_proxy_authenticate`, `_parse_env_proxy`,
-`_parse_etc_environment`, `_split_host_port` — string/env parsing with no subprocess/filesystem
-calls of their own, unlike the rest of that module), `tasks/certs.py`'s `_split_pem_certs`
-(regex-splits a PEM blob into individual cert blocks, no subprocess/filesystem calls — everything
-else in that module shells out to openssl/keytool or touches the trust store), and
-`tasks/wsl.py`'s `_dns_query_packet` (builds a raw DNS query packet in memory — no socket I/O,
-unlike `_query_dns_server`/`_public_dns_reachable`, which actually send it).
+Pure logic with no direct system calls, growing as more of it gets pulled out of the
+system-touching tasks around it: `tasks/phases.py` (pure orchestration — calls whatever task
+functions it's given and branches on their captured output), `tasks/proxy.py`'s parsing helpers
+(`_parse_proxy_authenticate`, `_parse_env_proxy`, `_parse_etc_environment`, `_split_host_port` —
+string/env parsing with no subprocess/filesystem calls of their own, unlike the rest of that
+module), `tasks/certs.py`'s `_split_pem_certs` (regex-splits a PEM blob into individual cert
+blocks, no subprocess/filesystem calls — everything else in that module shells out to
+openssl/keytool or touches the trust store), `tasks/wsl.py`'s `_dns_query_packet` (builds a raw DNS
+query packet in memory — no socket I/O, unlike `_query_dns_server`/`_public_dns_reachable`, which
+actually send it), `tasks/util.py`'s `ok_label`/`ensure_block_text`/`packages_by_method` (string
+formatting and dict filtering — the sudo/file-write side of `ensure_block`/`sudo_write` isn't
+covered), and `tasks/allowlist.py`'s `Classification`/`Source` enums plus `_resolve_flat_verdict`/
+`_classify_flag_result` (pure data transforms — the LLM call and subprocess/strace probing around
+them aren't).
 
 Set up once after cloning:
 

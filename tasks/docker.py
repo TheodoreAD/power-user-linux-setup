@@ -70,7 +70,7 @@ def configure(c):
             json.loads(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout) if _DAEMON_JSON.exists() else {}
         )
         cfg_ok = _is_subset(_DEFAULTS, existing)
-        print(f"[docker] group:{'ok' if in_group else 'MISSING'}  daemon.json:{'ok' if cfg_ok else 'MISSING'}")
+        print(f"[docker] group:{util.ok_label(in_group)}  daemon.json:{util.ok_label(cfg_ok)}")
         return
 
     if not util.command_exists("docker"):

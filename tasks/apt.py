@@ -1,4 +1,3 @@
-import tempfile
 from pathlib import Path
 
 from invoke import task
@@ -29,21 +28,15 @@ def configure(c):
     """Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars."""
     util.require_apt()
     if util.DRY_RUN:
-        ok = (
-            _APT_CONF.exists()
-            and c.run(f"{util.SUDO} cat {_APT_CONF}", hide=True, warn=True).stdout == _APT_CONF_CONTENT
-        )
-        print(f"[apt.configure] {'ok' if ok else 'MISSING'}")
+        ok = util.sudo_read(c, _APT_CONF) == _APT_CONF_CONTENT
+        print(f"[apt.configure] {util.ok_label(ok)}")
         return
-    current = c.run(f"{util.SUDO} cat {_APT_CONF}", hide=True, warn=True).stdout if _APT_CONF.exists() else ""
+    current = util.sudo_read(c, _APT_CONF)
     if current == _APT_CONF_CONTENT:
         print("[apt.configure] already configured")
         return
     _APT_CONF.parent.mkdir(parents=True, exist_ok=True)
-    with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
-        f.write(_APT_CONF_CONTENT)
-        tmp = f.name
-    c.run(f"{util.SUDO} cp {tmp} {_APT_CONF} && rm {tmp}")
+    util.sudo_write(c, _APT_CONF, _APT_CONF_CONTENT)
     print(f"[apt.configure] written → {_APT_CONF}")
 
 
@@ -55,7 +48,7 @@ def configure(c):
 def _install_apt(c, name: str, cfg: dict) -> None:
     packages = util.apt_packages(name, cfg)
     if util.DRY_RUN:
-        parts = [f"{p}:{'ok' if util.apt_installed(p) else 'MISSING'}" for p in packages]
+        parts = [f"{p}:{util.ok_label(util.apt_installed(p))}" for p in packages]
         print(f"[{name}] {',  '.join(parts)}")
         return
     missing = [p for p in packages if not util.apt_installed(p)]
@@ -74,7 +67,7 @@ def _install_apt(c, name: str, cfg: dict) -> None:
 def base(c):
     """Install base apt packages from config."""
     util.require_apt()
-    pkgs = util.packages_by_method("apt")
+    pkgs = util.packages_by_method(util.PackageMethod.APT)
     if util.DRY_RUN:
         for name, cfg in pkgs.items():
             _install_apt(c, name, cfg)
@@ -140,15 +133,15 @@ def _status_repo(name: str, cfg: dict) -> None:
     sources = Path(cfg["sources_path"])
     repo_ok = gpg.exists() and sources.exists()
     packages = util.apt_packages(name, cfg)
-    pkg_parts = [f"{p}:{'ok' if util.apt_installed(p) else 'MISSING'}" for p in packages]
-    print(f"[{name}] repo:{'ok' if repo_ok else 'MISSING'}  {',  '.join(pkg_parts)}")
+    pkg_parts = [f"{p}:{util.ok_label(util.apt_installed(p))}" for p in packages]
+    print(f"[{name}] repo:{util.ok_label(repo_ok)}  {',  '.join(pkg_parts)}")
 
 
 @task
 def repos(c):
     """Set up external apt repos and install their packages."""
     util.require_apt()
-    pkgs = util.packages_by_method("apt-repo")
+    pkgs = util.packages_by_method(util.PackageMethod.APT_REPO)
 
     if util.DRY_RUN:
         for name, cfg in pkgs.items():
@@ -256,7 +249,7 @@ def _dpkg_install(c, name: str, cfg: dict, version: str) -> bool:
 def _install_github_deb(c, name: str, cfg: dict) -> None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
-        print(f"[{name}] {'ok' if ok else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(ok)}")
         return
 
     if not util.command_exists(cfg.get("check_cmd", name)):
@@ -276,7 +269,7 @@ def _install_github_deb(c, name: str, cfg: dict) -> None:
 def _install_deb_url(c, name: str, cfg: dict) -> None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
-        print(f"[{name}] {'ok' if ok else 'MISSING'}")
+        print(f"[{name}] {util.ok_label(ok)}")
         return
     if util.command_exists(cfg.get("check_cmd", name)):
         print(f"[{name}] already installed")
@@ -343,9 +336,9 @@ def clean_cache_full(c):
 def deb(c):
     """Install packages sourced from GitHub releases or direct deb URLs."""
     util.require_apt()
-    for name, cfg in util.packages_by_method("deb-github").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
         _install_github_deb(c, name, cfg)
-    for name, cfg in util.packages_by_method("deb-url").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.DEB_URL).items():
         _install_deb_url(c, name, cfg)
 
     if not util.DRY_RUN:
@@ -405,7 +398,7 @@ def uninstall(c, name):
 @task
 def upgrade_debs(c):
     """Upgrade all deb-github packages to their latest versions (re-downloads and reinstalls each)."""
-    for name, cfg in util.packages_by_method("deb-github").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
         version = _resolve_version(c, name, cfg)
         if version is None:
             continue
@@ -418,7 +411,7 @@ def upgrade_debs(c):
 @task
 def refresh_keys(c):
     """Re-download GPG keys for all enabled apt-repo sources."""
-    for name, cfg in util.packages_by_method("apt-repo").items():
+    for name, cfg in util.packages_by_method(util.PackageMethod.APT_REPO).items():
         gpg = Path(cfg["gpg_path"])
         c.run(f"curl -fsSL {cfg['gpg_url']} | {util.SUDO} gpg --dearmor -o {gpg}")
         print(f"[{name}] key refreshed → {gpg}")
