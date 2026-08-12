@@ -1,6 +1,6 @@
 from invoke import task
 
-from . import ai, apt, docker, fonts, next_steps, node, phases, python, system, tools, util, wsl, zsh
+from . import ai, apt, docker, fonts, next_steps, node, phases, python, system, tools, util, verify, wsl, zsh
 
 
 @task
@@ -30,10 +30,12 @@ def setup(c):
         system.apparmor_profiles,
         python.tools,
         node.install,
+        verify.all,
     ]
     packages_note = (
         "apt config/repos/packages, Docker, .deb packages, script/binary tools, "
-        "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools"
+        "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools, "
+        "then a hard functional-verification pass over everything just installed"
     )
     shell_phase = [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell]
     shell_note = "Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell"

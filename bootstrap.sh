@@ -1,6 +1,27 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+if command -v apt-get &>/dev/null; then
+    missing=()
+    command -v curl &>/dev/null || missing+=(curl)
+    command -v gpg &>/dev/null || missing+=(gnupg)
+    command -v sudo &>/dev/null || missing+=(sudo)
+    dpkg -s ca-certificates &>/dev/null 2>&1 || missing+=(ca-certificates)
+
+    if [ ${#missing[@]} -gt 0 ]; then
+        echo "Installing OS prerequisites: ${missing[*]}..."
+        if [ "$(id -u)" -eq 0 ]; then
+            apt-get update && apt-get install -y "${missing[@]}"
+        elif command -v sudo &>/dev/null; then
+            sudo apt-get update && sudo apt-get install -y "${missing[@]}"
+        else
+            echo "Missing: ${missing[*]}, and no sudo available to install them." >&2
+            echo "Install manually (as root, or with sudo already configured) and re-run." >&2
+            exit 1
+        fi
+    fi
+fi
+
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SETUP_TOML="${SCRIPT_DIR}/setup.toml"
 

@@ -148,16 +148,22 @@ def repos(c):
             _status_repo(name, cfg)
         return
 
-    # lsb_release (package lsb-release) isn't guaranteed present on a fresh/minimal install, and
-    # this runs before apt.base — which is where setup.toml's other apt packages get installed —
-    # ever gets a chance to. Not declared as a [packages.*] entry for that reason: it wouldn't
-    # install in time to help here anyway, so it's just ensured directly. `apt update` first
-    # since a minimal/container base image (or one that's had /var/lib/apt/lists cleaned in an
-    # earlier Docker layer) may have no package index at all yet — `apt install` would 404 on
-    # "Unable to locate package" otherwise.
-    if not util.command_exists("lsb_release"):
+    # lsb_release (package lsb-release) and gpg (package gnupg) aren't guaranteed present on a
+    # fresh/minimal install, and this runs before apt.base — which is where setup.toml's other
+    # apt packages get installed — ever gets a chance to. Not declared as [packages.*] entries for
+    # that reason: they wouldn't install in time to help here anyway, so they're ensured directly.
+    # gnupg matters because _register_repo() below pipes each repo's signing key through
+    # `gpg --dearmor`; without it that fails silently (caught by warn=True) and apt falls back to
+    # whatever stale version, if any, ships in Ubuntu's own repos. `apt update` first since a
+    # minimal/container base image (or one that's had /var/lib/apt/lists cleaned in an earlier
+    # Docker layer) may have no package index at all yet — `apt install` would 404 on "Unable to
+    # locate package" otherwise.
+    missing_prereqs = [
+        pkg for pkg, cmd in [("lsb-release", "lsb_release"), ("gnupg", "gpg")] if not util.command_exists(cmd)
+    ]
+    if missing_prereqs:
         c.run(f"{util.SUDO} apt update")
-        c.run(f"{util.SUDO} apt install -y lsb-release")
+        c.run(f"{util.SUDO} apt install -y {' '.join(missing_prereqs)}")
     codename = c.run("lsb_release -cs", hide=True).stdout.strip()
 
     # Phase 1: register all repos, then one apt update.

@@ -76,6 +76,17 @@ Every `[packages.*]` entry has two independent, unrelated ways to be skipped:
 | `fonts.install` / `fonts.configure` | `settings.fonts` (not `packages.*` at all)                                   | N/A — not a package entry, no tags possible                                                                                                                                                                                                                                                                                                                                                   |
 | `zsh.configure`                     | **every** entry in `packages.*` that has a `zshrc`/`zshenv`/`zprofile` field | `enabled` only — **tags are ignored**. A `gui`-tagged tool's shell block (PATH entry, completion, OMZ plugin coupling) still gets written to `.zshrc` even when `PULSE_EXCLUDE_TAGS` skipped installing the tool itself. Usually harmless (blocks tend to guard on the binary existing), but worth knowing before assuming an exclude-tags profile produced a byte-for-byte-minimal `.zshrc`. |
 
+**`inv verify.all`** (`tasks/verify.py`, runs as the last step of `inv setup`'s `packages` phase —
+see [dev-container.md](dev-container.md#automated-functional-verification-inv-verifyall)) sits in
+neither bucket cleanly. For every method except `gnome-extension` it goes through
+`packages_by_method()` like the generic install tasks, so it only checks what the current tag
+profile actually installed. `gnome-extension` is force-skipped regardless of tags/enabled — no
+automated path, not even `inv setup` itself, ever calls `inv gnome.extensions` (see
+`tasks/gnome.py`), so checking those by default would fail `inv setup` for extensions it never
+attempted to install. It also does a manual scan for `method = "zsh"` entries (`enabled`-only,
+tags ignored — same bypass `zsh.configure` already uses), always skipping them since they're
+config-only with no command to verify.
+
 This split is exactly what [wsl.md](wsl.md) and [dev-container.md](dev-container.md) rely on — when building a new environment profile, check which bucket the task you're skipping falls into before assuming a tag exclusion is enough.
 
 **A third bucket: tasks that don't read `setup.toml` at all.** `apt.clean-cache(-full)`, `python.clean-cache(-full)`, `node.clean-cache(-full)`, `tools.clean-cache(-full)`, `docker.clean(-full)`, and the `cleanup.*` umbrella tasks that depend on them operate on whatever's actually on disk for that tool (apt's archive cache, `~/.cache/uv`, `~/.npm`, cargo's registry, Docker images) — `enabled`/`tags` are irrelevant to them since there's no `[packages.*]` entry being consulted in the first place. Excluding a tag stops something from being _installed_; it has no bearing on whether that tool's cache-cleanup task has anything to do.
