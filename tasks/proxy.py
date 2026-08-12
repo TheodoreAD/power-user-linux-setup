@@ -214,7 +214,7 @@ def _probe_with_retries(c, host: str, port: int, attempts: int = 5, delay: float
 
 def _install_px(c) -> None:
     if util.DRY_RUN:
-        print(f"[proxy] px: {'ok' if util.command_exists('px') else 'MISSING'}")
+        print(f"[proxy] px: {util.ok_label(util.command_exists('px'))}")
         return
     if util.command_exists("px"):
         return
@@ -234,7 +234,7 @@ def _configure_px(
     decide whether to restart the daemon).
     """
     if util.DRY_RUN:
-        print(f"[proxy] px.ini ({host}:{port}): {'ok' if _PX_INI.exists() else 'MISSING'}")
+        print(f"[proxy] px.ini ({host}:{port}): {util.ok_label(_PX_INI.exists())}")
         return False
     before = _PX_INI.read_text() if _PX_INI.exists() else None
     cmd = f"px --proxy={host}:{port} --save"
@@ -262,7 +262,7 @@ def _write_unit(c) -> bool:
     """
     if util.DRY_RUN:
         ok = _UNIT_PATH.exists() and _UNIT_PATH.read_text() == _UNIT_CONTENT
-        print(f"[proxy] systemd --user unit: {'ok' if ok else 'MISSING'}")
+        print(f"[proxy] systemd --user unit: {util.ok_label(ok)}")
         return False
     changed = not (_UNIT_PATH.exists() and _UNIT_PATH.read_text() == _UNIT_CONTENT)
     if changed:
@@ -537,4 +537,4 @@ def install(c, proxy="auto", noproxy=None):
         + (f'export no_proxy="{noproxy}"\nexport NO_PROXY="{noproxy}"\n' if noproxy else "")
     )
     status = util.ensure_block(_ZSHENV, "proxy", content)
-    print(f"[proxy] ~/.zshenv proxy block: {status} — open a new terminal for it to take effect")
+    print(f"[proxy] ~/.zshenv proxy block: {status.value} — open a new terminal for it to take effect")

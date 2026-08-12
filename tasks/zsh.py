@@ -40,7 +40,7 @@ def omz_configure(c):
         theme_ok = current_theme == theme
         plugins_present = bool(re.search(r"^plugins=\(", text, flags=re.MULTILINE))
         print(f"[oh-my-zsh] theme: {'ok' if theme_ok else f'MISSING  (current: {current_theme!r})'}")
-        print(f"[oh-my-zsh] plugins block: {'ok' if plugins_present else 'MISSING'}")
+        print(f"[oh-my-zsh] plugins block: {util.ok_label(plugins_present)}")
         return
 
     changed = False
@@ -92,7 +92,7 @@ def configure(c):
                     path = Path.home() / f".{target}"
                     text = path.read_text() if path.exists() else ""
                     _, status = util.ensure_block_text(text, name, content)
-                    print(f"[{name}] .{target}: {'ok' if status == 'ok' else 'MISSING'}")
+                    print(f"[{name}] .{target}: {util.ok_label(status == util.BlockStatus.OK)}")
         return
     for name, cfg in util.load_config()["packages"].items():
         if not cfg.get("enabled", True):
@@ -102,8 +102,8 @@ def configure(c):
                 path = Path.home() / f".{target}"
                 path.parent.mkdir(parents=True, exist_ok=True)
                 result = util.ensure_block(path, name, content)
-                if result != "ok":
-                    print(f"[{name}] .{target}: {result}")
+                if result != util.BlockStatus.OK:
+                    print(f"[{name}] .{target}: {result.value}")
 
 
 @task
@@ -117,7 +117,7 @@ def set_default_shell(c):
         print("[zsh] zsh not found on PATH — install it first (apt.base)")
         return
     if util.DRY_RUN:
-        print(f"[zsh] default shell: {'ok' if _shell_is_zsh(_current_shell()) else 'MISSING'}")
+        print(f"[zsh] default shell: {util.ok_label(_shell_is_zsh(_current_shell()))}")
         return
     if _shell_is_zsh(_current_shell()):
         print(f"[zsh] default shell already zsh ({_current_shell()}) — nothing to do")
@@ -149,7 +149,7 @@ def p10k_configure(c):
     """Copy repo baseline config/p10k.zsh to ~/.p10k.zsh if not already present."""
     dest = Path.home() / ".p10k.zsh"
     if util.DRY_RUN:
-        print(f"[p10k] ~/.p10k.zsh: {'ok' if dest.exists() else 'MISSING'}")
+        print(f"[p10k] ~/.p10k.zsh: {util.ok_label(dest.exists())}")
         return
     if dest.exists():
         print("[p10k] ~/.p10k.zsh already exists — skipping")

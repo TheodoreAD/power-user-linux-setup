@@ -50,7 +50,7 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str) -> None:
     up_to_date = ours and _dir_digest(dest) == _dir_digest(src)
 
     if util.DRY_RUN:
-        print(f"[{label}] {name}: {'ok' if up_to_date else 'MISSING'}")
+        print(f"[{label}] {name}: {util.ok_label(up_to_date)}")
         return
 
     if present and not ours:
@@ -203,7 +203,7 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
 
     already_linked = claude_skills.is_symlink() and claude_skills.resolve() == agents_skills.resolve()
     if util.DRY_RUN:
-        print(f"[{label}] {'ok' if already_linked and agents_skills.is_dir() else 'MISSING'}")
+        print(f"[{label}] {util.ok_label(already_linked and agents_skills.is_dir())}")
         return
 
     agents_skills.mkdir(parents=True, exist_ok=True)
@@ -273,7 +273,7 @@ def claude_direnv_hook(c, dir="."):
     hook_ok = bash_group is not None and hook_entry in bash_group.get("hooks", [])
 
     if util.DRY_RUN:
-        print(f"[ai.claude-direnv-hook] {settings_path}: {'ok' if env_ok and hook_ok else 'MISSING'}")
+        print(f"[ai.claude-direnv-hook] {settings_path}: {util.ok_label(env_ok and hook_ok)}")
         return
 
     if env_ok and hook_ok:

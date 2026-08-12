@@ -19,7 +19,7 @@ def install(c):
     nvm_sh = _nvm_sh(nvm_dir)
 
     if util.DRY_RUN:
-        print(f"[nvm] {'ok' if nvm_dir.exists() else 'MISSING'}")
+        print(f"[nvm] {util.ok_label(nvm_dir.exists())}")
         if nvm_dir.exists():
             for pkg in global_packages:
                 result = c.run(
@@ -27,7 +27,7 @@ def install(c):
                     hide=True,
                     warn=True,
                 )
-                print(f"[{pkg}] {'ok' if result.ok else 'MISSING'}")
+                print(f"[{pkg}] {util.ok_label(result.ok)}")
         else:
             for pkg in global_packages:
                 print(f"[{pkg}] MISSING  (nvm not installed)")

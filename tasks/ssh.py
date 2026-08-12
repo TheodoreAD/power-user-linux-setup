@@ -37,7 +37,7 @@ def keys(c):
     if util.DRY_RUN:
         for email in emails:
             key = _key_path(email, node)
-            status = "ok" if key.exists() else "MISSING"
+            status = util.ok_label(key.exists())
             print(f"[ssh] key {key.name}: {status}")
         return
 
@@ -74,7 +74,7 @@ def configure(c):
 
     status = util.ensure_block(_SSH_CONFIG, "ssh", "\n\n".join(blocks))
     _SSH_CONFIG.chmod(0o600)
-    print(f"[ssh] config: {status}")
+    print(f"[ssh] config: {status.value}")
 
 
 @task

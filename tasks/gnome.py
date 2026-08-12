@@ -50,7 +50,7 @@ def _apply_dconf(c, name: str, cfg: dict) -> None:
 @task
 def extensions(c):
     """Install and enable GNOME Shell extensions declared in setup.toml via gext."""
-    pkgs = util.packages_by_method("gnome-extension")
+    pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:
         print("[gnome-extensions] no extensions enabled — set enabled = true in setup.toml")
         return
@@ -129,7 +129,7 @@ def extensions(c):
 @task
 def enable(c):
     """Re-enable installed GNOME extensions from setup.toml without reinstalling missing ones."""
-    pkgs = util.packages_by_method("gnome-extension")
+    pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:
         print("[gnome-enable] no extensions enabled — set enabled = true in setup.toml")
         return
@@ -178,7 +178,7 @@ def enable(c):
 @task
 def configure(c):
     """Apply dconf settings for all enabled extensions — re-run without reinstalling."""
-    pkgs = util.packages_by_method("gnome-extension")
+    pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     any_config = False
     for name, cfg in pkgs.items():
         if not cfg.get("dconf"):
@@ -210,7 +210,9 @@ def status(c):
 
     active = _enabled_uuids(c)
     all_configs = {
-        name: cfg for name, cfg in util.load_config()["packages"].items() if cfg.get("method") == "gnome-extension"
+        name: cfg
+        for name, cfg in util.load_config()["packages"].items()
+        if cfg.get("method") == util.PackageMethod.GNOME_EXTENSION
     }
 
     print("\nPULSE extensions (all declared):")
@@ -243,7 +245,8 @@ def status(c):
 @task
 def clean(c):
     """Remove user extensions not enabled in setup.toml (system/apt extensions are untouched)."""
-    keep = {cfg["uuid"] for _, cfg in util.packages_by_method("gnome-extension").items() if cfg.get("uuid")}
+    pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
+    keep = {cfg["uuid"] for cfg in pkgs.values() if cfg.get("uuid")}
 
     if not _USER_EXT_DIR.exists():
         print("[gnome-clean] ~/.local/share/gnome-shell/extensions not found — nothing to do")

@@ -179,7 +179,7 @@ def configure(c):
         if settings_path and settings_path.exists():
             existing = _load_vscode_settings(settings_path)
             vscode_ok = all(existing.get(k) == v for k, v in vscode_settings.items())
-            print(f"[fonts] VS Code: {'ok' if vscode_ok else 'MISSING'}")
+            print(f"[fonts] VS Code: {util.ok_label(vscode_ok)}")
         else:
             print("[fonts] VS Code: not found")
         return
