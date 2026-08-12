@@ -1698,6 +1698,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Dockerfile outline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#non-root-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Non-root user
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#round-tripping-through-devcontainerscli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Round-tripping through <code>@devcontainers/cli</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2024,6 +2063,45 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Dockerfile outline">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#non-root-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Non-root user
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#round-tripping-through-devcontainerscli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Round-tripping through <code>@devcontainers/cli</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2195,7 +2273,7 @@ that the build didn&rsquo;t error):</p>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">ubuntu:24.04</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--no-install-recommends<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span>python3<span class="w"> </span>python3-pip<span class="w"> </span>curl<span class="w"> </span>git<span class="w"> </span>sudo<span class="w"> </span>zsh<span class="w"> </span>ca-certificates<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span>python3<span class="w"> </span>python3-pip<span class="w"> </span>curl<span class="w"> </span>git<span class="w"> </span>sudo<span class="w"> </span>zsh<span class="w"> </span>ca-certificates<span class="w"> </span>gnupg<span class="w"> </span><span class="se">\</span>
 </span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
 </span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
@@ -2219,9 +2297,21 @@ phase <code>inv setup</code> always runs) copies this repo&rsquo;s own <code>ski
 and fails with a <code>FileNotFoundError</code> if that directory wasn&rsquo;t copied in. <code>PATH</code> needs
 <code>/root/.local/bin</code> up front since that&rsquo;s where <code>uv</code>, <code>invoke</code>, and most script/binary/archive
 -method tools land (<code>~/.local/bin</code> when running as root during a build is <code>/root/.local/bin</code>).</p>
+<p><code>gnupg</code> is not optional either, despite apt never listing it as a dependency error: every
+<code>apt-repo</code>-method package (<code>gh</code>, <code>kubectl</code>, <code>docker</code>, <code>terraform</code>, &hellip;) registers its repo by
+piping a downloaded key through <code>gpg --dearmor</code>. Without the <code>gpg</code> binary present, that pipe fails
+(<code>curl: (23) Failure writing output to destination</code>) — but <code>apt.repos</code> treats a failed key fetch
+as &ldquo;skip this repo, print a WARNING, keep going&rdquo; rather than a fatal error, so <code>RUN inv setup</code>
+still exits 0. The image just silently ends up missing <code>kubectl</code>/<code>docker</code>/<code>terraform</code> entirely,
+and gets whatever stale version of <code>gh</code> happens to already be in Ubuntu&rsquo;s own <code>universe</code> repo
+instead of the pinned upstream one — easy to miss unless you specifically check <code>dpkg -l</code> and
+<code>/etc/apt/sources.list.d/</code>, which is how this was actually caught (confirmed by building without
+<code>gnupg</code>, finding the WARNINGs in the log, then rebuilding with it added and diffing installed
+versions).</p>
 <p><code>inv cleanup.all-full</code> is the container-appropriate cleanup call — see
-<a href="#cleanup-reclaiming-image-layer-space">Cleanup</a> below for what it does and why the container
-case wants the <em>full</em> variant specifically, not the conservative one a workstation should use.</p>
+<a href="#cleanup-reclaiming-image-layer-space">Cleanup</a> below for what it does, what it actually saves
+(less than you&rsquo;d think), and why the container case wants the <em>full</em> variant specifically, not
+the conservative one a workstation should use.</p>
 <p>If you don&rsquo;t want a shell/zsh configured in the image, drop <code>zsh.omz_configure</code>/<code>zsh.configure</code>
 from consideration — but there&rsquo;s no need to hand-pick tasks any more; <code>inv setup</code> runs the full
 sequence and self-skips what doesn&rsquo;t apply, matching the &ldquo;just call <code>inv setup</code>&rdquo; story bare-metal
@@ -2229,6 +2319,52 @@ installs already have. If you want more control than that, run the granular task
 outline used to document instead: <code>inv apt.repos apt.base apt.deb tools.install python.tools
 node.install zsh.omz-configure zsh.configure</code> (still fully supported, <code>inv setup</code> is a
 convenience wrapper around the same tasks, not a replacement for calling them directly).</p>
+<p>Re-running <code>inv setup</code> inside an already-provisioned container (not a fresh <code>docker build</code> —
+e.g. <code>devcontainer exec -- inv setup</code> against a container that&rsquo;s been kept running) is safe:
+confirmed by running it twice against the same live container. Everything already installed
+reports <code>already installed</code>/<code>already configured</code> and the <code>shell</code> phase offers to skip outright;
+nothing gets reinstalled or duplicated. The one thing that doesn&rsquo;t participate in that skip logic
+is <code>python.tools</code> (<code>uv tool install</code> for <code>keyring</code>/<code>nox</code>/<code>mkdocs-material</code>/etc.) — it re-resolves
+each package on every run rather than probing first, which is harmless (<code>uv</code> no-ops instantly on
+an already-satisfied install) but means you&rsquo;ll see it &ldquo;reinstall&rdquo; on every re-run regardless of
+whether anything changed.</p>
+<h3 id="non-root-user">Non-root user<a class="headerlink" href="#non-root-user" title="Permanent link">&para;</a></h3>
+<p>Every real devcontainer runs as a non-root user with passwordless sudo, not root — confirmed this
+Dockerfile needs no code changes for that, only a Dockerfile-side user:</p>
+<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-m<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>dev<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">&quot;dev ALL=(ALL) NOPASSWD:ALL&quot;</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/sudoers.d/dev<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0440</span><span class="w"> </span>/etc/sudoers.d/dev
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="k">USER</span><span class="w"> </span><span class="s">dev</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/home/dev/setup</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="c"># ...same COPY/ENV/RUN as above, with --chown=dev:dev on each COPY</span>
+</span></code></pre></div>
+<p>Verified specifically: <code>util.current_user()</code> resolves to the non-root username (not <code>root</code>) via
+its <code>pwd.getpwuid()</code> fallback — and that fallback path turns out to be the one that&rsquo;s <em>always</em>
+exercised in a Dockerfile build, root or non-root, since plain <code>docker run</code>/<code>RUN</code> never sets
+<code>$USER</code> at all (that&rsquo;s a login-shell/profile behavior, not something Docker sets itself); every
+tool-installed file (<code>~/.local/bin</code>, <code>~/.cache/uv</code>, <code>~/.npm</code>, <code>~/.local/share/{cargo,rustup,nvm}</code>)
+lands under the non-root user&rsquo;s real home; and <code>sudo</code> (not <code>sudo -A</code> — no <code>SUDO_ASKPASS</code> is set in
+a container either way) works non-interactively against the <code>NOPASSWD</code> sudoers entry with no
+prompt.</p>
+<h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code><a class="headerlink" href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" title="Permanent link">&para;</a></h3>
+<p>Also verified end-to-end, swapping only the <code>FROM</code> line and dropping the <code>useradd</code>/sudoers block
+(the image already ships a passwordless-sudo <code>vscode</code> user and <code>gnupg</code>) — everything else in the
+outline above is unchanged. Only addition needed: <code>python3</code>/<code>python3-pip</code> still aren&rsquo;t
+preinstalled, so that <code>apt-get install</code> line stays. No conflicts observed between this image&rsquo;s
+preinstalled packages and anything <code>setup.toml</code> installs.</p>
+<h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code><a class="headerlink" href="#round-tripping-through-devcontainerscli" title="Permanent link">&para;</a></h3>
+<p>The outline above is tested as a bare <code>docker build</code>; the actual VS Code Dev Containers /
+<code>@devcontainers/cli</code> workflow adds its own layer of environment setup before your Dockerfile even
+runs. Confirmed clean with a throwaway <code>devcontainer.json</code> pointing at this outline:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="p">{</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="w">  </span><span class="nt">&quot;name&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;pulse-devcontainer&quot;</span><span class="p">,</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="w">  </span><span class="nt">&quot;build&quot;</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">&quot;dockerfile&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;Dockerfile&quot;</span><span class="p">,</span><span class="w"> </span><span class="nt">&quot;context&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;..&quot;</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a><span class="w">  </span><span class="nt">&quot;remoteUser&quot;</span><span class="p">:</span><span class="w"> </span><span class="s2">&quot;dev&quot;</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>npx @devcontainers/cli build --workspace-folder .</code>, then <code>devcontainer up --workspace-folder .</code>,
+then <code>devcontainer exec --workspace-folder . -- inv --list</code> all succeeded with no adjustments
+beyond the Dockerfile outline already documented here.</p>
 <h2 id="cleanup-reclaiming-image-layer-space">Cleanup — reclaiming image-layer space<a class="headerlink" href="#cleanup-reclaiming-image-layer-space" title="Permanent link">&para;</a></h2>
 <p>Every layer <code>inv setup</code> writes is permanent once committed — a later <code>RUN rm -rf</code> doesn&rsquo;t shrink
 an <em>earlier</em> layer, it only hides those files from the final filesystem view while the bytes stay
@@ -2306,20 +2442,35 @@ breaks the moment a new tool is added to <code>setup.toml</code> — the Dockerf
 build — almost entirely the actual installed toolchain (<code>toolchains/</code>), not reclaimable cache;
 rustup&rsquo;s own <code>downloads</code>/<code>tmp</code> scratch dirs were already empty (rustup cleans its own install
 -time artifacts). Only <code>~/.local/share/cargo/registry</code> (crate download/build cache, separate from
-<code>RUSTUP_HOME</code>) is genuinely reclaimable, which is exactly what <code>tools.clean-cache*</code> targets. If
-disk footprint matters more than cache cleanup can address, the bigger lever is
-<code>PULSE_EXCLUDE_TAGS</code> itself — leaving out toolchains you don&rsquo;t need (rust, go, k8s tooling) beats
-cleaning up after installing them.</p>
+<code>RUSTUP_HOME</code>) is genuinely reclaimable, which is exactly what <code>tools.clean-cache*</code> targets.</p>
+<p><strong>How much cleanup actually saves, measured</strong>: building the identical image with and without the
+<code>inv cleanup.all-full</code> step (default tag profile, otherwise byte-for-byte the same Dockerfile) —
+4.40GB without cleanup vs. 4.28GB with it, a <strong>~120MB saving, about 2.7% of image size</strong>. Worth
+knowing before reaching for it as the main size lever: it isn&rsquo;t one. <code>PULSE_EXCLUDE_TAGS</code> is —
+leaving out toolchains you don&rsquo;t need (rust, go, k8s tooling are each hundreds of MB to multiple
+GB) dwarfs anything cache cleanup can reclaim. Run cleanup because it&rsquo;s free and has no downside
+in a container, not because it meaningfully shrinks the image on its own.</p>
 <h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
-<p><code>[packages.docker]</code> is tagged <code>workstation</code> and excluded by default. It installs the full daemon
-(<code>docker-ce</code>, <code>containerd.io</code>) whose apt postinstall hooks try to start the service via systemctl
-— this fails in a container build. The <code>usermod -aG docker</code> post-install step is also meaningless
-inside a container. <code>docker.configure</code> (part of <code>inv setup</code>&rsquo;s <code>packages</code> phase) already detects
-&ldquo;docker not installed&rdquo; and skips cleanly rather than failing, so nothing extra to do here beyond
-leaving <code>workstation</code> excluded.</p>
+<p><code>[packages.docker]</code> is tagged <code>workstation</code> and excluded by default, so none of this is reachable
+in the recommended tag profile — it only matters if you deliberately drop <code>workstation</code> from
+<code>PULSE_EXCLUDE_TAGS</code>, which was tested specifically to check for exactly this kind of tag-gated
+assumption. <code>docker.configure</code> (part of <code>inv setup</code>&rsquo;s <code>packages</code> phase) already detects &ldquo;docker
+not installed&rdquo; and skips cleanly when the package is excluded, so the default profile needs
+nothing extra here.</p>
+<p>If <code>workstation</code> <em>is</em> included, <code>apt-get install docker-ce ...</code>&rsquo;s own postinstall hooks don&rsquo;t fail
+in a container build — Debian/Ubuntu base images ship a <code>policy-rc.d</code> that denies service-start
+attempts by default, so <code>invoke-rc.d</code>/<code>systemctl</code> calls from the <code>.deb</code>&rsquo;s postinst are cleanly
+no-opped, not fatal. What <em>did</em> fail, found by actually testing this combination (previously
+untested since it&rsquo;s excluded by default): <code>docker.configure</code>&rsquo;s own explicit
+<code>sudo systemctl restart docker</code> call afterward, unconditionally, with no no-systemd guard —
+crashing the entire <code>inv setup</code> run (and thus the whole <code>docker build</code>) with &ldquo;System has not been
+booted with systemd as init system.&rdquo; Fixed in <code>tasks/docker.py</code>&rsquo;s <code>_ensure_running()</code>, matching
+the <code>util.has_systemd()</code> guard pattern already used for the <code>system</code>/<code>desktop</code> phases: no systemd
+means daemon.json gets written and the user gets added to the <code>docker</code> group same as before, but
+the restart is skipped with a one-line message instead of attempted.</p>
 <p>If you need Docker CLI tooling inside the container (e.g. for socket passthrough from the host),
 install just the CLI packages manually in your Dockerfile instead:</p>
-<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>docker-ce-cli<span class="w"> </span>docker-compose-plugin<span class="w"> </span>docker-buildx-plugin
+<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>docker-ce-cli<span class="w"> </span>docker-compose-plugin<span class="w"> </span>docker-buildx-plugin
 </span></code></pre></div>
 <p>The OMZ <code>docker</code> and <code>docker-compose</code> plugins will still be loaded if you do this, since they
 come from <code>[packages.docker].omz_plugin</code> — but that entry is excluded, so you&rsquo;d need to add those
