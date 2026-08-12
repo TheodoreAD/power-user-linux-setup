@@ -2214,7 +2214,7 @@
   
 
 
-<h1 id="dev-container">Dev Container<a class="headerlink" href="#dev-container" title="Permanent link">&para;</a></h1>
+<h1 id="dev-container">Dev Container</h1>
 <p>The same <code>setup.toml</code> and invoke tasks that configure a workstation can build a dev container
 image — no Docker-in-Docker required. <code>RUN inv setup</code> in a plain Dockerfile is a real, tested
 path (see <a href="#dockerfile-outline">Dockerfile outline</a> below); the difference from a bare-metal
@@ -2223,7 +2223,7 @@ install is which tags you exclude and, automatically, which phases <code>inv set
 image (letting consumers layer PULSE&rsquo;s tooling onto <em>their own</em> base image), see
 <code>plans/2026-08-08-devcontainer-pipeline.md</code> — a separate, not-yet-implemented design. Both paths
 share the same underlying fix described next.</p>
-<h2 id="inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically"><code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically<a class="headerlink" href="#inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically" title="Permanent link">&para;</a></h2>
+<h2 id="inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically"><code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically</h2>
 <p><code>inv setup</code> runs a <code>system</code> phase first (<code>system.locale</code>, <code>system.dns</code>) that needs <code>systemctl</code>/
 <code>localectl</code> — meaningless, and previously fatal, in a container with no init system. <code>inv setup</code>
 now detects this itself (<code>util.has_systemd()</code>, the same check <code>require_systemd()</code> uses) and, when
@@ -2231,7 +2231,7 @@ there&rsquo;s no systemd and it isn&rsquo;t WSL, skips both the <code>system</co
 (<code>fonts.install</code>/<code>fonts.configure</code> — irrelevant in a headless container, same reasoning
 <code>wsl.install</code> already applies) instead of raising. Nothing to configure for this — it Just Works
 the same way <code>inv setup</code> already auto-detects WSL and delegates to <code>wsl.install</code>.</p>
-<h2 id="tags-to-exclude">Tags to exclude<a class="headerlink" href="#tags-to-exclude" title="Permanent link">&para;</a></h2>
+<h2 id="tags-to-exclude">Tags to exclude</h2>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation,corporate,ide,gnome
 </span></code></pre></div>
 <table>
@@ -2267,7 +2267,7 @@ the same way <code>inv setup</code> already auto-detects WSL and delegates to <c
 <p><code>ide</code>/<code>gnome</code> weren&rsquo;t part of the original recipe here but earn their place the same way they do
 under WSL (see <code>docs/wsl.md</code>) — nothing in a container has a GNOME session or benefits from a
 second IDE window running inside it.</p>
-<h2 id="dockerfile-outline">Dockerfile outline<a class="headerlink" href="#dockerfile-outline" title="Permanent link">&para;</a></h2>
+<h2 id="dockerfile-outline">Dockerfile outline</h2>
 <p>Tested end-to-end (<code>docker build</code>, then confirmed the installed tools actually work — not just
 that the build didn&rsquo;t error):</p>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">ubuntu:24.04</span>
@@ -2328,7 +2328,7 @@ is <code>python.tools</code> (<code>uv tool install</code> for <code>keyring</co
 each package on every run rather than probing first, which is harmless (<code>uv</code> no-ops instantly on
 an already-satisfied install) but means you&rsquo;ll see it &ldquo;reinstall&rdquo; on every re-run regardless of
 whether anything changed.</p>
-<h3 id="non-root-user">Non-root user<a class="headerlink" href="#non-root-user" title="Permanent link">&para;</a></h3>
+<h3 id="non-root-user">Non-root user</h3>
 <p>Every real devcontainer runs as a non-root user with passwordless sudo, not root — confirmed this
 Dockerfile needs no code changes for that, only a Dockerfile-side user:</p>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-m<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>dev<span class="w"> </span><span class="se">\</span>
@@ -2346,13 +2346,13 @@ tool-installed file (<code>~/.local/bin</code>, <code>~/.cache/uv</code>, <code>
 lands under the non-root user&rsquo;s real home; and <code>sudo</code> (not <code>sudo -A</code> — no <code>SUDO_ASKPASS</code> is set in
 a container either way) works non-interactively against the <code>NOPASSWD</code> sudoers entry with no
 prompt.</p>
-<h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code><a class="headerlink" href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" title="Permanent link">&para;</a></h3>
+<h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code></h3>
 <p>Also verified end-to-end, swapping only the <code>FROM</code> line and dropping the <code>useradd</code>/sudoers block
 (the image already ships a passwordless-sudo <code>vscode</code> user and <code>gnupg</code>) — everything else in the
 outline above is unchanged. Only addition needed: <code>python3</code>/<code>python3-pip</code> still aren&rsquo;t
 preinstalled, so that <code>apt-get install</code> line stays. No conflicts observed between this image&rsquo;s
 preinstalled packages and anything <code>setup.toml</code> installs.</p>
-<h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code><a class="headerlink" href="#round-tripping-through-devcontainerscli" title="Permanent link">&para;</a></h3>
+<h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code></h3>
 <p>The outline above is tested as a bare <code>docker build</code>; the actual VS Code Dev Containers /
 <code>@devcontainers/cli</code> workflow adds its own layer of environment setup before your Dockerfile even
 runs. Confirmed clean with a throwaway <code>devcontainer.json</code> pointing at this outline:</p>
@@ -2365,7 +2365,7 @@ runs. Confirmed clean with a throwaway <code>devcontainer.json</code> pointing a
 <p><code>npx @devcontainers/cli build --workspace-folder .</code>, then <code>devcontainer up --workspace-folder .</code>,
 then <code>devcontainer exec --workspace-folder . -- inv --list</code> all succeeded with no adjustments
 beyond the Dockerfile outline already documented here.</p>
-<h2 id="cleanup-reclaiming-image-layer-space">Cleanup — reclaiming image-layer space<a class="headerlink" href="#cleanup-reclaiming-image-layer-space" title="Permanent link">&para;</a></h2>
+<h2 id="cleanup-reclaiming-image-layer-space">Cleanup — reclaiming image-layer space</h2>
 <p>Every layer <code>inv setup</code> writes is permanent once committed — a later <code>RUN rm -rf</code> doesn&rsquo;t shrink
 an <em>earlier</em> layer, it only hides those files from the final filesystem view while the bytes stay
 in the image. This is why the Dockerfile above puts cleanup in the <em>same</em> <code>RUN</code> as <code>inv setup</code>
@@ -2450,7 +2450,7 @@ knowing before reaching for it as the main size lever: it isn&rsquo;t one. <code
 leaving out toolchains you don&rsquo;t need (rust, go, k8s tooling are each hundreds of MB to multiple
 GB) dwarfs anything cache cleanup can reclaim. Run cleanup because it&rsquo;s free and has no downside
 in a container, not because it meaningfully shrinks the image on its own.</p>
-<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
+<h2 id="docker">Docker</h2>
 <p><code>[packages.docker]</code> is tagged <code>workstation</code> and excluded by default, so none of this is reachable
 in the recommended tag profile — it only matters if you deliberately drop <code>workstation</code> from
 <code>PULSE_EXCLUDE_TAGS</code>, which was tested specifically to check for exactly this kind of tag-gated
@@ -2476,7 +2476,7 @@ install just the CLI packages manually in your Dockerfile instead:</p>
 come from <code>[packages.docker].omz_plugin</code> — but that entry is excluded, so you&rsquo;d need to add those
 plugins via a separate mechanism or accept they won&rsquo;t load. Alternatively, mount the host socket
 and use the host Docker installation directly.</p>
-<h2 id="other-notes">Other notes<a class="headerlink" href="#other-notes" title="Permanent link">&para;</a></h2>
+<h2 id="other-notes">Other notes</h2>
 <ul>
 <li>Tasks use <code>sudo</code> internally; either run as root (as the outline above does) or ensure <code>sudo</code> is
   installed and the build user is in sudoers.</li>
