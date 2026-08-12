@@ -392,7 +392,7 @@ def _save_cache(tool: str, data: dict) -> None:
     (_HELP_CACHE_DIR / f"{tool}.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
 
 
-def _run(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
+def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
     """Run a command, return combined stdout+stderr, "" on timeout/missing binary. Never raises
     on nonzero exit — --help conventionally exits nonzero on plenty of tools."""
     env = {**os.environ, **_DETERMINISTIC_ENV}
@@ -429,7 +429,7 @@ def _tool_version(tool: str, version_flag: str, cfg: dict | None = None) -> str:
     --version prints its tagline first and the actual "v0.18.2 [+git]" on line 2 — a tagline
     never changes across upgrades, which would silently defeat staleness detection. Preferring
     the first line that contains a digit catches that case generally, not just for eza."""
-    text = _run(_invocation(tool, version_flag.split(), cfg or {}))
+    text = _run_capture(_invocation(tool, version_flag.split(), cfg or {}))
     if not text:
         return ""
     for line in text.splitlines():
@@ -559,7 +559,7 @@ def _hash_text(text: str) -> str:
     return hashlib.sha256(text.encode()).hexdigest()[:16]
 
 
-def _dangerous_tokens_in(name_or_path: str) -> set[str]:
+def _dangerous_path_tokens(name_or_path: str) -> set[str]:
     """The specific _DANGEROUS_VERBS token(s) that matched, not just whether any did — reused by
     the needs_review backstop (which only needs the bool) and by `reconfirm` (which needs to tell
     the model exactly which word triggered suspicion, so it can judge whether that word's
@@ -568,12 +568,12 @@ def _dangerous_tokens_in(name_or_path: str) -> set[str]:
     return {t for t in tokens if t in _DANGEROUS_VERBS}
 
 
-def _looks_dangerous(name_or_path: str) -> bool:
-    return bool(_dangerous_tokens_in(name_or_path))
+def _is_dangerous_path(name_or_path: str) -> bool:
+    return bool(_dangerous_path_tokens(name_or_path))
 
 
 def _dangerous_flag_tokens(flag: str) -> set[str]:
-    """Flag counterpart of _dangerous_tokens_in — same safe-hint tiebreak as _looks_dangerous_flag
+    """Flag counterpart of _dangerous_path_tokens — same safe-hint tiebreak as _looks_dangerous_flag
     (see its docstring: "--dry-run" token-matches "run" in _DANGEROUS_VERBS, added for `nvm run`
     as a subcommand, and needs the whole-name safe-hint check to not be wrongly flagged), just
     returning the matched token(s) instead of a bool."""
@@ -617,7 +617,7 @@ def _fetch_node(
     uncorroborated match that also happens to duplicate its parent. A lone duplicate has nothing
     backing it up; a duplicate inside a multi-member group discovered the same way as its
     non-duplicating siblings does."""
-    text = _run(_invocation(name, _sub_args(path, help_flag, help_style), cfg))
+    text = _run_capture(_invocation(name, _sub_args(path, help_flag, help_style), cfg))
     node_hash = _hash_text(text)
     duplicates_parent = bool(text) and node_hash == parent_hash
     likely_invalid = duplicates_parent and sibling_count == 1
@@ -703,7 +703,7 @@ def _extract_one(name: str, cfg: dict | None, force: bool) -> None:
     help_flag = cfg.get("help_flag", "--help")
     help_style = cfg.get("help_style", "suffix")  # "prefix": <tool> <flag> <sub> (go); default: <tool> <sub> <flag>
 
-    top_help = _run(_invocation(name, _sub_args(None, help_flag, help_style), cfg))
+    top_help = _run_capture(_invocation(name, _sub_args(None, help_flag, help_style), cfg))
 
     if not top_help and not cfg.get("shell_prefix"):
         print(f"[allowlist] {name}: no output from --help — skipping (installed but unresponsive?)")
@@ -976,7 +976,7 @@ def _assemble_new_nodes(
                 "flags": {},
             }
             continue
-        if classification == Classification.READ_ONLY and _looks_dangerous(key):
+        if classification == Classification.READ_ONLY and _is_dangerous_path(key):
             classification = Classification.NEEDS_REVIEW
         flags = {
             flag: _classify_flag_result(flag, fresult, classification)
@@ -1122,7 +1122,7 @@ def reconfirm(c, tool=None, model="haiku"):
             if v.get("classification") == Classification.NEEDS_REVIEW:
                 candidates[path] = {
                     "help_text": cache_nodes.get(path, {}).get("help_text", ""),
-                    "tokens": _dangerous_tokens_in(path),
+                    "tokens": _dangerous_path_tokens(path),
                     "kind": "node",
                     "path": path,
                 }

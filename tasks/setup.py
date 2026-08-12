@@ -45,17 +45,17 @@ def setup(c):
             "headless container). See docs/dev-container.md for the container-specific setup "
             "path, or install/enable systemd if this environment should have it."
         )
-        phases.run(c, "packages", packages_phase, note=packages_note)
-        phases.run(c, "shell", shell_phase, note=shell_note)
+        phases.run_phase(c, "packages", packages_phase, note=packages_note)
+        phases.run_phase(c, "shell", shell_phase, note=shell_note)
         next_steps.print_next_steps()
         return
 
-    phases.run(c, "system", [system.locale, system.curlrc, system.dns], note="locale, curl config, DNS")
+    phases.run_phase(c, "system", [system.locale, system.curlrc, system.dns], note="locale, curl config, DNS")
 
-    phases.run(c, "packages", packages_phase, note=packages_note)
+    phases.run_phase(c, "packages", packages_phase, note=packages_note)
 
-    phases.run(c, "shell", shell_phase, note=shell_note)
+    phases.run_phase(c, "shell", shell_phase, note=shell_note)
 
-    phases.run(c, "desktop", [fonts.install, fonts.configure], note="Nerd Fonts, monospace font config")
+    phases.run_phase(c, "desktop", [fonts.install, fonts.configure], note="Nerd Fonts, monospace font config")
 
     next_steps.print_next_steps()
