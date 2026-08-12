@@ -586,6 +586,45 @@ def _looks_dangerous_flag(flag: str) -> bool:
     return bool(_dangerous_flag_tokens(flag))
 
 
+def _fetch_node(
+    name: str, cfg: dict, path: list[str], parent_hash: str, sibling_count: int, help_flag: str, help_style: str
+) -> tuple[dict, bool]:
+    """Fetch one node's --help text and compute its hash/likely-invalid metadata. Returns
+    (node_entry, duplicates_parent) — node_entry has everything `_build_tree` stores except
+    `children` (only known after this node's own child-discovery, which happens in the caller);
+    duplicates_parent isn't stored but the caller needs it to decide whether to recurse.
+
+    A subcommand that doesn't actually exist can silently fall back to printing its parent's help
+    instead of erroring — confirmed twice, at two different tree levels: `docker trust --help`
+    (root-level, deprecated in this docker build) dumps the whole `docker --help`; `helm list
+    maudlin-arachnid --help` (an auto-discovered depth-2 "child" that was never a real subcommand
+    — `helm list --help`'s text includes a sample-output table row that happens to match the
+    "Commands:"-heading line shape) dumps `helm list --help` verbatim. Recursing into either would
+    treat the parent's full content as this node's children — for `trust` that would mean docker's
+    entire command surface, blowing the node budget.
+
+    Whether duplicate content also means "not a real command" turns out to hinge on group size,
+    not on whether the name came from an explicit list vs auto-discovery — tried that distinction
+    first and it was wrong: git's `submodule <verb> -h` returns the exact same combined usage
+    block for 9 of its 10 auto-discovered children (only `absorbgitdirs` differs), and all 9 are
+    real, safety-distinct commands (`submodule deinit` is very different from `submodule sync`)
+    that just happen to share undifferentiated help text — the same situation as nvm's shell
+    function, just one level deeper. What actually distinguishes that from `helm list
+    maudlin-arachnid` is corroboration: submodule's verbs were discovered *together*, 10 in one
+    batch, from a scoped signal (git's own usage synopsis literally lists each of them as an
+    alternative). `maudlin-arachnid` was the *only* child found for `list` at all — `helm list`
+    has no real subcommands, so nothing else in its help text matched, leaving one isolated,
+    uncorroborated match that also happens to duplicate its parent. A lone duplicate has nothing
+    backing it up; a duplicate inside a multi-member group discovered the same way as its
+    non-duplicating siblings does."""
+    text = _run(_invocation(name, _sub_args(path, help_flag, help_style), cfg))
+    node_hash = _hash_text(text)
+    duplicates_parent = bool(text) and node_hash == parent_hash
+    likely_invalid = duplicates_parent and sibling_count == 1
+    node_entry = {"help_text": text, "content_hash": node_hash, "likely_invalid": likely_invalid}
+    return node_entry, duplicates_parent
+
+
 def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style: str) -> tuple[dict, bool]:
     """Breadth-first walk of the subcommand tree, up to tools.toml's max_depth/max_nodes for this
     tool (both default to today's single-level behavior — see tools.toml's header comment). Only
@@ -608,11 +647,11 @@ def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style:
     truncated = False
     top_hash = _hash_text(top_help)
     # (path, depth, parent_hash, sibling_count) — parent_hash detects "doesn't really exist, help
-    # fell back to the parent's text" (see below); sibling_count is how many children were
+    # fell back to the parent's text" (see _fetch_node); sibling_count is how many children were
     # discovered together in the same batch as this one, which is what actually distinguishes a
-    # real-but-undifferentiated command from a discovery false positive (see the comment below the
-    # loop where it's used — the short version: a *lone* duplicate is suspicious, a duplicate
-    # within a larger corroborated group isn't).
+    # real-but-undifferentiated command from a discovery false positive (see _fetch_node — the
+    # short version: a *lone* duplicate is suspicious, a duplicate within a larger corroborated
+    # group isn't).
     queue: list[tuple[list[str], int, str, int]] = [([r], 1, top_hash, len(roots)) for r in roots]
 
     while queue:
@@ -621,47 +660,94 @@ def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style:
             break
         path, depth, parent_hash, sibling_count = queue.pop(0)
         key = " ".join(path)
-        text = _run(_invocation(name, _sub_args(path, help_flag, help_style), cfg))
-        node_hash = _hash_text(text)
-        # A subcommand that doesn't actually exist can silently fall back to printing its parent's
-        # help instead of erroring — confirmed twice, at two different tree levels: `docker trust
-        # --help` (root-level, deprecated in this docker build) dumps the whole `docker --help`;
-        # `helm list maudlin-arachnid --help` (an auto-discovered depth-2 "child" that was never a
-        # real subcommand — `helm list --help`'s text includes a sample-output table row that
-        # happens to match the "Commands:"-heading line shape) dumps `helm list --help` verbatim.
-        # Recursing into either would treat the parent's full content as this node's children —
-        # for `trust` that would mean docker's entire command surface, blowing the node budget.
-        duplicates_parent = bool(text) and node_hash == parent_hash
-        # Whether duplicate content also means "not a real command" turns out to hinge on group
-        # size, not on whether the name came from an explicit list vs auto-discovery — tried that
-        # distinction first and it was wrong: git's `submodule <verb> -h` returns the exact same
-        # combined usage block for 9 of its 10 auto-discovered children (only `absorbgitdirs`
-        # differs), and all 9 are real, safety-distinct commands (`submodule deinit` is very
-        # different from `submodule sync`) that just happen to share undifferentiated help text —
-        # the same situation as nvm's shell function, just one level deeper. What actually
-        # distinguishes that from `helm list maudlin-arachnid` is corroboration: submodule's verbs
-        # were discovered *together*, 10 in one batch, from a scoped signal (git's own usage
-        # synopsis literally lists each of them as an alternative). `maudlin-arachnid` was the
-        # *only* child found for `list` at all — `helm list` has no real subcommands, so nothing
-        # else in its help text matched, leaving one isolated, uncorroborated match that also
-        # happens to duplicate its parent. A lone duplicate has nothing backing it up; a duplicate
-        # inside a multi-member group discovered the same way as its non-duplicating siblings does.
-        likely_invalid = duplicates_parent and sibling_count == 1
+        node_entry, duplicates_parent = _fetch_node(name, cfg, path, parent_hash, sibling_count, help_flag, help_style)
         child_names = (
-            _discover_subcommands(text, breadth_cap, tool=name, path=path)
+            _discover_subcommands(node_entry["help_text"], breadth_cap, tool=name, path=path)
             if depth < max_depth and not duplicates_parent
             else []
         )
-        nodes[key] = {
-            "help_text": text,
-            "content_hash": node_hash,
-            "children": [f"{key} {c}" for c in child_names],
-            "likely_invalid": likely_invalid,
-        }
+        nodes[key] = {**node_entry, "children": [f"{key} {c}" for c in child_names]}
         for c in child_names:
-            queue.append(([*path, c], depth + 1, node_hash, len(child_names)))
+            queue.append(([*path, c], depth + 1, node_entry["content_hash"], len(child_names)))
 
     return nodes, truncated
+
+
+def _extract_one(name: str, cfg: dict | None, force: bool) -> None:
+    """Extract+cache one tool's --help tree, or mark it interactive-only/not-installed/unchanged
+    as appropriate — the per-tool body of extract()'s loop."""
+    if cfg is None:
+        print(f"[allowlist] {name}: not in tools.toml — skipping")
+        return
+    # shell_prefix tools (nvm) are shell functions, not binaries — `which` can't see them,
+    # so existence is judged by whether the extraction call actually produces output instead.
+    if not cfg.get("shell_prefix") and not util.command_exists(name):
+        print(f"[allowlist] {name}: not installed — skipping")
+        return
+
+    if cfg.get("skip_interactive"):
+        _save_cache(
+            name, {"interactive": True, "version": None, "extracted_at": _now(), "nodes": {}, "truncated": False}
+        )
+        print(f"[allowlist] {name}: interactive-only, no help captured")
+        return
+
+    version_flag = cfg.get("version_flag", "--version")
+    version = _tool_version(name, version_flag, cfg)
+
+    cached = _load_cache(name) or {}
+    if not force and version and cached.get("version") == version:
+        print(f"[allowlist] {name}: unchanged ({version}) — skipped")
+        return
+
+    help_flag = cfg.get("help_flag", "--help")
+    help_style = cfg.get("help_style", "suffix")  # "prefix": <tool> <flag> <sub> (go); default: <tool> <sub> <flag>
+
+    top_help = _run(_invocation(name, _sub_args(None, help_flag, help_style), cfg))
+
+    if not top_help and not cfg.get("shell_prefix"):
+        print(f"[allowlist] {name}: no output from --help — skipping (installed but unresponsive?)")
+        return
+
+    truncated = False
+    if cfg.get("no_subcommands"):
+        nodes = {
+            _NO_SUBCOMMANDS_KEY: {
+                "help_text": top_help,
+                "content_hash": _hash_text(top_help),
+                "children": [],
+                "likely_invalid": False,
+            }
+        }
+    else:
+        nodes = {
+            _TOP_HELP_KEY: {
+                "help_text": top_help,
+                "content_hash": _hash_text(top_help),
+                "children": [],
+                "likely_invalid": False,
+            }
+        }
+        tree_nodes, truncated = _build_tree(name, cfg, top_help, help_flag, help_style)
+        nodes.update(tree_nodes)
+
+    if cfg.get("shell_prefix") and not any(n["help_text"] for n in nodes.values()):
+        print(f"[allowlist] {name}: no output at all — likely not installed on this machine, skipping")
+        return
+
+    _save_cache(
+        name,
+        {
+            "interactive": False,
+            "version": version,
+            "extracted_at": _now(),
+            "nodes": nodes,
+            "truncated": truncated,
+        },
+    )
+    classifiable = len([k for k in nodes if k != _TOP_HELP_KEY])
+    note = " [truncated at max_nodes — increase tools.toml's max_nodes for this tool if needed]" if truncated else ""
+    print(f"[allowlist] {name}: extracted ({version or 'unknown version'}, {classifiable} node(s)){note}")
 
 
 @task
@@ -671,83 +757,8 @@ def extract(c, tool=None, force=False):
     the last successful extract, unless --force."""
     registry = _load_registry()
     names = [tool] if tool else sorted(registry)
-
     for name in names:
-        cfg = registry.get(name)
-        if cfg is None:
-            print(f"[allowlist] {name}: not in tools.toml — skipping")
-            continue
-        # shell_prefix tools (nvm) are shell functions, not binaries — `which` can't see them,
-        # so existence is judged by whether the extraction call actually produces output instead.
-        if not cfg.get("shell_prefix") and not util.command_exists(name):
-            print(f"[allowlist] {name}: not installed — skipping")
-            continue
-
-        if cfg.get("skip_interactive"):
-            _save_cache(
-                name, {"interactive": True, "version": None, "extracted_at": _now(), "nodes": {}, "truncated": False}
-            )
-            print(f"[allowlist] {name}: interactive-only, no help captured")
-            continue
-
-        version_flag = cfg.get("version_flag", "--version")
-        version = _tool_version(name, version_flag, cfg)
-
-        cached = _load_cache(name) or {}
-        if not force and version and cached.get("version") == version:
-            print(f"[allowlist] {name}: unchanged ({version}) — skipped")
-            continue
-
-        help_flag = cfg.get("help_flag", "--help")
-        help_style = cfg.get("help_style", "suffix")  # "prefix": <tool> <flag> <sub> (go); default: <tool> <sub> <flag>
-
-        top_help = _run(_invocation(name, _sub_args(None, help_flag, help_style), cfg))
-
-        if not top_help and not cfg.get("shell_prefix"):
-            print(f"[allowlist] {name}: no output from --help — skipping (installed but unresponsive?)")
-            continue
-
-        truncated = False
-        if cfg.get("no_subcommands"):
-            nodes = {
-                _NO_SUBCOMMANDS_KEY: {
-                    "help_text": top_help,
-                    "content_hash": _hash_text(top_help),
-                    "children": [],
-                    "likely_invalid": False,
-                }
-            }
-        else:
-            nodes = {
-                _TOP_HELP_KEY: {
-                    "help_text": top_help,
-                    "content_hash": _hash_text(top_help),
-                    "children": [],
-                    "likely_invalid": False,
-                }
-            }
-            tree_nodes, truncated = _build_tree(name, cfg, top_help, help_flag, help_style)
-            nodes.update(tree_nodes)
-
-        if cfg.get("shell_prefix") and not any(n["help_text"] for n in nodes.values()):
-            print(f"[allowlist] {name}: no output at all — likely not installed on this machine, skipping")
-            continue
-
-        _save_cache(
-            name,
-            {
-                "interactive": False,
-                "version": version,
-                "extracted_at": _now(),
-                "nodes": nodes,
-                "truncated": truncated,
-            },
-        )
-        classifiable = len([k for k in nodes if k != _TOP_HELP_KEY])
-        note = (
-            " [truncated at max_nodes — increase tools.toml's max_nodes for this tool if needed]" if truncated else ""
-        )
-        print(f"[allowlist] {name}: extracted ({version or 'unknown version'}, {classifiable} node(s)){note}")
+        _extract_one(name, registry.get(name), force)
 
 
 _NO_SUBCOMMANDS_KEY = "*"  # nodes dict key for a flat, no-subcommand-tree tool's single verdict
