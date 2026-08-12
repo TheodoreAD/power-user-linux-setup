@@ -67,7 +67,7 @@
 # `--help` only worked here because git-man happens to be present; `-h` doesn't have that
 # dependency and is used below for that reason, not merely as a style preference.
 #
-# Man-page-dependency audit: `cli-allowlist/check_man_deps.py` runs every registered tool's help
+# Man-page-dependency audit: `inv allowlist.check-man-deps` runs every registered tool's help
 # invocation under `strace -f -e trace=execve` and checks for a child exec of /usr/bin/man — the
 # only reliable way to tell "renders like a man page" (gcloud, which mimics man's NAME/SYNOPSIS/
 # DESCRIPTION layout with its own self-contained renderer) apart from "actually shells out to man"
@@ -299,7 +299,7 @@ max_subcommands = 25
 cloud_cli = true # same shape of problem as gcloud: aws <service> <operation>, hundreds of services
 help_flag = "help" # not --help: aws uses a literal `help` pseudo-subcommand (pager-rendered)
 # Unlike git, there's no alternate flag that avoids this: `aws help` pipes through groff/troff/
-# grotty for its formatted output (confirmed via check_man_deps.py's strace check) on every
+# grotty for its formatted output (confirmed via allowlist.check-man-deps' strace check) on every
 # invocation — extraction only works here because groff happens to be installed on this machine,
 # same risk class as git's original git-man dependency, just with no workaround available.
 subcommands = [

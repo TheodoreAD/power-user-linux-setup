@@ -47,7 +47,7 @@ inv allowlist.apply       # merge into ~/.claude/settings.json
 
 inv allowlist.status                        # what's tracked, stale, or still unreviewed
 inv allowlist.render --target=copilot       # Copilot's format instead — still print-only, no apply yet
-python3 cli-allowlist/check_man_deps.py     # re-check for new man-page dependencies
+inv allowlist.check-man-deps                # re-check for new man-page dependencies
 ```
 
 `apply` only ever touches the `permissions` block of `~/.claude/settings.json` — everything else

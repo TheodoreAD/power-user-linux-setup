@@ -184,17 +184,19 @@ Two real, empirically-confirmed problems, not hypothetical ones:
    renders through the system `man` command, which needs the `git-man` package. It happened to be
    installed on the machine this was built on, which made the bug invisible until tested with a
    stripped environment. Fixed by using `git -h` instead — a self-contained synopsis with no
-   package dependency. `cli-allowlist/check_man_deps.py` runs every registered tool's help
-   invocation under `strace -f -e trace=execve` and checks for a child `exec` of `man`, `groff`, or
-   `troff` — the only reliable way to tell "renders like a man page" (`gcloud`, which mimics man's
-   NAME/SYNOPSIS/DESCRIPTION layout with its own self-contained renderer, nothing external
-   involved) apart from "actually shells out to a formatter" (`git` depends on `man` itself; `aws`
-   — added when the cloud-CLI recursion boundary was drawn — depends on `groff`/`troff`/`grotty`
-   for `aws help`'s formatted output, same risk class, different package, caught the same way). Any
-   tool in this category only extracts correctly because that package happens to be installed on
-   this machine; there's no portable fix for `aws` the way `-h` was for `git` (no flag skips the
-   groff pipeline), so it's accepted and documented in `tools.toml` rather than worked around. Re-run
-   the check (`python3 cli-allowlist/check_man_deps.py`) after registering a new tool.
+   package dependency. `inv allowlist.check-man-deps` (`tasks/allowlist.py` — deliberately not part
+   of the extract/classify/review/apply pipeline itself, an occasional maintenance diagnostic
+   instead) runs every registered tool's help invocation under `strace -f -e trace=execve` and
+   checks for a child `exec` of `man`, `groff`, or `troff` — the only reliable way to tell "renders
+   like a man page" (`gcloud`, which mimics man's NAME/SYNOPSIS/DESCRIPTION layout with its own
+   self-contained renderer, nothing external involved) apart from "actually shells out to a
+   formatter" (`git` depends on `man` itself; `aws` — added when the cloud-CLI recursion boundary
+   was drawn — depends on `groff`/`troff`/`grotty` for `aws help`'s formatted output, same risk
+   class, different package, caught the same way). Any tool in this category only extracts
+   correctly because that package happens to be installed on this machine; there's no portable fix
+   for `aws` the way `-h` was for `git` (no flag skips the groff pipeline), so it's accepted and
+   documented in `tools.toml` rather than worked around. Re-run the check
+   (`inv allowlist.check-man-deps`) after registering a new tool.
 2. **Extraction must be portable, not just correct on the machine that wrote it.** `PAGER`,
    `MANPAGER`, `GIT_PAGER`, and `BROWSER` are neutralized (`cat`/`true`) for every extraction call
    — the actual defense here isn't "nothing tries to page or open a browser," it's that the
