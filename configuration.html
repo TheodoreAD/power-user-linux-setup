@@ -2339,6 +2339,16 @@ package was (or wasn&rsquo;t) picked up.</p>
 </tr>
 </tbody>
 </table>
+<p><strong><code>inv verify.all</code></strong> (<code>tasks/verify.py</code>, runs as the last step of <code>inv setup</code>&rsquo;s <code>packages</code> phase —
+see <a href="dev-container.html#automated-functional-verification-inv-verifyall">dev-container.md</a>) sits in
+neither bucket cleanly. For every method except <code>gnome-extension</code> it goes through
+<code>packages_by_method()</code> like the generic install tasks, so it only checks what the current tag
+profile actually installed. <code>gnome-extension</code> is force-skipped regardless of tags/enabled — no
+automated path, not even <code>inv setup</code> itself, ever calls <code>inv gnome.extensions</code> (see
+<code>tasks/gnome.py</code>), so checking those by default would fail <code>inv setup</code> for extensions it never
+attempted to install. It also does a manual scan for <code>method = "zsh"</code> entries (<code>enabled</code>-only,
+tags ignored — same bypass <code>zsh.configure</code> already uses), always skipping them since they&rsquo;re
+config-only with no command to verify.</p>
 <p>This split is exactly what <a href="wsl.html">wsl.md</a> and <a href="dev-container.html">dev-container.md</a> rely on — when building a new environment profile, check which bucket the task you&rsquo;re skipping falls into before assuming a tag exclusion is enough.</p>
 <p><strong>A third bucket: tasks that don&rsquo;t read <code>setup.toml</code> at all.</strong> <code>apt.clean-cache(-full)</code>, <code>python.clean-cache(-full)</code>, <code>node.clean-cache(-full)</code>, <code>tools.clean-cache(-full)</code>, <code>docker.clean(-full)</code>, and the <code>cleanup.*</code> umbrella tasks that depend on them operate on whatever&rsquo;s actually on disk for that tool (apt&rsquo;s archive cache, <code>~/.cache/uv</code>, <code>~/.npm</code>, cargo&rsquo;s registry, Docker images) — <code>enabled</code>/<code>tags</code> are irrelevant to them since there&rsquo;s no <code>[packages.*]</code> entry being consulted in the first place. Excluding a tag stops something from being <em>installed</em>; it has no bearing on whether that tool&rsquo;s cache-cleanup task has anything to do.</p>
 <p><strong>Tag catalog</strong> — only seven tags currently gate anything (used across the exclusion recipes in this repo):</p>

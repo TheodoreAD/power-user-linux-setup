@@ -598,6 +598,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#checking-installed-tools-actually-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking installed tools actually work
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reclaiming-disk-space-aptuvnpmcargodocker-caches" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2061,6 +2072,17 @@
 </li>
         
           <li class="md-nav__item">
+  <a href="#checking-installed-tools-actually-work" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Checking installed tools actually work
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#reclaiming-disk-space-aptuvnpmcargodocker-caches" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2219,9 +2241,16 @@ To upgrade all of them to the latest release:</p>
 <p>This re-downloads and reinstalls each <code>deb-github</code> package. <code>dpkg</code> handles version comparison —
 reinstalling the same version is safe. For packages using <code>tag = "nightly"</code>, this always fetches
 the latest nightly build.</p>
+<h3 id="checking-installed-tools-actually-work">Checking installed tools actually work</h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>verify.all
+</span></code></pre></div>
+<p>Runs automatically as the last step of <code>inv setup</code>&rsquo;s <code>packages</code> phase, so this is mainly useful
+standalone — a quick health check any time, or after manually installing/removing something. See
+<a href="dev-container.html#automated-functional-verification-inv-verifyall">dev-container.md</a> for how it
+decides what to check and why.</p>
 <h3 id="reclaiming-disk-space-aptuvnpmcargodocker-caches">Reclaiming disk space (apt/uv/npm/cargo/Docker caches)</h3>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>cleanup.all<span class="w">          </span><span class="c1"># conservative: keeps caches that speed up your next install</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>cleanup.all-full<span class="w">     </span><span class="c1"># full wipe: reclaims more, next install of each is slower</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>cleanup.all<span class="w">          </span><span class="c1"># conservative: keeps caches that speed up your next install</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>inv<span class="w"> </span>cleanup.all-full<span class="w">     </span><span class="c1"># full wipe: reclaims more, next install of each is slower</span>
 </span></code></pre></div>
 <p>Opt-in only — neither runs as part of <code>inv setup</code>, since a persistent workstation usually wants
 to <em>keep</em> these caches. Each covers apt&rsquo;s <code>.deb</code> archive cache, uv&rsquo;s build/wheel cache, npm&rsquo;s

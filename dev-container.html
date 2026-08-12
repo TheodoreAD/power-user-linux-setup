@@ -1702,6 +1702,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#automated-functional-verification-inv-verifyall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Automated functional verification (<code>inv verify.all</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#non-root-user" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2067,6 +2078,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#automated-functional-verification-inv-verifyall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Automated functional verification (<code>inv verify.all</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#non-root-user" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2272,42 +2294,96 @@ second IDE window running inside it.</p>
 that the build didn&rsquo;t error):</p>
 <div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">FROM</span><span class="w"> </span><span class="s">ubuntu:24.04</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>--no-install-recommends<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">      </span>python3<span class="w"> </span>python3-pip<span class="w"> </span>curl<span class="w"> </span>git<span class="w"> </span>sudo<span class="w"> </span>zsh<span class="w"> </span>ca-certificates<span class="w"> </span>gnupg<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>
-</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">RUN</span><span class="w"> </span>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://astral.sh/uv/install.sh<span class="w"> </span><span class="p">|</span><span class="w"> </span>sh
-</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">RUN</span><span class="w"> </span>pip3<span class="w"> </span>install<span class="w"> </span>--break-system-packages<span class="w"> </span>--no-cache-dir<span class="w"> </span>invoke
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/setup</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="k">COPY</span><span class="w"> </span>setup.toml<span class="w"> </span>.
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="k">COPY</span><span class="w"> </span>bootstrap.sh<span class="w"> </span>.
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="k">COPY</span><span class="w"> </span>tasks/<span class="w"> </span>tasks/
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="k">COPY</span><span class="w"> </span>config/<span class="w"> </span>config/
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="k">COPY</span><span class="w"> </span>skills/<span class="w"> </span>skills/
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/setup</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="k">COPY</span><span class="w"> </span>setup.toml<span class="w"> </span>.
-</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">COPY</span><span class="w"> </span>tasks/<span class="w"> </span>tasks/
-</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">COPY</span><span class="w"> </span>config/<span class="w"> </span>config/
-</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a><span class="k">COPY</span><span class="w"> </span>skills/<span class="w"> </span>skills/
-</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a>
-</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation,corporate,ide,gnome
-</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/root/.local/bin:</span><span class="si">${</span><span class="nv">PATH</span><span class="si">}</span><span class="s2">&quot;</span>
-</span><span id="__span-1-18"><a id="__codelineno-1-18" name="__codelineno-1-18" href="#__codelineno-1-18"></a>
-</span><span id="__span-1-19"><a id="__codelineno-1-19" name="__codelineno-1-19" href="#__codelineno-1-19"></a><span class="k">RUN</span><span class="w"> </span>inv<span class="w"> </span>setup<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-20"><a id="__codelineno-1-20" name="__codelineno-1-20" href="#__codelineno-1-20"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>inv<span class="w"> </span>cleanup.all-full<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-1-21"><a id="__codelineno-1-21" name="__codelineno-1-21" href="#__codelineno-1-21"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*<span class="w"> </span>/tmp/*
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="k">RUN</span><span class="w"> </span>bash<span class="w"> </span>bootstrap.sh
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gui,workstation,corporate,ide,gnome
+</span><span id="__span-1-13"><a id="__codelineno-1-13" name="__codelineno-1-13" href="#__codelineno-1-13"></a><span class="k">ENV</span><span class="w"> </span><span class="nv">PATH</span><span class="o">=</span><span class="s2">&quot;/root/.local/bin:</span><span class="si">${</span><span class="nv">PATH</span><span class="si">}</span><span class="s2">&quot;</span>
+</span><span id="__span-1-14"><a id="__codelineno-1-14" name="__codelineno-1-14" href="#__codelineno-1-14"></a>
+</span><span id="__span-1-15"><a id="__codelineno-1-15" name="__codelineno-1-15" href="#__codelineno-1-15"></a><span class="k">RUN</span><span class="w"> </span>inv<span class="w"> </span>setup<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-16"><a id="__codelineno-1-16" name="__codelineno-1-16" href="#__codelineno-1-16"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>inv<span class="w"> </span>cleanup.all-full<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-1-17"><a id="__codelineno-1-17" name="__codelineno-1-17" href="#__codelineno-1-17"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>rm<span class="w"> </span>-rf<span class="w"> </span>/var/lib/apt/lists/*<span class="w"> </span>/tmp/*
 </span></code></pre></div>
+<p>No <code>apt-get install</code> line at all — <code>bootstrap.sh</code> now self-installs every OS-level prerequisite
+(<code>curl</code>, <code>gnupg</code>, <code>ca-certificates</code>, <code>sudo</code>) the base image doesn&rsquo;t already have, via a preamble
+gated behind <code>command -v apt-get</code> that no-ops entirely on a system that already has them (every
+bare-metal/WSL/VM install, per <code>README.md</code>&rsquo;s existing &ldquo;Requirements&rdquo; section). Only a genuinely
+minimal container base image exercises the install branch. An earlier version of this doc listed
+<code>python3 python3-pip curl git sudo zsh ca-certificates gnupg</code> explicitly in a hand-maintained
+<code>apt-get install</code> line — all of that is gone now:</p>
+<ul>
+<li><code>python3</code>/<code>python3-pip</code> were never actually needed — <code>inv setup</code> never touches system Python at
+  all; <code>bootstrap.sh</code> provisions Python itself via <code>uv python install</code>.</li>
+<li><code>git</code>/<code>zsh</code> are ordinary <code>[packages.*]</code> apt entries (<code>setup.toml</code>&rsquo;s <code>git</code>/<code>zsh</code> sections),
+  installed by <code>apt.base</code> well before anything in <code>inv setup</code> needs either — no reason to also
+  hand-list them here.</li>
+<li><code>curl</code>/<code>sudo</code>/<code>ca-certificates</code>/<code>gnupg</code> are genuine prerequisites, but now <code>bootstrap.sh</code>&rsquo;s job,
+  not the Dockerfile&rsquo;s — the same self-heal preamble every other use case (bare metal, WSL, the
+  future <code>postCreateCommand</code> model) already runs unconditionally.</li>
+</ul>
+<p><code>gnupg</code> specifically matters because every <code>apt-repo</code>-method package (<code>gh</code>, <code>kubectl</code>, <code>docker</code>,
+<code>terraform</code>, &hellip;) registers its repo by piping a downloaded key through <code>gpg --dearmor</code> — without
+<code>gpg</code> present, that pipe fails (<code>curl: (23) Failure writing output to destination</code>), <code>apt.repos</code>
+treats the failed key fetch as &ldquo;skip this repo, print a WARNING, keep going&rdquo; rather than fatal, and
+<code>RUN inv setup</code> used to still exit 0 while silently missing <code>kubectl</code>/<code>docker</code>/<code>terraform</code> entirely
+and getting whatever stale version of <code>gh</code> happens to already be in Ubuntu&rsquo;s own <code>universe</code> repo
+instead of the pinned upstream one. <code>tasks/apt.py</code>&rsquo;s <code>repos()</code> task independently self-ensures
+<code>gnupg</code>/<code>lsb-release</code> too (a second, narrower layer — see <code>tasks/apt.py</code>&rsquo;s comment on that block)
+so a standalone <code>inv apt.repos</code> run stays protected even outside the <code>bootstrap.sh</code> flow. This
+specific bug is also exactly the shape of thing <code>inv verify.all</code> now catches automatically and
+generally — see below — so <code>RUN inv setup</code> no longer exits 0 while quietly missing something.</p>
+<h3 id="automated-functional-verification-inv-verifyall">Automated functional verification (<code>inv verify.all</code>)</h3>
+<p><code>inv setup</code>&rsquo;s <code>packages</code> phase ends with <code>inv verify.all</code> (<code>tasks/verify.py</code>) — a hard,
+convention-based check that every package this run installed also actually <em>works</em>, not just that
+it&rsquo;s present. The gnupg bug above was originally found by hand (manually checking <code>gh --version</code>
+and <code>dpkg -l</code>); this task exists so that class of bug fails the build loudly instead of needing a
+human to go looking for it.</p>
+<p>Convention, not a hand-written test per package: the default check is <code>&lt;check_cmd or table-key&gt;
+--version</code>, with existence checks (no invocation) for methods that install something with no
+command by nature — <code>git-clone</code>/<code>wrapper-script</code>/<code>apparmor-profile</code> dest/profile paths.
+<code>gnome-extension</code> always skips, since no automated path (not even <code>inv setup</code>) ever calls
+<code>inv gnome.extensions</code> — see <code>tasks/gnome.py</code>, GNOME sessions are never touched programmatically
+in this repo. Per-package <code>setup.toml</code> fields override the convention: <code>verify_cmd</code> for a
+different invocation, <code>verify = false</code> for &ldquo;no functional check is possible at all.&rdquo; No fallback
+chain anywhere — the first failure aborts <code>inv setup</code> immediately, deliberately the opposite of
+<code>apt.py</code>&rsquo;s <code>warn=True</code>-and-continue pattern.</p>
+<p>Auditing this against a real, fully-provisioned machine (not just reading the code) surfaced real
+bugs the convention alone wouldn&rsquo;t have predicted:</p>
+<ul>
+<li><strong><code>nyancat --version</code> doesn&rsquo;t exit</strong> — it ignores the unrecognized flag and runs its terminal
+  animation forever instead. Auditing this by hand actually hung the machine it ran on before a
+  fix was in place. Every invocation is now wrapped in <code>timeout 15s</code> — not a fallback, just a hard
+  ceiling on the one attempt — so a badly-behaved package fails loudly in 15 seconds instead of
+  hanging <code>inv setup</code> (or the machine) indefinitely. <code>px-proxy --version</code> had the same shape of
+  bug — it started the proxy daemon itself instead of printing a version and exiting.</li>
+<li><strong>Container-only PATH gaps</strong>: <code>go</code> and <code>node</code> both install to a location that&rsquo;s only ever put on
+  <code>PATH</code> by a <code>zshenv</code>/Oh-My-Zsh-plugin snippet, sourced by an interactive shell — never sourced
+  within the single non-interactive <code>RUN</code> layer a Dockerfile build runs in. Both work fine
+  interactively on bare metal (a later shell sources the snippet) but need an explicit
+  <code>verify_cmd</code> pointing at the real install path in <code>setup.toml</code> to be provable inside the same
+  <code>RUN</code> that just installed them.</li>
+<li><strong>Table-key-vs-real-binary mismatches</strong>: several entries&rsquo; section name isn&rsquo;t the command it
+  installs — <code>[packages.edge]</code> installs <code>microsoft-edge</code>, <code>[packages.vscode]</code> installs <code>code</code>,
+  <code>[packages.ripgrep]</code> installs <code>rg</code>, <code>[packages.kubectl]</code>/<code>[packages.helm]</code>/<code>[packages.go]</code>/<code>k9s</code>
+  don&rsquo;t support a <code>--version</code> flag at all (subcommand or short flag instead). Each got an explicit
+  <code>verify_cmd</code> once the audit found it — the convention&rsquo;s default guess is a starting point, not a
+  guarantee.</li>
+<li><strong>A genuinely stale machine</strong>: <code>[packages.pulse-proxy-start]</code> (a <code>wrapper-script</code> entry) was
+  added to <code>setup.toml</code> after this machine&rsquo;s last full <code>inv setup</code> run and had simply never been
+  installed here — <code>inv verify.all</code> caught that too; running <code>inv tools.install</code> once fixed it.
+  This is the mechanism doing exactly its job, not a false positive.</li>
+</ul>
 <p><code>COPY skills/ skills/</code> is easy to miss and not optional — <code>ai.skills</code> (part of the <code>packages</code>
 phase <code>inv setup</code> always runs) copies this repo&rsquo;s own <code>skills/research-library/</code> into the image
 and fails with a <code>FileNotFoundError</code> if that directory wasn&rsquo;t copied in. <code>PATH</code> needs
 <code>/root/.local/bin</code> up front since that&rsquo;s where <code>uv</code>, <code>invoke</code>, and most script/binary/archive
 -method tools land (<code>~/.local/bin</code> when running as root during a build is <code>/root/.local/bin</code>).</p>
-<p><code>gnupg</code> is not optional either, despite apt never listing it as a dependency error: every
-<code>apt-repo</code>-method package (<code>gh</code>, <code>kubectl</code>, <code>docker</code>, <code>terraform</code>, &hellip;) registers its repo by
-piping a downloaded key through <code>gpg --dearmor</code>. Without the <code>gpg</code> binary present, that pipe fails
-(<code>curl: (23) Failure writing output to destination</code>) — but <code>apt.repos</code> treats a failed key fetch
-as &ldquo;skip this repo, print a WARNING, keep going&rdquo; rather than a fatal error, so <code>RUN inv setup</code>
-still exits 0. The image just silently ends up missing <code>kubectl</code>/<code>docker</code>/<code>terraform</code> entirely,
-and gets whatever stale version of <code>gh</code> happens to already be in Ubuntu&rsquo;s own <code>universe</code> repo
-instead of the pinned upstream one — easy to miss unless you specifically check <code>dpkg -l</code> and
-<code>/etc/apt/sources.list.d/</code>, which is how this was actually caught (confirmed by building without
-<code>gnupg</code>, finding the WARNINGs in the log, then rebuilding with it added and diffing installed
-versions).</p>
 <p><code>inv cleanup.all-full</code> is the container-appropriate cleanup call — see
 <a href="#cleanup-reclaiming-image-layer-space">Cleanup</a> below for what it does, what it actually saves
 (less than you&rsquo;d think), and why the container case wants the <em>full</em> variant specifically, not
@@ -2348,10 +2424,10 @@ a container either way) works non-interactively against the <code>NOPASSWD</code
 prompt.</p>
 <h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code></h3>
 <p>Also verified end-to-end, swapping only the <code>FROM</code> line and dropping the <code>useradd</code>/sudoers block
-(the image already ships a passwordless-sudo <code>vscode</code> user and <code>gnupg</code>) — everything else in the
-outline above is unchanged. Only addition needed: <code>python3</code>/<code>python3-pip</code> still aren&rsquo;t
-preinstalled, so that <code>apt-get install</code> line stays. No conflicts observed between this image&rsquo;s
-preinstalled packages and anything <code>setup.toml</code> installs.</p>
+(the image already ships a passwordless-sudo <code>vscode</code> user, plus <code>curl</code>/<code>gnupg</code>/<code>ca-certificates</code>
+preinstalled) — everything else in the outline above is unchanged, and <code>bootstrap.sh</code>&rsquo;s self-heal
+preamble finds nothing missing on this image (<code>missing</code> stays empty, pure no-op). No conflicts
+observed between this image&rsquo;s preinstalled packages and anything <code>setup.toml</code> installs.</p>
 <h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code></h3>
 <p>The outline above is tested as a bare <code>docker build</code>; the actual VS Code Dev Containers /
 <code>@devcontainers/cli</code> workflow adds its own layer of environment setup before your Dockerfile even

@@ -2564,7 +2564,7 @@ always uses their defaults).</p>
 are actually live yet — skipped with a message otherwise, if <code>wsl.fix</code> just changed
 <code>/etc/wsl.conf</code> and you haven&rsquo;t restarted WSL), <em>then</em> two named phases run through
 <code>tasks/phases.py</code>: <strong>packages</strong> (<code>apt.repos</code>/<code>apt.base</code>/<code>apt.deb</code>/<code>tools.install</code>/<code>ai.skills</code>/
-<code>python.tools</code>/<code>node.install</code>) and <strong>shell</strong> (<code>zsh.omz-configure</code>/<code>zsh.configure</code>/
+<code>python.tools</code>/<code>node.install</code>/<code>verify.all</code>) and <strong>shell</strong> (<code>zsh.omz-configure</code>/<code>zsh.configure</code>/
 <code>zsh.p10k-configure</code>/<code>zsh.set-default-shell</code>). DNS has to be fixed before the packages/shell
 phases — on a re-run after a restart with <code>generateResolvConf=false</code> already active, DNS is broken
 (see <a href="#prerequisites-etcwslconf">Prerequisites</a> above) until <code>system.dns</code> runs, and every one of
