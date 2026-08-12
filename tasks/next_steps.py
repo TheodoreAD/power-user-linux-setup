@@ -16,7 +16,7 @@ def _current_shell() -> str:
 
 
 def _git_settings_applied() -> bool:
-    for key, want in git._SETTINGS.items():
+    for key, want in git.SETTINGS.items():
         result = subprocess.run(["git", "config", "--global", key], capture_output=True, text=True)
         if result.stdout.strip() != want:
             return False
@@ -25,26 +25,26 @@ def _git_settings_applied() -> bool:
 
 def _git_profiles_applied(identity: dict) -> bool:
     profiles = identity.get("git_profiles", [])
-    return all((git._PROJECTS_ROOT / p["directory"]).exists() for p in profiles)
+    return all((git.PROJECTS_ROOT / p["directory"]).exists() for p in profiles)
 
 
 def _missing_ssh_keys(identity: dict) -> list[str]:
-    node = ssh._node()
+    node = ssh.current_node()
     emails = sorted({h["email"] for h in identity.get("ssh_hosts", [])})
-    return [email for email in emails if not ssh._key_path(email, node).exists()]
+    return [email for email in emails if not ssh.key_path(email, node).exists()]
 
 
 def _ssh_config_applied(identity: dict) -> bool:
-    if not ssh._SSH_CONFIG.exists():
+    if not ssh.SSH_CONFIG.exists():
         return False
-    node = ssh._node()
+    node = ssh.current_node()
     blocks = []
     for h in identity.get("ssh_hosts", []):
-        key = ssh._key_path(h["email"], node)
+        key = ssh.key_path(h["email"], node)
         blocks.append(f"Host {h['alias']}\n  HostName {h['hostname']}\n  IdentityFile {key}\n  User {h['user']}")
-    blocks.append(ssh._HOST_STAR)
+    blocks.append(ssh.HOST_STAR)
     content = "\n\n".join(blocks)
-    text = ssh._SSH_CONFIG.read_text()
+    text = ssh.SSH_CONFIG.read_text()
     _, status = util.ensure_block_text(text, "ssh", content)
     return status == util.BlockStatus.OK
 

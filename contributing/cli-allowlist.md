@@ -290,7 +290,7 @@ whatever Claude's own default is) throws away commands that a closer look would 
 
 `inv allowlist.reconfirm` is a second, targeted LLM pass over exactly the current `needs_review`
 set (subcommands and flags both) — different from a normal `classify` re-run in two ways: it tells
-the model precisely which word triggered suspicion (`_dangerous_tokens_in`/`_dangerous_flag_tokens`
+the model precisely which word triggered suspicion (`_dangerous_path_tokens`/`_dangerous_flag_tokens`
 report the matched token, not just a bool, specifically so this prompt can cite it), and it trusts
 whatever the model comes back with directly — a reconfirmed `read_only` does **not** get run back
 through the same backstop that flagged it in the first place, which would just recreate the

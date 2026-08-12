@@ -5,9 +5,9 @@ from invoke import task
 
 from . import util
 
-_PROJECTS_ROOT = Path.home() / "projects"
+PROJECTS_ROOT = Path.home() / "projects"
 
-_SETTINGS = {
+SETTINGS = {
     "core.autocrlf": "input",
     "core.fileMode": "true",
     "core.ignorecase": "false",
@@ -25,7 +25,7 @@ _SETTINGS = {
 def settings(c):
     """Apply global git configuration (idempotent, no identity data required)."""
     if util.DRY_RUN:
-        for key, want in _SETTINGS.items():
+        for key, want in SETTINGS.items():
             result = subprocess.run(
                 ["git", "config", "--global", key],
                 capture_output=True,
@@ -35,7 +35,7 @@ def settings(c):
             status = "ok" if current == want else f"WRONG (current: {current!r})"
             print(f"[git] {key}: {status}")
         return
-    for key, val in _SETTINGS.items():
+    for key, val in SETTINGS.items():
         c.run(f"git config --global {key} {val!r}", hide=True)
     print("[git] global settings applied")
 
@@ -51,7 +51,7 @@ def configure(c):
 
     if util.DRY_RUN:
         for p in profiles:
-            project_dir = _PROJECTS_ROOT / p["directory"]
+            project_dir = PROJECTS_ROOT / p["directory"]
             exists = util.ok_label(project_dir.exists())
             print(f"[git] {p['directory']} ({exists}) → {p['name']} <{p['email']}>")
         return
@@ -60,7 +60,7 @@ def configure(c):
     c.run("git config --global --unset user.email", warn=True, hide=True)
 
     for p in profiles:
-        project_dir = _PROJECTS_ROOT / p["directory"]
+        project_dir = PROJECTS_ROOT / p["directory"]
         project_dir.mkdir(parents=True, exist_ok=True)
         gitconfig = project_dir / ".gitconfig"
         c.run(

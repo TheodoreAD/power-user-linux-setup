@@ -45,7 +45,7 @@ def configure(c):
 # ---------------------------------------------------------------------------
 
 
-def _install_apt(c, name: str, cfg: dict) -> None:
+def _install_apt_package(c, name: str, cfg: dict) -> None:
     packages = util.apt_packages(name, cfg)
     if util.DRY_RUN:
         parts = [f"{p}:{util.ok_label(util.apt_installed(p))}" for p in packages]
@@ -70,13 +70,13 @@ def base(c):
     pkgs = util.packages_by_method(util.PackageMethod.APT)
     if util.DRY_RUN:
         for name, cfg in pkgs.items():
-            _install_apt(c, name, cfg)
+            _install_apt_package(c, name, cfg)
         return
     needs_update = any(not util.apt_installed(p) for name, cfg in pkgs.items() for p in util.apt_packages(name, cfg))
     if needs_update:
         c.run(f"{util.SUDO} apt update")
     for name, cfg in pkgs.items():
-        _install_apt(c, name, cfg)
+        _install_apt_package(c, name, cfg)
 
 
 # ---------------------------------------------------------------------------

@@ -10,7 +10,7 @@ _EXAMPLE_PATH = Path(__file__).parent.parent / "config" / "identity.toml.example
 # label -> real hostname; simple mode uses the hostname itself as the ssh_hosts alias since
 # there's only ever one account per host in this mode (no need to disambiguate with a custom
 # alias the way the multi-account advanced setup does).
-_HOSTS = {
+_HOST_LABELS = {
     "GitHub": "github.com",
     "GitLab": "gitlab.com",
 }
@@ -35,7 +35,7 @@ def _render(name: str, email: str, directory: str, hosts: list[str]) -> str:
         f"email     = {_toml_string(email)}",
     ]
     for label in hosts:
-        hostname = _HOSTS[label]
+        hostname = _HOST_LABELS[label]
         lines += [
             "",
             "[[ssh_hosts]]",
@@ -79,7 +79,7 @@ def init(c):
     email = util.prompt_text("Email address")
     directory = util.prompt_text("Projects subdirectory name (~/projects/<this>/)", default="default")
 
-    hosts = [label for label in _HOSTS if ui.ask(f"Set up SSH/git for {label}?", default=label == "GitHub")]
+    hosts = [label for label in _HOST_LABELS if ui.ask(f"Set up SSH/git for {label}?", default=label == "GitHub")]
     if not hosts:
         print("[identity] no hosts selected — add [[ssh_hosts]] entries by hand later if you need one.")
 

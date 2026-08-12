@@ -29,7 +29,7 @@ def _probe(c, funcs) -> str:
     return buf.getvalue()
 
 
-def run(c, label, funcs, note=None):
+def run_phase(c, label, funcs, note=None):
     """Run a named group of setup tasks as one phase, banner first for visibility. If a dry-run
     probe shows nothing missing, offers to skip (default: yes) instead of redoing possibly-slow
     work (apt update, tool/version checks) that would just no-op anyway.
