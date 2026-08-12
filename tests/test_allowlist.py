@@ -1,6 +1,7 @@
 """Unit tests for tasks/allowlist.py's pure helpers: Classification/Source enum interop with the
-plain-string JSON that flows through cli-allowlist/rules/*.json and the LLM's JSON responses, plus
-_resolve_flat_verdict and _classify_flag_result (pure data transforms, no subprocess/LLM calls of
+plain-string JSON that flows through cli-allowlist/rules/*.json and the LLM's JSON responses,
+_resolve_flat_verdict/_classify_flag_result (pure data transforms, no subprocess/LLM calls of their
+own), and check_man_deps()'s _should_check_man_deps/_man_dependency (no strace/subprocess calls of
 their own). See tests/README.md.
 """
 
@@ -97,3 +98,37 @@ def test_classify_flag_result_leaves_safe_flag_alone():
 def test_classify_flag_result_falls_back_to_base_classification():
     result = allowlist._classify_flag_result("--output", {}, "dangerous")
     assert result["classification"] == "dangerous"
+
+
+def test_should_check_man_deps_skips_tools_marked_skip_interactive():
+    assert allowlist._should_check_man_deps("vim", {"skip_interactive": True}) is False
+
+
+def test_should_check_man_deps_allows_shell_prefix_tools_without_checking_install(monkeypatch):
+    # A shell_prefix tool (e.g. nvm) only exists as a shell function, not a binary on PATH —
+    # command_exists() would always report it missing, so it must be exempt from that check.
+    monkeypatch.setattr(allowlist.util, "command_exists", lambda name: False)
+    assert allowlist._should_check_man_deps("nvm", {"shell_prefix": ". ~/.nvm/nvm.sh"}) is True
+
+
+def test_should_check_man_deps_requires_install_when_no_shell_prefix(monkeypatch):
+    monkeypatch.setattr(allowlist.util, "command_exists", lambda name: False)
+    assert allowlist._should_check_man_deps("some-tool", {}) is False
+
+    monkeypatch.setattr(allowlist.util, "command_exists", lambda name: True)
+    assert allowlist._should_check_man_deps("some-tool", {}) is True
+
+
+def test_man_dependency_detects_man_binary():
+    log = 'execve("/usr/bin/man", ["man", "git"], 0x7fff /* 40 vars */) = 0\n'
+    assert allowlist._man_dependency(log) == "/usr/bin/man"
+
+
+def test_man_dependency_detects_groff():
+    log = 'execve("/usr/bin/groff", ["groff", "-m", "man"], 0x7fff) = 0\n'
+    assert allowlist._man_dependency(log) == "/usr/bin/groff"
+
+
+def test_man_dependency_none_when_no_match():
+    log = 'execve("/usr/bin/git", ["git", "status", "--help"], 0x7fff) = 0\n'
+    assert allowlist._man_dependency(log) is None

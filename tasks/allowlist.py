@@ -1436,3 +1436,88 @@ def status(c):
         flag_str = f" [{', '.join(flags)}]" if flags else ""
         depth = cfg.get("max_depth", 1)
         print(f"[allowlist] {name}: {entry.get('version') or '?'} ({len(nodes)} node(s), depth={depth}){flag_str}")
+
+
+# ---------------------------------------------------------------------------
+# check-man-deps: not part of the extract/classify/review/apply pipeline above — a separate,
+# occasional maintenance diagnostic (uses strace, slower than anything else here), run by hand
+# after registering a new tool or periodically, not automatically by any other task.
+# ---------------------------------------------------------------------------
+
+_MAN_BINARIES = ["/usr/bin/man", "/bin/man", "/usr/bin/groff", "/usr/bin/troff"]
+
+
+def _should_check_man_deps(name: str, cfg: dict) -> bool:
+    """Skip tools explicitly opted out, and (for tools without a shell_prefix escape hatch) any
+    not actually installed on this machine."""
+    if cfg.get("skip_interactive"):
+        return False
+    return bool(cfg.get("shell_prefix")) or util.command_exists(name)
+
+
+def _strace_execve_log(cmd: list[str], env: dict) -> str | None:
+    """Run cmd under strace tracing execve calls; return the log text, or None on timeout."""
+    with tempfile.NamedTemporaryFile(prefix="strace-", suffix=".log") as log:
+        try:
+            subprocess.run(
+                ["strace", "-f", "-e", "trace=execve", "-o", log.name, *cmd],
+                capture_output=True,
+                text=True,
+                timeout=10,
+                env=env,
+                stdin=subprocess.DEVNULL,
+            )
+        except subprocess.TimeoutExpired:
+            return None
+        return Path(log.name).read_text()
+
+
+def _man_dependency(log_text: str) -> str | None:
+    """Which (if any) of the man-rendering binaries the strace log shows an execve() for."""
+    return next((b for b in _MAN_BINARIES if f'execve("{b}"' in log_text), None)
+
+
+@task
+def check_man_deps(c):
+    """Does any registered tool's --help invocation secretly depend on a separately-installed
+    man-page-rendering package?
+
+    Text formatting alone can't answer this — gcloud's --help mimics a man page's NAME/SYNOPSIS/
+    DESCRIPTION layout with its own self-contained renderer, no external process involved. The
+    only reliable signal is watching what actually execs during the call. Checks for `man` itself
+    and for `groff`/`troff` (confirmed via this same strace technique: `aws help` doesn't invoke
+    `man`, but pipes through `groff -m man -T ascii` -> `troff` -> `grotty` to produce its
+    formatted output — the same "only works because a package happens to be installed" risk as
+    git's original git-man dependency, just a different package).
+
+    Run after adding a tool to tools.toml, or periodically to catch a tool that changed its help
+    backend. Raises (nonzero exit) if anything invokes one of these — CI-friendly, though there's
+    no CI here yet.
+    """
+    registry = _load_registry()
+    env = {**os.environ, **_DETERMINISTIC_ENV}
+    offenders = []
+
+    for name, cfg in sorted(registry.items()):
+        if not _should_check_man_deps(name, cfg):
+            continue
+
+        help_flag = cfg.get("help_flag", "--help")
+        args = help_flag.split()
+        cmd = _invocation(name, args, cfg)
+
+        log_text = _strace_execve_log(cmd, env)
+        if log_text is None:
+            print(f"{name}: TIMEOUT (couldn't determine)")
+            continue
+
+        hit = _man_dependency(log_text)
+        if hit:
+            offenders.append(name)
+            print(f"{name}: invokes {hit} — needs a fix (alternate flag, like git's -h) or a note")
+
+    if not offenders:
+        print(f"checked {len(registry)} registered tools — none invoke man/groff/troff")
+        return
+    print(f"\n{len(offenders)} tool(s) depend on man: {', '.join(offenders)}")
+    raise RuntimeError(f"{len(offenders)} tool(s) depend on man/groff/troff: {', '.join(offenders)}")
