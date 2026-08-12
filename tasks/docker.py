@@ -39,6 +39,9 @@ def _merge(base: dict, updates: dict) -> dict:
 
 
 def _ensure_running(c) -> None:
+    if not util.has_systemd():
+        print("[docker] no systemd — daemon.json/group updated, but nothing to restart here")
+        return
     if c.run("systemctl is-enabled docker", hide=True, warn=True).stdout.strip() == "masked":
         c.run(f"{util.SUDO} systemctl unmask docker")
         print("[docker] daemon was masked — unmasked")

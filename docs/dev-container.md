@@ -47,7 +47,7 @@ that the build didn't error):
 FROM ubuntu:24.04
 
 RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-pip curl git sudo zsh ca-certificates \
+      python3 python3-pip curl git sudo zsh ca-certificates gnupg \
     && rm -rf /var/lib/apt/lists/*
 
 RUN curl -fsSL https://astral.sh/uv/install.sh | sh
@@ -73,9 +73,22 @@ and fails with a `FileNotFoundError` if that directory wasn't copied in. `PATH` 
 `/root/.local/bin` up front since that's where `uv`, `invoke`, and most script/binary/archive
 -method tools land (`~/.local/bin` when running as root during a build is `/root/.local/bin`).
 
+`gnupg` is not optional either, despite apt never listing it as a dependency error: every
+`apt-repo`-method package (`gh`, `kubectl`, `docker`, `terraform`, ...) registers its repo by
+piping a downloaded key through `gpg --dearmor`. Without the `gpg` binary present, that pipe fails
+(`curl: (23) Failure writing output to destination`) — but `apt.repos` treats a failed key fetch
+as "skip this repo, print a WARNING, keep going" rather than a fatal error, so `RUN inv setup`
+still exits 0. The image just silently ends up missing `kubectl`/`docker`/`terraform` entirely,
+and gets whatever stale version of `gh` happens to already be in Ubuntu's own `universe` repo
+instead of the pinned upstream one — easy to miss unless you specifically check `dpkg -l` and
+`/etc/apt/sources.list.d/`, which is how this was actually caught (confirmed by building without
+`gnupg`, finding the WARNINGs in the log, then rebuilding with it added and diffing installed
+versions).
+
 `inv cleanup.all-full` is the container-appropriate cleanup call — see
-[Cleanup](#cleanup-reclaiming-image-layer-space) below for what it does and why the container
-case wants the _full_ variant specifically, not the conservative one a workstation should use.
+[Cleanup](#cleanup-reclaiming-image-layer-space) below for what it does, what it actually saves
+(less than you'd think), and why the container case wants the _full_ variant specifically, not
+the conservative one a workstation should use.
 
 If you don't want a shell/zsh configured in the image, drop `zsh.omz_configure`/`zsh.configure`
 from consideration — but there's no need to hand-pick tasks any more; `inv setup` runs the full
@@ -84,6 +97,65 @@ installs already have. If you want more control than that, run the granular task
 outline used to document instead: `inv apt.repos apt.base apt.deb tools.install python.tools
 node.install zsh.omz-configure zsh.configure` (still fully supported, `inv setup` is a
 convenience wrapper around the same tasks, not a replacement for calling them directly).
+
+Re-running `inv setup` inside an already-provisioned container (not a fresh `docker build` —
+e.g. `devcontainer exec -- inv setup` against a container that's been kept running) is safe:
+confirmed by running it twice against the same live container. Everything already installed
+reports `already installed`/`already configured` and the `shell` phase offers to skip outright;
+nothing gets reinstalled or duplicated. The one thing that doesn't participate in that skip logic
+is `python.tools` (`uv tool install` for `keyring`/`nox`/`mkdocs-material`/etc.) — it re-resolves
+each package on every run rather than probing first, which is harmless (`uv` no-ops instantly on
+an already-satisfied install) but means you'll see it "reinstall" on every re-run regardless of
+whether anything changed.
+
+### Non-root user
+
+Every real devcontainer runs as a non-root user with passwordless sudo, not root — confirmed this
+Dockerfile needs no code changes for that, only a Dockerfile-side user:
+
+```dockerfile
+RUN useradd -m -s /bin/bash dev \
+    && echo "dev ALL=(ALL) NOPASSWD:ALL" > /etc/sudoers.d/dev \
+    && chmod 0440 /etc/sudoers.d/dev
+USER dev
+WORKDIR /home/dev/setup
+# ...same COPY/ENV/RUN as above, with --chown=dev:dev on each COPY
+```
+
+Verified specifically: `util.current_user()` resolves to the non-root username (not `root`) via
+its `pwd.getpwuid()` fallback — and that fallback path turns out to be the one that's _always_
+exercised in a Dockerfile build, root or non-root, since plain `docker run`/`RUN` never sets
+`$USER` at all (that's a login-shell/profile behavior, not something Docker sets itself); every
+tool-installed file (`~/.local/bin`, `~/.cache/uv`, `~/.npm`, `~/.local/share/{cargo,rustup,nvm}`)
+lands under the non-root user's real home; and `sudo` (not `sudo -A` — no `SUDO_ASKPASS` is set in
+a container either way) works non-interactively against the `NOPASSWD` sudoers entry with no
+prompt.
+
+### Alternate base image: `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`
+
+Also verified end-to-end, swapping only the `FROM` line and dropping the `useradd`/sudoers block
+(the image already ships a passwordless-sudo `vscode` user and `gnupg`) — everything else in the
+outline above is unchanged. Only addition needed: `python3`/`python3-pip` still aren't
+preinstalled, so that `apt-get install` line stays. No conflicts observed between this image's
+preinstalled packages and anything `setup.toml` installs.
+
+### Round-tripping through `@devcontainers/cli`
+
+The outline above is tested as a bare `docker build`; the actual VS Code Dev Containers /
+`@devcontainers/cli` workflow adds its own layer of environment setup before your Dockerfile even
+runs. Confirmed clean with a throwaway `devcontainer.json` pointing at this outline:
+
+```json
+{
+  "name": "pulse-devcontainer",
+  "build": { "dockerfile": "Dockerfile", "context": ".." },
+  "remoteUser": "dev"
+}
+```
+
+`npx @devcontainers/cli build --workspace-folder .`, then `devcontainer up --workspace-folder .`,
+then `devcontainer exec --workspace-folder . -- inv --list` all succeeded with no adjustments
+beyond the Dockerfile outline already documented here.
 
 ## Cleanup — reclaiming image-layer space
 
@@ -142,19 +214,36 @@ breaks the moment a new tool is added to `setup.toml` — the Dockerfile above j
 build — almost entirely the actual installed toolchain (`toolchains/`), not reclaimable cache;
 rustup's own `downloads`/`tmp` scratch dirs were already empty (rustup cleans its own install
 -time artifacts). Only `~/.local/share/cargo/registry` (crate download/build cache, separate from
-`RUSTUP_HOME`) is genuinely reclaimable, which is exactly what `tools.clean-cache*` targets. If
-disk footprint matters more than cache cleanup can address, the bigger lever is
-`PULSE_EXCLUDE_TAGS` itself — leaving out toolchains you don't need (rust, go, k8s tooling) beats
-cleaning up after installing them.
+`RUSTUP_HOME`) is genuinely reclaimable, which is exactly what `tools.clean-cache*` targets.
+
+**How much cleanup actually saves, measured**: building the identical image with and without the
+`inv cleanup.all-full` step (default tag profile, otherwise byte-for-byte the same Dockerfile) —
+4.40GB without cleanup vs. 4.28GB with it, a **~120MB saving, about 2.7% of image size**. Worth
+knowing before reaching for it as the main size lever: it isn't one. `PULSE_EXCLUDE_TAGS` is —
+leaving out toolchains you don't need (rust, go, k8s tooling are each hundreds of MB to multiple
+GB) dwarfs anything cache cleanup can reclaim. Run cleanup because it's free and has no downside
+in a container, not because it meaningfully shrinks the image on its own.
 
 ## Docker
 
-`[packages.docker]` is tagged `workstation` and excluded by default. It installs the full daemon
-(`docker-ce`, `containerd.io`) whose apt postinstall hooks try to start the service via systemctl
-— this fails in a container build. The `usermod -aG docker` post-install step is also meaningless
-inside a container. `docker.configure` (part of `inv setup`'s `packages` phase) already detects
-"docker not installed" and skips cleanly rather than failing, so nothing extra to do here beyond
-leaving `workstation` excluded.
+`[packages.docker]` is tagged `workstation` and excluded by default, so none of this is reachable
+in the recommended tag profile — it only matters if you deliberately drop `workstation` from
+`PULSE_EXCLUDE_TAGS`, which was tested specifically to check for exactly this kind of tag-gated
+assumption. `docker.configure` (part of `inv setup`'s `packages` phase) already detects "docker
+not installed" and skips cleanly when the package is excluded, so the default profile needs
+nothing extra here.
+
+If `workstation` _is_ included, `apt-get install docker-ce ...`'s own postinstall hooks don't fail
+in a container build — Debian/Ubuntu base images ship a `policy-rc.d` that denies service-start
+attempts by default, so `invoke-rc.d`/`systemctl` calls from the `.deb`'s postinst are cleanly
+no-opped, not fatal. What _did_ fail, found by actually testing this combination (previously
+untested since it's excluded by default): `docker.configure`'s own explicit
+`sudo systemctl restart docker` call afterward, unconditionally, with no no-systemd guard —
+crashing the entire `inv setup` run (and thus the whole `docker build`) with "System has not been
+booted with systemd as init system." Fixed in `tasks/docker.py`'s `_ensure_running()`, matching
+the `util.has_systemd()` guard pattern already used for the `system`/`desktop` phases: no systemd
+means daemon.json gets written and the user gets added to the `docker` group same as before, but
+the restart is skipped with a one-line message instead of attempted.
 
 If you need Docker CLI tooling inside the container (e.g. for socket passthrough from the host),
 install just the CLI packages manually in your Dockerfile instead:
