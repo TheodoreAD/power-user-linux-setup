@@ -872,6 +872,127 @@ def _classify_flag_result(flag: str, result: dict, base_classification: str) -> 
     return {"classification": classification, "rationale": result.get("rationale", "")}
 
 
+def _diff_nodes(
+    classifiable_keys: list[str], cache_nodes: dict[str, dict], existing_nodes: dict[str, dict], force: bool
+) -> tuple[dict[str, dict], dict[str, dict], dict[str, dict]]:
+    """Bucket each classifiable node into (to_classify, carried, new_invalid) by comparing this
+    extraction's content hash against the last classification's.
+
+    Nodes _build_tree already flagged as likely bogus (auto-discovered, byte-identical to their
+    parent's help text) skip the LLM entirely — deterministic, free, and more reliable than asking
+    a model to notice the same thing. They still go through the same unchanged-since-last-run
+    check as everything else, just compared against "was this already recorded as invalid with
+    this exact content" instead of a normal classification."""
+    to_classify: dict[str, dict] = {}
+    carried: dict[str, dict] = {}
+    new_invalid: dict[str, dict] = {}
+    for key in classifiable_keys:
+        node = cache_nodes[key]
+        prior = existing_nodes.get(key)
+        # Community-seeded nodes (source: "community" — see tools.toml's header) are always
+        # swept back into to_classify, content hash notwithstanding: the seed was a reasonable
+        # starting point before this pipeline had its own rubric, flag ratings, or backstops,
+        # but it's external data with no ongoing reason to keep trusting over a fresh judgment
+        # from the same model/rubric everything else here is classified with. This makes
+        # community data self-liquidating — every classify() run upgrades whatever's left to
+        # real LLM output, a few nodes at a time, at no cost to already-fresh nodes.
+        is_community = bool(prior) and prior.get("source") == Source.COMMUNITY
+        unchanged = not force and not is_community and bool(prior) and prior.get("content_hash") == node["content_hash"]
+        if node.get("likely_invalid"):
+            if unchanged and prior.get("classification") == Classification.INVALID:
+                carried[key] = prior
+            else:
+                new_invalid[key] = node
+        elif unchanged:
+            carried[key] = prior
+        else:
+            to_classify[key] = node
+    return to_classify, carried, new_invalid
+
+
+def _run_classification(name: str, to_classify: dict[str, dict], top_help: str, model: str) -> tuple[dict, int]:
+    """Classify to_classify's nodes via chunked LLM calls. Returns (verdict, failed_chunks) —
+    verdict only has entries for chunks that succeeded; failed_chunks counts how many didn't.
+
+    Chunked, not one call for the whole tool: a call covering 50+ nodes (routine once recursion is
+    on) risks both the timeout and --max-budget-usd ceiling — see _CLASSIFY_CHUNK_SIZE's comment
+    for the measurement that drove this."""
+    verdict: dict = {}
+    failed_chunks = 0
+    items = list(to_classify.items())
+    for i in range(0, len(items), _CLASSIFY_CHUNK_SIZE):
+        chunk = dict(items[i : i + _CLASSIFY_CHUNK_SIZE])
+        chunk_verdict = _classify_via_claude(_build_prompt(name, chunk, top_help), model=model)
+        if chunk_verdict is None:
+            failed_chunks += 1
+            continue
+        if list(chunk) == [_NO_SUBCOMMANDS_KEY]:
+            chunk_verdict = _resolve_flat_verdict(chunk_verdict)
+        verdict.update(_strip_tool_prefix(chunk_verdict, name))
+    return verdict, failed_chunks
+
+
+def _assemble_new_nodes(
+    carried: dict[str, dict],
+    new_invalid: dict[str, dict],
+    to_classify: dict[str, dict],
+    verdict: dict,
+    existing_nodes: dict[str, dict],
+    model: str,
+) -> dict[str, dict]:
+    """Merge carried-forward nodes, newly-flagged-invalid nodes, and this run's LLM verdicts into
+    the final nodes dict to save."""
+    new_nodes = dict(carried)
+    for key, node in new_invalid.items():
+        new_nodes[key] = {
+            "content_hash": node["content_hash"],
+            "classification": Classification.INVALID,
+            "rationale": "Auto-discovered but duplicates its parent's help text verbatim — "
+            "likely a false-positive match (e.g. example/sample output mistaken "
+            "for a subcommand listing), not a real distinct command.",
+            "source": Source.HEURISTIC,
+            "flags": {},
+        }
+    for key, node in to_classify.items():
+        result = verdict.get(key)
+        if result is None:
+            # A failed chunk (or the model dropping a key) must not silently lose this node's
+            # existing coverage — confirmed as a real bug, not hypothetical: a single failed
+            # gh chunk during the community-data resweep (community nodes are always forced
+            # into to_classify, so they're never in `carried`) dropped 21 root-level nodes
+            # from rules/gh.json entirely, with no fallback. Keep whatever was there before;
+            # it's still not in `carried` so it stays eligible for to_classify next run too.
+            if key in existing_nodes:
+                new_nodes[key] = existing_nodes[key]
+            continue
+        classification = result.get("classification", Classification.WRITE)
+        if classification == Classification.INVALID:
+            new_nodes[key] = {
+                "content_hash": node["content_hash"],
+                "classification": Classification.INVALID,
+                "rationale": result.get("rationale", ""),
+                "source": Source.LLM,
+                "model": model,
+                "flags": {},
+            }
+            continue
+        if classification == Classification.READ_ONLY and _looks_dangerous(key):
+            classification = Classification.NEEDS_REVIEW
+        flags = {
+            flag: _classify_flag_result(flag, fresult, classification)
+            for flag, fresult in (result.get("flags") or {}).items()
+        }
+        new_nodes[key] = {
+            "content_hash": node["content_hash"],
+            "classification": classification,
+            "rationale": result.get("rationale", ""),
+            "source": Source.LLM,
+            "model": model,
+            "flags": flags,
+        }
+    return new_nodes
+
+
 @task
 def classify(c, tool=None, force=False, model="haiku"):
     """Classify each tool's extracted nodes (subcommands, and nested subcommands for any tool
@@ -918,57 +1039,13 @@ def classify(c, tool=None, force=False, model="haiku"):
         existing = _load_rule(name)
         existing_nodes = (existing or {}).get("nodes", {})
 
-        # Nodes _build_tree already flagged as likely bogus (auto-discovered, byte-identical to
-        # their parent's help text) skip the LLM entirely — deterministic, free, and more reliable
-        # than asking a model to notice the same thing. They still go through the same
-        # unchanged-since-last-run check as everything else, just compared against "was this
-        # already recorded as invalid with this exact content" instead of a normal classification.
-        to_classify: dict[str, dict] = {}
-        carried: dict[str, dict] = {}
-        new_invalid: dict[str, dict] = {}
-        for key in classifiable_keys:
-            node = cache_nodes[key]
-            prior = existing_nodes.get(key)
-            # Community-seeded nodes (source: "community" — see tools.toml's header) are always
-            # swept back into to_classify, content hash notwithstanding: the seed was a reasonable
-            # starting point before this pipeline had its own rubric, flag ratings, or backstops,
-            # but it's external data with no ongoing reason to keep trusting over a fresh judgment
-            # from the same model/rubric everything else here is classified with. This makes
-            # community data self-liquidating — every classify() run upgrades whatever's left to
-            # real LLM output, a few nodes at a time, at no cost to already-fresh nodes.
-            is_community = bool(prior) and prior.get("source") == Source.COMMUNITY
-            unchanged = (
-                not force and not is_community and bool(prior) and prior.get("content_hash") == node["content_hash"]
-            )
-            if node.get("likely_invalid"):
-                if unchanged and prior.get("classification") == Classification.INVALID:
-                    carried[key] = prior
-                else:
-                    new_invalid[key] = node
-            elif unchanged:
-                carried[key] = prior
-            else:
-                to_classify[key] = node
+        to_classify, carried, new_invalid = _diff_nodes(classifiable_keys, cache_nodes, existing_nodes, force)
 
         if not to_classify and not new_invalid:
             print(f"[allowlist] {name}: unchanged since last classification — skipped")
             continue
 
-        # Chunked, not one call for the whole tool: a call covering 50+ nodes (routine once
-        # recursion is on) risks both the timeout and --max-budget-usd ceiling — see
-        # _CLASSIFY_CHUNK_SIZE's comment for the measurement that drove this.
-        verdict: dict = {}
-        failed_chunks = 0
-        items = list(to_classify.items())
-        for i in range(0, len(items), _CLASSIFY_CHUNK_SIZE):
-            chunk = dict(items[i : i + _CLASSIFY_CHUNK_SIZE])
-            chunk_verdict = _classify_via_claude(_build_prompt(name, chunk, top_help), model=model)
-            if chunk_verdict is None:
-                failed_chunks += 1
-                continue
-            if list(chunk) == [_NO_SUBCOMMANDS_KEY]:
-                chunk_verdict = _resolve_flat_verdict(chunk_verdict)
-            verdict.update(_strip_tool_prefix(chunk_verdict, name))
+        verdict, failed_chunks = _run_classification(name, to_classify, top_help, model)
 
         if to_classify and not verdict:
             print(f"[allowlist] {name}: classification call failed — left as-is")
@@ -980,54 +1057,7 @@ def classify(c, tool=None, force=False, model="haiku"):
                 f"unclassified, will retry on the next run"
             )
 
-        new_nodes = dict(carried)
-        for key, node in new_invalid.items():
-            new_nodes[key] = {
-                "content_hash": node["content_hash"],
-                "classification": Classification.INVALID,
-                "rationale": "Auto-discovered but duplicates its parent's help text verbatim — "
-                "likely a false-positive match (e.g. example/sample output mistaken "
-                "for a subcommand listing), not a real distinct command.",
-                "source": Source.HEURISTIC,
-                "flags": {},
-            }
-        for key, node in to_classify.items():
-            result = verdict.get(key)
-            if result is None:
-                # A failed chunk (or the model dropping a key) must not silently lose this node's
-                # existing coverage — confirmed as a real bug, not hypothetical: a single failed
-                # gh chunk during the community-data resweep (community nodes are always forced
-                # into to_classify, so they're never in `carried`) dropped 21 root-level nodes
-                # from rules/gh.json entirely, with no fallback. Keep whatever was there before;
-                # it's still not in `carried` so it stays eligible for to_classify next run too.
-                if key in existing_nodes:
-                    new_nodes[key] = existing_nodes[key]
-                continue
-            classification = result.get("classification", Classification.WRITE)
-            if classification == Classification.INVALID:
-                new_nodes[key] = {
-                    "content_hash": node["content_hash"],
-                    "classification": Classification.INVALID,
-                    "rationale": result.get("rationale", ""),
-                    "source": Source.LLM,
-                    "model": model,
-                    "flags": {},
-                }
-                continue
-            if classification == Classification.READ_ONLY and _looks_dangerous(key):
-                classification = Classification.NEEDS_REVIEW
-            flags = {
-                flag: _classify_flag_result(flag, fresult, classification)
-                for flag, fresult in (result.get("flags") or {}).items()
-            }
-            new_nodes[key] = {
-                "content_hash": node["content_hash"],
-                "classification": classification,
-                "rationale": result.get("rationale", ""),
-                "source": Source.LLM,
-                "model": model,
-                "flags": flags,
-            }
+        new_nodes = _assemble_new_nodes(carried, new_invalid, to_classify, verdict, existing_nodes, model)
 
         _save_rule(
             name,
@@ -1325,6 +1355,31 @@ def render(c, target="claude", out=None):
         print(text)
 
 
+def _merge_rule_sets(
+    existing_allow: list[str], existing_ask: list[str], allow: list[str], ask: list[str], previous: set[str]
+) -> tuple[list[str], list[str], set[str], set[str], set[str], set[str]]:
+    """Merge freshly-computed allow/ask rules into what's already in settings.json, keeping
+    anything the user added by hand (not in `previous`, our own last-applied manifest) and
+    replacing only what we wrote last time. Returns (merged_allow, merged_ask, added_allow,
+    removed_allow, added_ask, removed_ask).
+
+    Per-bucket diff, not just the flattened union — a rule moving from allow to ask (a tool's
+    classification changed) is a real, meaningful change even though the union of both arrays
+    contains that rule string either way. Reporting only the union would silently print "+0 -0"
+    for exactly the kind of change this task most needs to surface honestly."""
+    kept_allow = [r for r in existing_allow if r not in previous]
+    kept_ask = [r for r in existing_ask if r not in previous]
+    merged_allow = kept_allow + [r for r in allow if r not in kept_allow]
+    merged_ask = kept_ask + [r for r in ask if r not in kept_ask]
+
+    added_allow = set(merged_allow) - set(existing_allow)
+    removed_allow = set(existing_allow) & previous - set(merged_allow)
+    added_ask = set(merged_ask) - set(existing_ask)
+    removed_ask = set(existing_ask) & previous - set(merged_ask)
+
+    return merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask
+
+
 @task
 def apply(c):
     """Merge the reviewed Bash allow/ask rules into ~/.claude/settings.json's `permissions`
@@ -1357,19 +1412,9 @@ def apply(c):
     existing_allow = perms.get("allow", [])
     existing_ask = perms.get("ask", [])
 
-    kept_allow = [r for r in existing_allow if r not in previous]
-    kept_ask = [r for r in existing_ask if r not in previous]
-    merged_allow = kept_allow + [r for r in allow if r not in kept_allow]
-    merged_ask = kept_ask + [r for r in ask if r not in kept_ask]
-
-    # Per-bucket diff, not just the flattened union — a rule moving from allow to ask (a tool's
-    # classification changed) is a real, meaningful change even though the union of both arrays
-    # contains that rule string either way. Reporting only the union would silently print "+0 -0"
-    # for exactly the kind of change this task most needs to surface honestly.
-    added_allow = set(merged_allow) - set(existing_allow)
-    removed_allow = set(existing_allow) & previous - set(merged_allow)
-    added_ask = set(merged_ask) - set(existing_ask)
-    removed_ask = set(existing_ask) & previous - set(merged_ask)
+    merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask = _merge_rule_sets(
+        existing_allow, existing_ask, allow, ask, previous
+    )
     added = added_allow | added_ask
     removed = removed_allow | removed_ask
     unchanged = new_set & previous - added - removed

@@ -100,6 +100,173 @@ def test_classify_flag_result_falls_back_to_base_classification():
     assert result["classification"] == "dangerous"
 
 
+def test_diff_nodes_carries_unchanged_node():
+    cache_nodes = {"status": {"content_hash": "abc"}}
+    existing_nodes = {"status": {"content_hash": "abc", "classification": "read_only", "source": "llm"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=False)
+    assert to_classify == {}
+    assert carried == {"status": existing_nodes["status"]}
+    assert new_invalid == {}
+
+
+def test_diff_nodes_sends_changed_node_to_classify():
+    cache_nodes = {"status": {"content_hash": "new-hash"}}
+    existing_nodes = {"status": {"content_hash": "old-hash", "classification": "read_only", "source": "llm"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=False)
+    assert to_classify == {"status": cache_nodes["status"]}
+    assert carried == {}
+
+
+def test_diff_nodes_sends_new_node_to_classify():
+    cache_nodes = {"status": {"content_hash": "abc"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, {}, force=False)
+    assert to_classify == {"status": cache_nodes["status"]}
+
+
+def test_diff_nodes_force_resends_even_unchanged_nodes():
+    cache_nodes = {"status": {"content_hash": "abc"}}
+    existing_nodes = {"status": {"content_hash": "abc", "classification": "read_only", "source": "llm"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=True)
+    assert to_classify == {"status": cache_nodes["status"]}
+    assert carried == {}
+
+
+def test_diff_nodes_community_source_always_resent_despite_matching_hash():
+    cache_nodes = {"status": {"content_hash": "abc"}}
+    existing_nodes = {"status": {"content_hash": "abc", "classification": "read_only", "source": "community"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=False)
+    assert to_classify == {"status": cache_nodes["status"]}
+    assert carried == {}
+
+
+def test_diff_nodes_likely_invalid_new_goes_to_new_invalid():
+    cache_nodes = {"bogus": {"content_hash": "abc", "likely_invalid": True}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["bogus"], cache_nodes, {}, force=False)
+    assert new_invalid == {"bogus": cache_nodes["bogus"]}
+    assert to_classify == {} and carried == {}
+
+
+def test_diff_nodes_likely_invalid_unchanged_and_already_invalid_is_carried():
+    cache_nodes = {"bogus": {"content_hash": "abc", "likely_invalid": True}}
+    existing_nodes = {"bogus": {"content_hash": "abc", "classification": "invalid", "source": "heuristic"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["bogus"], cache_nodes, existing_nodes, force=False)
+    assert carried == {"bogus": existing_nodes["bogus"]}
+    assert new_invalid == {} and to_classify == {}
+
+
+def test_diff_nodes_likely_invalid_unchanged_but_previously_classified_normally_goes_to_new_invalid():
+    # content hash matches, but the prior run hadn't yet flagged it invalid (e.g. _build_tree's
+    # heuristic changed, or this is the first run after it started catching this node) — must be
+    # re-recorded as invalid, not silently carried forward with its stale non-invalid verdict.
+    cache_nodes = {"bogus": {"content_hash": "abc", "likely_invalid": True}}
+    existing_nodes = {"bogus": {"content_hash": "abc", "classification": "write", "source": "llm"}}
+    to_classify, carried, new_invalid = allowlist._diff_nodes(["bogus"], cache_nodes, existing_nodes, force=False)
+    assert new_invalid == {"bogus": cache_nodes["bogus"]}
+    assert carried == {} and to_classify == {}
+
+
+def test_assemble_new_nodes_keeps_carried_nodes_verbatim():
+    carried = {"status": {"content_hash": "abc", "classification": "read_only", "source": "llm"}}
+    result = allowlist._assemble_new_nodes(carried, {}, {}, {}, {}, "haiku")
+    assert result == carried
+
+
+def test_assemble_new_nodes_records_new_invalid_with_heuristic_source():
+    new_invalid = {"bogus": {"content_hash": "abc"}}
+    result = allowlist._assemble_new_nodes({}, new_invalid, {}, {}, {}, "haiku")
+    assert result["bogus"]["classification"] == allowlist.Classification.INVALID
+    assert result["bogus"]["source"] == allowlist.Source.HEURISTIC
+    assert result["bogus"]["flags"] == {}
+
+
+def test_assemble_new_nodes_applies_verdict_to_classified_node():
+    to_classify = {"rm": {"content_hash": "abc"}}
+    verdict = {"rm": {"classification": "dangerous", "rationale": "deletes things"}}
+    result = allowlist._assemble_new_nodes({}, {}, to_classify, verdict, {}, "haiku")
+    assert result["rm"]["classification"] == "dangerous"
+    assert result["rm"]["source"] == allowlist.Source.LLM
+    assert result["rm"]["model"] == "haiku"
+
+
+def test_assemble_new_nodes_downgrades_read_only_dangerous_verb_to_needs_review():
+    to_classify = {"clean": {"content_hash": "abc"}}
+    verdict = {"clean": {"classification": "read_only", "rationale": "x"}}
+    result = allowlist._assemble_new_nodes({}, {}, to_classify, verdict, {}, "haiku")
+    assert result["clean"]["classification"] == allowlist.Classification.NEEDS_REVIEW
+
+
+def test_assemble_new_nodes_verdict_invalid_short_circuits_before_flags():
+    to_classify = {"weird": {"content_hash": "abc"}}
+    verdict = {"weird": {"classification": "invalid", "rationale": "not a real command"}}
+    result = allowlist._assemble_new_nodes({}, {}, to_classify, verdict, {}, "haiku")
+    assert result["weird"]["classification"] == allowlist.Classification.INVALID
+    assert result["weird"]["flags"] == {}
+
+
+def test_assemble_new_nodes_falls_back_to_existing_node_when_verdict_missing():
+    # A failed chunk (or the model dropping a key) must not silently lose existing coverage.
+    to_classify = {"push": {"content_hash": "new-hash"}}
+    existing_nodes = {"push": {"content_hash": "old-hash", "classification": "write", "source": "llm"}}
+    result = allowlist._assemble_new_nodes({}, {}, to_classify, {}, existing_nodes, "haiku")
+    assert result["push"] == existing_nodes["push"]
+
+
+def test_assemble_new_nodes_drops_node_entirely_when_no_verdict_and_no_existing():
+    to_classify = {"brand-new": {"content_hash": "abc"}}
+    result = allowlist._assemble_new_nodes({}, {}, to_classify, {}, {}, "haiku")
+    assert "brand-new" not in result
+
+
+def test_merge_rule_sets_no_change_when_rules_match_existing():
+    merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask = allowlist._merge_rule_sets(
+        ["Bash(git status:*)"], ["Bash(git push:*)"], ["Bash(git status:*)"], ["Bash(git push:*)"], set()
+    )
+    assert merged_allow == ["Bash(git status:*)"]
+    assert merged_ask == ["Bash(git push:*)"]
+    assert not added_allow and not removed_allow and not added_ask and not removed_ask
+
+
+def test_merge_rule_sets_adds_new_rule():
+    merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask = allowlist._merge_rule_sets(
+        [], [], ["Bash(git status:*)"], [], set()
+    )
+    assert merged_allow == ["Bash(git status:*)"]
+    assert added_allow == {"Bash(git status:*)"}
+    assert not removed_allow and not added_ask and not removed_ask
+
+
+def test_merge_rule_sets_removes_stale_rule_we_previously_wrote():
+    # "previous" is our own last-applied manifest — a rule in there but no longer in the fresh
+    # allow/ask set is one we generated before and should now remove.
+    merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask = allowlist._merge_rule_sets(
+        ["Bash(git status:*)"], [], [], [], {"Bash(git status:*)"}
+    )
+    assert merged_allow == []
+    assert removed_allow == {"Bash(git status:*)"}
+    assert not added_allow and not added_ask and not removed_ask
+
+
+def test_merge_rule_sets_preserves_rule_user_added_by_hand():
+    # Not in `previous` (our manifest) — this was never something we wrote, so even though it's
+    # no longer in the fresh allow/ask set, it must survive the merge untouched.
+    merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask = allowlist._merge_rule_sets(
+        ["Bash(custom-tool:*)"], [], [], [], set()
+    )
+    assert merged_allow == ["Bash(custom-tool:*)"]
+    assert not added_allow and not removed_allow
+
+
+def test_merge_rule_sets_detects_rule_moving_from_allow_to_ask():
+    # Same rule string, different bucket — a real classification change, not a no-op.
+    merged_allow, merged_ask, added_allow, removed_allow, added_ask, removed_ask = allowlist._merge_rule_sets(
+        ["Bash(docker network:*)"], [], [], ["Bash(docker network:*)"], {"Bash(docker network:*)"}
+    )
+    assert merged_allow == []
+    assert merged_ask == ["Bash(docker network:*)"]
+    assert removed_allow == {"Bash(docker network:*)"}
+    assert added_ask == {"Bash(docker network:*)"}
+
+
 def test_should_check_man_deps_skips_tools_marked_skip_interactive():
     assert allowlist._should_check_man_deps("vim", {"skip_interactive": True}) is False
 
