@@ -88,6 +88,16 @@ def _ensure_wsl_conf_kv(text: str, section: str, key: str, value: str) -> tuple[
     return "\n".join(lines) + "\n", True
 
 
+def _parse_tristate(value: str, flag_name: str) -> bool:
+    """Parse a --dns/--wslg-style explicit yes/no override — "auto" is handled separately by
+    each caller, since what "auto" means differs per flag."""
+    if value in ("yes", "true", "1"):
+        return True
+    if value in ("no", "false", "0"):
+        return False
+    raise RuntimeError(f"--{flag_name} must be auto, yes, or no (got {value!r})")
+
+
 def _resolv_conf_wsl_active() -> bool:
     """True if WSL is still (or will still, pending restart) overwrite /etc/resolv.conf itself —
     i.e. generateResolvConf hasn't been set to false in /etc/wsl.conf yet. False once it has, even
@@ -445,12 +455,8 @@ def install(c, wslg="auto", docker=False, dns="auto"):
                 "here.\nOverride WSL's own DNS with public resolvers anyway?"
             )
         use_public_dns = ui.ask(explanation, default=False)
-    elif dns in ("yes", "true", "1"):
-        use_public_dns = True
-    elif dns in ("no", "false", "0"):
-        use_public_dns = False
     else:
-        raise RuntimeError(f"--dns must be auto, yes, or no (got {dns!r})")
+        use_public_dns = _parse_tristate(dns, "dns")
 
     ui.block(
         "About to: configure /etc/wsl.conf (systemd"
@@ -538,14 +544,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     else:
         print("[wsl.install] systemd/DNS not both live yet — skipping system.dns (restart WSL and re-run)")
 
-    if wslg == "auto":
-        use_wslg = _wslg_available()
-    elif wslg in ("yes", "true", "1"):
-        use_wslg = True
-    elif wslg in ("no", "false", "0"):
-        use_wslg = False
-    else:
-        raise RuntimeError(f"--wslg must be auto, yes, or no (got {wslg!r})")
+    use_wslg = _wslg_available() if wslg == "auto" else _parse_tristate(wslg, "wslg")
 
     if use_wslg:
         excluded = {"gnome", "ide", "windows-native", "workstation", "corporate"}
