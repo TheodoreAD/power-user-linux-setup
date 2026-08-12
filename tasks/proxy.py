@@ -380,6 +380,10 @@ def _capture_credential(c) -> str | None:
     return username
 
 
+def _needs_negotiate(schemes: list[str]) -> bool:
+    return any(s.lower() in ("negotiate", "kerberos") for s in schemes)
+
+
 def _has_kerberos_ticket(c) -> bool:
     if not util.command_exists("klist"):
         return False
@@ -422,7 +426,7 @@ def check(c, proxy="auto"):
         print(f"[proxy] {host}:{port} reachable, no proxy auth required")
     else:
         print(f"[proxy] {host}:{port} requires: {', '.join(schemes)}")
-        if any(s.lower() in ("negotiate", "kerberos") for s in schemes):
+        if _needs_negotiate(schemes):
             print(f"[proxy] Kerberos ticket cached: {'✓' if _has_kerberos_ticket(c) else 'no (klist -s)'}")
 
     if util.command_exists("px"):
@@ -505,7 +509,7 @@ def install(c, proxy="auto", noproxy=None):
 
     _install_px(c)
 
-    has_negotiate = any(s.lower() in ("negotiate", "kerberos") for s in schemes)
+    has_negotiate = _needs_negotiate(schemes)
     needs_credential = bool(schemes) and not (has_negotiate and _has_kerberos_ticket(c))
     username = None
     if needs_credential:

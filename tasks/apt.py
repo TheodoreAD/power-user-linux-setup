@@ -246,6 +246,15 @@ def _dpkg_install(c, name: str, cfg: dict, version: str) -> bool:
     return True
 
 
+def _dpkg_install_and_report(c, name: str, cfg: dict, version: str, verb: str, past_verb: str) -> None:
+    """Download+dpkg-install `version` and print a "<verb>..."/"<past_verb>" pair around it —
+    shared by the first-install path (installing/installed) and upgrade_debs() (upgrading/upgraded)."""
+    tag_prefix = cfg.get("tag_prefix", "v")
+    print(f"[{name}] {verb} {tag_prefix}{version}...")
+    if _dpkg_install(c, name, cfg, version):
+        print(f"[{name}] {past_verb} {tag_prefix}{version}")
+
+
 def _install_github_deb(c, name: str, cfg: dict) -> None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
@@ -256,10 +265,7 @@ def _install_github_deb(c, name: str, cfg: dict) -> None:
         version = _resolve_version(c, name, cfg)
         if version is None:
             return
-        tag_prefix = cfg.get("tag_prefix", "v")
-        print(f"[{name}] installing {tag_prefix}{version}...")
-        if _dpkg_install(c, name, cfg, version):
-            print(f"[{name}] installed {tag_prefix}{version}")
+        _dpkg_install_and_report(c, name, cfg, version, "installing", "installed")
     else:
         print(f"[{name}] already installed")
 
@@ -299,6 +305,12 @@ def _install_deb_url(c, name: str, cfg: dict) -> None:
     print(f"[{name}] installed")
 
 
+def _cache_size_report(c, label: str) -> None:
+    result = c.run("du -sh /var/cache/apt/archives", hide=True, warn=True)
+    size = result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
+    print(f"[{label}] archive cache: {size}")
+
+
 @task
 def clean_cache(c):
     """Remove apt's downloaded .deb cache for packages no longer available at their cached
@@ -308,9 +320,7 @@ def clean_cache(c):
     """
     util.require_apt()
     if util.DRY_RUN:
-        result = c.run("du -sh /var/cache/apt/archives", hide=True, warn=True)
-        size = result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
-        print(f"[apt.clean-cache] archive cache: {size}")
+        _cache_size_report(c, "apt.clean-cache")
         return
     c.run(f"{util.SUDO} apt-get autoclean")
     print("[apt.clean-cache] obsolete entries removed from /var/cache/apt/archives")
@@ -324,9 +334,7 @@ def clean_cache_full(c):
     """
     util.require_apt()
     if util.DRY_RUN:
-        result = c.run("du -sh /var/cache/apt/archives", hide=True, warn=True)
-        size = result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
-        print(f"[apt.clean-cache-full] archive cache: {size}")
+        _cache_size_report(c, "apt.clean-cache-full")
         return
     c.run(f"{util.SUDO} apt-get clean")
     print("[apt.clean-cache-full] /var/cache/apt/archives cleared")
@@ -402,10 +410,7 @@ def upgrade_debs(c):
         version = _resolve_version(c, name, cfg)
         if version is None:
             continue
-        tag_prefix = cfg.get("tag_prefix", "v")
-        print(f"[{name}] upgrading to {tag_prefix}{version}...")
-        if _dpkg_install(c, name, cfg, version):
-            print(f"[{name}] upgraded to {tag_prefix}{version}")
+        _dpkg_install_and_report(c, name, cfg, version, "upgrading to", "upgraded to")
 
 
 @task
@@ -417,6 +422,65 @@ def refresh_keys(c):
         print(f"[{name}] key refreshed → {gpg}")
 
 
+def _report_stale_backup(c, f: Path, label: str) -> None:
+    if util.DRY_RUN:
+        print(f"[apt/keys] {label}/{f.name}: stale backup")
+    else:
+        c.run(f"{util.SUDO} rm {f}", hide=True)
+        print(f"[apt/keys] {label}/{f.name}: removed stale backup")
+
+
+def _audit_trusted_gpg(c) -> bool:
+    """trusted.gpg must be empty; any key here implicitly trusts ALL repos (no signed-by
+    scoping). Returns True if clean."""
+    trusted = Path("/etc/apt/trusted.gpg")
+    if not (trusted.exists() and trusted.stat().st_size > 0):
+        print("[apt/keys] trusted.gpg: empty ✓")
+        return True
+    result = c.run(
+        f"gpg --no-default-keyring --keyring {trusted} --list-keys 2>/dev/null",
+        hide=True,
+        warn=True,
+    )
+    count = len([line for line in result.stdout.splitlines() if line.startswith("pub ")])
+    if util.DRY_RUN:
+        print(f"[apt/keys] trusted.gpg: {count} key(s) present — should be empty (trusts all repos)")
+    else:
+        c.run(f"{util.SUDO} truncate -s 0 {trusted}", hide=True)
+        print(f"[apt/keys] trusted.gpg: cleared {count} legacy key(s)")
+    return False
+
+
+def _audit_trusted_gpg_d(c) -> bool:
+    """Ubuntu system keys are expected; anything else is old-style (not signed-by). Returns True
+    if clean."""
+    trusted_d = Path("/etc/apt/trusted.gpg.d")
+    if not trusted_d.exists():
+        return True
+    clean = True
+    for f in sorted(trusted_d.iterdir()):
+        if f.name.endswith("~"):
+            clean = False
+            _report_stale_backup(c, f, "trusted.gpg.d")
+        elif f.name not in _SYSTEM_TRUSTED_D:
+            clean = False
+            print(f"[apt/keys] trusted.gpg.d/{f.name}: old-style key (not signed-by) — check if repo still active")
+    return clean
+
+
+def _audit_keyrings(c) -> bool:
+    """Check for ~ backup files (safe to remove) in the modern keyrings dirs. Returns True if clean."""
+    clean = True
+    for keyrings_dir in _KEYRINGS_DIRS:
+        if not keyrings_dir.exists():
+            continue
+        for f in sorted(keyrings_dir.iterdir()):
+            if f.name.endswith("~"):
+                clean = False
+                _report_stale_backup(c, f, keyrings_dir.name)
+    return clean
+
+
 @task
 def audit_keys(c):
     """Audit apt key hygiene — report legacy keys, old-style trust, stale backups.
@@ -424,53 +488,9 @@ def audit_keys(c):
     Safe fixes (clear trusted.gpg, remove ~ backups) run automatically in live mode.
     Old-style trusted.gpg.d entries are reported only — they need manual review.
     """
-    clean = True
+    trusted_gpg_clean = _audit_trusted_gpg(c)
+    trusted_gpg_d_clean = _audit_trusted_gpg_d(c)
+    keyrings_clean = _audit_keyrings(c)
 
-    # trusted.gpg — must be empty; any key here implicitly trusts ALL repos (no signed-by scoping)
-    trusted = Path("/etc/apt/trusted.gpg")
-    if trusted.exists() and trusted.stat().st_size > 0:
-        result = c.run(
-            f"gpg --no-default-keyring --keyring {trusted} --list-keys 2>/dev/null",
-            hide=True,
-            warn=True,
-        )
-        count = len([line for line in result.stdout.splitlines() if line.startswith("pub ")])
-        clean = False
-        if util.DRY_RUN:
-            print(f"[apt/keys] trusted.gpg: {count} key(s) present — should be empty (trusts all repos)")
-        else:
-            c.run(f"{util.SUDO} truncate -s 0 {trusted}", hide=True)
-            print(f"[apt/keys] trusted.gpg: cleared {count} legacy key(s)")
-    else:
-        print("[apt/keys] trusted.gpg: empty ✓")
-
-    # trusted.gpg.d — Ubuntu system keys are expected; anything else is old-style (not signed-by)
-    trusted_d = Path("/etc/apt/trusted.gpg.d")
-    if trusted_d.exists():
-        for f in sorted(trusted_d.iterdir()):
-            if f.name.endswith("~"):
-                clean = False
-                if util.DRY_RUN:
-                    print(f"[apt/keys] trusted.gpg.d/{f.name}: stale backup")
-                else:
-                    c.run(f"{util.SUDO} rm {f}", hide=True)
-                    print(f"[apt/keys] trusted.gpg.d/{f.name}: removed stale backup")
-            elif f.name not in _SYSTEM_TRUSTED_D:
-                clean = False
-                print(f"[apt/keys] trusted.gpg.d/{f.name}: old-style key (not signed-by) — check if repo still active")
-
-    # keyrings dirs — check for ~ backup files (safe to remove)
-    for keyrings_dir in _KEYRINGS_DIRS:
-        if not keyrings_dir.exists():
-            continue
-        for f in sorted(keyrings_dir.iterdir()):
-            if f.name.endswith("~"):
-                clean = False
-                if util.DRY_RUN:
-                    print(f"[apt/keys] {keyrings_dir.name}/{f.name}: stale backup")
-                else:
-                    c.run(f"{util.SUDO} rm {f}", hide=True)
-                    print(f"[apt/keys] {keyrings_dir.name}/{f.name}: removed stale backup")
-
-    if clean:
+    if trusted_gpg_clean and trusted_gpg_d_clean and keyrings_clean:
         print("[apt/keys] all key locations clean ✓")

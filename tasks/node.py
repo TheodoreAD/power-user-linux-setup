@@ -9,14 +9,18 @@ def _nvm_sh(nvm_dir: Path) -> str:
     return f'export NVM_DIR="{nvm_dir}" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
 
 
+def _node_cfg() -> tuple[dict, Path, str]:
+    cfg = util.load_config()["packages"]["node"]
+    nvm_dir = Path(cfg.get("nvm_dir", "~/.local/share/nvm")).expanduser()
+    return cfg, nvm_dir, _nvm_sh(nvm_dir)
+
+
 @task
 def install(c):
     """Install nvm, Node.js, and global npm packages from config."""
-    cfg = util.load_config()["packages"]["node"]
+    cfg, nvm_dir, nvm_sh = _node_cfg()
     version = cfg.get("version", "lts")
     global_packages = cfg.get("global_packages", [])
-    nvm_dir = Path(cfg.get("nvm_dir", "~/.local/share/nvm")).expanduser()
-    nvm_sh = _nvm_sh(nvm_dir)
 
     if util.DRY_RUN:
         print(f"[nvm] {util.ok_label(nvm_dir.exists())}")
@@ -60,15 +64,14 @@ def clean_cache(c):
     not part of `inv setup`/`node.install` — see `inv cleanup.caches`. For a full wipe instead,
     see `node.clean-cache-full`.
     """
-    cfg = util.load_config()["packages"]["node"]
-    nvm_dir = Path(cfg.get("nvm_dir", "~/.local/share/nvm")).expanduser()
+    _cfg, nvm_dir, nvm_sh = _node_cfg()
     if not nvm_dir.exists():
         print("[node.clean-cache] nvm not installed — nothing to do")
         return
     if util.DRY_RUN:
         print("[node.clean-cache] would run: npm cache verify")
         return
-    c.run(f"bash -c '{_nvm_sh(nvm_dir)} && npm cache verify'")
+    c.run(f"bash -c '{nvm_sh} && npm cache verify'")
     print("[node.clean-cache] npm cache verified, invalid/unneeded entries removed")
 
 
@@ -78,13 +81,12 @@ def clean_cache_full(c):
     only affects install speed, not what's installed. Opt-in, not part of `inv setup`/
     `node.install` — see `inv cleanup.all-full`.
     """
-    cfg = util.load_config()["packages"]["node"]
-    nvm_dir = Path(cfg.get("nvm_dir", "~/.local/share/nvm")).expanduser()
+    _cfg, nvm_dir, nvm_sh = _node_cfg()
     if not nvm_dir.exists():
         print("[node.clean-cache-full] nvm not installed — nothing to do")
         return
     if util.DRY_RUN:
         print("[node.clean-cache-full] would run: npm cache clean --force")
         return
-    c.run(f"bash -c '{_nvm_sh(nvm_dir)} && npm cache clean --force'")
+    c.run(f"bash -c '{nvm_sh} && npm cache clean --force'")
     print("[node.clean-cache-full] npm cache cleared")

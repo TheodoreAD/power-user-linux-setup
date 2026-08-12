@@ -219,6 +219,25 @@ def _missing_source_message(command: str) -> str:
 # Tasks
 
 
+def _require_bundle_paths(bundle: str | None, command: str, *, raise_on_missing: bool) -> list[Path] | None:
+    """Resolve and validate configured bundle paths, shared by check()/install(). Returns None
+    (having already printed an explanatory message) if nothing is configured, or if a configured
+    file is missing and raise_on_missing is False. Raises RuntimeError instead of returning None
+    if a file is missing and raise_on_missing is True."""
+    paths = _resolve_paths(bundle)
+    if not paths:
+        print(_missing_source_message(command))
+        return None
+    missing = [p for p in paths if not p.exists()]
+    if missing:
+        message = f"configured bundle file(s) not found: {', '.join(str(p) for p in missing)}"
+        if raise_on_missing:
+            raise RuntimeError(message)
+        print(f"[certs] {message}")
+        return None
+    return paths
+
+
 @task
 def check(c, bundle=None):
     """Read-only diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts. Never
@@ -226,13 +245,8 @@ def check(c, bundle=None):
     docs/certs.md.
     """
     util.require_apt()
-    paths = _resolve_paths(bundle)
-    if not paths:
-        print(_missing_source_message("check"))
-        return
-    missing = [p for p in paths if not p.exists()]
-    if missing:
-        print(f"[certs] configured bundle file(s) not found: {', '.join(str(p) for p in missing)}")
+    paths = _require_bundle_paths(bundle, "check", raise_on_missing=False)
+    if paths is None:
         return
     status = _status(c, paths)
     print(f"[certs] bundle:{status['bundle']}  zshenv:{status['zshenv']}  java:{status['java']}")
@@ -248,13 +262,9 @@ def install(c, bundle=None):
     if not util.command_exists("openssl"):
         raise RuntimeError("openssl not found — run `sudo apt install openssl` first")
 
-    paths = _resolve_paths(bundle)
-    if not paths:
-        print(_missing_source_message("install"))
+    paths = _require_bundle_paths(bundle, "install", raise_on_missing=True)
+    if paths is None:
         return
-    missing = [p for p in paths if not p.exists()]
-    if missing:
-        raise RuntimeError(f"configured bundle file(s) not found: {', '.join(str(p) for p in missing)}")
 
     if util.DRY_RUN:
         status = _status(c, paths)
