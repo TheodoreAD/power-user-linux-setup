@@ -5,8 +5,6 @@ from pathlib import Path
 
 from . import git, ssh, ui, util
 
-_IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
-
 
 def _current_shell() -> str:
     try:
@@ -91,7 +89,7 @@ def print_next_steps(extra_note: str | None = None) -> None:
         )
         return
 
-    if not _IDENTITY_PATH.exists():
+    if not util.IDENTITY_PATH.exists():
         ui.block(
             "1. inv identity.init",
             "   — interactive wizard; offers a quick single-identity setup or, for multiple",

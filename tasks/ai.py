@@ -9,14 +9,13 @@ from invoke import task
 from . import ui, util
 
 _REPO_ROOT = Path(__file__).parent.parent
-_CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 _CLAUDE_ENV_CACHE_DIR = Path.home() / ".cache" / "claude-code"
 # Deliberately separate from tasks/allowlist.py's _APPLIED_MANIFEST — that one tracks
 # CLI-classification-derived Bash rules specifically; this tracks static, hand-declared rules
 # from any setup.toml package's claude_permissions_allow field. Same safe-merge pattern (only
 # rule strings we previously wrote are ever removed), different manifest, so the two mechanisms
 # can never step on each other's rules even though they touch the same settings.json file.
-_STATIC_PERMS_MANIFEST = Path.home() / ".local" / "state" / "pulse" / "claude-static-permissions-applied.json"
+_STATIC_PERMS_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-applied.json"
 _SKILL_MARKER = ".pulse-source"
 
 
@@ -136,7 +135,7 @@ def _apply_static_claude_permissions() -> None:
         }
     )
 
-    settings = json.loads(_CLAUDE_SETTINGS.read_text()) if _CLAUDE_SETTINGS.exists() else {}
+    settings = util.load_claude_settings()
     existing_allow = settings.get("permissions", {}).get("allow", [])
 
     if util.DRY_RUN:
@@ -155,14 +154,11 @@ def _apply_static_claude_permissions() -> None:
     perms = settings.setdefault("permissions", {})
     perms["allow"] = merged
 
-    if _CLAUDE_SETTINGS.exists():
-        _CLAUDE_SETTINGS.with_suffix(".json.bak").write_text(_CLAUDE_SETTINGS.read_text())
-    _CLAUDE_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-    _CLAUDE_SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
+    util.write_claude_settings(settings)
 
     _STATIC_PERMS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     _STATIC_PERMS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n")
-    print(f"[ai.skills] {_CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
+    print(f"[ai.skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
 
 
 def _copilot_present() -> bool:
