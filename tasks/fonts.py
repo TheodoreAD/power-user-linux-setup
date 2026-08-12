@@ -39,11 +39,7 @@ def _load_vscode_settings(path: Path) -> dict:
     text = path.read_text() if path.exists() and path.stat().st_size > 0 else ""
     if not text:
         return {}
-    # Strip // line comments
-    cleaned = "\n".join(line for line in text.splitlines() if not line.lstrip().startswith("//"))
-    # Strip trailing commas before } or ]
-    cleaned = re.sub(r",(\s*[}\]])", r"\1", cleaned)
-    return json.loads(cleaned)
+    return _load_jsonc(text)
 
 
 def _cfg() -> dict:

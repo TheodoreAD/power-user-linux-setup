@@ -2,7 +2,13 @@
 doesn't shell out or touch the filesystem/keyring. See tests/README.md.
 """
 
-from tasks.proxy import _parse_env_proxy, _parse_etc_environment, _parse_proxy_authenticate, _split_host_port
+from tasks.proxy import (
+    _needs_negotiate,
+    _parse_env_proxy,
+    _parse_etc_environment,
+    _parse_proxy_authenticate,
+    _split_host_port,
+)
 
 
 def test_parse_proxy_authenticate_single_scheme():
@@ -69,3 +75,13 @@ def test_parse_etc_environment_ignores_comments():
 
 def test_parse_etc_environment_no_proxy_lines():
     assert _parse_etc_environment('PATH="/usr/bin"\n') is None
+
+
+def test_needs_negotiate_true_for_negotiate_or_kerberos():
+    assert _needs_negotiate(["Negotiate"]) is True
+    assert _needs_negotiate(["NTLM", "Kerberos"]) is True
+
+
+def test_needs_negotiate_false_without_negotiate_scheme():
+    assert _needs_negotiate(["Basic", "NTLM"]) is False
+    assert _needs_negotiate([]) is False

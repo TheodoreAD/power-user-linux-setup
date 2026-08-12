@@ -62,13 +62,17 @@ def test_run_skips_when_everything_already_ok(monkeypatch, capsys):
     assert "[shell] skipped" in capsys.readouterr().out
 
 
+def _fail_if_asked(message):
+    def fail_if_asked(*a, **k):
+        raise AssertionError(message)
+
+    return fail_if_asked
+
+
 def test_run_does_not_offer_skip_when_something_is_missing(monkeypatch):
     missing = _make_task(missing=True)
 
-    def fail_if_asked(*a, **k):
-        raise AssertionError("should not ask to skip when a phase has outstanding work")
-
-    monkeypatch.setattr(ui, "ask", fail_if_asked)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("should not ask to skip when a phase has outstanding work"))
 
     phases.run(None, "packages", [missing])
 
@@ -79,10 +83,7 @@ def test_run_does_not_offer_skip_when_something_is_missing(monkeypatch):
 def test_run_bypasses_skip_logic_under_global_dry_run(monkeypatch):
     ok = _make_task(missing=False)
 
-    def fail_if_asked(*a, **k):
-        raise AssertionError("PULSE_DRY_RUN=1 must never be gated behind a skip prompt")
-
-    monkeypatch.setattr(ui, "ask", fail_if_asked)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("PULSE_DRY_RUN=1 must never be gated behind a skip prompt"))
     util.DRY_RUN = True  # simulates PULSE_DRY_RUN=1 inv setup
 
     phases.run(None, "packages", [ok])
