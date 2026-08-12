@@ -4,7 +4,6 @@ from invoke import task
 
 from . import ui, util
 
-_IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
 _EXAMPLE_PATH = Path(__file__).parent.parent / "config" / "identity.toml.example"
 
 # label -> real hostname; simple mode uses the hostname itself as the ssh_hosts alias since
@@ -57,7 +56,7 @@ def init(c):
     """
     if not util.interactive():
         print("[identity] not an interactive terminal — nothing to do.")
-        print(f"[identity] copy {_EXAMPLE_PATH} to {_IDENTITY_PATH} and edit it by hand instead.")
+        print(f"[identity] copy {_EXAMPLE_PATH} to {util.IDENTITY_PATH} and edit it by hand instead.")
         return
 
     ui.block(
@@ -67,11 +66,12 @@ def init(c):
         label="identity setup",
     )
     if not ui.ask("Use the simple single-identity setup?", default=True):
-        print(f"[identity] cp {_EXAMPLE_PATH} {_IDENTITY_PATH}")
+        print(f"[identity] cp {_EXAMPLE_PATH} {util.IDENTITY_PATH}")
         print("[identity] then edit it by hand — see docs/git.md and docs/ssh.md.")
         return
 
-    if _IDENTITY_PATH.exists() and not ui.ask(f"{_IDENTITY_PATH} already exists — overwrite it?", default=False):
+    overwrite_prompt = f"{util.IDENTITY_PATH} already exists — overwrite it?"
+    if util.IDENTITY_PATH.exists() and not ui.ask(overwrite_prompt, default=False):
         print("[identity] left existing file untouched.")
         return
 
@@ -83,8 +83,8 @@ def init(c):
     if not hosts:
         print("[identity] no hosts selected — add [[ssh_hosts]] entries by hand later if you need one.")
 
-    _IDENTITY_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    _IDENTITY_PATH.write_text(_render(name, email, directory, hosts))
-    _IDENTITY_PATH.chmod(0o600)
-    print(f"[identity] wrote {_IDENTITY_PATH}")
+    util.IDENTITY_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
+    util.IDENTITY_PATH.write_text(_render(name, email, directory, hosts))
+    util.IDENTITY_PATH.chmod(0o600)
+    print(f"[identity] wrote {util.IDENTITY_PATH}")
     print("[identity] next: inv git.configure git.settings ssh.keys ssh.configure ssh.add")

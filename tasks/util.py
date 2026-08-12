@@ -1,3 +1,4 @@
+import json
 import os
 import pwd
 import shutil
@@ -18,6 +19,15 @@ SUDO: str = "sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo"
 _PULSE_WIDTH = 78
 
 _PROC_VERSION = Path("/proc/version")
+_CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
+
+# Machine-local, out-of-repo state namespace shared by identity.toml and the applied-manifest
+# files tasks/ai.py and tasks/allowlist.py each track their own writes to settings.json with.
+PULSE_CONFIG_DIR = Path.home() / ".config" / "pulse"
+PULSE_STATE_DIR = Path.home() / ".local" / "state" / "pulse"
+
+IDENTITY_PATH = PULSE_CONFIG_DIR / "identity.toml"
+CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 
 
 def ok_label(ok: bool) -> str:
@@ -177,10 +187,6 @@ def sudo_read(c, path: Path) -> str:
     return result.stdout if result.ok else ""
 
 
-_CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
-_IDENTITY_PATH = Path.home() / ".config" / "pulse" / "identity.toml"
-
-
 @cache
 def load_config() -> dict:
     with _CONFIG_PATH.open("rb") as f:
@@ -189,13 +195,13 @@ def load_config() -> dict:
 
 @cache
 def load_identity() -> dict:
-    if not _IDENTITY_PATH.exists():
+    if not IDENTITY_PATH.exists():
         raise FileNotFoundError(
-            f"Identity file not found: {_IDENTITY_PATH}\n"
+            f"Identity file not found: {IDENTITY_PATH}\n"
             "Run `inv identity.init` (interactive wizard) or copy config/identity.toml.example "
-            f"to {_IDENTITY_PATH} and fill in your details by hand."
+            f"to {IDENTITY_PATH} and fill in your details by hand."
         )
-    with _IDENTITY_PATH.open("rb") as f:
+    with IDENTITY_PATH.open("rb") as f:
         return tomllib.load(f)
 
 
@@ -207,9 +213,9 @@ def load_proxy_override() -> dict:
     proxy.* invocation on the assumption it's edited far more often mid-troubleshooting than the
     machine's own identity ever is.
     """
-    if not _IDENTITY_PATH.exists():
+    if not IDENTITY_PATH.exists():
         return {}
-    with _IDENTITY_PATH.open("rb") as f:
+    with IDENTITY_PATH.open("rb") as f:
         return tomllib.load(f).get("proxy", {})
 
 
@@ -217,10 +223,25 @@ def load_certs_override() -> dict:
     """Optional [certs] table from ~/.config/pulse/identity.toml (corporate CA bundle path(s)).
     Same tolerant-of-missing-file, not-cached rationale as load_proxy_override() — see there.
     """
-    if not _IDENTITY_PATH.exists():
+    if not IDENTITY_PATH.exists():
         return {}
-    with _IDENTITY_PATH.open("rb") as f:
+    with IDENTITY_PATH.open("rb") as f:
         return tomllib.load(f).get("certs", {})
+
+
+def load_claude_settings() -> dict:
+    """Read CLAUDE_SETTINGS (~/.claude/settings.json), or {} if it doesn't exist yet."""
+    return json.loads(CLAUDE_SETTINGS.read_text()) if CLAUDE_SETTINGS.exists() else {}
+
+
+def write_claude_settings(settings: dict) -> None:
+    """Backup CLAUDE_SETTINGS (if present) then overwrite it with `settings`. Shared by
+    tasks/ai.py and tasks/allowlist.py, which each merge their own slice of permissions into the
+    same file and must never clobber the other's — see their callers for the merge logic."""
+    if CLAUDE_SETTINGS.exists():
+        CLAUDE_SETTINGS.with_suffix(".json.bak").write_text(CLAUDE_SETTINGS.read_text())
+    CLAUDE_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
+    CLAUDE_SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
 
 
 def _excluded_tags() -> set[str]:

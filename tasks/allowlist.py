@@ -68,12 +68,12 @@ _TOOLS_TOML = _ROOT / "tools.toml"
 _HELP_CACHE_DIR = _ROOT / "help-cache"
 _RULES_DIR = _ROOT / "rules"
 
-_CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 # Machine-local mutation-tracking state, not repo content — deliberately outside cli-allowlist/
 # (which is portable, shared, tracked in git) since this records what `apply` last wrote into an
-# out-of-repo file on *this* machine specifically, mirroring the ~/.config/pulse/ namespace
-# util.py already uses for the same kind of machine-local state (identity.toml).
-_APPLIED_MANIFEST = Path.home() / ".local" / "state" / "pulse" / "claude-settings-applied.json"
+# out-of-repo file on *this* machine specifically, using the same util.PULSE_STATE_DIR namespace
+# util.py already uses for the same kind of machine-local state (identity.toml lives in its
+# sibling PULSE_CONFIG_DIR).
+_APPLIED_MANIFEST = util.PULSE_STATE_DIR / "claude-settings-applied.json"
 
 _DEFAULT_MAX_SUBCOMMANDS = 40
 _DEFAULT_MAX_NODES = 60  # total tree-node budget once max_depth > 1 (see tools.toml header)
@@ -1407,7 +1407,7 @@ def apply(c):
     new_set = set(allow) | set(ask)
     previous = set(json.loads(_APPLIED_MANIFEST.read_text())) if _APPLIED_MANIFEST.exists() else set()
 
-    settings = json.loads(_CLAUDE_SETTINGS.read_text()) if _CLAUDE_SETTINGS.exists() else {}
+    settings = util.load_claude_settings()
     perms = settings.setdefault("permissions", {})
     existing_allow = perms.get("allow", [])
     existing_ask = perms.get("ask", [])
@@ -1420,10 +1420,10 @@ def apply(c):
     unchanged = new_set & previous - added - removed
 
     if set(merged_allow) == set(existing_allow) and set(merged_ask) == set(existing_ask):
-        print(f"[allowlist] {_CLAUDE_SETTINGS}: already up to date ({len(unchanged)} rule(s))")
+        print(f"[allowlist] {util.CLAUDE_SETTINGS}: already up to date ({len(unchanged)} rule(s))")
         return
 
-    print(f"[allowlist] {_CLAUDE_SETTINGS}: +{len(added)} -{len(removed)} rule(s) ({len(unchanged)} unchanged)")
+    print(f"[allowlist] {util.CLAUDE_SETTINGS}: +{len(added)} -{len(removed)} rule(s) ({len(unchanged)} unchanged)")
     if util.DRY_RUN:
         for r in sorted(added_allow):
             print(f"  + {r} (allow)")
@@ -1438,14 +1438,11 @@ def apply(c):
     perms["allow"] = merged_allow
     perms["ask"] = merged_ask
 
-    if _CLAUDE_SETTINGS.exists():
-        _CLAUDE_SETTINGS.with_suffix(".json.bak").write_text(_CLAUDE_SETTINGS.read_text())
-    _CLAUDE_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-    _CLAUDE_SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
+    util.write_claude_settings(settings)
 
     _APPLIED_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     _APPLIED_MANIFEST.write_text(json.dumps(sorted(new_set), indent=2) + "\n")
-    print(f"[allowlist] wrote {_CLAUDE_SETTINGS} (backup at {_CLAUDE_SETTINGS}.bak)")
+    print(f"[allowlist] wrote {util.CLAUDE_SETTINGS} (backup at {util.CLAUDE_SETTINGS}.bak)")
 
 
 @task
