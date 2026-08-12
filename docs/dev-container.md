@@ -46,18 +46,14 @@ that the build didn't error):
 ```dockerfile
 FROM ubuntu:24.04
 
-RUN apt-get update && apt-get install -y --no-install-recommends \
-      python3 python3-pip curl git sudo zsh ca-certificates gnupg \
-    && rm -rf /var/lib/apt/lists/*
-
-RUN curl -fsSL https://astral.sh/uv/install.sh | sh
-RUN pip3 install --break-system-packages --no-cache-dir invoke
-
 WORKDIR /setup
 COPY setup.toml .
+COPY bootstrap.sh .
 COPY tasks/ tasks/
 COPY config/ config/
 COPY skills/ skills/
+
+RUN bash bootstrap.sh
 
 ENV PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome
 ENV PATH="/root/.local/bin:${PATH}"
@@ -67,23 +63,84 @@ RUN inv setup \
     && rm -rf /var/lib/apt/lists/* /tmp/*
 ```
 
+No `apt-get install` line at all — `bootstrap.sh` now self-installs every OS-level prerequisite
+(`curl`, `gnupg`, `ca-certificates`, `sudo`) the base image doesn't already have, via a preamble
+gated behind `command -v apt-get` that no-ops entirely on a system that already has them (every
+bare-metal/WSL/VM install, per `README.md`'s existing "Requirements" section). Only a genuinely
+minimal container base image exercises the install branch. An earlier version of this doc listed
+`python3 python3-pip curl git sudo zsh ca-certificates gnupg` explicitly in a hand-maintained
+`apt-get install` line — all of that is gone now:
+
+- `python3`/`python3-pip` were never actually needed — `inv setup` never touches system Python at
+  all; `bootstrap.sh` provisions Python itself via `uv python install`.
+- `git`/`zsh` are ordinary `[packages.*]` apt entries (`setup.toml`'s `git`/`zsh` sections),
+  installed by `apt.base` well before anything in `inv setup` needs either — no reason to also
+  hand-list them here.
+- `curl`/`sudo`/`ca-certificates`/`gnupg` are genuine prerequisites, but now `bootstrap.sh`'s job,
+  not the Dockerfile's — the same self-heal preamble every other use case (bare metal, WSL, the
+  future `postCreateCommand` model) already runs unconditionally.
+
+`gnupg` specifically matters because every `apt-repo`-method package (`gh`, `kubectl`, `docker`,
+`terraform`, ...) registers its repo by piping a downloaded key through `gpg --dearmor` — without
+`gpg` present, that pipe fails (`curl: (23) Failure writing output to destination`), `apt.repos`
+treats the failed key fetch as "skip this repo, print a WARNING, keep going" rather than fatal, and
+`RUN inv setup` used to still exit 0 while silently missing `kubectl`/`docker`/`terraform` entirely
+and getting whatever stale version of `gh` happens to already be in Ubuntu's own `universe` repo
+instead of the pinned upstream one. `tasks/apt.py`'s `repos()` task independently self-ensures
+`gnupg`/`lsb-release` too (a second, narrower layer — see `tasks/apt.py`'s comment on that block)
+so a standalone `inv apt.repos` run stays protected even outside the `bootstrap.sh` flow. This
+specific bug is also exactly the shape of thing `inv verify.all` now catches automatically and
+generally — see below — so `RUN inv setup` no longer exits 0 while quietly missing something.
+
+### Automated functional verification (`inv verify.all`)
+
+`inv setup`'s `packages` phase ends with `inv verify.all` (`tasks/verify.py`) — a hard,
+convention-based check that every package this run installed also actually _works_, not just that
+it's present. The gnupg bug above was originally found by hand (manually checking `gh --version`
+and `dpkg -l`); this task exists so that class of bug fails the build loudly instead of needing a
+human to go looking for it.
+
+Convention, not a hand-written test per package: the default check is `<check_cmd or table-key>
+--version`, with existence checks (no invocation) for methods that install something with no
+command by nature — `git-clone`/`wrapper-script`/`apparmor-profile` dest/profile paths.
+`gnome-extension` always skips, since no automated path (not even `inv setup`) ever calls
+`inv gnome.extensions` — see `tasks/gnome.py`, GNOME sessions are never touched programmatically
+in this repo. Per-package `setup.toml` fields override the convention: `verify_cmd` for a
+different invocation, `verify = false` for "no functional check is possible at all." No fallback
+chain anywhere — the first failure aborts `inv setup` immediately, deliberately the opposite of
+`apt.py`'s `warn=True`-and-continue pattern.
+
+Auditing this against a real, fully-provisioned machine (not just reading the code) surfaced real
+bugs the convention alone wouldn't have predicted:
+
+- **`nyancat --version` doesn't exit** — it ignores the unrecognized flag and runs its terminal
+  animation forever instead. Auditing this by hand actually hung the machine it ran on before a
+  fix was in place. Every invocation is now wrapped in `timeout 15s` — not a fallback, just a hard
+  ceiling on the one attempt — so a badly-behaved package fails loudly in 15 seconds instead of
+  hanging `inv setup` (or the machine) indefinitely. `px-proxy --version` had the same shape of
+  bug — it started the proxy daemon itself instead of printing a version and exiting.
+- **Container-only PATH gaps**: `go` and `node` both install to a location that's only ever put on
+  `PATH` by a `zshenv`/Oh-My-Zsh-plugin snippet, sourced by an interactive shell — never sourced
+  within the single non-interactive `RUN` layer a Dockerfile build runs in. Both work fine
+  interactively on bare metal (a later shell sources the snippet) but need an explicit
+  `verify_cmd` pointing at the real install path in `setup.toml` to be provable inside the same
+  `RUN` that just installed them.
+- **Table-key-vs-real-binary mismatches**: several entries' section name isn't the command it
+  installs — `[packages.edge]` installs `microsoft-edge`, `[packages.vscode]` installs `code`,
+  `[packages.ripgrep]` installs `rg`, `[packages.kubectl]`/`[packages.helm]`/`[packages.go]`/`k9s`
+  don't support a `--version` flag at all (subcommand or short flag instead). Each got an explicit
+  `verify_cmd` once the audit found it — the convention's default guess is a starting point, not a
+  guarantee.
+- **A genuinely stale machine**: `[packages.pulse-proxy-start]` (a `wrapper-script` entry) was
+  added to `setup.toml` after this machine's last full `inv setup` run and had simply never been
+  installed here — `inv verify.all` caught that too; running `inv tools.install` once fixed it.
+  This is the mechanism doing exactly its job, not a false positive.
+
 `COPY skills/ skills/` is easy to miss and not optional — `ai.skills` (part of the `packages`
 phase `inv setup` always runs) copies this repo's own `skills/research-library/` into the image
 and fails with a `FileNotFoundError` if that directory wasn't copied in. `PATH` needs
 `/root/.local/bin` up front since that's where `uv`, `invoke`, and most script/binary/archive
 -method tools land (`~/.local/bin` when running as root during a build is `/root/.local/bin`).
-
-`gnupg` is not optional either, despite apt never listing it as a dependency error: every
-`apt-repo`-method package (`gh`, `kubectl`, `docker`, `terraform`, ...) registers its repo by
-piping a downloaded key through `gpg --dearmor`. Without the `gpg` binary present, that pipe fails
-(`curl: (23) Failure writing output to destination`) — but `apt.repos` treats a failed key fetch
-as "skip this repo, print a WARNING, keep going" rather than a fatal error, so `RUN inv setup`
-still exits 0. The image just silently ends up missing `kubectl`/`docker`/`terraform` entirely,
-and gets whatever stale version of `gh` happens to already be in Ubuntu's own `universe` repo
-instead of the pinned upstream one — easy to miss unless you specifically check `dpkg -l` and
-`/etc/apt/sources.list.d/`, which is how this was actually caught (confirmed by building without
-`gnupg`, finding the WARNINGs in the log, then rebuilding with it added and diffing installed
-versions).
 
 `inv cleanup.all-full` is the container-appropriate cleanup call — see
 [Cleanup](#cleanup-reclaiming-image-layer-space) below for what it does, what it actually saves
@@ -134,10 +191,10 @@ prompt.
 ### Alternate base image: `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`
 
 Also verified end-to-end, swapping only the `FROM` line and dropping the `useradd`/sudoers block
-(the image already ships a passwordless-sudo `vscode` user and `gnupg`) — everything else in the
-outline above is unchanged. Only addition needed: `python3`/`python3-pip` still aren't
-preinstalled, so that `apt-get install` line stays. No conflicts observed between this image's
-preinstalled packages and anything `setup.toml` installs.
+(the image already ships a passwordless-sudo `vscode` user, plus `curl`/`gnupg`/`ca-certificates`
+preinstalled) — everything else in the outline above is unchanged, and `bootstrap.sh`'s self-heal
+preamble finds nothing missing on this image (`missing` stays empty, pure no-op). No conflicts
+observed between this image's preinstalled packages and anything `setup.toml` installs.
 
 ### Round-tripping through `@devcontainers/cli`
 

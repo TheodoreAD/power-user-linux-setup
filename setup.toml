@@ -155,6 +155,20 @@
 #   (default ~/.local/share/nvm).
 #
 # any section (any method):
+#   verify_cmd    shell command `inv verify.all` runs to prove this package actually works, not
+#                 just that it's installed (default: `<check_cmd or section-name> --version`).
+#                 Override when the default guess is wrong — a multi-binary bundle with no single
+#                 command, a tool that needs a subcommand instead of a flag, etc.
+#   verify        set to `false` to opt this section out of inv verify.all entirely — for packages
+#                 with no meaningful check possible even by existence (e.g. a pure library
+#                 dependency with no binary and no file PULSE itself places, like
+#                 [packages.citrix-workspace-deps]). Not a general escape hatch for "the default
+#                 guess happens to be wrong" — use verify_cmd for that instead, so the package
+#                 still gets a real check. git-clone/wrapper-script/apparmor-profile default to an
+#                 existence check (same path the install-time check already uses) and
+#                 gnome-extension defaults to a `gnome-extensions list` membership check — none of
+#                 those four need verify_cmd/verify=false unless the default doesn't apply.
+#
 #   zshrc         shell snippet appended to ~/.zshrc   (interactive shells — hooks, completions)
 #   zshenv        shell snippet appended to ~/.zshenv  (all shells — environment variables)
 #   zprofile      shell snippet appended to ~/.zprofile (login shells)
@@ -303,16 +317,19 @@ legacy = ["Ubuntu Mono*Nerd Font Complete.ttf"]
 description = "Provides add-apt-repository — prerequisite for all apt-repo setup tasks in this config"
 method = "apt"
 tags = ["apt", "setup"]
+verify_cmd = "add-apt-repository --help" # no --version support (exit 2, "unrecognized arguments")
 
 [packages.unzip]
 description = "Prerequisite for dprint's install.sh (unzips its release archive) and deb-github assets that ship as a .zip wrapping a .deb (e.g. flameshot)"
 method = "apt"
 tags = ["apt", "setup"]
+verify_cmd = "unzip -v" # no --version support
 
 [packages.fontconfig]
 description = "Provides fc-cache — fonts.install rebuilds the font cache with it after installing any new font files"
 method = "apt"
 tags = ["apt", "setup"]
+verify_cmd = "fc-list --version" # package provides fc-* tools, not a "fontconfig" binary
 
 [packages.zenity]
 description = "Runtime dependency of the askpass-zenity wrapper script (GUI password/passphrase dialog for sudo -A / SSH_ASKPASS)"
@@ -323,6 +340,7 @@ tags = ["shell", "system"]
 description = "Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command"
 method = "apt"
 tags = ["hardware", "monitor", "workstation"]
+verify_cmd = "sensors --version" # package provides the "sensors" binary, not "lm-sensors"
 
 [packages.patchelf]
 description = "Modify ELF binaries — required by Nuitka to patch compiled executables"
@@ -343,6 +361,7 @@ packages = [
   "manpages-dev",
   "manpages-posix-dev",
 ]
+verify_cmd = "make --version" # multi-package bundle, no single "build-tools" command — make stands in for the group
 
 [packages.git]
 description = "Distributed version control system"
@@ -364,6 +383,7 @@ description = "SSH client, GPG, and keychain agent manager — keys and secure c
 method = "apt"
 tags = ["security", "dev"]
 packages = ["openssh-client", "gnupg", "keychain"]
+verify_cmd = "ssh -V" # ssh only supports the short getopt-style flag, not --version
 
 [packages.openssh-server]
 description = """
@@ -433,6 +453,7 @@ description = "Wayland clipboard CLI — wl-copy and wl-paste for scripts and te
 method = "apt"
 tags = ["cli", "desktop", "gui"]
 packages = ["wl-clipboard"]
+verify_cmd = "wl-copy --version" # package name differs from both the section name and the two binaries it provides
 zshrc = """
 alias xcc="wl-copy"
 function xc() { echo -n "$*" | wl-copy; }
@@ -449,6 +470,7 @@ description = "GNOME backend for the xdg-desktop-portal Screenshot/ScreenCast D-
 method = "apt"
 enabled = true
 tags = ["desktop", "gnome"]
+verify = false # background D-Bus service, not a CLI — no invocable command to prove it works
 
 # See docs/screen_capture.md for shortcut design and comparison with the built-in GNOME screenshot
 # tool. After install, run `inv screenshot.enable` to wire up shortcuts (see docs for details).
@@ -742,6 +764,10 @@ uuid = "quick-settings-tweaks@qwreey"
 description = "NyanCat for the terminal — an absolute must"
 method = "apt"
 tags = ["terminal", "fun"]
+# --version doesn't exit — ignores unrecognized flags and just runs the animation forever, which
+# hung the machine running the inv verify.all audit pass before this override was added. --help
+# does exit cleanly.
+verify_cmd = "nyancat --help"
 
 [packages.terminator]
 description = "Feature-rich terminal emulator with split panes and profiles"
@@ -753,6 +779,7 @@ config_files = [{ src = "config/terminator.conf", dst = "~/.config/terminator/co
 description = "Terminal multiplexer — persistent sessions, split panes, detach/reattach"
 method = "apt"
 tags = ["terminal", "multiplexer", "workstation"]
+verify_cmd = "tmux -V" # no --version support
 
 [packages.tree]
 description = "Recursive directory listing formatted as a tree"
@@ -770,6 +797,7 @@ symlinks = [{ src = "fdfind", dst = "fd" }]
 description = "Extremely fast recursive grep — respects .gitignore, supports regex"
 method = "apt"
 tags = ["search", "modern"]
+verify_cmd = "rg --version" # package name differs from the "rg" binary it provides
 
 [packages.fzf]
 description = "Interactive fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C directory jump, ** tab completion. Uses fd for file listing and bat for previews."
@@ -1006,6 +1034,7 @@ fi
 description = "Claude desktop app (community repackage — aaddrick/claude-desktop-debian)"
 method = "apt-repo"
 tags = ["ai", "desktop", "gui", "windows-native"]
+verify_cmd = "claude-desktop-unofficial --version" # apt package "claude-desktop" is now a transitional rename to this real binary
 gpg_url = "https://pkg.claude-desktop-debian.dev/KEY.gpg"
 gpg_path = "/usr/share/keyrings/claude-desktop.gpg"
 sources_path = "/etc/apt/sources.list.d/claude-desktop.list"
@@ -1062,6 +1091,7 @@ The apt repo URL is version-specific (v1.33); update when upgrading to a new min
 method = "apt-repo"
 tags = ["k8s", "cloud"]
 omz_plugin = "kubectl"
+verify_cmd = "kubectl version --client" # --version is not a recognized flag
 gpg_url = "https://pkgs.k8s.io/core:/stable:/v1.33/deb/Release.key"
 gpg_path = "/usr/share/keyrings/kubernetes-apt-keyring.gpg"
 sources_path = "/etc/apt/sources.list.d/kubernetes.list"
@@ -1073,6 +1103,7 @@ method = "archive"
 tags = ["k8s", "cloud"]
 omz_plugin = "helm"
 check_cmd = "helm"
+verify_cmd = "helm version" # --version is not a recognized flag; version is a subcommand
 version_cmd = "curl -fsSL https://api.github.com/repos/helm/helm/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 download_url = "https://get.helm.sh/helm-v{version}-linux-amd64.tar.gz"
 bin_pick = "helm"
@@ -1103,6 +1134,7 @@ tags = ["k8s", "dev"]
 repo = "derailed/k9s"
 asset = "k9s_linux_amd64.deb"
 check_cmd = "k9s"
+verify_cmd = "k9s version" # --version is not a recognized flag; version is a subcommand
 
 [packages.freelens]
 description = "Open-source Kubernetes IDE (community fork of Lens) — cluster explorer, log viewer, resource editor"
@@ -1142,6 +1174,7 @@ description = "Microsoft Edge browser (stable channel)"
 method = "apt-repo"
 tags = ["browser", "desktop", "gui", "windows-native"]
 packages = ["microsoft-edge-stable"]
+verify_cmd = "microsoft-edge --version" # real binary name, not "edge"
 gpg_url = "https://packages.microsoft.com/keys/microsoft.asc"
 gpg_path = "/usr/share/keyrings/microsoft-edge.gpg"
 sources_path = "/etc/apt/sources.list.d/microsoft-edge.list"
@@ -1152,6 +1185,7 @@ description = "Visual Studio Code — Microsoft official apt repo; auto-updates 
 method = "apt-repo"
 tags = ["dev", "editor", "ide", "gui"]
 packages = ["code"]
+verify_cmd = "code --version" # real binary name, not "vscode"
 gpg_url = "https://packages.microsoft.com/keys/microsoft.asc"
 gpg_path = "/usr/share/keyrings/microsoft-vscode.gpg"
 sources_path = "/etc/apt/sources.list.d/vscode.list"
@@ -1222,6 +1256,7 @@ description = "Runtime dependency for Citrix Workspace — provides libwoff2dec.
 method = "apt"
 tags = ["gui", "corporate"]
 packages = ["libwoff1"]
+verify = false # pure shared-library dependency, no binary of its own to invoke
 
 [packages.citrix-workspace]
 description = "Citrix Workspace — remote desktop and app access"
@@ -1284,6 +1319,11 @@ description = "Go programming language runtime — installs to ~/.local/share/go
 method = "archive"
 tags = ["dev", "language"]
 check_cmd = "go"
+# Absolute path, not "go version": go's bin dir only reaches PATH via the zshenv snippet below,
+# which a non-interactive shell (e.g. a single `RUN` layer in a Dockerfile) never sources — a real
+# gap found by testing this inside a container build, not just theoretical. -version is also not
+# a recognized flag; version is a subcommand.
+verify_cmd = "~/.local/share/go/bin/go version"
 version_url = "https://go.dev/VERSION?m=text"
 download_url = "https://go.dev/dl/{version}.linux-amd64.tar.gz"
 extract_to = "~/.local/share"
@@ -1299,6 +1339,7 @@ description = "Python keyring library — CLI and API for storing/retrieving sec
 method = "uv-tool"
 package = "keyring"
 check_cmd = "keyring"
+verify_cmd = "keyring --help" # no --version support
 
 [packages.nox]
 description = "Python session-based test automation, similar to tox"
@@ -1333,6 +1374,9 @@ method = "uv-tool"
 package = "px-proxy"
 check_cmd = "px"
 tags = ["corporate"]
+# --version doesn't exit — starts the proxy daemon itself instead (hung for the full check
+# timeout during the audit pass before this override was added). --help exits cleanly.
+verify_cmd = "px --help"
 
 [packages.pulse-proxy-start]
 description = "Devcontainer/no-systemd fallback starter for the Px proxy daemon (inv proxy.fix/install use this when systemd --user isn't available)"
@@ -1375,6 +1419,10 @@ method = "nvm"
 omz_plugin = "nvm"
 version = "lts"
 nvm_dir = "~/.local/share/nvm"
+# node/npm live under a version-specific nvm path only reachable by sourcing nvm.sh (normally
+# done by Oh My Zsh's nvm plugin on shell startup) — not found by a plain "node" on PATH in a
+# non-interactive shell (e.g. a single `RUN` layer in a Dockerfile), same class of gap as go above.
+verify_cmd = "bash -c 'source ~/.local/share/nvm/nvm.sh && node --version'"
 global_packages = [
   "skills",
 ] # `skills` CLI (skills.sh) — installs Agent Skills from a GitHub repo; see the `skills` field docs above and [packages.research-library] for a declarative example

@@ -324,7 +324,7 @@ It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (onl
 are actually live yet — skipped with a message otherwise, if `wsl.fix` just changed
 `/etc/wsl.conf` and you haven't restarted WSL), _then_ two named phases run through
 `tasks/phases.py`: **packages** (`apt.repos`/`apt.base`/`apt.deb`/`tools.install`/`ai.skills`/
-`python.tools`/`node.install`) and **shell** (`zsh.omz-configure`/`zsh.configure`/
+`python.tools`/`node.install`/`verify.all`) and **shell** (`zsh.omz-configure`/`zsh.configure`/
 `zsh.p10k-configure`/`zsh.set-default-shell`). DNS has to be fixed before the packages/shell
 phases — on a re-run after a restart with `generateResolvConf=false` already active, DNS is broken
 (see [Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of

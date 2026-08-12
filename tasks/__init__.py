@@ -22,6 +22,7 @@ from . import (
     ssh,
     system,
     tools,
+    verify,
     wsl,
     zsh,
 )
@@ -48,6 +49,7 @@ namespace = Collection(
     Collection.from_module(system),
     Collection.from_module(tools),
     Collection.from_module(node),
+    Collection.from_module(verify),
     Collection.from_module(wsl),
     Collection.from_module(zsh),
 )

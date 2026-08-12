@@ -6,7 +6,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import ai, apt, next_steps, node, phases, python, system, tools, ui, util, zsh
+from . import ai, apt, next_steps, node, phases, python, system, tools, ui, util, verify, zsh
 
 _WSL_CONF = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
@@ -565,8 +565,11 @@ def install(c, wslg="auto", docker=False, dns="auto"):
     phases.run_phase(
         c,
         "packages",
-        [apt.repos, apt.base, apt.deb, tools.install, ai.skills, python.tools, node.install],
-        note="apt repos/packages, script/binary tools, AI agent skills scaffolding, Python and Node.js",
+        [apt.repos, apt.base, apt.deb, tools.install, ai.skills, python.tools, node.install, verify.all],
+        note=(
+            "apt repos/packages, script/binary tools, AI agent skills scaffolding, Python and "
+            "Node.js, then a hard functional-verification pass over everything just installed"
+        ),
     )
 
     phases.run_phase(

@@ -99,6 +99,17 @@ This re-downloads and reinstalls each `deb-github` package. `dpkg` handles versi
 reinstalling the same version is safe. For packages using `tag = "nightly"`, this always fetches
 the latest nightly build.
 
+### Checking installed tools actually work
+
+```shell
+inv verify.all
+```
+
+Runs automatically as the last step of `inv setup`'s `packages` phase, so this is mainly useful
+standalone — a quick health check any time, or after manually installing/removing something. See
+[dev-container.md](dev-container.md#automated-functional-verification-inv-verifyall) for how it
+decides what to check and why.
+
 ### Reclaiming disk space (apt/uv/npm/cargo/Docker caches)
 
 ```shell

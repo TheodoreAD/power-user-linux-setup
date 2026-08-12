@@ -47,6 +47,22 @@ environment profile (headless, dev container, WSL) by setting `PULSE_EXCLUDE_TAG
 sufficient — check the docs/configuration.md table for what each task actually respects before
 assuming.
 
+## Post-install verification (`inv verify.all`)
+
+`tasks/verify.py` runs as the last step of `inv setup`'s (and `inv wsl.install`'s) `packages`
+phase — a hard, convention-based check that every package a run installed also actually _works_,
+not just that it's present. No fallback chain: first failure aborts immediately, the deliberate
+opposite of `apt.py`'s `warn=True`-and-continue pattern.
+
+[`docs/dev-container.md`'s "Automated functional verification"
+section](docs/dev-container.md#automated-functional-verification-inv-verifyall) is the published
+"what it is / why it exists" page. **Full writeup, including every gotcha the first implementation
+pass hit (a real machine freeze from an unrecognized-flag hang, why `gnome-extension` always
+skips, container-only `PATH` gaps for `go`/`node`, why `git-clone`/`wrapper-script` default to an
+existence check instead of invocation) and how testing — not code review — caught each one, is
+[`contributing/verify.md`](contributing/verify.md)** — read that before re-deriving this task's
+design from scratch or "simplifying" something that was already a deliberate tradeoff.
+
 ## WSL support
 
 `tasks/wsl.py` (`inv wsl.check` diagnostic, `inv wsl.fix` for the fixable subset —
