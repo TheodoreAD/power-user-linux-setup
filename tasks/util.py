@@ -23,8 +23,10 @@ _CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
 
 # Machine-local, out-of-repo state namespace shared by identity.toml and the applied-manifest
 # files tasks/ai.py and tasks/allowlist.py each track their own writes to settings.json with.
-PULSE_CONFIG_DIR = Path.home() / ".config" / "pulse"
-PULSE_STATE_DIR = Path.home() / ".local" / "state" / "pulse"
+# Deliberately the full repo name, not "pulse" — "~/.config/pulse" is PulseAudio's own real config
+# dir, and this namespace used to collide with it silently before this rename.
+PULSE_CONFIG_DIR = Path.home() / ".config" / "power-user-linux-setup"
+PULSE_STATE_DIR = Path.home() / ".local" / "state" / "power-user-linux-setup"
 
 IDENTITY_PATH = PULSE_CONFIG_DIR / "identity.toml"
 CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
@@ -223,7 +225,7 @@ def load_identity() -> dict:
 
 
 def load_proxy_override() -> dict:
-    """Optional [proxy] table from ~/.config/pulse/identity.toml (host/port/noproxy). Unlike
+    """Optional [proxy] table from ~/.config/power-user-linux-setup/identity.toml (host/port/noproxy). Unlike
     load_identity(), tolerant of a missing file — proxy detection has to degrade gracefully on the
     common case of a personal, non-corporate machine, not require identity.toml to exist just to
     run `inv proxy.check`. Not cached like load_identity()/load_config(): this is re-read on every
@@ -237,7 +239,7 @@ def load_proxy_override() -> dict:
 
 
 def load_certs_override() -> dict:
-    """Optional [certs] table from ~/.config/pulse/identity.toml (corporate CA bundle path(s)).
+    """Optional [certs] table from ~/.config/power-user-linux-setup/identity.toml (corporate CA bundle path(s)).
     Same tolerant-of-missing-file, not-cached rationale as load_proxy_override() — see there.
     """
     if not IDENTITY_PATH.exists():

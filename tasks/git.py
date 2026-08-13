@@ -42,7 +42,7 @@ def settings(c):
 
 @task
 def configure(c):
-    """Set up per-directory git identities from ~/.config/pulse/identity.toml."""
+    """Set up per-directory git identities from ~/.config/power-user-linux-setup/identity.toml."""
     identity = util.load_identity()
     profiles = identity.get("git_profiles", [])
     if not profiles:

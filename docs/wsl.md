@@ -382,7 +382,7 @@ to do:
 
 1. If the login shell isn't zsh yet, tells you to open a new terminal (or, if `usermod` failed,
    the exact command to run by hand) and re-run.
-2. Otherwise, if `~/.config/pulse/identity.toml` doesn't exist, tells you to run `inv identity.init`
+2. Otherwise, if `~/.config/power-user-linux-setup/identity.toml` doesn't exist, tells you to run `inv identity.init`
    (interactive wizard — simple single-identity setup, or points you at hand-editing the example
    for multiple directories/accounts), then re-run.
 3. Otherwise, walks the `inv git.*`/`inv ssh.*` chain one command at a time — global git settings

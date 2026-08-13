@@ -1,5 +1,5 @@
 # Personal identity data — DO NOT commit this file.
-# Copy to ~/.config/pulse/identity.toml and fill in your details.
+# Copy to ~/.config/power-user-linux-setup/identity.toml and fill in your details.
 #
 # Only need one name/email and one ~/projects/<dir>/? Run `inv identity.init` instead — an
 # interactive wizard that writes the minimal version of this same file for you, no hand-editing

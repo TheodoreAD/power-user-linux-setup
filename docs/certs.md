@@ -22,7 +22,7 @@ configure" — expected, not a failure.
 
 ## Config
 
-Add a `[certs]` section to `~/.config/pulse/identity.toml` (see
+Add a `[certs]` section to `~/.config/power-user-linux-setup/identity.toml` (see
 `config/identity.toml.example`):
 
 ```toml

@@ -32,7 +32,7 @@ change, or as a build step where prompting isn't possible.
 `proxy.check`/`proxy.install --proxy=auto` (the default) look for a candidate address in this
 order, and print which source they used:
 
-1. An explicit `[proxy]` `host`/`port` in `~/.config/pulse/identity.toml` (see
+1. An explicit `[proxy]` `host`/`port` in `~/.config/power-user-linux-setup/identity.toml` (see
    `config/identity.toml.example`) — always wins if set, since it's an explicit statement of
    intent rather than a guess.
 2. **WSL**: reachability of an unauthenticated proxy already listening at the Windows host's IP

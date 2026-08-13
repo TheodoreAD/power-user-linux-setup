@@ -2,7 +2,7 @@
 
 ## Identity setup
 
-Git identity is driven by `~/.config/pulse/identity.toml` — a personal file that is never committed to the repo.
+Git identity is driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is never committed to the repo.
 
 **Quick start** — one name/email, one `~/projects/<dir>/` directory:
 
@@ -16,9 +16,9 @@ Interactive wizard; answer a few prompts and it writes `identity.toml` for you. 
 **Advanced / manual** — for multiple directories or accounts, copy the example and hand-edit it:
 
 ```shell
-mkdir -p ~/.config/pulse
-cp config/identity.toml.example ~/.config/pulse/identity.toml
-# edit ~/.config/pulse/identity.toml
+mkdir -p ~/.config/power-user-linux-setup
+cp config/identity.toml.example ~/.config/power-user-linux-setup/identity.toml
+# edit ~/.config/power-user-linux-setup/identity.toml
 ```
 
 Either way produces the same file format — `inv identity.init`'s simple mode just writes the

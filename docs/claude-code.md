@@ -234,7 +234,7 @@ regardless of that entry's `method`. `inv ai.skills` merges every declared rule 
 `~/.claude/settings.json`'s `permissions.allow` — same safe-merge shape as
 `tasks/allowlist.py`'s `apply` (every other key untouched, `.json.bak` written before any real
 change, only rule strings this mechanism wrote previously are ever removed) but through its own,
-separate manifest (`~/.local/state/pulse/claude-static-permissions-applied.json`) — **deliberately
+separate manifest (`~/.local/state/power-user-linux-setup/claude-static-permissions-applied.json`) — **deliberately
 not routed through the CLI-allowlist pipeline** (see [`cli-allowlist.md`](cli-allowlist.md)): that
 pipeline exists specifically to classify CLI tool risk from `--help` output, and these are static,
 hand-declared rules with nothing to classify. Keeping the manifests separate means neither

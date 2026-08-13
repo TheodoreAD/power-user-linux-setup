@@ -175,7 +175,7 @@ def _resolve_cert_bundle_paths(identity_toml: Path | None) -> list[Path]:
     """[certs] bundle from identity_toml (a single string or a list) — same resolution shape as
     tasks/certs.py's _resolve_paths(), reimplemented here (not calling util.load_certs_override(),
     which is hardcoded to util.IDENTITY_PATH and @cache'd) so tests can point it at a fabricated
-    identity.toml under a tmp_path fixture instead of the real ~/.config/pulse/identity.toml.
+    identity.toml under a tmp_path fixture instead of the real ~/.config/power-user-linux-setup/identity.toml.
     """
     if not identity_toml or not identity_toml.exists():
         return []
@@ -232,14 +232,14 @@ def _discover_candidates(
             )
         )
 
-    if (home / ".config" / "pulse").exists():
+    if (home / ".config" / "power-user-linux-setup").exists():
         candidates.append(
             MountCandidate(
                 id="pulse-identity",
-                label="~/.config/pulse (identity.toml, PULSE state)",
-                source="${localEnv:HOME}/.config/pulse",
+                label="~/.config/power-user-linux-setup (identity.toml, PULSE config)",
+                source="${localEnv:HOME}/.config/power-user-linux-setup",
                 target=None,
-                target_suffix="/.config/pulse",
+                target_suffix="/.config/power-user-linux-setup",
                 readonly=False,
                 default=True,
             )
@@ -335,7 +335,7 @@ def _render_mounts_json(selected: list[MountCandidate], container_home: str) -> 
 @task
 def mounts(c):
     """Host-side interactive helper: discover credential-shaped directories/sockets on this
-    machine (~/.ssh or $SSH_AUTH_SOCK, ~/.config/pulse, the corporate CA bundle from
+    machine (~/.ssh or $SSH_AUTH_SOCK, ~/.config/power-user-linux-setup, the corporate CA bundle from
     identity.toml, ~/.gitconfig, ~/.gnupg, ~/.aws, ~/.kube, ~/.config/{gcloud,gh}) and print a
     ready-to-paste devcontainer.json "mounts"/"remoteEnv" fragment for whichever you select.
 

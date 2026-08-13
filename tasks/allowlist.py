@@ -1388,7 +1388,7 @@ def apply(c):
     Every other key in that file (theme, effortLevel, cleanupPeriodDays, any permission rule you
     added by hand, etc.) is left completely untouched, including on repeated runs. This works by
     tracking exactly which rule strings *we* wrote last time in a local manifest
-    (~/.local/state/pulse/claude-settings-applied.json, not repo content — see its definition
+    (~/.local/state/power-user-linux-setup/claude-settings-applied.json, not repo content — see its definition
     above): on each run, only rules present in that manifest are eligible to be removed, and only
     the freshly computed set is added back. A rule that was never in our manifest — something you
     added yourself — is never touched, and a rule we used to generate but no longer do (say a

@@ -2,7 +2,7 @@
 
 ## Identity setup
 
-SSH keys and config are driven by `~/.config/pulse/identity.toml` — a personal file that is never committed to the repo.
+SSH keys and config are driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is never committed to the repo.
 
 **Quick start** — one email, one key per host you pick (GitHub/GitLab):
 
@@ -18,9 +18,9 @@ from the start (see [git.md](git.md) for what that looks like).
 and hand-edit it:
 
 ```shell
-mkdir -p ~/.config/pulse
-cp config/identity.toml.example ~/.config/pulse/identity.toml
-# edit ~/.config/pulse/identity.toml
+mkdir -p ~/.config/power-user-linux-setup
+cp config/identity.toml.example ~/.config/power-user-linux-setup/identity.toml
+# edit ~/.config/power-user-linux-setup/identity.toml
 ```
 
 Both paths produce the same `identity.toml` schema, so you can always add more `[[ssh_hosts]]`

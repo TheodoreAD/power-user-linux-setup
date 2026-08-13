@@ -182,7 +182,7 @@ To redo or fix the prompt: delete `~/.p10k.zsh` and run `inv zsh.p10k-configure`
 
 `zsh.set-default-shell` uses `usermod -s`, not `chsh` — `chsh`'s PAM password prompt doesn't work non-interactively the way `sudo -A` does. It's a no-op if the login shell is already some zsh (matched by binary name, not exact path — a machine can have more than one zsh on disk). Takes a brand new terminal/login session to actually apply, not just a new tab in an already-open shell.
 
-Phases 1–3 run automatically via `inv setup`. It finishes by calling `next_steps.print_next_steps()` (`tasks/next_steps.py` — separate from `tasks/util.py` since it needs to check `git`/`ssh` state, and both of those import `util`), which checks real state rather than a stored "already told you" flag and prints the single next concrete thing to do: shell first, then `~/.config/pulse/identity.toml`, then walks Phase 5 below one command at a time — git settings/profiles applied? SSH keys present for every `identity.toml` email? `~/.ssh/config` written? keys loaded in the agent? `gh` authenticated (only checked if `gh` is installed)? Safe to re-run after doing whatever it suggests — it just reports whatever's still outstanding.
+Phases 1–3 run automatically via `inv setup`. It finishes by calling `next_steps.print_next_steps()` (`tasks/next_steps.py` — separate from `tasks/util.py` since it needs to check `git`/`ssh` state, and both of those import `util`), which checks real state rather than a stored "already told you" flag and prints the single next concrete thing to do: shell first, then `~/.config/power-user-linux-setup/identity.toml`, then walks Phase 5 below one command at a time — git settings/profiles applied? SSH keys present for every `identity.toml` email? `~/.ssh/config` written? keys loaded in the agent? `gh` authenticated (only checked if `gh` is installed)? Safe to re-run after doing whatever it suggests — it just reports whatever's still outstanding.
 
 ### Phase 4 — Desktop _(before logout)_
 
@@ -200,7 +200,7 @@ GNOME extensions require manual installation — see [gnome_extensions.md](gnome
 ### Phase 5 — Authentication _(interactive, last)_
 
 ```shell
-inv identity.init                # wizard: writes ~/.config/pulse/identity.toml (simple or advanced)
+inv identity.init                # wizard: writes ~/.config/power-user-linux-setup/identity.toml (simple or advanced)
 inv git.configure git.settings   # per-directory git identity + global settings from identity.toml
 inv ssh.keys                     # one ed25519 key per unique email — prompts for a passphrase each
 inv ssh.configure                # write ~/.ssh/config
@@ -208,7 +208,7 @@ inv ssh.add                      # load this node's keys into ssh-agent
 gh auth login                    # GitHub CLI — opens browser, not automatable
 ```
 
-Everything after `inv identity.init` (except `gh auth login`) needs `~/.config/pulse/identity.toml`
+Everything after `inv identity.init` (except `gh auth login`) needs `~/.config/power-user-linux-setup/identity.toml`
 filled in first — either via the wizard above (simple: one identity, one `~/projects/<dir>/`) or by
 hand for multiple directories/accounts, see [git.md](git.md) and [ssh.md](ssh.md).
 `next_steps.print_next_steps()` (above) guides you through this exact sequence, one command at a
