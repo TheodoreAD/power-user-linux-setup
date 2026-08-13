@@ -67,6 +67,56 @@ a specific commit or branch you've verified yourself, not `stable`.
 self-heal preamble and every `[packages.*]` `apt`/`apt-repo`/`deb-github`/`deb-url` method assume
 `apt`/`dpkg`. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.
 
+### Mounting host directories
+
+A fresh container has none of your credentials: `inv identity.init` has to be re-run, `ssh.keys`
+mints a brand-new keypair (which then needs re-adding to GitHub), and a corporate CA bundle
+`certs.install` needs isn't present at all. `inv devcontainer.mounts` discovers what's actually
+available on **this host** and prints a ready-to-paste `devcontainer.json` `mounts`/`remoteEnv`
+fragment for whichever of it you select — it never writes or edits any file itself, including
+this repo's own `.devcontainer/devcontainer.json` (that file is shared and CI-smoke-tested; your
+personal host paths don't belong in it). Run it on the **host**, before `devcontainer up` or
+opening the folder in VS Code — devcontainer mounts are fixed at container-creation time,
+`postCreateCommand` runs too late to add any, which is also why this can't just be folded into
+`bootstrap-devcontainer.sh`.
+
+```shell
+inv devcontainer.mounts
+```
+
+It only prompts for candidates that actually exist on this host (no `~/.aws`? no prompt for it).
+
+**SSH — agent forwarding first.** The default candidate forwards `$SSH_AUTH_SOCK` via
+`${localEnv:SSH_AUTH_SOCK}` (a devcontainer.json substitution resolved fresh at container-creation
+time, so it survives the host socket path changing between login sessions) plus a `remoteEnv`
+override pointing the container's `SSH_AUTH_SOCK` at the mounted socket — private key material
+never enters the container. On WSL2 + Docker Desktop specifically, this path has multiple open,
+unresolved upstream bugs (`microsoft/vscode-remote-release#3902`/`#8689`/`#2925`); `inv
+devcontainer.mounts` prints this caveat automatically when it detects WSL. The reliable fix there
+is running `ssh-agent` natively _inside_ WSL2 itself, not relying on the Windows-side agent — not
+solved or automated here, just called out. If no `$SSH_AUTH_SOCK` is found at all, the task falls
+back to offering a direct `~/.ssh` mount instead, defaulting to selected — with the tradeoff
+printed alongside it: private key bytes become visible inside the container.
+
+**Corporate CA bundle — same absolute path on both sides.** `identity.toml`'s `[certs] bundle`
+field is an absolute host path, read verbatim by `tasks/certs.py` at runtime; mounting it at the
+_identical_ absolute path inside the container means `certs.py` keeps resolving it correctly with
+zero code changes, once `~/.config/pulse` (which holds `identity.toml` itself) is also mounted.
+
+**Code directories are automatic — no feature needed here.** Dev containers are repo-bounded by
+convention: the current repo is already mounted as the workspace folder by the devcontainer spec
+itself. The rare case of genuinely needing a sibling repo too is a single manual `mounts` entry,
+not something to automate:
+
+```json
+"mounts": ["source=${localEnv:HOME}/projects/other-repo,target=/workspaces/other-repo,type=bind"]
+```
+
+**Security note.** Anything mounted into the container is visible to everything that runs inside
+it — any dependency, any installed tool. This is why most candidates default to `readonly`, and
+why the lower-value/higher-sensitivity ones (`~/.aws`, `~/.kube`, `~/.config/gcloud`,
+`~/.config/gh`, `~/.gnupg`) default to **not offered/opt-in** rather than pre-selected.
+
 ## Tags to exclude
 
 <!-- PULSE::devcontainer-tags -->

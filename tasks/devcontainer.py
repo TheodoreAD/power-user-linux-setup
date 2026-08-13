@@ -1,13 +1,17 @@
 """Container distribution path: bootstrap-devcontainer.sh's default tag profile, the generated
-docs block, and a read-only smoke check — see docs/dev-container.md.
+docs block, a read-only smoke check, and the host-side credential-mount helper — see
+docs/dev-container.md.
 """
 
+import json
 import os
+import tomllib
+from dataclasses import dataclass
 from pathlib import Path
 
 from invoke import task
 
-from . import phases, util
+from . import phases, ui, util
 from . import setup as setup_tasks
 
 _DOC_PATH = Path(__file__).parent.parent / "docs" / "dev-container.md"
@@ -125,3 +129,247 @@ def check(c):
             os.environ.pop("PULSE_EXCLUDE_TAGS", None)
         else:
             os.environ["PULSE_EXCLUDE_TAGS"] = saved
+
+
+# ---------------------------------------------------------------------------
+# inv devcontainer.mounts — host-side credential/config mount helper. See docs/dev-container.md's
+# "Mounting host directories" section.
+
+_DEFAULT_CONTAINER_HOME = "/home/vscode"
+
+_WSL_SSH_AGENT_CAVEAT = (
+    "WSL2 + Docker Desktop's SSH-agent forwarding into a container has multiple open, unresolved "
+    "upstream issues (microsoft/vscode-remote-release#3902, #8689, #2925). If forwarding doesn't "
+    "work, the reliable fix is running `ssh-agent` natively inside WSL2 itself, not the "
+    "Windows-side agent."
+)
+_SSH_DIR_CAVEAT = "direct mount, read-write — private key bytes become visible inside the container."
+_GNUPG_CAVEAT = "GPG agent/pinentry forwarding is known-fiddly — not solved here, just offered opt-in."
+_CERT_BUNDLE_CAVEAT_TEMPLATE = (
+    "mounted at the identical absolute host path so identity.toml's [certs] bundle field keeps "
+    "resolving correctly inside the container with no changes needed to certs.py."
+)
+
+
+@dataclass(frozen=True)
+class MountCandidate:
+    """One discoverable host directory/socket offered by `inv devcontainer.mounts`. `source` is
+    the devcontainer.json mount "source=" value as-is (already using ${localEnv:...} where that
+    makes the fragment portable across machines). `target` is an absolute container path when
+    fixed (ssh-agent socket, the corporate cert bundle — same path as the host); otherwise None,
+    and `target_suffix` is appended to the user-provided container home instead.
+    """
+
+    id: str
+    label: str
+    source: str
+    target: str | None
+    target_suffix: str | None
+    readonly: bool
+    default: bool
+    remote_env: dict[str, str] | None = None
+    caveat: str | None = None
+
+
+def _resolve_cert_bundle_paths(identity_toml: Path | None) -> list[Path]:
+    """[certs] bundle from identity_toml (a single string or a list) — same resolution shape as
+    tasks/certs.py's _resolve_paths(), reimplemented here (not calling util.load_certs_override(),
+    which is hardcoded to util.IDENTITY_PATH and @cache'd) so tests can point it at a fabricated
+    identity.toml under a tmp_path fixture instead of the real ~/.config/pulse/identity.toml.
+    """
+    if not identity_toml or not identity_toml.exists():
+        return []
+    with identity_toml.open("rb") as f:
+        raw = tomllib.load(f).get("certs", {}).get("bundle")
+    if not raw:
+        return []
+    if isinstance(raw, str):
+        return [Path(raw).expanduser()]
+    return [Path(p).expanduser() for p in raw]
+
+
+def _discover_candidates(
+    home: Path,
+    identity_toml: Path | None,
+    ssh_auth_sock: str | None,
+    *,
+    is_wsl: bool = False,
+) -> list[MountCandidate]:
+    """Pure(ish) discovery: every check is a Path.exists() under `home`/`identity_toml`, no other
+    I/O — lets tests fabricate a tmp_path $HOME with whichever subset of dotfiles present. Returns
+    only candidates actually discoverable on this host; the interactive mounts() task prompts one
+    ui.ask() per entry returned here, nothing for entries that don't apply at all.
+    """
+    candidates: list[MountCandidate] = []
+
+    sock_exists = bool(ssh_auth_sock and Path(ssh_auth_sock).exists())
+    if sock_exists:
+        candidates.append(
+            MountCandidate(
+                id="ssh-agent",
+                label="SSH agent forwarding ($SSH_AUTH_SOCK)",
+                source="${localEnv:SSH_AUTH_SOCK}",
+                target="/tmp/ssh-agent.sock",
+                target_suffix=None,
+                readonly=False,
+                default=True,
+                remote_env={"SSH_AUTH_SOCK": "/tmp/ssh-agent.sock"},
+                caveat=_WSL_SSH_AGENT_CAVEAT if is_wsl else None,
+            )
+        )
+
+    if (home / ".ssh").exists():
+        candidates.append(
+            MountCandidate(
+                id="ssh-dir",
+                label="~/.ssh (direct mount)",
+                source="${localEnv:HOME}/.ssh",
+                target=None,
+                target_suffix="/.ssh",
+                readonly=False,
+                default=not sock_exists,
+                caveat=_SSH_DIR_CAVEAT,
+            )
+        )
+
+    if (home / ".config" / "pulse").exists():
+        candidates.append(
+            MountCandidate(
+                id="pulse-identity",
+                label="~/.config/pulse (identity.toml, PULSE state)",
+                source="${localEnv:HOME}/.config/pulse",
+                target=None,
+                target_suffix="/.config/pulse",
+                readonly=False,
+                default=True,
+            )
+        )
+
+    bundle_paths = [p for p in _resolve_cert_bundle_paths(identity_toml) if p.exists()]
+    for i, bundle_path in enumerate(bundle_paths):
+        suffix = "" if i == 0 else f"-{i}"
+        candidates.append(
+            MountCandidate(
+                id=f"corporate-cert-bundle{suffix}",
+                label=f"corporate CA bundle ({bundle_path})",
+                source=str(bundle_path),
+                target=str(bundle_path),
+                target_suffix=None,
+                readonly=True,
+                default=True,
+                caveat=_CERT_BUNDLE_CAVEAT_TEMPLATE,
+            )
+        )
+
+    if (home / ".gitconfig").exists():
+        candidates.append(
+            MountCandidate(
+                id="gitconfig",
+                label="~/.gitconfig",
+                source="${localEnv:HOME}/.gitconfig",
+                target=None,
+                target_suffix="/.gitconfig",
+                readonly=True,
+                default=True,
+            )
+        )
+
+    if (home / ".gnupg").exists():
+        candidates.append(
+            MountCandidate(
+                id="gnupg",
+                label="~/.gnupg",
+                source="${localEnv:HOME}/.gnupg",
+                target=None,
+                target_suffix="/.gnupg",
+                readonly=False,
+                default=False,
+                caveat=_GNUPG_CAVEAT,
+            )
+        )
+
+    for id_, dirname, target_suffix in (
+        ("aws", ".aws", "/.aws"),
+        ("kube", ".kube", "/.kube"),
+        ("gcloud-config", "gcloud", "/.config/gcloud"),
+        ("gh-config", "gh", "/.config/gh"),
+    ):
+        # aws/kube live directly under $HOME; gcloud/gh live under ~/.config/
+        host_dir = home / dirname if id_ in ("aws", "kube") else home / ".config" / dirname
+        if not host_dir.exists():
+            continue
+        candidates.append(
+            MountCandidate(
+                id=id_,
+                label=f"~{target_suffix}",
+                source="${localEnv:HOME}" + target_suffix,
+                target=None,
+                target_suffix=target_suffix,
+                readonly=True,
+                default=False,
+            )
+        )
+
+    return candidates
+
+
+def _render_mounts_json(selected: list[MountCandidate], container_home: str) -> str:
+    """Render a ready-to-paste devcontainer.json fragment ({"mounts": [...], "remoteEnv": {...}})
+    for the selected candidates — printed, never written; see mounts()'s docstring for why.
+    """
+    mounts_list = []
+    remote_env: dict[str, str] = {}
+    for cand in selected:
+        target = cand.target if cand.target is not None else f"{container_home}{cand.target_suffix}"
+        flags = ",type=bind" + (",readonly" if cand.readonly else "")
+        mounts_list.append(f"source={cand.source},target={target}{flags}")
+        if cand.remote_env:
+            remote_env.update(cand.remote_env)
+
+    fragment: dict = {"mounts": mounts_list}
+    if remote_env:
+        fragment["remoteEnv"] = remote_env
+    return json.dumps(fragment, indent=2)
+
+
+@task
+def mounts(c):
+    """Host-side interactive helper: discover credential-shaped directories/sockets on this
+    machine (~/.ssh or $SSH_AUTH_SOCK, ~/.config/pulse, the corporate CA bundle from
+    identity.toml, ~/.gitconfig, ~/.gnupg, ~/.aws, ~/.kube, ~/.config/{gcloud,gh}) and print a
+    ready-to-paste devcontainer.json "mounts"/"remoteEnv" fragment for whichever you select.
+
+    Run this on the *host*, before `devcontainer up` / opening the folder in VS Code — mounts are
+    fixed at container-creation time, postCreateCommand runs too late to add any. Never writes or
+    edits any file (unlike render_docs) — specifically never auto-edits the shared, committed,
+    CI-smoke-tested .devcontainer/devcontainer.json with one developer's personal host paths; you
+    paste the printed fragment into whichever devcontainer.json you're actually using.
+    """
+    home = Path.home()
+    candidates = _discover_candidates(home, util.IDENTITY_PATH, os.environ.get("SSH_AUTH_SOCK"), is_wsl=util.is_wsl())
+    if not candidates:
+        print("[devcontainer] nothing discoverable on this host to mount — nothing to do.")
+        return
+
+    ui.block(
+        "Prints a devcontainer.json mounts/remoteEnv fragment for whichever of these you select "
+        "below — never writes or edits any file. The current repo is already mounted automatically "
+        "as the workspace folder by the devcontainer spec itself; this is only for credentials/"
+        "config that live outside it.",
+        label="devcontainer mounts",
+    )
+
+    selected = []
+    for cand in candidates:
+        if cand.caveat:
+            ui.note(cand.caveat)
+        if ui.ask(f"Mount {cand.label}?", default=cand.default):
+            selected.append(cand)
+
+    if not selected:
+        print("[devcontainer] nothing selected.")
+        return
+
+    container_home = util.prompt_text("Container home directory", default=_DEFAULT_CONTAINER_HOME)
+    print()
+    print(_render_mounts_json(selected, container_home))
