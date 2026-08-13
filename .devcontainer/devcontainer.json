@@ -1,0 +1,5 @@
+{
+  "name": "power-user-linux-setup",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "postCreateCommand": "bash bootstrap-devcontainer.sh --local"
+}

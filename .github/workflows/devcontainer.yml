@@ -1,0 +1,61 @@
+name: Dev container smoke test
+
+on:
+  workflow_dispatch:
+  # push:
+  #   branches: [master]
+  #   paths:
+  #     - setup.toml
+  #     - tasks/**
+  #     - bootstrap.sh
+  #     - bootstrap-devcontainer.sh
+  #     - .devcontainer/**
+  # Intentionally disabled for now (workflow_dispatch-only) while this pipeline is still under
+  # active development — repeated pushes to master would otherwise trigger a build/smoke-test on
+  # every commit. Re-enable by uncommenting the block above once it's been exercised a few times
+  # via `gh workflow run devcontainer.yml` and is trusted to run unattended. See
+  # plans/2026-08-08-devcontainer-pipeline.md.
+
+jobs:
+  smoke-test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: devcontainers/ci@v0.3
+        with:
+          imageName: ghcr.io/theodoread/power-user-linux-setup-devcontainer
+          push: never
+          runCmd: |
+            inv --list
+            command -v rg
+            command -v fzf
+            command -v gh
+
+  publish-stable:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - run: |
+          git tag -f stable
+          git push origin stable --force
+
+  docs:
+    needs: smoke-test
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/master'
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv run inv devcontainer.render-docs
+      - uses: stefanzweifel/git-auto-commit-action@v7
+        with:
+          commit_message: "docs: regenerate dev-container.md tag block (inv devcontainer.render-docs)"
+          file_pattern: docs/dev-container.md

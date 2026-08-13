@@ -130,7 +130,17 @@ def prompt_text(question: str, default: str | None = None) -> str | None:
         print("This can't be empty.")
 
 
-def _marker(name: str, open_: bool) -> str:
+class MarkerStyle(StrEnum):
+    """Which comment syntax _marker() emits — see ensure_block()/ensure_block_text()."""
+
+    COMMENT = "comment"  # '# ╔══ PULSE::name ══╗' ... '# ╚══...══╝' — shell/ini/config files (default)
+    HTML = "html"  # '<!-- PULSE::name -->' ... '<!-- /PULSE::name -->' — markdown/HTML targets, where a
+    # '#'-prefixed line would render as a heading, not a comment
+
+
+def _marker(name: str, open_: bool, style: MarkerStyle = MarkerStyle.COMMENT) -> str:
+    if style == MarkerStyle.HTML:
+        return f"<!-- PULSE::{name} -->" if open_ else f"<!-- /PULSE::{name} -->"
     tl, tr = ("╔", "╗") if open_ else ("╚", "╝")
     label = f" PULSE::{name} "
     fill = _PULSE_WIDTH - 2 - 2 - len(label)
@@ -145,11 +155,18 @@ class BlockStatus(StrEnum):
     UPDATED = "updated"
 
 
-def ensure_block_text(text: str, name: str, content: str) -> tuple[str, BlockStatus]:
+def ensure_block_text(
+    text: str, name: str, content: str, *, style: MarkerStyle = MarkerStyle.COMMENT
+) -> tuple[str, BlockStatus]:
     """Return (new_text, status) with a named PULSE block applied. Does not write."""
-    start = _marker(name, open_=True)
-    end = _marker(name, open_=False)
-    block = f"{start}\n{content.strip()}\n{end}"
+    start = _marker(name, open_=True, style=style)
+    end = _marker(name, open_=False, style=style)
+    # Markdown requires a blank line between adjacent block-level elements (here: the HTML-comment
+    # marker and the content, e.g. a table) to parse/format as intended — dprint enforces this and
+    # would otherwise fight ensure_block's own idempotency by re-inserting the blank lines on every
+    # `inv quality.fix` pass. The comment-style marker has no such requirement (shell/config files).
+    sep = "\n\n" if style == MarkerStyle.HTML else "\n"
+    block = f"{start}{sep}{content.strip()}{sep}{end}"
     if start in text:
         s = text.index(start)
         e = text.index(end) + len(end)
@@ -159,10 +176,10 @@ def ensure_block_text(text: str, name: str, content: str) -> tuple[str, BlockSta
     return text.rstrip("\n") + f"\n\n{block}\n", BlockStatus.ADDED
 
 
-def ensure_block(path: Path, name: str, content: str) -> BlockStatus:
+def ensure_block(path: Path, name: str, content: str, *, style: MarkerStyle = MarkerStyle.COMMENT) -> BlockStatus:
     """Idempotently write a named PULSE block to a file. Returns BlockStatus.{ADDED,UPDATED,OK}."""
     text = path.read_text() if path.exists() else ""
-    new_text, status = ensure_block_text(text, name, content)
+    new_text, status = ensure_block_text(text, name, content, style=style)
     if status != BlockStatus.OK:
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_text(new_text)
