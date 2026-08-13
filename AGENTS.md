@@ -84,16 +84,19 @@ without forcing a shared maintained image on them) and a build-time bake via `do
 supporting invoke namespace: `CONTAINER_EXCLUDE_TAGS` (single source of truth for the recommended
 tag exclusion), `print-exclude-tags` (machine-readable, consumed by the bash script),
 `render-docs` (regenerates the tag table in `docs/dev-container.md` via `util.ensure_block` with
-`util.MarkerStyle.HTML` — a `#`-prefixed marker would render as a heading in Markdown), and
-`check` (read-only dry run, same shape as `inv wsl.check`).
+`util.MarkerStyle.HTML` — a `#`-prefixed marker would render as a heading in Markdown), `check`
+(read-only dry run, same shape as `inv wsl.check`), and `mounts` (host-side interactive helper —
+discovers credential-shaped directories/sockets on the host and prints a devcontainer.json
+`mounts`/`remoteEnv` fragment; never writes/edits a file itself, per
+`plans/2026-08-13-devcontainer-mounts.md`, landed and verified end-to-end via `@devcontainers/cli
+up`/`exec`, including a live `ssh-add -l` against a forwarded agent socket).
 
 [`docs/dev-container.md`](docs/dev-container.md) is the published page — read that before
 extending this rather than re-deriving the design. **`.github/workflows/devcontainer.yml` is
 intentionally `workflow_dispatch`-only right now** (the `push` trigger is written in but commented
 out, with a re-enable note) — this is deliberate, not an oversight, while the pipeline is still
 under active iteration; don't "fix" it by uncommenting the trigger without checking with the user
-first. `plans/2026-08-13-devcontainer-mounts.md` is the design for the next piece (mounting host
-SSH/certs/config into the container) — not yet implemented as of this writing.
+first.
 
 ## CLI permission allowlist pipeline
 
