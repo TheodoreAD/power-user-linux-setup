@@ -140,7 +140,7 @@ def _discover_candidate(c) -> tuple[str, int, str] | None:
     """
     override = util.load_proxy_override()
     if override.get("host") and override.get("port"):
-        return (override["host"], int(override["port"]), "~/.config/pulse/identity.toml [proxy]")
+        return (override["host"], int(override["port"]), "~/.config/power-user-linux-setup/identity.toml [proxy]")
 
     if util.is_wsl():
         host_ip = _wsl_host_ip(c)
@@ -412,7 +412,7 @@ def check(c, proxy="auto"):
         print(
             "[proxy] no candidate proxy address found — nothing to configure. If this network "
             "does use a corporate proxy, pass --proxy=host:port to `inv proxy.install`, or add a "
-            "[proxy] host/port to ~/.config/pulse/identity.toml (see config/identity.toml.example)."
+            "[proxy] host/port to ~/.config/power-user-linux-setup/identity.toml (see config/identity.toml.example)."
         )
         return
     host, port, source = candidate

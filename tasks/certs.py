@@ -47,7 +47,7 @@ def _split_pem_certs(text: str) -> list[str]:
 
 
 def _resolve_paths(bundle: str | None) -> list[Path]:
-    """--bundle=path override, else the [certs] bundle field from ~/.config/pulse/identity.toml
+    """--bundle=path override, else the [certs] bundle field from ~/.config/power-user-linux-setup/identity.toml
     (a single string or a list). Empty if neither is configured.
     """
     if bundle:
@@ -211,7 +211,7 @@ def _missing_source_message(command: str) -> str:
     return (
         "[certs] no corporate CA bundle configured — nothing to "
         f"{command}. If this network uses one, pass --bundle=path to `inv certs.install`, or add "
-        "a [certs] bundle to ~/.config/pulse/identity.toml (see config/identity.toml.example)."
+        "a [certs] bundle to ~/.config/power-user-linux-setup/identity.toml (see config/identity.toml.example)."
     )
 
 
@@ -241,7 +241,7 @@ def _require_bundle_paths(bundle: str | None, command: str, *, raise_on_missing:
 @task
 def check(c, bundle=None):
     """Read-only diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts. Never
-    mutates. --bundle=path overrides the [certs] table in ~/.config/pulse/identity.toml. See
+    mutates. --bundle=path overrides the [certs] table in ~/.config/power-user-linux-setup/identity.toml. See
     docs/certs.md.
     """
     util.require_apt()
@@ -256,7 +256,7 @@ def check(c, bundle=None):
 def install(c, bundle=None):
     """Install the corporate CA bundle into the OS trust store and export it for
     python/node/awscli. --bundle=path overrides the [certs] table in
-    ~/.config/pulse/identity.toml. See docs/certs.md.
+    ~/.config/power-user-linux-setup/identity.toml. See docs/certs.md.
     """
     util.require_apt()
     if not util.command_exists("openssl"):

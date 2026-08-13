@@ -101,7 +101,7 @@ printed alongside it: private key bytes become visible inside the container.
 **Corporate CA bundle — same absolute path on both sides.** `identity.toml`'s `[certs] bundle`
 field is an absolute host path, read verbatim by `tasks/certs.py` at runtime; mounting it at the
 _identical_ absolute path inside the container means `certs.py` keeps resolving it correctly with
-zero code changes, once `~/.config/pulse` (which holds `identity.toml` itself) is also mounted.
+zero code changes, once `~/.config/power-user-linux-setup` (which holds `identity.toml` itself) is also mounted.
 
 **Code directories are automatic — no feature needed here.** Dev containers are repo-bounded by
 convention: the current repo is already mounted as the workspace folder by the devcontainer spec

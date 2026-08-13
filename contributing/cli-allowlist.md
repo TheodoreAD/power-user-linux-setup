@@ -437,9 +437,9 @@ clobbering your own settings or leaving stale rules behind:
    `cleanupPeriodDays`, anything else you or a future you adds — is read, kept, and written back
    unchanged.
 2. **A local manifest tracks exactly which rule strings this pipeline wrote last time**
-   (`~/.local/state/pulse/claude-settings-applied.json` — deliberately _not_ repo content, unlike
+   (`~/.local/state/power-user-linux-setup/claude-settings-applied.json` — deliberately _not_ repo content, unlike
    everything under `cli-allowlist/`, since it's machine-local mutation-tracking state for an
-   out-of-repo file, the same category as `~/.config/pulse/identity.toml`). On each run, only rule
+   out-of-repo file, the same category as `~/.config/power-user-linux-setup/identity.toml`). On each run, only rule
    strings present in that manifest are eligible for removal; anything else already in your
    `permissions.allow`/`ask` — a rule you added by hand — is never touched, and a rule this
    pipeline generated before but no longer does (a tool's classification changed) gets cleanly

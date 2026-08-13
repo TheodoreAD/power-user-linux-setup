@@ -63,7 +63,7 @@ def test_discover_candidates_ssh_agent_gets_wsl_caveat_only_when_is_wsl(tmp_path
 
 
 def test_discover_candidates_pulse_identity_offered_when_present(tmp_path):
-    (tmp_path / ".config" / "pulse").mkdir(parents=True)
+    (tmp_path / ".config" / "power-user-linux-setup").mkdir(parents=True)
     assert "pulse-identity" in _ids(tmp_path)
 
 

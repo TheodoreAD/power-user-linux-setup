@@ -48,7 +48,7 @@ def _render(name: str, email: str, directory: str, hosts: list[str]) -> str:
 
 @task
 def init(c):
-    """Interactive wizard for ~/.config/pulse/identity.toml: pick simple (one name/email, one
+    """Interactive wizard for ~/.config/power-user-linux-setup/identity.toml: pick simple (one name/email, one
     ~/projects/<dir>/) or advanced (hand-edit the full multi-directory/multi-host example).
 
     Writes the same identity.toml schema either way — git.py/ssh.py don't know or care which
