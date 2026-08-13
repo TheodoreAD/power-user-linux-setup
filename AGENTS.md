@@ -73,6 +73,28 @@ install tasks fail fast with an actionable message instead of partway through a 
 are generic capability checks, not WSL-specific branching. If asked about WSL support again, extend
 that module rather than re-researching from scratch.
 
+## Dev container distribution pipeline
+
+Two paths for running PULSE inside a dev container, both landed
+(`plans/2026-08-08-devcontainer-pipeline.md`): a `devcontainer.json` + `postCreateCommand` flow
+(`bootstrap-devcontainer.sh`, the recommended path — layers PULSE onto _any_ consumer's base image
+without forcing a shared maintained image on them) and a build-time bake via `docker/Dockerfile`
+(canonical example, local-WIP-testing vehicle, and hand-roll template — reuses
+`bootstrap-devcontainer.sh --local`, not a separate script). `tasks/devcontainer.py` is the
+supporting invoke namespace: `CONTAINER_EXCLUDE_TAGS` (single source of truth for the recommended
+tag exclusion), `print-exclude-tags` (machine-readable, consumed by the bash script),
+`render-docs` (regenerates the tag table in `docs/dev-container.md` via `util.ensure_block` with
+`util.MarkerStyle.HTML` — a `#`-prefixed marker would render as a heading in Markdown), and
+`check` (read-only dry run, same shape as `inv wsl.check`).
+
+[`docs/dev-container.md`](docs/dev-container.md) is the published page — read that before
+extending this rather than re-deriving the design. **`.github/workflows/devcontainer.yml` is
+intentionally `workflow_dispatch`-only right now** (the `push` trigger is written in but commented
+out, with a re-enable note) — this is deliberate, not an oversight, while the pipeline is still
+under active iteration; don't "fix" it by uncommenting the trigger without checking with the user
+first. `plans/2026-08-13-devcontainer-mounts.md` is the design for the next piece (mounting host
+SSH/certs/config into the container) — not yet implemented as of this writing.
+
 ## CLI permission allowlist pipeline
 
 `cli-allowlist/` (tracked, unlike the gitignored `reference/` research dump it grew out of) keeps a
