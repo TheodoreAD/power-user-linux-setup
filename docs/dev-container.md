@@ -1,14 +1,19 @@
 # Dev Container
 
-The same `setup.toml` and invoke tasks that configure a workstation can build a dev container
-image — no Docker-in-Docker required. `RUN inv setup` in a plain Dockerfile is a real, tested
-path (see [Dockerfile outline](#dockerfile-outline) below); the difference from a bare-metal
-install is which tags you exclude and, automatically, which phases `inv setup` itself skips.
+The same `setup.toml` and invoke tasks that configure a workstation can provision a dev
+container. Two distribution paths, both built on the same underlying fix (the systemd gap,
+described next):
 
-For the `postCreateCommand`/live-git-reference distribution model instead of baking a custom
-image (letting consumers layer PULSE's tooling onto _their own_ base image), see
-`plans/2026-08-08-devcontainer-pipeline.md` — a separate, not-yet-implemented design. Both paths
-share the same underlying fix described next.
+- **[Recommended: devcontainer.json + postCreateCommand](#recommended-devcontainerjson--postcreatecommand)**
+  — layer PULSE's tooling onto _any_ base image you already use, at container-create time. No
+  custom image to build or maintain; consumers aren't forced onto one shared base image.
+- **[Alternative: baking a custom base image](#alternative-baking-a-custom-base-image)** —
+  bake PULSE into the image itself at build time, via `docker/Dockerfile`. Still legitimate where
+  a prebuilt image's startup-time win matters more than the postCreateCommand flow's flexibility
+  (e.g. CI runner images).
+
+See `plans/2026-08-08-devcontainer-pipeline.md` for the design history behind the recommended
+path (why a live git reference pinned to a CI-gated `stable` tag, not a published OCI Feature).
 
 ## `inv setup` in a container — the systemd gap, and why it's handled automatically
 
@@ -18,13 +23,53 @@ now detects this itself (`util.has_systemd()`, the same check `require_systemd()
 there's no systemd and it isn't WSL, skips both the `system` phase and the `desktop` phase
 (`fonts.install`/`fonts.configure` — irrelevant in a headless container, same reasoning
 `wsl.install` already applies) instead of raising. Nothing to configure for this — it Just Works
-the same way `inv setup` already auto-detects WSL and delegates to `wsl.install`.
+the same way `inv setup` already auto-detects WSL and delegates to `wsl.install`. Both
+distribution paths below call `inv setup` directly (via `bootstrap-devcontainer.sh`), so this
+explanation is load-bearing for both, not incidental background.
+
+## Recommended: `devcontainer.json` + `postCreateCommand`
+
+Point any Debian/Ubuntu-family `image` at `bootstrap-devcontainer.sh`, curled from a pinned ref:
+
+```json
+{
+  "name": "my-project",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh | bash"
+}
+```
+
+This repo's own `.devcontainer/devcontainer.json` dogfoods the same script with `--local`
+(skip the clone — it's already inside a checkout):
+
+```json
+{
+  "name": "power-user-linux-setup",
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "postCreateCommand": "bash bootstrap-devcontainer.sh --local"
+}
+```
+
+`bootstrap-devcontainer.sh` clones this repo at `--ref` (default `stable`) into
+`~/.local/share/pulse-devcontainer-src`, runs `bootstrap.sh` (uv + invoke install, reused as-is),
+then `inv setup` with `PULSE_EXCLUDE_TAGS` resolved from `--exclude-tags` or, if omitted, from
+`inv devcontainer.print-exclude-tags` (see [Tags to exclude](#tags-to-exclude) below).
+
+**Why `stable`, not `master`/`HEAD`:** an unpinned ref would mean every consumer's
+`postCreateCommand` runs whatever's currently on `master`, including anything broken mid-commit.
+`stable` is a git tag that CI (`.github/workflows/devcontainer.yml`) only force-moves forward when
+a build/smoke-test against `.devcontainer/devcontainer.json` passes — "up to date" without ever
+running untested instructions. That workflow is currently `workflow_dispatch`-only while under
+active development (see the workflow file for the re-enable note); until it's live, pin `--ref` to
+a specific commit or branch you've verified yourself, not `stable`.
+
+**Constraint:** this only works on apt-based (Debian/Ubuntu-family) images — `bootstrap.sh`'s
+self-heal preamble and every `[packages.*]` `apt`/`apt-repo`/`deb-github`/`deb-url` method assume
+`apt`/`dpkg`. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.
 
 ## Tags to exclude
 
-```dockerfile
-ENV PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome
-```
+<!-- PULSE::devcontainer-tags -->
 
 | Tag           | Excludes                                                                         |
 | ------------- | -------------------------------------------------------------------------------- |
@@ -34,63 +79,66 @@ ENV PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome
 | `ide`         | Full IDEs and their support profiles (`vscode`, `jetbrains-toolbox`)             |
 | `gnome`       | GNOME Shell extensions and GNOME-only `xdg-desktop-portal` backends              |
 
+Example — this is the default (equivalent to omitting `--exclude-tags`; see `bootstrap-devcontainer.sh`'s own default resolution via `inv devcontainer.print-exclude-tags`):
+
+```json
+{
+  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
+  "postCreateCommand": "bash bootstrap-devcontainer.sh"
+}
+```
+
+To override: `bash bootstrap-devcontainer.sh --exclude-tags gui,workstation,corporate,ide,gnome`
+
+<!-- /PULSE::devcontainer-tags -->
+
+(Generated by `inv devcontainer.render-docs` from `CONTAINER_EXCLUDE_TAGS` in
+`tasks/devcontainer.py` — edit the constant, not this block, then re-run that task.)
+
 `ide`/`gnome` weren't part of the original recipe here but earn their place the same way they do
 under WSL (see `docs/wsl.md`) — nothing in a container has a GNOME session or benefits from a
 second IDE window running inside it.
 
-## Dockerfile outline
+## Alternative: baking a custom base image
 
-Tested end-to-end (`docker build`, then confirmed the installed tools actually work — not just
-that the build didn't error):
+`docker/Dockerfile` is the canonical, tested example of layering PULSE onto a base image at
+_build_ time — the bake-time analog of the `postCreateCommand` flow above. It serves three
+purposes: a documented working example, a vehicle for testing uncommitted local changes to
+`tasks/*.py`/`setup.toml` (it `COPY`s the local working tree and runs
+`bootstrap-devcontainer.sh --local`, not a git clone), and a template to `FROM`/copy when
+hand-rolling a custom image with extra tooling layered on a strong base. Build it from the repo
+root:
 
-```dockerfile
-FROM ubuntu:24.04
-
-WORKDIR /setup
-COPY setup.toml .
-COPY bootstrap.sh .
-COPY tasks/ tasks/
-COPY config/ config/
-COPY skills/ skills/
-
-RUN bash bootstrap.sh
-
-ENV PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome
-ENV PATH="/root/.local/bin:${PATH}"
-
-RUN inv setup \
-    && inv cleanup.all-full \
-    && rm -rf /var/lib/apt/lists/* /tmp/*
+```shell
+docker build -f docker/Dockerfile -t pulse-devcontainer .
 ```
 
-No `apt-get install` line at all — `bootstrap.sh` now self-installs every OS-level prerequisite
-(`curl`, `gnupg`, `ca-certificates`, `sudo`) the base image doesn't already have, via a preamble
-gated behind `command -v apt-get` that no-ops entirely on a system that already has them (every
-bare-metal/WSL/VM install, per `README.md`'s existing "Requirements" section). Only a genuinely
-minimal container base image exercises the install branch. An earlier version of this doc listed
-`python3 python3-pip curl git sudo zsh ca-certificates gnupg` explicitly in a hand-maintained
-`apt-get install` line — all of that is gone now:
+No `apt-get install` line at all — `bootstrap.sh` (called by `bootstrap-devcontainer.sh`)
+self-installs every OS-level prerequisite (`curl`, `gnupg`, `ca-certificates`, `sudo`) the base
+image doesn't already have, via a preamble gated behind `command -v apt-get` that no-ops entirely
+on a system that already has them (every bare-metal/WSL/VM install, per `README.md`'s existing
+"Requirements" section). Only a genuinely minimal container base image exercises the install
+branch:
 
 - `python3`/`python3-pip` were never actually needed — `inv setup` never touches system Python at
   all; `bootstrap.sh` provisions Python itself via `uv python install`.
 - `git`/`zsh` are ordinary `[packages.*]` apt entries (`setup.toml`'s `git`/`zsh` sections),
-  installed by `apt.base` well before anything in `inv setup` needs either — no reason to also
-  hand-list them here.
-- `curl`/`sudo`/`ca-certificates`/`gnupg` are genuine prerequisites, but now `bootstrap.sh`'s job,
-  not the Dockerfile's — the same self-heal preamble every other use case (bare metal, WSL, the
-  future `postCreateCommand` model) already runs unconditionally.
+  installed by `apt.base` well before anything in `inv setup` needs either.
+- `curl`/`sudo`/`ca-certificates`/`gnupg` are genuine prerequisites, but `bootstrap.sh`'s job, not
+  the Dockerfile's — the same self-heal preamble every other use case (bare metal, WSL, the
+  `postCreateCommand` path above) already runs unconditionally.
 
 `gnupg` specifically matters because every `apt-repo`-method package (`gh`, `kubectl`, `docker`,
 `terraform`, ...) registers its repo by piping a downloaded key through `gpg --dearmor` — without
 `gpg` present, that pipe fails (`curl: (23) Failure writing output to destination`), `apt.repos`
 treats the failed key fetch as "skip this repo, print a WARNING, keep going" rather than fatal, and
-`RUN inv setup` used to still exit 0 while silently missing `kubectl`/`docker`/`terraform` entirely
+`inv setup` used to still exit 0 while silently missing `kubectl`/`docker`/`terraform` entirely
 and getting whatever stale version of `gh` happens to already be in Ubuntu's own `universe` repo
 instead of the pinned upstream one. `tasks/apt.py`'s `repos()` task independently self-ensures
 `gnupg`/`lsb-release` too (a second, narrower layer — see `tasks/apt.py`'s comment on that block)
 so a standalone `inv apt.repos` run stays protected even outside the `bootstrap.sh` flow. This
 specific bug is also exactly the shape of thing `inv verify.all` now catches automatically and
-generally — see below — so `RUN inv setup` no longer exits 0 while quietly missing something.
+generally — see below — so `inv setup` no longer exits 0 while quietly missing something.
 
 ### Automated functional verification (`inv verify.all`)
 
@@ -136,24 +184,23 @@ bugs the convention alone wouldn't have predicted:
   installed here — `inv verify.all` caught that too; running `inv tools.install` once fixed it.
   This is the mechanism doing exactly its job, not a false positive.
 
-`COPY skills/ skills/` is easy to miss and not optional — `ai.skills` (part of the `packages`
-phase `inv setup` always runs) copies this repo's own `skills/research-library/` into the image
-and fails with a `FileNotFoundError` if that directory wasn't copied in. `PATH` needs
-`/root/.local/bin` up front since that's where `uv`, `invoke`, and most script/binary/archive
--method tools land (`~/.local/bin` when running as root during a build is `/root/.local/bin`).
+`COPY skills/ skills/` (in `docker/Dockerfile`) is easy to miss and not optional — `ai.skills`
+(part of the `packages` phase `inv setup` always runs) copies this repo's own
+`skills/research-library/` into the image and fails with a `FileNotFoundError` if that directory
+wasn't copied in. `PATH` needs `/root/.local/bin` up front since that's where `uv`, `invoke`, and
+most script/binary/archive-method tools land (`~/.local/bin` when running as root during a build
+is `/root/.local/bin`).
 
 `inv cleanup.all-full` is the container-appropriate cleanup call — see
 [Cleanup](#cleanup-reclaiming-image-layer-space) below for what it does, what it actually saves
 (less than you'd think), and why the container case wants the _full_ variant specifically, not
 the conservative one a workstation should use.
 
-If you don't want a shell/zsh configured in the image, drop `zsh.omz_configure`/`zsh.configure`
-from consideration — but there's no need to hand-pick tasks any more; `inv setup` runs the full
-sequence and self-skips what doesn't apply, matching the "just call `inv setup`" story bare-metal
-installs already have. If you want more control than that, run the granular task list this
-outline used to document instead: `inv apt.repos apt.base apt.deb tools.install python.tools
-node.install zsh.omz-configure zsh.configure` (still fully supported, `inv setup` is a
-convenience wrapper around the same tasks, not a replacement for calling them directly).
+There's no supported way to hand-pick a subset of tasks any more — `inv setup` runs the full
+sequence and self-skips what doesn't apply (system/desktop phases with no systemd), the same
+"just call `inv setup`" story bare-metal installs already have. Both `bootstrap-devcontainer.sh`
+and `docker/Dockerfile` rely on this rather than hand-listing individual tasks, so the list can't
+drift out of sync with `tasks/setup.py`'s actual phase composition.
 
 Re-running `inv setup` inside an already-provisioned container (not a fresh `docker build` —
 e.g. `devcontainer exec -- inv setup` against a container that's been kept running) is safe:
@@ -167,8 +214,8 @@ whether anything changed.
 
 ### Non-root user
 
-Every real devcontainer runs as a non-root user with passwordless sudo, not root — confirmed this
-Dockerfile needs no code changes for that, only a Dockerfile-side user:
+Every real devcontainer runs as a non-root user with passwordless sudo, not root. `docker/Dockerfile`
+needs no code changes for that — only a Dockerfile-side user, added before `WORKDIR`:
 
 ```dockerfile
 RUN useradd -m -s /bin/bash dev \
@@ -176,7 +223,7 @@ RUN useradd -m -s /bin/bash dev \
     && chmod 0440 /etc/sudoers.d/dev
 USER dev
 WORKDIR /home/dev/setup
-# ...same COPY/ENV/RUN as above, with --chown=dev:dev on each COPY
+# ...same COPY/ENV/RUN as docker/Dockerfile, with --chown=dev:dev on each COPY
 ```
 
 Verified specifically: `util.current_user()` resolves to the non-root username (not `root`) via
@@ -190,40 +237,33 @@ prompt.
 
 ### Alternate base image: `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`
 
-Also verified end-to-end, swapping only the `FROM` line and dropping the `useradd`/sudoers block
-(the image already ships a passwordless-sudo `vscode` user, plus `curl`/`gnupg`/`ca-certificates`
-preinstalled) — everything else in the outline above is unchanged, and `bootstrap.sh`'s self-heal
-preamble finds nothing missing on this image (`missing` stays empty, pure no-op). No conflicts
-observed between this image's preinstalled packages and anything `setup.toml` installs.
+Swapping `FROM ubuntu:24.04` for `mcr.microsoft.com/devcontainers/base:ubuntu-24.04` in
+`docker/Dockerfile` needs no other changes and drops the need for the `useradd`/sudoers block above
+— that image already ships a passwordless-sudo `vscode` user plus `curl`/`gnupg`/`ca-certificates`
+preinstalled, so `bootstrap.sh`'s self-heal preamble finds nothing missing (pure no-op). No
+conflicts observed between this image's preinstalled packages and anything `setup.toml` installs.
 
 ### Round-tripping through `@devcontainers/cli`
 
-The outline above is tested as a bare `docker build`; the actual VS Code Dev Containers /
+`docker/Dockerfile` is a bare `docker build`, but the actual VS Code Dev Containers /
 `@devcontainers/cli` workflow adds its own layer of environment setup before your Dockerfile even
-runs. Confirmed clean with a throwaway `devcontainer.json` pointing at this outline:
-
-```json
-{
-  "name": "pulse-devcontainer",
-  "build": { "dockerfile": "Dockerfile", "context": ".." },
-  "remoteUser": "dev"
-}
-```
-
-`npx @devcontainers/cli build --workspace-folder .`, then `devcontainer up --workspace-folder .`,
-then `devcontainer exec --workspace-folder . -- inv --list` all succeeded with no adjustments
-beyond the Dockerfile outline already documented here.
+runs. To verify it round-trips cleanly, point a throwaway `devcontainer.json`'s `build.dockerfile`
+at `docker/Dockerfile` (`context` set to the repo root) and run
+`npx @devcontainers/cli build --workspace-folder .`, then `devcontainer up`, then
+`devcontainer exec -- inv --list`. The primary, CI-smoke-tested artifact for this round-trip is
+this repo's own `.devcontainer/devcontainer.json` (the `postCreateCommand` path above), not
+`docker/Dockerfile` — see [Recommended](#recommended-devcontainerjson--postcreatecommand).
 
 ## Cleanup — reclaiming image-layer space
 
 Every layer `inv setup` writes is permanent once committed — a later `RUN rm -rf` doesn't shrink
 an _earlier_ layer, it only hides those files from the final filesystem view while the bytes stay
-in the image. This is why the Dockerfile above puts cleanup in the _same_ `RUN` as `inv setup`
-(chained with `&&`), not a separate step — a separate `RUN inv cleanup.all-full` after the fact
-would add a new layer on top without reclaiming anything from the layer where the caches were
-actually written. If you split `inv setup` across multiple `RUN` lines for better build-cache
-reuse, run the matching cleanup inside whichever `RUN` created the mess, or switch to a
-multi-stage build.
+in the image. This is why `docker/Dockerfile` puts cleanup in the _same_ `RUN` as
+`bootstrap-devcontainer.sh` (chained with `&&`), not a separate step — a separate
+`RUN inv cleanup.all-full` after the fact would add a new layer on top without reclaiming anything
+from the layer where the caches were actually written. If you split the install across multiple
+`RUN` lines for better build-cache reuse, run the matching cleanup inside whichever `RUN` created
+the mess, or switch to a multi-stage build.
 
 Two families of things accumulate during install, verified by actually building an image and
 inspecting it — not assumed from reading the code:
@@ -235,7 +275,7 @@ alongside this doc, for a case where a failed `dpkg -i` used to leave the `.deb`
 built image directly (`find` for `*.zip`/`*.tar*`/`*.deb` under `~/.local/bin` and `~/`) turned
 up nothing — every method that downloads an archive already cleans up after itself.
 
-**Caches** — the real target, handled by `inv cleanup.*` (new task family, `tasks/cleanup.py` +
+**Caches** — the real target, handled by `inv cleanup.*` (task family, `tasks/cleanup.py` +
 per-tool tasks in `tasks/apt.py`/`tasks/python.py`/`tasks/node.py`/`tasks/tools.py`/
 `tasks/docker.py`). Each cache has both a conservative and a full-wipe variant, since the two
 audiences for this want different tradeoffs:
@@ -257,14 +297,14 @@ hold irreplaceable data, a different risk class than a rebuildable cache.
 cargo caches directly speed up your _next_ install of the same tool. On a persistent workstation
 that's worth keeping — `inv cleanup.caches`/`inv cleanup.all` (conservative) is the one to run by
 hand occasionally, and neither is part of `inv setup`. A container image has no "next install" on
-that machine to speed up, so the Dockerfile above calls `inv cleanup.all-full` unconditionally at
+that machine to speed up, so `docker/Dockerfile` calls `inv cleanup.all-full` unconditionally at
 the end of its `RUN` — there's no downside to being aggressive there.
 
 One more cache found only by actually inspecting a built image, not by reading code: Node's own
 V8 compile cache under `/tmp` (small, a few MB, created by any `node`/`npm` invocation during
 install — separate from npm's own package cache at `~/.npm`, which `node.clean-cache*` already
 covers). Rather than chasing every script-installed tool's own `/tmp` litter by name — fragile,
-breaks the moment a new tool is added to `setup.toml` — the Dockerfile above just does a blanket
+breaks the moment a new tool is added to `setup.toml` — `docker/Dockerfile` just does a blanket
 `rm -rf /tmp/*` at the end, the standard Docker pattern for exactly this class of problem.
 
 **What's _not_ a cache, confirmed by inspection**: `~/.local/share/rustup` was 1.6G in the test
@@ -316,8 +356,8 @@ and use the host Docker installation directly.
 
 ## Other notes
 
-- Tasks use `sudo` internally; either run as root (as the outline above does) or ensure `sudo` is
-  installed and the build user is in sudoers.
+- Tasks use `sudo` internally; either run as root (as `docker/Dockerfile` does) or ensure `sudo`
+  is installed and the build user is in sudoers.
 - `claude-code`'s installer (`https://claude.ai/install.sh`) needs bash, not the `script` method's
   default `sh` (dash on Ubuntu) — already declared correctly in `setup.toml`
   (`[packages.claude-code]` sets `shell = "bash"`), nothing to do here, just don't remove it if

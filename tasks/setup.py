@@ -2,6 +2,29 @@ from invoke import task
 
 from . import ai, apt, docker, fonts, next_steps, node, phases, python, system, tools, util, verify, wsl, zsh
 
+# Module-level so tasks/devcontainer.py's check() can dry-run the exact same phase composition
+# `inv setup` uses (via phases._probe) instead of a second, driftable copy.
+PACKAGES_PHASE = [
+    apt.configure,
+    apt.repos,
+    apt.base,
+    docker.configure,
+    apt.deb,
+    tools.install,
+    ai.skills,
+    system.apparmor_profiles,
+    python.tools,
+    node.install,
+    verify.all,
+]
+PACKAGES_NOTE = (
+    "apt config/repos/packages, Docker, .deb packages, script/binary tools, "
+    "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools, "
+    "then a hard functional-verification pass over everything just installed"
+)
+SHELL_PHASE = [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell]
+SHELL_NOTE = "Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell"
+
 
 @task
 def setup(c):
@@ -19,27 +42,6 @@ def setup(c):
         wsl.install(c)
         return
 
-    packages_phase = [
-        apt.configure,
-        apt.repos,
-        apt.base,
-        docker.configure,
-        apt.deb,
-        tools.install,
-        ai.skills,
-        system.apparmor_profiles,
-        python.tools,
-        node.install,
-        verify.all,
-    ]
-    packages_note = (
-        "apt config/repos/packages, Docker, .deb packages, script/binary tools, "
-        "AI agent skills scaffolding, AppArmor profiles, Python and Node.js tools, "
-        "then a hard functional-verification pass over everything just installed"
-    )
-    shell_phase = [zsh.omz_configure, zsh.configure, zsh.p10k_configure, zsh.set_default_shell]
-    shell_note = "Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline, default shell"
-
     if not util.has_systemd():
         print(
             "[setup] no systemd detected (not WSL) — skipping the `system` phase (locale/DNS "
@@ -47,16 +49,16 @@ def setup(c):
             "headless container). See docs/dev-container.md for the container-specific setup "
             "path, or install/enable systemd if this environment should have it."
         )
-        phases.run_phase(c, "packages", packages_phase, note=packages_note)
-        phases.run_phase(c, "shell", shell_phase, note=shell_note)
+        phases.run_phase(c, "packages", PACKAGES_PHASE, note=PACKAGES_NOTE)
+        phases.run_phase(c, "shell", SHELL_PHASE, note=SHELL_NOTE)
         next_steps.print_next_steps()
         return
 
     phases.run_phase(c, "system", [system.locale, system.curlrc, system.dns], note="locale, curl config, DNS")
 
-    phases.run_phase(c, "packages", packages_phase, note=packages_note)
+    phases.run_phase(c, "packages", PACKAGES_PHASE, note=PACKAGES_NOTE)
 
-    phases.run_phase(c, "shell", shell_phase, note=shell_note)
+    phases.run_phase(c, "shell", SHELL_PHASE, note=SHELL_NOTE)
 
     phases.run_phase(c, "desktop", [fonts.install, fonts.configure], note="Nerd Fonts, monospace font config")
 

@@ -40,6 +40,29 @@ def test_ensure_block_text_updates_changed_block():
     assert "new content" in updated
 
 
+def test_ensure_block_text_html_style_uses_html_comment_markers():
+    text, status = util.ensure_block_text("", "myblock", "content", style=util.MarkerStyle.HTML)
+    assert status == util.BlockStatus.ADDED
+    assert "<!-- PULSE::myblock -->" in text
+    assert "<!-- /PULSE::myblock -->" in text
+    assert "#" not in text
+
+
+def test_ensure_block_text_html_style_blank_lines_around_content():
+    # Markdown needs a blank line between adjacent block-level elements (marker <-> content) to
+    # match dprint's own formatting — otherwise `inv quality.fix` would perpetually "fix" what
+    # render-docs just wrote, and the two would never agree on a stable, idempotent output.
+    text, _ = util.ensure_block_text("", "myblock", "content", style=util.MarkerStyle.HTML)
+    assert "<!-- PULSE::myblock -->\n\ncontent\n\n<!-- /PULSE::myblock -->" in text
+
+
+def test_ensure_block_text_html_style_is_idempotent_when_unchanged():
+    first, _ = util.ensure_block_text("", "myblock", "content", style=util.MarkerStyle.HTML)
+    second, status = util.ensure_block_text(first, "myblock", "content", style=util.MarkerStyle.HTML)
+    assert status == util.BlockStatus.OK
+    assert second == first
+
+
 def test_packages_by_method_filters_by_method_and_enabled(monkeypatch):
     monkeypatch.setattr(
         util,

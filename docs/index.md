@@ -64,7 +64,7 @@ inv setup             # runs the full setup — see configuration.md for what th
 PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
 
 # Headless / container install — no GUI or hardware-specific packages
-PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome inv setup
+PULSE_EXCLUDE_TAGS=$(inv devcontainer.print-exclude-tags) inv setup
 ```
 
 Curious what `inv setup` actually runs, phase by phase, or how config files and tags work under the hood? See [How it works](configuration.md).
