@@ -1,3 +1,8 @@
+---
+status: landed
+updated: 2026-08-08
+---
+
 # Dev container pipeline (no custom base image)
 
 ## Context

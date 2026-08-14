@@ -1,3 +1,8 @@
+---
+status: idea
+updated: 2026-08-14
+---
+
 # Standardizing scaffolding for personal Python agent-tool repos
 
 ## Context

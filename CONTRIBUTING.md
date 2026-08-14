@@ -71,7 +71,13 @@ there live in [`contributing/`](contributing/) instead, one file per topic, neve
   playbook (companion to [`docs/certs.md`](docs/certs.md)).
 
 If you're about to write a "why this is built this way" section in `docs/`, it probably belongs
-in `contributing/` instead — add a new per-topic file there and list it above.
+in `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
+writeup is documentation for a shipped skill (something under `skills/<name>/`), it belongs inside
+that skill's own directory instead — e.g. `skills/<name>/references/*.md` — so it travels with
+every `inv ai.skills` copy into every other repo. `contributing/` stays for rationale that's
+internal to this repo and never leaves it (see `skills/plan-docs/references/design-rationale.md`
+vs. `skills/mcp-skill-shipping/`'s and `skills/research-library/`'s external
+`contributing/<name>.md` companions for both patterns side by side).
 
 ## Git workflow
 
