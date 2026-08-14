@@ -1491,3 +1491,15 @@ No package attached; exists purely to declare the skill. See contributing/mcp-sk
 method = "skill"
 tags = ["dev"]
 skills = [{ source = "local", path = "skills/mcp-skill-shipping" }]
+
+[packages.plan-docs]
+description = """
+Convention and workflow skill for plans/YYYY-MM-DD-topic.md files — one file per idea/design,
+a small YAML frontmatter status field (idea/planned/in-progress/blocked/landed/abandoned/superseded)
+so a plan's lifecycle is visible at a glance, and a retirement procedure so plans/ stays a working
+set rather than an ever-growing archive. No package attached; exists purely to declare the skill.
+See skills/plan-docs/references/design-rationale.md for the full rationale.
+"""
+method = "skill"
+tags = ["dev"]
+skills = [{ source = "local", path = "skills/plan-docs" }]

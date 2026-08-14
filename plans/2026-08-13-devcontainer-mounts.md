@@ -1,3 +1,8 @@
+---
+status: landed
+updated: 2026-08-13
+---
+
 # Dev container: mounting host directories (credentials, certs, config)
 
 ## Context

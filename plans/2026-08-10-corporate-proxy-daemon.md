@@ -1,3 +1,8 @@
+---
+status: landed
+updated: 2026-08-10
+---
+
 # Corporate proxy auth detection + local daemon (PULSE feature)
 
 Design record, not usage docs — for how this actually works today, see
