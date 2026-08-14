@@ -103,6 +103,37 @@ once that's genuinely done — asking first whenever there's real doubt, since d
 one-way door that git history only partially undoes (it recovers the file, not the judgment call
 that nothing in it still mattered).
 
+### Worked example: retiring this repo's own first three landed plans
+
+The first real dogfood of this procedure (`power-user-linux-setup`, 2026-08-14) retired
+`2026-08-08-devcontainer-pipeline.md`, `2026-08-10-corporate-proxy-daemon.md`, and
+`2026-08-13-devcontainer-mounts.md`, plus the tracking plan that scheduled the work. Two things
+from that pass are worth carrying forward as the procedure's own lessons, not just its outcome:
+
+- **"Default: preserve" is a check, not a guarantee of new writing.** Two of the three plans needed
+  **zero** new `contributing/*.md` content — their design rationale (a devcontainer.json-vs-baked-
+  image tradeoff, a `stable`-tag pin/float decision, an SSH-agent-forwarding default) turned out to
+  already be fully present in `docs/dev-container.md`'s prose, written at landing time. Only the
+  third plan's content — rejected alternatives (`cntlm`, a hand-rolled NTLM/Kerberos
+  implementation), the reasoning behind a three-task `check`/`fix`/`install` split, and one
+  narrowly-scoped bugfix (a restart/verify race condition) — wasn't captured anywhere else, and got
+  a genuinely new `contributing/corporate-proxy.md`. The lesson: always check whether `docs/*.md`
+  already covers the rationale before writing something new — duplicating it wastes the retirement
+  pass' effort and leaves two copies to drift apart later.
+- **The "commit the `## Migrated to` addition before deleting" rule (`SKILL.md`, step 2) is not
+  optional busywork — it's the only way the section is ever recorded at all.** If a plan file is
+  edited to add the section and then deleted in the _same_ commit, `git log -p -- plans/<file>.md`
+  never shows the addition: a deletion commit's diff is computed against its parent's last
+  _committed_ state, and if the addition was never committed on its own, the parent's state never
+  had it either — the file just vanishes as if the section had never been written. Two small
+  commits (add the section; separately, delete the file plus fix dangling references) is what
+  actually makes the destination discoverable later via `git log -p` on the dead path.
+- **Dangling references aren't confined to `AGENTS.md`/`docs/`/`contributing/`.** This pass found
+  citations to a plan's own path inside `tasks/proxy.py`'s module docstring and a function
+  docstring — code commentary explaining _why_ a design choice was made will naturally cite the
+  plan that made it, the same way narrative docs do. A scoped grep of only the "obvious" narrative
+  locations misses these; grep the whole repo for the filename instead.
+
 ## Relationship to a repo's own `AGENTS.md`
 
 `status:` frontmatter is a plan's own machine-greppable lifecycle marker, updated the moment its
