@@ -138,3 +138,13 @@ Dogfoods the setup for this repo itself and doubles as the exact artifact CI smo
   outside this repo, not just self-hosted.
 - CI: the `devcontainers/ci`-driven `smoke-test` job is the automated version of the first
   bullet, gating whether `stable` moves.
+
+## Migrated to
+
+- [`docs/dev-container.md`](../docs/dev-container.md) already carries this plan's design rationale
+  in place (the devcontainer.json-vs-baked-image tradeoff, the `stable`-tag pin/float reasoning) —
+  no separate `contributing/*.md` needed; nothing here wasn't already migrated.
+- `.github/workflows/devcontainer.yml` and `tasks/devcontainer.py` are self-documenting for the CI
+  job breakdown (each job's own comments/structure carry that record).
+- This file is deleted in the same change that fixes the two dangling references to it
+  (`docs/dev-container.md`, `AGENTS.md`).

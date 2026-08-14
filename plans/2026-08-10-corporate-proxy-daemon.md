@@ -104,3 +104,12 @@ observed firsthand.
 
 All test artifacts (keyring entry, `px.ini`, the systemd unit, the `~/.zshenv` block, the
 `uv tool install`ed `px` binary, the Squid container) were removed after verification.
+
+## Migrated to
+
+- Usage docs: [`docs/corporate-proxy.md`](../docs/corporate-proxy.md) (already existed alongside
+  this plan; unchanged by this retirement).
+- Design rationale (rejected alternatives, the check/fix/install task-split reasoning, and the
+  restart-race-condition fix not already captured in the usage doc):
+  [`contributing/corporate-proxy.md`](../contributing/corporate-proxy.md) (new).
+- This file is deleted in the same change that adds the above.
