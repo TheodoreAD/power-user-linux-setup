@@ -12,9 +12,6 @@ described next):
   a prebuilt image's startup-time win matters more than the postCreateCommand flow's flexibility
   (e.g. CI runner images).
 
-See `plans/2026-08-08-devcontainer-pipeline.md` for the design history behind the recommended
-path (why a live git reference pinned to a CI-gated `stable` tag, not a published OCI Feature).
-
 ## `inv setup` in a container — the systemd gap, and why it's handled automatically
 
 `inv setup` runs a `system` phase first (`system.locale`, `system.dns`) that needs `systemctl`/

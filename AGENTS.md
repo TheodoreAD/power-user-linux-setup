@@ -75,8 +75,8 @@ that module rather than re-researching from scratch.
 
 ## Dev container distribution pipeline
 
-Two paths for running PULSE inside a dev container, both landed
-(`plans/2026-08-08-devcontainer-pipeline.md`): a `devcontainer.json` + `postCreateCommand` flow
+Two paths for running PULSE inside a dev container, both landed: a `devcontainer.json` +
+`postCreateCommand` flow
 (`bootstrap-devcontainer.sh`, the recommended path — layers PULSE onto _any_ consumer's base image
 without forcing a shared maintained image on them) and a build-time bake via `docker/Dockerfile`
 (canonical example, local-WIP-testing vehicle, and hand-roll template — reuses
@@ -87,9 +87,8 @@ tag exclusion), `print-exclude-tags` (machine-readable, consumed by the bash scr
 `util.MarkerStyle.HTML` — a `#`-prefixed marker would render as a heading in Markdown), `check`
 (read-only dry run, same shape as `inv wsl.check`), and `mounts` (host-side interactive helper —
 discovers credential-shaped directories/sockets on the host and prints a devcontainer.json
-`mounts`/`remoteEnv` fragment; never writes/edits a file itself, per
-`plans/2026-08-13-devcontainer-mounts.md`, landed and verified end-to-end via `@devcontainers/cli
-up`/`exec`, including a live `ssh-add -l` against a forwarded agent socket).
+`mounts`/`remoteEnv` fragment; never writes/edits a file itself — verified end-to-end via
+`@devcontainers/cli up`/`exec`, including a live `ssh-add -l` against a forwarded agent socket).
 
 [`docs/dev-container.md`](docs/dev-container.md) is the published page — read that before
 extending this rather than re-deriving the design. **`.github/workflows/devcontainer.yml` is

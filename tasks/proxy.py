@@ -6,10 +6,11 @@ caches the credential in the OS keyring — apps point at 127.0.0.1:<port> and n
 credential. This module detects whether a proxy is present at all, what auth scheme it requires,
 and drives Px's own --save/--kerberos flags plus a direct keyring write accordingly, rather than
 hand-authoring px.ini or reimplementing NTLM/Kerberos negotiation (neither of which this repo's
-author can test against real corporate infra — see the "Genuine unknowns" section of
-plans/2026-08-10-corporate-proxy-daemon.md). The credential path specifically was verified end to
-end against a disposable local Squid instance, not assumed from Px's --help text alone — see
-_capture_credential's docstring for what that testing found and corrected.
+author can test against real corporate infra — see docs/corporate-proxy.md's "Genuine limitations"
+section and contributing/corporate-proxy.md for the full rationale). The credential path
+specifically was verified end to end against a disposable local Squid instance, not assumed from
+Px's --help text alone — see _capture_credential's docstring for what that testing found and
+corrected.
 """
 
 import getpass
@@ -325,8 +326,8 @@ def _capture_credential(c) -> str | None:
 
     Originally this shelled out to `px --username=... --save --password`, matching --help's
     documented "--password: Collect and save password to default keyring." Verified against a
-    disposable local Squid instance (see plans/2026-08-10-corporate-proxy-daemon.md's Verification
-    section) that this does NOT work non-interactively: --password calls Python's
+    disposable local Squid instance (see contributing/corporate-proxy.md) that this does NOT work
+    non-interactively: --password calls Python's
     getpass.getpass(), which opens /dev/tty directly and raises EOFError with no controlling
     terminal — piping input, a pty via `script`, or setting PX_PASSWORD in the subprocess env all
     failed to produce a stored password in this repo's own testing. PX_PASSWORD *does* work, but
