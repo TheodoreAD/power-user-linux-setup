@@ -64,6 +64,9 @@ there live in [`contributing/`](contributing/) instead, one file per topic, neve
   documented) about how the zensical docs-site engine actually behaves; read before a version bump.
 - [`contributing/research-library.md`](contributing/research-library.md) — design rationale for
   the shared `$RESEARCH_HOME` cross-project reference store.
+- [`contributing/mcp-skill-shipping.md`](contributing/mcp-skill-shipping.md) — design rationale for
+  the personal MCP-server/skill dev + distribution workflow (companion to the deployed
+  `skills/mcp-skill-shipping/SKILL.md`).
 - [`contributing/certs.md`](contributing/certs.md) — the corporate-CA-bundle feature's QA/fixture
   playbook (companion to [`docs/certs.md`](docs/certs.md)).
 

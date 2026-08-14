@@ -1480,3 +1480,14 @@ claude_permissions_allow = [
   "Grep(//home/tdumitrescu/research/**)",
   "Read(//home/tdumitrescu/research/**)",
 ]
+
+[packages.mcp-skill-shipping]
+description = """
+Workflow skill for developing/distributing personal MCP servers and Agent Skills built as
+standalone repos (the *-polite-mcp family, product-research-pipeline) — dev-loop setup,
+git-as-artifact-store distribution (no PyPI), and local-vs-deployed Claude Code registration.
+No package attached; exists purely to declare the skill. See contributing/mcp-skill-shipping.md.
+"""
+method = "skill"
+tags = ["dev"]
+skills = [{ source = "local", path = "skills/mcp-skill-shipping" }]
