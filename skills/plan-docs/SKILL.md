@@ -54,13 +54,19 @@ empties out, not an ADR-style archive — but nothing genuinely costly to work o
 dropped either.
 
 1. **Default: preserve.** Assume debugging, investigation, and rejected-alternative reasoning has
-   future value unless it's already written down elsewhere in the repo.
+   future value unless it's already written down elsewhere in the repo. Often it already is — check
+   `docs/*.md` before assuming new `contributing/*.md` content is needed; a plan whose design
+   rationale is already fully covered in prose there needs no new file at all.
 2. Add a `## Migrated to` section naming the destination: nothing needed for pure-code changes, a
    `docs/*.md` link if the content is usage-facing, and/or a `contributing/<topic>.md` entry (new
    or existing) for design rationale and gotchas — the same bucket `contributing/verify.md` and
-   `contributing/cli-allowlist.md` already use in this repo.
-3. Grep `AGENTS.md` (and `docs/`, `contributing/`) for the plan's own path and fix or drop any
-   references before they go stale.
+   `contributing/cli-allowlist.md` already use in this repo. **Commit this addition on its own,
+   before deleting the file** — add-and-delete in the same commit means the section is never
+   recorded in git history at all (the deletion commit's diff only ever shows what a _prior_ commit
+   last recorded), which defeats the entire point of writing it.
+3. Grep the **whole repo**, not just `AGENTS.md`/`docs/`/`contributing/`, for the plan's own
+   filename and fix or drop any references before they go stale — code comments and docstrings
+   (`tasks/*.py`, etc.) cite plan paths too, not only narrative docs.
 4. Delete `plans/<file>.md` — **only** once step 2 is genuinely covered. If there's any doubt
    whether something worth keeping was actually captured, ask before deleting rather than deciding
    unilaterally; it's a one-way door once the commit lands.
