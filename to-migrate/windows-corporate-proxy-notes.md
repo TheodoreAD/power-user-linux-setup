@@ -4,14 +4,16 @@
 scope (it never provisions a Windows host) — this file doesn't belong here long-term. It's
 committed under `to-migrate/` (a deliberate exception to the normal `reference/`-is-gitignored
 convention — see `docs/index.md`/`AGENTS.md`) purely so the Windows-specific research from the
-conversation that produced `plans/2026-08-10-corporate-proxy-daemon.md` doesn't live only on one
-machine's local disk until a separate, Windows-only project exists to receive it. **When that
+conversation that produced this repo's Linux corporate-proxy daemon feature (`docs/corporate-proxy.md`,
+`contributing/corporate-proxy.md`) doesn't live only on one machine's local disk until a separate,
+Windows-only project exists to receive it. **When that
 project starts: move this file there (`git mv`/copy + delete here), then delete `to-migrate/` from
 this repo** — don't leave it behind once it has a real home.
 
 The Linux/WSL/devcontainer side of this research is now the real, implemented feature — see
-`docs/corporate-proxy.md` and `plans/2026-08-10-corporate-proxy-daemon.md` in this repo. This file
-covers what's specific to the Windows host and doesn't belong in a Linux-setup repo's tracked docs.
+`docs/corporate-proxy.md` (usage) and `contributing/corporate-proxy.md` (design rationale) in this
+repo. This file covers what's specific to the Windows host and doesn't belong in a Linux-setup
+repo's tracked docs.
 
 ## The problem this solves
 
@@ -135,9 +137,10 @@ Don't run a second proxy daemon inside the WSL guest. Run Px once on the Windows
 for free), and have WSL's per-tool proxy configs point at the host's IP
 (`$(ip route show default | awk '{print $3}')`, since WSL2's default route points at the Windows
 host) on that Px port. Keeps the only credential-holding process on the Windows side, where SSPI
-actually works. This is the one conclusion `plans/2026-08-10-corporate-proxy-daemon.md`'s WSL
-discovery logic (§4, "WSL" bullet) directly consumes — it probes for a Px already listening at the
-host IP and, if found, skips installing a Linux-side daemon entirely rather than duplicating it.
+actually works. This is the one conclusion the Linux side's WSL discovery logic
+(`docs/corporate-proxy.md`'s "WSL" section) directly consumes — it probes for a Px already
+listening at the host IP and, if found, skips installing a Linux-side daemon entirely rather than
+duplicating it.
 
 ## Open items if this becomes a real Windows-only project
 
