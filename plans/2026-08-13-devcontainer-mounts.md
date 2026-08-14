@@ -155,3 +155,14 @@ testing X" tone — content:
   `devcontainer up` + `devcontainer exec -- ls -la ~/.ssh ~/.config/pulse` (or equivalent for
   whichever candidates were selected) that the mounted paths are actually visible and correctly
   populated inside the container — not just that `docker create` accepted the config.
+
+## Migrated to
+
+- [`docs/dev-container.md`](../docs/dev-container.md)'s "Mounting host directories" subsection
+  already carries this plan's design rationale in place (the candidate catalog's defaults, the
+  same-absolute-path corporate-cert-bundle reasoning, the SSH-agent-forwarding-first choice and its
+  WSL2/Docker Desktop caveat) — no separate `contributing/*.md` needed.
+- `tasks/devcontainer.py` and `tests/test_devcontainer.py` are self-documenting for the pure-helper
+  split; the end-to-end `@devcontainers/cli` verification result is already recorded in `AGENTS.md`.
+- This file is deleted in the same change that fixes the one dangling reference to it
+  (`AGENTS.md`).
