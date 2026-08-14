@@ -134,6 +134,29 @@ from that pass are worth carrying forward as the procedure's own lessons, not ju
   plan that made it, the same way narrative docs do. A scoped grep of only the "obvious" narrative
   locations misses these; grep the whole repo for the filename instead.
 
+### Worked example: migrating a legacy `PLAN.md` (`freshful-polite-mcp`, 2026-08-14)
+
+This repo predated the convention entirely: one `PLAN.md` accumulated remote-research notes, a
+live-spike log, several fully-landed design decisions, and one genuinely still-open thread (whether
+to build support for a second site, blocked on an unresolved ToS question), all in one file, cited
+by name from ten other files (`AGENTS.md`, `README.md`, and docstrings/comments across most of the
+package). Two follow-on lessons, beyond confirming "Migrating a legacy single plan file" (`SKILL.md`)
+works as described:
+
+- **A quoted section title is part of the reference, not decoration on it.** The mechanical part of
+  this migration (`sed 's/PLAN\.md/contributing\/design-notes.md/g'`) was necessary but not
+  sufficient — dozens of hits looked like `PLAN.md "Proposed architecture"`, and the new document
+  didn't use that heading (it became "Why CDP-attach and real DOM interaction, not a hand-crafted API
+  client" once organized under its own topic). Anyone following the reference would land in the
+  right file but have to search for the claimed section and not find it. Fixing the path and leaving
+  the stale quoted title is only a half-fix.
+- **Not every citation should point at the new design-rationale doc.** A few references cited
+  `PLAN.md "Setup: the dedicated Chrome instance"` — but that recipe was always usage-facing and had
+  already been duplicated verbatim in `AGENTS.md`'s own "Operational dependency" section since it was
+  written. Migrating that content into `contributing/design-notes.md` too would have created a third
+  copy of the same paragraph. The fix was to repoint those specific references at the `AGENTS.md`
+  section that already existed, not to migrate more content.
+
 ## Relationship to a repo's own `AGENTS.md`
 
 `status:` frontmatter is a plan's own machine-greppable lifecycle marker, updated the moment its
@@ -144,6 +167,19 @@ frontmatter also says so, since it serves a different reader (someone skimming f
 auditing plan state) — but retirement is the one moment they must be kept in sync: once a plan
 file is actually deleted, any `AGENTS.md` prose citing that exact path needs to be repointed (to
 wherever the content actually migrated) or have the dead reference dropped.
+
+`AGENTS.md` also accumulates drift independent of any single plan's retirement, and periodically
+deserves the same scrutiny on its own. Worked example: the same `freshful-polite-mcp` session above
+continued with a second `/plan-docs` pass, this time auditing `AGENTS.md` itself per an explicit ask
+to leave it clean of "any planning or ideation." That surfaced the two patterns "Keeping AGENTS.md
+itself clean" (`SKILL.md`) now names concretely — a "Status: ... exercised live 2026-08-14" heading
+that was pure changelog framing wrapped around otherwise-fine architecture facts, and a "Parsing"
+section still describing three functions as raising `NotImplementedError`, a claim `rg
+NotImplementedError` showed was no longer true anywhere in the file: the functions had been fully
+implemented in an earlier, unrelated session, and nobody had gone back to update the prose that said
+otherwise. Neither was a `plans/*.md` retirement in the formal sense — no frontmatter, no file to
+delete — but both are the same underlying failure mode as a stale plan reference: prose asserting
+something about the repo's state that stopped being true, with nothing forcing a revisit.
 
 ## Prior art
 
