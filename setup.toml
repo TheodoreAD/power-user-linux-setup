@@ -189,11 +189,19 @@
 #                     source below; a `.pulse-source` marker in the copy tracks provenance so a
 #                     re-run can refresh it safely. Edit the repo copy, then `inv ai.skills` to
 #                     apply.
-#                   { source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }
+#                   { source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...], description = "..." }
 #                     Installs via the `skills` CLI (global npm package, see [packages.node]),
 #                     e.g. `skills add <owner>/<repo> --global --skill <names...> --agent
 #                     <agents...> --yes`. `names` omitted installs every skill in the repo;
-#                     `agents` defaults to ["claude-code"].
+#                     `agents` defaults to ["claude-code"]. `description` is optional and shown
+#                     alongside the repo/skill names when `inv ai.skills` asks before installing —
+#                     a remote skill has no local SKILL.md to read a description from the way a
+#                     `local` entry does, so there's nothing to show without it.
+#
+#                 `inv ai.skills` shows each skill's description (from its SKILL.md frontmatter
+#                 for a `local` entry, or this `description` field for an `npx` one) and asks
+#                 before installing/updating it — pass -y/--yes (same convention as the `skills`
+#                 CLI's own --yes) to skip the prompts. See ai.skills' docstring.
 
 [settings]
 # Default Python for all uv tool installs — uv downloads it if not already managed.
