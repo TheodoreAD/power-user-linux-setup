@@ -4,14 +4,17 @@
 
 Git identity is driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is never committed to the repo.
 
-**Quick start** — one name/email, one `~/projects/<dir>/` directory:
+**Quick start** — one name/email, one projects directory:
 
 ```shell
 inv identity.init
 ```
 
-Interactive wizard; answer a few prompts and it writes `identity.toml` for you. Choose the
-"advanced" option inside it if you want multiple directories/accounts from the start.
+Interactive wizard; answer a few prompts and it writes `identity.toml` for you. The projects
+directory defaults to `~/projects/` itself (repos go straight in, no subdirectory) — enter an
+absolute path (`~` allowed, as many nested directories as you like) if you want somewhere else,
+e.g. `~/code/clientA`. Choose the "advanced" option inside it if you want multiple
+directories/accounts from the start.
 
 **Advanced / manual** — for multiple directories or accounts, copy the example and hand-edit it:
 
@@ -28,17 +31,18 @@ minimal instance of it (one `[[git_profiles]]` entry), and you can always add mo
 Then apply:
 
 ```shell
-inv git.configure   # creates ~/projects/<directory>/ + per-dir .gitconfig with includeIf
+inv git.configure   # creates each profile's directory + per-dir .gitconfig with includeIf
 inv git.settings    # applies global git settings (editor, push, pull, log, etc.)
 ```
 
 `inv git.configure` disables the global `user.name`/`user.email` and wires up `includeIf.gitdir`
-so git automatically picks the right identity based on which `~/projects/<directory>/` the repo lives in.
+so git automatically picks the right identity based on which projects directory the repo lives in
+(`~/projects/<directory>/` for a relative name, or the absolute path itself for a custom location).
 
 This per-directory `.gitconfig`/`includeIf` mechanism has been running unmodified on an existing
 machine for a long time, but hasn't yet been validated end-to-end on a genuinely fresh install —
-worth confirming the created `~/projects/<directory>/.gitconfig` files and the global `includeIf`
-entries look right the next time this repo is bootstrapped on a new machine.
+worth confirming the created `.gitconfig` files and the global `includeIf` entries look right the
+next time this repo is bootstrapped on a new machine.
 
 ## Multi-account platforms
 

@@ -23,7 +23,7 @@ def _git_settings_applied() -> bool:
 
 def _git_profiles_applied(identity: dict) -> bool:
     profiles = identity.get("git_profiles", [])
-    return all((git.PROJECTS_ROOT / p["directory"]).exists() for p in profiles)
+    return all(git.resolve_project_dir(p["directory"]).exists() for p in profiles)
 
 
 def _missing_ssh_keys(identity: dict) -> list[str]:

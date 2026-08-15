@@ -48,8 +48,9 @@ def _render(name: str, email: str, directory: str, hosts: list[str]) -> str:
 
 @task
 def init(c):
-    """Interactive wizard for ~/.config/power-user-linux-setup/identity.toml: pick simple (one name/email, one
-    ~/projects/<dir>/) or advanced (hand-edit the full multi-directory/multi-host example).
+    """Interactive wizard for ~/.config/power-user-linux-setup/identity.toml: pick simple (one
+    name/email, one projects directory — ~/projects/ by default) or advanced (hand-edit the full
+    multi-directory/multi-host example).
 
     Writes the same identity.toml schema either way — git.py/ssh.py don't know or care which
     path produced the file, and a simple-mode file is trivially expandable later by hand.
@@ -60,7 +61,8 @@ def init(c):
         return
 
     ui.block(
-        "Simple: one name/email, one ~/projects/<dir>/ directory. Quick, and easy to expand "
+        "Simple: one name/email, one projects directory (defaults to ~/projects/ itself — enter "
+        "an absolute path, ~ allowed, to use somewhere else instead). Quick, and easy to expand "
         "into more directories/hosts later by hand.",
         "Advanced: hand-edit identity.toml yourself for multiple directories, accounts, or server hosts right away.",
         label="identity setup",
@@ -77,7 +79,10 @@ def init(c):
 
     name = util.prompt_text("Full name (for git commits)")
     email = util.prompt_text("Email address")
-    directory = util.prompt_text("Projects subdirectory name (~/projects/<this>/)", default="default")
+    directory = util.prompt_text(
+        "Projects directory (absolute path, ~ allowed, as many nested dirs as you like)",
+        default="~/projects/",
+    )
 
     hosts = [label for label in _HOST_LABELS if ui.ask(f"Set up SSH/git for {label}?", default=label == "GitHub")]
     if not hosts:
