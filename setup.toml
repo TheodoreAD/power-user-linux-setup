@@ -1511,3 +1511,18 @@ See skills/plan-docs/references/design-rationale.md for the full rationale.
 method = "skill"
 tags = ["dev"]
 skills = [{ source = "local", path = "skills/plan-docs" }]
+
+[packages.db-defaults]
+description = """
+Decision-table skill: default storage tech per common use case (in-process ephemeral state, TTL
+cache, simple/complex/OLTP relational, analytical/OLAP, document store, full-text search,
+vector/embedding search, background job queue, cron/scheduled tasks, pub/sub/event streaming,
+graph data, blob storage, time-series) so picks stay consistent across projects instead of drifting
+per session/model. Every pick is MIT/Apache/BSD-licensed, pytest-local testable with no
+docker/cloud, and chosen for low-boilerplate LLM-agent-friendly APIs — favoring the best-fit tool
+per concern over minimizing technology count. No package attached; exists purely to declare the
+skill. See skills/db-defaults/references/rationale.md.
+"""
+method = "skill"
+tags = ["dev"]
+skills = [{ source = "local", path = "skills/db-defaults" }]
