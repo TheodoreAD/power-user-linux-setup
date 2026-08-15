@@ -30,7 +30,54 @@ def _dir_digest(path: Path) -> str:
     return h.hexdigest()
 
 
-def _install_local_skill(base: Path, repo_path: str, *, label: str) -> None:
+def _parse_frontmatter_description(text: str) -> str | None:
+    """Pull the `description:` field out of a SKILL.md's YAML frontmatter without a YAML
+    dependency — the frontmatter here is always a flat `key: value` block, so a line scan between
+    the two `---` markers is enough. Pure string parsing (no filesystem calls of its own) so it's
+    unit-testable directly — see _skill_frontmatter_description for the file-reading wrapper.
+    """
+    lines = text.splitlines()
+    if not lines or lines[0].strip() != "---":
+        return None
+    for line in lines[1:]:
+        if line.strip() == "---":
+            break
+        if line.startswith("description:"):
+            return line.split("description:", 1)[1].strip().strip('"')
+    return None
+
+
+def _skill_frontmatter_description(skill_md: Path) -> str | None:
+    if not skill_md.is_file():
+        return None
+    return _parse_frontmatter_description(skill_md.read_text())
+
+
+def _local_skill_plan(*, present: bool, ours: bool, up_to_date: bool) -> str:
+    """Pure decision of what _install_local_skill should do next, given the on-disk state it
+    already gathered (present/ours/up_to_date all come from real filesystem checks, but the
+    decision itself has no I/O of its own — unit-testable without touching a filesystem at all).
+
+    One of: "foreign" (something else already lives at dest, leave it alone), "up_to_date"
+    (ours, nothing to do), "install" (nothing there yet), "update" (ours, but stale).
+    """
+    if present and not ours:
+        return "foreign"
+    if up_to_date:
+        return "up_to_date"
+    return "update" if present else "install"
+
+
+def _remote_skill_label(names: list[str] | None, repo: str) -> str:
+    return f"{', '.join(names) if names else 'all skills'} from {repo}"
+
+
+def _remote_skill_prompt(label: str, entry_description: str | None) -> str:
+    explain = f"\n{entry_description}" if entry_description else ""
+    return f"Install {label}?{explain}"
+
+
+def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -> None:
     """Copy this repo's skills/<name>/ to <base>/.agents/skills/<name> (source = "local") — a
     real, standalone copy, not a symlink, matching how the npx-sourced installer behaves (it
     also copies, per its own install summary output). A `.pulse-source` marker records which
@@ -39,6 +86,11 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str) -> None:
     .claude/skills symlink — without a marker, two directory copies are indistinguishable by
     content alone. Refreshed to exactly match the repo on every run once it's ours; an edit to
     the repo copy needs `inv ai.skills` re-run to take effect, unlike the old symlink approach.
+
+    Asks (showing the skill's own SKILL.md description) before an actual install/update, unless
+    `yes` is set — same `-y`/`--yes` convention as the `skills` CLI's own `--yes` flag used below.
+    Never asks for a skill that's already up to date, so a re-run of an unchanged setup stays
+    quiet either way.
     """
     src = (_REPO_ROOT / repo_path).resolve()
     name = src.name
@@ -47,21 +99,29 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str) -> None:
     marker = dest / _SKILL_MARKER
     ours = marker.is_file() and marker.read_text().strip() == repo_path
     up_to_date = ours and _dir_digest(dest) == _dir_digest(src)
+    plan = _local_skill_plan(present=present, ours=ours, up_to_date=up_to_date)
 
     if util.DRY_RUN:
-        print(f"[{label}] {name}: {util.ok_label(up_to_date)}")
+        print(f"[{label}] {name}: {util.ok_label(plan == 'up_to_date')}")
         return
 
-    if present and not ours:
+    if plan == "foreign":
         ui.warn(
             f"{dest} already exists and wasn't installed by this entry ({repo_path}).",
             "Leaving it alone — remove it yourself and re-run to install the repo's copy.",
         )
         return
 
-    if up_to_date:
+    if plan == "up_to_date":
         print(f"[{label}] {name} already up to date")
         return
+
+    if not yes:
+        desc = _skill_frontmatter_description(src / "SKILL.md") or "(no description found)"
+        verb = "Update" if plan == "update" else "Install"
+        if not ui.ask(f"{verb} skill '{name}'?\n{desc}"):
+            print(f"[{label}] {name}: skipped (declined)")
+            return
 
     if present:
         dest.unlink() if dest.is_symlink() else shutil.rmtree(dest)
@@ -71,22 +131,32 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str) -> None:
     print(f"[{label}] {name} copied from {repo_path}")
 
 
-def _install_remote_skill(c, entry: dict, *, label: str) -> None:
+def _install_remote_skill(c, entry: dict, *, label: str, yes: bool) -> None:
     """Install a skill from a GitHub repo via the `skills` CLI (source = "npx").
 
-    Always global + non-interactive (this is unattended provisioning, not a project-local,
-    interactive `skills add`). `names` omitted installs every skill in the repo; `agents`
-    defaults to just claude-code, since that's the one this repo actively manages (its
-    .claude/skills is symlinked to .agents/skills, so this converges on the same shared
-    directory local skills use, not a separate claude-code-only copy).
+    Always global (this is unattended provisioning, not a project-local, interactive `skills
+    add`) — `--yes` on the `skills` CLI invocation below skips *its own* per-file overwrite
+    prompts, separate from the `yes` param here, which gates whether we ask before running it at
+    all. `names` omitted installs every skill in the repo; `agents` defaults to just claude-code,
+    since that's the one this repo actively manages (its .claude/skills is symlinked to
+    .agents/skills, so this converges on the same shared directory local skills use, not a
+    separate claude-code-only copy).
+
+    Asks before running `skills add` unless `yes` is set — there's no cheap up-to-date check for
+    a remote repo the way there is for a local copy (see _install_local_skill), so unlike that one
+    this always asks, even on a re-run of an already-installed skill.
     """
     repo = entry["repo"]
     names = entry.get("names")
     agents = entry.get("agents", ["claude-code"])
-    desc = f"{', '.join(names) if names else 'all skills'} from {repo}"
+    desc = _remote_skill_label(names, repo)
 
     if util.DRY_RUN:
         print(f"[{label}] {desc}: not checked in dry-run (would run `skills add`)")
+        return
+
+    if not yes and not ui.ask(_remote_skill_prompt(desc, entry.get("description"))):
+        print(f"[{label}] {desc}: skipped (declined)")
         return
 
     cmd = ["skills", "add", repo, "--global", "--yes"]
@@ -97,7 +167,7 @@ def _install_remote_skill(c, entry: dict, *, label: str) -> None:
     print(f"[{label}] installed {desc}")
 
 
-def _install_declared_skills(c, base: Path) -> None:
+def _install_declared_skills(c, base: Path, *, yes: bool) -> None:
     """Process every `skills` list found on any setup.toml package entry, regardless of that
     entry's own `method` — same any-section pattern as zshenv/zshrc/zprofile.
     """
@@ -107,9 +177,9 @@ def _install_declared_skills(c, base: Path) -> None:
         for entry in cfg.get("skills", []):
             source = entry.get("source")
             if source == "local":
-                _install_local_skill(base, entry["path"], label=name)
+                _install_local_skill(base, entry["path"], label=name, yes=yes)
             elif source == "npx":
-                _install_remote_skill(c, entry, label=name)
+                _install_remote_skill(c, entry, label=name, yes=yes)
             else:
                 ui.warn(f"[{name}] skills entry has unknown source {source!r} — skipping")
 
@@ -310,12 +380,21 @@ to repeat them here, only what's specific to this repo.
 
 
 @task
-def skills(c, dir=None):
+def skills(c, dir=None, yes=False):
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
     On the default (global) run, also merges every declared `claude_permissions_allow` rule into
     ~/.claude/settings.json and checks for GitHub Copilot (see docs/claude-code.md).
+
+    Before actually installing or updating a skill, shows its own description and asks — same
+    `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
+    add --yes`), rather than a bespoke `--confirm`-to-opt-in flag: pass -y/--yes to skip the
+    prompts and install everything, e.g. for a fully unattended `inv setup`. Skills that are
+    already up to date are never prompted for, so a re-run of an unchanged setup stays quiet
+    either way. Like every other prompt in this repo (see ui.ask), a non-interactive run (piped,
+    CI, PULSE_DRY_RUN) skips the prompt and proceeds — this never hangs a scripted run even
+    without -y.
 
     Defaults to the home directory (the personal, cross-project skills location). Pass --dir to
     set this up for a specific project instead — permissions/Copilot are skipped for a --dir run,
@@ -323,7 +402,7 @@ def skills(c, dir=None):
     """
     base = Path(dir).expanduser().resolve() if dir else Path.home()
     _ensure_agents_skills(base, label="ai.skills")
-    _install_declared_skills(c, base)
+    _install_declared_skills(c, base, yes=yes)
     if dir is None:
         _apply_static_claude_permissions()
         _note_copilot_permissions()
