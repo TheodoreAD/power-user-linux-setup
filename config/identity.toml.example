@@ -12,9 +12,14 @@
 #   inv ssh.forward    — ssh-copy-id to non-git server hosts
 #   inv ssh.add        — ssh-add all keys for this machine
 
-# One entry per ~/projects/ subdirectory.
+# One entry per projects directory.
 # Each directory gets its own .gitconfig with user.name and user.email.
 # git automatically picks the right identity based on where the repo lives.
+#
+# `directory` is either a bare relative name — joined under ~/projects/, as below — or an
+# absolute path (optionally starting with ~, expanded), used as-is for a location outside
+# ~/projects/ entirely, e.g. directory = "~/projects/" (repos directly in ~/projects/, no
+# subdirectory) or directory = "~/code/clientA".
 
 [[git_profiles]]
 directory = "github.com-personal"

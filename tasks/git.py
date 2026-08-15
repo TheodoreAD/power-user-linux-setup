@@ -7,6 +7,20 @@ from . import util
 
 PROJECTS_ROOT = Path.home() / "projects"
 
+
+def resolve_project_dir(directory: str) -> Path:
+    """A profile's `directory` is either a bare relative name — joined under PROJECTS_ROOT, the
+    multi-account convention in identity.toml.example (e.g. "github.com-personal") — or an
+    absolute path, optionally starting with `~` (expanded), used as-is for a custom location.
+    This is what lets the simple wizard default straight to ~/projects/ itself instead of forcing
+    an extra subdirectory under it.
+    """
+    expanded = Path(directory).expanduser()
+    if expanded.is_absolute():
+        return expanded
+    return PROJECTS_ROOT / directory
+
+
 SETTINGS = {
     "core.autocrlf": "input",
     "core.fileMode": "true",
@@ -51,16 +65,16 @@ def configure(c):
 
     if util.DRY_RUN:
         for p in profiles:
-            project_dir = PROJECTS_ROOT / p["directory"]
+            project_dir = resolve_project_dir(p["directory"])
             exists = util.ok_label(project_dir.exists())
-            print(f"[git] {p['directory']} ({exists}) → {p['name']} <{p['email']}>")
+            print(f"[git] {project_dir} ({exists}) → {p['name']} <{p['email']}>")
         return
 
     c.run("git config --global --unset user.name", warn=True, hide=True)
     c.run("git config --global --unset user.email", warn=True, hide=True)
 
     for p in profiles:
-        project_dir = PROJECTS_ROOT / p["directory"]
+        project_dir = resolve_project_dir(p["directory"])
         project_dir.mkdir(parents=True, exist_ok=True)
         gitconfig = project_dir / ".gitconfig"
         c.run(
@@ -69,4 +83,4 @@ def configure(c):
         )
         c.run(f'git config --file "{gitconfig}" user.name "{p["name"]}"', hide=True)
         c.run(f'git config --file "{gitconfig}" user.email "{p["email"]}"', hide=True)
-        print(f"[git] {p['directory']} → {p['name']} <{p['email']}>")
+        print(f"[git] {project_dir} → {p['name']} <{p['email']}>")

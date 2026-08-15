@@ -209,8 +209,9 @@ gh auth login                    # GitHub CLI — opens browser, not automatable
 ```
 
 Everything after `inv identity.init` (except `gh auth login`) needs `~/.config/power-user-linux-setup/identity.toml`
-filled in first — either via the wizard above (simple: one identity, one `~/projects/<dir>/`) or by
-hand for multiple directories/accounts, see [git.md](git.md) and [ssh.md](ssh.md).
+filled in first — either via the wizard above (simple: one identity, one projects directory,
+`~/projects/` itself by default) or by hand for multiple directories/accounts, see
+[git.md](git.md) and [ssh.md](ssh.md).
 `next_steps.print_next_steps()` (above) guides you through this exact sequence, one command at a
 time, once identity.toml exists.
 

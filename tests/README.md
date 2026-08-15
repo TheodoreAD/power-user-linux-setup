@@ -15,9 +15,12 @@ openssl/keytool or touches the trust store), `tasks/wsl.py`'s `_dns_query_packet
 query packet in memory — no socket I/O, unlike `_query_dns_server`/`_public_dns_reachable`, which
 actually send it), `tasks/util.py`'s `ok_label`/`ensure_block_text`/`packages_by_method` (string
 formatting and dict filtering — the sudo/file-write side of `ensure_block`/`sudo_write` isn't
-covered), and `tasks/allowlist.py`'s `Classification`/`Source` enums plus `_resolve_flat_verdict`/
+covered), `tasks/allowlist.py`'s `Classification`/`Source` enums plus `_resolve_flat_verdict`/
 `_classify_flag_result` (pure data transforms — the LLM call and subprocess/strace probing around
-them aren't).
+them aren't), `tasks/git.py`'s `resolve_project_dir` (relative-vs-absolute `directory` resolution —
+no subprocess/filesystem calls, unlike `configure()`/`settings()` around it, which shell out to
+git), and `tasks/identity.py`'s `_render`/`_toml_string` (TOML string-building for the generated
+identity.toml — no filesystem/prompting, unlike `init()` around them).
 
 Set up once after cloning:
 
