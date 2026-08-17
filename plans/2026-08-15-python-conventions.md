@@ -213,14 +213,61 @@ choice:
   opt-in model is more composable (pairs with `cattrs`, kept separate from the model by design).
   Concedes Pydantic's default validation error messages are better, precisely because Pydantic
   validates by default where attrs requires opting in per field.
-- **NamedTuple** — only if the value must behave like a plain tuple for a specific contract
-  (positional unpack, hashable, drop-in tuple replacement). A frozen dataclass covers "immutable
-  record" already; reach for NamedTuple only when tuple-ness itself is the requirement.
+- **NamedTuple** — a frozen dataclass already covers "immutable record with named fields," so a
+  follow-up pass researched exactly what's left for NamedTuple to be the _better_ choice for, given
+  it's not just "the tuple-flavored option" anymore. Concrete decision rule, reach for NamedTuple
+  over the frozen-dataclass default only when:
+  1. **Drop-in positional-tuple compatibility is the actual requirement** — the value needs to
+     interoperate with code that expects a plain `tuple` (stdlib's own `os.stat_result`/
+     `sys.version_info`/`urllib.parse.urlparse()`'s `ParseResult` all do exactly this via
+     `PyStructSequence`/`namedtuple`, specifically for backward-compatible positional access
+     alongside named fields), a C extension expecting positional args, or `Row._make(csv_row)`-style
+     construction from an existing iterable.
+  2. **The record is small, closed, and order-_is_-the-meaning** — `x, y = point`,
+     `key, group =
+     pair` — not a multi-field "bag of results," which Effective Python (Slatkin)
+     Item 31 argues against past 2 values regardless of container type: unpacking more than ~3
+     variables is "all too easy to reorder... accidentally," and his own fix is a dataclass, not a
+     NamedTuple.
+  3. **Zero validation/behavioral needs** — NamedTuple subclasses genuinely **cannot add new
+     fields** (verified against the `typing.NamedTuple` docs; subclassing only lets you add/override
+     methods), and `__post_init__`-style validation requires overriding `__new__`, an awkward,
+     easy-to-get-wrong pattern next to a dataclass's dedicated hook. Any real validation or
+     field-adding-subclass need is an immediate dataclass signal.
+
+  Hashability (works with zero config on both once `frozen=True`, verified against the dataclasses
+  docs — `eq=True` + `frozen=True` auto-generates `__hash__`, so this is a non-differentiator now)
+  and raw memory/speed (NamedTuple keeps a modest edge over even `slots=True` dataclasses, since
+  it's tuple-native rather than slot-retrofitted, but the gap is small post-3.10 and not a
+  legitimate deciding factor at this project's scale) were both checked and ruled out as deciding
+  factors.
 - **msgspec** — only once Pydantic's validation/serialization overhead is a _measured_ bottleneck,
   not a guess. Pydantic v2's Rust core (`pydantic-core`) is 4–50x faster than v1 depending on model
   shape — **any pre-2023 "Pydantic is slow" take is measuring v1** and should be discounted — but
   msgspec still wins on raw speed when it matters (10–20x faster decode, 5–60x faster struct
   operations per multiple 2025–2026 sources).
+
+**Does Rust-core Pydantic close the gap with plain dataclass enough to widen its default scope
+beyond boundaries?** A direct follow-up check, since the person raised it as a real "did our
+reasoning stay current" question — answer: **no, and the reason it doesn't is itself informative.**
+Every direct Pydantic-v2-vs-dataclass benchmark found (not vs. attrs/msgspec, which the table above
+already covers) still shows dataclass ahead on the "just hold typed fields" comparison: ~2.6x faster
+instantiation even on Python 3.13 after both CPython's own dataclass-codegen speedup _and_
+pydantic-core's Rust rewrite; a maintainer-unaddressed Pydantic GitHub issue's own 1M-iteration
+timeit shows plain attribute _writes_ ~50x slower on a Pydantic model; per-instance memory ~2.6x
+larger (Pydantic instances carry `__dict__` plus `__pydantic_fields_set__`/`__pydantic_extra__`/
+`__pydantic_private__` bookkeeping a dataclass never allocates). **The "Pydantic got faster"
+narrative is real but scoped to validation/serialization throughput specifically** — every "5–50x"
+figure in circulation is v2-vs-v1, i.e. Rust-validator-vs-Python-validator, and a frozen dataclass
+never paid that Python-validator cost to begin with, so the Rust rewrite didn't touch the actual
+axis that differentiates it from a dataclass for unvalidated internal data. No reputable source
+found argues Pydantic should be a general internal-data default even post-Rust-core; the ones that
+address this directly
+(["Pydantic and Performance Spaghetti Code"](https://leehanchung.github.io/blogs/2025/07/03/pydantic-is-all-you-need-for-performance-spaghetti/),
+coining "SerDes Debt" for exactly this anti-pattern) argue the opposite. **No change to the existing
+split** — the case for `@dataclass(frozen=True)` internally rests on grounds the Rust core doesn't
+address at all (zero validation-library coupling, full transparency, stdlib-only dependency weight),
+not on a performance gap that's since closed.
 
 ## 3. Settings and secrets management
 
@@ -276,6 +323,42 @@ class with field overrides) rather than fighting shared global state — the sam
 Pattern over class-based Singleton" reasoning §6 already covers. See §6 for community-precedent
 validation of this composite pattern specifically (Flask's own long-documented
 `Config`/`DevelopmentConfig`/`ProductionConfig` idiom is the closest established analogue found).
+
+**The competing idea — FastAPI's own `@lru_cache`-wrapped factory pattern — researched in depth per
+the user's explicit request ("I'm not entirely confident in my globals.py and init design"), and the
+verdict is: don't adopt it, the eager pattern above is the better fit here.** FastAPI's docs
+(`get_settings()` decorated with `@lru_cache`, consumed via `Depends()`) state their own rationale
+directly: "reading a file from disk is normally a costly (slow) operation... we would be reading the
+`.env` file for each request" if the factory weren't cached — an explicitly **per-request
+amortization** argument. `@lru_cache` on a zero-argument function degenerates to a lazy singleton
+(one possible cache key, `maxsize` is inert); the real distinguishing property is _lazy_
+construction versus the `globals.py` pattern's _eager_ one. Three findings against adopting it here:
+
+1. **The stated rationale doesn't transfer.** Neither a CLI tool (one invocation total) nor a
+   well-behaved MCP server (settings should already only be read once regardless of pattern)
+   reproduces the "N times per request" condition the whole argument depends on — it's solving a
+   problem specific to a request-serving loop, which these applications don't have.
+2. **The testability mechanism is genuinely framework-specific, confirmed from FastAPI's own
+   source.** `app.dependency_overrides[get_settings] = ...` works because FastAPI's request-dispatch
+   code (`solve_dependencies` in `fastapi/dependencies/utils.py`) explicitly consults that dict at
+   call time — a real interception point that doesn't exist outside FastAPI. Without it, the
+   portable equivalent is `get_settings.cache_clear()`, which is real and documented but has a
+   genuine, sourced gotcha: it doesn't fix stale references anything already holds to the pre-clear
+   instance — real enough that a dedicated pytest plugin (`pytest-antilru`) exists specifically to
+   manage this. The `globals.py` pattern's isolation is structurally simpler: construct another
+   instance, no cache to bust, nothing to go stale.
+3. **Fail-fast timing favors eager.** A missing/invalid env var fails at _import_ time (before any
+   application code runs) with the eager pattern, vs. at _first call_ time — possibly deep in a CLI
+   subcommand or, worse, the first real client request in production — with the lazy one. This is
+   this project's own already-decided §4 principle (fail fast at the earliest diagnosable point),
+   and the eager pattern gets it for free; `@lru_cache` actively trades it away for a benefit
+   (per-request amortization) that doesn't apply outside a request-serving context.
+
+One real-world data point cited as corroboration, not proof: an independent, non-FastAPI MCP server
+(`frontmatter-mcp`) that tried a similar lazy-cached-factory shape ended up hand-rolling its own
+resettable cache with an explicit `reset_caches()` specifically once testability became a
+first-class concern — someone hit the same friction and engineered around it rather than reaching
+for `lru_cache` directly once outside FastAPI's dependency-override safety net.
 
 ## 4. Early returns / guard clauses, fail-fast, and the EAFP tension
 
@@ -643,6 +726,41 @@ whatever floor is chosen), both run over `fd -e sh` output, folded into `inv qua
 own plain-script (non-pre-commit) integrations already use. A root `.shellcheckrc` should hold any
 exclusions, each with an inline comment stating why, following kubernetes' precedent directly.
 
+**Install mechanism — revised after the pilot run: `uv-tool`, not `apt`.** The user's own framing:
+shell scripts aren't Python-specific (any project might have them), so both tools should be
+available machine-wide, not bundled per-Python-project — but system apt packages need root and lag
+upstream releases, and this project already prefers ephemeral/no-heavy-setup tooling. Checked
+whether Rust/Go's own quality tools set a precedent either way: **Rust's is unambiguous** —
+`rustup`/`cargo` have no system-wide install path at all; `clippy`/`rustfmt` are `rustup component`s
+installed per-user to `~/.cargo/bin`, by design. **Go's is more mixed** — `gofmt` ships bundled with
+the toolchain itself, but for a real linter (`golangci-lint`), the maintainers themselves steer
+people _away_ from the user-scoped `go install` toward a pinned binary-download script, specifically
+because `go install` compiles locally against whatever Go version happens to be present, so the
+resulting binary isn't the one that was actually tested — a reproducibility concern, not a
+scope-of-install one, and it doesn't transfer here (see below). Net: user-scoped tool management is
+the stronger, cleaner precedent of the two.
+
+The concrete mechanism found: **`shellcheck-py`/`shfmt-py`** (PyPI, MIT, verified live against the
+PyPI index) — the same "wheel bundles the real prebuilt upstream binary" pattern basedpyright itself
+already uses for its own bundled Node runtime. `shellcheck-py` alone has 4.3M downloads/month.
+Because they ship a prebuilt binary rather than compiling anything at install time, Go's
+`go
+install`-reproducibility objection above doesn't apply — the binary is exactly the pinned
+upstream release, same as a `deb-github` install would give, just distributed as a wheel instead.
+This resolved the install-location question in `setup.toml` cleanly, since `method = "uv-tool"` was
+already an established package method in this repo, used for `gnome-extensions-cli`/`nox`/`mkdocs`/
+`glances`/etc. (`package =` field for when the PyPI name differs from the section key): the
+pre-existing `[packages.shellcheck]` apt entry became `method = "uv-tool"`,
+`package =
+"shellcheck-py"`, and a new `[packages.shfmt]` entry was added the same way — both
+installed via `inv python.tools` (the existing task that installs every `uv-tool`-method package),
+not a manual `uv tool install`, keeping the install path itself declarative and reproducible rather
+than an ad hoc one-off command. **Correction to this section's original recommendation**: the
+severity floor proposed above (`--severity=warning`) turned out unnecessary in practice — this
+repo's five existing shell scripts had zero shellcheck findings at the default (unfiltered)
+severity, so no `.shellcheckrc` was needed either; both stay as documented fallbacks for whenever a
+real finding does show up, not applied speculatively.
+
 ## 9. Ruff, pytest, and dprint — configuration conventions, not tool choice
 
 All three tools are already decided; this is about tuning, researched against real, actively-
@@ -740,6 +858,121 @@ is that hard-wrapping at a fixed width improves diff/merge-conflict locality (a 
 doesn't reflow the whole paragraph in the diff), which is a real, checkable property independent of
 any human-vs-agent readability claim.
 
+## 10. Pilot findings — applying all of this to `power-user-linux-setup` itself
+
+Landed in commit `c01b53c` (2026-08-16/17). Real gotchas a pure literature review couldn't have
+surfaced — this is the actual payoff of piloting on a real codebase before writing any of it into a
+skill other repos would copy verbatim.
+
+**basedpyright config gotchas, both self-inflicted, both worth documenting so the skill doesn't
+repeat them:**
+
+- **Setting `exclude` explicitly replaces basedpyright's own default exclude list, it doesn't add to
+  it.** The default list includes `**/.*` (any dot-directory), which is how `.venv` normally gets
+  skipped with zero config. Adding `exclude = ["reference"]` to keep out a vendored-repos directory
+  silently un-excluded `.venv` too — the first real run type-checked 16,009 errors across
+  typeshed/third-party packages inside the virtualenv itself before this was caught. Fix: repeat the
+  defaults (`"**/node_modules"`, `"**/__pycache__"`, `"**/.*"`) alongside whatever you're adding.
+- **TOML scopes bare `key = value` lines to the most recently opened table**, not back to the parent
+  table — a `reportImportCycles = "warning"` line placed after
+  `[[tool.basedpyright.
+  executionEnvironments]]` silently became a property of that array entry
+  instead of a top-level basedpyright setting, and did nothing at the top level. Every top-level
+  `[tool.basedpyright]` key has to come before the first `[[executionEnvironments]]` block in the
+  file.
+- **`cast(SomeTypedDict, x)` fails basedpyright's "sufficient overlap" check when `x`'s static type
+  is a concrete `dict[str, Any]`** (e.g. `tomllib.load()`'s real return type), even though the same
+  cast succeeds cleanly when `x`'s type is genuinely `Any` (e.g. `json.loads()`'s return type).
+  basedpyright's own error message names the fix: route through `object` first —
+  `cast(SomeTypedDict, cast(object, x))`.
+- **`reportImplicitStringConcatenation` at `"error"` was pure noise on this codebase's real style**:
+  every one of the 52 hits found was this repo's routine convention of wrapping one long string
+  literal across several parenthesized lines (log/print messages, docstrings) — not a single genuine
+  missing-comma bug. Downgraded to `"none"` for this repo. Ruff's own `ISC001` has the identical
+  conflict with the formatter's string-wrapping and is disabled for the same documented reason —
+  this wasn't a one-off surprise, it's a known category of false positive for this exact rule shape,
+  just not one the original research surfaced because it never ran the rule against real code.
+- **`reportImportCycles` fired on `tasks/__init__.py`'s own necessary shape**: it imports every task
+  submodule to build an `invoke.Collection`, and each submodule does `from . import util` (a sibling
+  import through the package) — a textbook, harmless Python circular-import pattern (Python resolves
+  submodule imports fine without needing the package's own `__init__` body to finish first), not a
+  bug. Downgraded to `"warning"` rather than silenced entirely, so a _genuine_ cycle elsewhere would
+  still surface.
+- **`allowedUntypedLibraries` doesn't cover `reportAny`/`reportFunctionMemberAccess`** — confirmed
+  by running into it directly: adding `invoke` there fixed the bulk of the warning volume (every
+  `reportUnknown*`/`reportMissingTypeStubs` hit from invoke's own missing stubs) but did nothing for
+  `ai.skills.body(...)` (reaching into invoke's `Task.body` attribute to unit-test the undecorated
+  function directly) — that rule pair needed a scoped
+  `# pyright: ignore[reportAny,
+  reportFunctionMemberAccess]` at the two call sites instead. The
+  docs' own wording ("`reportUnknownVariableType`, `reportUnknownMemberType`, and
+  `reportMissingTypeStubs`") is precise and was easy to over-generalize from without hitting this in
+  practice.
+
+**Ruff findings — confirmed research, plus one repo-shape-dependent correction the research couldn't
+have predicted without real code to run against:**
+
+- `RUF`'s absence was real, not hypothetical — this repo genuinely had zero `RUF` coverage before
+  this pass. `PLR`/`TRY003` were confirmed noisy on real hits here too (`PLR0912`/`PLR2004`/
+  `PLR0913`/`PLR0917`/`PLR0911`/`PLR0915` all fired on ordinary CLI-task-handler code, matching Home
+  Assistant/Litestar/Mozilla's own documented reasons for dropping them).
+- **`T20`/flake8-print does not fit this repo's shape at all — 460 hits, essentially the whole
+  `tasks/` tree.** The research's own verdict ("exempt the CLI-output entrypoint module") assumed a
+  library with one or a few genuine CLI-output modules; here, _every_ `@task`-decorated function
+  prints status as its primary interface — there's no minority of files to exempt, printing _is_
+  what this whole package does. Not added to this repo's `select`. Worth carrying into the skill as
+  an explicit caveat: `T20` is a good fit for library code where a stray `print()` really is a
+  leftover debug statement, not for an invoke/Click/argparse-shaped CLI-tool repo where console
+  output is the product.
+- `C901` (15 pre-existing complexity hits, all ordinary multi-branch `@task` handlers) and the 5
+  `A001`/`A002` builtin-shadowing hits (`dir`/`all` as invoke task/parameter names — which _are_ the
+  actual `--dir` flag and `inv <ns>.all` subcommand names, so renaming would break the CLI) were
+  deliberately **not** refactored in this pass — `ruff check --add-noqa` recorded them as known,
+  named, greppable (`rg "noqa: C901"`) deferred work rather than either silently ignoring the whole
+  rule or forcing a same-session mass refactor of working automation code.
+- **`PLW1510` (subprocess-run-without-check) was a genuine, valuable catch, not noise**: 12
+  `subprocess.run()` calls repo-wide with no explicit `check=`. Checked every single one before
+  fixing — all 12 turned out to already be deliberate "probe and inspect `.returncode`/`.stdout`,
+  never raise" patterns (several with docstrings saying so explicitly), so the uniform fix was
+  making the existing behavior explicit (`check=False`) everywhere, not adding `check=True`
+  anywhere. The rule's value here was forcing an explicit choice, not revealing a bug — but reading
+  each site to confirm that, rather than blindly adding `check=False` everywhere, is exactly the
+  "select-then-triage" workflow §9 already recommended.
+- **`reportUnusedVariable`-style findings surfaced real test-coverage gaps, not just dead code**:
+  four tests in `test_allowlist.py` unpacked a `_diff_nodes()` return value (`new_invalid`) without
+  ever asserting on it — a real, silent verification gap in tests specifically about "does this node
+  correctly avoid being routed to `new_invalid`." Fixed by adding the missing assertions, not by
+  prefixing the variable with `_` — the ruff finding was pointing at an actual weaker-than-intended
+  test, not a false positive.
+
+**dprint's `textWrap` modes are easy to get backwards — verified the hard way.** `"never"` does not
+mean "never touch wrapping, leave the file alone" — it means dprint will _never insert a line break
+in prose_, which collapses this repo's existing hand-wrapped paragraphs into single giant lines (the
+opposite of the intended fix). `"always"` is what actually enforces consistent hard-wrapping at a
+configured width, which is what "fix the buggy `maintain` default without discarding the existing
+wrapped-prose convention" actually required. Also needed a markdown-specific `lineWidth` override
+(separate from the file's top-level `120`, which governs code blocks/JSON/TOML) — the existing docs'
+own wrapping converged on ~100 chars, not dprint's own 80-char plugin default or the repo's 120-char
+code width; landed on an explicit `100`, confirmed to not already exist as a value anywhere else in
+this repo's configs, and deliberately left un-unified with ruff's 120-char docstring ceiling (ruff
+format never wraps docstring/comment prose regardless of `line-length`, so a docstring can already
+run up to 120 chars with `E501` flagging it but nothing auto-fixing it — a pre-existing, orthogonal
+inconsistency this pass didn't try to resolve).
+
+**Shell tooling: the install mechanism changed mid-pilot, and the reasoning is worth keeping.**
+Originally planned as a plain `apt`-installed `shellcheck` (already true before this pass) plus a
+new `apt`-installed `shfmt`. The user redirected twice: first to prefer a fully venv-portable,
+CI-friendly install over any system package at all (`shellcheck-py`/`shfmt-py`, verified real and
+actively maintained via the PyPI index directly, not just search-result summaries) — then, once it
+became clear shell scripts aren't Python-project-specific and both tools should be available
+machine-wide, to `uv-tool` instead of a plain project dev-dependency, installed through this repo's
+_own_ declarative package pipeline (`setup.toml` + `inv python.tools`), explicitly **not** a manual
+`uv tool install` run by hand — "that defeats the purpose of this setup." Both `shellcheck` and
+`shfmt` (previously apt, now `uv-tool`) ended up in `setup.toml` exactly like every other
+user-scoped uv tool this repo already manages (`gnome-extensions-cli`, `nox`, `mkdocs`, `glances`,
+...) — the Rust/Go precedent-check above was requested specifically to sanity-check this direction,
+not the original plan.
+
 ## Recommended direction
 
 **Confirmed: package as a new Agent Skill, `python-conventions`**, mirroring `db-defaults`' proven
@@ -756,33 +989,37 @@ solved.
 
 This file stays at `status: idea` — **explicitly, per the user: "just plans, for now."** No skill
 build starts until the user says so; per `plan-docs` convention, promoting to `planned` happens in
-this same file once that build actually starts.
+this same file once that build actually starts. The pilot in §10 (below) is deliberately not the
+skill itself — it's this repo's own config/tasks adopting the picks directly, so they're tested
+against real code first.
 
 A second research round (2026-08-15, same day) added five more topics the user pulled in after
 reviewing the first pass — ruff/pytest/dprint _configuration_ conventions (tool choice already
 decided, only best-practice config was in question), shell-script checking, statelessness,
 immutability, a community-precedent check on the `globals.py` settings pattern, and a basedpyright
-rule profile tuned for "hard to mess up for agents, not so strict it's pure ceremony." All landed
-and are folded into §1 (revised) and new §§7–9 above, in place, per `plan-docs`' "promote in place"
-rule — this file was not superseded.
+rule profile tuned for "hard to mess up for agents, not so strict it's pure ceremony." A third round
+(2026-08-16/17) covered the FastAPI `@lru_cache` settings pattern in depth and a NamedTuple-vs-
+dataclass decision rule plus a Pydantic-v2-vs-dataclass performance recheck — and, per the user's
+explicit direction, this repo itself became the pilot/reference implementation for §§1 and 9, landed
+in commit `c01b53c` with real findings recorded in new §10. All of it is folded into the numbered
+sections above, in place, per `plan-docs`' "promote in place" rule — this file was not superseded.
 
 ## Open questions
 
 - [NEEDS CLARIFICATION: exact snippet set for the skill — one file per convention (matching
   `db-defaults`' one-file-per-category split, which the user confirmed didn't hurt agent
-  readability) or grouped by theme (typing, control-flow, architecture)? §8/§9's tool-config
-  findings (basedpyright profile, ruff additions, shellcheck/shfmt invoke tasks) also need a home —
-  likely the skill's `references/`, alongside or instead of each repo's own `pyproject.toml`/
-  `tasks/quality.py`, since those are config changes a skill can't make on a consuming repo's
-  behalf.]
-- [NEEDS CLARIFICATION: this repo's _own_ `pyproject.toml`/`tasks/quality.py` is a candidate to
-  adopt several of these findings directly, independent of the skill build: `RUF`/`C90`/`PERF`/`A`/
-  `DTZ`/`T20`/`PL`(minus `PLR`)/`TRY`(minus noisy codes) added to `select`; `basedpyright` added as
-  a new dev dependency with §1's tuned profile; `shellcheck`/`shfmt` added as new `inv quality.*`
-  steps for this repo's own `.sh` files (`bootstrap-devcontainer.sh` etc.); `dprint.json`'s markdown
-  `textWrap` set explicitly to route around the `maintain`-mode bug. Worth doing here first (as the
-  reference implementation, the same role `olx-polite-mcp` played for the scaffolding plan) once the
-  user says so, or held until the skill itself is being built?]
+  readability) or grouped by theme (typing, control-flow, architecture)? §10's pilot findings (the
+  corrected basedpyright profile, the ruff select/ignore list, the `tasks/quality.py` shape, the
+  dprint `textWrap`/`lineWidth` gotchas) need a home too — likely the skill's `references/`, written
+  up as generalized guidance rather than this repo's literal config, since a skill can't edit a
+  consuming repo's files on its own.]
+- [RESOLVED, 2026-08-16/17: piloting on this repo first, before building the skill — done, landed in
+  `c01b53c`. §10 has the findings; several were real (the `T20` repo-shape mismatch, the two
+  basedpyright TOML/exclude footguns, the `reportImplicitStringConcatenation`/`reportImportCycles`
+  false positives) and materially changed the tuned profile from what §1/§9 originally proposed.
+  This validates the pilot-first approach itself, not just the specific picks — a skill built
+  straight from the first research pass would have shipped at least three of these mistakes to every
+  consuming repo.]
 - ["and more" — the user's own framing: this is a starting set, not the full scope. Candidates
   raised implicitly by this research but not yet covered: async/concurrency conventions, logging
   conventions, CLI-argument-parsing conventions. Revisit once this batch is packaged rather than
