@@ -26,14 +26,17 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 
 - Snippet: [`references/snippets/in-process-state.py`](references/snippets/in-process-state.py)
 - Default: plain stdlib (`threading.Lock`, `time.monotonic`, a dict) — no library
-- Why: no persistence needed; a library would be pure overhead for "hold one number, guarded by one lock"
-- Escalate to: n/a — once it needs to survive a restart, it's the Cache or Relational category instead
+- Why: no persistence needed; a library would be pure overhead for "hold one number, guarded by one
+  lock"
+- Escalate to: n/a — once it needs to survive a restart, it's the Cache or Relational category
+  instead
 
 ## Cache (TTL / eviction)
 
 - Snippet: [`references/snippets/cache.py`](references/snippets/cache.py)
 - Default: `diskcache` (Apache-2.0, pure Python)
-- Why: disk-backed, handles TTL/eviction so you don't hand-roll it; trivial pytest `tmp_path` fixture
+- Why: disk-backed, handles TTL/eviction so you don't hand-roll it; trivial pytest `tmp_path`
+  fixture
 - Escalate to: Redis — once multiple processes/machines need to share one cache
 
 ## Relational — simple (few tables, KV-shaped)
@@ -47,15 +50,15 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 
 - Snippet: [`references/snippets/relational-oltp.py`](references/snippets/relational-oltp.py)
 - Default: `sqlalchemy` + `alembic` (both MIT)
-- Why: real Engine/Session/declarative-model ceremony, but it buys migration and relationship
-  safety that nothing lighter offers for a genuinely transactional multi-table shape
+- Why: real Engine/Session/declarative-model ceremony, but it buys migration and relationship safety
+  that nothing lighter offers for a genuinely transactional multi-table shape
 - Escalate to: Postgres
 
 ## Analytical / OLAP (read/aggregate-heavy queries over structured data)
 
 - Snippet: [`references/snippets/analytical-olap.py`](references/snippets/analytical-olap.py)
-- Default: `duckdb` (MIT — IP held by a nonprofit foundation specifically to keep it MIT
-  "in perpetuity")
+- Default: `duckdb` (MIT — IP held by a nonprofit foundation specifically to keep it MIT "in
+  perpetuity")
 - Why: `duckdb.connect(":memory:")` gives native SQL over a plain connection, zero ORM ceremony —
   much lower-boilerplate than SQLAlchemy for this shape, and genuinely fast at joins/aggregation.
   Single-writer (fine for personal-scale local use); a multi-writer "Quack" protocol shipped May
@@ -67,8 +70,8 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 - Snippet: [`references/snippets/document-store.py`](references/snippets/document-store.py)
 - Default: `tinydb` (MIT, pure Python)
 - Why: real dict-like API (`db.insert({...})`, `db.search(Query().field == x)`) — no SQL anywhere;
-  `MemoryStorage()` or `tmp_path` for pytest. Maintainer calls it "maintenance mode" (feature-complete
-  and stable) — still gets bugfix releases, not abandoned
+  `MemoryStorage()` or `tmp_path` for pytest. Maintainer calls it "maintenance mode"
+  (feature-complete and stable) — still gets bugfix releases, not abandoned
 - Alternative: `sqlitedict` (Apache-2.0) for pure key→object storage with no field queries needed —
   flag its multi-year commit gap before reaching for it
 - Escalate to: MongoDB
@@ -78,8 +81,8 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 - Snippet: [`references/snippets/full-text-search.py`](references/snippets/full-text-search.py)
 - Default: SQLite `FTS5` virtual tables — ships with stdlib `sqlite3`, zero new dependency, built-in
   `bm25()` ranking
-- Alternative: `bm25s` (MIT) for a standalone RAG-style scorer decoupled from a datastore;
-  `tantivy` (MIT, Python bindings to the Rust `tantivy` search engine — `pip install tantivy`, not
+- Alternative: `bm25s` (MIT) for a standalone RAG-style scorer decoupled from a datastore; `tantivy`
+  (MIT, Python bindings to the Rust `tantivy` search engine — `pip install tantivy`, not
   `tantivy-py`, which is a different, stale package) for heavier Lucene-like search once FTS5's
   feature set is genuinely too thin
 - Avoid: `Whoosh` — long-unmaintained
@@ -102,9 +105,9 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 
 - Snippet: [`references/snippets/job-queue.py`](references/snippets/job-queue.py)
 - Default: `huey` (MIT)
-- Why: `SqliteHuey(..., immediate=True)` runs `@huey.task()` functions synchronously in-process —
-  no consumer subprocess, no orchestration, a plain pytest test just calls the function directly.
-  Small decorator-based API, 15-year track record, near-zero open-issue backlog
+- Why: `SqliteHuey(..., immediate=True)` runs `@huey.task()` functions synchronously in-process — no
+  consumer subprocess, no orchestration, a plain pytest test just calls the function directly. Small
+  decorator-based API, 15-year track record, near-zero open-issue backlog
 - Escalate to: Celery/RQ/Dramatiq — all need a real broker (Redis/RabbitMQ), which is the point once
   you need multiple worker processes/machines
 
@@ -113,11 +116,11 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 - Snippet: [`references/snippets/cron-scheduler.py`](references/snippets/cron-scheduler.py)
 - Default: `apscheduler` 3.x (MIT)
 - Why: `SQLAlchemyJobStore` pointed at a `sqlite:///` URL persists schedules across restarts, no
-  external broker, usable purely as a queue if scheduling isn't even needed. Genuine bus-factor
-  risk to know about, not a reason to
-  avoid it outright: single dominant maintainer (1,134 commits vs. next-highest contributor's 6),
-  ~2-year-old unreviewed PRs, and v4 has been in alpha since 2020 with no stable release — 3.x is
-  still the only practical choice and remains actively patched (releases as recently as Jun 2026)
+  external broker, usable purely as a queue if scheduling isn't even needed. Genuine bus-factor risk
+  to know about, not a reason to avoid it outright: single dominant maintainer (1,134 commits vs.
+  next-highest contributor's 6), ~2-year-old unreviewed PRs, and v4 has been in alpha since 2020
+  with no stable release — 3.x is still the only practical choice and remains actively patched
+  (releases as recently as Jun 2026)
 - Alternative: `schedule` (MIT) — zero-dependency, trivial in-process API, but no persistence (a
   restart loses all schedules) and itself hasn't been pushed since May 2024; a lightweight escape
   hatch for pure in-process cases, not a governance-driven replacement
@@ -156,8 +159,8 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 
 - Snippet: [`references/snippets/blob-storage.py`](references/snippets/blob-storage.py)
 - Default: plain `pathlib.Path` file writes — no library
-- Why: zero dependency, trivial `tmp_path` testing; adding an abstraction for cloud storage you don't
-  have a concrete plan for yet is exactly the case YAGNI is for
+- Why: zero dependency, trivial `tmp_path` testing; adding an abstraction for cloud storage you
+  don't have a concrete plan for yet is exactly the case YAGNI is for
 - Escalate to: `fsspec` (BSD-3-Clause) + `s3fs`/`gcsfs` once cloud storage is an actual plan, not a
   maybe — same `fs.open()`/`fs.ls()` calls, only the protocol string changes
 
@@ -186,10 +189,10 @@ to prevent.
 `references/snippets/` has one real, ruff-clean, self-contained Python file per category above —
 each a verified `pip install` command in its docstring plus a working `test_*` function showing the
 pytest-local pattern, directly copy-pasteable rather than a tutorial to adapt. Each category's
-"Snippet:" line above links straight to its own file, so there's no need to open the others. This
-is also where two real naming traps caught while writing them are documented at the point they
-matter: `full-text-search.py` (the `tantivy` vs `tantivy-py` PyPI mixup) and `cron-scheduler.py`
-(the nonexistent `SQLiteJobStore` class name).
+"Snippet:" line above links straight to its own file, so there's no need to open the others. This is
+also where two real naming traps caught while writing them are documented at the point they matter:
+`full-text-search.py` (the `tantivy` vs `tantivy-py` PyPI mixup) and `cron-scheduler.py` (the
+nonexistent `SQLiteJobStore` class name).
 
 ## Full rationale
 

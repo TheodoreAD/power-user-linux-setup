@@ -15,7 +15,7 @@ def _current_shell() -> str:
 
 def _git_settings_applied() -> bool:
     for key, want in git.SETTINGS.items():
-        result = subprocess.run(["git", "config", "--global", key], capture_output=True, text=True)
+        result = subprocess.run(["git", "config", "--global", key], capture_output=True, text=True, check=False)
         if result.stdout.strip() != want:
             return False
     return True
@@ -50,7 +50,7 @@ def _ssh_config_applied(identity: dict) -> bool:
 def _ssh_keys_loaded() -> bool:
     if not util.command_exists("ssh-add"):
         return True  # nothing to check — don't block the chain on a missing optional tool
-    result = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True)
+    result = subprocess.run(["ssh-add", "-l"], capture_output=True, text=True, check=False)
     return result.returncode == 0
 
 
@@ -58,7 +58,7 @@ def _gh_authenticated() -> bool | None:
     """None if gh isn't installed — caller should skip this check, not treat None as "no"."""
     if not util.command_exists("gh"):
         return None
-    result = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True)
+    result = subprocess.run(["gh", "auth", "status"], capture_output=True, text=True, check=False)
     return result.returncode == 0
 
 

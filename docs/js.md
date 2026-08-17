@@ -2,14 +2,18 @@
 
 <https://github.com/nvm-sh/nvm>
 
-Installed via `inv node.install` (nvm method — installs nvm to `~/.local/share/nvm`, then installs Node LTS and global packages declared in `setup.toml`).
+Installed via `inv node.install` (nvm method — installs nvm to `~/.local/share/nvm`, then installs
+Node LTS and global packages declared in `setup.toml`).
 
 Shell integration is split across two files written by `inv zsh.configure`:
 
-- `~/.zshenv` — `export NVM_DIR` (sourced first, before oh-my-zsh, so the `nvm` plugin sees the custom path)
+- `~/.zshenv` — `export NVM_DIR` (sourced first, before oh-my-zsh, so the `nvm` plugin sees the
+  custom path)
 - `~/.zshrc` — `export NVM_DIR` as a fallback for shells that skip `.zshenv`
 
-The oh-my-zsh `nvm` plugin (declared in `setup.toml` as `omz_plugin = "nvm"`) sources `nvm.sh` and handles zsh completion via `bashcompinit`. The `nvm install` script is run with `PROFILE=/dev/null` so it never writes to shell config files directly — PULSE owns those.
+The oh-my-zsh `nvm` plugin (declared in `setup.toml` as `omz_plugin = "nvm"`) sources `nvm.sh` and
+handles zsh completion via `bashcompinit`. The `nvm install` script is run with `PROFILE=/dev/null`
+so it never writes to shell config files directly — PULSE owns those.
 
 ## Version management
 
@@ -25,7 +29,8 @@ nvm ls                     # list installed versions
 
 ## Global packages
 
-Global npm packages are declared in `setup.toml` under `global_packages` and installed by `inv node.install`. Currently:
+Global npm packages are declared in `setup.toml` under `global_packages` and installed by
+`inv node.install`. Currently:
 
 | Package  | What it does                                                                 |
 | -------- | ---------------------------------------------------------------------------- |
@@ -33,11 +38,16 @@ Global npm packages are declared in `setup.toml` under `global_packages` and ins
 
 ### Global installs vs uv tool install
 
-`npm install -g` puts all tools in a single shared location under the active nvm version — there is no per-tool isolation like `uv tool install` provides. In practice this rarely causes conflicts because Node CLI tools have few shared dependencies.
+`npm install -g` puts all tools in a single shared location under the active nvm version — there is
+no per-tool isolation like `uv tool install` provides. In practice this rarely causes conflicts
+because Node CLI tools have few shared dependencies.
 
-For one-off runs use `npx <tool>` (equivalent to `uvx`) — it downloads and runs without installing. Only add to `global_packages` for commands used daily.
+For one-off runs use `npx <tool>` (equivalent to `uvx`) — it downloads and runs without installing.
+Only add to `global_packages` for commands used daily.
 
-If tool isolation ever becomes a real need, [Volta](https://volta.sh) is the upgrade path: it manages Node versions and installs global tools in isolated shims, pinnable per project via `package.json`.
+If tool isolation ever becomes a real need, [Volta](https://volta.sh) is the upgrade path: it
+manages Node versions and installs global tools in isolated shims, pinnable per project via
+`package.json`.
 
 ## Verify
 

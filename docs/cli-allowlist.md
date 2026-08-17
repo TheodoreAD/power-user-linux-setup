@@ -2,10 +2,10 @@
 
 Claude Code (and similar agent harnesses) prompt for approval on most Bash commands. Most of what
 gets run in a typical session is safe — inspecting, listing, describing — and approving the same
-`kubectl get`/`git log`/`docker ps` shape of command over and over is pure friction. The fix isn't
-a hand-written list of "safe commands" (stale the moment a tool updates, and nobody keeps it in
-sync) — it's a small pipeline that regenerates the list from what's actually installed, classifies
-it with an LLM instead of guessing, and keeps a human in the loop before anything gets trusted.
+`kubectl get`/`git log`/`docker ps` shape of command over and over is pure friction. The fix isn't a
+hand-written list of "safe commands" (stale the moment a tool updates, and nobody keeps it in sync)
+— it's a small pipeline that regenerates the list from what's actually installed, classifies it with
+an LLM instead of guessing, and keeps a human in the loop before anything gets trusted.
 
 That pipeline lives in `cli-allowlist/` (tracked in git — this is original derived project config,
 not vendor material) and `tasks/allowlist.py` (`inv allowlist.*`).
@@ -21,15 +21,15 @@ inv allowlist.review    human gate                  you look at what changed, ma
 inv allowlist.apply     deterministic, no LLM       merges reviewed rules into ~/.claude/settings.json
 ```
 
-Each stage is independently re-runnable and cheap to re-run when nothing changed — that's the
-point. `extract` is skipped per-tool when `--version` output hasn't changed; `classify` is skipped
-per-node when that node's own help text hasn't changed; `apply` is a no-op when the computed rule
-set already matches what's live. A routine re-run after `apt upgrade` costs close to nothing and
-makes zero LLM calls unless a tool's actual command surface changed.
+Each stage is independently re-runnable and cheap to re-run when nothing changed — that's the point.
+`extract` is skipped per-tool when `--version` output hasn't changed; `classify` is skipped per-node
+when that node's own help text hasn't changed; `apply` is a no-op when the computed rule set already
+matches what's live. A routine re-run after `apt upgrade` costs close to nothing and makes zero LLM
+calls unless a tool's actual command surface changed.
 
-Coverage isn't limited to what `setup.toml` installs — it also includes the base system
-(coreutils, util-linux, diffutils, procps, tar/gzip/bzip2/xz), so an agent reaching for
-`cat`/`cp`/`rm`/`dd` is covered just as much as anything PULSE explicitly installs.
+Coverage isn't limited to what `setup.toml` installs — it also includes the base system (coreutils,
+util-linux, diffutils, procps, tar/gzip/bzip2/xz), so an agent reaching for `cat`/`cp`/`rm`/`dd` is
+covered just as much as anything PULSE explicitly installs.
 
 Both `write` and `dangerous` classifications render as `ask` rules, never `deny` — you always still
 get a real, interactively-approvable prompt for anything risky; only genuinely safe, read-only

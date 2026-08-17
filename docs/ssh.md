@@ -2,7 +2,8 @@
 
 ## Identity setup
 
-SSH keys and config are driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is never committed to the repo.
+SSH keys and config are driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file
+that is never committed to the repo.
 
 **Quick start** — one email, one key per host you pick (GitHub/GitLab):
 
@@ -10,9 +11,9 @@ SSH keys and config are driven by `~/.config/power-user-linux-setup/identity.tom
 inv identity.init
 ```
 
-Interactive wizard; walks through name/email and which hosts to key for, and writes
-`identity.toml` for you. Pick "advanced" inside it if you need multiple accounts/hosts/aliases
-from the start (see [git.md](git.md) for what that looks like).
+Interactive wizard; walks through name/email and which hosts to key for, and writes `identity.toml`
+for you. Pick "advanced" inside it if you need multiple accounts/hosts/aliases from the start (see
+[git.md](git.md) for what that looks like).
 
 **Advanced / manual** — for multiple accounts, aliases, or non-git server hosts, copy the example
 and hand-edit it:
@@ -37,11 +38,11 @@ inv ssh.add        # add all keys for this machine to ssh-agent
 
 **Migrating a machine with an existing hand-written `~/.ssh/config`** (not managed by PULSE, no
 sentinel markers): `inv ssh.configure` only _appends_ a new PULSE block via `ensure_block` — it
-won't touch or remove existing hand-written blocks. That's safe in general, but if a new
-`ssh_hosts` alias collides with an existing hand-written `Host` entry (e.g. both define
-`github.com`), the old block wins, since SSH config resolution is first-match-wins per keyword.
-Check the `ssh_hosts` alias list against the existing config's `Host` entries for collisions
-before running this on a machine with years of accumulated manual SSH config.
+won't touch or remove existing hand-written blocks. That's safe in general, but if a new `ssh_hosts`
+alias collides with an existing hand-written `Host` entry (e.g. both define `github.com`), the old
+block wins, since SSH config resolution is first-match-wins per keyword. Check the `ssh_hosts` alias
+list against the existing config's `Host` entries for collisions before running this on a machine
+with years of accumulated manual SSH config.
 
 ## What gets created
 
@@ -52,7 +53,8 @@ before running this on a machine with years of accumulated manual SSH config.
 ~/.ssh/<email>__<hostname>_ed25519.pub
 ```
 
-**Config** — `~/.ssh/config` gets a PULSE-managed block with one `Host` entry per `ssh_hosts` entry, plus a `Host *` default section:
+**Config** — `~/.ssh/config` gets a PULSE-managed block with one `Host` entry per `ssh_hosts` entry,
+plus a `Host *` default section:
 
 ```
 Host github.com

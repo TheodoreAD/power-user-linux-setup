@@ -34,6 +34,7 @@ import tomllib
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
+from typing import Any, cast
 
 from invoke import task
 
@@ -348,7 +349,7 @@ def _wrap(prefix: str, text: str, colored_prefix: str | None = None) -> str:
     return wrapped
 
 
-def _node_prefix(indent: str, label: str, classification: str, suffix: str = "") -> tuple[str, str]:
+def _node_prefix(indent: str, label: str, classification: Classification, suffix: str = "") -> tuple[str, str]:
     """(plain, colored) prefix pair for a node/flag line: name in bold, classification in its
     tier color, everything else (indent, punctuation, source annotation) left in the terminal's
     default color so it doesn't compete for attention with the two things worth scanning for."""
@@ -397,7 +398,9 @@ def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
     on nonzero exit — --help conventionally exits nonzero on plenty of tools."""
     env = {**os.environ, **_DETERMINISTIC_ENV}
     try:
-        result = subprocess.run(cmd, capture_output=True, text=True, timeout=timeout, env=env, stdin=subprocess.DEVNULL)
+        result = subprocess.run(
+            cmd, capture_output=True, text=True, timeout=timeout, env=env, stdin=subprocess.DEVNULL, check=False
+        )
     except (subprocess.TimeoutExpired, FileNotFoundError):
         return ""
     return (result.stdout + result.stderr).strip()
@@ -667,8 +670,7 @@ def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style:
             else []
         )
         nodes[key] = {**node_entry, "children": [f"{key} {c}" for c in child_names]}
-        for c in child_names:
-            queue.append(([*path, c], depth + 1, node_entry["content_hash"], len(child_names)))
+        queue.extend(([*path, c], depth + 1, node_entry["content_hash"], len(child_names)) for c in child_names)
 
     return nodes, truncated
 
@@ -822,14 +824,15 @@ def _classify_via_claude(prompt: str, model: str, schema: str = _SCHEMA) -> dict
                 timeout=_CLASSIFY_TIMEOUT,
                 cwd=scratch,
                 stdin=subprocess.DEVNULL,
+                check=False,
             )
         except subprocess.TimeoutExpired:
             return None
     if result.returncode != 0:
         return None
     try:
-        envelope = json.loads(result.stdout)
-        return envelope["structured_output"]["classifications"]
+        envelope = cast(dict[str, Any], json.loads(result.stdout))
+        return cast(dict, envelope["structured_output"]["classifications"])
     except (json.JSONDecodeError, KeyError, TypeError):
         return None
 
@@ -896,14 +899,16 @@ def _diff_nodes(
         # from the same model/rubric everything else here is classified with. This makes
         # community data self-liquidating — every classify() run upgrades whatever's left to
         # real LLM output, a few nodes at a time, at no cost to already-fresh nodes.
-        is_community = bool(prior) and prior.get("source") == Source.COMMUNITY
-        unchanged = not force and not is_community and bool(prior) and prior.get("content_hash") == node["content_hash"]
+        is_community = prior is not None and prior.get("source") == Source.COMMUNITY
+        unchanged = (
+            not force and not is_community and prior is not None and prior.get("content_hash") == node["content_hash"]
+        )
         if node.get("likely_invalid"):
-            if unchanged and prior.get("classification") == Classification.INVALID:
+            if unchanged and prior is not None and prior.get("classification") == Classification.INVALID:
                 carried[key] = prior
             else:
                 new_invalid[key] = node
-        elif unchanged:
+        elif unchanged and prior is not None:
             carried[key] = prior
         else:
             to_classify[key] = node
@@ -1088,7 +1093,7 @@ def _build_reconfirm_prompt(tool: str, candidates: dict[str, dict]) -> str:
 
 
 @task
-def reconfirm(c, tool=None, model="haiku"):
+def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
     """Second-pass LLM reclassification for everything currently sitting at `needs_review`
     (subcommands and flags alike) — items where the model said read_only but the deterministic
     verb-token backstop (_DANGEROUS_VERBS) overrode it, because a name/flag merely *containing* a
@@ -1183,7 +1188,7 @@ def reconfirm(c, tool=None, model="haiku"):
 
 
 @task
-def review(c, apply_all=False, only=None):
+def review(c, apply_all=False, only=None):  # noqa: C901
     """Show tools with unreviewed classifications (new or changed since the last reviewed
     snapshot) and, on confirmation, mark them reviewed. Nothing in `render` trusts an unreviewed
     entry, so this is the human gate before anything downstream sees a tool's rules. Per-tool, not
@@ -1405,7 +1410,9 @@ def apply(c):
 
     allow, ask = _compute_claude_rules(rules)
     new_set = set(allow) | set(ask)
-    previous = set(json.loads(_APPLIED_MANIFEST.read_text())) if _APPLIED_MANIFEST.exists() else set()
+    previous: set[str] = (
+        set(cast(list[str], json.loads(_APPLIED_MANIFEST.read_text()))) if _APPLIED_MANIFEST.exists() else set()
+    )
 
     settings = util.load_claude_settings()
     perms = settings.setdefault("permissions", {})
@@ -1446,7 +1453,7 @@ def apply(c):
 
 
 @task
-def status(c):
+def status(c):  # noqa: C901
     """Quick table: which registered tools are installed, stale (version changed since last
     classify), or still unreviewed."""
     registry = _load_registry()
@@ -1519,6 +1526,7 @@ def _strace_execve_log(cmd: list[str], env: dict) -> str | None:
                 timeout=10,
                 env=env,
                 stdin=subprocess.DEVNULL,
+                check=False,
             )
         except subprocess.TimeoutExpired:
             return None

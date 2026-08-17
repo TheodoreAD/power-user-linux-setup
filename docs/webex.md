@@ -1,12 +1,10 @@
 # Webex
 
-Not automated via `setup.toml`/`inv` — Cisco doesn't publish an apt repo, only a versioned
-`.deb` download, so there's no stable URL to pin a `deb-url` package entry against. Install
-manually:
+Not automated via `setup.toml`/`inv` — Cisco doesn't publish an apt repo, only a versioned `.deb`
+download, so there's no stable URL to pin a `deb-url` package entry against. Install manually:
 
-1. Download the `.deb` from the [Webex download page](https://www.webex.com/downloads.html)
-   (Linux section). Supported on Ubuntu 22.04 and 24.04 — 20.04 support was dropped after Webex
-   45.6.
+1. Download the `.deb` from the [Webex download page](https://www.webex.com/downloads.html) (Linux
+   section). Supported on Ubuntu 22.04 and 24.04 — 20.04 support was dropped after Webex 45.6.
 2. Install:
    ```shell
    sudo dpkg -i ~/Downloads/Webex.deb

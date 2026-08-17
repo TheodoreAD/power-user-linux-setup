@@ -88,36 +88,35 @@ Annotated (documentation only — strip the `#` lines before pasting to the devi
 
 ### Tap-to-open Activities does nothing (Super key swallowed)
 
-GNOME's tap-to-open-overview gesture (`gsettings get org.gnome.mutter overlay-key`) is hardcoded
-to the `Super_L` keysym only — it does not also listen for `Super_R`. If the Kinesis's thumb-cluster
-key(s) that act as "Windows/Super" are mapped to the right-hand keysym, tapping them does nothing
-in GNOME even though the same physical key works fine as a modifier (e.g. in `Super+Tab`, which
-GNOME binds to both `Super_L` and `Super_R`).
+GNOME's tap-to-open-overview gesture (`gsettings get org.gnome.mutter overlay-key`) is hardcoded to
+the `Super_L` keysym only — it does not also listen for `Super_R`. If the Kinesis's thumb-cluster
+key(s) that act as "Windows/Super" are mapped to the right-hand keysym, tapping them does nothing in
+GNOME even though the same physical key works fine as a modifier (e.g. in `Super+Tab`, which GNOME
+binds to both `Super_L` and `Super_R`).
 
 Fix: remap `rwin` to `lwin` under `<base>` only (see the layout above). A layout file stores only
 the _diffs_ from the factory defaults (§4.0 of the guide), and a key left unmapped on
-`<function1>`/`<function2>`/`<function3>` falls through to whatever `<base>` says for that key —
-so one line under `<base>` covers every layer, with nothing to keep in sync elsewhere.
+`<function1>`/`<function2>`/`<function3>` falls through to whatever `<base>` says for that key — so
+one line under `<base>` covers every layer, with nothing to keep in sync elsewhere.
 
 **Confirmed working**: a single `<base>` line is enough — unmapped keys on the Fn layers do fall
-through to `<base>`, so the right Super key now works correctly everywhere (tap-to-open-overview
-and modifier use) with no duplicate line needed on Fn1, and no OS-level (GNOME/X11/Wayland)
-remapping required on top of it.
+through to `<base>`, so the right Super key now works correctly everywhere (tap-to-open-overview and
+modifier use) with no duplicate line needed on Fn1, and no OS-level (GNOME/X11/Wayland) remapping
+required on top of it.
 
-Verify with `gsettings get org.gnome.mutter overlay-key` (should stay `'Super_L'`) and a bare tap
-of the key. See [keybindings.md](keybindings.md) for the full set of Super-based bindings this
-affects.
+Verify with `gsettings get org.gnome.mutter overlay-key` (should stay `'Super_L'`) and a bare tap of
+the key. See [keybindings.md](keybindings.md) for the full set of Super-based bindings this affects.
 
 ### SmartSet direct-programming syntax reference
 
-Reference PDFs (large, not checked in — see `reference/kinesis/`, which is gitignored;
-re-download from https://kinesis-ergo.com/support/kb360/ if missing):
+Reference PDFs (large, not checked in — see `reference/kinesis/`, which is gitignored; re-download
+from https://kinesis-ergo.com/support/kb360/ if missing):
 
 - `adv360-smartset-direct-programming-guide-v12-2-22.pdf` — syntax rules, section 4
 - `adv360-smartset-action-tokens-v3-31-23.pdf` — full list of position/action tokens
 
-Each of the 9 profiles is a plain-text `layout<N>.txt` file on the keyboard's onboard "v-Drive".
-A file is split into layer sections; write a line under the layer it should apply to:
+Each of the 9 profiles is a plain-text `layout<N>.txt` file on the keyboard's onboard "v-Drive". A
+file is split into layer sections; write a line under the layer it should apply to:
 
 ```text
 <base>
@@ -127,8 +126,8 @@ A file is split into layer sections; write a line under the layer it should appl
 <function3>
 ```
 
-**Remaps** — one physical key always sends one action. Square brackets, exactly one action token,
-no control over press/release timing:
+**Remaps** — one physical key always sends one action. Square brackets, exactly one action token, no
+control over press/release timing:
 
 ```text
 [position]>[action]
@@ -145,23 +144,23 @@ sequence of actions. Curly braces on both sides:
 
 Action-sequence tokens:
 
-- `{-tok}` / `{+tok}` — press-and-hold / release `tok` (needed for modifiers, since a plain
-  `{tok}` is a full tap). Shifted characters therefore require a macro, not a remap:
+- `{-tok}` / `{+tok}` — press-and-hold / release `tok` (needed for modifiers, since a plain `{tok}`
+  is a full tap). Shifted characters therefore require a macro, not a remap:
   `{tab}>{-lshf}{h}{+lshf}{i}` makes the Tab key type "Hi".
 - `{s1}`-`{s9}` prefix (right after the `>`) — sets this macro's own playback speed.
 - `{x1}`-`{x9}` prefix — Multiplay: fire the macro exactly that many times instead of the default
   "repeat continuously while the trigger is held".
-- `{d001}`-`{d999}` / `{dran}` — a fixed (ms) or random delay, e.g. between clicks of a
-  double-click macro.
-- Tap-and-Hold uses remap syntax with two extra tokens:
-  `[key]>[tap-action][t&hNNN][hold-action]` — different behavior for a tap vs. holding past
-  `NNN` ms (Kinesis recommends 250ms; not recommended for alphanumeric keys).
+- `{d001}`-`{d999}` / `{dran}` — a fixed (ms) or random delay, e.g. between clicks of a double-click
+  macro.
+- Tap-and-Hold uses remap syntax with two extra tokens: `[key]>[tap-action][t&hNNN][hold-action]` —
+  different behavior for a tap vs. holding past `NNN` ms (Kinesis recommends 250ms; not recommended
+  for alphanumeric keys).
 
-**No comment syntax exists**, inline or line-level. The only documented "inert line" mechanism is
-a leading `*`, which _disables_ an otherwise-valid code line — it doesn't let you attach free text,
+**No comment syntax exists**, inline or line-level. The only documented "inert line" mechanism is a
+leading `*`, which _disables_ an otherwise-valid code line — it doesn't let you attach free text,
 and the guide warns that bad syntax "could cause temporary problems with even basic keyboard
-operation." So actual layout files are kept comment-free; explanations live in this doc instead,
-as annotated copies placed next to the pasteable block above.
+operation." So actual layout files are kept comment-free; explanations live in this doc instead, as
+annotated copies placed next to the pasteable block above.
 
 ### References
 

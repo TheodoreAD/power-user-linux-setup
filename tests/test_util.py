@@ -75,7 +75,7 @@ def test_packages_by_method_filters_by_method_and_enabled(monkeypatch):
             }
         },
     )
-    monkeypatch.setattr(util, "_excluded_tags", lambda: set())
+    monkeypatch.setattr(util, "_excluded_tags", set)
 
     result = util.packages_by_method(util.PackageMethod.APT)
 

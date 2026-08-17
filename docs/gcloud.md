@@ -6,13 +6,13 @@
 
 ## Why not apt?
 
-Installing via apt completely disables `gcloud components install` — it fails outright.
-Additional components must then be managed as separate `google-cloud-cli-*` apt packages,
-which is more cumbersome and ties component versions to the distro's packaging cadence.
+Installing via apt completely disables `gcloud components install` — it fails outright. Additional
+components must then be managed as separate `google-cloud-cli-*` apt packages, which is more
+cumbersome and ties component versions to the distro's packaging cadence.
 
 The standalone installer keeps everything self-contained under `~/.local/share/google-cloud-sdk`,
-handles its own updates, and gives full access to `gcloud components install/update` with
-no sudo required after the initial setup.
+handles its own updates, and gives full access to `gcloud components install/update` with no sudo
+required after the initial setup.
 
 ## Install
 
@@ -23,8 +23,8 @@ inv tools.install
 inv zsh.configure   # adds gcloud to PATH and enables zsh completion
 ```
 
-The installer script runs non-interactively and does not modify any shell rc files —
-PATH and completion are handled by the `zshrc` field in `setup.toml` via `inv zsh.configure`.
+The installer script runs non-interactively and does not modify any shell rc files — PATH and
+completion are handled by the `zshrc` field in `setup.toml` via `inv zsh.configure`.
 
 ## Post-install (interactive — run manually)
 

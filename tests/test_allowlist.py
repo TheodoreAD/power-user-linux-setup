@@ -7,6 +7,7 @@ their own). See tests/README.md.
 
 import json
 from pathlib import Path
+from typing import Any, cast
 
 from tasks import allowlist
 
@@ -35,12 +36,16 @@ def test_every_rule_file_on_disk_uses_only_known_classification_and_source_value
     known_classifications = {m.value for m in allowlist.Classification}
     known_sources = {m.value for m in allowlist.Source}
     for path in rule_files:
-        entry = json.loads(path.read_text())
-        for key, node in entry.get("nodes", {}).items():
+        entry = cast(dict[str, Any], json.loads(path.read_text()))
+        # Rule-file JSON is arbitrary, externally-shaped data this test deliberately checks
+        # loosely (only the two keys asserted on below) — a full TypedDict for every node/flag
+        # field, most of which this test doesn't care about, isn't worth it just to silence
+        # reportAny on a one-off validation loop.
+        for key, node in entry.get("nodes", {}).items():  # pyright: ignore[reportAny]
             assert node["classification"] in known_classifications, f"{path.name}:{key}"
             if "source" in node:
                 assert node["source"] in known_sources, f"{path.name}:{key}"
-            for flag_name, flag in node.get("flags", {}).items():
+            for flag_name, flag in node.get("flags", {}).items():  # pyright: ignore[reportAny]
                 assert flag["classification"] in known_classifications, f"{path.name}:{key} flag {flag_name}"
 
 
@@ -115,12 +120,15 @@ def test_diff_nodes_sends_changed_node_to_classify():
     to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=False)
     assert to_classify == {"status": cache_nodes["status"]}
     assert carried == {}
+    assert new_invalid == {}
 
 
 def test_diff_nodes_sends_new_node_to_classify():
     cache_nodes = {"status": {"content_hash": "abc"}}
     to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, {}, force=False)
     assert to_classify == {"status": cache_nodes["status"]}
+    assert carried == {}
+    assert new_invalid == {}
 
 
 def test_diff_nodes_force_resends_even_unchanged_nodes():
@@ -129,6 +137,7 @@ def test_diff_nodes_force_resends_even_unchanged_nodes():
     to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=True)
     assert to_classify == {"status": cache_nodes["status"]}
     assert carried == {}
+    assert new_invalid == {}
 
 
 def test_diff_nodes_community_source_always_resent_despite_matching_hash():
@@ -136,6 +145,8 @@ def test_diff_nodes_community_source_always_resent_despite_matching_hash():
     existing_nodes = {"status": {"content_hash": "abc", "classification": "read_only", "source": "community"}}
     to_classify, carried, new_invalid = allowlist._diff_nodes(["status"], cache_nodes, existing_nodes, force=False)
     assert to_classify == {"status": cache_nodes["status"]}
+    assert carried == {}
+    assert new_invalid == {}
     assert carried == {}
 
 
@@ -231,6 +242,7 @@ def test_merge_rule_sets_adds_new_rule():
         [], [], ["Bash(git status:*)"], [], set()
     )
     assert merged_allow == ["Bash(git status:*)"]
+    assert merged_ask == []
     assert added_allow == {"Bash(git status:*)"}
     assert not removed_allow and not added_ask and not removed_ask
 
@@ -242,6 +254,7 @@ def test_merge_rule_sets_removes_stale_rule_we_previously_wrote():
         ["Bash(git status:*)"], [], [], [], {"Bash(git status:*)"}
     )
     assert merged_allow == []
+    assert merged_ask == []
     assert removed_allow == {"Bash(git status:*)"}
     assert not added_allow and not added_ask and not removed_ask
 
@@ -253,7 +266,8 @@ def test_merge_rule_sets_preserves_rule_user_added_by_hand():
         ["Bash(custom-tool:*)"], [], [], [], set()
     )
     assert merged_allow == ["Bash(custom-tool:*)"]
-    assert not added_allow and not removed_allow
+    assert merged_ask == []
+    assert not added_allow and not removed_allow and not added_ask and not removed_ask
 
 
 def test_merge_rule_sets_detects_rule_moving_from_allow_to_ask():
@@ -263,8 +277,10 @@ def test_merge_rule_sets_detects_rule_moving_from_allow_to_ask():
     )
     assert merged_allow == []
     assert merged_ask == ["Bash(docker network:*)"]
+    assert not added_allow
     assert removed_allow == {"Bash(docker network:*)"}
     assert added_ask == {"Bash(docker network:*)"}
+    assert not removed_ask
 
 
 def test_should_check_man_deps_skips_tools_marked_skip_interactive():

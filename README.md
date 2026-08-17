@@ -1,7 +1,7 @@
 # Power User Linux Setup (PULSE)
 
-An opinionated, reproducible workstation setup for Ubuntu 24.04: one `setup.toml` manifest and a
-set of [`invoke`](https://www.pyinvoke.org/) tasks that take a fresh install to a fully configured
+An opinionated, reproducible workstation setup for Ubuntu 24.04: one `setup.toml` manifest and a set
+of [`invoke`](https://www.pyinvoke.org/) tasks that take a fresh install to a fully configured
 dev/desktop environment in one run — shell (zsh, Oh My Zsh, Powerlevel10k), languages and CLIs
 (Python/uv, Go, Rust, Node, kubectl, gcloud, ...), GNOME, fonts, terminal config, and more, all
 declared in one place and safe to re-run.

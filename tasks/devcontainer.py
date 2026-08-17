@@ -8,6 +8,7 @@ import os
 import tomllib
 from dataclasses import dataclass
 from pathlib import Path
+from typing import TypedDict, cast
 
 from invoke import task
 
@@ -171,6 +172,14 @@ class MountCandidate:
     caveat: str | None = None
 
 
+class _CertsSection(TypedDict, total=False):
+    bundle: str | list[str] | None
+
+
+class _IdentityToml(TypedDict, total=False):
+    certs: _CertsSection
+
+
 def _resolve_cert_bundle_paths(identity_toml: Path | None) -> list[Path]:
     """[certs] bundle from identity_toml (a single string or a list) — same resolution shape as
     tasks/certs.py's _resolve_paths(), reimplemented here (not calling util.load_certs_override(),
@@ -180,7 +189,8 @@ def _resolve_cert_bundle_paths(identity_toml: Path | None) -> list[Path]:
     if not identity_toml or not identity_toml.exists():
         return []
     with identity_toml.open("rb") as f:
-        raw = tomllib.load(f).get("certs", {}).get("bundle")
+        data = cast(_IdentityToml, cast(object, tomllib.load(f)))
+    raw = data.get("certs", {}).get("bundle")
     if not raw:
         return []
     if isinstance(raw, str):

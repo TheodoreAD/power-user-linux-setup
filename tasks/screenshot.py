@@ -3,6 +3,7 @@ import os
 import re
 import shutil
 from pathlib import Path
+from typing import cast
 
 from invoke import task
 
@@ -95,7 +96,7 @@ def _get_custom_keybindings(c) -> list[str]:
     stdout = (result.stdout or "").strip()
     if not stdout or stdout in ("@as []", "[]"):
         return []
-    return ast.literal_eval(stdout)
+    return cast(list[str], ast.literal_eval(stdout))
 
 
 def _set_custom_keybindings(c, paths: list[str]) -> None:
@@ -122,7 +123,7 @@ def _next_free_index(paths: list[str]) -> int:
 
 
 @task
-def enable(c):
+def enable(c):  # noqa: C901
     """Bind PrtSc/Shift+PrtSc to Flameshot (save + clipboard, no dialog), disabling the matching
     GNOME defaults.
 

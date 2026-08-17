@@ -508,7 +508,16 @@ tags = ["desktop", "gui", "gnome"]
 
 [packages.shellcheck]
 description = "Static analysis and linting for shell scripts"
-method = "apt"
+method = "uv-tool"
+package = "shellcheck-py"
+check_cmd = "shellcheck"
+tags = ["dev", "linting"]
+
+[packages.shfmt]
+description = "Formatter for shell scripts — the shellcheck-py sibling package, wrapping the real shfmt binary"
+method = "uv-tool"
+package = "shfmt-py"
+check_cmd = "shfmt"
 tags = ["dev", "linting"]
 
 [packages.dos2unix]

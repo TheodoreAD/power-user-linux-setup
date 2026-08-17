@@ -3,24 +3,31 @@ direct system calls), so it's the only part worth an automated test. See tests/R
 """
 
 import sys
+from dataclasses import dataclass, field
 
 import pytest
 
 from tasks import phases, ui, util
 
 
-def _make_task(missing: bool):
-    """A stub task function matching the real convention: prints ok/MISSING depending on
-    util.DRY_RUN, and records each call as (dry_run_value_at_call_time,).
+@dataclass
+class _StubTask:
+    """A stub task callable matching the real convention: prints ok/MISSING depending on
+    util.DRY_RUN, and records each call's DRY_RUN value at call time. A real class rather than a
+    closure with a bolted-on attribute so `.calls` is a real, typed attribute instead of a
+    dynamic addition to a plain function object.
     """
-    calls = []
 
-    def task(c):
-        calls.append(util.DRY_RUN)
-        print(f"[x] {'MISSING' if missing else 'ok'}")
+    missing: bool
+    calls: list[bool] = field(default_factory=list)
 
-    task.calls = calls
-    return task
+    def __call__(self, c: object) -> None:
+        self.calls.append(util.DRY_RUN)
+        print(f"[x] {'MISSING' if self.missing else 'ok'}")
+
+
+def _make_task(missing: bool) -> _StubTask:
+    return _StubTask(missing)
 
 
 @pytest.fixture(autouse=True)

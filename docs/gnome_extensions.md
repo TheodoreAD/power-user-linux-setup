@@ -10,8 +10,8 @@
 > `inv apt.uninstall citrix-workspace` you need a full **reboot** (not just logout/login) before
 > extensions work again. `citrix-workspace`'s `cleanup_paths` also removes the mandatory lock file
 > directly (`/etc/dconf/db/local.d/locks/extensions-mandatory`) and runs `dconf update`, which is
-> what let extensions become writable again immediately on 2026-08-08 without waiting for a
-> reboot. See [citrix.md](citrix.md) — Citrix is currently uninstalled (paused, not abandoned).
+> what let extensions become writable again immediately on 2026-08-08 without waiting for a reboot.
+> See [citrix.md](citrix.md) — Citrix is currently uninstalled (paused, not abandoned).
 
 ## Ubuntu 24.04
 
@@ -30,12 +30,13 @@ inv gnome.clean        # remove user extensions not in enabled set
 inv gnome.update       # update all gext-managed extensions
 ```
 
-**Why extensions go inactive:** A `gnome-shell` package update can change the minor version,
-causing extensions that don't declare the new version as compatible to be auto-disabled. Run
-`inv gnome.status` to see which extensions are affected, then `inv gnome.enable` to re-enable
-them (or `inv gnome.update` if the extension needs an updated release), and logout/login to
-activate. If all user extensions vanished at once, check `gsettings get org.gnome.shell
-disable-user-extensions` — `inv gnome.enable` will fix it if it's `true`.
+**Why extensions go inactive:** A `gnome-shell` package update can change the minor version, causing
+extensions that don't declare the new version as compatible to be auto-disabled. Run
+`inv gnome.status` to see which extensions are affected, then `inv gnome.enable` to re-enable them
+(or `inv gnome.update` if the extension needs an updated release), and logout/login to activate. If
+all user extensions vanished at once, check `gsettings get org.gnome.shell
+disable-user-extensions`
+— `inv gnome.enable` will fix it if it's `true`.
 
 Newly installed or updated extensions activate after logout/login (no shell restart on Wayland).
 
@@ -80,23 +81,23 @@ To reinstall: `sudo apt install gnome-shell-extensions` (puts them in
 | `windowsNavigator@...gcampax...`        | [#10](https://extensions.gnome.org/extension/10/)   | Number-key window selection in Activities overview                          | Skip — niche; keyboard nav in overview already works              |
 | `workspace-indicator@...gcampax...`     | [#21](https://extensions.gnome.org/extension/21/)   | Workspace number in the top bar                                             | Skip — replaced by `space-bar` (in setup.toml)                    |
 
-**Worth reconsidering:** `user-theme` is the only one that has no gext equivalent and may be
-needed later if you apply a custom Shell theme. If that comes up, reinstall the package and
-add it to `setup.toml`.
+**Worth reconsidering:** `user-theme` is the only one that has no gext equivalent and may be needed
+later if you apply a custom Shell theme. If that comes up, reinstall the package and add it to
+`setup.toml`.
 
 #### User extensions — `~/.local/share/gnome-shell/extensions/`
 
-Installed by gext (or left over from old installs). Owned entirely by PULSE.
-`inv gnome.extensions` installs declared extensions here.
-`inv gnome.clean` removes every directory not matching an `enabled = true` UUID in `setup.toml`.
+Installed by gext (or left over from old installs). Owned entirely by PULSE. `inv gnome.extensions`
+installs declared extensions here. `inv gnome.clean` removes every directory not matching an
+`enabled = true` UUID in `setup.toml`.
 
 ---
 
 ### PULSE-managed extension list
 
-All entries below have a `[packages.gnome-ext-*]` section in `setup.toml`. Set `enabled = true`
-and run `inv gnome.extensions` to install and activate. Currently 12 `enabled = true`,
-10 `enabled = false` (22 total).
+All entries below have a `[packages.gnome-ext-*]` section in `setup.toml`. Set `enabled = true` and
+run `inv gnome.extensions` to install and activate. Currently 12 `enabled = true`, 10
+`enabled = false` (22 total).
 
 #### Currently active
 
@@ -117,7 +118,8 @@ All 12 confirmed active as of 2026-06-09:
 | `just-perfection-desktop@just-perfection` | [#3843](https://extensions.gnome.org/extension/3843/) | `gnome-ext-just-perfection`     | GUI for all GNOME Shell UI tweaks: Activities button, clock position, hot corners, animations.                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `space-bar@luchrioh`                      | [#5090](https://extensions.gnome.org/extension/5090/) | `gnome-ext-space-bar`           | Named i3-style workspace bar replacing the dot indicator; pairs with dash-to-panel.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-**Applied dconf configuration** (stored in `setup.toml`, applied by `inv gnome.extensions` / `inv gnome.configure`):
+**Applied dconf configuration** (stored in `setup.toml`, applied by `inv gnome.extensions` /
+`inv gnome.configure`):
 
 | Extension     | Key                | Value                                                                    |
 | ------------- | ------------------ | ------------------------------------------------------------------------ |
@@ -135,22 +137,22 @@ All 12 confirmed active as of 2026-06-09:
 | vitals        | `show-gpu`         | `false`                                                                  |
 | vitals        | `hot-sensors`      | `['_temperature_gpu_', '_temperature_processor_0_', '_system_load_1m_']` |
 
-> **dash-to-panel `panel-element-positions`** (clock centering, element order) contains the
-> monitor serial ID (`SAM-0x01000e00`) — machine-specific, not stored in `setup.toml`. Set via
-> the extension Prefs dialog after each new install.
+> **dash-to-panel `panel-element-positions`** (clock centering, element order) contains the monitor
+> serial ID (`SAM-0x01000e00`) — machine-specific, not stored in `setup.toml`. Set via the extension
+> Prefs dialog after each new install.
 
-> **Vitals sensors (this machine):** `hot-sensors` is pre-populated with GPU temp, CPU Package
-> temp, and 1-min load average. On a new machine with different hardware, sensor IDs may differ —
-> open the Vitals dropdown, right-click desired readings to pin them, then read back the IDs via
+> **Vitals sensors (this machine):** `hot-sensors` is pre-populated with GPU temp, CPU Package temp,
+> and 1-min load average. On a new machine with different hardware, sensor IDs may differ — open the
+> Vitals dropdown, right-click desired readings to pin them, then read back the IDs via
 > `dconf read /org/gnome/shell/extensions/vitals/hot-sensors` and update `setup.toml`.
 
-> **Freon (`gnome-ext-freon`)** is kept `enabled = false` — Vitals is a strict superset
-> (adds voltage, more temps, storage) with 10× the install base.
+> **Freon (`gnome-ext-freon`)** is kept `enabled = false` — Vitals is a strict superset (adds
+> voltage, more temps, storage) with 10× the install base.
 
 #### Not installed — disabled in setup.toml
 
-These 3 extensions are `enabled = false` in `setup.toml` and not on disk. Enable individually
-if needed; `inv gnome.extensions` will install and activate.
+These 3 extensions are `enabled = false` in `setup.toml` and not on disk. Enable individually if
+needed; `inv gnome.extensions` will install and activate.
 
 | UUID                                    | EGO                                                       | setup.toml key       | Notes                                                                                                                                                                                         |
 | --------------------------------------- | --------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -220,5 +222,5 @@ sudo apt install -y gnome-browser-connector
 Then use the Chrome extension:
 <https://chromewebstore.google.com/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep>
 
-Note: `gnome-browser-connector` is disabled in `setup.toml` by default since gext covers the
-same function without requiring a browser.
+Note: `gnome-browser-connector` is disabled in `setup.toml` by default since gext covers the same
+function without requiring a browser.

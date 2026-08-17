@@ -44,6 +44,7 @@ def settings(c):
                 ["git", "config", "--global", key],
                 capture_output=True,
                 text=True,
+                check=False,
             )
             current = result.stdout.strip()
             status = "ok" if current == want else f"WRONG (current: {current!r})"
