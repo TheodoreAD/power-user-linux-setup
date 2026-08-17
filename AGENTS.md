@@ -46,6 +46,18 @@ Only 7 tags actually gate anything: `gui`, `desktop`, `gnome`, `workstation`, `c
 profile (headless, dev container, WSL) by setting `PULSE_EXCLUDE_TAGS` alone is not sufficient —
 check the docs/configuration.md table for what each task actually respects before assuming.
 
+**Installing a new tool for this repo's own use (not the machine's) still goes through this pipeline
+— never a manual `apt install`/`sudo apt install`/`uv tool install`/`pip install`.** Add a
+`[packages.<name>]` entry to `setup.toml` (matching an existing entry's `method` for the same kind
+of tool — e.g. `uv-tool` for a PyPI-distributed CLI, see `gnome-extensions-cli`/`nox`/`glances` for
+the shape) and run the corresponding install task (`inv python.tools` for every `uv-tool` package,
+`inv apt.base` for `apt`, etc.) instead. This is not a style preference — running the install by
+hand outside `setup.toml` defeats the entire point of the repo, which is that every install this
+machine has is declared in one reproducible, re-runnable place. Caught live during the
+`python-conventions` pilot (`plans/2026-08-15-python-conventions.md` §10): `shellcheck`/`shfmt` were
+first installed via a direct `uv tool install`, then corrected on the spot to go through
+`setup.toml` and `inv python.tools` instead.
+
 ## Post-install verification (`inv verify.all`)
 
 `tasks/verify.py` runs as the last step of `inv setup`'s (and `inv wsl.install`'s) `packages` phase
