@@ -1,71 +1,23 @@
----
-status: landed
-updated: 2026-08-17
----
+# Full rationale — Python design and style defaults
 
-# Python conventions across personal repos: typing, style, and design defaults
+Full citation trail behind [`../SKILL.md`](../SKILL.md)'s decision table. Researched across multiple
+passes (four parallel research agents on the first pass, several follow-ups pulled in by later
+questions) against reputable sources, real OSS project configs, and community precedent — this file
+is the durable record, not a scratch summary, so sources are kept rather than compressed away.
+Originally written up in `plans/2026-08-15-python-conventions.md`; migrated here once that plan
+promoted from `idea` to this built skill.
 
-## Context
+For type-checker/linter/formatter/shell-check _tool configuration_ (a different concern — applied
+once at repo setup, not referenced while writing code), see
+`plans/2026-08-14-python-repo-scaffolding.md` instead, particularly its "Quality-tooling
+conventions" section.
 
-Same underlying motivation as `skills/db-defaults`: models and sessions drift toward different
-"reasonable" choices for the same recurring decisions, so conventions across this repo family
-(`power-user-linux-setup`, the `*-polite-mcp` repos, `product-research-pipeline`) end up
-inconsistent even though there's no real disagreement about what's best — just nobody wrote the
-default down. This plan is scoped to **language-level and design-level conventions** — the choices
-an agent makes continuously while writing Python code (typing discipline, data modeling, control
-flow, architecture, testing style) — not repo scaffolding
-(`plans/2026-08-14-python-repo-scaffolding.md`) and not quality-tooling configuration, covered
-below.
-
-**Split from quality-tooling configuration (2026-08-17).** This plan originally also covered tool
-_choice and config_ — which type checker, which ruff rules, shellcheck/shfmt, dprint's markdown
-settings — alongside the design guidance. The user asked for these to become separate concerns:
-design conventions are read continuously while writing code, tool config is applied once when a repo
-is set up. That config content (basedpyright's tuned profile, the ruff select/ignore list,
-shellcheck/shfmt, dprint's `textWrap` fix, and the full pilot-findings writeup from applying all of
-it to this repo) moved to `plans/2026-08-14-python-repo-scaffolding.md`, whose own "shared
-invoke-tasks package" / "repo template" pieces are exactly where that config already needs to live —
-it wasn't a new third bucket, just a piece of an existing plan that hadn't been filled in yet. This
-file keeps only the design/style guidance; the two plans cross-reference each other rather than
-duplicating content.
-
-Audience is explicitly both humans and coding agents, so — per Armin Ronacher's argument cited in
-the tooling plan's typing section — **consistency of one opinion matters as much as which opinion is
-"most correct"** in the several places reputable sources genuinely disagree with each other. This
-plan surfaces those disagreements rather than hiding them, and records which way the user actually
-decided, so the resulting skill (see "Design" below) has real citations behind it instead of
-restating LLM training-data platitudes.
-
-Ruff already governs mechanical style (formatting, import order, common bug patterns, now including
-the rule-selection tuning documented in the scaffolding plan) — this plan deliberately doesn't
-re-litigate anything ruff already enforces, only the structural/idiomatic choices ruff is silent on.
-
-Seed topics, per the user's original list, explicitly not exhaustive ("we can start with those"):
-general style, early returns/guard clauses, fail-fast, Pydantic vs dataclass vs NamedTuple vs
-TypedDict, modularity/testability/DRY/readability/encapsulation, modules-as-singletons, properties
-for lazy loading. Research also surfaced a topic the user hadn't listed but pulled in once flagged:
-**settings/secrets management**.
-
-Four research agents ran the primary pass (parallelized by cluster); follow-up passes covered
-settings libraries, statelessness/immutability, a community-precedent check on the user's own
-`globals.py` pattern, the FastAPI `@lru_cache` settings alternative, and a NamedTuple-vs-dataclass
-decision rule, after the user's own answers and follow-up questions surfaced those gaps. Full
-citation trails are kept below — this file is the durable record, not a scratch summary.
-
-**Research retention, independent of this plan's own lifecycle** (explicit user instruction,
-2026-08-16): this research "validates our ideas" and must survive regardless of how the plan itself
-ends up being used — consolidated is fine, lost is not. Concretely: this file's citation trail
-migrates into the `python-conventions` skill's own `references/rationale.md` as part of the same
-build this promotion covers — see "Files touched" below.
-
-## Design
-
-### 1. Data modeling — Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec
+## 1. Data modeling — Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec
 
 **Decision: trim to as few default choices as possible.** The user's explicit ask — fewer options so
 agents mimicking existing code have less room to pick the wrong one — overrides the general
-[[feedback_best_tool_per_concern]] instinct here; the research below (attrs vs. Pydantic tradeoffs,
-msgspec's speed) stays in the file as real, verified options, but only two are the routine default:
+best-tool-per-concern instinct here; the research below (attrs vs. Pydantic tradeoffs, msgspec's
+speed) stays in the file as real, verified options, but only two are the routine default:
 
 | Situation                                                                                                                 | Default                        |
 | ------------------------------------------------------------------------------------------------------------------------- | ------------------------------ |
@@ -98,11 +50,9 @@ choice:
      alongside named fields), a C extension expecting positional args, or `Row._make(csv_row)`-style
      construction from an existing iterable.
   2. **The record is small, closed, and order-_is_-the-meaning** — `x, y = point`,
-     `key, group =
-     pair` — not a multi-field "bag of results," which Effective Python (Slatkin)
-     Item 31 argues against past 2 values regardless of container type: unpacking more than ~3
-     variables is "all too easy to reorder... accidentally," and his own fix is a dataclass, not a
-     NamedTuple.
+     `key, group = pair` — not a multi-field "bag of results," which Effective Python (Slatkin) Item
+     31 argues against past 2 values regardless of container type: unpacking more than ~3 variables
+     is "all too easy to reorder... accidentally," and his own fix is a dataclass, not a NamedTuple.
   3. **Zero validation/behavioral needs** — NamedTuple subclasses genuinely **cannot add new
      fields** (verified against the `typing.NamedTuple` docs; subclassing only lets you add/override
      methods), and `__post_init__`-style validation requires overriding `__new__`, an awkward,
@@ -122,10 +72,9 @@ choice:
   operations per multiple 2025–2026 sources).
 
 **Does Rust-core Pydantic close the gap with plain dataclass enough to widen its default scope
-beyond boundaries?** A direct follow-up check, since the person raised it as a real "did our
-reasoning stay current" question — answer: **no, and the reason it doesn't is itself informative.**
-Every direct Pydantic-v2-vs-dataclass benchmark found (not vs. attrs/msgspec, which the table above
-already covers) still shows dataclass ahead on the "just hold typed fields" comparison: ~2.6x faster
+beyond boundaries?** Answer: **no, and the reason it doesn't is itself informative.** Every direct
+Pydantic-v2-vs-dataclass benchmark found (not vs. attrs/msgspec, which the table above already
+covers) still shows dataclass ahead on the "just hold typed fields" comparison: ~2.6x faster
 instantiation even on Python 3.13 after both CPython's own dataclass-codegen speedup _and_
 pydantic-core's Rust rewrite; a maintainer-unaddressed Pydantic GitHub issue's own 1M-iteration
 timeit shows plain attribute _writes_ ~50x slower on a Pydantic model; per-instance memory ~2.6x
@@ -143,10 +92,7 @@ split** — the case for `@dataclass(frozen=True)` internally rests on grounds t
 address at all (zero validation-library coupling, full transparency, stdlib-only dependency weight),
 not on a performance gap that's since closed.
 
-### 2. Settings and secrets management
-
-Not in the original seed list — the user flagged this gap explicitly and named `pydantic-settings`
-as the candidate.
+## 2. Settings and secrets management
 
 **pydantic-settings**: split out of Pydantic v1's built-in `BaseSettings` into its own
 `pydantic`-org-maintained package for v2. Verified mechanics: typed `BaseSettings` subclass,
@@ -234,7 +180,7 @@ resettable cache with an explicit `reset_caches()` specifically once testability
 first-class concern — someone hit the same friction and engineered around it rather than reaching
 for `lru_cache` directly once outside FastAPI's dependency-override safety net.
 
-### 3. Early returns / guard clauses, fail-fast, and the EAFP tension
+## 3. Early returns / guard clauses, fail-fast, and the EAFP tension
 
 **Guard clauses — the actual rule, not the folk version.** Fowler's _Refactoring_ (the origin,
 "Replace Nested Conditional with Guard Clauses") draws an asymmetry test, not a blanket "flatten
@@ -282,7 +228,7 @@ silently raise, no static way to see what runs after a catch), proposing explici
 culture — not adopted here, but worth recording so it isn't silently "rediscovered" later and
 treated as a regression from current practice.
 
-### 4. Modularity, testability, DRY, readability, encapsulation
+## 4. Modularity, testability, DRY, readability, encapsulation
 
 **Architecture lineage:** _Architecture Patterns with Python_ (Percival & Gregory, cosmicpython.com)
 is the standard current Python-specific reference, built explicitly on three borrowed ideas:
@@ -320,10 +266,10 @@ Python-authority echo found**, worth being honest about rather than dressing up 
 consensus; it reaches Python circles by reference (e.g. via Kent C. Dodds' "AHA Programming" /
 "Avoid Hasty Abstractions," which does the same move). "WET" as a backronym has **no verifiable
 single coiner** — treat as crowd folklore, not a cited origin. **This decision matches the user's
-existing [[feedback_best_tool_per_concern]] preference and was confirmed directly**: for
-solo-maintained repos, a miscalibrated abstraction costs only the maintainer, but also has to
-survive being correctly understood by an agent before it can be safely modified — a wrong
-abstraction is _harder_ for an agent to safely touch than duplicated code, not easier.
+existing best-tool-per-concern preference and was confirmed directly**: for solo-maintained repos, a
+miscalibrated abstraction costs only the maintainer, but also has to survive being correctly
+understood by an agent before it can be safely modified — a wrong abstraction is _harder_ for an
+agent to safely touch than duplicated code, not easier.
 
 **Readability:** PEP 8 itself (authored by Guido, Barry Warsaw, Alyssa Coghlan) states directly:
 "code is read much more often than it is written," immediately followed by subordinating the style
@@ -352,7 +298,7 @@ requires no API change later. **Recommendation: internal helper modules public-b
 definitions, CLI entrypoints) — the point at which unknown external callers, not just future-you,
 are reading the boundary.
 
-### 5. Modules-as-singletons and lazy-loading properties — the `globals.py` pattern
+## 5. Modules-as-singletons and lazy-loading properties — the `globals.py` pattern
 
 **Modules-as-singletons is real, stdlib-endorsed practice**, not just a convenient accident: the
 official
@@ -477,16 +423,12 @@ five pieces with sharply differing precedent strength:
   re-instantiable plain class — exactly the Global Object Pattern reasoning above — is the
   deliberate design, not an oversight to work around.
 
-**Net honest framing for the eventual skill writeup**: present this as _"Flask's fifteen-year-old
-config-subclass idiom, reimplemented in Pydantic with stronger immutability guarantees,"_ not as
-_"the standard Pydantic pattern"_ — the shape is excellent and well-precedented, the
-Pydantic-specific combination is a reasonable, well-motivated synthesis rather than a copied best
-practice.
+**Net honest framing**: present this as _"Flask's fifteen-year-old config-subclass idiom,
+reimplemented in Pydantic with stronger immutability guarantees,"_ not as _"the standard Pydantic
+pattern"_ — the shape is excellent and well-precedented, the Pydantic-specific combination is a
+reasonable, well-motivated synthesis rather than a copied best practice.
 
-### 6. Statelessness and immutability
-
-Two new topics the user pulled in after the first pass, tightly related to §5's singleton pattern
-and §1's `frozen=True` default.
+## 6. Statelessness and immutability
 
 **Statelessness — the canonical source says less than the word implies.** Twelve-Factor App, Factor
 VI ("Processes"), Adam Wiggins/Heroku, 2011 —
@@ -501,11 +443,10 @@ banned outright. **Directly relevant same-week evidence in this exact tool famil
 revision, SEP-2575 "Make MCP Stateless" (2026-07-28), removed the protocol-level session handshake —
 and the writeup on it draws precisely the distinction this plan needs: **"stateless MCP does not
 mean stateless software — application state must be explicit, addressable, and secured by the
-application instead of hiding inside an MCP transport session."** The user's actual goal, and what
-the research supports as the operative rule, is narrower and more useful than "no state anywhere":
-**no _shared_, _hidden_ mutable state that a future request/process/test can't see coming** —
-architecture-level (don't let a process assume its own memory outlives the request), not a ban on
-any object anywhere holding data.
+application instead of hiding inside an MCP transport session."** The operative rule, narrower and
+more useful than "no state anywhere": **no _shared_, _hidden_ mutable state that a future
+request/process/test can't see coming** — architecture-level (don't let a process assume its own
+memory outlives the request), not a ban on any object anywhere holding data.
 
 **Legitimate, source-acknowledged exceptions — not edge cases to explain away.** Caches, connection
 pools, and rate limiters are the standard trio, and this project's own `db-defaults` skill research
@@ -525,7 +466,7 @@ a frozen dataclass with a `list` field can't be reassigned, but `obj.items.appen
 through it. `Final`/`ClassVar` have **zero runtime enforcement** — purely a static-checker contract,
 confirmed directly from the typing spec ("there is no runtime checking of these properties"), which
 is exactly why running a type checker in CI matters: without one actually running, `Final` is a
-comment, not a guarantee (the scaffolding plan's basedpyright section is what makes that check
+comment, not a guarantee (see the scaffolding plan's basedpyright section for what makes that check
 real).
 
 **Why immutability matters — four distinct, separately-sourced arguments, not one vague appeal:**
@@ -558,7 +499,7 @@ payload. `frozen=True` dataclasses/Pydantic + `tuple`/`frozenset` cover the vast
 here at zero extra dependency weight; reach for a persistent-structure library only against a
 measured, not guessed, copy-cost problem on a large nested collection.
 
-### 7. Testing conventions
+## 7. Testing conventions
 
 **Fixture scope directly ties to §5's singleton-testing concern.** Official rule of thumb: narrowest
 scope that keeps tests correct, widen only when setup is genuinely expensive; pytest's own docs warn
@@ -569,9 +510,7 @@ the expensive object at module/session scope, but reset/monkeypatch its _mutable
 function-scoped fixture — cheap construction stays shared, isolation stays per-test. `conftest.py`:
 keep one root file for genuinely cross-cutting fixtures, split per-directory only once a real subset
 of tests needs fixtures the rest shouldn't see. `parametrize`: attach `ids` once values stop being
-self-explanatory. (Marker registration and `--strict-markers` are mechanical pytest _config_, not
-design guidance — that lives with the rest of the tool-config decisions in
-`plans/2026-08-14-python-repo-scaffolding.md`.)
+self-explanatory.
 
 **DAMP vs. DRY in tests — a real, sourced debate that does _not_ simply inherit §4's "lean toward
 duplication" production-code stance.** Vladimir Khorikov's reframing (Enterprise Craftsmanship, and
@@ -583,10 +522,10 @@ the scenario being verified) should stay explicit and duplicated per test**, eve
 near-identical, because collapsing them into a shared abstracted mega-test trades away the "read one
 test top-to-bottom, understand the scenario" property that's the actual point of a test suite. This
 is a genuinely different axis from §4's production-code DRY decision, not a re-derivation of it —
-worth stating explicitly in the skill so a reader doesn't assume "this project avoids DRY
-everywhere" and over-apply it to test bodies.
+worth stating explicitly so a reader doesn't assume "this project avoids DRY everywhere" and
+over-apply it to test bodies.
 
-### 8. Type hygiene
+## 8. Type hygiene
 
 **`Any` / `# type: ignore` hygiene:** community-uncontested — scope ignores to a specific error code
 (`# type: ignore[code]` / `# pyright: ignore[reportX]`) rather than blanket-silencing a line. Ruff's
@@ -594,56 +533,15 @@ everywhere" and over-apply it to test bodies.
 section for whether it's selected in a given repo; the convention itself holds regardless of whether
 the lint rule is turned on.
 
-The pre-existing "type everything, even snippets" precedent
-([[feedback_type_everything_for_agent_precedent]]) still holds: annotate real code paths fully,
-including throwaway example/snippet code, since agents pattern-match off existing precedent and an
-untyped snippet reads as license to skip typing elsewhere. The basedpyright profile in
-`plans/2026-08-14-python-repo-scaffolding.md` is how that precedent gets enforced without also
-demanding annotation ceremony that doesn't catch bugs (see that plan for which rules are `error` vs.
-left at the untyped-dependency default).
+The pre-existing "type everything, even snippets" precedent still holds: annotate real code paths
+fully, including throwaway example/snippet code, since agents pattern-match off existing precedent
+and an untyped snippet reads as license to skip typing elsewhere. The scaffolding plan's
+basedpyright profile is how that precedent gets enforced without also demanding annotation ceremony
+that doesn't catch bugs.
 
-## Files touched
+## Not yet covered
 
-- `skills/python-conventions/SKILL.md` — decision-table-style entry point, one row/section per
-  convention above, linking to the rationale and a runnable snippet.
-- `skills/python-conventions/references/rationale.md` — this file's §1–8 citation trail, migrated in
-  full (per the "research retention" note in Context — nothing here gets lost, only moved).
-- `skills/python-conventions/references/snippets/*.py` — one example file per major pattern:
-  `data-modeling.py` (dataclass vs. Pydantic vs. NamedTuple side by side), `settings.py`
-  (`globals.py` + pydantic-settings environment-subclass pattern, `cached_property` caveat inline),
-  `guard-clauses.py` (early-return/EAFP boundary example), `exceptions.py` (minimal hierarchy
-  example), `testing.py` (fixture-scope + DAMP-vs-DRY example). Resolves the prior
-  `[NEEDS CLARIFICATION: exact snippet set]` open question — grouped by theme (one file per major
-  convention area), matching what the pre-promotion draft had already sketched for four of the five.
-- `setup.toml` — new `[packages.python-conventions]` entry, `method = "skill"`, mirroring
-  `db-defaults`/`plan-docs`.
-
-## Verification
-
-- `inv quality.fix` then `inv quality.check`: ruff clean ("All checks passed!"), dprint clean (120
-  files already formatted), basedpyright 0 errors (2852 pre-existing warnings in `tasks/`/`tests/`,
-  unrelated to this change — the new skill's `references/snippets/` is excluded from basedpyright by
-  the same `exclude` entry that already covered `db-defaults`'), shellcheck/shfmt silent (clean),
-  all 169 existing tests still passing. Confirmed 2026-08-17.
-- `setup.toml`'s new `[packages.python-conventions]` entry mirrors `db-defaults`'/`plan-docs`'
-  existing `method = "skill"` shape exactly — same pattern already proven to work with
-  `inv ai.skills`.
-- Spot-check: every cross-section `§N` reference in "Design" above points at the section it now
-  claims to (renumbered during this promotion — mapping: old §2→1, §3→2, §4→3, §5→4, §6→5, §7→6,
-  plus two new sections, 7 and 8). The three code-comment citations in `pyproject.toml` that pointed
-  at this file's old §1/§4/§9 were updated in the same pass (§9→`python-repo-scaffolding.md` §C2,
-  §4→this file's new §3, §1→`python-repo-scaffolding.md` §C1).
-
-## Migrated to
-
-- `skills/python-conventions/` — `SKILL.md` (decision table) + `references/rationale.md` (this
-  file's full §1–8 citation trail, migrated verbatim) + `references/snippets/*.py` (5 runnable
-  examples: `data-modeling.py`, `settings.py`, `guard-clauses.py`, `exceptions.py`, `testing.py`).
-- `plans/2026-08-14-python-repo-scaffolding.md` — the quality-tooling half (basedpyright/ruff/
-  shellcheck/dprint config + pilot findings), split out per the user's explicit request that design
-  guidance and tool config become separate concerns.
-
-Per `plan-docs`' retirement procedure: this file's durable content now has a permanent home (the
-skill's own `references/rationale.md`, plus the scaffolding plan for the tooling half), so this file
-is safe to delete in a follow-up pass once every repo reference to its path is confirmed updated —
-not done in this same pass to keep the "Migrated to" section itself visible in git history first.
+The user's own framing when this research started: "we can start with those" — a starting set, not
+the full scope. Candidates raised implicitly by this research but not yet covered: async/concurrency
+conventions, logging conventions, CLI-argument-parsing conventions. Revisit as their own topics
+rather than scope-creeping an existing one.
