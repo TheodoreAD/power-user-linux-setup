@@ -112,7 +112,7 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
     print(f"[{name}] symlinked {link} -> {dest}")
 
 
-def _install_archive(c, name: str, cfg: dict) -> None:
+def _install_archive(c, name: str, cfg: dict) -> None:  # noqa: C901
     if util.DRY_RUN:
         print(f"[{name}] {util.ok_label(_check_tool(name, cfg))}")
         return

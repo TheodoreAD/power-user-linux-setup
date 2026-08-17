@@ -2,7 +2,8 @@
 
 ## Identity setup
 
-Git identity is driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is never committed to the repo.
+Git identity is driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is
+never committed to the repo.
 
 **Quick start** — one name/email, one projects directory:
 
@@ -12,9 +13,9 @@ inv identity.init
 
 Interactive wizard; answer a few prompts and it writes `identity.toml` for you. The projects
 directory defaults to `~/projects/` itself (repos go straight in, no subdirectory) — enter an
-absolute path (`~` allowed, as many nested directories as you like) if you want somewhere else,
-e.g. `~/code/clientA`. Choose the "advanced" option inside it if you want multiple
-directories/accounts from the start.
+absolute path (`~` allowed, as many nested directories as you like) if you want somewhere else, e.g.
+`~/code/clientA`. Choose the "advanced" option inside it if you want multiple directories/accounts
+from the start.
 
 **Advanced / manual** — for multiple directories or accounts, copy the example and hand-edit it:
 
@@ -24,8 +25,8 @@ cp config/identity.toml.example ~/.config/power-user-linux-setup/identity.toml
 # edit ~/.config/power-user-linux-setup/identity.toml
 ```
 
-Either way produces the same file format — `inv identity.init`'s simple mode just writes the
-minimal instance of it (one `[[git_profiles]]` entry), and you can always add more
+Either way produces the same file format — `inv identity.init`'s simple mode just writes the minimal
+instance of it (one `[[git_profiles]]` entry), and you can always add more
 `[[git_profiles]]`/`[[ssh_hosts]]` entries by hand later if you outgrow a single identity.
 
 Then apply:
@@ -35,8 +36,8 @@ inv git.configure   # creates each profile's directory + per-dir .gitconfig with
 inv git.settings    # applies global git settings (editor, push, pull, log, etc.)
 ```
 
-`inv git.configure` disables the global `user.name`/`user.email` and wires up `includeIf.gitdir`
-so git automatically picks the right identity based on which projects directory the repo lives in
+`inv git.configure` disables the global `user.name`/`user.email` and wires up `includeIf.gitdir` so
+git automatically picks the right identity based on which projects directory the repo lives in
 (`~/projects/<directory>/` for a relative name, or the absolute path itself for a custom location).
 
 This per-directory `.gitconfig`/`includeIf` mechanism has been running unmodified on an existing
@@ -46,7 +47,8 @@ next time this repo is bootstrapped on a new machine.
 
 ## Multi-account platforms
 
-For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in `identity.toml`:
+For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in
+`identity.toml`:
 
 ```toml
 [[ssh_hosts]]

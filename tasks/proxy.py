@@ -18,6 +18,7 @@ import os
 import re
 import subprocess
 import time
+from collections.abc import Mapping
 from pathlib import Path
 
 from invoke import task
@@ -83,7 +84,7 @@ def _split_host_port(url: str, default_port: int = 80) -> tuple[str, int] | None
     return (m.group(1), int(m.group(2)) if m.group(2) else default_port)
 
 
-def _parse_env_proxy(environ: dict) -> tuple[str, int] | None:
+def _parse_env_proxy(environ: Mapping[str, str]) -> tuple[str, int] | None:
     """Highest-confidence discovery source: whatever's already in the current shell's proxy env
     vars is literally what every CLI tool already reads."""
     for key in ("https_proxy", "HTTPS_PROXY", "http_proxy", "HTTP_PROXY"):
@@ -135,7 +136,7 @@ def _gsettings_proxy(c) -> tuple[str, int] | None:
     return (host_val, int(port_val))
 
 
-def _discover_candidate(c) -> tuple[str, int, str] | None:
+def _discover_candidate(c) -> tuple[str, int, str] | None:  # noqa: C901
     """Returns (host, port, source_description) for the best-guess upstream proxy, or None if
     nothing was found. Environment-specific priority order — see docs/corporate-proxy.md.
     """
@@ -307,7 +308,7 @@ def _capture_password(prompt: str) -> str | None:
     """
     askpass = Path.home() / ".local" / "bin" / "askpass-zenity"
     if os.environ.get("DISPLAY") and askpass.exists():
-        result = subprocess.run([str(askpass), prompt], capture_output=True, text=True)
+        result = subprocess.run([str(askpass), prompt], capture_output=True, text=True, check=False)
         if result.returncode == 0 and result.stdout.strip():
             return result.stdout.rstrip("\n")
     if util.interactive():
@@ -373,6 +374,7 @@ def _capture_credential(c) -> str | None:
         input=password,
         capture_output=True,
         text=True,
+        check=False,
     )
     if proc.returncode != 0:
         print(f"[proxy] keyring write failed:\n{proc.stderr}")

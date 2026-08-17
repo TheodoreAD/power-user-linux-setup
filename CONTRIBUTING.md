@@ -25,8 +25,8 @@ inv quality.fix     # apply, then check — the one command to run before consid
 ```
 
 That's `apply` (fix everything auto-fixable) followed by `check` (verify clean), each in turn a
-`pre=`-chain of the individual `<category>_check` / `<category>_apply` tasks (`_check` never
-writes, `_apply` fixes what's auto-fixable):
+`pre=`-chain of the individual `<category>_check` / `<category>_apply` tasks (`_check` never writes,
+`_apply` fixes what's auto-fixable):
 
 ```shell
 inv quality.check   # lint_check + format_check + test — CI-style gate, no changes written
@@ -45,42 +45,44 @@ Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `test`
 > [!WARNING]
 > When adding a new `!!! NOTE`/`!!! WARNING` mkdocs admonition to `docs/*.md`, put a **blank line**
 > between the `!!! TYPE` marker and its indented body. Without one, dprint's markdown plugin parses
-> the body as a lazy paragraph continuation and strips its indentation on format — silently
-> breaking the admonition into a plain paragraph (mkdocs-material then renders the literal `!!!
-> TYPE` text instead of a callout box, and `dprint check`/`ruff`/pytest all stay green since nothing
-> about this is a lint error). `dprint.json`'s `markdown.textWrap` is `"maintain"` (dprint's own
-> default) specifically so it doesn't also collapse ordinary hand-wrapped prose — don't change it
-> to `"never"`, which means "never wrap," i.e. join every paragraph onto one line.
+> the body as a lazy paragraph continuation and strips its indentation on format — silently breaking
+> the admonition into a plain paragraph (mkdocs-material then renders the literal `!!!
+> TYPE` text
+> instead of a callout box, and `dprint check`/`ruff`/pytest all stay green since nothing about this
+> is a lint error). `dprint.json`'s `markdown.textWrap` is `"maintain"` (dprint's own default)
+> specifically so it doesn't also collapse ordinary hand-wrapped prose — don't change it to
+> `"never"`, which means "never wrap," i.e. join every paragraph onto one line.
 
 ## Design notes
 
 `docs/*.md` is published to the public site (`docs_dir: docs` in `mkdocs.yml`) — it's for people
-_using_ this tool, not developing it. Longer implementation/design write-ups that don't belong
-there live in [`contributing/`](contributing/) instead, one file per topic, never published:
+_using_ this tool, not developing it. Longer implementation/design write-ups that don't belong there
+live in [`contributing/`](contributing/) instead, one file per topic, never published:
 
 - [`contributing/cli-allowlist.md`](contributing/cli-allowlist.md) — the CLI permission allowlist
-  pipeline's full design rationale (companion to the trimmed [`docs/cli-allowlist.md`](docs/cli-allowlist.md)).
+  pipeline's full design rationale (companion to the trimmed
+  [`docs/cli-allowlist.md`](docs/cli-allowlist.md)).
 - [`contributing/zensical.md`](contributing/zensical.md) — everything verified (as opposed to
   documented) about how the zensical docs-site engine actually behaves; read before a version bump.
-- [`contributing/research-library.md`](contributing/research-library.md) — design rationale for
-  the shared `$RESEARCH_HOME` cross-project reference store.
+- [`contributing/research-library.md`](contributing/research-library.md) — design rationale for the
+  shared `$RESEARCH_HOME` cross-project reference store.
 - [`contributing/mcp-skill-shipping.md`](contributing/mcp-skill-shipping.md) — design rationale for
   the personal MCP-server/skill dev + distribution workflow (companion to the deployed
   `skills/mcp-skill-shipping/SKILL.md`).
 - [`contributing/certs.md`](contributing/certs.md) — the corporate-CA-bundle feature's QA/fixture
   playbook (companion to [`docs/certs.md`](docs/certs.md)).
 
-If you're about to write a "why this is built this way" section in `docs/`, it probably belongs
-in `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
+If you're about to write a "why this is built this way" section in `docs/`, it probably belongs in
+`contributing/` instead — add a new per-topic file there and list it above. Exception: if the
 writeup is documentation for a shipped skill (something under `skills/<name>/`), it belongs inside
-that skill's own directory instead — e.g. `skills/<name>/references/*.md` — so it travels with
-every `inv ai.skills` copy into every other repo. `contributing/` stays for rationale that's
-internal to this repo and never leaves it (see `skills/plan-docs/references/design-rationale.md`
-vs. `skills/mcp-skill-shipping/`'s and `skills/research-library/`'s external
-`contributing/<name>.md` companions for both patterns side by side).
+that skill's own directory instead — e.g. `skills/<name>/references/*.md` — so it travels with every
+`inv ai.skills` copy into every other repo. `contributing/` stays for rationale that's internal to
+this repo and never leaves it (see `skills/plan-docs/references/design-rationale.md` vs.
+`skills/mcp-skill-shipping/`'s and `skills/research-library/`'s external `contributing/<name>.md`
+companions for both patterns side by side).
 
 ## Git workflow
 
 Direct, focused commits straight to `master` are the normal way to land changes here. Open a PR
-instead only when either (a) someone other than the owner is contributing, or (b) a batch of
-related commits is worth bundling behind a PR description for reviewability.
+instead only when either (a) someone other than the owner is contributing, or (b) a batch of related
+commits is worth bundling behind a PR description for reviewability.

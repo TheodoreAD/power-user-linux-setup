@@ -97,7 +97,7 @@ def _all_checks() -> list[tuple[str, str, str]]:
 
 
 @task
-def all(c):
+def all(c):  # noqa: A001, C901
     """Prove every package this run installed actually works, not just that it's present.
     Convention-based: default check is `<check_cmd or name> --version` for invocable methods,
     existence for methods with no command by nature (git-clone/wrapper-script/apparmor-profile).

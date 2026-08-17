@@ -1,10 +1,12 @@
 # Scala
 
-Scala is not in `setup.toml` — it is optional and the Coursier launcher runs a self-configuring install that does not fit the standard package methods.
+Scala is not in `setup.toml` — it is optional and the Coursier launcher runs a self-configuring
+install that does not fit the standard package methods.
 
 ## Install via Coursier
 
-[Coursier](https://get-coursier.io/) is the standard Scala artifact and tool manager. It bootstraps itself and then installs `scala`, `scalac`, `sbt`, and other toolchain components.
+[Coursier](https://get-coursier.io/) is the standard Scala artifact and tool manager. It bootstraps
+itself and then installs `scala`, `scalac`, `sbt`, and other toolchain components.
 
 ```shell
 SCALA_CLI_SETUP="$(mktemp)"
@@ -15,7 +17,8 @@ chmod +x "${SCALA_CLI_SETUP}"
 rm "${SCALA_CLI_SETUP}"
 ```
 
-This installs `cs` to `~/.local/share/coursier/bin` and adds it to PATH (via `~/.profile` update). Open a new shell after install.
+This installs `cs` to `~/.local/share/coursier/bin` and adds it to PATH (via `~/.profile` update).
+Open a new shell after install.
 
 ## Metals (VS Code extension)
 

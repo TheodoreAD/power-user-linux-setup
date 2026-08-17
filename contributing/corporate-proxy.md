@@ -1,10 +1,10 @@
 # Corporate proxy daemon — design notes
 
 Companion to [`docs/corporate-proxy.md`](../docs/corporate-proxy.md) (the published "what it is /
-how to use it" page). This is the durable record of what was considered and rejected while
-building `tasks/proxy.py`, and what testing against a disposable local proxy resolved that reading
-`--help` text alone didn't. Read this before re-deriving the design from scratch or "simplifying"
-something that was already a deliberate tradeoff.
+how to use it" page). This is the durable record of what was considered and rejected while building
+`tasks/proxy.py`, and what testing against a disposable local proxy resolved that reading `--help`
+text alone didn't. Read this before re-deriving the design from scratch or "simplifying" something
+that was already a deliberate tradeoff.
 
 Built with **no real corporate proxy available to test against** — the design had to degrade
 gracefully and be honest about what could/couldn't be verified locally. `docs/corporate-proxy.md`'s
@@ -14,8 +14,8 @@ the reasoning that got the design to that point.
 ## Why Px, not a home-grown or NTLM-only alternative
 
 `cntlm` was rejected: NTLM-only and unmaintained — narrower than what's needed (Kerberos/Negotiate
-matters too) and doesn't reuse the Windows-side mental model already settled for the Windows half
-of this feature (`px` there too, via SSPI passthrough — see
+matters too) and doesn't reuse the Windows-side mental model already settled for the Windows half of
+this feature (`px` there too, via SSPI passthrough — see
 [`to-migrate/windows-corporate-proxy-notes.md`](../to-migrate/windows-corporate-proxy-notes.md)).
 
 A custom `mitmproxy`/`proxy.py` script was rejected: it would mean reimplementing NTLM/Kerberos
@@ -27,8 +27,8 @@ Kerberos ticket) was considered as a first step, and is checked by `proxy.instal
 back to Px — but it can't be the _only_ path, since Basic-auth-only and NTLM-only proxies have no
 ticket to reuse at all.
 
-[Px](https://github.com/genotrance/px) (`px-proxy` on PyPI) won on three independent points at
-once: installable via an install method this repo already has (`uv-tool`/`wrapper-script`, no new
+[Px](https://github.com/genotrance/px) (`px-proxy` on PyPI) won on three independent points at once:
+installable via an install method this repo already has (`uv-tool`/`wrapper-script`, no new
 `setup.toml` method needed), reuses OS-keyring credential storage PULSE would otherwise have to
 build itself, and defers the actual protocol-correctness risk (NTLM/Kerberos wire format) to an
 externally maintained implementation instead of code nobody here can fully test.
@@ -40,9 +40,9 @@ rather than a single do-everything command, specifically so `fix` is safe to cal
 non-interactive contexts (CI, a container's `postCreateCommand`) without ever risking a credential
 prompt — only `install` performs one. A systemd `--user` unit was new territory for this repo (only
 system-level units existed before this feature); the plain background-process-plus-`pgrep`-guard
-fallback exists specifically for dev containers, where a user systemd manager is usually
-unavailable — a real limitation (no crash auto-restart, no persistence across a rebuild), stated
-plainly in `docs/corporate-proxy.md` rather than papered over.
+fallback exists specifically for dev containers, where a user systemd manager is usually unavailable
+— a real limitation (no crash auto-restart, no persistence across a rebuild), stated plainly in
+`docs/corporate-proxy.md` rather than papered over.
 
 Reused rather than re-derived: `tasks/wsl.py`'s `_dns_resolves()` "verify it actually works, don't
 trust the config" pattern (`install` re-probes the daemon before ever pointing a shell at it);
@@ -67,11 +67,11 @@ directly; the third is implementation-only and lives here:
    produce a stored password. Fix: write the keyring entry directly
    (`keyring.set_password('Px', username, password)`, matching what Px itself looks up) instead of
    driving Px's own interactive collector.
-3. **A restart/verify race**: the post-restart verification probe ran before the daemon had
-   actually bound its port yet, producing a false "not working" result immediately after a clean
-   restart. Fixed with a short retry loop instead of one immediate probe — the daemon needs a brief
-   moment after process start before its listening socket is up.
+3. **A restart/verify race**: the post-restart verification probe ran before the daemon had actually
+   bound its port yet, producing a false "not working" result immediately after a clean restart.
+   Fixed with a short retry loop instead of one immediate probe — the daemon needs a brief moment
+   after process start before its listening socket is up.
 
 All test artifacts (keyring entry, `px.ini`, the systemd unit, the `~/.zshenv` block, the
-`uv tool install`ed `px` binary, the Squid container) were removed after verification — nothing
-from this testing pass is left behind on the dev machine.
+`uv tool install`ed `px` binary, the Squid container) were removed after verification — nothing from
+this testing pass is left behind on the dev machine.

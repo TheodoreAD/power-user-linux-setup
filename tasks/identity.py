@@ -77,12 +77,18 @@ def init(c):
         print("[identity] left existing file untouched.")
         return
 
+    # None-return in prompt_text() is only reachable via its own non-interactive branch — this
+    # function already returned above when util.interactive() is False, so stdin is guaranteed a
+    # real tty here and these three prompts always give a real answer, not None.
     name = util.prompt_text("Full name (for git commits)")
+    assert name is not None
     email = util.prompt_text("Email address")
+    assert email is not None
     directory = util.prompt_text(
         "Projects directory (absolute path, ~ allowed, as many nested dirs as you like)",
         default="~/projects/",
     )
+    assert directory is not None
 
     hosts = [label for label in _HOST_LABELS if ui.ask(f"Set up SSH/git for {label}?", default=label == "GitHub")]
     if not hosts:

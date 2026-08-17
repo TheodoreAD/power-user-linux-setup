@@ -1,14 +1,13 @@
 # Corporate CA bundle — verification
 
-Companion to [`docs/certs.md`](../docs/certs.md). QA playbook for `inv certs.*`
-(`tasks/certs.py`) — how the four detection branches were built and verified, and what's still
-untested.
+Companion to [`docs/certs.md`](../docs/certs.md). QA playbook for `inv certs.*` (`tasks/certs.py`) —
+how the four detection branches were built and verified, and what's still untested.
 
 ## Verify
 
-Run this in a disposable container or VM, not the primary workstation — `certs.install` makes
-real, persistent, root-owned changes to the system trust store, and a real corporate CA isn't
-available outside a corporate network to test against anyway.
+Run this in a disposable container or VM, not the primary workstation — `certs.install` makes real,
+persistent, root-owned changes to the system trust store, and a real corporate CA isn't available
+outside a corporate network to test against anyway.
 
 ```shell
 docker run --rm -it -v "$PWD":/repo -w /repo ubuntu:24.04 bash
@@ -44,7 +43,7 @@ keytool -list -alias pulse-corporate-0 -keystore "$JAVA_HOME/lib/security/cacert
 
 ## Genuine limitations
 
-- **Real Windows-issued PKCS#7 bundles are untested** — only locally-generated `openssl`
-  fixtures were used to build and verify the four detection branches (see Verify above).
+- **Real Windows-issued PKCS#7 bundles are untested** — only locally-generated `openssl` fixtures
+  were used to build and verify the four detection branches (see Verify above).
 - **The Java `cacerts` step is untested against a real JDK** — no JDK is present anywhere in this
   environment. Reviewed-and-defensive, not proven.

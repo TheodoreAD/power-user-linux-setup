@@ -24,7 +24,7 @@ def caches_full(c):
 
 
 @task(pre=[caches, docker.clean])
-def all(c):
+def all(c):  # noqa: A001
     """Everything reclaimable, conservatively: caches() plus Docker's conservative prune
     (stopped containers, dangling images — see `docker.clean`). For a full wipe of everything
     instead, see `cleanup.all-full`.

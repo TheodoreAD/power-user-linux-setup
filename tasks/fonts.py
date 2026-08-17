@@ -6,6 +6,7 @@ import zipfile
 from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from typing import Any, cast
 
 from invoke import task
 
@@ -16,11 +17,11 @@ _JSONC_COMMENT_RE = re.compile(r'"(?:[^"\\]|\\.)*"|(//.*)')
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 
 
-def _load_jsonc(text: str) -> dict:
+def _load_jsonc(text: str) -> dict[str, Any]:
     """Parse JSON-with-comments (JSONC) as used by VS Code settings.json."""
     text = _JSONC_COMMENT_RE.sub(lambda m: "" if m.group(1) else m.group(0), text)
     text = _TRAILING_COMMA_RE.sub(r"\1", text)
-    return json.loads(text)
+    return cast(dict[str, Any], json.loads(text))
 
 
 _FONTS_DIR = Path.home() / ".local" / "share" / "fonts"
@@ -53,7 +54,7 @@ def _families() -> list[dict]:
 @cache
 def _fc_list() -> str:
     """Return full fc-list output, lower-cased. Cached — called once per process."""
-    return subprocess.run(["fc-list"], capture_output=True, text=True).stdout.lower()
+    return subprocess.run(["fc-list"], capture_output=True, text=True, check=False).stdout.lower()
 
 
 def _is_installed(entry: dict) -> bool:
@@ -139,7 +140,7 @@ def install(c):
 
 
 @task
-def configure(c):
+def configure(c):  # noqa: C901
     """Set the configured monospace font as system default, GNOME Terminal, and VS Code font."""
     cfg = _cfg()
     monospace = cfg.get("monospace", "")

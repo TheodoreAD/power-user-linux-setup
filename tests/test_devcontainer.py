@@ -3,6 +3,9 @@ fabricated $HOME) and _render_mounts_json (devcontainer.json fragment rendering)
 filesystem/env touched outside a tmp_path fixture. See tests/README.md.
 """
 
+import json
+from typing import Any, cast
+
 from tasks.devcontainer import MountCandidate, _discover_candidates, _render_mounts_json
 
 
@@ -198,8 +201,6 @@ def test_render_mounts_json_omits_remote_env_when_none_selected():
 
 
 def test_render_mounts_json_is_valid_json():
-    import json
-
     cand = MountCandidate(
         id="gitconfig",
         label="~/.gitconfig",
@@ -209,5 +210,5 @@ def test_render_mounts_json_is_valid_json():
         readonly=True,
         default=True,
     )
-    parsed = json.loads(_render_mounts_json([cand], "/home/vscode"))
+    parsed = cast(dict[str, Any], json.loads(_render_mounts_json([cand], "/home/vscode")))
     assert parsed["mounts"] == ["source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"]

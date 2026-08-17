@@ -1,7 +1,7 @@
 # Apt packages
 
-All apt packages are declared in `setup.toml` and installed via invoke tasks.
-Each package has a `method` field that determines how it is installed:
+All apt packages are declared in `setup.toml` and installed via invoke tasks. Each package has a
+`method` field that determines how it is installed:
 
 | Method       | Command                | Description                                                                       |
 | ------------ | ---------------------- | --------------------------------------------------------------------------------- |
@@ -13,10 +13,10 @@ Each package has a `method` field that determines how it is installed:
 | —            | `inv apt.refresh-keys` | Re-download all apt-repo GPG keys                                                 |
 | —            | `inv apt.audit-keys`   | Audit key hygiene across all key stores                                           |
 
-`inv apt.repos` is a two-phase command. Phase 1 registers all GPG keys and sources files
-in one pass, then runs a single `apt update`. Phase 2 installs the packages. If a GPG key
-URL or sources write fails for any entry (e.g. a dead URL), that repo is skipped with a
-`WARNING:` message and the rest continue — a broken third-party repo does not abort the run.
+`inv apt.repos` is a two-phase command. Phase 1 registers all GPG keys and sources files in one
+pass, then runs a single `apt update`. Phase 2 installs the packages. If a GPG key URL or sources
+write fails for any entry (e.g. a dead URL), that repo is skipped with a `WARNING:` message and the
+rest continue — a broken third-party repo does not abort the run.
 
 Run everything at once:
 
@@ -46,8 +46,8 @@ inv apt.deb
 
 ## Adding or disabling packages
 
-Edit `setup.toml`. To disable a package without deleting it, set `enabled = false`.
-To add a new apt package where the section name matches the apt package name:
+Edit `setup.toml`. To disable a package without deleting it, set `enabled = false`. To add a new apt
+package where the section name matches the apt package name:
 
 ```toml
 [packages.mypackage]
@@ -56,8 +56,8 @@ method = "apt"
 tags = ["some-tag"]
 ```
 
-If the apt package name differs from the section name, or you need multiple packages,
-declare them explicitly:
+If the apt package name differs from the section name, or you need multiple packages, declare them
+explicitly:
 
 ```toml
 [packages.mygroup]
@@ -84,7 +84,8 @@ Checks three locations and reports issues:
 | `/etc/apt/trusted.gpg.d/`                    | Only Ubuntu system keys expected; others are old-style (not `signed-by`) | No — reported for manual review |
 | `/etc/apt/keyrings/`, `/usr/share/keyrings/` | No `~` backup files                                                      | Yes — removed in live mode      |
 
-All repos declared in `setup.toml` use the modern `signed-by` approach with keys stored in `/usr/share/keyrings/` — the old global key stores should stay empty after initial cleanup.
+All repos declared in `setup.toml` use the modern `signed-by` approach with keys stored in
+`/usr/share/keyrings/` — the old global key stores should stay empty after initial cleanup.
 
 `PULSE_DRY_RUN=1 inv apt.audit-keys` reports without changing anything.
 
@@ -96,7 +97,7 @@ Third-party apt repo keys can expire. To re-download all keys declared in `setup
 inv apt.refresh-keys
 ```
 
-This re-fetches the key from each `gpg_url` and overwrites the file at `gpg_path` for
-every enabled `apt-repo` entry — no need to look up per-repo commands.
+This re-fetches the key from each `gpg_url` and overwrites the file at `gpg_path` for every enabled
+`apt-repo` entry — no need to look up per-repo commands.
 
 See [gcloud.md](gcloud.md) for Google Cloud CLI setup.

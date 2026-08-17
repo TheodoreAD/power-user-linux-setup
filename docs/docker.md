@@ -1,13 +1,15 @@
 # Docker
 
-Installed via apt-repo by `inv apt.repos` (or `inv setup`). Installs:
-`docker-ce`, `docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`.
+Installed via apt-repo by `inv apt.repos` (or `inv setup`). Installs: `docker-ce`, `docker-ce-cli`,
+`containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`.
 
-`inv docker.configure` (part of `inv setup`) adds the current user to the `docker` group and configures the daemon.
+`inv docker.configure` (part of `inv setup`) adds the current user to the `docker` group and
+configures the daemon.
 
 ## Post-install
 
-Group membership takes effect in new login sessions. Open a new terminal after running `inv docker.configure` — no full logout needed.
+Group membership takes effect in new login sessions. Open a new terminal after running
+`inv docker.configure` — no full logout needed.
 
 Verify:
 
@@ -25,7 +27,8 @@ docker compose up
 
 ## Daemon config
 
-`overlay2` storage driver and `systemd` cgroup driver are the defaults on Ubuntu 24.04 — no changes needed for those.
+`overlay2` storage driver and `systemd` cgroup driver are the defaults on Ubuntu 24.04 — no changes
+needed for those.
 
 Log limits and DNS are configured by `inv docker.configure` (also runs as part of `inv setup`):
 
@@ -33,7 +36,8 @@ Log limits and DNS are configured by `inv docker.configure` (also runs as part o
 inv docker.configure
 ```
 
-This merges the following into `/etc/docker/daemon.json` and restarts the daemon only if something changed. Existing keys not listed here are left untouched.
+This merges the following into `/etc/docker/daemon.json` and restarts the daemon only if something
+changed. Existing keys not listed here are left untouched.
 
 ```json
 {
@@ -46,13 +50,20 @@ This merges the following into `/etc/docker/daemon.json` and restarts the daemon
 }
 ```
 
-**Log limits:** Docker's default log driver (`json-file`) writes to `/var/lib/docker/containers/<id>/<id>-json.log` with no size cap, which will eventually fill the disk on long-running or chatty containers. `max-size` caps each file before rotation; `max-file` sets how many rotated files to keep. With the defaults above each container uses at most 150 MB of log space (3 × 50 MB). Per-container overrides work via `--log-opt` or the `logging:` key in docker-compose.
+**Log limits:** Docker's default log driver (`json-file`) writes to
+`/var/lib/docker/containers/<id>/<id>-json.log` with no size cap, which will eventually fill the
+disk on long-running or chatty containers. `max-size` caps each file before rotation; `max-file`
+sets how many rotated files to keep. With the defaults above each container uses at most 150 MB of
+log space (3 × 50 MB). Per-container overrides work via `--log-opt` or the `logging:` key in
+docker-compose.
 
-**DNS:** optional but makes containers use Cloudflare, matching `inv system.dns`. Without it, Docker falls back to `8.8.8.8` automatically. See [networking.md](networking.md).
+**DNS:** optional but makes containers use Cloudflare, matching `inv system.dns`. Without it, Docker
+falls back to `8.8.8.8` automatically. See [networking.md](networking.md).
 
 ## Troubleshooting
 
-**Daemon masked** (`Loaded: masked`): `inv docker.configure` detects and fixes this automatically. To fix manually:
+**Daemon masked** (`Loaded: masked`): `inv docker.configure` detects and fixes this automatically.
+To fix manually:
 
 ```shell
 sudo systemctl unmask docker
@@ -68,15 +79,16 @@ sudo chown $USER:docker /var/run/docker.sock
 ## Corporate registries/mirrors (not automated yet)
 
 Not covered by `inv docker.configure` or `inv certs.install` — tracked as a follow-up, documented
-here so the mechanism doesn't have to be re-derived. Three distinct, easily-conflated pieces if
-this network has a corporate registry mirror and/or TLS-inspecting proxy:
+here so the mechanism doesn't have to be re-derived. Three distinct, easily-conflated pieces if this
+network has a corporate registry mirror and/or TLS-inspecting proxy:
 
-- **Registry pull-through mirror** (Docker Hub only) — `registry-mirrors` in `/etc/docker/daemon.json`,
-  same merge mechanism `inv docker.configure` already uses for `log-driver`/`dns` above.
-- **Daemon's own outbound proxy** — dockerd is a systemd service and does _not_ inherit the
-  shell's `http_proxy`/`https_proxy`. Needs its own systemd drop-in:
-  `/etc/systemd/system/docker.service.d/http-proxy.conf` with `Environment="HTTPS_PROXY=..."`,
-  then `systemctl daemon-reload && systemctl restart docker`.
+- **Registry pull-through mirror** (Docker Hub only) — `registry-mirrors` in
+  `/etc/docker/daemon.json`, same merge mechanism `inv docker.configure` already uses for
+  `log-driver`/`dns` above.
+- **Daemon's own outbound proxy** — dockerd is a systemd service and does _not_ inherit the shell's
+  `http_proxy`/`https_proxy`. Needs its own systemd drop-in:
+  `/etc/systemd/system/docker.service.d/http-proxy.conf` with `Environment="HTTPS_PROXY=..."`, then
+  `systemctl daemon-reload && systemctl restart docker`.
 - **Containers' own proxy** (so processes _inside_ containers see it too) — not a daemon setting,
   goes in `~/.docker/config.json`'s `proxies` key.
 

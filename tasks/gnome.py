@@ -48,7 +48,7 @@ def _apply_dconf(c, name: str, cfg: dict) -> None:
 
 
 @task
-def extensions(c):
+def extensions(c):  # noqa: C901
     """Install and enable GNOME Shell extensions declared in setup.toml via gext."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:
@@ -127,7 +127,7 @@ def extensions(c):
 
 
 @task
-def enable(c):
+def enable(c):  # noqa: C901
     """Re-enable installed GNOME extensions from setup.toml without reinstalling missing ones."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:

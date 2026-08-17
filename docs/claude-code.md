@@ -1,8 +1,8 @@
 # Claude Code environment
 
-What this repo does specifically to make [Claude Code](https://claude.ai/code) (the CLI agent)
-work smoothly on this machine — as opposed to `docs/ai.md`, which covers AI tools generally
-(install, model choice, other agents).
+What this repo does specifically to make [Claude Code](https://claude.ai/code) (the CLI agent) work
+smoothly on this machine — as opposed to `docs/ai.md`, which covers AI tools generally (install,
+model choice, other agents).
 
 ## The core problem: no TTY
 
@@ -12,9 +12,9 @@ outright instead of waiting for input. Two independent instances of this are sol
 
 ## askpass-zenity — GUI dialog instead of a TTY prompt
 
-`[packages.askpass-zenity]` in `setup.toml` writes `~/.local/bin/askpass-zenity`, a script that
-pops a Zenity GUI password dialog and prints whatever was entered to stdout — the standard
-`*_ASKPASS` program contract. It's wired up for two separate purposes:
+`[packages.askpass-zenity]` in `setup.toml` writes `~/.local/bin/askpass-zenity`, a script that pops
+a Zenity GUI password dialog and prints whatever was entered to stdout — the standard `*_ASKPASS`
+program contract. It's wired up for two separate purposes:
 
 ```shell
 export SUDO_ASKPASS="${HOME}/.local/bin/askpass-zenity"
@@ -22,8 +22,8 @@ export SSH_ASKPASS="${HOME}/.local/bin/askpass-zenity"
 export SSH_ASKPASS_REQUIRE="prefer"
 ```
 
-**sudo** — use `sudo -A` (not plain `sudo`) for every sudo call from Claude Code. `-A` tells sudo
-to use `$SUDO_ASKPASS` instead of prompting on a TTY that doesn't exist. Plain `sudo` fails with
+**sudo** — use `sudo -A` (not plain `sudo`) for every sudo call from Claude Code. `-A` tells sudo to
+use `$SUDO_ASKPASS` instead of prompting on a TTY that doesn't exist. Plain `sudo` fails with
 `sudo: a terminal is required`.
 
 **git over SSH** — `SSH_ASKPASS` + `SSH_ASKPASS_REQUIRE=prefer` fixes a related but separate
@@ -33,13 +33,13 @@ _lazily_, the first time it's actually used each session (`AddKeysToAgent yes` i
 If Claude Code runs the first `git fetch`/`git push` of the day before anything else has triggered
 that lazy load, `ssh` needs the passphrase to unlock the key — and with no TTY, that fails as
 `Permission denied (publickey)`, indistinguishable from an actual auth problem. `SSH_ASKPASS` makes
-`ssh` pop the same Zenity dialog for the passphrase instead of failing. **No HTTPS/token
-workaround is needed — just run `git fetch`/`git push` normally.**
+`ssh` pop the same Zenity dialog for the passphrase instead of failing. **No HTTPS/token workaround
+is needed — just run `git fetch`/`git push` normally.**
 
-`SSH_ASKPASS_REQUIRE=prefer`, deliberately not `force`: `force` would hijack passphrase prompts in
-a normal interactive terminal too (popping a GUI dialog even when you're sitting at a real shell
-that could just prompt you inline) — a regression to the normal workflow. `prefer` only engages the
-GUI dialog when there's no usable TTY, which is exactly the Bash-tool case; an interactive terminal
+`SSH_ASKPASS_REQUIRE=prefer`, deliberately not `force`: `force` would hijack passphrase prompts in a
+normal interactive terminal too (popping a GUI dialog even when you're sitting at a real shell that
+could just prompt you inline) — a regression to the normal workflow. `prefer` only engages the GUI
+dialog when there's no usable TTY, which is exactly the Bash-tool case; an interactive terminal
 session is unaffected.
 
 The dialog blocks on user input — if nobody's at the machine to enter the passphrase, the git
@@ -61,8 +61,8 @@ terminal, even after `direnv allow`. Two things stack:
    on `precmd` — a real interactive prompt cycle — which never happens in this non-interactive,
    one-shot `zsh -c`. Writing the export to `~/.zshenv` instead doesn't help either: `.zshenv` _is_
    sourced unconditionally, but the snapshot sourced right after it carries its own hardcoded
-   `export PATH=...` (captured from whatever shell state existed when the snapshot was taken),
-   which clobbers it before the real command runs.
+   `export PATH=...` (captured from whatever shell state existed when the snapshot was taken), which
+   clobbers it before the real command runs.
 2. Separately, this environment can carry stale `DIRENV_DIR`/`DIRENV_WATCHES` inherited from before
    `direnv allow` was ever run (e.g. baked into a GUI app's launch environment), which makes
    `direnv export` silently no-op even when invoked correctly — `unset`ting those first forces a
@@ -74,7 +74,8 @@ tool calls) paired with a `PreToolUse` hook on the Bash tool that keeps that fil
 `direnv export zsh` before every single call, so `cd`/`.envrc` changes are picked up too, not just
 whatever was true at session start.
 
-`inv ai.claude-direnv-hook [--dir PATH]` (`tasks/ai.py`) writes this into `<dir>/.claude/settings.json`:
+`inv ai.claude-direnv-hook [--dir PATH]` (`tasks/ai.py`) writes this into
+`<dir>/.claude/settings.json`:
 
 ```json
 {
@@ -97,8 +98,8 @@ repos sharing a basename never collide. No-ops if `<dir>/.envrc` doesn't exist (
 activate), and merges into an existing `settings.json` (appending to a `Bash` `PreToolUse` group if
 one already exists, adding one if not) rather than overwriting, so hand-written hooks survive a
 re-run. `python.dev-venv` calls it for this repo's own `.venv` automatically; run it directly
-against any other project — `inv ai.claude-direnv-hook --dir ~/projects/foo` — to set the same
-thing up there.
+against any other project — `inv ai.claude-direnv-hook --dir ~/projects/foo` — to set the same thing
+up there.
 
 Caveat: `env` values in `settings.json` are only read at Claude Code process launch, unlike hooks,
 which are read fresh per call — so this needs a session restart (or VS Code window reload) to take
@@ -110,14 +111,15 @@ effect after first being configured, even though the hook itself starts firing i
 Anthropic's native installer (`curl -fsSL https://claude.ai/install.sh | bash`) — a `script`-method
 entry, same as Oh My Zsh. This is the officially recommended method: it needs no Node.js, ships a
 signed per-platform binary, and auto-updates itself in the background (`~/.local/bin/claude`
-symlinked into `~/.local/share/claude/versions/`). Don't use `npm install -g @anthropic-ai/claude-code`
-for a fresh install on this machine — it still works but is the legacy path; PULSE only needs to
-`curl`-install once and then leaves auto-update to Claude Code itself.
+symlinked into `~/.local/share/claude/versions/`). Don't use
+`npm install -g @anthropic-ai/claude-code` for a fresh install on this machine — it still works but
+is the legacy path; PULSE only needs to `curl`-install once and then leaves auto-update to Claude
+Code itself.
 
 ## `~/AGENTS.md` — global instructions, declaratively managed
 
-`[packages.claude-global-md]` writes `~/AGENTS.md` (the cross-tool, cross-project instructions
-file every agent CLI on this machine can read) from `setup.toml`, and symlinks
+`[packages.claude-global-md]` writes `~/AGENTS.md` (the cross-tool, cross-project instructions file
+every agent CLI on this machine can read) from `setup.toml`, and symlinks
 `~/.claude/CLAUDE.md -> ~/AGENTS.md` via the `wrapper-script` method's `symlink_dest` field — the
 exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
 `CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
@@ -135,24 +137,26 @@ Several conventions live there too, deliberately global rather than repeated per
 - **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
   `AGENTS.md` (the cross-tool standard 30+ agent CLIs read) and, if `CLAUDE.md` exists at all, it's
   a plain symlink to `AGENTS.md` — not a file containing Claude Code's `@AGENTS.md` import
-  directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content
-  to every harness that reads a literal `CLAUDE.md`, no special-case parsing needed. Trade-off:
-  nothing can be appended below a symlink's target, so a genuinely Claude-specific addendum belongs
-  in `AGENTS.md` itself instead. Both this repo's own root (`AGENTS.md` real, `CLAUDE.md ->
-  AGENTS.md`) and `~` itself (`AGENTS.md` real, `~/.claude/CLAUDE.md -> ~/AGENTS.md`) follow it.
+  directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content to
+  every harness that reads a literal `CLAUDE.md`, no special-case parsing needed. Trade-off: nothing
+  can be appended below a symlink's target, so a genuinely Claude-specific addendum belongs in
+  `AGENTS.md` itself instead. Both this repo's own root (`AGENTS.md` real,
+  `CLAUDE.md ->
+  AGENTS.md`) and `~` itself (`AGENTS.md` real,
+  `~/.claude/CLAUDE.md -> ~/AGENTS.md`) follow it.
 - **Cross-session memory policy.** Durable, repo-specific knowledge belongs in that repo's
   `AGENTS.md`, not Claude Code's auto-memory system (`~/.claude/projects/.../memory/`) — memory is
   invisible to every other contributor, every other agent tool, and every code review; `AGENTS.md`
   is version-controlled and visible to all three.
 - **Bash tool / CLI allowlist discipline.** Don't `cd` out of a project — the Bash tool's cwd is
-  already the project root, so just run plain commands, and don't reach for a directory-scoping
-  flag (`git -C`, `npm --prefix`, etc.) as a substitute either, since for subcommand-tree tools
-  that breaks the allow-rule match the same way `cd &&` does. Also prefer several simple, separate
-  Bash calls over one chained/piped/env-prefixed command. Both come from the same mechanism: `inv allowlist.*`
-  (see [`cli-allowlist.md`](cli-allowlist.md)) generates permission rules that match on a literal
-  command _prefix_, and a `cd x && cmd`/`cmd1 && cmd2`-style compound string can't match a prefix
-  rule that was written for the plain command alone — so it prompts every time even when every
-  individual piece is already allowlisted.
+  already the project root, so just run plain commands, and don't reach for a directory-scoping flag
+  (`git -C`, `npm --prefix`, etc.) as a substitute either, since for subcommand-tree tools that
+  breaks the allow-rule match the same way `cd &&` does. Also prefer several simple, separate Bash
+  calls over one chained/piped/env-prefixed command. Both come from the same mechanism:
+  `inv allowlist.*` (see [`cli-allowlist.md`](cli-allowlist.md)) generates permission rules that
+  match on a literal command _prefix_, and a `cd x && cmd`/`cmd1 && cmd2`-style compound string
+  can't match a prefix rule that was written for the plain command alone — so it prompts every time
+  even when every individual piece is already allowlisted.
 
 ## `~/.claude/settings.json` — permissions merged in by `inv allowlist.apply`
 
@@ -161,9 +165,9 @@ partial merge. `inv allowlist.apply` (see [`cli-allowlist.md`](cli-allowlist.md)
 pipeline this is the last step of) rewrites only the `permissions.allow`/`permissions.ask` arrays,
 tracking what it wrote via a local manifest so it never touches a rule you added by hand, or any
 other key in the file (`theme`, `effortLevel`, `cleanupPeriodDays`, ...). `cleanupPeriodDays`
-specifically — governs how long session transcripts/tasks/shell-snapshots/backups are kept — is
-set to `365` here (default is `30`) as a deliberate preference, reviewed and confirmed while
-building the allowlist pipeline, not something PULSE enforces or will change on your behalf.
+specifically — governs how long session transcripts/tasks/shell-snapshots/backups are kept — is set
+to `365` here (default is `30`) as a deliberate preference, reviewed and confirmed while building
+the allowlist pipeline, not something PULSE enforces or will change on your behalf.
 
 ## `.agents/skills/` and project scaffolding — `tasks/ai.py`
 
@@ -177,9 +181,9 @@ PULSE symlinks `.claude/skills` to `.agents/skills`:
   below). Defaults to `~` (the personal, cross-project skills location); part of the standard
   `inv setup`/`inv wsl.install` chain.
 - `inv ai.init [--dir PATH]` — full project scaffold: the skills symlink above (not the declared
-  skills — those are meant for the shared `~`, not baked into every new project by default), plus
-  a minimal `AGENTS.md` and a `CLAUDE.md` symlinked to it, for any project on the machine (defaults
-  to the current directory). Run it from this repo against another project, e.g.
+  skills — those are meant for the shared `~`, not baked into every new project by default), plus a
+  minimal `AGENTS.md` and a `CLAUDE.md` symlinked to it, for any project on the machine (defaults to
+  the current directory). Run it from this repo against another project, e.g.
   `inv ai.init --dir ~/projects/foo`.
 
 Both tasks check for existing files/symlinks first and skip rather than overwrite — safe to re-run,
@@ -190,55 +194,56 @@ and safe to point at a project that already has hand-written `AGENTS.md`/`CLAUDE
 Any `setup.toml` package entry can carry a `skills` list, checked by `inv ai.skills` regardless of
 that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zprofile`. Two sources:
 
-- **`{ source = "local", path = "skills/<name>" }`** — for skills authored _in this repo_.
-  Real skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references,
-  assets) live under `skills/` at the repo root, tracked by git like any other repo content —
-  deliberately not gitignored `reference/`, and not nested under this repo's own `.agents/skills/`
-  (that's the _deployed_, tool-agnostic location on a given machine; this repo is where some
-  skills happen to be authored, not where they run from). `inv ai.skills` **copies** the repo's
-  `skills/<name>/` to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching
-  how the `npx` source below behaves (it copies too). A `.pulse-source` marker file inside the
-  copy records which entry installed it, so a re-run can tell "ours, safe to refresh to match the
-  repo" apart from "something else is already here, leave it alone" — editing the repo copy needs
-  an `inv ai.skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
-  `[packages.research-library]` is the example: its `skills` field points at
-  `skills/research-library/`, which documents `$RESEARCH_HOME` (see
-  `contributing/research-library.md`).
+- **`{ source = "local", path = "skills/<name>" }`** — for skills authored _in this repo_. Real
+  skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references, assets)
+  live under `skills/` at the repo root, tracked by git like any other repo content — deliberately
+  not gitignored `reference/`, and not nested under this repo's own `.agents/skills/` (that's the
+  _deployed_, tool-agnostic location on a given machine; this repo is where some skills happen to be
+  authored, not where they run from). `inv ai.skills` **copies** the repo's `skills/<name>/` to
+  `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching how the `npx` source
+  below behaves (it copies too). A `.pulse-source` marker file inside the copy records which entry
+  installed it, so a re-run can tell "ours, safe to refresh to match the repo" apart from "something
+  else is already here, leave it alone" — editing the repo copy needs an `inv ai.skills` re-run to
+  take effect, it doesn't apply instantly the way a symlink would. `[packages.research-library]` is
+  the example: its `skills` field points at `skills/research-library/`, which documents
+  `$RESEARCH_HOME` (see `contributing/research-library.md`).
 - **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — for skills
   published on GitHub. Installed via the real `skills` CLI (`[packages.node].global_packages`,
-  [skills.sh](https://skills.sh)): `skills add <repo> --global --skill <names...> --agent
-  <agents...> --yes`. `names` omitted installs every skill the repo has; `agents` defaults to
-  `["claude-code"]` — this repo doesn't manage other agents' skill directories, and since
-  `.claude/skills` is already symlinked to `.agents/skills`, targeting `claude-code` lands in the
-  same shared directory the `local` source uses, not a separate copy. The CLI prints its own
-  security-risk assessment (Socket/Snyk-style) per skill at install time — worth actually reading
-  before adding an entry, since an installed skill runs with full agent permissions, same trust
-  level as any other content read into an agent session.
+  [skills.sh](https://skills.sh)):
+  `skills add <repo> --global --skill <names...> --agent
+  <agents...> --yes`. `names` omitted
+  installs every skill the repo has; `agents` defaults to `["claude-code"]` — this repo doesn't
+  manage other agents' skill directories, and since `.claude/skills` is already symlinked to
+  `.agents/skills`, targeting `claude-code` lands in the same shared directory the `local` source
+  uses, not a separate copy. The CLI prints its own security-risk assessment (Socket/Snyk-style) per
+  skill at install time — worth actually reading before adding an entry, since an installed skill
+  runs with full agent permissions, same trust level as any other content read into an agent
+  session.
 
 Add a skill to install without attaching it to some other tool's entry by giving it its own
 `[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
 
 The `npx` source was validated end-to-end against a real package
-([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style
-skill) before being trusted for `research-library`'s own `local` source — but caveman itself
-ended up living in `~/AGENTS.md` instead (see "Caveman-style terse output" in
-`config/global-AGENTS.md`), not as an installed skill: a skill only reaches Claude Code, and the
-simpler, always-on AGENTS.md version covers every agent tool on this machine for less overall
-complexity than keeping both. `contributing/research-library.md` has the fuller review notes.
+([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
+before being trusted for `research-library`'s own `local` source — but caveman itself ended up
+living in `~/AGENTS.md` instead (see "Caveman-style terse output" in `config/global-AGENTS.md`), not
+as an installed skill: a skill only reaches Claude Code, and the simpler, always-on AGENTS.md
+version covers every agent tool on this machine for less overall complexity than keeping both.
+`contributing/research-library.md` has the fuller review notes.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 
 A second any-section field, same pattern as `skills`: any package entry can carry
 `claude_permissions_allow`, a list of literal Claude Code permission-rule strings, checked
 regardless of that entry's `method`. `inv ai.skills` merges every declared rule into
-`~/.claude/settings.json`'s `permissions.allow` — same safe-merge shape as
-`tasks/allowlist.py`'s `apply` (every other key untouched, `.json.bak` written before any real
-change, only rule strings this mechanism wrote previously are ever removed) but through its own,
-separate manifest (`~/.local/state/power-user-linux-setup/claude-static-permissions-applied.json`) — **deliberately
+`~/.claude/settings.json`'s `permissions.allow` — same safe-merge shape as `tasks/allowlist.py`'s
+`apply` (every other key untouched, `.json.bak` written before any real change, only rule strings
+this mechanism wrote previously are ever removed) but through its own, separate manifest
+(`~/.local/state/power-user-linux-setup/claude-static-permissions-applied.json`) — **deliberately
 not routed through the CLI-allowlist pipeline** (see [`cli-allowlist.md`](cli-allowlist.md)): that
 pipeline exists specifically to classify CLI tool risk from `--help` output, and these are static,
-hand-declared rules with nothing to classify. Keeping the manifests separate means neither
-mechanism can ever remove a rule the other one owns, even though both write to the same file.
+hand-declared rules with nothing to classify. Keeping the manifests separate means neither mechanism
+can ever remove a rule the other one owns, even though both write to the same file.
 
 `[packages.research-library]` is the example: `Read`/`Glob`/`Grep` allowed, unprompted, for
 everything under `$RESEARCH_HOME` — deliberately treating that curated, read-only library like
@@ -252,5 +257,5 @@ turned up `chat.tools.terminal.autoApprove` (terminal commands — already handl
 confirmed, documented Copilot setting for path-scoped _file-read_ auto-approval the way Claude's
 `Read(pattern)` rules work — only a global, all-or-nothing
 `github.copilot.chat.agent.autoApproveFileChanges` boolean, which governs edits, not reads, and
-isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse
-than an honest "nothing applied, here's why." Revisit if a scoped-read key is ever confirmed.
+isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse than
+an honest "nothing applied, here's why." Revisit if a scoped-read key is ever confirmed.

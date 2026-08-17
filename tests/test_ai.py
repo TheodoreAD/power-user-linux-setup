@@ -361,7 +361,7 @@ def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.skills.body(None, yes=True)
+    ai.skills.body(None, yes=True)  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
 
     assert ("perms",) in calls
     assert ("copilot",) in calls
@@ -372,7 +372,9 @@ def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_pat
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.skills.body(None, dir=str(tmp_path), yes=False)
+    ai.skills.body(  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+        None, dir=str(tmp_path), yes=False
+    )
 
     assert ("perms",) not in calls
     assert ("copilot",) not in calls

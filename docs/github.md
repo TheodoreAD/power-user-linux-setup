@@ -1,6 +1,7 @@
 # GitHub CLI (gh)
 
-Installed via apt-repo by `inv apt.repos` (or `inv setup`). Zsh completions are included in the apt package and loaded automatically by `compinit`.
+Installed via apt-repo by `inv apt.repos` (or `inv setup`). Zsh completions are included in the apt
+package and loaded automatically by `compinit`.
 
 ## Post-install (interactive — run manually)
 

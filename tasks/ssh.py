@@ -19,7 +19,7 @@ Host *
 
 
 def current_node() -> str:
-    return subprocess.run(["uname", "-n"], capture_output=True, text=True).stdout.strip()
+    return subprocess.run(["uname", "-n"], capture_output=True, text=True, check=False).stdout.strip()
 
 
 def key_path(email: str, node: str) -> Path:

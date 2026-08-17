@@ -1,9 +1,9 @@
 # Go
 
-<https://go.dev/doc/install>
-<https://github.com/golang-standards/project-layout>
+<https://go.dev/doc/install> <https://github.com/golang-standards/project-layout>
 
-Installed via `inv tools.install` (archive method — downloads the official tarball from go.dev and extracts to `~/.local/share/go`). Shell environment is written to `~/.zshrc` by `inv zsh.configure`.
+Installed via `inv tools.install` (archive method — downloads the official tarball from go.dev and
+extracts to `~/.local/share/go`). Shell environment is written to `~/.zshrc` by `inv zsh.configure`.
 
 ## Environment
 
@@ -22,9 +22,11 @@ Go 1.21+ has built-in per-project version management. A `go.mod` declaring:
 toolchain go1.26.4
 ```
 
-will cause the `go` command to automatically download and use that exact version when you enter the project. `GOTOOLCHAIN=auto` (the default since 1.21) enables this behaviour — no extra tool needed.
+will cause the `go` command to automatically download and use that exact version when you enter the
+project. `GOTOOLCHAIN=auto` (the default since 1.21) enables this behaviour — no extra tool needed.
 
-Install one bootstrap version via `inv tools.install` and let projects pull their own toolchains as needed.
+Install one bootstrap version via `inv tools.install` and let projects pull their own toolchains as
+needed.
 
 ## To update the bootstrap install
 

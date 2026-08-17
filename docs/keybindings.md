@@ -1,7 +1,7 @@
 # Keybindings
 
-Reference for every binding that uses the Super (Windows) key on this setup, so it's clear what
-to expect and where a given shortcut is defined. Pulled from live `gsettings`/`dconf` state on
+Reference for every binding that uses the Super (Windows) key on this setup, so it's clear what to
+expect and where a given shortcut is defined. Pulled from live `gsettings`/`dconf` state on
 2026-08-08 — re-verify with the commands shown if extensions or GNOME defaults change.
 
 See [input_devices.md](input_devices.md) for why a bare Super _tap_ might not register at all
@@ -58,8 +58,8 @@ not `Super_R`.
 
 ## Tiling Shell (`tilingshell@ferrarodomenico.com`)
 
-Tiling Shell records the native bindings it overrides in its own `overridden-settings` dconf key
-(so it can restore them if disabled) and implements the actual Super+Arrow tiling itself:
+Tiling Shell records the native bindings it overrides in its own `overridden-settings` dconf key (so
+it can restore them if disabled) and implements the actual Super+Arrow tiling itself:
 
 ```shell
 dconf read /org/gnome/shell/extensions/tilingshell/overridden-settings
@@ -78,8 +78,8 @@ active. See [gnome_extensions.md](gnome_extensions.md).
 
 ## Dash to Panel (`dash-to-panel@jderose9.github.com`)
 
-Doesn't bind Super itself — it visualizes the native `Super+1..9` shortcuts above by showing
-number overlays on pinned/running app icons while Super is held:
+Doesn't bind Super itself — it visualizes the native `Super+1..9` shortcuts above by showing number
+overlays on pinned/running app icons while Super is held:
 
 ```shell
 dconf read /org/gnome/shell/extensions/dash-to-panel/hotkeys-overlay-combo   # 'TEMPORARILY'
@@ -87,9 +87,9 @@ dconf read /org/gnome/shell/extensions/dash-to-panel/hotkeys-overlay-combo   # '
 
 ## Advanced Alt-Tab Window Switcher (`advanced-alt-tab@G-dH.github.com`)
 
-Replaces the handler behind `Super+Tab` / `Shift+Super+Tab` (still the same native keybinding
-above) with a searchable, filterable switcher instead of GNOME's default. No separate dconf-level
-binding of its own — check its extension preferences dialog for any custom shortcuts added there.
+Replaces the handler behind `Super+Tab` / `Shift+Super+Tab` (still the same native keybinding above)
+with a searchable, filterable switcher instead of GNOME's default. No separate dconf-level binding
+of its own — check its extension preferences dialog for any custom shortcuts added there.
 
 ## Custom shortcuts
 

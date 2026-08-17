@@ -31,8 +31,8 @@ def _wsl_conf_value(section: str, key: str) -> str | None:
     if not _WSL_CONF.exists():
         return None
     current = None
-    for line in _WSL_CONF.read_text().splitlines():
-        line = line.strip()
+    for raw_line in _WSL_CONF.read_text().splitlines():
+        line = raw_line.strip()
         if not line or line.startswith("#") or line.startswith(";"):
             continue
         if line.startswith("[") and line.endswith("]"):
@@ -45,7 +45,7 @@ def _wsl_conf_value(section: str, key: str) -> str | None:
     return None
 
 
-def _ensure_wsl_conf_kv(text: str, section: str, key: str, value: str) -> tuple[str, bool]:
+def _ensure_wsl_conf_kv(text: str, section: str, key: str, value: str) -> tuple[str, bool]:  # noqa: C901
     """Idempotently set `key = value` under [section] in wsl.conf-style INI text.
 
     Preserves everything else in the file (other sections/keys/comments) — this is user-owned
@@ -159,7 +159,7 @@ def _query_dns_server(server: str, hostname: str = "archive.ubuntu.com", timeout
         with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
             sock.settimeout(timeout)
             sock.sendto(packet, (server, 53))
-            data, _ = sock.recvfrom(512)
+            data = sock.recvfrom(512)[0]  # discard sender address (typeshed types it loosely)
         return len(data) >= 2 and data[:2] == packet[:2]
     except OSError:
         return False
@@ -204,7 +204,7 @@ def _os_release_id() -> str:
 
 
 @task
-def check(c):
+def check(c):  # noqa: C901
     """Diagnose WSL-specific risks before running PULSE tasks: systemd, DNS, Docker, WSLg.
 
     Read-only — reports findings and remediation, changes nothing. See docs/wsl.md.
@@ -398,7 +398,7 @@ def fix(c, dns=False):
 
 
 @task
-def install(c, wslg="auto", docker=False, dns="auto"):
+def install(c, wslg="auto", docker=False, dns="auto"):  # noqa: C901
     """Run the docs/wsl.md recommended install sequence in one shot, as named phases: wsl config,
     system config (locale/DNS, only if systemd/DNS are actually live yet), packages, then shell —
     with WSL-appropriate tags excluded.

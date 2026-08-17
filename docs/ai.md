@@ -1,6 +1,7 @@
 # AI tools
 
-Tools for running local LLMs, agentic coding, and getting more out of hosted assistants (Claude, Copilot).
+Tools for running local LLMs, agentic coding, and getting more out of hosted assistants (Claude,
+Copilot).
 
 ---
 
@@ -8,7 +9,8 @@ Tools for running local LLMs, agentic coding, and getting more out of hosted ass
 
 <https://ollama.com>
 
-The de-facto standard for running open-weight LLMs locally. MIT-licensed, exposes an OpenAI-compatible API on `localhost:11434`, and integrates with every tool in this doc.
+The de-facto standard for running open-weight LLMs locally. MIT-licensed, exposes an
+OpenAI-compatible API on `localhost:11434`, and integrates with every tool in this doc.
 
 ```shell
 curl -fsSL https://ollama.com/install.sh | sh
@@ -37,7 +39,9 @@ ollama serve                     # starts the API server (auto-started on instal
 
 <https://aider.chat>
 
-Terminal-native, git-first coding agent. Maps the codebase, edits files across multiple paths, and auto-commits every accepted change with a conventional message. Works with any LLM provider or a local Ollama model.
+Terminal-native, git-first coding agent. Maps the codebase, edits files across multiple paths, and
+auto-commits every accepted change with a conventional message. Works with any LLM provider or a
+local Ollama model.
 
 ```shell
 pip install aider-install && aider-install   # installs aider into its own venv
@@ -56,22 +60,29 @@ aider src/main.go src/handler.go
 
 <https://claude.ai/code>
 
-Anthropic's official terminal agent. Strongest at large-scope refactors, architecture reasoning, and multi-file changes. Requires an Anthropic API key or Pro/Max subscription.
+Anthropic's official terminal agent. Strongest at large-scope refactors, architecture reasoning, and
+multi-file changes. Requires an Anthropic API key or Pro/Max subscription.
 
 ```shell
 curl -fsSL https://claude.ai/install.sh | bash   # native installer, auto-updates itself
 claude
 ```
 
-PULSE installs it this way too — `[packages.claude-code]` in `setup.toml`, via `inv tools.install` — so on this machine you generally don't need the command above at all. (`npm install -g @anthropic-ai/claude-code` still works but is the legacy path.)
+PULSE installs it this way too — `[packages.claude-code]` in `setup.toml`, via `inv tools.install` —
+so on this machine you generally don't need the command above at all.
+(`npm install -g @anthropic-ai/claude-code` still works but is the legacy path.)
 
-See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup, hooks, and slash commands. For what this repo specifically does to make it work well on this machine (sudo/ssh without a TTY, the global `~/AGENTS.md` symlinked as `CLAUDE.md`, `AGENTS.md`/`.agents/skills` scaffolding for any project), see [claude-code.md](claude-code.md).
+See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup,
+hooks, and slash commands. For what this repo specifically does to make it work well on this machine
+(sudo/ssh without a TTY, the global `~/AGENTS.md` symlinked as `CLAUDE.md`,
+`AGENTS.md`/`.agents/skills` scaffolding for any project), see [claude-code.md](claude-code.md).
 
 ### Goose
 
 <https://goose-docs.ai>
 
-Editor-agnostic autonomous agent (Apache-2.0, Linux Foundation AI). Goes beyond code: can run shell commands, manage files, call APIs, and execute test suites. Works offline with Ollama.
+Editor-agnostic autonomous agent (Apache-2.0, Linux Foundation AI). Goes beyond code: can run shell
+commands, manage files, call APIs, and execute test suites. Works offline with Ollama.
 
 ```shell
 curl -fsSL https://github.com/block/goose/releases/latest/download/install.sh | sh
@@ -81,13 +92,16 @@ goose session start              # interactive REPL
 goose run --recipe my-recipe.yaml  # automated workflow
 ```
 
-Connects to Zed, JetBrains, or VS Code as an ACP server. Choose Goose when you need an agent that works outside VS Code or need repeatable "recipes" for recurring workflows.
+Connects to Zed, JetBrains, or VS Code as an ACP server. Choose Goose when you need an agent that
+works outside VS Code or need repeatable "recipes" for recurring workflows.
 
 ### Gemini CLI
 
 <https://github.com/google-gemini/gemini-cli>
 
-Google's open-source terminal agent. Free tier is generous (1,500 requests/day with a personal Google account), making it useful for high-volume or exploratory tasks where you don't want to burn paid credits.
+Google's open-source terminal agent. Free tier is generous (1,500 requests/day with a personal
+Google account), making it useful for high-volume or exploratory tasks where you don't want to burn
+paid credits.
 
 ```shell
 npm install -g @google/gemini-cli
@@ -102,7 +116,9 @@ gemini
 
 <https://continue.dev>
 
-The most editor-portable option: same config drives both VS Code and JetBrains extensions. Supports autocomplete, inline edit, and chat. Routes to any backend — Ollama, Claude, OpenAI, or a self-hosted Tabby server.
+The most editor-portable option: same config drives both VS Code and JetBrains extensions. Supports
+autocomplete, inline edit, and chat. Routes to any backend — Ollama, Claude, OpenAI, or a
+self-hosted Tabby server.
 
 ```shell
 # VS Code
@@ -132,7 +148,9 @@ Config lives at `~/.continue/config.json`. Point at a local Ollama model:
 
 <https://github.com/cline/cline>
 
-VS Code extension that gives you an autonomous coding agent in a side panel. Bring-your-own-key: Claude, GPT-4o, local Ollama, or any OpenAI-compatible endpoint. Cline CLI 2.0 (2026) supports headless and parallel workflows.
+VS Code extension that gives you an autonomous coding agent in a side panel. Bring-your-own-key:
+Claude, GPT-4o, local Ollama, or any OpenAI-compatible endpoint. Cline CLI 2.0 (2026) supports
+headless and parallel workflows.
 
 ```shell
 code --install-extension saoudrizwan.claude-dev
@@ -146,7 +164,9 @@ code --install-extension saoudrizwan.claude-dev
 
 <https://github.com/features/copilot>
 
-The most widely-used paid assistant (~42% market share). Tight IDE integration and a free tier (50 agent requests + 2,000 completions/month). Pro is $10/month. Available in VS Code, JetBrains, Neovim, and the terminal.
+The most widely-used paid assistant (~42% market share). Tight IDE integration and a free tier (50
+agent requests + 2,000 completions/month). Pro is $10/month. Available in VS Code, JetBrains,
+Neovim, and the terminal.
 
 ```shell
 # VS Code
@@ -162,13 +182,16 @@ gh copilot suggest "undo last git commit"
 
 <https://cursor.sh>
 
-VS Code fork with AI woven into every layer. Market leader in AI editors ($2B ARR). Best for developers who want deep autocomplete and Composer (multi-file agent) without leaving the editor. Linux `.deb` / AppImage available.
+VS Code fork with AI woven into every layer. Market leader in AI editors ($2B ARR). Best for
+developers who want deep autocomplete and Composer (multi-file agent) without leaving the editor.
+Linux `.deb` / AppImage available.
 
 ### Windsurf
 
 <https://codeium.com/windsurf>
 
-Another VS Code fork from Codeium. Notable for "Cascade" — a flow-based multi-step agent that maintains a codemap. Free tier available. Linux `.deb` available.
+Another VS Code fork from Codeium. Notable for "Cascade" — a flow-based multi-step agent that
+maintains a codemap. Free tier available. Linux `.deb` available.
 
 ---
 
@@ -176,7 +199,9 @@ Another VS Code fork from Codeium. Notable for "Cascade" — a flow-based multi-
 
 <https://tabby.tabbyml.com>
 
-Self-hosted completion server. Runs on your own hardware, exposes an OpenAI-compatible API, and serves any GGUF model. Right choice when your org has data-residency requirements or you want team-wide shared inference.
+Self-hosted completion server. Runs on your own hardware, exposes an OpenAI-compatible API, and
+serves any GGUF model. Right choice when your org has data-residency requirements or you want
+team-wide shared inference.
 
 ```shell
 docker run -it \

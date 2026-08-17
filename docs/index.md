@@ -1,6 +1,8 @@
 # PULSE — Power User Linux Setup
 
-**PULSE** (Power User Linux Setup) is an opinionated, reproducible workstation setup for Ubuntu 24.04, driven by a single `setup.toml` and [`invoke`](https://www.pyinvoke.org/) tasks. Clone, run `bootstrap.sh`, run `inv setup` — no step-by-step walkthrough required for the golden path.
+**PULSE** (Power User Linux Setup) is an opinionated, reproducible workstation setup for Ubuntu
+24.04, driven by a single `setup.toml` and [`invoke`](https://www.pyinvoke.org/) tasks. Clone, run
+`bootstrap.sh`, run `inv setup` — no step-by-step walkthrough required for the golden path.
 
 <div class="grid cards" markdown>
 
@@ -8,7 +10,8 @@
 
   ---
 
-  Bare-metal or VM Ubuntu 24.04 desktop: shell, languages, GNOME, fonts, terminals — everything below runs.
+  Bare-metal or VM Ubuntu 24.04 desktop: shell, languages, GNOME, fonts, terminals — everything
+  below runs.
 
   [:octicons-arrow-right-24: Quick start](#quick-start)
 
@@ -50,7 +53,8 @@ cd power-user-linux-setup
 inv setup             # runs the full setup — see configuration.md for what that covers, phase by phase
 ```
 
-`inv setup` does not cover everything — see **Manual steps** below for what still requires human input.
+`inv setup` does not cover everything — see **Manual steps** below for what still requires human
+input.
 
 ### Environment variables
 
@@ -67,7 +71,8 @@ PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
 PULSE_EXCLUDE_TAGS=$(inv devcontainer.print-exclude-tags) inv setup
 ```
 
-Curious what `inv setup` actually runs, phase by phase, or how config files and tags work under the hood? See [How it works](configuration.md).
+Curious what `inv setup` actually runs, phase by phase, or how config files and tags work under the
+hood? See [How it works](configuration.md).
 
 ## Manual steps
 
@@ -88,16 +93,16 @@ These cannot be automated — they require hardware knowledge, a browser, or int
 
 ### Updating deb-github packages
 
-Packages installed via `deb-github` (e.g. wezterm nightly) are not updated by `apt upgrade`.
-To upgrade all of them to the latest release:
+Packages installed via `deb-github` (e.g. wezterm nightly) are not updated by `apt upgrade`. To
+upgrade all of them to the latest release:
 
 ```shell
 inv apt.upgrade-debs
 ```
 
 This re-downloads and reinstalls each `deb-github` package. `dpkg` handles version comparison —
-reinstalling the same version is safe. For packages using `tag = "nightly"`, this always fetches
-the latest nightly build.
+reinstalling the same version is safe. For packages using `tag = "nightly"`, this always fetches the
+latest nightly build.
 
 ### Checking installed tools actually work
 
@@ -117,10 +122,10 @@ inv cleanup.all          # conservative: keeps caches that speed up your next in
 inv cleanup.all-full     # full wipe: reclaims more, next install of each is slower
 ```
 
-Opt-in only — neither runs as part of `inv setup`, since a persistent workstation usually wants
-to _keep_ these caches. Each covers apt's `.deb` archive cache, uv's build/wheel cache, npm's
-package cache, cargo's registry cache (if rust is installed), and Docker images/containers/build
-cache (if Docker is installed) — see [dev-container.md](dev-container.md#cleanup-reclaiming-image-layer-space)
+Opt-in only — neither runs as part of `inv setup`, since a persistent workstation usually wants to
+_keep_ these caches. Each covers apt's `.deb` archive cache, uv's build/wheel cache, npm's package
+cache, cargo's registry cache (if rust is installed), and Docker images/containers/build cache (if
+Docker is installed) — see [dev-container.md](dev-container.md#cleanup-reclaiming-image-layer-space)
 for the full breakdown and the reasoning behind the conservative/full split. `inv cleanup.caches`/
 `inv cleanup.caches-full` run the same set minus Docker, if you just want the package-manager
 caches.

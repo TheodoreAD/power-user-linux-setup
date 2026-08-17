@@ -1,6 +1,7 @@
 # Fonts
 
-Nerd Fonts patches popular programming fonts with thousands of extra glyphs (icons, powerline symbols, devicons) required for a feature-rich terminal and editor experience.
+Nerd Fonts patches popular programming fonts with thousands of extra glyphs (icons, powerline
+symbols, devicons) required for a feature-rich terminal and editor experience.
 
 ## Install
 
@@ -11,8 +12,11 @@ inv fonts.configure  # sets CaskaydiaCove Nerd Font Mono as system monospace, GN
 
 Both run as part of `inv setup`. Re-running is safe:
 
-- If v3 files are present (compact filenames like `JetBrainsMonoNerdFont-Regular.ttf`), the family is skipped.
-- If only v2 files are present (spaced filenames like `JetBrains Mono Regular Nerd Font Complete.ttf`), they are removed and v3 is downloaded automatically.
+- If v3 files are present (compact filenames like `JetBrainsMonoNerdFont-Regular.ttf`), the family
+  is skipped.
+- If only v2 files are present (spaced filenames like
+  `JetBrains Mono Regular Nerd Font Complete.ttf`), they are removed and v3 is downloaded
+  automatically.
 - If nothing is present, v3 is downloaded fresh.
 
 !!! hint "Troubleshooting"
@@ -47,11 +51,15 @@ Sample output:
 [fonts] VS Code: ok
 ```
 
-`ok (v2 — will upgrade)` means the family is installed but as v2 — the next live run will remove the old files and install v3.
+`ok (v2 — will upgrade)` means the family is installed but as v2 — the next live run will remove the
+old files and install v3.
 
 ## Default font — CaskaydiaCove Nerd Font
 
-CaskaydiaCove Nerd Font is the Nerd Fonts project's patched version of Microsoft's [Cascadia Code](https://github.com/microsoft/cascadia-code). The name change is required by the OFL (Open Font License) **Reserved Font Name** clause in Cascadia Code's license — any modified version must be distributed under a different name.
+CaskaydiaCove Nerd Font is the Nerd Fonts project's patched version of Microsoft's
+[Cascadia Code](https://github.com/microsoft/cascadia-code). The name change is required by the OFL
+(Open Font License) **Reserved Font Name** clause in Cascadia Code's license — any modified version
+must be distributed under a different name.
 
 `inv fonts.configure` sets it as the default in three places:
 
@@ -62,7 +70,8 @@ CaskaydiaCove Nerd Font is the Nerd Fonts project's patched version of Microsoft
 | VS Code editor                 | CaskaydiaCove Nerd Font         | Default variant; double-width icons render correctly, ligatures enabled           |
 | VS Code integrated terminal    | CaskaydiaCove Nerd Font Mono    | Mono for the terminal grid inside VS Code                                         |
 
-For JetBrains IDEs: Settings → Editor → Font → set **CaskaydiaCove Nerd Font** (or Mono for the embedded terminal under Tools → Terminal).
+For JetBrains IDEs: Settings → Editor → Font → set **CaskaydiaCove Nerd Font** (or Mono for the
+embedded terminal under Tools → Terminal).
 
 ## Font variants (Nerd Fonts v3)
 
@@ -74,7 +83,8 @@ Each family ships three variants per weight:
 | Mono    | `NerdFontMono`  | Terminals — icons forced to exactly one cell width              |
 | Propo   | `NerdFontPropo` | Proportional contexts (rare)                                    |
 
-`inv fonts.install` installs all three variants for every family so you can switch freely without re-running the installer.
+`inv fonts.install` installs all three variants for every family so you can switch freely without
+re-running the installer.
 
 ## CascadiaCode NF vs CaskaydiaCove NF — naming explained
 
@@ -85,7 +95,9 @@ Two distributions of the same upstream font exist:
 | **CaskaydiaCove Nerd Font** | Nerd Fonts project (`CascadiaCode.zip`) | Renamed due to OFL RFN; bundled with all other Nerd Font families                   |
 | **Cascadia Code NF**        | Microsoft (official, since April 2024)  | Microsoft's own first-party Nerd Font variant; not subject to RFN since they own it |
 
-This setup uses CaskaydiaCove because it ships in the same zip as all other families and is updated in sync with them. The Microsoft variant is equally valid — to use it instead, replace the `CascadiaCode` entry in `setup.toml` with the Microsoft release URL and an appropriate `check` glob.
+This setup uses CaskaydiaCove because it ships in the same zip as all other families and is updated
+in sync with them. The Microsoft variant is equally valid — to use it instead, replace the
+`CascadiaCode` entry in `setup.toml` with the Microsoft release URL and an appropriate `check` glob.
 
 ## Installed families
 
@@ -112,4 +124,6 @@ Families are declared in `setup.toml` under `[[settings.fonts.families]]`. Each 
 
 To add a family, append a `[[settings.fonts.families]]` entry to `setup.toml`.
 
-The default font and VS Code settings are also in `setup.toml` under `[settings.fonts]` — edit `monospace`, `terminal`, and `[settings.fonts.vscode]` to change the configured font without touching any Python.
+The default font and VS Code settings are also in `setup.toml` under `[settings.fonts]` — edit
+`monospace`, `terminal`, and `[settings.fonts.vscode]` to change the configured font without
+touching any Python.

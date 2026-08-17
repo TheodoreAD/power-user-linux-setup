@@ -9,6 +9,7 @@ import tomllib
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
+from typing import Any, cast, overload
 
 DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "yes")
 
@@ -114,6 +115,10 @@ def confirm(question: str, default: bool = True) -> bool:
         print("Please answer y or n.")
 
 
+@overload
+def prompt_text(question: str, default: str) -> str: ...
+@overload
+def prompt_text(question: str, default: None = None) -> str | None: ...
 def prompt_text(question: str, default: str | None = None) -> str | None:
     """Prompt for a line of free text on stdin. Returns `default` unmodified (may be None) if
     stdin isn't a real terminal — same non-interactive gate as confirm(); call interactive()
@@ -235,7 +240,7 @@ def load_proxy_override() -> dict:
     if not IDENTITY_PATH.exists():
         return {}
     with IDENTITY_PATH.open("rb") as f:
-        return tomllib.load(f).get("proxy", {})
+        return cast(dict[str, Any], tomllib.load(f).get("proxy", {}))
 
 
 def load_certs_override() -> dict:
@@ -245,7 +250,7 @@ def load_certs_override() -> dict:
     if not IDENTITY_PATH.exists():
         return {}
     with IDENTITY_PATH.open("rb") as f:
-        return tomllib.load(f).get("certs", {})
+        return cast(dict[str, Any], tomllib.load(f).get("certs", {}))
 
 
 def load_claude_settings() -> dict:
@@ -308,6 +313,7 @@ def apt_installed(pkg: str) -> bool:
         ["dpkg-query", "-W", "-f=${Status}", pkg],
         capture_output=True,
         text=True,
+        check=False,
     )
     return "install ok installed" in result.stdout
 

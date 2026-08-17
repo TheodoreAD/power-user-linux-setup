@@ -7,8 +7,9 @@ description: "Use when developing or distributing a personal MCP server or Agent
 
 Workflow for repos whose entire purpose is producing an MCP server or a skill for personal,
 cross-project use (not a library other code imports) — e.g. `olx-polite-mcp`, `emag-polite-mcp`,
-`altex-polite-mcp`, `temu-polite-mcp`, `product-research-pipeline`. Covers going from a working repo to "loadable by
-Claude Code in any project," and how that differs between the dev machine and everywhere else.
+`altex-polite-mcp`, `temu-polite-mcp`, `product-research-pipeline`. Covers going from a working repo
+to "loadable by Claude Code in any project," and how that differs between the dev machine and
+everywhere else.
 
 ## Per-repo dev loop
 
@@ -21,12 +22,12 @@ Claude Code in any project," and how that differs between the dev machine and ev
 
 ## One entry point, `uv tool install` for a stable PATH binary
 
-Add a `[project.scripts]` entry point to the MCP repo's `pyproject.toml`
-(e.g. `olx-polite-mcp = "olx_polite_mcp.server:main"`) before writing `server.py`, not as a
-retrofit. Then install it as a real tool via `uv tool` (validated end-to-end in
-`olx-polite-mcp/README.md`) rather than pointing `claude mcp add` at a `uv run`/`uvx` invocation —
-`uv tool install` builds an isolated env and drops a shim on `PATH` (`~/.local/bin/` by default),
-so registration itself becomes a bare binary name with no path/flags to keep in sync:
+Add a `[project.scripts]` entry point to the MCP repo's `pyproject.toml` (e.g.
+`olx-polite-mcp = "olx_polite_mcp.server:main"`) before writing `server.py`, not as a retrofit. Then
+install it as a real tool via `uv tool` (validated end-to-end in `olx-polite-mcp/README.md`) rather
+than pointing `claude mcp add` at a `uv run`/`uvx` invocation — `uv tool install` builds an isolated
+env and drops a shim on `PATH` (`~/.local/bin/` by default), so registration itself becomes a bare
+binary name with no path/flags to keep in sync:
 
 Install against the **local working tree** while actively developing (editable — picks up local
 edits without reinstalling, so the repo has to stay put at that path):
@@ -35,8 +36,8 @@ edits without reinstalling, so the repo has to stay put at that path):
 uv tool install -e ~/projects/github.com-personal/olx-polite-mcp
 ```
 
-Install **from GitHub** once not actively iterating (pin `@<tag>`/`@<sha>` for reproducibility,
-omit for the default branch):
+Install **from GitHub** once not actively iterating (pin `@<tag>`/`@<sha>` for reproducibility, omit
+for the default branch):
 
 ```shell
 uv tool install git+https://github.com/TheodoreAD/olx-polite-mcp
@@ -48,22 +49,22 @@ Either way, registration is the same one-liner, independent of which source was 
 claude mcp add --scope user olx-polite-mcp olx-polite-mcp
 ```
 
-Switching sources is `uv tool install` again with the other source (uv replaces the existing tool)
-— no `claude mcp remove`/re-`add` needed, since the registered command name never changes.
-`--scope user` (not `local`/`project`) matches how skills already install globally, so the server
-is available in every project on this machine, not just one. Use `--scope project` instead only
-for a _consumer_ repo that wants the server offered automatically to anyone who clones it (see
+Switching sources is `uv tool install` again with the other source (uv replaces the existing tool) —
+no `claude mcp remove`/re-`add` needed, since the registered command name never changes.
+`--scope user` (not `local`/`project`) matches how skills already install globally, so the server is
+available in every project on this machine, not just one. Use `--scope project` instead only for a
+_consumer_ repo that wants the server offered automatically to anyone who clones it (see
 `olx-polite-mcp/README.md`'s project-scope example) — a different case than personal cross-project
 use.
 
-Editable and from-GitHub installs can't be combined (editable needs a real working directory uv
-can point at; a git-sourced install doesn't expose one) — for "edit locally, sourced as if from
-GitHub," `git clone` it yourself, then `uv tool install -e` that clone, which is just the
-editable-from-disk case again.
+Editable and from-GitHub installs can't be combined (editable needs a real working directory uv can
+point at; a git-sourced install doesn't expose one) — for "edit locally, sourced as if from GitHub,"
+`git clone` it yourself, then `uv tool install -e` that clone, which is just the editable-from-disk
+case again.
 
-Project- and user-scope servers need a one-time approval on `claude` startup before a _new_
-session launches them (`claude mcp list` shows pending ones) — an already-running session that had
-it approved keeps it live.
+Project- and user-scope servers need a one-time approval on `claude` startup before a _new_ session
+launches them (`claude mcp list` shows pending ones) — an already-running session that had it
+approved keeps it live.
 
 ## Distribution: skip PyPI
 

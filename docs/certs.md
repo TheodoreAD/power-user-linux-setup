@@ -2,13 +2,14 @@
 
 Many corporate networks run a TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, etc.) that
 terminates HTTPS and re-signs it with its own root CA. Every TLS client on the machine needs to
-trust that CA, or verification fails everywhere (`SSL: CERTIFICATE_VERIFY_FAILED`, `x509:
-certificate signed by unknown authority`, `unable to get local issuer certificate`). Installing it
-into the OS trust store alone isn't enough — several common tools vendor their own CA bundle
-instead of reading the OS one: Python (`certifi`), Node/npm, and the AWS CLI.
+trust that CA, or verification fails everywhere (`SSL: CERTIFICATE_VERIFY_FAILED`,
+`x509:
+certificate signed by unknown authority`, `unable to get local issuer certificate`).
+Installing it into the OS trust store alone isn't enough — several common tools vendor their own CA
+bundle instead of reading the OS one: Python (`certifi`), Node/npm, and the AWS CLI.
 
-`inv certs.*` installs an IT-provided bundle into the OS trust store via
-`update-ca-certificates`, then points those tools at the resulting merged bundle.
+`inv certs.*` installs an IT-provided bundle into the OS trust store via `update-ca-certificates`,
+then points those tools at the resulting merged bundle.
 
 ## Quick start
 
@@ -17,8 +18,8 @@ inv certs.check      # read-only — bundle/env-var/Java status, changes nothing
 inv certs.install     # installs into the OS trust store, exports env vars for python/node/awscli
 ```
 
-On a personal machine with no corporate CA configured, both exit cleanly with "nothing to
-configure" — expected, not a failure.
+On a personal machine with no corporate CA configured, both exit cleanly with "nothing to configure"
+— expected, not a failure.
 
 ## Config
 
@@ -56,35 +57,36 @@ alone. `certs.install` probes with `openssl` in this order and uses the first th
 1. `openssl x509 -noout -inform PEM` — already PEM, pass through.
 2. `openssl x509 -inform DER -outform PEM` — single-cert DER, convert.
 3. `openssl pkcs7 -print_certs -inform PEM` — PEM-armored PKCS#7, extract (root + intermediate).
-4. `openssl pkcs7 -print_certs -inform DER` — DER-armored PKCS#7, extract (also seen from Windows
-   AD CS — extension alone doesn't say which armor).
+4. `openssl pkcs7 -print_certs -inform DER` — DER-armored PKCS#7, extract (also seen from Windows AD
+   CS — extension alone doesn't say which armor).
 
-If none of the four parse, `certs.install` **fails loudly** rather than installing anything.
-This is a deliberate departure from `update-ca-certificates`'s own behavior: it silently _skips_
-a file it can't parse (just a warning), so a plain reinstall attempt with a bad file would
-otherwise "succeed" while TLS verification keeps failing with no clear signal why. Inspect a
-rejected file manually with `file <path>` or `openssl asn1parse -in <path>`.
+If none of the four parse, `certs.install` **fails loudly** rather than installing anything. This is
+a deliberate departure from `update-ca-certificates`'s own behavior: it silently _skips_ a file it
+can't parse (just a warning), so a plain reinstall attempt with a bad file would otherwise "succeed"
+while TLS verification keeps failing with no clear signal why. Inspect a rejected file manually with
+`file <path>` or `openssl asn1parse -in <path>`.
 
 ## Java {: #java }
 
-No JDK is installed or managed by this repo — Scala tooling uses Coursier's own private JVM
-instead (see [scala.md](scala.md)), and nothing else here needs one. The `cacerts` import step is
-purely conditional on `keytool` already being on `PATH`: a no-op today, and it activates
-automatically without any further changes if a JDK is added independently later.
+No JDK is installed or managed by this repo — Scala tooling uses Coursier's own private JVM instead
+(see [scala.md](scala.md)), and nothing else here needs one. The `cacerts` import step is purely
+conditional on `keytool` already being on `PATH`: a no-op today, and it activates automatically
+without any further changes if a JDK is added independently later.
 
 If a JDK is present, each cert in the bundle is imported into `$JAVA_HOME/lib/security/cacerts`
-under aliases `pulse-corporate-0`, `pulse-corporate-1`, etc. (idempotent — checked via `keytool
+under aliases `pulse-corporate-0`, `pulse-corporate-1`, etc. (idempotent — checked via
+`keytool
 -list` first, `storepass` is the Java default `changeit`).
 
 ## WSL
 
-WSL2's trust store is fully independent of Windows' own. IT populating the Windows certificate
-store via Group Policy/Intune does **not** carry over into WSL — `update-ca-certificates` still
-has to run inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an
-OS-trust-store issue, not a networking one). If the bundle needs to be pulled off the Windows side
-first, that's a one-time manual copy (e.g. via `/mnt/c`) — this repo has no automation for reading
-the Windows certificate store or shelling out to `certutil.exe`/`powershell.exe`; usually simplest
-to just ask IT for the raw file directly.
+WSL2's trust store is fully independent of Windows' own. IT populating the Windows certificate store
+via Group Policy/Intune does **not** carry over into WSL — `update-ca-certificates` still has to run
+inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an OS-trust-store
+issue, not a networking one). If the bundle needs to be pulled off the Windows side first, that's a
+one-time manual copy (e.g. via `/mnt/c`) — this repo has no automation for reading the Windows
+certificate store or shelling out to `certutil.exe`/`powershell.exe`; usually simplest to just ask
+IT for the raw file directly.
 
 ## Uninstall / rotation
 
@@ -94,12 +96,14 @@ sudo update-ca-certificates
 ```
 
 Don't pass `--fresh` — it rebuilds the trust store from scratch and would also drop any _other_
-locally-added certs, not just this one. Neither task prunes stale config on its own, so also
-remove by hand:
+locally-added certs, not just this one. Neither task prunes stale config on its own, so also remove
+by hand:
 
 - The `PULSE::certs` block from `~/.zshenv`.
-- Any `pulse-corporate-*` Java aliases: `sudo keytool -delete -alias pulse-corporate-0 -keystore
-  "$JAVA_HOME/lib/security/cacerts" -storepass changeit` (repeat per alias).
+- Any `pulse-corporate-*` Java aliases:
+  `sudo keytool -delete -alias pulse-corporate-0 -keystore
+  "$JAVA_HOME/lib/security/cacerts" -storepass changeit`
+  (repeat per alias).
 
 ## Genuine limitations
 
@@ -109,13 +113,13 @@ remove by hand:
   environment (see Java above). Reviewed-and-defensive, not proven.
 - **`update-ca-certificates --fresh` interaction with other manually-added local certs is out of
   scope by design** — hence the "no `--fresh`" uninstall instructions above.
-- **Docker registry mirrors, daemon proxy config, and per-registry `certs.d` are out of scope
-  here** — a corporate registry behind the same TLS-inspecting proxy needs its own separate setup;
-  see [docker.md](docker.md#corporate-registriesmirrors-not-automated-yet) for the mechanism
-  (tracked as a follow-up, not covered by this task).
+- **Docker registry mirrors, daemon proxy config, and per-registry `certs.d` are out of scope here**
+  — a corporate registry behind the same TLS-inspecting proxy needs its own separate setup; see
+  [docker.md](docker.md#corporate-registriesmirrors-not-automated-yet) for the mechanism (tracked as
+  a follow-up, not covered by this task).
 
 ## See also
 
 - [corporate-proxy.md](corporate-proxy.md) — the separate concern of authenticating _through_ a
-  corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA;
-  proxy auth is unrelated and doesn't require one to imply the other.
+  corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA; proxy
+  auth is unrelated and doesn't require one to imply the other.

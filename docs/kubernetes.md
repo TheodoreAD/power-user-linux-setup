@@ -16,7 +16,8 @@ Or all at once: `inv setup`
 
 ## kubectl
 
-Kubernetes CLI — declared as `[packages.kubectl]` in `setup.toml`. The apt repo is version-specific (`v1.33`); update the repo URL in `setup.toml` when upgrading to a new minor version.
+Kubernetes CLI — declared as `[packages.kubectl]` in `setup.toml`. The apt repo is version-specific
+(`v1.33`); update the repo URL in `setup.toml` when upgrading to a new minor version.
 
 ## helm
 
@@ -29,9 +30,11 @@ helm repo update
 
 ## kind
 
-Kubernetes in Docker — for when you kinda want the banana but without the gorilla and the whole jungle.
+Kubernetes in Docker — for when you kinda want the banana but without the gorilla and the whole
+jungle.
 
-Single-node cluster on your machine without the pain of kubeadm, kubelet & friends. Installed as a direct binary download to `~/.local/bin/kind`.
+Single-node cluster on your machine without the pain of kubeadm, kubelet & friends. Installed as a
+direct binary download to `~/.local/bin/kind`.
 
 ```shell
 kind create cluster
@@ -40,12 +43,15 @@ kind delete cluster
 
 ## k9s
 
-Terminal UI for Kubernetes — browse clusters, pods, logs, exec into containers, port-forward, all from the keyboard. Installed as a `.deb` from the latest GitHub release via `inv apt.deb`.
+Terminal UI for Kubernetes — browse clusters, pods, logs, exec into containers, port-forward, all
+from the keyboard. Installed as a `.deb` from the latest GitHub release via `inv apt.deb`.
 
 ## Freelens
 
-Open-source Kubernetes IDE (community fork of Lens). Installed as a `.deb` from the latest GitHub release via `inv apt.deb`.
+Open-source Kubernetes IDE (community fork of Lens). Installed as a `.deb` from the latest GitHub
+release via `inv apt.deb`.
 
 ## Tilt
 
-Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual `kubectl apply`.
+Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual
+`kubectl apply`.

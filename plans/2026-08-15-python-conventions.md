@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-15
+updated: 2026-08-16
 ---
 
 # Python conventions across personal repos: typing, style, and design defaults
@@ -11,22 +11,22 @@ Same underlying motivation as `skills/db-defaults`: models and sessions drift to
 "reasonable" choices for the same recurring decisions, so conventions across this repo family
 (`power-user-linux-setup`, the `*-polite-mcp` repos, `product-research-pipeline`) end up
 inconsistent even though there's no real disagreement about what's best — just nobody wrote the
-default down. This plan is scoped to **language-level and design-level conventions** (typing,
-style, control flow, data modeling, architecture) — not repo scaffolding, which is already covered
-by `plans/2026-08-14-python-repo-scaffolding.md`.
+default down. This plan is scoped to **language-level and design-level conventions** (typing, style,
+control flow, data modeling, architecture) — not repo scaffolding, which is already covered by
+`plans/2026-08-14-python-repo-scaffolding.md`.
 
-Audience is explicitly both humans and coding agents, so — per Armin Ronacher's argument cited
-below — **consistency of one opinion matters as much as which opinion is "most correct"** in the
-several places reputable sources genuinely disagree with each other. This plan surfaces those
-disagreements rather than hiding them, and records which way the user actually decided, so the
-future skill build-out (§ Recommended direction — confirmed, not folded per-repo into `AGENTS.md`:
-maintaining the same guidance across every repo's own file was judged a maintenance burden the
+Audience is explicitly both humans and coding agents, so — per Armin Ronacher's argument cited below
+— **consistency of one opinion matters as much as which opinion is "most correct"** in the several
+places reputable sources genuinely disagree with each other. This plan surfaces those disagreements
+rather than hiding them, and records which way the user actually decided, so the future skill
+build-out (§ Recommended direction — confirmed, not folded per-repo into `AGENTS.md`: maintaining
+the same guidance across every repo's own file was judged a maintenance burden the
 `db-defaults`-style skill mechanism already solves) has real citations behind it instead of
 restating LLM training-data platitudes.
 
-No repo in this family has a static type checker configured today. Ruff already governs
-mechanical style (formatting, import order, common bug patterns) — this plan deliberately doesn't
-re-litigate anything ruff already enforces, only the structural/idiomatic choices ruff is silent on.
+No repo in this family has a static type checker configured today. Ruff already governs mechanical
+style (formatting, import order, common bug patterns) — this plan deliberately doesn't re-litigate
+anything ruff already enforces, only the structural/idiomatic choices ruff is silent on.
 
 Seed topics, per the user's original list, explicitly not exhaustive ("we can start with those"):
 typing, general style, early returns/guard clauses, fail-fast, Pydantic vs dataclass vs NamedTuple
@@ -40,32 +40,52 @@ basedpyright and settings libraries after the user's own answers surfaced those 
 trails are in each cluster below — this file is the durable record, not a scratch summary, so
 sources are kept rather than compressed away.
 
+**Research retention, independent of this plan's own lifecycle** (explicit user instruction,
+2026-08-16): this research "validates our ideas" and must survive regardless of how the plan itself
+ends up being used — consolidated is fine, lost is not. This is already the default behavior the
+`plan-docs` skill's own "Retiring a plan" step 1 prescribes ("preserve unless already written down
+elsewhere") — flagged here explicitly anyway so a future retirement pass doesn't need to rediscover
+that instruction from scratch. Concretely: when this file eventually reaches `landed`/`superseded`,
+its citation trail migrates to a permanent home (most likely the `python-conventions` skill's own
+`references/rationale.md`, or a `contributing/*.md` entry if the skill idea doesn't pan out)
+_before_ this file is deleted — never delete-without-migrating just because the plan's specific
+proposed next step (the skill) didn't happen.
+
+**This repo is now the pilot/reference implementation** (explicit user instruction, 2026-08-16):
+rather than building the `python-conventions` skill first and only then finding out whether its
+picks hold up in practice, `power-user-linux-setup`'s own `pyproject.toml`/`tasks/quality.py`/
+`setup.toml`/`dprint.json` adopt the tool choices and tuned configs from §§1 and 9 directly, the
+same role `olx-polite-mcp` already played as the reference implementation for the scaffolding plan
+(`plans/2026-08-14-python-repo-scaffolding.md`). This tests the defaults against a real codebase
+before they're baked into a skill other repos will copy — see the repo's own commit history from
+2026-08-16 onward for what actually landed and what friction, if any, it produced.
+
 ## 1. Static type checking — tool choice and strictness
 
 **Landscape (Aug 2026):** four real contenders, no consensus winner.
 
 - **mypy** — incumbent, deepest tutorial/Stack-Overflow ecosystem, but lowest typing-spec
   conformance of the four (~58% in one third-party conformance run) and slowest.
-- **pyright** (Microsoft) — mature, highest install base (Pylance ships in VS Code, 196M+
-  installs), strongest strict-mode documentation, ~95–98% conformance.
-- **pyrefly** (Meta) — newest to reach stable (1.0, May 2026), best speed+conformance combo in
-  most benchmarks, smallest community/troubleshooting footprint of the four.
-- **ty** (Astral — same team as ruff/uv, OpenAI-acquired March 2026) — fast, ecosystem-aligned
-  with tools already in this stack, but still pre-1.0/beta versioning (`0.0.72` as of this
-  research) — not yet broadly recommended as a default by its own maintainers' versioning signal.
+- **pyright** (Microsoft) — mature, highest install base (Pylance ships in VS Code, 196M+ installs),
+  strongest strict-mode documentation, ~95–98% conformance.
+- **pyrefly** (Meta) — newest to reach stable (1.0, May 2026), best speed+conformance combo in most
+  benchmarks, smallest community/troubleshooting footprint of the four.
+- **ty** (Astral — same team as ruff/uv, OpenAI-acquired March 2026) — fast, ecosystem-aligned with
+  tools already in this stack, but still pre-1.0/beta versioning (`0.0.72` as of this research) —
+  not yet broadly recommended as a default by its own maintainers' versioning signal.
 
 **basedpyright** (the user's actual pick, researched in depth as a follow-up): a fork of pyright,
 maintained primarily by one contributor (`DetachHead`) plus ~90–200+ contributors depending on
-counting method. Exists to close two real gaps in plain pyright: (1) several editor-facing
-features — inlay hints, semantic highlighting, docstring/import-suggestion completions — are
-implemented only in Microsoft's closed-source **Pylance**, licensed for VS Code only; basedpyright
-reimplements Pylance-equivalent features into its own language server so any editor gets parity.
-(2) Plain pyright's CLI ships only via npm and needs a Node runtime — an awkward fit for a
-pure-Python/uv toolchain; basedpyright publishes a normal PyPI package that bundles its own Node
-runtime internally. It tracks upstream pyright tightly — new pyright releases get merged in within
-0–2 days, confirmed directly from commit history, not just from the docs' framing — so it's a
-genuine superset, not a diverging fork. It keeps pyright's `off`/`basic`/`standard`/`strict` ladder
-intact and adds two more tiers: `recommended` (its new default — every practically-useful rule on,
+counting method. Exists to close two real gaps in plain pyright: (1) several editor-facing features
+— inlay hints, semantic highlighting, docstring/import-suggestion completions — are implemented only
+in Microsoft's closed-source **Pylance**, licensed for VS Code only; basedpyright reimplements
+Pylance-equivalent features into its own language server so any editor gets parity. (2) Plain
+pyright's CLI ships only via npm and needs a Node runtime — an awkward fit for a pure-Python/uv
+toolchain; basedpyright publishes a normal PyPI package that bundles its own Node runtime
+internally. It tracks upstream pyright tightly — new pyright releases get merged in within 0–2 days,
+confirmed directly from commit history, not just from the docs' framing — so it's a genuine
+superset, not a diverging fork. It keeps pyright's `off`/`basic`/`standard`/`strict` ladder intact
+and adds two more tiers: `recommended` (its new default — every practically-useful rule on,
 distinguishing likely-bug errors from style warnings) and `all`, plus a `--writebaseline` mechanism
 for adopting stricter rules on an existing codebase incrementally (comparable to ruff's/mypy's own
 baseline-adoption story). Posit's engineering blog (Mar 2026), evaluating type checkers for their
@@ -79,14 +99,15 @@ found treats this as a current problem, but it's worth naming rather than omitti
 **Decision: basedpyright, `recommended` as the base mode — not `strict`.** This corrects the plan's
 own first-pass instinct ("strict from day one"), on direct evidence: **`strict` mode does not enable
 most of basedpyright's own exclusive bug-catching rules** — `reportAny`, `reportUnreachable`,
-`reportImplicitStringConcatenation`, and `reportIgnoreCommentWithoutRule` all default to `"none"` (or,
-for `reportUnreachable`, `"hint"` — invisible to a CLI-driven agent loop entirely) under `strict`,
-because those rules were wired into `recommended`/`all` for pyright/VS-Code backward-compatibility
-reasons, not retrofitted into the older `strict` ladder. Picking `strict` — the tier that sounds
-more rigorous — would have silently missed the exact three bug classes the user asked this profile
-to catch. `recommended` turns them on, but has its own gap: it grades everything as `"warning"` or
-`"error"`, and defaults `failOnWarnings = true`, which makes the grading meaningless to a CLI-driven
-agent (a `"warning"`-level ceremony rule still fails the run). The concrete, tuned profile:
+`reportImplicitStringConcatenation`, and `reportIgnoreCommentWithoutRule` all default to `"none"`
+(or, for `reportUnreachable`, `"hint"` — invisible to a CLI-driven agent loop entirely) under
+`strict`, because those rules were wired into `recommended`/`all` for pyright/VS-Code
+backward-compatibility reasons, not retrofitted into the older `strict` ladder. Picking `strict` —
+the tier that sounds more rigorous — would have silently missed the exact three bug classes the user
+asked this profile to catch. `recommended` turns them on, but has its own gap: it grades everything
+as `"warning"` or `"error"`, and defaults `failOnWarnings = true`, which makes the grading
+meaningless to a CLI-driven agent (a `"warning"`-level ceremony rule still fails the run). The
+concrete, tuned profile:
 
 ```toml
 [tool.basedpyright]
@@ -134,15 +155,15 @@ allowedUntypedLibraries = []
 ```
 
 `useLibraryCodeForTypes` stays at its default `true` (already reduces `reportUnknown*` noise by
-reading a dependency's actual source when no stub exists). basedpyright added `allowedUntypedLibraries`
-specifically in response to the well-documented pyright pain point of the `reportUnknown*`/
-`reportMissingTypeStubs` cluster cascading badly against untyped third-party libraries
-([microsoft/pyright#10566](https://github.com/microsoft/pyright/issues/10566) was an open, unmerged
-request for exactly this in upstream pyright) — the practical answer to that friction is a per-library
-allowlist entry as it's encountered, not a global severity retreat. No comparable basedpyright-specific
-"pragmatic strict config" writeup exists yet in the wild (`recommended` mode and
-`allowedUntypedLibraries` are both new enough that this appears to be a genuine gap) — this profile is
-derived directly from basedpyright's own rule-default table
+reading a dependency's actual source when no stub exists). basedpyright added
+`allowedUntypedLibraries` specifically in response to the well-documented pyright pain point of the
+`reportUnknown*`/ `reportMissingTypeStubs` cluster cascading badly against untyped third-party
+libraries ([microsoft/pyright#10566](https://github.com/microsoft/pyright/issues/10566) was an open,
+unmerged request for exactly this in upstream pyright) — the practical answer to that friction is a
+per-library allowlist entry as it's encountered, not a global severity retreat. No comparable
+basedpyright-specific "pragmatic strict config" writeup exists yet in the wild (`recommended` mode
+and `allowedUntypedLibraries` are both new enough that this appears to be a genuine gap) — this
+profile is derived directly from basedpyright's own rule-default table
 ([docs.basedpyright.com/latest/configuration/config-files/#diagnostic-settings-defaults](https://docs.basedpyright.com/latest/configuration/config-files/#diagnostic-settings-defaults)),
 not adapted from a third party's already-published tuning. The pre-existing "type everything, even
 snippets" precedent ([[feedback_type_everything_for_agent_precedent]]) still holds — this profile is
@@ -151,22 +172,24 @@ how that precedent gets enforced without also demanding annotation ceremony that
 **Genuine dissent worth keeping in view, not adopting:** Armin Ronacher (Flask creator), two posts —
 ["Untyped Python: The Python That Was"](https://lucumr.pocoo.org/2023/12/1/the-python-that-was/)
 (Dec 2023) argues Python's original strength was a tiny language-runtime surface area, and heavy
-typing risks "creating the new Java." More pointed: ["In Support Of Shitty Types"](https://lucumr.pocoo.org/2025/8/4/shitty-types/) (Aug 2025) argues fragmented, disagreeing
-type checkers actively hurt LLM coding agents specifically, because models struggle when tools
-disagree on what counts as an error — his conclusion is that _consistency_ of one checker's opinion
-matters more than maximal strictness for agent-driven workflows. This is unusually on-point given
-this plan's own stated audience, and is exactly why "pick one checker, strict, and stop arguing
-about it" is the right shape of decision here even though "strict" itself isn't universally
-endorsed.
+typing risks "creating the new Java." More pointed:
+["In Support Of Shitty Types"](https://lucumr.pocoo.org/2025/8/4/shitty-types/) (Aug 2025) argues
+fragmented, disagreeing type checkers actively hurt LLM coding agents specifically, because models
+struggle when tools disagree on what counts as an error — his conclusion is that _consistency_ of
+one checker's opinion matters more than maximal strictness for agent-driven workflows. This is
+unusually on-point given this plan's own stated audience, and is exactly why "pick one checker,
+strict, and stop arguing about it" is the right shape of decision here even though "strict" itself
+isn't universally endorsed.
 
 **`Any` / `# type: ignore` hygiene:** community-uncontested — scope ignores to a specific error code
-(`# type: ignore[code]`) rather than blanket-silencing a line; Ruff has `PGH003
+(`# type: ignore[code]`) rather than blanket-silencing a line; Ruff has
+`PGH003
 (blanket-type-ignore)` for exactly this, not currently in this repo's `select` list.
 
 ## 2. Data modeling — Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec
 
-**Decision: trim to as few default choices as possible.** The user's explicit ask — fewer options
-so agents mimicking existing code have less room to pick the wrong one — overrides the general
+**Decision: trim to as few default choices as possible.** The user's explicit ask — fewer options so
+agents mimicking existing code have less room to pick the wrong one — overrides the general
 [[feedback_best_tool_per_concern]] instinct here; the research below (attrs vs. Pydantic tradeoffs,
 msgspec's speed) stays in the file as real, verified options, but only two are the routine default:
 
@@ -184,8 +207,8 @@ choice:
 
 - **attrs** — only if a concrete case needs validators/converters without Pydantic's
   validation+serialization bundling. The sharpest source found on this tradeoff:
-  ["Why I use attrs instead of pydantic"](https://threeofwands.com/why-i-use-attrs-instead-of-pydantic/) —
-  "Pydantic makes things that should be hard appear easy, and things that should be easy,
+  ["Why I use attrs instead of pydantic"](https://threeofwands.com/why-i-use-attrs-instead-of-pydantic/)
+  — "Pydantic makes things that should be hard appear easy, and things that should be easy,
   frustratingly hard," arguing Pydantic's bundling causes surprising default behavior, while attrs'
   opt-in model is more composable (pairs with `cattrs`, kept separate from the model by design).
   Concedes Pydantic's default validation error messages are better, precisely because Pydantic
@@ -206,14 +229,14 @@ as the candidate.
 
 **pydantic-settings**: split out of Pydantic v1's built-in `BaseSettings` into its own
 `pydantic`-org-maintained package for v2. Verified mechanics: typed `BaseSettings` subclass,
-source-priority chain (CLI args → init kwargs → env vars → `.env` file(s), layerable →
-`secrets_dir` → field defaults), nested config via `env_nested_delimiter` or JSON, first-class TOML/
+source-priority chain (CLI args → init kwargs → env vars → `.env` file(s), layerable → `secrets_dir`
+→ field defaults), nested config via `env_nested_delimiter` or JSON, first-class TOML/
 YAML/JSON/`pyproject.toml` sources, and genuine Docker/K8s-secret-mount support
-(`SettingsConfigDict(secrets_dir=...)`, one file per field). `SecretStr` masks `repr()`/`str()`
-only — genuinely prevents the common "stray `print(settings)` leaks a secret" accident, but
+(`SettingsConfigDict(secrets_dir=...)`, one file per field). `SecretStr` masks `repr()`/`str()` only
+— genuinely prevents the common "stray `print(settings)` leaks a secret" accident, but
 `.get_secret_value()` still returns the raw string, so it is **not** a full secrets-management
-control; state this plainly wherever it's documented, since it's a common point of over-trust.
-~488M PyPI downloads/month (reflecting FastAPI's install base as much as direct adoption), commits
+control; state this plainly wherever it's documented, since it's a common point of over-trust. ~488M
+PyPI downloads/month (reflecting FastAPI's install base as much as direct adoption), commits
 same-day as this research — lowest realistic maintenance-risk option checked.
 
 **Contenders evaluated and rejected for this use case, not just unmentioned:**
@@ -257,23 +280,22 @@ validation of this composite pattern specifically (Flask's own long-documented
 ## 4. Early returns / guard clauses, fail-fast, and the EAFP tension
 
 **Guard clauses — the actual rule, not the folk version.** Fowler's _Refactoring_ (the origin,
-"Replace Nested Conditional with Guard Clauses") draws an asymmetry test, not a blanket
-"flatten everything" rule: if-then-else is right when both branches are equally likely/important;
-a guard clause is right specifically when one path is the happy path and the other a rare,
-exceptional early-out. **Using a guard clause to split two co-equal business branches destroys the
-signal the construct is supposed to carry** — this is the single most load-bearing nuance to keep.
-PEP 8 never mentions guard clauses, early return, EAFP, or LBYL at all (verified directly against
-the PEP text — several web summaries claiming "PEP 8 endorses EAFP" are wrong). The closest thing
-to an official Python endorsement is PEP 20's "Flat is better than nested" — a philosophy, not a
-rule.
+"Replace Nested Conditional with Guard Clauses") draws an asymmetry test, not a blanket "flatten
+everything" rule: if-then-else is right when both branches are equally likely/important; a guard
+clause is right specifically when one path is the happy path and the other a rare, exceptional
+early-out. **Using a guard clause to split two co-equal business branches destroys the signal the
+construct is supposed to carry** — this is the single most load-bearing nuance to keep. PEP 8 never
+mentions guard clauses, early return, EAFP, or LBYL at all (verified directly against the PEP text —
+several web summaries claiming "PEP 8 endorses EAFP" are wrong). The closest thing to an official
+Python endorsement is PEP 20's "Flat is better than nested" — a philosophy, not a rule.
 
 **The EAFP/LBYL tension is real, not manufactured.** A guard clause is structurally LBYL — it looks
 before it leaps. Python's own glossary calls out LBYL's race-condition risk directly (check-then-act
 gap) and names EAFP as the culturally preferred style. The reconciliation that holds up: **guard
-clauses validate a function's own contract** (did the caller uphold the API — argument types,
-value ranges) — a different question than "will this specific runtime operation succeed," which is
-EAFP's territory (dict/attr lookups, file I/O, network calls — things Python already knows how to
-fail loudly on). Where sources disagree is how strictly to police that boundary; mainstream practice
+clauses validate a function's own contract** (did the caller uphold the API — argument types, value
+ranges) — a different question than "will this specific runtime operation succeed," which is EAFP's
+territory (dict/attr lookups, file I/O, network calls — things Python already knows how to fail
+loudly on). Where sources disagree is how strictly to police that boundary; mainstream practice
 (`requests`, `click`, the Google style guide) mixes both freely as long as the EAFP half catches
 specific, narrow exception types.
 
@@ -295,12 +317,13 @@ reasonable inference than a cited consensus**, so stated as one: one root except
 minimum, deeper leaves only once a caller actually needs to discriminate.
 
 **Genuine minority dissent, not a strawman:** Nikita Sobolevn (maintainer,
-`wemake-python-styleguide`), ["Python exceptions considered an anti-pattern"](https://sobolevn.me/2019/02/python-exceptions-considered-an-antipattern) — argues
-exception-heavy EAFP code is itself a readability/correctness hazard (almost any line can silently
-raise, no static way to see what runs after a catch), proposing explicit `Result[Success, Error]`
-container types instead. Real standing, genuinely rejects mainstream EAFP culture — not adopted
-here, but worth recording so it isn't silently "rediscovered" later and treated as a regression from
-current practice.
+`wemake-python-styleguide`),
+["Python exceptions considered an anti-pattern"](https://sobolevn.me/2019/02/python-exceptions-considered-an-antipattern)
+— argues exception-heavy EAFP code is itself a readability/correctness hazard (almost any line can
+silently raise, no static way to see what runs after a catch), proposing explicit
+`Result[Success, Error]` container types instead. Real standing, genuinely rejects mainstream EAFP
+culture — not adopted here, but worth recording so it isn't silently "rediscovered" later and
+treated as a regression from current practice.
 
 ## 5. Modularity, testability, DRY, readability, encapsulation
 
@@ -313,14 +336,15 @@ suspicion in the Python world."** Their prescription is not a DI framework but a
 monkeypatch-style mocking "couples tests tightly to implementation details."
 
 **Clean Code / Clean Architecture (Robert C. Martin) — the Python-specific pushback is real and
-documented**, not invented for balance: ["Why I can't recommend Clean Architecture by Robert C
+documented**, not invented for balance:
+["Why I can't recommend Clean Architecture by Robert C
 Martin"](https://dev.to/bosepchuk/why-i-cant-recommend-clean-architecture-by-robert-c-martin-ofd)
-(discussed on HN and Lobsters) argues Clean Architecture's abstract-interface-class machinery is
-"a very common, and necessary tactic when using statically typed languages like Java and C#," but
-in Python those interface classes and the dependencies that would target them don't need to exist
-at all — duck typing already provides the decoupling. **The core idea (depend on abstractions, keep
-the domain free of I/O concerns) survives; the Java-flavored mechanism doesn't fit and is rejected
-by Python-specific voices.**
+(discussed on HN and Lobsters) argues Clean Architecture's abstract-interface-class machinery is "a
+very common, and necessary tactic when using statically typed languages like Java and C#," but in
+Python those interface classes and the dependencies that would target them don't need to exist at
+all — duck typing already provides the decoupling. **The core idea (depend on abstractions, keep the
+domain free of I/O concerns) survives; the Java-flavored mechanism doesn't fit and is rejected by
+Python-specific voices.**
 
 **Functional Core, Imperative Shell** — legitimate, live, actionable advice, not a dated pattern:
 Google's own engineering blog revived it in Oct 2025 (Testing on the Toilet series). Fits
@@ -331,17 +355,18 @@ the more applicable concept.
 
 **DRY vs. its critiques — decision: lean toward duplication.** Fowler's older Rule of Three
 (duplicate once freely, wince at twice, refactor on three, attributed to Don Roberts) is the
-moderate position. Sandi Metz's sharper "[The Wrong Abstraction](https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction)" — "duplication is far
-cheaper than the wrong abstraction," inline a strained abstraction back out rather than patch it
-with more parameters — is a Ruby-community citation with **no independently-argued Python-authority
-echo found**, worth being honest about rather than dressing up as cross-language consensus; it
-reaches Python circles by reference (e.g. via Kent C. Dodds' "AHA Programming" / "Avoid Hasty
-Abstractions," which does the same move). "WET" as a backronym has **no verifiable single
-coiner** — treat as crowd folklore, not a cited origin. **This decision matches the user's existing
-[[feedback_best_tool_per_concern]] preference and was confirmed directly**: for solo-maintained
-repos, a miscalibrated abstraction costs only the maintainer, but also has to survive being
-correctly understood by an agent before it can be safely modified — a wrong abstraction is _harder_
-for an agent to safely touch than duplicated code, not easier.
+moderate position. Sandi Metz's sharper
+"[The Wrong Abstraction](https://sandimetz.com/blog/2016/1/20/the-wrong-abstraction)" — "duplication
+is far cheaper than the wrong abstraction," inline a strained abstraction back out rather than patch
+it with more parameters — is a Ruby-community citation with **no independently-argued
+Python-authority echo found**, worth being honest about rather than dressing up as cross-language
+consensus; it reaches Python circles by reference (e.g. via Kent C. Dodds' "AHA Programming" /
+"Avoid Hasty Abstractions," which does the same move). "WET" as a backronym has **no verifiable
+single coiner** — treat as crowd folklore, not a cited origin. **This decision matches the user's
+existing [[feedback_best_tool_per_concern]] preference and was confirmed directly**: for
+solo-maintained repos, a miscalibrated abstraction costs only the maintainer, but also has to
+survive being correctly understood by an agent before it can be safely modified — a wrong
+abstraction is _harder_ for an agent to safely touch than duplicated code, not easier.
 
 **Readability:** PEP 8 itself (authored by Guido, Barry Warsaw, Alyssa Coghlan) states directly:
 "code is read much more often than it is written," immediately followed by subordinating the style
@@ -350,11 +375,12 @@ misattribution** — "programs are meant to be read by humans" is Abelson & Suss
 not Knuth; Knuth's real, distinct contribution to this lineage is Literate Programming. Comment
 philosophy ("why, not what") is already governed by this session's own global instructions
 (`~/AGENTS.md`'s "default to no comments... only when the WHY is non-obvious"), not re-litigated
-here — but worth noting the pushback exists: Hillel Wayne's ["The Myth of Self-Documenting Code"](https://buttondown.com/hillelwayne/archive/the-myth-of-self-documenting-code/) argues some
-information (negative information — "we tried X, it broke because Y" — optimization rationale,
-caller-facing gotchas) genuinely can't be inferred from clean code no matter how well-named, so
-"self-documenting code" as an ideal is oversold. Consistent with, doesn't override, the existing
-comment policy.
+here — but worth noting the pushback exists: Hillel Wayne's
+["The Myth of Self-Documenting Code"](https://buttondown.com/hillelwayne/archive/the-myth-of-self-documenting-code/)
+argues some information (negative information — "we tried X, it broke because Y" — optimization
+rationale, caller-facing gotchas) genuinely can't be inferred from clean code no matter how
+well-named, so "self-documenting code" as an ideal is oversold. Consistent with, doesn't override,
+the existing comment policy.
 
 **Encapsulation:** Python has no real privacy. PEP 8, verbatim: single underscore is a "weak
 'internal use' indicator" (affects `import *` only); double-underscore triggers name mangling for
@@ -372,16 +398,17 @@ are reading the boundary.
 ## 6. Modules-as-singletons and lazy-loading properties — the `globals.py` pattern
 
 **Modules-as-singletons is real, stdlib-endorsed practice**, not just a convenient accident: the
-official [CPython Programming FAQ](https://docs.python.org/3/faq/programming.html#how-do-i-share-global-variables-across-modules)
+official
+[CPython Programming FAQ](https://docs.python.org/3/faq/programming.html#how-do-i-share-global-variables-across-modules)
 states directly that a module is the canonical way to share state, "because there is only one
 instance of each module," and explicitly names this as the basis for implementing Singleton in
 Python. Brandon Rhodes' python-patterns.guide sharpens this into the actually-useful form: prefer
-"[The Global Object Pattern](https://python-patterns.guide/python/module-globals/)" — instantiate a plain class once at
-module level — over a GoF class-based Singleton, specifically because **the Global Object Pattern
-doesn't architecturally forbid a second instance**, which is exactly what makes tests able to
-construct an independent, isolated object instead of fighting shared global state. This is the
-precise shape of the `globals.py` pattern described: a class, one default module-level instance,
-freely re-instantiable for tests.
+"[The Global Object Pattern](https://python-patterns.guide/python/module-globals/)" — instantiate a
+plain class once at module level — over a GoF class-based Singleton, specifically because **the
+Global Object Pattern doesn't architecturally forbid a second instance**, which is exactly what
+makes tests able to construct an independent, isolated object instead of fighting shared global
+state. This is the precise shape of the `globals.py` pattern described: a class, one default
+module-level instance, freely re-instantiable for tests.
 
 **Validated against this family's actual code, not just the abstract pattern:** none of the
 `*-polite-mcp` repos has a config/settings module today, but all three implemented ones
@@ -408,10 +435,11 @@ convention, not a new direction being introduced.**
   from scratch, independently re-initializing anything with construction-time side effects (opening
   a file, binding a port). A lock held at fork time can be copied in the _locked_ state without the
   thread that would release it — a real hang source if a singleton wraps anything lock-protected.
-- **Concurrency correctness:** the official [free-threading guide](https://py-free-threading.github.io/testing/) states plainly that global mutable state
-  relying on unstated GIL assumptions is not safe even under the classic GIL for compound operations
-  (check-then-set, `+=`), and is a live forward-looking risk now that free-threaded builds are a
-  real (if opt-in) option.
+- **Concurrency correctness:** the official
+  [free-threading guide](https://py-free-threading.github.io/testing/) states plainly that global
+  mutable state relying on unstated GIL assumptions is not safe even under the classic GIL for
+  compound operations (check-then-set, `+=`), and is a live forward-looking risk now that
+  free-threaded builds are a real (if opt-in) option.
 
 **`cached_property` — a genuinely version-sensitive fact for this repo family (targets 3.11+),
 verified against current stdlib docs rather than assumed:** thread-safety semantics **changed
@@ -432,16 +460,16 @@ via property is fine for expensive, side-effect-free computation** (the stdlib's
 `stdev` computed once from already-loaded, immutable data); **it's the wrong tool once the deferred
 work has externally-visible side effects** (opening a DB connection, a network call) — an explicit
 `.load()`/`.ensure_loaded()` method makes that cost visible at the call site, which a property by
-construction cannot. (This specific explicit-method-vs-property contrast is reasoned from the
-Google guide's stated principle, not independently sourced by name — flagged as the single weakest-
+construction cannot. (This specific explicit-method-vs-property contrast is reasoned from the Google
+guide's stated principle, not independently sourced by name — flagged as the single weakest-
 evidenced sub-point in this whole research pass.)
 
 **Decision, confirmed with the user:** the `globals.py` pattern — a class instantiated once at
 module level, `@property`/`cached_property` for lazy-loaded fields, freely re-instantiable with
 different settings so tests can swap or recreate the object — is a sound, well-precedented default.
 Document both live caveats alongside it wherever it's written up: the 3.11→3.12 `cached_property`
-locking change, and "only lazy-load via property when the getter is idempotent/side-effect-free;
-use eager `__init__`-time loading or an explicit method when it isn't."
+locking change, and "only lazy-load via property when the getter is idempotent/side-effect-free; use
+eager `__init__`-time loading or an explicit method when it isn't."
 
 **Community-precedent check on the composite settings pattern (§3), run at the user's explicit
 request — an honest, mixed result, not inflated into false consensus.** The pattern decomposes into
@@ -450,16 +478,16 @@ five pieces with sharply differing precedent strength:
 - **Base class + environment-specific subclasses + env-var-driven selection (pieces 1–3) — very
   strong precedent, but for Flask's older, non-Pydantic `Config` idiom.** Flask's own docs, fetched
   directly, have described this exact shape for over a decade:
-  ["Configuration Handling"](https://flask.palletsprojects.com/en/stable/config/#development-production) —
-  `class Config` → `ProductionConfig(Config)`/`DevelopmentConfig(Config)`/`TestingConfig(Config)`,
+  ["Configuration Handling"](https://flask.palletsprojects.com/en/stable/config/#development-production)
+  — `class Config` → `ProductionConfig(Config)`/`DevelopmentConfig(Config)`/`TestingConfig(Config)`,
   each overriding only what differs, selected via `app.config.from_object()` driven by an env var.
-  Django's `DJANGO_SETTINGS_MODULE` does the same job by swapping a whole _module_, not subclassing —
-  confirmed genuinely different, a useful contrast rather than a competing endorsement. A real,
+  Django's `DJANGO_SETTINGS_MODULE` does the same job by swapping a whole _module_, not subclassing
+  — confirmed genuinely different, a useful contrast rather than a competing endorsement. A real,
   independent, non-Flask precedent for the "class hierarchy auto-selected by an env var" mechanism
   itself exists in `django-classy-settings` (a real PyPI package doing exactly this for Django).
 - **The Pydantic-specific version of the composite is real but thinly precedented — one tutorial
-  lineage, not community consensus.** Three online sources (Teclado's FastAPI course, rednafi.com,
-  a smaller blog) show near-identical `GlobalConfig`/`DevConfig`/`ProdConfig` code and naming,
+  lineage, not community consensus.** Three online sources (Teclado's FastAPI course, rednafi.com, a
+  smaller blog) show near-identical `GlobalConfig`/`DevConfig`/`ProdConfig` code and naming,
   probably traceable to one common origin rather than independently invented three times. Neither
   pydantic-settings' own docs nor FastAPI's own docs recommend this composite — pydantic-settings'
   docs show layered `.env` files instead (`.env`, `.env.prod`, later overriding earlier), and
@@ -471,9 +499,9 @@ five pieces with sharply differing precedent strength:
   sources describing the same idiom state the reason directly — "creating a global settings instance
   at module import time can limit flexibility, making it difficult to override settings during
   testing." This is a different mechanism solving the _same_ testability goal the `globals.py`
-  pattern already solves a different way (a frozen-but-freely-constructible class, not a Singleton) —
-  a legitimate design choice, not a flaw, but worth stating honestly as "not the way FastAPI's docs
-  demonstrate" rather than implying it's the only correct approach.
+  pattern already solves a different way (a frozen-but-freely-constructible class, not a Singleton)
+  — a legitimate design choice, not a flaw, but worth stating honestly as "not the way FastAPI's
+  docs demonstrate" rather than implying it's the only correct approach.
 - **`frozen=True` on `BaseSettings` — confirmed clean, no subclass-override conflict.** Pydantic's
   own docs confirm `frozen` blocks reassignment on an already-constructed instance; it has no
   interaction with a subclass declaring a different field _default_ at class-definition time, since
@@ -482,43 +510,45 @@ five pieces with sharply differing precedent strength:
   found is narrow and tooling-only: some static type checkers need `frozen=True` redeclared
   explicitly on the subclass to recognize the inherited immutability, even though it holds at
   runtime regardless.
-- **Plain class, not a GoF Singleton (piece 5) — directly, strongly validated**, and by an
-  unusually authoritative source for this specific point: a pydantic-settings maintainer, on a
-  GitHub issue requesting native Singleton support, **explicitly declined**:
-  ["reconsider adding Singleton option for BaseSettings"](https://github.com/pydantic/pydantic-settings/issues/410) —
-  "it is not `pydantic-settings`'s responsibility to care about singleton instance... adding a new
+- **Plain class, not a GoF Singleton (piece 5) — directly, strongly validated**, and by an unusually
+  authoritative source for this specific point: a pydantic-settings maintainer, on a GitHub issue
+  requesting native Singleton support, **explicitly declined**:
+  ["reconsider adding Singleton option for BaseSettings"](https://github.com/pydantic/pydantic-settings/issues/410)
+  — "it is not `pydantic-settings`'s responsibility to care about singleton instance... adding a new
   config flag makes our configs more complex... and needs maintenance work as well." This is a
   direct, citable confirmation from the library's own team that keeping `BaseSettings` a freely
-  re-instantiable plain class — exactly the Global Object Pattern reasoning above — is the deliberate
-  design, not an oversight to work around.
+  re-instantiable plain class — exactly the Global Object Pattern reasoning above — is the
+  deliberate design, not an oversight to work around.
 
 **Net honest framing for the eventual skill writeup**: present this as _"Flask's fifteen-year-old
 config-subclass idiom, reimplemented in Pydantic with stronger immutability guarantees,"_ not as
-_"the standard Pydantic pattern"_ — the shape is excellent and well-precedented, the Pydantic-specific
-combination is a reasonable, well-motivated synthesis rather than a copied best practice.
+_"the standard Pydantic pattern"_ — the shape is excellent and well-precedented, the
+Pydantic-specific combination is a reasonable, well-motivated synthesis rather than a copied best
+practice.
 
 ## 7. Statelessness and immutability
 
 Two new topics the user pulled in after the first pass, tightly related to §6's singleton pattern
 and §2's `frozen=True` default.
 
-**Statelessness — the canonical source says less than the word implies.** Twelve-Factor App,
-Factor VI ("Processes"), Adam Wiggins/Heroku, 2011 — [12factor.net/processes](https://12factor.net/processes) —
-fetched directly: "Twelve-factor processes are stateless and share-nothing... any data that needs to
-persist must be stored in a stateful backing service." Explicitly **not** "zero state, ever" — the
-process's memory/filesystem "can be used as a brief, single-transaction cache," and the actual rule
-being enforced is that nothing assumes a _future_ request/invocation is served by the _same_
-process holding onto what an earlier one left behind. Traces back further to Fielding's REST
-dissertation (2000): "session state is therefore kept entirely on the client" — same shape, state
-relocated to an explicit place, not banned outright. **Directly relevant same-week evidence in this
-exact tool family**: MCP's own spec revision, SEP-2575 "Make MCP Stateless" (2026-07-28), removed
-the protocol-level session handshake — and the writeup on it draws precisely the distinction this
-plan needs: **"stateless MCP does not mean stateless software — application state must be explicit,
-addressable, and secured by the application instead of hiding inside an MCP transport session."**
-The user's actual goal, and what the research supports as the operative rule, is narrower and more
-useful than "no state anywhere": **no _shared_, _hidden_ mutable state that a future
-request/process/test can't see coming** — architecture-level (don't let a process assume its own
-memory outlives the request), not a ban on any object anywhere holding data.
+**Statelessness — the canonical source says less than the word implies.** Twelve-Factor App, Factor
+VI ("Processes"), Adam Wiggins/Heroku, 2011 —
+[12factor.net/processes](https://12factor.net/processes) — fetched directly: "Twelve-factor
+processes are stateless and share-nothing... any data that needs to persist must be stored in a
+stateful backing service." Explicitly **not** "zero state, ever" — the process's memory/filesystem
+"can be used as a brief, single-transaction cache," and the actual rule being enforced is that
+nothing assumes a _future_ request/invocation is served by the _same_ process holding onto what an
+earlier one left behind. Traces back further to Fielding's REST dissertation (2000): "session state
+is therefore kept entirely on the client" — same shape, state relocated to an explicit place, not
+banned outright. **Directly relevant same-week evidence in this exact tool family**: MCP's own spec
+revision, SEP-2575 "Make MCP Stateless" (2026-07-28), removed the protocol-level session handshake —
+and the writeup on it draws precisely the distinction this plan needs: **"stateless MCP does not
+mean stateless software — application state must be explicit, addressable, and secured by the
+application instead of hiding inside an MCP transport session."** The user's actual goal, and what
+the research supports as the operative rule, is narrower and more useful than "no state anywhere":
+**no _shared_, _hidden_ mutable state that a future request/process/test can't see coming** —
+architecture-level (don't let a process assume its own memory outlives the request), not a ban on
+any object anywhere holding data.
 
 **Legitimate, source-acknowledged exceptions — not edge cases to explain away.** Caches, connection
 pools, and rate limiters are the standard trio, and this project's own `db-defaults` skill research
@@ -543,11 +573,11 @@ is a comment, not a guarantee.
 **Why immutability matters — four distinct, separately-sourced arguments, not one vague appeal:**
 thread/free-threading correctness (ties directly to §6's free-threading finding); easier reasoning
 (no hidden mutation of arguments — the entire reason the shallow-freeze gotcha above is worth
-documenting is that it violates this exact expectation); hashability (immutable types are
-required for dict keys/set members — `list.__hash__` is deliberately `None` so a container's hash
-can't silently change after insertion and corrupt the structure); and defensive-copying elimination
-(if a value can't change, sharing it is behaviorally identical to copying it, so the copy becomes
-pure overhead — a real, source-backed argument, not just asserted).
+documenting is that it violates this exact expectation); hashability (immutable types are required
+for dict keys/set members — `list.__hash__` is deliberately `None` so a container's hash can't
+silently change after insertion and corrupt the structure); and defensive-copying elimination (if a
+value can't change, sharing it is behaviorally identical to copying it, so the copy becomes pure
+overhead — a real, source-backed argument, not just asserted).
 
 **Where blanket immutability doesn't fit Python — the real, Python-specific tension, not FP dogma
 imported uncritically.** Python is mutable-by-default at the language level (lists, dicts, class
@@ -562,8 +592,8 @@ building a result before returning it) stays conventionally mutable. This is the
 core/imperative-shell split §5 already covers, applied one level down to individual objects rather
 than whole modules.
 
-**Third-party persistent-structure libraries (`pyrsistent`, stdlib-adjacent `immutables` —
-the latter genuinely powers CPython's own `contextvars`, not a fringe library) — honest verdict:
+**Third-party persistent-structure libraries (`pyrsistent`, stdlib-adjacent `immutables` — the
+latter genuinely powers CPython's own `contextvars`, not a fringe library) — honest verdict:
 overkill for this project family.** Both solve efficient repeated-modification of large, deeply-
 nested collections (undo stacks, CRDTs) — not the shape of a config object, CLI arg record, or MCP
 payload. `frozen=True` dataclasses/Pydantic + `tuple`/`frozenset` cover the vast majority of cases
@@ -602,9 +632,9 @@ exactly this reason.
 **Integration: fold into the existing `tasks/quality.py` invoke namespace, no `pre-commit`
 framework.** `pre-commit` is genuinely how most real projects wire these two together, but adopting
 it here would mean a second task-runner, a second config format, and a second mental model for "how
-do I run checks" sitting alongside `invoke`, which already exists, is already the single entry
-point (`inv quality.fix`), and already solves exactly this "aggregate multiple quality tools behind
-one command" problem for ruff+dprint. Duplicating a problem this repo already solved is the wrong
+do I run checks" sitting alongside `invoke`, which already exists, is already the single entry point
+(`inv quality.fix`), and already solves exactly this "aggregate multiple quality tools behind one
+command" problem for ruff+dprint. Duplicating a problem this repo already solved is the wrong
 tradeoff here — this is the one place [[feedback_best_tool_per_concern]] doesn't argue for a second
 tool, because `invoke` isn't a worse fit for this concern, it's the _same_ tool already doing this
 job. Concrete shape: `shfmt -l -d` (check) / `-w` (fix) and `shellcheck --severity=warning` (or
@@ -620,11 +650,11 @@ maintained OSS projects' own configs (Home Assistant, Litestar, Pydantic, httpx)
 abstract rule-category descriptions.
 
 **A concrete gap in this repo's current `select` list, independent of anything flagged before:**
-Ruff's own zero-config default already includes `F`, `E`, `B`, `UP`, **and `RUF`** (Ruff's own
-rule family — mutable class-attribute defaults, `noqa` hygiene, f-string pitfalls). Because this
-repo's `select` is explicit rather than additive, it currently gets **none** of `RUF` despite that
-category being close to table-stakes elsewhere (22.7% direct-selection rate across a ~127k-repo PyPI
-survey). Worth adding on its own merits, separate from the `PGH003`/`C901` candidates already noted.
+Ruff's own zero-config default already includes `F`, `E`, `B`, `UP`, **and `RUF`** (Ruff's own rule
+family — mutable class-attribute defaults, `noqa` hygiene, f-string pitfalls). Because this repo's
+`select` is explicit rather than additive, it currently gets **none** of `RUF` despite that category
+being close to table-stakes elsewhere (22.7% direct-selection rate across a ~127k-repo PyPI survey).
+Worth adding on its own merits, separate from the `PGH003`/`C901` candidates already noted.
 
 **`C901`/mccabe — confirmed precisely, plus a real gotcha to avoid.** Default `max-complexity = 10`
 per Ruff's own settings docs, tracing to McCabe's original "anything beyond 10 is too complex." Not
@@ -681,8 +711,9 @@ construct the expensive object at module/session scope, but reset/monkeypatch it
 via a function-scoped fixture — cheap construction stays shared, isolation stays per-test.
 `conftest.py`: keep one root file for genuinely cross-cutting fixtures, split per-directory only
 once a real subset of tests needs fixtures the rest shouldn't see. `parametrize`: attach `ids` once
-values stop being self-explanatory. Marker registration via `markers = [...]` plus `--strict-markers`
-(already this repo's convention) matches Litestar's and httpx's own configs exactly.
+values stop being self-explanatory. Marker registration via `markers = [...]` plus
+`--strict-markers` (already this repo's convention) matches Litestar's and httpx's own configs
+exactly.
 
 **DAMP vs. DRY in tests — a real, sourced debate that does _not_ simply inherit §5's "lean toward
 duplication" production-code stance.** Vladimir Khorikov's reframing (Enterprise Craftsmanship, and
@@ -701,8 +732,8 @@ everywhere" and over-apply it to test bodies.
 reasoning.** Markdown plugin defaults: `line_width = 80`, `text_wrap = "maintain"` (tries to
 preserve the source's existing wrap decisions). The default `maintain` mode has an **open,
 documented bug** — it can delete newlines inside linked/inline-code text in some cases
-([dprint-plugin-markdown#149](https://github.com/dprint/dprint-plugin-markdown/issues/149)) —
-worth setting `textWrap` explicitly (`always` or `never`) rather than relying on the buggy default,
+([dprint-plugin-markdown#149](https://github.com/dprint/dprint-plugin-markdown/issues/149)) — worth
+setting `textWrap` explicitly (`always` or `never`) rather than relying on the buggy default,
 independent of any style preference. Beyond that: the "docs read by both humans and agents" framing
 has thin direct sourcing (flagged honestly, not inflated) — the one concrete, verifiable win found
 is that hard-wrapping at a fixed width improves diff/merge-conflict locality (a one-sentence edit
@@ -742,12 +773,13 @@ rule — this file was not superseded.
   readability) or grouped by theme (typing, control-flow, architecture)? §8/§9's tool-config
   findings (basedpyright profile, ruff additions, shellcheck/shfmt invoke tasks) also need a home —
   likely the skill's `references/`, alongside or instead of each repo's own `pyproject.toml`/
-  `tasks/quality.py`, since those are config changes a skill can't make on a consuming repo's behalf.]
+  `tasks/quality.py`, since those are config changes a skill can't make on a consuming repo's
+  behalf.]
 - [NEEDS CLARIFICATION: this repo's _own_ `pyproject.toml`/`tasks/quality.py` is a candidate to
   adopt several of these findings directly, independent of the skill build: `RUF`/`C90`/`PERF`/`A`/
-  `DTZ`/`T20`/`PL`(minus `PLR`)/`TRY`(minus noisy codes) added to `select`; `basedpyright` added as a
-  new dev dependency with §1's tuned profile; `shellcheck`/`shfmt` added as new `inv quality.*` steps
-  for this repo's own `.sh` files (`bootstrap-devcontainer.sh` etc.); `dprint.json`'s markdown
+  `DTZ`/`T20`/`PL`(minus `PLR`)/`TRY`(minus noisy codes) added to `select`; `basedpyright` added as
+  a new dev dependency with §1's tuned profile; `shellcheck`/`shfmt` added as new `inv quality.*`
+  steps for this repo's own `.sh` files (`bootstrap-devcontainer.sh` etc.); `dprint.json`'s markdown
   `textWrap` set explicitly to route around the `maintain`-mode bug. Worth doing here first (as the
   reference implementation, the same role `olx-polite-mcp` played for the scaffolding plan) once the
   user says so, or held until the skill itself is being built?]

@@ -22,7 +22,7 @@ def _shell_is_zsh(shell_path: str) -> bool:
 
 
 @task
-def omz_configure(c):
+def omz_configure(c):  # noqa: C901
     """Update Oh My Zsh theme and plugins list in ~/.zshrc in-place."""
     all_cfg = util.load_config()["packages"]
     cfg = all_cfg.get("oh-my-zsh", {})
@@ -81,7 +81,7 @@ def omz_configure(c):
 
 
 @task
-def configure(c):
+def configure(c):  # noqa: C901
     """Add or update zsh configuration blocks declared in setup.toml."""
     if util.DRY_RUN:
         for name, cfg in util.load_config()["packages"].items():

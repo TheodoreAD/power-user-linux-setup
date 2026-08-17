@@ -3,6 +3,7 @@ import json
 import shlex
 import shutil
 from pathlib import Path
+from typing import TypedDict, cast
 
 from invoke import task
 
@@ -213,7 +214,11 @@ def _apply_static_claude_permissions() -> None:
         print(f"[ai.skills] static Claude permissions: {'ok' if not missing else f'MISSING {len(missing)}'}")
         return
 
-    previous = set(json.loads(_STATIC_PERMS_MANIFEST.read_text())) if _STATIC_PERMS_MANIFEST.exists() else set()
+    previous: set[str] = (
+        set(cast(list[str], json.loads(_STATIC_PERMS_MANIFEST.read_text())))
+        if _STATIC_PERMS_MANIFEST.exists()
+        else set()
+    )
     kept = [r for r in existing_allow if r not in previous]
     merged = kept + [r for r in declared if r not in kept]
 
@@ -291,6 +296,29 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
     print(f"[{label}] created .agents/skills, symlinked .claude/skills to it")
 
 
+class _ClaudeHookEntry(TypedDict):
+    type: str
+    command: str
+
+
+class _ClaudeHookGroup(TypedDict):
+    matcher: str
+    hooks: list[_ClaudeHookEntry]
+
+
+class _ClaudeHooks(TypedDict, total=False):
+    PreToolUse: list[_ClaudeHookGroup]
+
+
+class _ClaudeSettings(TypedDict, total=False):
+    """The slice of ~/.claude/settings.json claude_direnv_hook() reads/writes — not the whole
+    file's real shape, just enough to keep this function's own JSON manipulation honestly typed
+    instead of Any-tainted."""
+
+    env: dict[str, str]
+    hooks: _ClaudeHooks
+
+
 def _claude_env_file_path(base: Path) -> Path:
     """Deterministic per-project CLAUDE_ENV_FILE path — sanitized-abs-path scheme, same one
     Claude Code's own auto-memory directory uses (~/.claude/projects/<sanitized-cwd>/memory/), so
@@ -306,7 +334,7 @@ def _direnv_hook_command(env_file: Path) -> str:
 
 
 @task
-def claude_direnv_hook(c, dir="."):
+def claude_direnv_hook(c, dir="."):  # noqa: A002
     """Wire up Claude Code's Bash tool to auto-activate this project's direnv environment (e.g. a
     Python .venv) on every call, by writing <dir>/.claude/settings.json with env.CLAUDE_ENV_FILE
     and a PreToolUse/Bash hook that refreshes it from `direnv export zsh` before each command.
@@ -327,13 +355,15 @@ def claude_direnv_hook(c, dir="."):
     envrc = base / ".envrc"
     settings_path = base / ".claude" / "settings.json"
     env_file = _claude_env_file_path(base)
-    hook_entry = {"type": "command", "command": _direnv_hook_command(env_file)}
+    hook_entry: _ClaudeHookEntry = {"type": "command", "command": _direnv_hook_command(env_file)}
 
     if not envrc.exists():
         print(f"[ai.claude-direnv-hook] {envrc} not found — nothing to hook, skipping")
         return
 
-    settings = json.loads(settings_path.read_text()) if settings_path.exists() else {}
+    settings: _ClaudeSettings = (
+        cast(_ClaudeSettings, json.loads(settings_path.read_text())) if settings_path.exists() else {}
+    )
     env_ok = settings.get("env", {}).get("CLAUDE_ENV_FILE") == str(env_file)
     bash_group = next((g for g in settings.get("hooks", {}).get("PreToolUse", []) if g.get("matcher") == "Bash"), None)
     hook_ok = bash_group is not None and hook_entry in bash_group.get("hooks", [])
@@ -350,7 +380,8 @@ def claude_direnv_hook(c, dir="."):
     pretooluse = settings.setdefault("hooks", {}).setdefault("PreToolUse", [])
     bash_group = next((g for g in pretooluse if g.get("matcher") == "Bash"), None)
     if bash_group is None:
-        bash_group = {"matcher": "Bash", "hooks": []}
+        new_group: _ClaudeHookGroup = {"matcher": "Bash", "hooks": []}
+        bash_group = new_group
         pretooluse.append(bash_group)
     if hook_entry not in bash_group["hooks"]:
         bash_group["hooks"].append(hook_entry)
@@ -380,7 +411,7 @@ to repeat them here, only what's specific to this repo.
 
 
 @task
-def skills(c, dir=None, yes=False):
+def skills(c, dir=None, yes=False):  # noqa: A002
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
@@ -409,7 +440,7 @@ def skills(c, dir=None, yes=False):
 
 
 @task
-def init(c, dir="."):
+def init(c, dir="."):  # noqa: A002
     """Scaffold a project for AI agents: minimal AGENTS.md, CLAUDE.md as a symlink to it, and
     .agents/skills/ (symlinked from .claude/skills). Never overwrites a file that already exists —
     safe to re-run.
