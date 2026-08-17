@@ -43,9 +43,9 @@ select = [
   "PTH", # flake8-use-pathlib
   "RET", # flake8-return
   "TID", # flake8-tidy-imports
-  # added 2026-08-16 (plans/2026-08-15-python-conventions.md §9): ruff's own zero-config default
-  # already includes RUF — an explicit `select` doesn't inherit it, so this repo was silently
-  # missing it until now.
+  # added 2026-08-16 (plans/2026-08-14-python-repo-scaffolding.md §C2): ruff's own zero-config
+  # default already includes RUF — an explicit `select` doesn't inherit it, so this repo was
+  # silently missing it until now.
   "RUF", # ruff-specific rules (mutable class defaults, noqa hygiene, f-string pitfalls, ...)
   "C90", # mccabe complexity — default threshold 10; 15 pre-existing @task handlers noqa'd, not
   # refactored in this pass (see `rg "noqa: C901"`)
@@ -62,7 +62,7 @@ select = [
 ignore = [
   "PLR", # see PL comment above — refactor-suggestion noise, not bug-catching
   "TRY003", # "raise vanilla exception with a long message" — this repo deliberately keeps a
-  # minimal exception hierarchy (plans/2026-08-15-python-conventions.md §4); Home Assistant's own
+  # minimal exception hierarchy (plans/2026-08-15-python-conventions.md §3); Home Assistant's own
   # config drops this same code for being too opinionated for exactly this reason
 ]
 
@@ -74,7 +74,7 @@ section-order = ["future", "standard-library", "third-party", "first-party", "lo
 # "recommended", not "strict" — strict mode leaves basedpyright's own exclusive bug-catching rules
 # (reportAny, reportUnreachable, ...) at "none"/"hint", since they were wired into recommended/all
 # for pyright/VS-Code backward compatibility rather than retrofitted into the older strict ladder.
-# See plans/2026-08-15-python-conventions.md §1 for the full research trail behind this profile.
+# See plans/2026-08-14-python-repo-scaffolding.md §C1 for the full research trail behind this profile.
 typeCheckingMode = "recommended"
 
 # reference/allowlists/repos/** holds upstream repos cloned verbatim for research (see

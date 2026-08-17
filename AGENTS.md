@@ -54,8 +54,8 @@ the shape) and run the corresponding install task (`inv python.tools` for every 
 `inv apt.base` for `apt`, etc.) instead. This is not a style preference — running the install by
 hand outside `setup.toml` defeats the entire point of the repo, which is that every install this
 machine has is declared in one reproducible, re-runnable place. Caught live during the
-`python-conventions` pilot (`plans/2026-08-15-python-conventions.md` §10): `shellcheck`/`shfmt` were
-first installed via a direct `uv tool install`, then corrected on the spot to go through
+`python-conventions` pilot (`plans/2026-08-14-python-repo-scaffolding.md` §C4): `shellcheck`/`shfmt`
+were first installed via a direct `uv tool install`, then corrected on the spot to go through
 `setup.toml` and `inv python.tools` instead.
 
 ## Post-install verification (`inv verify.all`)
