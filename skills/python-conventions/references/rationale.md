@@ -912,6 +912,44 @@ holds the site-wide rate-limit lock too. A tenacity-decorated replacement needs 
 same nesting or it silently reintroduces the lock-contention problem that comment documents having
 been fixed.
 
+## 14. Package layout: `src/` over flat
+
+**Default: any installable/importable package in this family uses `src/<pkg_name>/`, not a flat
+`<pkg_name>/` at repo root.** A top-level `tasks.py` or other script entrypoint isn't a package and
+stays at repo root regardless — this convention governs the thing that gets built into a wheel and
+imported, not tooling scripts.
+
+**PyPA's own packaging guide states the reasoning directly, fetched verbatim**:
+[packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout](https://packaging.python.org/en/latest/discussions/src-layout-vs-flat-layout/)
+— three distinct, separately-stated arguments, not one vague appeal to convention. (1) "The src
+layout helps prevent accidental usage of the in-development copy of the code" — Python puts the
+current working directory first on the import path, so a flat layout lets an import silently resolve
+to the _uninstalled, cwd_ copy instead of whatever's actually installed, which can mask "subtle
+misconfiguration of the project's packaging tooling" (files missing from a real distribution, for
+example) that only surfaces once someone else installs the package for real. (2) It "helps enforce
+that an editable installation is only able to import files that were meant to be importable" — flat
+layout lets an editable install expose non-package files (a `README`, a config file sitting at repo
+root) on the import path, so "certain imports work in editable installations but not regular
+installations," a real cross-environment inconsistency. (3) "The src layout requires installation of
+the project to be able to run its code, and the flat layout does not" — an explicit, deliberate
+development step rather than code that happens to run by accident from the wrong location.
+
+**Hynek Schlawack's "Testing & Packaging," fetched directly, makes the same case from the testing
+angle specifically**:
+[hynek.me/articles/testing-packaging](https://hynek.me/articles/testing-packaging/) — "If you use
+the ad hoc layout without an `src` directory, your tests do not run against the package as it will
+be installed by its users. They run against whatever the situation in your project directory is." A
+flat layout's test suite silently tests the development-directory state of the code, not the actual
+packaged deliverable — packaging mistakes (a missing sub-package, an unincluded resource file) stay
+invisible in CI and surface only once a real user installs it. `src/` layout makes the project root
+itself un-importable, so a test run is forced through the same install path a real consumer goes
+through.
+
+**Honest scope note**: neither source claims flat layout is unsafe for code that's never
+packaged/installed anywhere (a pure script, a one-off notebook) — the argument is specifically about
+anything meant to be `pip`/`uv`-installed, which is every package in this family (MCP servers
+install via `uv tool install`; a shared library like `repo-tasks` installs via `uv add`).
+
 ## Not yet covered
 
 The user's own framing when this research started: "we can start with those" — a starting set, not
