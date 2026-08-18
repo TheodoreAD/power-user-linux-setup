@@ -31,34 +31,34 @@ EXCLUDE_TAGS=""
 LOCAL=false
 
 while [ $# -gt 0 ]; do
-    case "$1" in
-        --exclude-tags)
-            EXCLUDE_TAGS="$2"
-            shift 2
-            ;;
-        --ref)
-            REF="$2"
-            shift 2
-            ;;
-        --local)
-            LOCAL=true
-            shift
-            ;;
-        *)
-            echo "bootstrap-devcontainer.sh: unknown option: $1" >&2
-            exit 1
-            ;;
-    esac
+  case "$1" in
+    --exclude-tags)
+      EXCLUDE_TAGS="$2"
+      shift 2
+      ;;
+    --ref)
+      REF="$2"
+      shift 2
+      ;;
+    --local)
+      LOCAL=true
+      shift
+      ;;
+    *)
+      echo "bootstrap-devcontainer.sh: unknown option: $1" >&2
+      exit 1
+      ;;
+  esac
 done
 
 if [ "${LOCAL}" = true ]; then
-    SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-    cd "${SCRIPT_DIR}"
+  SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+  cd "${SCRIPT_DIR}"
 else
-    echo "Cloning power-user-linux-setup@${REF} into ${CLONE_DIR}..."
-    rm -rf "${CLONE_DIR}"
-    git clone --branch "${REF}" --depth 1 "${REPO_URL}" "${CLONE_DIR}"
-    cd "${CLONE_DIR}"
+  echo "Cloning power-user-linux-setup@${REF} into ${CLONE_DIR}..."
+  rm -rf "${CLONE_DIR}"
+  git clone --branch "${REF}" --depth 1 "${REPO_URL}" "${CLONE_DIR}"
+  cd "${CLONE_DIR}"
 fi
 
 bash ./bootstrap.sh
@@ -67,7 +67,7 @@ bash ./bootstrap.sh
 export PATH="${HOME}/.local/bin:${PATH}"
 
 if [ -z "${EXCLUDE_TAGS}" ]; then
-    EXCLUDE_TAGS="$(inv devcontainer.print-exclude-tags)"
+  EXCLUDE_TAGS="$(inv devcontainer.print-exclude-tags)"
 fi
 
 echo "PULSE_EXCLUDE_TAGS=${EXCLUDE_TAGS}"

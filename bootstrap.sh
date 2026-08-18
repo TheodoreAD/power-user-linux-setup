@@ -1,25 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-if command -v apt-get &>/dev/null; then
-    missing=()
-    command -v curl &>/dev/null || missing+=(curl)
-    command -v gpg &>/dev/null || missing+=(gnupg)
-    command -v sudo &>/dev/null || missing+=(sudo)
-    dpkg -s ca-certificates &>/dev/null 2>&1 || missing+=(ca-certificates)
+if command -v apt-get &> /dev/null; then
+  missing=()
+  command -v curl &> /dev/null || missing+=(curl)
+  command -v gpg &> /dev/null || missing+=(gnupg)
+  command -v sudo &> /dev/null || missing+=(sudo)
+  dpkg -s ca-certificates &> /dev/null 2>&1 || missing+=(ca-certificates)
 
-    if [ ${#missing[@]} -gt 0 ]; then
-        echo "Installing OS prerequisites: ${missing[*]}..."
-        if [ "$(id -u)" -eq 0 ]; then
-            apt-get update && apt-get install -y "${missing[@]}"
-        elif command -v sudo &>/dev/null; then
-            sudo apt-get update && sudo apt-get install -y "${missing[@]}"
-        else
-            echo "Missing: ${missing[*]}, and no sudo available to install them." >&2
-            echo "Install manually (as root, or with sudo already configured) and re-run." >&2
-            exit 1
-        fi
+  if [ ${#missing[@]} -gt 0 ]; then
+    echo "Installing OS prerequisites: ${missing[*]}..."
+    if [ "$(id -u)" -eq 0 ]; then
+      apt-get update && apt-get install -y "${missing[@]}"
+    elif command -v sudo &> /dev/null; then
+      sudo apt-get update && sudo apt-get install -y "${missing[@]}"
+    else
+      echo "Missing: ${missing[*]}, and no sudo available to install them." >&2
+      echo "Install manually (as root, or with sudo already configured) and re-run." >&2
+      exit 1
     fi
+  fi
 fi
 
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -30,24 +30,24 @@ UV_PYTHON_DEFAULT=$(grep '^\s*uv_python_default\s*=' "${SETUP_TOML}" | sed 's/.*
 UV_PYTHON_EXTRA=$(grep '^\s*uv_python_extra\s*=' "${SETUP_TOML}" | grep -o '"[^"]*"' | tr -d '"')
 UV_PYTHON_SET_DEFAULT=$(grep '^\s*uv_python_set_default\s*=' "${SETUP_TOML}" | grep -o 'true\|false')
 
-if ! command -v uv &>/dev/null; then
-    echo "Installing uv..."
-    UV_NO_MODIFY_PATH=1 curl -LsSf https://astral.sh/uv/install.sh | sh
-    export PATH="${HOME}/.local/bin:${PATH}"
+if ! command -v uv &> /dev/null; then
+  echo "Installing uv..."
+  UV_NO_MODIFY_PATH=1 curl -LsSf https://astral.sh/uv/install.sh | sh
+  export PATH="${HOME}/.local/bin:${PATH}"
 else
-    echo "uv already installed: $(uv --version)"
+  echo "uv already installed: $(uv --version)"
 fi
 
 echo "Installing Python ${UV_PYTHON_DEFAULT}..."
 if [ "${UV_PYTHON_SET_DEFAULT:-true}" = "false" ]; then
-    uv python install "${UV_PYTHON_DEFAULT}"
+  uv python install "${UV_PYTHON_DEFAULT}"
 else
-    uv python install "${UV_PYTHON_DEFAULT}" --default
+  uv python install "${UV_PYTHON_DEFAULT}" --default
 fi
 
 for version in ${UV_PYTHON_EXTRA}; do
-    echo "Installing Python ${version}..."
-    uv python install "${version}"
+  echo "Installing Python ${version}..."
+  uv python install "${version}"
 done
 
 echo "Installing invoke (Python ${UV_PYTHON_DEFAULT})..."

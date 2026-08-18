@@ -1,6 +1,14 @@
 from invoke import Collection
 
-from repo_tasks import quality
+try:
+    # repo_tasks (github.com/TheodoreAD/repo-tasks) is a dev-only dependency, resolved through
+    # this project's own venv. bootstrap.sh's zero-install path (a bare `uv tool install invoke`,
+    # no `uv sync` — see docker/Dockerfile, which never installs this project's own dependencies
+    # either) has nothing for it to resolve against, so quality.* tasks just aren't available
+    # there rather than taking down every other `inv` command with an import error.
+    from repo_tasks import quality
+except ImportError:
+    quality = None
 
 from . import (
     ai,
@@ -46,7 +54,6 @@ namespace = Collection(
     Collection.from_module(ide),
     Collection.from_module(proxy),
     Collection.from_module(python),
-    Collection.from_module(quality),
     Collection.from_module(screenshot),
     Collection.from_module(ssh),
     Collection.from_module(system),
@@ -56,3 +63,5 @@ namespace = Collection(
     Collection.from_module(wsl),
     Collection.from_module(zsh),
 )
+if quality is not None:
+    namespace.add_collection(Collection.from_module(quality))

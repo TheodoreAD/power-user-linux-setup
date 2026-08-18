@@ -157,7 +157,10 @@ not something this rule overrides).
 
 Full details (rule selection, `dprint.json`, the individual `lint_check`/`lint_apply`/
 `format_check`/`format_apply`/`test`/`fix`/`check` tasks) are in [CONTRIBUTING.md](CONTRIBUTING.md)
-— read that rather than re-deriving the `src/repo_tasks/quality.py` setup from scratch.
+— read that rather than re-deriving the setup from scratch. The tasks themselves live in
+[github.com/TheodoreAD/repo-tasks](https://github.com/TheodoreAD/repo-tasks)'s `quality.py`, a git
+dev dependency (`tasks/__init__.py` imports it lazily — see the comment there — so bootstrap.sh's
+zero-install path, which never runs `uv sync`, still works without it).
 
 ## Git workflow
 

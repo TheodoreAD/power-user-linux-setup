@@ -194,11 +194,19 @@ def precommit(c):
     done, with no need to know or invoke the individual tools."""
 ```
 
-`shfmt`'s indent style (hardcoded today as `-i 4 -ci` in `tasks/quality.py`) moves to
+`shfmt`'s indent style (hardcoded before this as `-i 4 -ci` in `tasks/quality.py`) moved to
 `.editorconfig` instead of a flag — `shfmt` reads `.editorconfig` natively, fitting §C0's "each tool
-owns its own config file" principle better than a flag baked into the shared task. Distributed the
-same way `skills/mcp-skill-shipping` already teaches for MCP servers — git-as-artifact-store, no
-PyPI — but via `uv add`, not `uv tool install`, since this is a library, not an executable:
+owns its own config file" principle better than a flag baked into the shared task. **Resolved
+2026-08-19, researched rather than just kept as-is**: 2-space indent (not the old 4), matching
+shfmt's own README-recommended "Google Shell Style" tip and the dominant real-world convention
+(`fzf`, `Shopify/toxiproxy`, 1,400+ other GitHub repos with `switch_case_indent` set) —
+`switch_case_indent = true` and `space_redirects = true` are near-unanimous among projects that
+configure this at all, so both are on; `binary_next_line`/`keep_padding`/`function_next_line`/
+`simplify` are genuine taste calls with no dominant convention, left off but present as commented
+toggles for easy per-preference use. Landed in both `power-user-linux-setup`'s own `.editorconfig`
+and `repo-tasks`'s (the file to actually copy from, per §C's redirect above). Distributed the same
+way `skills/mcp-skill-shipping` already teaches for MCP servers — git-as-artifact-store, no PyPI —
+but via `uv add`, not `uv tool install`, since this is a library, not an executable:
 
 ```shell
 uv add --dev git+https://github.com/TheodoreAD/repo-tasks
