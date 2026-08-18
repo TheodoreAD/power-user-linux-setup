@@ -647,3 +647,18 @@ Per `plan-docs`' retirement procedure: this file's durable content now has a per
 skill's own `references/rationale.md`, plus the scaffolding plan for the tooling half), so this file
 is safe to delete in a follow-up pass once every repo reference to its path is confirmed updated —
 not done in this same pass to keep the "Migrated to" section itself visible in git history first.
+
+**Follow-up research pass, 2026-08-18 — landed directly in the skill, no separate plan-file stage.**
+Before deleting this file, audited what else belonged in it: five more topics researched (four
+parallel research agents against the actual `*-polite-mcp` sibling repos, not just docs) and written
+straight into `skills/python-conventions/references/rationale.md` §9–13 and the matching `SKILL.md`
+sections — MCP-stdio logging discipline, error handling at the MCP tool boundary, MCP tool
+docstrings as an LLM-facing contract (distinct from PEP 257), async/concurrency conventions, and
+HTTP client/ session/timeout/retry-backoff conventions. Three new snippets:
+`references/snippets/mcp-tool-boundary.py`, `async-fanout.py`, `http-retry.py`. Also retrofitted a
+**Model default** line onto every topic in `SKILL.md` (old and new), per explicit user request, so
+the skill states plainly whether a topic overrides a model's own default instinct or just confirms
+an already-sound one — the skill should steer, not fight normal agent behavior on things a capable
+model already gets right. This pass had no plan-file stage of its own since this plan was already
+`landed` and migrated before it started — the skill's `references/rationale.md` is the durable
+record for it, the same role this file served for §1–8.

@@ -539,9 +539,389 @@ and an untyped snippet reads as license to skip typing elsewhere. The scaffoldin
 basedpyright profile is how that precedent gets enforced without also demanding annotation ceremony
 that doesn't catch bugs.
 
+## 9. MCP-stdio logging discipline
+
+**Scope: stdio-transport MCP servers only** (the `*-polite-mcp` family) — not
+`power-user-linux-setup` itself, which has no MCP server and no stdio-framing constraint.
+
+**The spec is unambiguous, fetched directly, not inferred.** MCP specification, stdio transport page
+(2026-07-28 revision) —
+[modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio](https://modelcontextprotocol.io/specification/2026-07-28/basic/transports/stdio)
+— quoted verbatim: "The server **MUST NOT** write anything to its `stdout` that is not a valid MCP
+message. The server **MAY** write UTF-8 strings to `stderr` for any logging purposes." All of stdout
+is reserved, not just framing bytes — a stray `print()`, a dependency's own
+`logging.StreamHandler()` wired to stdout, or a traceback printed instead of raised all corrupt the
+JSON-RPC stream.
+
+**FastMCP (`fastmcp==3.4.7`, this family's pinned version) already defaults its own logging to
+stderr — corroborated across independent secondary sources (a GitHub issue thread, unaffiliated blog
+posts), but a first-party doc page/source fetch could not be completed during this research (the
+FastMCP GitHub org transferred `jlowin/fastmcp` → `PrefectHQ/fastmcp` mid-pass, breaking several
+URLs) — treat as reliable, not as a verbatim citation. The framework protects itself by construction
+but doesn't document the _why_, and doesn't guard a server author's own code or dependencies.
+
+**Ground truth against the sibling repos: no violation today, but no guard either.** Zero `print()`
+calls inside any `*_polite_mcp/` package proper (the only hits are in standalone dev/ops scripts —
+`recapture_fixtures.py`, `spike_cdp.py`, `login.py`, `recover_session.py` — never imported by
+`server.py`, never run as part of the stdio process). Zero `logging`/`basicConfig`/`StreamHandler`
+imports anywhere across all three repos — correctness today rests on "nobody happened to write
+`print()` in `server.py` yet," not on any enforced convention.
+
+**Decision: never call bare `print()` in package code** (the existing standalone-dev-script category
+is fine as-is — those never run inside the stdio process). **Route all logging through the stdlib
+`logging` module, explicitly configured to stderr at server startup**
+(`logging.basicConfig(stream=sys.stderr, ...)`, or defer to FastMCP's own `configure_logging()`/
+`get_logger()`, which already defaults there) rather than leaving it unconfigured and implicit.
+State the caveat plainly wherever this lands: explicit stderr configuration protects code this
+project owns, not a third-party dependency that writes to stdout on its own initiative — the only
+fully robust check is exercising the real stdio transport end-to-end (MCP Inspector, or a real
+client round-trip), not code review alone.
+
+## 10. Error handling at the MCP tool boundary
+
+**Scope: stdio-transport MCP servers only**, same as §9.
+
+**FastMCP has a documented, structured mechanism, fetched directly from
+[gofastmcp.com/servers/tools](https://gofastmcp.com/servers/tools).** `ToolError` (from
+`fastmcp.exceptions`) is the sanctioned channel: its message reaches the client unmodified,
+"regardless of the `mask_error_details` setting." **The load-bearing, easy-to-miss fact: FastMCP's
+default already unmasks plain exceptions.** A tool that raises a standard
+`ValueError`/`TypeError`/... without `ToolError` has its full exception detail included in the
+client-facing response by default (`mask_error_details=False`) — not something a repo opts into by
+skipping a setting, the out-of-the-box behavior. `mask_error_details=True` converts non-`ToolError`
+exceptions to a generic message, but `ToolError` messages still pass through even with masking on —
+it's the explicit "this text is safe to show" channel, masking is the "don't show anything else"
+channel.
+
+**This has the identical shape to §2's `SecretStr` caveat, not a new kind of problem.**
+`mask_error_details=True` protects against FastMCP's own automatic traceback inclusion, but does
+nothing to sanitize text a developer deliberately embeds in a `ToolError` message or hands to
+`str(exc)` — if that string itself contains something sensitive, masking never touches it, exactly
+as `SecretStr` never touches a value already pulled via `.get_secret_value()`. Also orthogonal to
+§3's exception-hierarchy decision: internal hierarchies govern what the _code_ catches and
+discriminates on; `ToolError` governs what crosses the MCP wire — a separate concern the existing
+hierarchy decision doesn't cover.
+
+**Ground truth: zero `ToolError` imports or uses anywhere in the family.** All three repos call
+plain `FastMCP("name")` with no `mask_error_details` argument, so FastMCP's unmasked default applies
+everywhere. Two patterns exist in practice: direct `raise ValueError(...)` for bad tool arguments
+(uncaught, propagates through FastMCP's default unmasked path — consistent with upstream default,
+nothing hidden or leaked beyond what FastMCP already does), and per-item `except Exception` inside
+batch tools (deliberately broad, `# noqa: BLE001`) that writes `error=str(exc)` into a structured
+result field rather than re-raising — isolates one bad item from failing an entire batch (a good,
+deliberate pattern for that problem), but means whatever text `str(exc)` produces for _any_
+exception type flows to the client with zero review. Today likely benign (the caught exceptions are
+mostly this project's own deliberately-worded `ValueError`/`NotFoundError` types), but an unreviewed
+assumption — a future dependency exception (a raw Playwright/requests error embedding a URL, header,
+or path) would flow through identically, unexamined.
+
+**Decision: adopt `ToolError` at the MCP tool boundary specifically** — the point an internal
+exception is about to cross back to the client is the one place that decides what's safe to expose,
+by either re-raising as `ToolError` with an explicit, hand-written message, or leaving a plain
+exception to raise (accepting FastMCP's default unmasked behavior). Never assume `str(exc)` of an
+arbitrarily caught exception is safe by default just because it happens to be dev-controlled today.
+Do **not** flip `mask_error_details=True` project-wide as the fix — it would suppress legitimately
+useful debugging detail the plain-`ValueError` argument-validation call sites still rely on being
+visible to the calling agent; the finer-grained per-message `ToolError` choice mirrors §2's own
+preference for explicit control over a broad, blanket toggle.
+
+## 11. MCP tool docstrings — the LLM-facing contract
+
+**Scope: any function decorated as an MCP tool** (`@mcp.tool()` in this family's FastMCP-based
+servers) — a genuinely distinct concern from general docstring style, not an extension of one (no
+general docstring-content rule exists elsewhere in this skill to extend; §8 covers only type-hint
+hygiene). The reader and the failure mode are both different: a human-facing docstring costs reading
+time when weak; an MCP tool description is read by an LLM at inference time to decide whether to
+invoke the tool at all and with what arguments — a weak one causes wrong-tool-picked,
+wrong-arguments, or never-invoked failures, a correctness cost paid by every future call, not a
+comprehension-speed one. Mechanically, in this exact stack: FastMCP's docstring parser turns the
+_entire_ docstring into the wire-level `Tool.description` — there is no split between "the
+IDE-tooltip part" and "the MCP-wire part." A PEP-257-conformant one-line summary would be a _worse_
+MCP tool description by the bar below even though it would pass ordinary docstring-style review
+cleanly.
+
+**MCP spec, fetched directly**:
+[modelcontextprotocol.io/specification/2025-11-25/server/tools](https://modelcontextprotocol.io/specification/2025-11-25/server/tools)
+— "Tools in MCP are designed to be **model-controlled**, meaning that the language model can
+discover and invoke tools automatically." The spec itself is thin on content guidance (`description`
+is defined only as "Human-readable description of functionality" — no prescribed length/structure).
+
+**Anthropic's platform docs are the most directly actionable source found**,
+["Define tools"](https://platform.claude.com/docs/en/agents-and-tools/tool-use/define-tools), "Best
+practices for tool definitions," fetched directly: **"Provide extremely detailed descriptions. This
+is by far the most important factor in tool performance."** Content checklist: what the tool does,
+when it should/shouldn't be used, what each parameter means and how it affects behavior, caveats/
+limitations, what information the tool does _not_ return. **"Aim for at least 3–4 sentences for each
+tool description, more if the tool is complex."** Also: consolidate related operations into fewer
+tools rather than one-tool-per-action ("fewer, more capable tools reduce selection ambiguity");
+meaningful namespacing once a library spans multiple services; design responses to return only
+high-signal information ("Bloated responses waste context"). A worked good-vs-poor example pair
+(`get_stock_price`) is given directly: the good version states what's returned, when to use it, and
+what it explicitly does _not_ cover in ~3 sentences; the poor version is a six-word fragment with no
+parameter description at all.
+
+**Anthropic's engineering blog,
+["Writing effective tools for agents"](https://www.anthropic.com/engineering/writing-tools-for-agents),
+is the deeper "why."** Core heuristic, quoted in full: **"When writing tool descriptions and specs,
+think of how you would describe your tool to a new hire on your team. Consider the context that you
+might implicitly bring — specialized query formats, definitions of niche terminology, relationships
+between underlying resources — and make it explicit."** Parameter-naming guidance: "input parameters
+should be unambiguously named: instead of a parameter named `user`, try a parameter named `user_id`"
+— this family's tools already do this consistently (`listing_url`, `seller_url`, `category_slug`,
+never a bare `id`/`url`). "Every word in your tool's name, description, and parameter documentation
+shapes how agents understand and use it" — the function name is part of the same selection surface
+as the prose. The article's evidence this matters at all: Claude Sonnet 3.5's SWE-bench Verified
+result followed specifically from "precise refinements to tool descriptions, dramatically reducing
+error rates."
+
+**OpenAI's guidance is directionally consistent but pulls toward brevity for a different reason —
+token cost, not clarity** (aggregated via search, not independently deep-fetched — the weaker
+citation here): "a tool list with 10 verbose function descriptions can add hundreds of tokens to
+every API call... keep descriptions specific but concise." A real tension with Anthropic's "3–4
+sentences minimum" bar, not a contradiction — different cost model. OpenAI's guidance targets a
+large multi-tool library resent every call; this family's actual shape (5–8 tools per server, MCP's
+session-scoped tool listing, not resent per-message) pays that token cost once per session, not per
+message — **Anthropic's "detailed over concise" bar is the better fit here**, a judgment call, not a
+claim that OpenAI's advice is wrong in its own context.
+
+**Ground truth: this family's own code is already unusually strong practice, well beyond the
+Anthropic floor — worth naming specifically what it does right.** Read directly from
+`olx-polite-mcp/olx_polite_mcp/server.py` and `freshful-polite-mcp/freshful_polite_mcp/server.py`
+(both `fastmcp==3.4.7`, no `description=` override anywhere — every tool relies on docstring
+parsing): `get_listing_details_batch`'s docstring **disambiguates from the sibling
+`get_listing_details` tool by name, inline**, states argument provenance ("pass `listing_url` from a
+`search_listings` result"), and explains its batch cap as a deliberate anti-misuse guard, not just a
+number ("specifically to keep that from being a one-call blanket-enrichment shortcut"), preempting a
+plausible LLM misuse pattern rather than only documenting the ceiling. `list_favorites` explicitly
+contrasts itself against `list_usuals` and `search_products`. `get_shopping_patterns`'s docstring
+states a measured response-size number (~69KB for 200 products, against a ~64KB cap) as the reason a
+smaller default shape exists — response-shape documentation, not just tool-purpose documentation.
+
+**Two concrete, checkable gaps found — mechanism, not content quality.** (1) None of the ~11 tools
+grepped use `Annotated[x, Field(description=...)]` or a docstring `Args:` section — every parameter
+description lives only in free-form prose, so the JSON-Schema
+`inputSchema.properties.<param>.description` field itself is empty for every parameter in both files
+(checkable via `tools/list`). Functionally this mostly still reaches the LLM (most clients send the
+whole description), but it's unexercised as FastMCP's parameter-description mechanism is designed to
+work. (2) `add_to_cart`/`remove_from_cart` in `freshful-polite-mcp` — real-money-adjacent, clearly
+destructive/write operations — have no `annotations=` set (`readOnlyHint`/`destructiveHint`/etc., a
+structurally separate field from `description`, per the MCP spec). FastMCP's own docs state clients
+"use annotation hints to determine when to skip confirmation prompts" — a client capable of
+consulting `destructiveHint` gets no signal from this server at all today, relying entirely on
+docstring prose to convey what the field exists specifically to make machine-readable. (Per the
+spec, annotations must also be treated as untrusted unless from a trusted server — a security
+framing distinct from the writing-quality question here.)
+
+**Decision:** for any `@mcp.tool()`-decorated function, the docstring is the tool's contract with an
+LLM caller, not internal documentation — write to Anthropic's bar (what it does and how it differs
+from its nearest sibling by name, when to use/not use it, where each non-obvious parameter's value
+comes from, response shape/size caveats, at least 3–4 sentences, more for a complex tool), not PEP
+257's. Concrete shape, extracted from this family's own strongest examples rather than invented
+fresh:
+
+```python
+@mcp.tool()
+def get_listing_details_batch(listing_urls: list[str], report_path: str | None = None) -> DetailBatchReport:
+    """<What it does, one sentence, and how it differs from the nearest sibling tool by name.>
+
+    <When to use it vs. not — e.g. the shortlist-vs-full-search distinction, the batch-cap rationale.>
+
+    <Where each non-obvious parameter's value comes from — "pass X from Y's result" — and what
+    the response contains/omits, including size caveats if the tool can return a lot of data.>
+    """
+```
+
+Two secondary follow-ups, worth a line each even though they're not the docstring itself: attach
+per-parameter descriptions via `Annotated[x, Field(description=...)]` so the JSON-Schema itself
+carries them, not just the aggregate description text; and set `annotations=` on any tool with real
+side effects, since clients use it specifically to decide when to skip or require confirmation
+prompts.
+
+**Honesty flags carried forward**: the OpenAI-conciseness citation and FastMCP's claim that
+"docstrings should describe response shape" both came from search summaries, not independently
+re-fetched primary text — directionally trusted, not verbatim-cited. "FastMCP docstrings are
+LLM-facing" is a correct-but-inferred combination of two separately-verified facts (FastMCP
+populates `Tool.description` from the docstring; the spec defines `Tool.description` as what the
+model-controlled invocation flow reads), not one direct FastMCP statement.
+
+## 12. Async and concurrency
+
+**Ground truth first, since this shapes everything below**: zero `async def`/`await`/`asyncio.`
+matches across all five `*-polite-mcp` repos — every implemented site MCP is 100% synchronous code
+today. `product-research-pipeline` (the fan-out orchestrator) has no code at all yet — its own
+roadmap states "research-before-build" deliberately. The sub-decisions below for the orchestrator
+are therefore forward-looking design decisions, not extraction from existing practice — flagged
+honestly rather than dressed up as already-proven.
+
+**Sync-vs-async boundary — FastMCP forces the answer for MCP tool code, verified directly from
+installed source (`fastmcp==3.4.7`), not docs alone.** `FunctionTool.run()` branches on
+`is_coroutine_function`: an `async def` tool is awaited directly on the event loop; a plain `def`
+tool is dispatched via `anyio.to_thread.run_sync` — a **thread pool**, not the event loop,
+explicitly noted as "safe for functions that depend on context (like dependency injection)" since it
+propagates contextvars. **This is exactly the mechanism `olx-polite-mcp`'s `RateLimiter` docstring
+is defending against**: "Thread-safe since FastMCP may dispatch concurrent tool calls... across
+threads" — verified correct, not a guess, which is why `RateLimiter` uses `threading.Lock`, not
+`asyncio.Lock` (an `asyncio.Lock` would be useless across FastMCP's thread pool — it only guards
+concurrent tasks on one event loop).
+
+**Decision: `def`, not `async def`, for site-MCP tool functions** — matches 100% of existing code,
+and FastMCP already gives a sync tool function real concurrency (thread-pool dispatch) for free;
+`async def` would only be justified by needing structured control over _that_ concurrency inside one
+tool call (e.g. fanning out to several upstream URLs within a single tool response) — decide
+per-tool if that need arises, not as a blanket switch. **Decision: `product-research-pipeline`'s
+orchestrator should be async** — it's structurally the fan-out-then-merge case below, the opposite
+of a single-request-at-a-time MCP server (inferred from its own roadmap architecture, not working
+code — flagged as the one part of this section resting on doc inference).
+
+**Structured concurrency: `asyncio.TaskGroup`, not `asyncio.gather()`, as the default** — official
+docs, fetched directly, quoted verbatim: "_TaskGroup_ provides stronger safety guarantees than
+_gather_ for scheduling a nesting of subtasks: if a task... raises an exception, _TaskGroup_ will,
+while _gather_ will not, cancel the remaining scheduled tasks." `gather()`'s default mode propagates
+the first exception but leaves sibling awaitables running orphaned in the background unless
+something else awaits/cancels them — for a fan-out orchestrator calling 3–6 site MCPs, that means
+one site erroring leaves the others' in-flight rate-limited/browser-session calls running
+unobserved, exactly the kind of resource leak a deliberately-throttled, deliberately-session-holding
+"polite" client can't afford. `TaskGroup`'s fail-fast-and-cancel-siblings is the closer match to "if
+one site errors, stop hitting all the others and surface the failure." Where genuine
+partial-tolerance is wanted (return whichever sites answered, list the rest as errors — plausible
+per the roadmap's own "normalize/ dedupe/sort" language), the right shape is catch-and-record
+_inside_ each child coroutine, preserving TaskGroup's cancellation semantics for genuinely uncaught
+cross-cutting failures, rather than reaching for `gather(return_exceptions=True)` directly. **Real
+internal precedent, not just docs**: FastMCP's own `fastmcp/utilities/async_utils.py` implements its
+internal `gather()` helper on top of `anyio.create_task_group()`, catching exceptions inside each
+child task rather than letting them propagate into the group — the exact pattern recommended above,
+corroborated from the framework this family is built on.
+
+**Rate-limiting vs. concurrency-capping — two different jobs, not competing mechanisms.**
+`RateLimiter` (`core/politeness.py`) is correctly sync/`threading.Lock`-based given the sync-tool
+decision above, and stays that way — it would not compose directly inside genuinely async code (a
+blocking `with` inside a coroutine freezes the entire event loop for however long it's held,
+defeating the point of being async). Two load-bearing, source-confirmed design points in the
+existing code: `throttle()` holds its lock for the **entire request**, not just the pre-send wait —
+its docstring cites a real 2026-08-13 production incident (olx.ro connection resets from concurrent
+`get_listing_details` calls) as the reason a naive "just space out request starts" version was
+insufficient; and `retry_with_backoff()`'s docstring requires retries to happen _inside_ the
+throttled call, not wrapped around it, or a slow retry's backoff sleep holds the site-wide lock too.
+For the future async orchestrator, `asyncio.Semaphore` is the standard tool to cap how many site-MCP
+calls are in flight simultaneously — a different axis than `RateLimiter`'s per-site request spacing,
+layered on top of (not replacing) each site MCP's own existing rate limiter, since each site MCP is
+a separate process/connection the orchestrator's semaphore doesn't conflict with.
+
+**Blocking calls inside async code — the hazard and where it actually applies.** The moment any code
+in this family becomes genuinely `async def`, a sync HTTP call or a `threading.Lock`-based
+`throttle()` call executed directly inside a coroutine blocks the _entire_ event loop for its
+duration — a serious footgun for a deliberately-throttled client (a blocking `time.sleep()` inside
+`async def` freezes every other concurrent task on that loop for the sleep's duration, cancelling
+out the concurrency the orchestrator exists to get). Mitigation: either use a client with a native
+async API end-to-end, or — if a sync call is genuinely unavoidable — push it off the loop via
+`asyncio.to_thread()` (stdlib, 3.9+, the same `anyio.to_thread.run_sync` mechanism FastMCP already
+uses internally for sync tool dispatch, so not a novel pattern for this codebase). Concretely,
+though, this hazard is narrower than "any HTTP call blocks the loop": orchestrator-to-site-MCP calls
+go over `fastmcp.client` (itself async), so that boundary is async-clean by construction — the
+hazard only bites a _future_ async site-MCP tool doing its own sync HTTP/CDP call inline rather than
+through an async client.
+
+## 13. HTTP client, sessions, timeouts, and retry/backoff
+
+**Ground truth first.** `olx-polite-mcp/olx_polite_mcp/core/fetch.py` is the only file in the family
+importing `requests` — one `requests.Session()` per `PoliteFetcher` instance (itself a module-level
+singleton per site, §5's `globals.py` pattern), explicit `REQUEST_TIMEOUT_SECONDS = 15` on every
+call, and a hand-rolled `retry_with_backoff()` scoped to exactly `ConnectionError`/
+`ChunkedEncodingError`/`Timeout` — deliberately **excluding** `HTTPError`, with a comment explaining
+why: "a 404/403 is a real answer from the site, not a network blip, and retrying it would just be
+hammering the site for no reason." `freshful-polite-mcp`/`temu-polite-mcp` don't use a plain HTTP
+client at all for their main fetch path — both sites are anti-bot-hardened enough that Playwright
+over CDP is the working approach. All three fetch robots.txt via stdlib `urllib.request` directly,
+not `RobotFileParser.read()` — a documented, deliberate workaround for a real bug (a live incident
+where `publi24.ro` 403s the default `Python-urllib` UA, and `RobotFileParser`'s own `disallow_all`
+latch on a 401/403 never resets), not a general client-library preference. No async anywhere
+(`rg -c
+'async def'` returns zero across all `server.py` files) — the premise that async-concurrency
+work forces httpx adoption doesn't currently hold; noted honestly rather than assumed.
+
+**HTTP client library — httpx is the default for any new plain-HTTP fetch path** (what `emag-`/
+`altex-polite-mcp` should reach for once they get real code). requests' own docs, fetched directly,
+name httpx as the answer to requests' own biggest gap: "If you are concerned about the use of
+blocking IO... some excellent examples are... **httpx**." httpx's own site, fetched directly:
+"builds on the well-established usability of `requests`, and gives you a broadly requests-compatible
+API" — confirming low migration cost from the existing `PoliteFetcher` shape if ever done — plus
+"Strict timeouts everywhere" as a named feature (see below), HTTP/2, and async-ready if any
+`@mcp.tool()` function ever does go async. **Not a recommendation to churn
+`olx-polite-mcp/core/fetch.py` today** — it's small, already handles the real gotchas, and rewriting
+working code with no concrete driving need contradicts this project's own §4 "lean toward
+duplication / don't fix what isn't measured-broken" stance (this "don't migrate working code" half
+is this research's own inference from that existing stance, not separately sourced). Stdlib `urllib`
+stays the deliberate, correct choice for the robots.txt case specifically — not a general-purpose
+contender.
+
+**Session/connection reuse — already correctly done, now stated as an explicit convention.**
+`PoliteFetcher.__init__` constructs one `Session` and reuses it for the object's lifetime; requests'
+own docs confirm the mechanism ("keep-alive is 100% automatic within a session... the underlying TCP
+connection will be reused"). The politeness argument is real, not just a perf one: every new TCP+TLS
+handshake is extra load the _target site_ pays for, so reuse is doubly justified here — the standard
+perf argument, and direct service to the "polite" mission (fewer distinct connections against a site
+that isn't expecting bulk traffic), the same instinct visible in `RateLimiter.throttle()`'s own
+comment about a live connection-reset incident from concurrent in-flight requests. **Decision: one
+`Client`/`Session` per fetcher instance, constructed once and reused for its lifetime** — the direct
+`httpx.Client()` equivalent applies unchanged if `olx-polite-mcp` ever migrates.
+
+**Timeout defaults — requests has no default timeout, confirmed directly from requests' own docs, a
+real and well-sourced gotcha that is already avoided here.** "By default, requests do not time out
+unless a timeout value is set explicitly. Without a timeout, your code may hang for minutes or more"
+— but `REQUEST_TIMEOUT_SECONDS = 15` is already passed on every call, and a separate
+`ROBOTS_FETCH_TIMEOUT_SECONDS = 10.0` guards the robots.txt fetch. httpx ships a safer default
+(`Timeout(5.0)`, "Strict timeouts everywhere" as a stated feature) but 5s is generic, not tuned to
+any site's actual latency profile the way `olx-polite-mcp`'s 15s deliberately is — so the operative
+convention is **"keep setting an explicit, site-tuned timeout regardless of which client is in
+use,"** not "httpx's default is safe enough to skip setting one."
+
+**Retry/backoff — tenacity is the default for retry/backoff logic going forward.** What exists
+today: `retry_with_backoff()` is small and already does the two things that matter most for a
+_polite_ retry policy (bounded attempts at `RETRY_ATTEMPTS = 3`; a hard exclusion of `HTTPError`
+since 404/403 are real answers, not blips) — it's just **linear**, not exponential, has no jitter,
+and there's no `Retry-After` handling anywhere in the family. httpx deliberately doesn't fill this
+gap itself — confirmed from its own docs: `HTTPTransport(retries=N)` only retries connection-level
+failures, and for anything beyond that httpx's own docs say "consider general-purpose tools such as
+**tenacity**" (the same relationship requests has via `urllib3.util.Retry` mounted on an
+`HTTPAdapter` — even requests' own example scopes `allowed_methods` narrowly rather than retrying
+everything). Exponential-backoff-with-jitter is settled practice, not contested: AWS's Architecture
+Blog,
+["Exponential Backoff and Jitter"](https://aws.amazon.com/blogs/architecture/exponential-backoff-and-jitter/),
+fetched directly — unjittered backoff still clusters retries into synchronized spikes; jitter
+"should be considered a standard approach for remote clients," and most AWS SDKs now ship it as a
+built-in default. This family's fetch paths are exclusively GET (idempotent by construction — no
+POST/PATCH in scope for these lookup tools), so retry-safety's idempotency precondition (AWS's
+Builders' Library,
+["Making retries safe with idempotent APIs"](https://aws.amazon.com/builders-library/making-retries-safe-with-idempotent-APIs/))
+is already satisfied structurally. `Retry-After` handling is the one genuine gap — none of the three
+retry paths currently parse or honor it, the more impolite of the two behaviors given the family's
+whole premise.
+
+**Decision: tenacity going forward** — for `emag-`/`altex-polite-mcp`'s new retryable-HTTP code, and
+as the natural next iteration of `retry_with_backoff()` itself, should someone pick that improvement
+up (not a mandate to do so now). Scoping rules to carry forward, all already true in spirit of the
+existing hand-rolled code: **retry only transient network conditions and a narrow retryable-status
+set (429/502/503/504), never 4xx "real answers" like 404/403; keep attempts low (the existing
+`RETRY_ATTEMPTS = 3` is a reasonable ceiling to preserve, not a floor to raise — more retries
+against a low-traffic personal tool cuts against the politeness mission); and parse and honor
+`Retry-After` when present, in preference to the computed backoff delay.** One architectural detail
+that must survive any tenacity migration: `RateLimiter.throttle()`'s docstring documents the
+retry-vs-throttle ordering as a deliberate, incident-informed choice — the throttle call must be
+_inside_ the retried function, not wrapping the whole retry loop, or a slow retry's backoff sleep
+holds the site-wide rate-limit lock too. A tenacity-decorated replacement needs to preserve this
+same nesting or it silently reintroduces the lock-contention problem that comment documents having
+been fixed.
+
 ## Not yet covered
 
 The user's own framing when this research started: "we can start with those" — a starting set, not
-the full scope. Candidates raised implicitly by this research but not yet covered: async/concurrency
-conventions, logging conventions, CLI-argument-parsing conventions. Revisit as their own topics
-rather than scope-creeping an existing one.
+the full scope. §9–13 above closed the async/concurrency and (MCP-scoped) logging gaps this section
+used to list. Still open: **general logging conventions for non-MCP code** (log levels, structured
+logging vs. stdlib `logging`, applicable to `power-user-linux-setup` itself and any future CLI tool
+in the family — §9 only covers the MCP-stdio-specific stdout/stderr constraint, not logging style
+broadly) and **CLI-argument-parsing conventions** (no CLI-heavy repo in the family yet to ground
+against — `product-research-pipeline`'s orchestrator is the most likely first real case). Two
+narrower follow-ups surfaced during §11/§13 and worth tracking even though they're not new topics:
+adopting `Annotated[x, Field(description=...)]` for per-parameter MCP tool descriptions, and adding
+`Retry-After` handling to the family's retry logic — both concrete gaps in existing code, not new
+conventions to decide.
