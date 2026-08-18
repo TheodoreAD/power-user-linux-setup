@@ -312,6 +312,21 @@ httpx, kubernetes, bats-core) rather than abstract rule-category descriptions �
 §A's shared invoke-tasks package and §B's `pyproject.toml`/`dprint.json` template skeleton actually
 seed into every consuming repo, not just this one.
 
+**Since `repo-tasks` shipped (2026-08-19), it — not this section — is the thing to actually copy
+from when creating or updating a repo's tool config.**
+[github.com/TheodoreAD/repo-tasks](https://github.com/TheodoreAD/repo-tasks) carries live,
+already-working `ruff.toml`/`pyrightconfig.json`/`pytest.ini`/`dprint.json` files embodying every
+decision below. When scaffolding a new repo or bringing an existing one up to date: pull those files
+directly (they're small and dependency-free to fetch/diff), then adjust the one field that's
+genuinely per-repo — `ruff.toml`'s `[lint.isort] known-first-party` (set to that repo's own
+top-level package name, not `repo_tasks`). Everything else in them is meant to be identical
+everywhere, per §A's "no allowances" decision. **The rest of §C below stays as the reasoning trail**
+(why `recommended` not `strict`, why this ruff `select` list, the dprint `textWrap` bug, ...) —
+useful when a rule needs re-litigating or a new tool gets added, but it is not itself the thing to
+copy into a new repo anymore, and the inline snippets below will drift from the live files over time
+the same way this repo's own `pyproject.toml` copy already did (fixed 2026-08-19, `af86f6a` — see
+§C4's note).
+
 #### C0. Config file location: dedicated per-tool files, not `pyproject.toml` (resolved 2026-08-18)
 
 **Every tool below gets its own dedicated config file — `ruff.toml`, `pyrightconfig.json`,
@@ -327,10 +342,10 @@ basedpyright/pyright reads `pyrightconfig.json` in preference to `[tool.basedpyr
 reads `pytest.ini`'s `[pytest]` section in preference to `[tool.pytest.ini_options]` — this is a
 file-location change only, the tuned rule content documented in §C1/§C2 below is unchanged.
 
-**This repo (`power-user-linux-setup`) has not yet migrated to this** — it remains the pilot for the
-tuned config _content_ in §C1/§C2, not yet for this file-location convention, which was decided in
-the same session as §A's design above. Named explicitly as a required follow-up in §A, not silently
-inconsistent.
+~~This repo (`power-user-linux-setup`) has not yet migrated to this~~ — **done 2026-08-19**
+(`af86f6a`): `ruff.toml`/`pyrightconfig.json`/`pytest.ini`, content unchanged from what was in
+`pyproject.toml`. `repo-tasks` (§A) ships the same three files from day one, so this is now the
+default shape for every repo in the family, not a pilot-only convention.
 
 #### C1. Static type checking — tool choice and strictness
 
@@ -379,9 +394,12 @@ Picking `strict` — the tier that sounds more rigorous — would have silently 
 bug classes this profile is meant to catch. `recommended` turns them on, but has its own gap: it
 grades everything as `"warning"` or `"error"`, and defaults `failOnWarnings = true`, which makes the
 grading meaningless to a CLI-driven agent (a `"warning"`-level ceremony rule still fails the run).
-The concrete, tuned profile — landed verbatim in this repo's own `pyproject.toml`
-`[tool.basedpyright]` block, which is the up-to-date source of truth (this section documents the
-reasoning, not a copy to keep in sync by hand):
+The concrete, tuned profile now lives at
+[repo-tasks's own `pyrightconfig.json`](https://github.com/TheodoreAD/repo-tasks/blob/main/pyrightconfig.json)
+— that's the copy to actually pull from for a new or existing repo; this section documents the
+reasoning, not something to keep in sync by hand. The snippet below is the same profile in its
+original TOML form (kept for readability of the reasoning above, not as something to copy —
+`repo-tasks`'s JSON version is authoritative and may have moved on):
 
 ```toml
 [tool.basedpyright]
@@ -574,8 +592,11 @@ checks" sitting alongside `invoke`, which already exists and already solves exac
 multiple quality tools behind one command" problem for ruff+dprint — duplicating a problem already
 solved is the wrong tradeoff. Concrete shape: `shfmt -l -d` (check) / `-w` (fix) and `shellcheck`
 (severity floor per-repo, see C4 — this repo needed none), both run over `fd -e sh` output, folded
-into the same `check`/`apply`/`fix` task graph as ruff/dprint. A root `.shellcheckrc` should hold
-any exclusions, each with an inline comment stating why, following kubernetes' precedent directly.
+into the same `check`/`fix`/`precommit` task graph as ruff/dprint — landed exactly this way in
+[repo-tasks's `quality.py`](https://github.com/TheodoreAD/repo-tasks/blob/main/src/repo_tasks/quality.py),
+including the graceful zero-`.sh`-files degradation §A's "no allowances" decision required. A root
+`.shellcheckrc` should hold any exclusions, each with an inline comment stating why, following
+kubernetes' precedent directly.
 
 **Install mechanism: `uv-tool`, not `apt` — see C4** for the reasoning (Rust/Go precedent check) and
 the mid-pilot correction that led here; `shellcheck-py`/`shfmt-py` (PyPI wheels bundling the real
@@ -585,9 +606,11 @@ seed, installed through whatever that repo's own declarative package pipeline is
 
 #### C4. Pilot findings — applying all of this to `power-user-linux-setup` itself
 
-Landed in commit `c01b53c` (2026-08-16/17). Real gotchas a pure literature review couldn't have
-surfaced — this is the actual payoff of piloting on a real codebase before writing any of it into
-something other repos would copy verbatim via §A/§B.
+Landed in commit `c01b53c` (2026-08-16/17), config _content_ only — still inside `pyproject.toml` at
+that point. The file-_location_ move (`ruff.toml`/`pyrightconfig.json`/`pytest.ini`) landed later,
+2026-08-19, `af86f6a`; content unchanged by that move. Real gotchas a pure literature review
+couldn't have surfaced — this is the actual payoff of piloting on a real codebase before writing any
+of it into something other repos would copy verbatim via §A/§B.
 
 **basedpyright config gotchas, both self-inflicted, both worth avoiding when seeding a new repo:**
 
