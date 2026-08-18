@@ -1,5 +1,5 @@
 ---
-status: planned
+status: in-progress
 updated: 2026-08-19
 ---
 
@@ -236,13 +236,12 @@ safe to run unconditionally.
 is required eventually, not optional — sequenced out because each is a real migration of
 already-relied-upon tooling, not because the convention doesn't apply to it):
 
-- This repo's own `tasks/quality.py`: rename its current `apply` → `fix` and current `fix` →
-  `precommit` (this repo's existing naming is the _inverse_ of the shared package's — its `apply` is
-  the shared package's `fix`, its `fix` is the shared package's `precommit`), update
-  `AGENTS.md`/`CLAUDE.md`'s "`inv quality.fix`" wording to match the new meaning.
-- This repo's own `pyproject.toml`: migrate `[tool.ruff]`/`[tool.basedpyright]`/
-  `[tool.pytest.ini_options]` into dedicated files per §C0 — this repo piloted the tuned config
-  _content_ (§C1/§C2) but not yet the file-_location_ convention decided this session.
+- ~~This repo's own `tasks/quality.py`: rename its current `apply` → `fix` and current `fix` →
+  `precommit`~~ — **done 2026-08-19** (`af86f6a`), plus `AGENTS.md`/`CONTRIBUTING.md` wording.
+- ~~This repo's own `pyproject.toml`: migrate `[tool.ruff]`/`[tool.basedpyright]`/
+  `[tool.pytest.ini_options]` into dedicated files per §C0~~ — **done 2026-08-19** (`af86f6a`):
+  `ruff.toml`/`pyrightconfig.json`/`pytest.ini`, content unchanged, verified empirically that
+  basedpyright accepts JSONC comments in `pyrightconfig.json` before relying on it.
 - ~~This repo's own `tasks/` package: migrate to `src/tasks/` layout~~ — **struck 2026-08-19, was
   wrong.** This repo's `tasks/` is the canonical per-repo invoke-tasks directory every repo in this
   family has (repo-specific tasks, never installed/imported elsewhere), the exact same role a
@@ -253,13 +252,25 @@ already-relied-upon tooling, not because the convention doesn't apply to it):
   consults an installed copy) — `inv` would have nothing to find.
   `skills/python-conventions/SKILL.md`'s src-layout topic updated same day to state this scoping
   explicitly, so a sibling-repo retrofit doesn't repeat it.
-- Whether this repo becomes an actual consumer of `repo-tasks` once built (one canonical copy of
-  these tasks instead of two), or stays the standalone origin repo it was extracted from — genuinely
-  undecided.
-- Retrofitting `olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp` onto `repo-tasks` + `src/`
-  layout, sequenced after `repo-tasks` itself exists.
-- Actually creating the `repo-tasks` repo and its code — this section stays a design document until
-  a future session executes it.
+- **Still open**: whether this repo becomes an actual consumer of `repo-tasks` now that it exists
+  (one canonical copy of these tasks instead of two — this repo's own `src/repo_tasks/quality.py`,
+  committed `8cbf46a` as the local pilot the extraction was cut from, is not yet wired to the
+  published package), or stays the standalone origin repo it was extracted from.
+- **Still open**: retrofitting `olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp` onto
+  `repo-tasks` + `src/` layout, now unblocked since `repo-tasks` exists.
+- ~~Actually creating the `repo-tasks` repo and its code~~ — **done 2026-08-19**:
+  [github.com/TheodoreAD/repo-tasks](https://github.com/TheodoreAD/repo-tasks), public (matching
+  this repo's own visibility, not the private convention the `*-polite-mcp`/
+  `product-research-pipeline` siblings use — a reusable dev-tooling package, not a personal
+  scraper). `src/repo_tasks/quality.py` matches §2 exactly (`_sh_files` graceful degradation,
+  `echo=True`, per-task docstrings); `tests/test_quality.py` covers every task via `MockContext`
+  plus dedicated `_sh_files` empty/nonempty/failure cases per §4; dedicated `ruff.toml`/
+  `pyrightconfig.json`/`pytest.ini`/`dprint.json`; root `tasks.py` dogfoods the same
+  `Collection.from_module(quality)` wiring every consumer will use. Verified before pushing:
+  `inv precommit` clean (0 lint/type errors, 14 tests) from repo-tasks's own venv — this needed
+  running with `VIRTUAL_ENV` unset and its own `.venv/bin` prepended to `PATH`, since a same-named
+  `repo_tasks` package already editable-installed from this repo's own `src/` would otherwise shadow
+  it and silently test the wrong copy.
 
 ### B. Repo template — solves one-time scaffolding (Copier, not Cookiecutter)
 
