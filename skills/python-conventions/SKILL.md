@@ -1,6 +1,6 @@
 ---
 name: python-conventions
-description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, and type-ignore hygiene. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see plans/2026-08-14-python-repo-scaffolding.md instead."
+description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, type-ignore hygiene, async/concurrency, and HTTP client/retry conventions — plus MCP-server-specific conventions (stdio logging discipline, tool-boundary error handling, LLM-facing tool docstrings) for the *-polite-mcp family. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Each topic notes whether it overrides a model's own default instinct or just documents an already-sound one, so the skill steers rather than fights normal agent behavior. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see plans/2026-08-14-python-repo-scaffolding.md instead."
 ---
 
 # Python design and style defaults
@@ -16,6 +16,16 @@ install or how to configure it — that's `plans/2026-08-14-python-repo-scaffold
 ruff, shellcheck/shfmt, dprint, pytest config mechanics). This skill is what to reference _while
 writing code_; that plan is what a repo's tooling enforces _once, at setup_.
 
+**Each topic below states whether it's overriding your own default instinct or just confirming
+one.** A capable model already gets a lot of this right without being told — early returns, EAFP for
+runtime lookups, reasonable async code, `pathlib` over `os.path`. This skill isn't trying to
+relitigate those; it exists for the choices where a model left alone drifts (six equally-plausible
+data-modeling options, a DRY instinct that over-abstracts, a settings pattern borrowed from the last
+framework seen in training data) or where a convention is genuinely non-obvious/project-specific
+rather than general Python knowledge (the `globals.py` singleton shape, MCP's stdio stdout
+constraint). Each **Model default** line below says which case you're in — skim past the ones that
+just confirm what you'd already do, weight the ones that don't.
+
 ## Data modeling
 
 - Snippet: [`references/snippets/data-modeling.py`](references/snippets/data-modeling.py)
@@ -30,6 +40,9 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
   `NamedTuple` (drop-in positional-tuple compatibility, or a small closed record where order _is_
   the meaning — never past ~3 fields), `msgspec` (once Pydantic overhead is a _measured_
   bottleneck), `TypedDict` (value must genuinely stay a plain dict, not become an object).
+- Model default: **overrides.** Left alone, a model mixes Pydantic/dataclass/TypedDict/NamedTuple
+  inconsistently across a codebase depending on what it last saw — there's no strong single default
+  instinct here to confirm.
 
 ## Settings and secrets management
 
@@ -48,6 +61,9 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
   server, its test-override mechanism is FastAPI-dependency-injection-specific, and it trades away
   fail-fast-at-import-time for a benefit that doesn't apply here. Full reasoning in the rationale
   doc.
+- Model default: **overrides.** A model trained heavily on FastAPI examples defaults toward the
+  `@lru_cache` factory pattern, not this one — the eager base+subclass+env-selector shape is a
+  specific chosen idiom, not what falls out naturally.
 
 ## Early returns, guard clauses, fail-fast, and EAFP
 
@@ -64,6 +80,9 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
 - Exception hierarchy: [`references/snippets/exceptions.py`](references/snippets/exceptions.py) —
   one root exception per package minimum, deeper leaves only once a caller actually needs to
   discriminate (2–3 levels, matching `requests`/`click`'s own shape).
+- Model default: **mostly confirms.** Early-return style and EAFP-for-runtime-lookups are already
+  close to default behavior; the real add is the guard-clause/co-equal-branch nuance and the
+  never-return-None-on-failure rule, which models don't reliably self-apply.
 
 ## Modularity, testability, DRY, readability, encapsulation
 
@@ -76,6 +95,9 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
 - Encapsulation: Python has no real privacy (PEP 8: single underscore is a "weak indicator," nothing
   more). Internal helper modules public-by-default; reserve `__all__` + underscore discipline for
   genuine package-public surfaces (MCP tool definitions, CLI entrypoints).
+- Model default: **overrides, actively.** A model asked to "clean up" or even just implementing a
+  feature proactively tends to extract shared helpers/abstractions on sight — this is the section
+  most likely to be fought against if skipped, not a minor nudge.
 
 ## Modules-as-singletons and lazy-loading properties
 
@@ -93,6 +115,9 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
   idempotent, not just a performance one. `monkeypatch.setattr` in tests must target the module
   attribute itself (`monkeypatch.setattr(config_module, "X", ...)`), not a name already pulled in
   via `from config import X`.
+- Model default: **overrides.** A model reaches for dependency injection, a class-based Singleton,
+  or a per-call instantiation before it reaches for a bare module-level instance — this pattern is
+  idiosyncratic to this project family, not a common default.
 
 ## Statelessness and immutability
 
@@ -106,6 +131,8 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
   never its contents (`obj.items.append(x)` works fine on a frozen dataclass with a `list` field).
   `Final`/`ClassVar` have zero runtime enforcement — a type checker actually running is what makes
   them real (see the scaffolding plan's basedpyright config).
+- Model default: **overrides.** Models don't default to `frozen=True` — mutable-by-default matches
+  Python's own language default, so this is a deliberate opt-in a model won't reach for unassisted.
 
 ## Testing conventions
 
@@ -118,21 +145,147 @@ writing code_; that plan is what a repo's tooling enforces _once, at setup_.
   of it: setup mechanics (fixtures/helpers) stay DRY, but test bodies/assertions stay explicit and
   duplicated per test, even when near-identical — collapsing them into a shared mega-test trades
   away "read one test top-to-bottom, understand the scenario."
+- Model default: **overrides.** The modularity section above already pushes a model toward
+  abstracting — without this entry, that instinct leaks into test bodies too, which is the specific
+  failure this section exists to block.
 
 ## Type hygiene
 
 - Scope `# type: ignore`/`# pyright: ignore` comments to a specific error code — never blanket-
   silence a line. Type real code fully, including throwaway example/snippet code — an untyped
   snippet reads as license to skip typing elsewhere to a pattern-matching agent.
+- Model default: **mostly confirms.** Scoped ignores are already close to default behavior; "type
+  even throwaway snippets" is the real add — the shortcut a model takes when told "just a quick
+  example."
+
+## Async and concurrency
+
+- Snippet: [`references/snippets/async-fanout.py`](references/snippets/async-fanout.py)
+- Default: plain `def`, not `async def`, for MCP tool functions — FastMCP already dispatches sync
+  tools onto a thread pool (`anyio.to_thread.run_sync`), giving real concurrency for free, and 100%
+  of this family's existing tool code is sync. For genuine fan-out code (an orchestrator calling
+  several MCP clients concurrently), default to `asyncio.TaskGroup`, not `asyncio.gather()` — it
+  cancels sibling tasks on the first uncaught exception where `gather()` leaves them running
+  orphaned. Reach for `gather(return_exceptions=True)`-style partial tolerance only via a per-child
+  `try`/`except` _inside_ a `TaskGroup`, not bare `gather`.
+- Why: `gather()`'s siblings-keep-running-after-a-failure behavior is a real resource leak for a
+  deliberately throttled/session-holding "polite" client — one site erroring shouldn't leave other
+  sites' rate-limited calls or browser sessions running unobserved.
+- Escalate to: `asyncio.Semaphore` to cap concurrent in-flight calls at a fan-out layer — a
+  different axis from a per-site rate limiter (concurrency count vs. request spacing), compose both
+  rather than picking one. If a sync call is unavoidable inside `async def` code,
+  `asyncio.to_thread()` is the stdlib escape hatch (the same mechanism FastMCP already uses
+  internally for sync tool dispatch).
+- **Don't**: run a blocking call (`time.sleep()`, a `threading.Lock`-based throttle, a sync HTTP
+  call) directly inside `async def` code — it freezes the entire event loop for its duration, not
+  just the calling task.
+- Model default: **partial.** Models write async syntax correctly; the specific choice of
+  `TaskGroup` over `gather`, and the sync/async tool-function boundary FastMCP imposes, aren't
+  something a model infers without being told the framework's actual dispatch mechanism.
+
+## HTTP client, sessions, timeouts, and retry/backoff
+
+- Snippet: [`references/snippets/http-retry.py`](references/snippets/http-retry.py)
+- Default: `httpx` for any new plain-HTTP fetch path (requests-compatible API, safer default
+  timeouts, async-ready). One `Client`/`Session` per fetcher instance, constructed once and reused
+  for its lifetime — never a new connection per request. An explicit, site-tuned timeout on every
+  request, regardless of client. `tenacity` for retry/backoff: exponential with jitter, scoped to a
+  narrow retryable-status set (429/502/503/504) and transient network exceptions, never plain 4xx
+  "real answers" like 404/403 — and honor a response's `Retry-After` header when present, in
+  preference to the computed delay.
+- Why: connection reuse and conservative, `Retry-After`-respecting retry aren't just performance —
+  they're direct service to a "polite," rate-limited client's actual mission; retrying aggressively
+  or opening a fresh connection per request is antithetical to it.
+- Escalate to: nothing — this is the default, not an escalation path. Existing working code using
+  `requests` isn't something to churn to httpx without a concrete driving need (see Modularity's
+  lean-toward-duplication stance).
+- **Don't**: assume any HTTP client's own built-in retry covers HTTP-level conditions — httpx's/
+  requests' built-in retry is connection-level only; a 503 or a `Retry-After`-bearing 429 needs an
+  actual retry library or hand-rolled logic layered on top. If a rate limiter's throttle call wraps
+  a retried function, the retry must happen _inside_ the throttled call, not around it, or a slow
+  retry's backoff sleep holds the site-wide rate-limit lock too.
+- Model default: **mostly confirms, one real gap.** Models already default to setting a timeout and
+  reusing a session/client; they do _not_ reliably default to jittered (vs. plain
+  linear/exponential) backoff or to honoring `Retry-After` — the retry-scoping specifics are the
+  real add here.
+
+## MCP-stdio logging discipline
+
+_Scope: stdio-transport MCP servers only (the `*-polite-mcp` family) — not applicable to
+`power-user-linux-setup` itself, which has no MCP server._
+
+- Snippet: [`references/snippets/mcp-tool-boundary.py`](references/snippets/mcp-tool-boundary.py)
+- Default: never a bare `print()` in server package code. Route all logging through the stdlib
+  `logging` module, explicitly configured to write to stderr at startup (or defer to FastMCP's own
+  `configure_logging()`, which already defaults there).
+- Why: the MCP stdio spec is unambiguous — a server **MUST NOT** write anything to stdout that isn't
+  a valid MCP message; a single stray `print()` or a dependency's stdout-bound log handler corrupts
+  the JSON-RPC stream. stderr is the sanctioned outlet for everything, logs included.
+- **Don't**: trust that "no `print()` in my code" is sufficient — a dependency that logs to stdout
+  on its own initiative isn't caught by explicit stderr configuration of your own logging. The
+  robust check is exercising the real stdio transport end-to-end, not code review alone.
+- Model default: **overrides — sharply, not a style nudge.** This is protocol-specific knowledge a
+  model has no general-Python reason to know; without it, a model reaches for `print()` debugging
+  exactly as it would in any other script, silently breaking the server.
+
+## Error handling at the MCP tool boundary
+
+_Scope: stdio-transport MCP servers only, same as above._
+
+- Snippet: [`references/snippets/mcp-tool-boundary.py`](references/snippets/mcp-tool-boundary.py)
+- Default: at the point an internal exception is about to cross back to the client, decide
+  deliberately what's safe to expose — either re-raise as `fastmcp.exceptions.ToolError` with an
+  explicit, hand-written message, or let a plain exception raise (FastMCP's default already surfaces
+  it, unmasked, to the client). Never assume `str(exc)` of an arbitrarily caught exception is safe
+  by default, especially inside a broad per-item `except Exception` (a legitimate pattern for
+  isolating one bad item in a batch call — just don't let its caught exception's message reach the
+  client unreviewed).
+- Why: FastMCP's default (`mask_error_details=False`) already includes full exception detail in the
+  client-facing response — this isn't an opt-in risk, it's the out-of-the-box behavior. The same
+  shape as this skill's `SecretStr` caveat: a broad safety switch doesn't sanitize text you
+  deliberately choose to expose.
+- **Don't**: flip `mask_error_details=True` project-wide as a blanket fix — it suppresses
+  legitimately useful validation detail (a bad argument, a batch-size violation) that plain
+  `raise ValueError(...)` call sites rely on being visible to the calling agent. Prefer the
+  finer-grained per-message `ToolError` choice.
+- Model default: **overrides.** A model doesn't know `ToolError` exists or that FastMCP unmasks
+  exceptions by default unless told — without this, it either leaves exceptions to propagate as-is
+  (today's actual state in this family) or reaches for a blanket masking flag, both worse than the
+  deliberate per-boundary choice.
+
+## MCP tool docstrings
+
+_Scope: any function decorated as an MCP tool (`@mcp.tool()` in this family). A genuinely distinct
+concern from general docstring style — no general docstring-content rule exists elsewhere in this
+skill to extend._
+
+- Default: write the docstring to Anthropic's tool-definition bar, not PEP 257's — what the tool
+  does and how it differs from its nearest sibling by name, when to use/not use it, where each
+  non-obvious parameter's value comes from, response shape/size caveats, **at least 3–4 sentences,
+  more for a complex tool**. See `references/rationale.md` §11 for the concrete template and this
+  family's own strongest real examples.
+- Why: the docstring becomes the wire-level `Tool.description` an LLM client reads at inference time
+  to decide whether/how to call the tool — a weak one causes wrong-tool-picked, wrong-arguments, or
+  never-invoked failures, a correctness cost paid by every future call, not a comprehension-speed
+  one the way a weak human-facing docstring is.
+- Escalate to: `Annotated[x, Field(description=...)]` for per-parameter descriptions once free-form
+  prose isn't enough (so the JSON-Schema `inputSchema` itself carries them); `annotations=`
+  (`readOnlyHint`/`destructiveHint`/etc.) on any tool with real side effects, since clients use it
+  to decide when to skip or require confirmation prompts.
+- Model default: **overrides.** A model's default docstring instinct is PEP 257's — a concise
+  one-line summary — which is actively worse here; the entire point of this section is that the bar
+  for an LLM-facing description is different from, not a stricter version of, ordinary docstring
+  style.
 
 ## Full rationale
 
 See [`references/rationale.md`](references/rationale.md) — the full citation trail: sources
 consulted, options considered and rejected per topic, and the reasoning behind every branch/
-escalation path above. Originally researched and written up in
-`plans/2026-08-15-python-conventions.md`; migrated here once the plan promoted from `idea` to a
-built skill (that plan file may since have been retired — check its own history if the path is
-gone).
+escalation path above. §1–8 were originally researched and written up in
+`plans/2026-08-15-python-conventions.md`, migrated here once that plan promoted from `idea` to this
+built skill (the plan file has since been retired — see git history if you need it). §9 onward
+(async/concurrency, HTTP/retry, and the MCP-specific sections) were researched directly against this
+skill after that promotion, with no separate plan-file stage.
 
 ## Starter snippets
 
