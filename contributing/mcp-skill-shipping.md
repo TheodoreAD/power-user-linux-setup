@@ -64,6 +64,18 @@ itself (`claude mcp add --scope user <name> <name>`) never changes, since both i
 same binary name on `PATH`. Never two divergent MCP-registration setups to keep in sync, and never a
 reason to publish a dev build somewhere just to test it end-to-end.
 
+## Why "self-update on friction" is a convention, not just session-harvest's own quirk
+
+Surfaced while designing `skills/session-harvest/SKILL.md`: a routing decision it made mid-design
+was genuinely ambiguous (should "new skills should default to self-update mechanics" be a personal
+feedback memory, or a documented convention here?) — asked rather than guessed, and the answer was
+"here, in `mcp-skill-shipping`." That's itself an instance of the pattern: a convention skill that
+never revises itself from what actually happens when it's used goes stale the way any unmaintained
+doc does, except worse, since nobody re-reads a skill file the way they'd re-read `AGENTS.md`. Worth
+generalizing to every future convention skill in this family rather than treating it as bespoke to
+`session-harvest` — hence the short rule in the skill itself pointing back at `session-harvest` as
+the worked example instead of re-explaining the mechanics twice.
+
 ## Deferred: a declarative `mcp_servers` list in `tasks/ai.py`
 
 `tasks/ai.py`'s `_install_declared_skills` already reads a `skills` list off any `setup.toml`

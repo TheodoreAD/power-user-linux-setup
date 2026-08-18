@@ -1551,3 +1551,17 @@ skills/python-conventions/references/rationale.md.
 method = "skill"
 tags = ["dev"]
 skills = [{ source = "local", path = "skills/python-conventions" }]
+
+[packages.session-harvest]
+description = """
+On-demand skill: reviews a session for what's worth persisting before compacting. Routes
+candidates into the harness's own user/feedback/project/reference memory taxonomy, but first
+filters out plan-specific content (→ plans/*.md per plan-docs) and repo-specific durable knowledge
+(→ AGENTS.md/docs) so memory doesn't end up duplicating what those already own, then reports a
+safe-to-compact checklist. Escalates genuine routing ambiguity to the user instead of guessing, and
+self-updates its own SKILL.md with the resolution so the same friction doesn't recur. No package
+attached; exists purely to declare the skill. See skills/session-harvest/references/rationale.md.
+"""
+method = "skill"
+tags = ["dev"]
+skills = [{ source = "local", path = "skills/session-harvest" }]

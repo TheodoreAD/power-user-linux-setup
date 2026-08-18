@@ -86,6 +86,18 @@ skills = [{ source = "npx", repo = "TheodoreAD/product-research-pipeline" }]
 
 then `inv ai.skills` makes it available globally, same as every other declared skill.
 
+## Convention skills should self-update on friction
+
+A skill that encodes a convention (not a one-shot task) should build in a way to improve itself from
+real usage, not just get read and followed. Default pattern for any new convention skill: when using
+it produces a genuinely ambiguous call the skill's own rules don't resolve, or the user corrects a
+decision it made, escalate to the user with `AskUserQuestion` rather than guessing — then fold the
+resolution back into the skill's own source as a small, additive edit (never the installed
+`~/.agents/skills/<name>` copy, which is a plain file copy clobbered by the next `inv ai.skills`
+run) and re-run `inv ai.skills` so the fix reaches every project. `skills/session-harvest/SKILL.md`
+is the worked example — its own "On friction, ask" + "Self-update mechanics" sections are the
+pattern to copy when authoring the next one.
+
 ## Full rationale
 
 See [`contributing/mcp-skill-shipping.md`](../../contributing/mcp-skill-shipping.md) in the
