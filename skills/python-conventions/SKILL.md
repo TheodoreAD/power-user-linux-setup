@@ -1,6 +1,7 @@
 ---
 name: python-conventions
-description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, type-ignore hygiene, async/concurrency, and HTTP client/retry conventions — plus MCP-server-specific conventions (stdio logging discipline, tool-boundary error handling, LLM-facing tool docstrings) for the *-polite-mcp family. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Each topic notes whether it overrides a model's own default instinct or just documents an already-sound one, so the skill steers rather than fights normal agent behavior. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see plans/2026-08-14-python-repo-scaffolding.md instead."
+description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, type-ignore hygiene, `src/`-layout package structure, async/concurrency, and HTTP client/retry
+  conventions — plus MCP-server-specific conventions (stdio logging discipline, tool-boundary error handling, LLM-facing tool docstrings) for the *-polite-mcp family. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Each topic notes whether it overrides a model's own default instinct or just documents an already-sound one, so the skill steers rather than fights normal agent behavior. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see plans/2026-08-14-python-repo-scaffolding.md instead."
 ---
 
 # Python design and style defaults
@@ -158,6 +159,25 @@ just confirm what you'd already do, weight the ones that don't.
   even throwaway snippets" is the real add — the shortcut a model takes when told "just a quick
   example."
 
+## Package layout: `src/` over flat
+
+- Default: any installable/importable package in this family uses `src/<pkg_name>/`, not a flat
+  `<pkg_name>/` at repo root. A top-level `tasks.py` or other script entrypoint isn't a package and
+  stays at repo root regardless — this governs the thing that gets built into a wheel and imported,
+  not tooling scripts.
+- Why: a flat layout lets `pytest`/an import silently resolve to the _uninstalled, cwd_ copy of the
+  package instead of what's actually installed (Python puts the cwd first on the import path) —
+  masking real packaging bugs (a missing sub-package, an unincluded resource file) until a real user
+  installs it. `src/` makes the project root itself un-importable, so both a test run and an
+  editable install are forced through the same path a real install goes through. See
+  `references/rationale.md` §14 for the full PyPA/Hynek Schlawack citations.
+- Escalate to: nothing — this is the default, not an escalation path. A pure script never meant to
+  be installed/imported elsewhere (a one-off notebook, `tasks.py` itself) is out of scope for this
+  convention entirely, not an exception to it.
+- Model default: **overrides.** Flat layout (package directory directly at repo root) is what most
+  quick/tutorial code — and most models, absent instruction — default to; `src/` is a deliberate
+  opt-in.
+
 ## Async and concurrency
 
 - Snippet: [`references/snippets/async-fanout.py`](references/snippets/async-fanout.py)
@@ -284,8 +304,8 @@ consulted, options considered and rejected per topic, and the reasoning behind e
 escalation path above. §1–8 were originally researched and written up in
 `plans/2026-08-15-python-conventions.md`, migrated here once that plan promoted from `idea` to this
 built skill (the plan file has since been retired — see git history if you need it). §9 onward
-(async/concurrency, HTTP/retry, and the MCP-specific sections) were researched directly against this
-skill after that promotion, with no separate plan-file stage.
+(async/concurrency, HTTP/retry, the MCP-specific sections, and `src/`-layout) were researched
+directly against this skill after that promotion, with no separate plan-file stage.
 
 ## Starter snippets
 

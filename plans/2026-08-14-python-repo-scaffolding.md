@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-17
+status: planned
+updated: 2026-08-18
 ---
 
 # Standardizing scaffolding for personal Python agent-tool repos
@@ -55,29 +55,175 @@ structure as we incorporate learnings" half of the ask specifically needs (2), n
 
 ### A. Shared invoke-tasks package — solves ongoing drift
 
-New, small repo (e.g. `pulse-dev-tasks` — naming caveat below), a real Python package exposing an
-invoke `Collection` extracted verbatim from `tasks/quality.py` in this repo (already the proven
-source of truth — `lint_check`/`lint_apply`/`format_check`/`format_apply`/`test`/`check`/`apply`/
-`fix`). Distributed the same way `skills/mcp-skill-shipping` already teaches for MCP servers:
-git-as-artifact-store, no PyPI —
+**Design resolved 2026-08-18** (naming and composition were open questions as of the previous
+revision — both settled this session, including one substantial correction: an earlier draft that
+proposed leaf-tasks-only, each repo composing its own `check`/`apply`/`fix`, was rejected by the
+user directly — **no per-repo allowances. Every consumer repo uses the exact same composite tasks
+from the shared package, unmodified.**). New, small repo **`repo-tasks`** (`pulse-dev-tasks`
+rejected — clashes with PulseAudio; `py-dev-tasks` rejected — too generic; a `taudelta`/`td`-branded
+option considered and passed over), `src/` layout (see `skills/python-conventions`'s new "Package
+layout" topic), cloned locally to `~/projects/github.com-personal/repo-tasks`:
 
-```shell
-uv add --dev git+https://github.com/TheodoreAD/pulse-dev-tasks
+```
+repo-tasks/
+  pyproject.toml            # hatchling, dependencies = ["invoke"], packages = ["src/repo_tasks"]
+  ruff.toml                 # dedicated file, not [tool.ruff] in pyproject.toml — see §C0
+  pyrightconfig.json        # dedicated file, not [tool.basedpyright]
+  pytest.ini                # dedicated file, not [tool.pytest.ini_options]
+  dprint.json                # already a dedicated file today, unchanged
+  src/repo_tasks/
+    __init__.py
+    quality.py               # extracted from tasks/quality.py, see below
+  tests/
+    test_quality.py
 ```
 
-Each consumer repo's own `tasks.py` shrinks from a ~50-line copy to a thin re-export plus its own
-repo-specific tasks:
+A real Python package exposing an invoke `Collection` extracted from `tasks/quality.py` in this repo
+(already the proven source), but with three renamed/added composite tasks — `apply` (auto-fix only,
+unchanged), `check` (CI gate, unchanged), and **`precommit`** (`apply` then `check`, replacing what
+this repo currently calls `fix`) — **`precommit` is the one command an agent always runs, without
+needing to know or invoke the individual tools itself.** Every `c.run(...)` call echoes the command
+it runs (`echo=True`) so both a human and an agent see exactly what executed — the only exception
+would be a step involving a secret, and none of the quality tasks do. Because
+`type_check`/`shell_check` are now unconditional parts of every consumer's `check` (no allowances to
+skip them), `shell_check`/ `shell_format_*` must degrade gracefully on a repo with zero `*.sh` files
+(confirmed: none of `olx`/`temu`/`freshful-polite-mcp` has any) rather than erroring the way
+`shellcheck $(fd -e sh .)` does today on an empty file list — and every consumer repo must carry its
+own `pyrightconfig.json` (§C0), since "every repo runs type_check" only works if "every repo has
+type-check config" also holds:
+
+```python
+"""Shared, reproducible quality-tooling invoke tasks. Every command is echoed
+(echo=True) so both a human and an agent see exactly what ran — the only
+exception is a step that would involve a secret, and none here do."""
+
+from invoke import task
+
+
+def _sh_files(c):
+    result = c.run("fd -e sh .", hide=True, warn=True)
+    return result.stdout.split() if result.ok else []
+
+
+@task
+def lint_check(c):
+    c.run("ruff check .", echo=True)
+
+
+@task
+def lint_apply(c):
+    c.run("ruff check --fix .", echo=True)
+
+
+@task
+def format_check(c):
+    c.run("ruff format --check .", echo=True)
+    c.run("dprint check --config-discovery=ignore-descendants", echo=True)
+
+
+@task
+def format_apply(c):
+    c.run("ruff format .", echo=True)
+    c.run("dprint fmt --config-discovery=ignore-descendants", echo=True)
+
+
+@task
+def type_check(c):
+    c.run("basedpyright", echo=True)
+
+
+@task
+def shell_check(c):
+    """No-ops cleanly on a repo with no *.sh files, so this is safe to run
+    unconditionally in every consumer's `check` — no per-repo opt-out needed."""
+    files = _sh_files(c)
+    if files:
+        c.run(f"shellcheck {' '.join(files)}", echo=True)
+
+
+@task
+def shell_format_check(c):
+    files = _sh_files(c)
+    if files:
+        c.run(f"shfmt -d {' '.join(files)}", echo=True)
+
+
+@task
+def shell_format_apply(c):
+    files = _sh_files(c)
+    if files:
+        c.run(f"shfmt -w {' '.join(files)}", echo=True)
+
+
+@task
+def test(c):
+    c.run("pytest", echo=True)
+
+
+@task(pre=[lint_apply, format_apply, shell_format_apply])
+def apply(c):
+    """Fix everything auto-fixable."""
+
+
+@task(pre=[lint_check, format_check, type_check, shell_check, test])
+def check(c):
+    """CI-style gate: every check, no changes written."""
+
+
+@task(pre=[apply, check])
+def precommit(c):
+    """Apply, then check. The one command an agent always runs before
+    considering a change done — no need to know or invoke the individual
+    tools."""
+```
+
+`shfmt`'s indent style (hardcoded today as `-i 4 -ci` in `tasks/quality.py`) moves to
+`.editorconfig` instead of a flag — `shfmt` reads `.editorconfig` natively, fitting §C0's "each tool
+owns its own config file" principle better than a flag baked into the shared task. Distributed the
+same way `skills/mcp-skill-shipping` already teaches for MCP servers — git-as-artifact-store, no
+PyPI — but via `uv add`, not `uv tool install`, since this is a library, not an executable:
+
+```shell
+uv add --dev git+https://github.com/TheodoreAD/repo-tasks
+```
+
+Each consumer repo's own `tasks.py` shrinks to exactly this, with **no local override**:
 
 ```python
 from invoke import Collection
-from pulse_dev_tasks import quality
+from repo_tasks import quality
 
-ns = Collection(quality, ...)  # + repo-specific tasks, same shape as this repo's tasks/__init__.py
+ns = Collection.from_module(quality)
 ```
 
-A fix or improvement in the shared package reaches every repo on its next `uv sync`/version bump —
-not a manual re-port. Mirrors this repo's own `tasks/` package (many small task modules), just
-extracted one level up so it's importable instead of merely copyable.
+`inv quality.precommit` is the single command, identical across every repo — matching the pattern
+already proven in this repo's own `tasks/__init__.py`'s `Collection.from_module(quality)` usage, not
+a guessed shape. A fix or improvement in the shared package reaches a consumer only via a deliberate
+`uv lock --upgrade-package repo-tasks` (or a pinned `@<tag>` bump) plus a committed lockfile change
+— not automatic, same as any other dependency bump.
+
+**Tested via invoke's own `MockContext`** (`from invoke import MockContext, Result`), asserting the
+right command string is built per task, plus dedicated tests for `_sh_files`'s empty-vs-nonempty
+behavior specifically — the one piece of real logic, and exactly what makes the mandatory composite
+safe to run unconditionally.
+
+**Required follow-ups this design does not itself execute** (per "no allowances," every one of these
+is required eventually, not optional — sequenced out because each is a real migration of
+already-relied-upon tooling, not because the convention doesn't apply to it):
+
+- This repo's own `tasks/quality.py`: rename `fix` → `precommit`, update `AGENTS.md`/`CLAUDE.md`'s
+  "`inv quality.fix`" wording to match.
+- This repo's own `pyproject.toml`: migrate `[tool.ruff]`/`[tool.basedpyright]`/
+  `[tool.pytest.ini_options]` into dedicated files per §C0 — this repo piloted the tuned config
+  _content_ (§C1/§C2) but not yet the file-_location_ convention decided this session.
+- This repo's own `tasks/` package: migrate to `src/tasks/` layout for consistency.
+- Whether this repo becomes an actual consumer of `repo-tasks` once built (one canonical copy of
+  these tasks instead of two), or stays the standalone origin repo it was extracted from — genuinely
+  undecided.
+- Retrofitting `olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp` onto `repo-tasks` + `src/`
+  layout, sequenced after `repo-tasks` itself exists.
+- Actually creating the `repo-tasks` repo and its code — this section stays a design document until
+  a future session executes it.
 
 ### B. Repo template — solves one-time scaffolding (Copier, not Cookiecutter)
 
@@ -96,12 +242,15 @@ plain `requests`/per-call-`Playwright` fetch; different enough from the stateles
 own variant, not a bolt-on flag), and **orchestrator/skill** (flatter, no site-adapter split, no
 fetch layer at all) — a Copier conditional on one answer, not three forks to keep in sync.
 
-Seeds: `pyproject.toml` skeleton (hatchling build, ruff block, dev-dependency on package A above),
-`tasks.py` stub, `dprint.json`, `LICENSE`, a `README.md` "Installation" section shaped like
-`olx-polite-mcp`'s/`temu-polite-mcp`'s (the `uv tool install` editable/git pattern documented in
-`skills/mcp-skill-shipping` — independently arrived at in both repos' READMEs, good sign it's the
-right default to template), and a call to `inv ai.init` for `AGENTS.md` — reuse what already works
-there rather than re-templating it.
+Seeds: `src/<pkg_name>/` package layout (not flat — see `skills/python-conventions`'s "Package
+layout" topic and §C0 below), `pyproject.toml` skeleton (hatchling build,
+`packages = ["src/<pkg_name>"]`, dev-dependency on `repo-tasks`), dedicated
+`ruff.toml`/`pyrightconfig.json`/`pytest.ini` (§C0 — not `pyproject.toml` blocks), `tasks.py` stub
+(`Collection.from_module(quality)`, no local override — §A), `dprint.json`, `LICENSE`, a `README.md`
+"Installation" section shaped like `olx-polite-mcp`'s/ `temu-polite-mcp`'s (the `uv tool install`
+editable/git pattern documented in `skills/mcp-skill-shipping` — independently arrived at in both
+repos' READMEs, good sign it's the right default to template), and a call to `inv ai.init` for
+`AGENTS.md` — reuse what already works there rather than re-templating it.
 
 **`olx-polite-mcp` (stateless shape) and `temu-polite-mcp` (session-backed shape) are the two
 reference implementations to extract the template from** — both mature, battle-tested repos, not
@@ -115,6 +264,26 @@ researched against real, actively-maintained OSS projects (Home Assistant, Lites
 httpx, kubernetes, bats-core) rather than abstract rule-category descriptions — this is the content
 §A's shared invoke-tasks package and §B's `pyproject.toml`/`dprint.json` template skeleton actually
 seed into every consuming repo, not just this one.
+
+#### C0. Config file location: dedicated per-tool files, not `pyproject.toml` (resolved 2026-08-18)
+
+**Every tool below gets its own dedicated config file — `ruff.toml`, `pyrightconfig.json`,
+`pytest.ini` — instead of a `[tool.X]` block inside `pyproject.toml`.** `dprint.json` already
+follows this shape today and doesn't change. The reasoning is the user's own, stated directly:
+consolidating every tool's config into one `pyproject.toml` makes template-driven updates across
+many repos "very difficult and risky," since `pyproject.toml` also carries each repo's own
+`[project]` metadata, dependencies, and build config mixed in with the tuned tool settings — a
+dedicated file can be diffed/replaced cleanly on its own (via `copier update` or a manual patch)
+without touching anything repo-specific sitting next to it in the same file. All three tools support
+this natively — ruff reads `ruff.toml`/`.ruff.toml` in preference to `[tool.ruff]`,
+basedpyright/pyright reads `pyrightconfig.json` in preference to `[tool.basedpyright]`, and pytest
+reads `pytest.ini`'s `[pytest]` section in preference to `[tool.pytest.ini_options]` — this is a
+file-location change only, the tuned rule content documented in §C1/§C2 below is unchanged.
+
+**This repo (`power-user-linux-setup`) has not yet migrated to this** — it remains the pilot for the
+tuned config _content_ in §C1/§C2, not yet for this file-location convention, which was decided in
+the same session as §A's design above. Named explicitly as a required follow-up in §A, not silently
+inconsistent.
 
 #### C1. Static type checking — tool choice and strictness
 
@@ -488,33 +657,47 @@ paragraphs into single giant lines on the first attempt (the opposite of the int
 
 ### Retrofit path for existing repos
 
-- `emag-polite-mcp`/`altex-polite-mcp` are still plan-only — apply the template once their
-  implementation actually starts; no retrofit needed.
-- `olx-polite-mcp` already has real code that will have diverged from any not-yet-built template —
-  retrofitting it means `copier update` once the template exists (exactly the direction Copier's
-  update mechanism is built for), not a manual re-diff by hand.
+**Required eventually, per §A's "no allowances" decision — not optional cleanup.** `olx-polite-mcp`/
+`temu-polite-mcp`/`freshful-polite-mcp` all already have real code that will have diverged from
+`repo-tasks`/the not-yet-built template; retrofitting each means adopting `repo-tasks` (§A) plus
+`src/` layout, then `copier update` once the template (§B) exists too (exactly the direction
+Copier's update mechanism is built for, not a manual re-diff by hand).
+`emag-polite-mcp`/`altex-polite-mcp` are still plan-only — they pick up the template (with
+`repo-tasks` as a dependency from the start) once their implementation actually begins, so no
+separate retrofit step for those two. Sequenced after `repo-tasks` and the template both exist — not
+part of either build itself.
 
-## Open questions to resolve before building
+## Open questions — resolved 2026-08-18
 
-- **Naming**: `pulse-dev-tasks` ties the package to `power-user-linux-setup`'s "PULSE" branding even
-  though it's consumed by unrelated repos with no runtime dependency on this one — probably wants a
-  name that doesn't imply personal-machine-setup scope.
-- Should the shared package eventually also carry MCP-specific reusable pieces (robots.txt guard,
-  rate limiter, disk cache — currently `olx-polite-mcp/core/`) once a _second_ MCP repo needs them,
-  or does that stay per-repo? `olx-polite-mcp`'s own `AGENTS.md` already applies exactly this
-  restraint to its Playwright fetch path ("generalize... only once a second site actually needs it")
-  — the same principle likely applies here.
-- Sequencing: build the shared tasks package (§A) first — smaller, immediately useful, ~50 lines
-  already proven and ready to extract — before investing in the heavier Copier template (§B), or do
-  both together. §A has no dependency on §B and can land independently.
+Every question this section used to list is now resolved — see §A for the full design:
+
+- **Naming**: `repo-tasks` (`pulse-dev-tasks` rejected — clashes with PulseAudio; `py-dev-tasks`
+  rejected — too generic).
+- **Composition**: no per-repo allowances — every consumer uses the exact same `apply`/`check`/
+  `precommit` composite from the shared package, unmodified (an earlier leaf-tasks-only draft was
+  considered and rejected). This also resolves the "should shell/type checks be optional per repo"
+  question the leaf-tasks draft implied: no — they're unconditional, and the tasks themselves
+  degrade gracefully instead (§A).
+- **Config file location**: dedicated per-tool files (`ruff.toml`, `pyrightconfig.json`,
+  `pytest.ini`), not `pyproject.toml` blocks — see §C0.
+- **Package layout**: `src/`, not flat — see `skills/python-conventions`'s new "Package layout"
+  topic.
+- **Sequencing**: §A (the package) first, since §B (the template) depends on `repo-tasks` existing
+  as a dev-dependency to seed. Still true, unchanged from the original framing.
+
+One question remains genuinely open, not yet resolved: whether the shared package should eventually
+also carry MCP-specific reusable pieces (robots.txt guard, rate limiter, disk cache — currently
+`olx-polite-mcp/core/`) once a _second_ MCP repo needs them, or stay quality-tooling-only forever.
+`olx-polite-mcp`'s own `AGENTS.md` already applies the relevant restraint to its own Playwright
+fetch path ("generalize... only once a second site actually needs it") — the same principle likely
+applies here, but not decided.
 
 ## Explicitly out of scope right now
 
-No new repo (a `pulse-dev-tasks` package, a Copier template) gets built by this plan yet — §A and §B
-are still a future build. The one exception is §C: those config decisions were already piloted with
-real code changes directly in `power-user-linux-setup`'s own `tasks/quality.py`/`pyproject.toml`/
-`setup.toml`/`dprint.json` (commit `c01b53c`, 2026-08-16/17) deliberately, so §A/§B start from
-config already proven against a real codebase rather than a first guess. Next step, whenever picked
-back up, is a real planning session for whichever of §A/§B comes first — most likely §A, given it's
-the smaller, lower-risk, immediately-useful piece with a proven source already sitting in this
-repo's own `tasks/quality.py`.
+No new repo (`repo-tasks`, a Copier template) gets built by this plan yet — §A's design is fully
+resolved but not yet executed; §B remains high-level only. §C's config _content_ was already piloted
+with real code changes directly in `power-user-linux-setup`'s own
+`tasks/quality.py`/`pyproject.toml`/ `setup.toml`/`dprint.json` (commit `c01b53c`, 2026-08-16/17);
+§C0's file-_location_ convention was decided this session but not yet applied to this repo itself
+(§A's "required follow-ups" list). Next step, whenever picked back up, is actually building
+`repo-tasks` per §A's now-concrete design.
