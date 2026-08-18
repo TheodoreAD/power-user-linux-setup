@@ -770,6 +770,15 @@ also carry MCP-specific reusable pieces (robots.txt guard, rate limiter, disk ca
 fetch path ("generalize... only once a second site actually needs it") — the same principle likely
 applies here, but not decided.
 
+**New, not yet explored (2026-08-19):** whether §B's Copier template should go further than citing
+`skills/mcp-skill-shipping` as a README pattern to follow manually, and actually seed the workflow
+that skill documents directly into a generated repo — the `[project.scripts]` entry point wired into
+`pyproject.toml` from the start, the `uv tool install`/`claude mcp add --scope user` "Installation"
+section pre-written into `README.md`, maybe a `copier update`-safe stub for the registration step
+itself. Would turn `mcp-skill-shipping` from "read this after generating a repo" into "already
+true the moment `copier copy` finishes." Not scoped or designed yet — flagged for when §B moves from
+high-level to an actual build.
+
 ## Explicitly out of scope right now
 
 No new repo (`repo-tasks`, a Copier template) gets built by this plan yet — §A's design is fully
