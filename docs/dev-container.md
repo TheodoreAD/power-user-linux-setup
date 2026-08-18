@@ -337,9 +337,9 @@ different tradeoffs:
 | Docker images/containers/build cache      | `docker.clean` (`docker system prune -f`) | `docker.clean-full` (`docker system prune -af`)                  |
 
 `inv cleanup.all` / `inv cleanup.all-full` run every row above (conservative or full, respectively)
-plus Docker pruning — invoke `pre=[...]` task dependencies, same pattern as `tasks/quality.py`'s
-`check`/`apply`/`fix`. Neither Docker variant touches volumes; those can hold irreplaceable data, a
-different risk class than a rebuildable cache.
+plus Docker pruning — invoke `pre=[...]` task dependencies, same pattern as
+`src/repo_tasks/quality.py`'s `check`/`fix`/`precommit`. Neither Docker variant touches volumes;
+those can hold irreplaceable data, a different risk class than a rebuildable cache.
 
 **Conservative on a workstation, full in a container, and why that split matters**: the uv/npm/
 cargo caches directly speed up your _next_ install of the same tool. On a persistent workstation

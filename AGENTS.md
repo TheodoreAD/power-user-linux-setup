@@ -156,9 +156,8 @@ in this repo an `inv` task already exists for — prefer the task over the bare 
 not something this rule overrides).
 
 Full details (rule selection, `dprint.json`, the individual `lint_check`/`lint_apply`/
-`format_check`/`format_apply`/`test`/`apply`/`check` tasks) are in
-[CONTRIBUTING.md](CONTRIBUTING.md) — read that rather than re-deriving the tasks/quality.py setup
-from scratch.
+`format_check`/`format_apply`/`test`/`fix`/`check` tasks) are in [CONTRIBUTING.md](CONTRIBUTING.md)
+— read that rather than re-deriving the `src/repo_tasks/quality.py` setup from scratch.
 
 ## Git workflow
 

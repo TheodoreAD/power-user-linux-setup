@@ -1,5 +1,7 @@
 from invoke import Collection
 
+from repo_tasks import quality
+
 from . import (
     ai,
     allowlist,
@@ -17,7 +19,6 @@ from . import (
     node,
     proxy,
     python,
-    quality,
     screenshot,
     setup,
     ssh,
