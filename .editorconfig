@@ -1,0 +1,20 @@
+root = true
+
+# shfmt reads printer options from EditorConfig (see `man shfmt`, or
+# github.com/mvdan/sh/blob/master/cmd/shfmt/shfmt.1.scd upstream, for the full key list) — this
+# governs every *.sh file `inv quality.fix`'s shfmt step formats. 2-space + indented case labels is
+# shfmt's own README-recommended "Google Shell Style" convention
+# (google.github.io/styleguide/shellguide.html) and the dominant real-world choice among projects
+# that configure this at all (fzf, Shopify/toxiproxy, 1400+ other GitHub repos with
+# switch_case_indent set). space_redirects is likewise near-unanimous among those same projects.
+[*.sh]
+indent_style = space
+indent_size = 2
+switch_case_indent = true
+space_redirects = true
+
+# Less commonly set — off by default, uncomment to opt in:
+# binary_next_line = true    # && / | may start a line instead of trailing the previous one
+# keep_padding = true        # preserve manual column-alignment whitespace instead of normalizing it
+# function_next_line = true  # `function() {` brace on its own line instead of the same line
+# simplify = true            # drop redundant syntax (e.g. unnecessary nesting) — shfmt's -s flag
