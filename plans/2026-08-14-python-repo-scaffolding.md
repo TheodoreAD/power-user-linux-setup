@@ -1,6 +1,6 @@
 ---
 status: planned
-updated: 2026-08-18
+updated: 2026-08-19
 ---
 
 # Standardizing scaffolding for personal Python agent-tool repos
@@ -243,7 +243,16 @@ already-relied-upon tooling, not because the convention doesn't apply to it):
 - This repo's own `pyproject.toml`: migrate `[tool.ruff]`/`[tool.basedpyright]`/
   `[tool.pytest.ini_options]` into dedicated files per §C0 — this repo piloted the tuned config
   _content_ (§C1/§C2) but not yet the file-_location_ convention decided this session.
-- This repo's own `tasks/` package: migrate to `src/tasks/` layout for consistency.
+- ~~This repo's own `tasks/` package: migrate to `src/tasks/` layout~~ — **struck 2026-08-19, was
+  wrong.** This repo's `tasks/` is the canonical per-repo invoke-tasks directory every repo in this
+  family has (repo-specific tasks, never installed/imported elsewhere), the exact same role a
+  consumer's own `tasks.py` plays in §A/§3 above — src-layout was never meant to reach it, it
+  governs distributable packages only (the future `repo-tasks` extraction, e.g.). Attempted live and
+  caught before landing: moving `tasks/` under `src/` also collides with invoke's own
+  `FilesystemLoader` (walks upward from cwd for a literal `tasks.py`/`tasks/__init__.py`, never
+  consults an installed copy) — `inv` would have nothing to find.
+  `skills/python-conventions/SKILL.md`'s src-layout topic updated same day to state this scoping
+  explicitly, so a sibling-repo retrofit doesn't repeat it.
 - Whether this repo becomes an actual consumer of `repo-tasks` once built (one canonical copy of
   these tasks instead of two), or stays the standalone origin repo it was extracted from — genuinely
   undecided.

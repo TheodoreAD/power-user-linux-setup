@@ -74,10 +74,10 @@ def check(c):
 
 
 @task(pre=[lint_apply, format_apply, shell_format_apply])
-def apply(c):
+def fix(c):
     """Fix everything auto-fixable: ruff --fix, ruff format, dprint fmt, shfmt -w."""
 
 
-@task(pre=[apply, check])
-def fix(c):
-    """Fix everything auto-fixable, then run the CI-style gate: apply, then check."""
+@task(pre=[fix, check])
+def precommit(c):
+    """Fix everything auto-fixable, then run the CI-style gate: fix, then check."""

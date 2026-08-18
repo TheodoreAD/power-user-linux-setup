@@ -1,0 +1,90 @@
+{
+  // "recommended", not "strict" — strict mode leaves basedpyright's own exclusive bug-catching
+  // rules (reportAny, reportUnreachable, ...) at "none"/"hint", since they were wired into
+  // recommended/all for pyright/VS-Code backward compatibility rather than retrofitted into the
+  // older strict ladder. See plans/2026-08-14-python-repo-scaffolding.md §C1 for the full
+  // research trail behind this profile.
+  "typeCheckingMode": "recommended",
+
+  // reference/allowlists/repos/** holds upstream repos cloned verbatim for research (see
+  // feedback_research_via_cloned_repos memory) — not this project's own code, never type-check it.
+  // skills/*/references/snippets/** are standalone example files, each with its own "pip install X"
+  // docstring — deliberately not installed as this repo's own deps (same reason pytest's own
+  // testpaths excludes them from this repo's test run) — they get typed-and-checked in whatever
+  // future project actually installs and runs them, not here.
+  // Setting `exclude` explicitly replaces basedpyright's own default list rather than adding to it
+  // — the defaults below (node_modules/__pycache__/dot-dirs, which is how .venv normally gets
+  // skipped) must be repeated here or third-party packages inside .venv get type-checked too.
+  "exclude": ["**/node_modules", "**/__pycache__", "**/.*", "reference", "skills/*/references/snippets"],
+
+  // recommended defaults failOnWarnings=true, which makes "warning" behave like "error" for a
+  // CLI-driven check. Turning it off restores warning/error as an actual blocking-vs-visible
+  // split: rules left at "warning" below are ceremony that shouldn't have to be fixed for a green
+  // run, but still show up in an editor or on review.
+  "failOnWarnings": false,
+
+  // escalate: real bugs "recommended" only grades as warning, or that basedpyright's own
+  // exclusive rules leave off entirely under "strict".
+  "reportAny": "error", // Any silently laundered through instead of a real fix
+  "reportUnreachable": "error", // dead branch from a logic error; "hint" even under strict, CLI-invisible
+  "reportIgnoreCommentWithoutRule": "error", // blanket ignore can mask an unrelated future error on the same line
+  "reportUnnecessaryTypeIgnoreComment": "error", // stale suppression left after the real fix landed
+  "reportUnusedImport": "error",
+  "reportUnusedVariable": "error",
+  "reportUnusedFunction": "error",
+  "reportUnusedClass": "error", // unused code = likely leftover from a half-finished edit
+  "reportUnusedCoroutine": "error", // forgotten `await`; recommended oddly downgrades this from basic's error
+  "reportUnnecessaryIsInstance": "error",
+  "reportUnnecessaryCast": "error",
+  "reportUnnecessaryComparison": "error",
+  "reportUnnecessaryContains": "error", // always-true/false check = wrong assumption from a bad refactor
+  "reportMatchNotExhaustive": "error", // missing match case
+  "reportRedeclaration": "error", // same symbol, two incompatible types = probably duplicated code
+  "reportPropertyTypeMismatch": "error", // subtly-wrong getter/setter type
+
+  // downgrade: strict-mode ceremony that recommended doesn't already soften
+  "reportMissingTypeArgument": "warning", // bare generics; not worth a turn parametrizing every list/dict use
+
+  // downgrade: pilot run against this repo's real code (2026-08-16) found this rule can't
+  // distinguish a forgotten comma from this codebase's routine, deliberate style of wrapping one
+  // long string across several parenthesized literals (print/log messages, setup.toml-style
+  // descriptions) — every hit found here was the latter. A per-pattern rule that can't tell the
+  // two apart isn't worth even a warning at this codebase's actual false-positive rate; ruff's own
+  // ISC001 has the identical conflict with the formatter's string-wrapping and is disabled for the
+  // same reason.
+  "reportImplicitStringConcatenation": "none",
+
+  // left at recommended's default "warning" (non-blocking now that failOnWarnings=false): the
+  // annotation-completeness / untyped-third-party-dependency cluster — reportMissingParameterType,
+  // reportUnknown{Parameter,Argument,Variable,Member}Type, reportMissingTypeStubs,
+  // reportUntyped{FunctionDecorator,ClassDecorator,BaseClass,NamedTuple},
+  // reportUnannotatedClassAttribute, reportCallInDefaultInitializer, reportUnusedCallResult,
+  // reportUnusedParameter, reportPrivateUsage — no override needed.
+
+  // fill in per untyped dependency as encountered, instead of a global severity change.
+  // invoke ships no type stubs — every `c: Context` task parameter and the Task object's own
+  // attributes (e.g. `.body`, the undecorated function invoke's @task wraps — see
+  // tests/test_ai.py's `ai.skills.body(...)` calls) are Unknown/Any without this. This is the
+  // single largest source of warning volume in this repo; it's real friction from an untyped
+  // dependency, not a code smell.
+  "allowedUntypedLibraries": ["invoke"],
+
+  // downgrade: pilot run found this fires on tasks/__init__.py's own necessary shape — it imports
+  // every task submodule to build an invoke Collection, and each submodule does `from . import
+  // util` (a sibling import through the package). Python resolves this fine at runtime (submodule
+  // imports don't require the package's own __init__ body to have finished first) — a real,
+  // standard invoke-package pattern, not a bug. Downgraded rather than silenced entirely since a
+  // *genuine* cycle elsewhere would still be worth seeing.
+  "reportImportCycles": "warning",
+
+  // pytest autouse fixtures (def _reset_dry_run(): ..., @pytest.fixture(autouse=True)) are called
+  // only by pytest's own plugin machinery, never referenced by name anywhere in the file — a
+  // structural false positive for reportUnusedFunction that will recur in every test file that
+  // uses one, so it's scoped off for tests/ rather than ignored per-fixture.
+  "executionEnvironments": [
+    {
+      "root": "tests",
+      "reportUnusedFunction": "none"
+    }
+  ]
+}

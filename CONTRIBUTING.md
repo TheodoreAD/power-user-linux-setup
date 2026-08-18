@@ -21,19 +21,21 @@ in required flags (see the note below) and keep the tools' invocation in one pla
 scattered across every contributor's/agent's memory of the right command line.
 
 ```shell
-inv quality.fix     # apply, then check — the one command to run before considering a change done
+inv quality.precommit   # fix, then check — the one command to run before considering a change done
 ```
 
-That's `apply` (fix everything auto-fixable) followed by `check` (verify clean), each in turn a
+That's `fix` (fix everything auto-fixable) followed by `check` (verify clean), each in turn a
 `pre=`-chain of the individual `<category>_check` / `<category>_apply` tasks (`_check` never writes,
 `_apply` fixes what's auto-fixable):
 
 ```shell
-inv quality.check   # lint_check + format_check + test — CI-style gate, no changes written
-inv quality.apply   # lint_apply + format_apply — fixes everything auto-fixable
+inv quality.check   # lint_check + format_check + type_check + shell_check + shell_format_check +
+                     # test — CI-style gate, no changes written
+inv quality.fix      # lint_apply + format_apply + shell_format_apply — fixes everything auto-fixable
 ```
 
-Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `test`.
+Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_check`,
+`shell_check`, `shell_format_check`, `shell_format_apply`, `test`.
 
 > [!NOTE]
 > `dprint fmt`/`dprint check` need `--config-discovery=ignore-descendants` (already baked into the
