@@ -143,7 +143,7 @@ session, not `source .venv/bin/activate` workarounds.
 Before considering a change done, run:
 
 ```shell
-inv quality.fix   # apply (ruff --fix, ruff format, dprint fmt), then check — must pass clean
+inv quality.precommit   # fix (ruff --fix, ruff format, dprint fmt), then check — must pass clean
 ```
 
 **Never call `ruff` or `dprint` directly** — always go through `inv quality.*`. They bake in

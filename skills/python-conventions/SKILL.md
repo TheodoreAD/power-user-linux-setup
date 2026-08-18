@@ -162,9 +162,14 @@ just confirm what you'd already do, weight the ones that don't.
 ## Package layout: `src/` over flat
 
 - Default: any installable/importable package in this family uses `src/<pkg_name>/`, not a flat
-  `<pkg_name>/` at repo root. A top-level `tasks.py` or other script entrypoint isn't a package and
-  stays at repo root regardless — this governs the thing that gets built into a wheel and imported,
-  not tooling scripts.
+  `<pkg_name>/` at repo root. A repo's own `tasks.py`/`tasks/` invoke entrypoint isn't a package and
+  stays flat at repo root regardless — every repo in this family has one, it's never installed or
+  imported elsewhere, and this convention governs the thing that gets built into a wheel and
+  imported, not that repo's own tooling scripts. (Confirmed live 2026-08-19 on
+  `power-user-linux-setup` itself: its `tasks/` holds ~25 modules of repo-specific invoke tasks, not
+  a distributable library — moving it under `src/` would also collide with invoke's own
+  `FilesystemLoader`, which walks upward from cwd for a literal `tasks.py`/`tasks/__init__.py` and
+  never consults an installed copy.)
 - Why: a flat layout lets `pytest`/an import silently resolve to the _uninstalled, cwd_ copy of the
   package instead of what's actually installed (Python puts the cwd first on the import path) —
   masking real packaging bugs (a missing sub-package, an unincluded resource file) until a real user

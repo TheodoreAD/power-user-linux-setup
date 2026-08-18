@@ -1,0 +1,49 @@
+target-version = "py311"
+line-length = 120
+
+[lint]
+# ruff 0.16 (2026-07) changed its own default from the narrow E4/E7/E9/F set (59 rules) to a much
+# broader 413-rule default — extend-select would pile these on top of that new default and land
+# near-ALL (~966 rules, including bandit/pylint/async-safety noise never intended here). Pin an
+# explicit select instead: the old default (E4, E7, E9, F) plus this repo's curated additions.
+select = [
+  # old ruff default (pycodestyle subset + pyflakes)
+  "E4",
+  "E7",
+  "E9",
+  "F",
+  "E501", # line too long — formatter doesn't wrap comments/docstrings/strings
+  "I", # isort — import sorting
+  "UP", # pyupgrade — modern syntax for the target version
+  "B", # flake8-bugbear — common bug patterns
+  "C4", # flake8-comprehensions
+  "SIM", # flake8-simplify
+  "PTH", # flake8-use-pathlib
+  "RET", # flake8-return
+  "TID", # flake8-tidy-imports
+  # added 2026-08-16 (plans/2026-08-14-python-repo-scaffolding.md §C2): ruff's own zero-config
+  # default already includes RUF — an explicit `select` doesn't inherit it, so this repo was
+  # silently missing it until now.
+  "RUF", # ruff-specific rules (mutable class defaults, noqa hygiene, f-string pitfalls, ...)
+  "C90", # mccabe complexity — default threshold 10; 15 pre-existing @task handlers noqa'd, not
+  # refactored in this pass (see `rg "noqa: C901"`)
+  "PERF", # perflint — real inefficiencies, low false-positive rate
+  "A", # flake8-builtins — shadowed builtins; a few deliberate invoke CLI names noqa'd (dir/all
+  # are also the actual --flag/subcommand names, changing them would break the CLI)
+  "DTZ", # flake8-datetimez — naive datetime.now()/utcnow(), a real timezone-bug class
+  "PL", # pylint subset — PLR (refactor-suggestion codes: too-many-args/branches/statements,
+  # magic-value-comparison) dropped below; every real-world config checked during research (Home
+  # Assistant, Litestar) carves it out the same way, and this repo's own hits confirmed why
+  # (PLR0912/0913/0915/0911/2004/0917 all fired on ordinary, not-actually-complex code)
+  "TRY", # tryceratops — exception-handling anti-patterns; TRY003 dropped below
+]
+ignore = [
+  "PLR", # see PL comment above — refactor-suggestion noise, not bug-catching
+  "TRY003", # "raise vanilla exception with a long message" — this repo deliberately keeps a
+  # minimal exception hierarchy (skills/python-conventions/references/rationale.md §3); Home
+  # Assistant's own config drops this same code for being too opinionated for exactly this reason
+]
+
+[lint.isort]
+known-first-party = ["tasks"]
+section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
