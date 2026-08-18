@@ -79,18 +79,23 @@ repo-tasks/
 ```
 
 A real Python package exposing an invoke `Collection` extracted from `tasks/quality.py` in this repo
-(already the proven source), but with three renamed/added composite tasks — `apply` (auto-fix only,
-unchanged), `check` (CI gate, unchanged), and **`precommit`** (`apply` then `check`, replacing what
-this repo currently calls `fix`) — **`precommit` is the one command an agent always runs, without
-needing to know or invoke the individual tools itself.** Every `c.run(...)` call echoes the command
-it runs (`echo=True`) so both a human and an agent see exactly what executed — the only exception
-would be a step involving a secret, and none of the quality tasks do. Because
-`type_check`/`shell_check` are now unconditional parts of every consumer's `check` (no allowances to
-skip them), `shell_check`/ `shell_format_*` must degrade gracefully on a repo with zero `*.sh` files
-(confirmed: none of `olx`/`temu`/`freshful-polite-mcp` has any) rather than erroring the way
+(already the proven source), but with three renamed/added composite tasks — **`fix`** (auto-fix only
+— renamed from this repo's current `apply`, revised 2026-08-18: "apply" read fine for solo use, but
+"fix" is the name people sharing this package will already expect), `check` (CI gate, unchanged),
+and **`precommit`** (`fix` then `check`, replacing what this repo currently calls `fix` for the
+combo task) — **`precommit` is the one command an agent always runs, without needing to know or
+invoke the individual tools itself.** Every `c.run(...)` call echoes the command it runs
+(`echo=True`) so both a human and an agent see exactly what executed — the only exception would be a
+step involving a secret, and none of the quality tasks do. Because `type_check`/`shell_check` are
+now unconditional parts of every consumer's `check` (no allowances to skip them),
+`shell_check`/`shell_format_*` must degrade gracefully on a repo with zero `*.sh` files (confirmed:
+none of `olx`/`temu`/`freshful-polite-mcp` has any) rather than erroring the way
 `shellcheck $(fd -e sh .)` does today on an empty file list — and every consumer repo must carry its
 own `pyrightconfig.json` (§C0), since "every repo runs type_check" only works if "every repo has
-type-check config" also holds:
+type-check config" also holds. **Every task, leaf and composite alike, carries a succinct one-line
+docstring** — this is what `inv -l` displays as that task's help text in a consumer repo, so
+`inv -l` alone should be enough to know what's available without reading source (revised 2026-08-18,
+per explicit request):
 
 ```python
 """Shared, reproducible quality-tooling invoke tasks. Every command is echoed
@@ -107,35 +112,43 @@ def _sh_files(c):
 
 @task
 def lint_check(c):
+    """Run ruff's linter (no fixes)."""
     c.run("ruff check .", echo=True)
 
 
 @task
 def lint_apply(c):
+    """Run ruff's linter and apply auto-fixes."""
     c.run("ruff check --fix .", echo=True)
 
 
 @task
 def format_check(c):
+    """Check formatting (ruff format, dprint) without writing changes."""
     c.run("ruff format --check .", echo=True)
     c.run("dprint check --config-discovery=ignore-descendants", echo=True)
 
 
 @task
 def format_apply(c):
+    """Apply formatting: ruff format, then dprint fmt."""
     c.run("ruff format .", echo=True)
     c.run("dprint fmt --config-discovery=ignore-descendants", echo=True)
 
 
 @task
 def type_check(c):
+    """Run basedpyright's type checker."""
     c.run("basedpyright", echo=True)
 
 
 @task
 def shell_check(c):
-    """No-ops cleanly on a repo with no *.sh files, so this is safe to run
-    unconditionally in every consumer's `check` — no per-repo opt-out needed."""
+    """Run shellcheck against every *.sh file in the repo.
+
+    No-ops cleanly on a repo with no shell scripts, so this is safe to run
+    unconditionally in every consumer's `check` — no per-repo opt-out needed.
+    """
     files = _sh_files(c)
     if files:
         c.run(f"shellcheck {' '.join(files)}", echo=True)
@@ -143,6 +156,8 @@ def shell_check(c):
 
 @task
 def shell_format_check(c):
+    """Check shell script formatting (shfmt) without writing changes. No-ops
+    cleanly on a repo with no shell scripts."""
     files = _sh_files(c)
     if files:
         c.run(f"shfmt -d {' '.join(files)}", echo=True)
@@ -150,6 +165,8 @@ def shell_format_check(c):
 
 @task
 def shell_format_apply(c):
+    """Apply shell script formatting (shfmt). No-ops cleanly on a repo with
+    no shell scripts."""
     files = _sh_files(c)
     if files:
         c.run(f"shfmt -w {' '.join(files)}", echo=True)
@@ -157,12 +174,13 @@ def shell_format_apply(c):
 
 @task
 def test(c):
+    """Run the pytest suite."""
     c.run("pytest", echo=True)
 
 
 @task(pre=[lint_apply, format_apply, shell_format_apply])
-def apply(c):
-    """Fix everything auto-fixable."""
+def fix(c):
+    """Fix everything auto-fixable: ruff --fix, ruff format, dprint fmt, shfmt -w."""
 
 
 @task(pre=[lint_check, format_check, type_check, shell_check, test])
@@ -170,11 +188,10 @@ def check(c):
     """CI-style gate: every check, no changes written."""
 
 
-@task(pre=[apply, check])
+@task(pre=[fix, check])
 def precommit(c):
-    """Apply, then check. The one command an agent always runs before
-    considering a change done — no need to know or invoke the individual
-    tools."""
+    """Fix, then check — the one command to run before considering a change
+    done, with no need to know or invoke the individual tools."""
 ```
 
 `shfmt`'s indent style (hardcoded today as `-i 4 -ci` in `tasks/quality.py`) moves to
@@ -196,9 +213,17 @@ from repo_tasks import quality
 ns = Collection.from_module(quality)
 ```
 
-`inv quality.precommit` is the single command, identical across every repo — matching the pattern
-already proven in this repo's own `tasks/__init__.py`'s `Collection.from_module(quality)` usage, not
-a guessed shape. A fix or improvement in the shared package reaches a consumer only via a deliberate
+**Every task above — leaf and composite alike — is a plain public function in the `quality` module,
+not just the three composites.** `from repo_tasks import quality; quality.test` works directly at
+the Python level, and `Collection.from_module(quality)` surfaces every one of them individually
+under `inv quality.<name>` in a consumer repo: `inv quality.test` (pytest alone),
+`inv quality.lint_check`, `inv quality.type_check`, etc. all remain fully supported entrypoints on
+their own — `precommit` is the recommended default for "run everything, I don't want to think about
+which tools," not the only supported one (revised 2026-08-18, per explicit request — `test`/pytest
+specifically called out as a command people will often want standalone). `inv quality.precommit` is
+the single command, identical across every repo, for the common case — matching the pattern already
+proven in this repo's own `tasks/__init__.py`'s `Collection.from_module(quality)` usage, not a
+guessed shape. A fix or improvement in the shared package reaches a consumer only via a deliberate
 `uv lock --upgrade-package repo-tasks` (or a pinned `@<tag>` bump) plus a committed lockfile change
 — not automatic, same as any other dependency bump.
 
@@ -211,8 +236,10 @@ safe to run unconditionally.
 is required eventually, not optional — sequenced out because each is a real migration of
 already-relied-upon tooling, not because the convention doesn't apply to it):
 
-- This repo's own `tasks/quality.py`: rename `fix` → `precommit`, update `AGENTS.md`/`CLAUDE.md`'s
-  "`inv quality.fix`" wording to match.
+- This repo's own `tasks/quality.py`: rename its current `apply` → `fix` and current `fix` →
+  `precommit` (this repo's existing naming is the _inverse_ of the shared package's — its `apply` is
+  the shared package's `fix`, its `fix` is the shared package's `precommit`), update
+  `AGENTS.md`/`CLAUDE.md`'s "`inv quality.fix`" wording to match the new meaning.
 - This repo's own `pyproject.toml`: migrate `[tool.ruff]`/`[tool.basedpyright]`/
   `[tool.pytest.ini_options]` into dedicated files per §C0 — this repo piloted the tuned config
   _content_ (§C1/§C2) but not yet the file-_location_ convention decided this session.
@@ -673,7 +700,7 @@ Every question this section used to list is now resolved — see §A for the ful
 
 - **Naming**: `repo-tasks` (`pulse-dev-tasks` rejected — clashes with PulseAudio; `py-dev-tasks`
   rejected — too generic).
-- **Composition**: no per-repo allowances — every consumer uses the exact same `apply`/`check`/
+- **Composition**: no per-repo allowances — every consumer uses the exact same `fix`/`check`/
   `precommit` composite from the shared package, unmodified (an earlier leaf-tasks-only draft was
   considered and rejected). This also resolves the "should shell/type checks be optional per repo"
   question the leaf-tasks draft implied: no — they're unconditional, and the tasks themselves
