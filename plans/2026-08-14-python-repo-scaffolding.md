@@ -226,8 +226,8 @@ profile is derived directly from basedpyright's own rule-default table
 ([docs.basedpyright.com/latest/configuration/config-files/#diagnostic-settings-defaults](https://docs.basedpyright.com/latest/configuration/config-files/#diagnostic-settings-defaults)),
 not adapted from a third party's already-published tuning. Type-hygiene conventions this profile
 enforces (scoped `# type: ignore[code]`, "type everything including snippets") live in
-`plans/2026-08-15-python-conventions.md` §8 — this section is the tool config, that one is the
-writing convention it backs.
+`skills/python-conventions/references/rationale.md` §8 — this section is the tool config, that one
+is the writing convention it backs.
 
 **Genuine dissent worth keeping in view, not adopting:** Armin Ronacher (Flask creator), two posts —
 ["Untyped Python: The Python That Was"](https://lucumr.pocoo.org/2023/12/1/the-python-that-was/)
@@ -272,11 +272,11 @@ select every category — hand-picked, narrow selections are the actual norm):
   `PLR0913` counts `self`/`cls` toward its argument limit and doesn't exempt overrides by default, a
   frequently-cited annoyance. Select `PL`, keep `PLC`/`PLE`/`PLW` (closer to real bugs), drop `PLR`.
 - **Add, same pattern**: `TRY`/tryceratops — directly relevant to
-  `plans/2026-08-15-python-conventions.md` §3's exception-hierarchy guidance. Home Assistant selects
-  it but ignores `TRY003` (long exception messages) and `TRY400` (`logging.error` vs `.exception`)
-  as too opinionated — a minimal exception hierarchy (that plan's own §3 decision) makes `TRY003`
-  actively fight the design, not just style noise. Recommend select-then-triage: turn it on, see
-  what actually fires, decide ignores from real signal rather than pre-guessing.
+  `skills/python-conventions/references/rationale.md` §3's exception-hierarchy guidance. Home
+  Assistant selects it but ignores `TRY003` (long exception messages) and `TRY400` (`logging.error`
+  vs `.exception`) as too opinionated — a minimal exception hierarchy (that plan's own §3 decision)
+  makes `TRY003` actively fight the design, not just style noise. Recommend select-then-triage: turn
+  it on, see what actually fires, decide ignores from real signal rather than pre-guessing.
 - **Skip, or scope to non-test code**: `ARG`/flake8-unused-arguments — none of the four flagship
   projects select it, likely because it collides with two common, legitimate patterns: interface-
   conformance overrides, and pytest fixtures that take an argument purely for its side effect (e.g.
@@ -298,8 +298,8 @@ select every category — hand-picked, narrow selections are the actual norm):
   hand-picked, explicit ignores for noisy subcategories.
 
 **pytest config mechanics** (design guidance on fixture scope and DAMP-vs-DRY test structure lives
-in `plans/2026-08-15-python-conventions.md` §7 — this is only the mechanical setup): marker
-registration via `markers = [...]` plus `--strict-markers` matches Litestar's and httpx's own
+in `skills/python-conventions/references/rationale.md` §7 — this is only the mechanical setup):
+marker registration via `markers = [...]` plus `--strict-markers` matches Litestar's and httpx's own
 configs exactly — already this repo's convention, already in `pyproject.toml`'s
 `[tool.pytest.ini_options]`.
 

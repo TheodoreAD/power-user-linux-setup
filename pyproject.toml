@@ -62,8 +62,8 @@ select = [
 ignore = [
   "PLR", # see PL comment above — refactor-suggestion noise, not bug-catching
   "TRY003", # "raise vanilla exception with a long message" — this repo deliberately keeps a
-  # minimal exception hierarchy (plans/2026-08-15-python-conventions.md §3); Home Assistant's own
-  # config drops this same code for being too opinionated for exactly this reason
+  # minimal exception hierarchy (skills/python-conventions/references/rationale.md §3); Home
+  # Assistant's own config drops this same code for being too opinionated for exactly this reason
 ]
 
 [tool.ruff.lint.isort]
