@@ -1,7 +1,8 @@
 # Canonical example: layering PULSE onto a base image at *build* time — the bake-time analog of
 # the postCreateCommand flow in docs/dev-container.md. Three uses:
 # 1. A documented, working example of "FROM a stock base image, layer PULSE on top."
-# 2. A vehicle for local testing of *uncommitted* changes to tasks/*.py, setup.toml, etc. — it
+# 2. A vehicle for local testing of *uncommitted* changes to tasks/*.py, src/repo_tasks/*.py,
+# setup.toml, etc. — it
 # COPYs the local working tree in and runs bootstrap-devcontainer.sh --local, not a git clone
 # of a pinned ref, so `docker build` picks up whatever's on disk right now.
 # 3. A template: FROM this image to layer your own extra tooling on a "strong base," or copy
@@ -24,6 +25,7 @@ COPY setup.toml .
 COPY bootstrap.sh .
 COPY bootstrap-devcontainer.sh .
 COPY tasks/ tasks/
+COPY src/repo_tasks/ repo_tasks/
 COPY config/ config/
 COPY skills/ skills/
 
