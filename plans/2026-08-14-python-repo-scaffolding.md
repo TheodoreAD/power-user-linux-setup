@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-19
+updated: 2026-08-20
 ---
 
 # Standardizing scaffolding for personal Python agent-tool repos
@@ -991,6 +991,137 @@ then `copier update` against `scaffoldapy` (exactly the direction Copier's updat
 for, not a manual re-diff by hand). `emag-polite-mcp`/`altex-polite-mcp` are still plan-only — they
 pick up the template (with `repo-tasks` as a dependency from the start) once their implementation
 actually begins, so no separate retrofit step for those two regardless of this deferral.
+
+### E. Extract `dev_env` and `docs` modules to `repo-tasks` (2026-08-20)
+
+**Prompted by an audit of `power-user-linux-setup`'s own `tasks/` for what else, besides `quality`
+(already extracted per §A), is actually generic per-repo dev tooling rather than
+machine-setup-only.** Most of `tasks/` (`apt`, `gnome`, `wsl`, `docker`, `certs`, `proxy`, `fonts`,
+`screenshot`, `node`, `system`, `ide`, `zsh`, `devcontainer`, `cleanup`, `identity`, `allowlist`,
+`verify`, `ai.skills`/ `ai.init`) is tied to this machine or this repo's own
+`setup.toml`/`identity.toml` and isn't portable. Two things are: `python.dev_venv` +
+`ai.claude_direnv_hook` (the "set up my dev loop after cloning" pair — `dev_venv` already calls
+`claude_direnv_hook` as a step), and `docs.{clean,build,
+serve}` (the `zensical` doc-site wrapper).
+A live audit of every sibling repo confirmed neither is actually consistent across the family yet —
+the concrete gaps this section exists to close:
+
+| repo                                   | `.envrc` | Claude direnv hook wired | `tasks.py` on `repo_tasks.ns`           | `dprint.json` | `docs/` |
+| -------------------------------------- | -------- | ------------------------ | --------------------------------------- | ------------- | ------- |
+| `olx-polite-mcp`                       | yes      | yes                      | **no — old hand-duplicated leaf tasks** | yes           | no      |
+| `temu-polite-mcp`                      | no       | no                       | **no — old hand-duplicated leaf tasks** | yes           | no      |
+| `freshful-polite-mcp`                  | no       | no                       | **no — old hand-duplicated leaf tasks** | yes           | no      |
+| `repo-tasks`                           | yes      | no                       | yes (dogfoods itself)                   | yes           | no      |
+| `scaffoldapy`                          | yes      | no                       | yes (dogfoods `repo_tasks`)             | yes           | no      |
+| `emag-polite-mcp` / `altex-polite-mcp` | —        | —                        | plan-only, no code yet                  | —             | no      |
+
+The `tasks.py` gap on `olx`/`temu`/`freshful-polite-mcp` is the same retrofit work already deferred
+above, not a new problem — confirmed still true, and `dev_env`/`docs` will land in that same
+eventual retrofit pass once `scaffoldapy` stabilizes. Zero repos in the family have a `docs/` site
+today.
+
+**`repo_tasks.dev_env`** — new module, ported from `tasks/python.py`'s `dev_venv` and
+`tasks/ai.py`'s `claude_direnv_hook`, restructured to match `quality`'s leaf/composite shape:
+
+- `venv` (from `dev_venv`): `uv sync`, then `direnv allow` if `direnv` is present.
+- `claude_hook` (from `claude_direnv_hook`): wires `<dir>/.claude/settings.json`'s
+  `env.CLAUDE_ENV_FILE` + a `PreToolUse`/`Bash` hook refreshing it from `direnv export zsh`, so
+  Claude Code's non-interactive Bash tool picks up the venv (docs/claude-code.md's stale-
+  shell-snapshot problem) — already fully self-contained (only reads/writes under the target `dir`,
+  no `setup.toml` dependency), just needs its own tiny `command_exists`/path helpers instead of
+  importing `tasks/util.py`.
+- `setup` (new composite, `pre=[venv, claude_hook]`): the one command a human or agent runs once
+  after cloning — mirrors `quality.precommit`'s "the one command an agent always runs" role.
+- **Two things intentionally dropped in the port, not preserved:**
+  - `PULSE_DRY_RUN`/`util.DRY_RUN` support — a machine-setup-wide convention
+    (`inv setup
+    --dry-run`-style tasks across all of `tasks/`) that `quality.py` itself never
+    adopted either; dropping keeps `dev_env` consistent with `repo-tasks`'s existing tasks rather
+    than importing a convention unique to this repo.
+  - `_ensure_dprint_config`'s auto-create-`dprint.json`-if-missing behavior — confirmed via the
+    table above that every repo actually running `quality`/`dev_venv` already has a committed
+    `dprint.json` today, and auto-creating a tracked config file as a side effect of routine
+    dev-loop setup is exactly the silent-mutation pattern §D already rejected for `configs.pull`
+    itself (`configs.pull`/`configs.diff` are deliberate, standalone tasks — never a `pre=` of
+    something else). Once §D lands, a repo missing `dprint.json` should be told to run
+    `configs.pull`, not have it silently fabricated.
+- Docstrings generalized: `dev_venv`'s current text points at _this_ repo's `tests/README.md` — the
+  ported version describes the generic "run once after cloning" contract only.
+
+**`repo_tasks.docs`** — new module, `tasks/docs.py`'s `clean`/`build`/`serve` ported near-verbatim
+(already fully generic: `_SITE_DIR` is relative to the repo root, every command is a bare
+`zensical build --strict` / `zensical serve`, no this-repo-specific assumption anywhere in the task
+bodies themselves — only the _config_ and _how `zensical` gets onto `PATH`_ need work, below).
+
+**Alignment gap this surfaces, worth fixing regardless of the extraction:** locally, `zensical`
+resolves from `power-user-linux-setup`'s own machine-wide `uv tool install` (`[packages.zensical]`
+in `setup.toml`); in CI, `.github/workflows/publish_on_push.yml` instead does
+`pip install -r requirements-docs.txt` (a separately pinned `zensical==0.0.44`) — two different
+delivery paths for the same tool, already slightly inconsistent even within this one repo. Neither
+generalizes to a `repo-tasks` consumer: those repos have no `setup.toml` and aren't guaranteed to
+run on a PULSE-provisioned machine at all. **Recommendation: make `zensical` a project-scoped `uv`
+dependency (a `docs` dependency group, resolved via `uv sync`/`uv add --group docs zensical`) for
+every consumer that opts into docs**, the same mechanism `repo_tasks` itself already is
+(`uv add
+--dev git+...`) — one delivery path, local and CI alike, no reliance on a machine-wide
+install. `power-user-linux-setup` itself should probably also move onto this (drop
+`[packages.zensical]`, adopt the dependency-group + `requirements-docs.txt`-or-group-export for CI),
+tracked here as a one-time cleanup once `dev_env`/`docs` land, not blocking them.
+
+**`mkdocs.yml` does _not_ join §D's `configs.pull`-synced set — a real technical finding, not a
+preference.** §D's model (whole file pulled verbatim from the installed package,
+`configs.local.toml` appends a handful of exception lines) assumes the file is uniform across the
+family. `mkdocs.yml` isn't: confirmed by reading the installed `zensical` package (`config.py`) that
+it has **no `INHERIT:`-style config-layering** (unlike upstream `mkdocs` itself) — so there's no
+mechanism to split it into a synced shared-baseline file plus a small per-repo override the way
+`ruff.toml`/ `pyrightconfig.json` work. Roughly 85% of `power-user-linux-setup`'s current
+`mkdocs.yml` (`theme`, `markdown_extensions`, `plugins`, `extra_css`, the mermaid
+`fence_code_format` fix from `contributing/zensical.md`) is copy-paste-identical boilerplate any
+consumer would want; the rest (`site_name`, `site_url`, `repo_url`, `repo_name`, and especially
+`nav` — actively hand-edited every time a doc page is added) is genuinely per-repo and not
+append-only the way `configs.local.toml`'s two known exceptions are. Conclusion: `mkdocs.yml`
+belongs in the same bucket as `pyproject.toml` — **a `scaffoldapy`-owned, one-time generated
+structural file** (baseline boilerplate + copier-templated identity fields + a starter
+`nav: [index.md]`), not a `repo_tasks.configs` package-data file. A future fix to the shared
+boilerplate portion needs manual reconciliation into already-generated repos, same limitation §D
+already accepted for `pyproject.toml`-level content and consistent with scaffoldapy's
+already-declared "no `copier update` against existing repos for now" scope. Revisit if `zensical`
+ever adds config-layering.
+
+**`scaffoldapy` additions, gated behind a new copier question — resolved 2026-08-20:**
+`with_docs:
+bool`, `default: false`, always asked interactively (never silently skipped) — decided
+by the user directly: a README is enough for a small project, but a docs site is worth aiming for
+once a project reaches medium/larger size, since it's nicer to browse and free to host on GitHub
+Pages for a public repo. Uniformly opt-in across every `interface` choice, not defaulted-on for any
+of them — the question's `help` text carries that size guidance plus an explicit warning that GitHub
+Pages publishes the site **publicly even for a private GitHub repo** (true as of the last check), so
+don't enable it if the docs would ever contain anything sensitive. When set: stamps `mkdocs.yml`
+(per above), a starter `docs/index.md`, a `docs` dependency group in `pyproject.toml` (`zensical`),
+and `.github/workflows/docs.yml` (ported from `publish_on_push.yml`, using the dependency-group
+install instead of `requirements-docs.txt`).
+
+**Landed 2026-08-20:** `repo_tasks.dev_env` (`venv`/`claude_hook`/`setup`) and `repo_tasks.docs`
+(`clean`/`build`/`serve`) both shipped in `repo-tasks`, with tests; `scaffoldapy`'s `with_docs`
+question plus the gated `mkdocs.yml`/`docs/index.md`/docs dependency group/`docs.yml` workflow
+templates shipped too, with `test_template.py` coverage for both the on and off paths. **Not done as
+part of this pass, deliberately:** migrating `power-user-linux-setup`'s own
+`tasks/python.py::
+dev_venv` and `tasks/ai.py::claude_direnv_hook` to consume `repo_tasks.dev_env`
+instead of their local copies (the way `tasks/quality.py` already consumes `repo_tasks.quality`) —
+blocked on a real decision neither asked for nor made here: those two still support `PULSE_DRY_RUN`,
+which `repo_tasks.dev_env`'s port deliberately dropped (§A precedent: `quality.py` never had it
+either). Swapping to the shared module without deciding "drop dry-run support here too" vs. "keep a
+dry-run-capable local copy indefinitely" would be a silent behavior change to already-working,
+untested-but-relied-on tooling, not a mechanical dedup. Same deferral for `tasks/docs.py` and the
+`[packages.zensical]`-vs-dependency-group unification noted above — lower-risk than the dry-run
+question but still an unrequested change to this repo's own working setup, not something either
+`dev_env`/`docs` landing in `repo-tasks` requires.
+
+**Sequencing:** `dev_env`/`docs` land in `repo-tasks` independent of §D (`configs.pull` et al.) — no
+blocking dependency either direction, since the dprint-auto-create logic is simply dropped rather
+than replaced by a `configs.pull` call that doesn't exist yet. `scaffoldapy`'s `mkdocs.yml`/docs-CI
+template work can land in parallel with either.
 
 ## Open questions — resolved 2026-08-18
 
