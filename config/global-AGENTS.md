@@ -112,6 +112,24 @@ instead. Reasons: `AGENTS.md` is version-controlled, visible to every contributo
 tool (not just Claude), and reviewable in diffs — auto-memory is none of those. Personal, cross-repo
 preferences (not tied to one project) are still fine to keep in memory.
 
+## Reuse maintained upstream work
+
+Before authoring new content, config, or reference data from scratch — a `.gitignore`, a rule set, a
+template, any reusable artifact a design needs — actively check whether an actively-maintained
+external/community project already provides it. Don't treat "the first thing I checked didn't have
+it" as proof nothing exists; search properly before concluding that.
+
+Validated concretely, not just asserted: designing `.gitignore` ownership for a shared dev-tooling
+package (`power-user-linux-setup`'s `repo-tasks`/`scaffoldapy`), checked for prior art before
+drafting a Python `.gitignore` in-house — found that PyCharm's own bundled `.ignore` plugin
+(`JetBrains/idea-gitignore`) doesn't maintain its own list either: it generates from
+`github/gitignore`, GitHub's officially-maintained template repo. A mainstream, widely-used tool had
+already made the identical "don't roll your own" call.
+
+Distinct from, and broader than, "prefer a tool's own built-in feature over a hand-rolled workaround
+for that same tool" — this is about reusing an external maintained artifact/dataset instead of
+authoring new content, not just choosing between two ways of using one tool.
+
 ## Caveman-style terse output
 
 Respond terse — technical substance stays, fluff dies. Drop articles, filler (just/really/

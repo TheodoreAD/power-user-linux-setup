@@ -260,10 +260,10 @@ already-relied-upon tooling, not because the convention doesn't apply to it):
   consults an installed copy) — `inv` would have nothing to find.
   `skills/python-conventions/SKILL.md`'s src-layout topic updated same day to state this scoping
   explicitly, so a sibling-repo retrofit doesn't repeat it.
-- ~~Whether this repo becomes an actual consumer of `repo-tasks`~~ — **done 2026-08-19** (`6a9c981`):
-  `uv add --dev git+https://github.com/TheodoreAD/repo-tasks`, `tasks/__init__.py` now does
-  `from repo_tasks import quality`, no local `tasks/quality.py` duplicate remains. See §D for the
-  config-file half of this same question (still open as of that commit — resolved below).
+- ~~Whether this repo becomes an actual consumer of `repo-tasks`~~ — **done 2026-08-19**
+  (`6a9c981`): `uv add --dev git+https://github.com/TheodoreAD/repo-tasks`, `tasks/__init__.py` now
+  does `from repo_tasks import quality`, no local `tasks/quality.py` duplicate remains. See §D for
+  the config-file half of this same question (still open as of that commit — resolved below).
 - **Still open**: retrofitting `olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp` onto
   `repo-tasks` + `src/` layout, now unblocked since `repo-tasks` exists.
 - ~~Actually creating the `repo-tasks` repo and its code~~ — **done 2026-08-19**:
@@ -753,19 +753,20 @@ paragraphs into single giant lines on the first attempt (the opposite of the int
 
 ### D. Repo-family scope split + config distribution mechanism (2026-08-19)
 
-**Scope split across the three repos, stated explicitly per the user's own framing (this
-supersedes any looser language earlier in this plan):**
+**Scope split across the three repos, stated explicitly per the user's own framing (this supersedes
+any looser language earlier in this plan):**
 
 - **`power-user-linux-setup`**: machine initial setup + small subsequent updates. Not itself a
   template target — it's the meta/origin repo, shaped nothing like the `interface`/`fetch_strategy`
   sibling repos §B targets.
 - **`repo-tasks`**: using tools daily in dev — the invoke tasks run constantly (`lint`/`format`/
   `type_check`/`test`/`precommit`), **and now also the config each of those tools reads**, since the
-  config is strongly coupled to the task that invokes it (a `ruff.toml` divorced from the `ruff
-  check` call that reads it is exactly the kind of split-brain this plan is trying to eliminate).
-  This is the resolution to §C0/§C's "which repo is source of truth" ambiguity: **`repo-tasks`,
-  full stop, as a real enforced mechanism, not a "please copy this by hand" note.**
-- **`scaffoldapy`**: one-time project *structural* scaffolding (layout, `pyproject.toml` skeleton,
+  config is strongly coupled to the task that invokes it (a `ruff.toml` divorced from the
+  `ruff
+  check` call that reads it is exactly the kind of split-brain this plan is trying to
+  eliminate). This is the resolution to §C0/§C's "which repo is source of truth" ambiguity:
+  **`repo-tasks`, full stop, as a real enforced mechanism, not a "please copy this by hand" note.**
+- **`scaffoldapy`**: one-time project _structural_ scaffolding (layout, `pyproject.toml` skeleton,
   CI workflow, packaging entry points) — **not** tool config anymore (see below), and, for now,
   **not** fixing the structure of already-existing repos either (see "Narrowed for now" below).
 
@@ -779,10 +780,10 @@ this-repo-only local exceptions (see below) — `repo-tasks` package data become
 canonical copy, everywhere.
 
 **Mechanism: `inv configs.pull` / `inv configs.diff`, a new task module (`repo_tasks.configs`)
-shipped alongside `quality`, config files bundled as package data
-(`src/repo_tasks/configs/*`, resolved via `importlib.resources`).**
+shipped alongside `quality`, config files bundled as package data (`src/repo_tasks/configs/*`,
+resolved via `importlib.resources`).**
 
-- `inv configs.pull` — materialize each config file at the calling repo's root from the *installed*
+- `inv configs.pull` — materialize each config file at the calling repo's root from the _installed_
   `repo_tasks` package, applying that repo's local-override manifest if one exists (below).
   Overwrites whatever's on disk.
 - `inv configs.diff` — dry-run: diff installed-package (+ local overrides) version against what's
@@ -796,7 +797,7 @@ shipped alongside `quality`, config files bundled as package data
   version, `inv configs.pull` re-materializes. One update lifecycle for code and config both, not
   two.
 - **Explicitly rejected**: dprint's native `"extends": "<url>"` (would fetch over the network on
-  *every* `dprint check` run, not just at dependency-resolve time — exactly the kind of surprise
+  _every_ `dprint check` run, not just at dependency-resolve time — exactly the kind of surprise
   runtime network dependency that fails opaquely behind a corporate proxy/firewall — "corpos HATE
   blockers"). A raw `curl`/git-fetch-at-pull-time sync (re-invents the version pinning `uv.lock`
   already solves, and needs its own auth/private-index story from scratch). Using Copier for config
@@ -804,9 +805,9 @@ shipped alongside `quality`, config files bundled as package data
   separating).
 
 **Trigger: deliberate, not automatic — corrected 2026-08-19, an earlier draft of this section had
-`configs.pull` wired as a `pre=` dependency of `fix`/`check`/`precommit` so it "self-healed" on every
-run. Rejected directly**: config files need to be committed (below), and quietly rewriting a tracked
-file as a side effect of a routine `inv quality.precommit` run — possibly pulling in a newer
+`configs.pull` wired as a `pre=` dependency of `fix`/`check`/`precommit` so it "self-healed" on
+every run. Rejected directly**: config files need to be committed (below), and quietly rewriting a
+tracked file as a side effect of a routine `inv quality.precommit` run — possibly pulling in a newer
 `repo-tasks` version the developer never decided to take yet — is exactly the kind of surprise this
 family's tooling is supposed to avoid. `configs.pull`/`configs.diff` are standalone tasks, run
 deliberately, same tier as `uv lock --upgrade-package repo-tasks` itself: something a human or agent
@@ -815,13 +816,13 @@ tested, reviewed code change like any other, not a background side effect of dai
 
 **Root-level config files are committed, in every repo — never gitignored.** Reversed from an
 earlier draft of this section. Two concrete reasons this actually matters, not just preference: (1)
-**CI** in some setups needs the files present without first running `inv` (a raw `ruff`/`basedpyright`
-invocation outside this family's `inv quality.*` wrapper, or a CI cache/restore step that assumes the
-working tree is already complete); (2) **audit** — `git blame`/`git log` on the config file itself is
-how you answer "what ruleset was actually in effect for this PR," which is impossible if the file was
-never checked in. `configs.pull`'s committed output is the reviewable artifact; nothing about the
-mechanism changes, only that its result lands in a normal commit instead of a gitignored, silently-
-regenerated file.
+**CI** in some setups needs the files present without first running `inv` (a raw
+`ruff`/`basedpyright` invocation outside this family's `inv quality.*` wrapper, or a CI
+cache/restore step that assumes the working tree is already complete); (2) **audit** —
+`git blame`/`git log` on the config file itself is how you answer "what ruleset was actually in
+effect for this PR," which is impossible if the file was never checked in. `configs.pull`'s
+committed output is the reviewable artifact; nothing about the mechanism changes, only that its
+result lands in a normal commit instead of a gitignored, silently- regenerated file.
 
 **Local exceptions: investigated, not assumed — most turned out to already be unnecessary.** Live
 tested against `power-user-linux-setup`'s actual config files (2026-08-19/20) rather than guessed:
@@ -831,12 +832,12 @@ tested against `power-user-linux-setup`'s actual config files (2026-08-19/20) ra
   `reference/` tree, but explicitly targeting `ruff check reference/` (bypassing discovery) surfaces
   143. No `exclude` entry was ever needed for it, and `ruff.toml` has none.
 - **`pyrightconfig.json`'s `reference`/`skills/*/references/snippets` excludes are genuine and
-  unavoidable — basedpyright does *not* respect `.gitignore`.** Confirmed empirically: stripping
+  unavoidable — basedpyright does _not_ respect `.gitignore`.** Confirmed empirically: stripping
   those two entries from `exclude` (leaving only basedpyright's own defaults) took this repo from
   `0 errors, 2811 warnings` to `132 errors, 3509 warnings`, entirely from `reference/`'s vendored
   clones and the standalone example snippets under `skills/*/references/`. This is the one real,
   irreducible per-repo exception found.
-- **`dprint.json`'s `.vscode`/`uv.lock` excludes are *not* a `power-user-linux-setup`-specific
+- **`dprint.json`'s `.vscode`/`uv.lock` excludes are _not_ a `power-user-linux-setup`-specific
   exception at all** — `repo-tasks`'s own (stale) `dprint.json` already carries both. They belong in
   the shared baseline as-is, no local override needed.
 - **`dprint.json`'s `cli-allowlist/help-cache` exclude is genuine**: real, git-tracked (not
@@ -848,25 +849,26 @@ today** — `pyrightconfig.json`'s two extra `exclude` globs and `dprint.json`'s
 entry, both `power-user-linux-setup`-only. This is small enough to validate the whole "rely on
 gitignore, keep true exceptions rare and loud" premise rather than assume it.
 
-**What `configs.local.toml` is for, stated plainly**: it's the one place a consumer repo declares the
-small number of config additions it genuinely needs beyond the shared `repo-tasks` baseline, so that
-re-running `configs.pull` later (after a `repo-tasks` version bump) doesn't silently wipe them out.
-Without it, `configs.pull` would just overwrite each config file verbatim from the package every
-time — fine for the common case (most repos need nothing extra), but for the rare repo that does
-(`power-user-linux-setup` today), the person running the next pull would have to *remember*, by hand,
-which lines to re-add and why. `configs.local.toml` makes that unnecessary: it's a small, committed,
-human-and-agent-readable manifest — "this repo needs X, in addition to the shared config, because
-Y" — that `configs.pull` reads and folds in automatically on every run, so the addition survives
-indefinitely without depending on anyone's memory. It is not a general override/customization system
-— see the "kept deliberately dumb" framing below for exactly how narrow its actual scope is.
+**What `configs.local.toml` is for, stated plainly**: it's the one place a consumer repo declares
+the small number of config additions it genuinely needs beyond the shared `repo-tasks` baseline, so
+that re-running `configs.pull` later (after a `repo-tasks` version bump) doesn't silently wipe them
+out. Without it, `configs.pull` would just overwrite each config file verbatim from the package
+every time — fine for the common case (most repos need nothing extra), but for the rare repo that
+does (`power-user-linux-setup` today), the person running the next pull would have to _remember_, by
+hand, which lines to re-add and why. `configs.local.toml` makes that unnecessary: it's a small,
+committed, human-and-agent-readable manifest — "this repo needs X, in addition to the shared config,
+because Y" — that `configs.pull` reads and folds in automatically on every run, so the addition
+survives indefinitely without depending on anyone's memory. It is not a general
+override/customization system — see the "kept deliberately dumb" framing below for exactly how
+narrow its actual scope is.
 
 **Mechanism, kept deliberately dumb (no per-repo `select`/`extends`/deep-merge)**: a single tracked
 `configs.local.toml` at a consumer repo's root, present only in repos that need one (today: only
-`power-user-linux-setup`). Shape — additive-only, list-append per target file/key, each entry's *why*
-required inline as a TOML comment (this is the concrete mechanism for "exceptions must always be
-explained in a comment," since the exceptions can't all carry a comment in the generated file itself
-— `dprint.json` is plain JSON, no comment syntax, while `pyrightconfig.json`'s JSONC *could* but
-shouldn't be relied on as the only place the reasoning lives):
+`power-user-linux-setup`). Shape — additive-only, list-append per target file/key, each entry's
+_why_ required inline as a TOML comment (this is the concrete mechanism for "exceptions must always
+be explained in a comment," since the exceptions can't all carry a comment in the generated file
+itself — `dprint.json` is plain JSON, no comment syntax, while `pyrightconfig.json`'s JSONC _could_
+but shouldn't be relied on as the only place the reasoning lives):
 
 ```toml
 # basedpyright doesn't respect .gitignore (confirmed 2026-08-19) — reference/ is gitignored but
@@ -888,27 +890,27 @@ two real cases found above and nothing more general than that.
 **Self-hosting, corrected 2026-08-19**: an earlier draft of this section had `repo-tasks`'s own root
 config files as pure generated output, kept identical to `src/repo_tasks/configs/*` at all times.
 Wrong — clarified directly: `repo-tasks` is still a normal Python project, developed to the same
-standards as anything else in this family, and its root config files are what govern *its own* dev
-loop (`inv quality.check` linting/type-checking `repo-tasks`'s own `src/`/`tests/`). Those root files
-are allowed to diverge, in-flight, from `src/repo_tasks/configs/*` — the package data is "what gets
-shipped to consumers," the root files are "what `repo-tasks` uses on itself today," and the two are
-related deliberately, not by an automatic identity mapping:
+standards as anything else in this family, and its root config files are what govern _its own_ dev
+loop (`inv quality.check` linting/type-checking `repo-tasks`'s own `src/`/`tests/`). Those root
+files are allowed to diverge, in-flight, from `src/repo_tasks/configs/*` — the package data is "what
+gets shipped to consumers," the root files are "what `repo-tasks` uses on itself today," and the two
+are related deliberately, not by an automatic identity mapping:
 
 - Root files are committed and hand-developed like any repo's config — including possibly their own
   `configs.local.toml` if `repo-tasks` itself ever needs a local exception (none known today).
-- `configs.promote` (below) is the deliberate, one-directional action that takes whatever's currently
-  at root and makes it the new canonical `src/repo_tasks/configs/*` baseline, once the maintainer
-  decides that tuning is ready to ship to every consumer.
+- `configs.promote` (below) is the deliberate, one-directional action that takes whatever's
+  currently at root and makes it the new canonical `src/repo_tasks/configs/*` baseline, once the
+  maintainer decides that tuning is ready to ship to every consumer.
 - `configs.pull` still applies to `repo-tasks` itself too (per direct instruction) for the opposite
   case: resetting root back to what's currently shipped, or, combined with `--source` below, staging
   a candidate baseline pulled in from another repo's already-tuned config before reviewing it.
 
-**Authoring/harvest workflow — how an update made *outside* `repo-tasks` gets back in.** Composed
+**Authoring/harvest workflow — how an update made _outside_ `repo-tasks` gets back in.** Composed
 from two primitives rather than one bespoke harvest tool, per the instruction to keep `configs.pull`
 itself the one mechanism everything routes through:
 
 1. `configs.pull` gains an optional `--source` override (default: the installed package) —
-   `--source git:<url>` or `--source local:<path>` — pointing it at *another repo's root* config
+   `--source git:<url>` or `--source local:<path>` — pointing it at _another repo's root_ config
    files instead of the installed package. Run from inside `repo-tasks`'s own checkout, this
    materializes some other repo's (e.g. `power-user-linux-setup`'s) current root config files at
    `repo-tasks`'s own root — the same shape any consumer ends up in, just sourced differently. A
@@ -920,24 +922,24 @@ itself the one mechanism everything routes through:
    prints the diff; `--apply` writes root → package. Diff-first-by-default matches `configs.diff`'s
    own "surface drift, don't blind-overwrite" posture.
 
-Net authoring loop: `configs.pull --source local:/path/to/power-user-linux-setup` (or `git:`), review
-`configs.promote`'s diff, `configs.promote --apply` once satisfied. Two small, testable primitives,
-no separate one-off script.
+Net authoring loop: `configs.pull --source local:/path/to/power-user-linux-setup` (or `git:`),
+review `configs.promote`'s diff, `configs.promote --apply` once satisfied. Two small, testable
+primitives, no separate one-off script.
 
-**Consumer `tasks.py`/`tasks/` is no longer required to be *only* the two-line import.** The original
-§A framing ("Every consumer repo's own `tasks.py` shrinks to exactly this, with no local override")
-is revised: that "no allowances" decision was and stays about the *shared quality task graph's
-internals* — every consumer's `fix`/`check`/`precommit` still resolve to the exact same composite
-tasks from `repo_tasks`, unmodified, no per-repo fork of what "check" means. What's relaxed is the
-*container* — a repo's `tasks.py`/`tasks/` package may define additional local tasks alongside
-`from repo_tasks import ns` for that repo's own custom needs (`power-user-linux-setup`'s own
-`tasks/__init__.py` already does exactly this — `apt`, `allowlist`, `wsl`, `devcontainer`, `verify`,
-now also `quality` — and `repo-tasks`'s own `configs.promote` above is the same pattern). Nothing
-about `quality`'s or `configs`'s own composite-task shape changes.
+**Consumer `tasks.py`/`tasks/` is no longer required to be _only_ the two-line import.** The
+original §A framing ("Every consumer repo's own `tasks.py` shrinks to exactly this, with no local
+override") is revised: that "no allowances" decision was and stays about the _shared quality task
+graph's internals_ — every consumer's `fix`/`check`/`precommit` still resolve to the exact same
+composite tasks from `repo_tasks`, unmodified, no per-repo fork of what "check" means. What's
+relaxed is the _container_ — a repo's `tasks.py`/`tasks/` package may define additional local tasks
+alongside `from repo_tasks import ns` for that repo's own custom needs (`power-user-linux-setup`'s
+own `tasks/__init__.py` already does exactly this — `apt`, `allowlist`, `wsl`, `devcontainer`,
+`verify`, now also `quality` — and `repo-tasks`'s own `configs.promote` above is the same pattern).
+Nothing about `quality`'s or `configs`'s own composite-task shape changes.
 
 **`scaffoldapy` narrowed for now, two ways:**
 
-- **Sheds its own literal copies of the four config files** (currently a *third* duplicate, per the
+- **Sheds its own literal copies of the four config files** (currently a _third_ duplicate, per the
   diff run 2026-08-19 — `scaffoldapy/{ruff.toml,pyrightconfig.json,dprint.json,pytest.ini}` and
   `template/{dprint.json,pyrightconfig.json}`). Post-generation step becomes `uv sync` → the
   generated `tasks.py`'s own `inv configs.pull`, materializing them from the now-installed
@@ -956,19 +958,20 @@ ones) was discovered empirically, one tool at a time, while designing this mecha
 predictable from documentation alone, and the same is true for whatever `pytest`/`dprint`/
 `shellcheck`/`shfmt` turn out to do. Given how easy it would be to get this wrong per tool (and how
 wrong "probably respects gitignore" would have been for basedpyright specifically), this needs the
-same empirical audit applied to every tool `repo-tasks` configures, not just the two checked so far —
-written up as
+same empirical audit applied to every tool `repo-tasks` configures, not just the two checked so far
+— written up as
 [`repo-tasks/plans/2026-08-19-gitignore-tool-alignment.md`](https://github.com/TheodoreAD/repo-tasks/blob/main/plans/2026-08-19-gitignore-tool-alignment.md)
 since it's `repo-tasks`'s config baseline the findings actually land in, not this repo's. That plan
 also carries the related "preemptively cover community-standard excludes (`.venv`, `dist/`,
-`__pycache__`, cache dirs, ...), but let `.gitignore` itself absorb as much of that as possible rather
-than duplicating it into every tool's own exclude list" question — same investigation, same place.
+`__pycache__`, cache dirs, ...), but let `.gitignore` itself absorb as much of that as possible
+rather than duplicating it into every tool's own exclude list" question — same investigation, same
+place.
 
 **Open questions:**
 
 - Naming is a placeholder, not load-bearing: `configs.pull`/`configs.diff`/`configs.promote`, the
   `--source git:<url>|local:<path>` prefix convention. Fine to bikeshed at implementation time.
-- Whether `configs.promote`'s diff should also flag when a *local-override manifest* entry looks
+- Whether `configs.promote`'s diff should also flag when a _local-override manifest_ entry looks
   like it's actually generic (i.e., candidate to fold into the shared baseline instead of staying a
   per-repo exception) — not designed, `power-user-linux-setup`'s own `.vscode`/`uv.lock` false-alarm
   (found already-generic content sitting in a spot that looked local) suggests this pattern will
