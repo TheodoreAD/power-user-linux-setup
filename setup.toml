@@ -520,6 +520,13 @@ package = "shfmt-py"
 check_cmd = "shfmt"
 tags = ["dev", "linting"]
 
+[packages.copier]
+description = "Project scaffolding tool with in-place template updates — drives the scaffoldapy repo template"
+method = "uv-tool"
+package = "copier"
+check_cmd = "copier"
+tags = ["dev"]
+
 [packages.dos2unix]
 description = "Convert CRLF line endings to LF — useful when receiving files from Windows"
 method = "apt"

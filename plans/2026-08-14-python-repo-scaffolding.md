@@ -282,34 +282,50 @@ already-relied-upon tooling, not because the convention doesn't apply to it):
 
 ### B. Repo template — solves one-time scaffolding (Copier, not Cookiecutter)
 
-Recommend **Copier** over literal Cookiecutter: Copier supports `copier update` to apply template
-changes to an _already-generated_ project (diffs against the template's own git history and merges);
-Cookiecutter has no native update story (the closest bolt-on, `cruft`, is less actively maintained).
-Given the explicit ask to keep improving the structure over time, the update path is the deciding
-factor, not just initial generation quality.
+**Built 2026-08-19 as [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy).** Recommended
+**Copier** over literal Cookiecutter, as originally planned: `copier update` applies template
+changes to an already-generated project; Cookiecutter has no native equivalent.
 
-New template repo (e.g. `python-agent-repo-template`), parameterized for at least the three shapes
-already seen: **stateless MCP server** (`olx-polite-mcp`/`emag-polite-mcp`/`altex-polite-mcp` shape
-— `core/` + `sites/<key>/`, fetch/parse/models split, `[project.scripts]` entry, `tests/*/fixtures/`
-convention), **session-backed MCP server** (`temu-polite-mcp`'s shape — site requires a logged-in
-account, so it drives a persistent, manually-authenticated Chrome instance over CDP rather than a
-plain `requests`/per-call-`Playwright` fetch; different enough from the stateless shape to need its
-own variant, not a bolt-on flag), and **orchestrator/skill** (flatter, no site-adapter split, no
-fetch layer at all) — a Copier conditional on one answer, not three forks to keep in sync.
+**Design changed from the original three-fixed-shapes sketch below to composable axes**, per
+explicit user correction during the build session: `interface`
+(`mcp_server`/`cli`/`web_service`/`skill`/ `library`), `fetch_strategy`
+(`none`/`http`/`browser_session`), and `multi_source` (bool — a single upstream vs. a pluggable
+`core/`+`sources/<key>/` adapter split) are independent questions, each gating a small module of
+files, rather than one `project_type` choice branching into separate monolithic trees. This scales
+to kinds beyond the three sibling repos originally scoped (a CLI, a FastAPI web service) without
+forking the whole template, and lets e.g. a CLI that scrapes reuse the exact same `core/`
+polite-fetch primitives an MCP server gets. `olx-polite-mcp`'s `core/`+`sites/` split and
+`temu-polite-mcp`'s CDP session-manager pattern were still the architecture references — their
+_tooling_ (flat layout, no dedicated config files, hand-copied `tasks.py`) was explicitly **not**
+copied forward, since it predates `repo-tasks`/`skills/python-conventions` and is itself due for
+retrofit (see below), not a source of truth. Seeds match §A/§C0 as originally planned:
+`src/<pkg_name>/` layout, `pyproject.toml` (hatchling, dev-dependency on `repo-tasks`,
+`[project.scripts]` wired from day one for `mcp_server`/`cli`), dedicated
+`ruff.toml`/`pyrightconfig.json`/`pytest.ini`/`dprint.json`/`.editorconfig` copied verbatim from
+`repo-tasks`, a two-line `tasks.py` (`Collection.from_module(quality)`, no local override), `.envrc`
+(direnv, matching `power-user-linux-setup`'s own — a gap discovered live: even `repo-tasks` itself
+was missing this), a new `.github/workflows/ci.yml` (no family precedent before this — `uv sync` +
+`inv check`), and a `README.md` "Installation" section shaped like `mcp-skill-shipping`'s pattern.
+`AGENTS.md` is deliberately **not** templated — `copier.yml`'s comment explains why (`inv ai.init`
+needs its cwd inside a `power-user-linux-setup` checkout, which the template can't reliably locate
+on an arbitrary machine); the generated README documents it as a one-time manual step instead.
 
-Seeds: `src/<pkg_name>/` package layout (not flat — see `skills/python-conventions`'s "Package
-layout" topic and §C0 below), `pyproject.toml` skeleton (hatchling build,
-`packages = ["src/<pkg_name>"]`, dev-dependency on `repo-tasks`), dedicated
-`ruff.toml`/`pyrightconfig.json`/`pytest.ini` (§C0 — not `pyproject.toml` blocks), `tasks.py` stub
-(`Collection.from_module(quality)`, no local override — §A), `dprint.json`, `LICENSE`, a `README.md`
-"Installation" section shaped like `olx-polite-mcp`'s/ `temu-polite-mcp`'s (the `uv tool install`
-editable/git pattern documented in `skills/mcp-skill-shipping` — independently arrived at in both
-repos' READMEs, good sign it's the right default to template), and a call to `inv ai.init` for
-`AGENTS.md` — reuse what already works there rather than re-templating it.
+**Real bug caught during the build, worth remembering:** `Collection.from_module(quality)` assigned
+directly as a `tasks.py`'s `ns` (the two-line wrapper every consumer repo uses, including
+`repo-tasks` itself) puts tasks at the **root** — `inv precommit`/`inv check`, no `quality.` prefix.
+The `quality.`-prefixed form (`inv quality.precommit`) only exists in `power-user-linux-setup`
+itself, because its own `tasks/__init__.py` uses
+`namespace.add_collection(Collection.from_module(quality))` instead, which nests.
+`repo-tasks/README.md` itself had this exact typo (prose said `inv quality.precommit`, its own code
+example two lines later correctly said `inv precommit`) — fixed live. Any future doc/skill text
+describing "the one command a consumer repo runs" should say `inv precommit`/`inv check`, not
+`inv quality.*`, unless it's specifically about `power-user-linux-setup` itself.
 
-**`olx-polite-mcp` (stateless shape) and `temu-polite-mcp` (session-backed shape) are the two
-reference implementations to extract the template from** — both mature, battle-tested repos, not
-building from a blank guess.
+**`olx-polite-mcp` (stateless shape) and `temu-polite-mcp` (session-backed shape) were the two
+reference implementations the template's `core`/`sources` architecture was extracted from** — both
+mature, battle-tested repos. `product-research-pipeline` (the `skill`/orchestrator reference) turned
+out to have no code at all yet (roadmap-only) — that shape was designed from `mcp-skill-shipping`'s
+conventions and the roadmap's stated architecture, not extracted from real code.
 
 ### C. Quality-tooling conventions — concrete config for §A/§B
 
@@ -735,15 +751,15 @@ paragraphs into single giant lines on the first attempt (the opposite of the int
 
 ### Retrofit path for existing repos
 
-**Required eventually, per §A's "no allowances" decision — not optional cleanup.** `olx-polite-mcp`/
-`temu-polite-mcp`/`freshful-polite-mcp` all already have real code that will have diverged from
-`repo-tasks`/the not-yet-built template; retrofitting each means adopting `repo-tasks` (§A) plus
-`src/` layout, then `copier update` once the template (§B) exists too (exactly the direction
-Copier's update mechanism is built for, not a manual re-diff by hand).
+**Required eventually, per §A's "no allowances" decision — not optional cleanup. Now unblocked** —
+both `repo-tasks` (§A) and `scaffoldapy` (§B) exist. `olx-polite-mcp`/`temu-polite-mcp`/
+`freshful-polite-mcp` all already have real code that will have diverged from `repo-tasks`/the
+template; retrofitting each means adopting `repo-tasks` (§A) plus `src/` layout, then
+`copier update` against `scaffoldapy` (exactly the direction Copier's update mechanism is built for,
+not a manual re-diff by hand) — not yet done, still a real follow-up.
 `emag-polite-mcp`/`altex-polite-mcp` are still plan-only — they pick up the template (with
 `repo-tasks` as a dependency from the start) once their implementation actually begins, so no
-separate retrofit step for those two. Sequenced after `repo-tasks` and the template both exist — not
-part of either build itself.
+separate retrofit step for those two.
 
 ## Open questions — resolved 2026-08-18
 
@@ -770,21 +786,20 @@ also carry MCP-specific reusable pieces (robots.txt guard, rate limiter, disk ca
 fetch path ("generalize... only once a second site actually needs it") — the same principle likely
 applies here, but not decided.
 
-**New, not yet explored (2026-08-19):** whether §B's Copier template should go further than citing
-`skills/mcp-skill-shipping` as a README pattern to follow manually, and actually seed the workflow
-that skill documents directly into a generated repo — the `[project.scripts]` entry point wired into
-`pyproject.toml` from the start, the `uv tool install`/`claude mcp add --scope user` "Installation"
-section pre-written into `README.md`, maybe a `copier update`-safe stub for the registration step
-itself. Would turn `mcp-skill-shipping` from "read this after generating a repo" into "already
-true the moment `copier copy` finishes." Not scoped or designed yet — flagged for when §B moves from
-high-level to an actual build.
+**Resolved 2026-08-19 — §B went further, as this note hoped:** `scaffoldapy` wires the
+`[project.scripts]` entry point into `pyproject.toml` from day one for `mcp_server`/`cli`, and
+pre-writes the `uv tool install`/`claude mcp add --scope user` "Installation" section into
+`README.md`, chosen by the generated repo's actual `interface`. No `copier update`-safe registration
+stub — `claude mcp add` itself isn't idempotent-safe to script blindly, left as a manual one-liner
+per `mcp-skill-shipping`.
 
 ## Explicitly out of scope right now
 
-No new repo (`repo-tasks`, a Copier template) gets built by this plan yet — §A's design is fully
-resolved but not yet executed; §B remains high-level only. §C's config _content_ was already piloted
+§A (`repo-tasks`) and §B (`scaffoldapy`) are both built. §C's config _content_ was already piloted
 with real code changes directly in `power-user-linux-setup`'s own
-`tasks/quality.py`/`pyproject.toml`/ `setup.toml`/`dprint.json` (commit `c01b53c`, 2026-08-16/17);
-§C0's file-_location_ convention was decided this session but not yet applied to this repo itself
-(§A's "required follow-ups" list). Next step, whenever picked back up, is actually building
-`repo-tasks` per §A's now-concrete design.
+`tasks/quality.py`/`pyproject.toml`/ `setup.toml`/`dprint.json` (commit `c01b53c`, 2026-08-16/17)
+and §C0's file-location convention has since been applied to `power-user-linux-setup` itself too.
+Still open: the retrofit pass on `olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp` (see
+"Retrofit path" above), and the still-genuinely-open question of whether `core/`'s
+politeness/cache/fetch primitives eventually move into a shared package instead of being duplicated
+per generated repo.
