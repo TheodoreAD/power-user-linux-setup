@@ -1138,6 +1138,124 @@ blocking dependency either direction, since the dprint-auto-create logic is simp
 than replaced by a `configs.pull` call that doesn't exist yet. `scaffoldapy`'s `mkdocs.yml`/docs-CI
 template work can land in parallel with either.
 
+### F. Repo-scoped AGENTS.md/`.claude` skills scaffolding moves to `scaffoldapy` (2026-08-20)
+
+**Scope, resolved directly by the user after two rounds of clarification — stated explicitly since
+it reverses an initial default the earlier `dev_env`/`docs` precedent would have suggested:** the
+_whole_ repo-scoped AI-agent scaffold — `AGENTS.md`, `CLAUDE.md` as a symlink to it,
+`.agents/skills/`
+
+- `.claude/skills` symlinked to it — moves **out of `power-user-linux-setup` entirely** and into
+  `scaffoldapy`, not `repo-tasks`. Two things this is _not_, both directly ruled out:
+
+* **Not the earlier `dev_env`/`docs` pattern** (invoke task, shared via `repo-tasks`, run repeatedly
+  to stay in sync). `AGENTS.md`/`CLAUDE.md` content is written once at generation time and then
+  hand-maintained per repo — there's nothing to "stay in sync" the way `ruff.toml` or the
+  `quality`/`dev-env`/`docs` task graphs are. That makes it structural, one-time output — the same
+  bucket `mkdocs.yml` already landed in (§E) — not a `repo-tasks` module.
+* **Not `power-user-linux-setup` at all**, even as a kept-alongside general-purpose utility — an
+  option floated and explicitly rejected. `inv ai.init [--dir PATH]` (`tasks/ai.py`) is deleted
+  outright, not narrowed. Its one remaining real value (scaffolding a non-Python, non-`repo-tasks`
+  project from an existing PULSE checkout) is a real capability being knowingly given up, not an
+  oversight — the user's framing ("the whole ai part for the repos, and only for the repos, should
+  no longer be in pulse") was explicit and unambiguous on a second pass.
+
+**Explicitly no skill installation in the generated scaffold** — narrower than `ai.init` even was.
+`ai.init` already didn't install any skill content (`ai.skills`'s job, home-directory-scoped, see
+below), only ever created the empty `.agents/skills/` dir + symlink; the new `scaffoldapy` version
+keeps exactly that shape, per direct instruction: "the repos shouldn't install skills by default,
+probably just t[he] symlinks and create the directories and maybe have a readme explaining the
+symlinking."
+
+**What stays in `power-user-linux-setup`, confirmed explicitly, not just left alone by omission:**
+everything home-directory-scoped — `~/AGENTS.md` (written by `[packages.claude-global-md]` +
+`tasks/tools.py`'s `wrapper-script` method from `config/global-AGENTS.md`, a completely separate
+mechanism from `tasks/ai.py`) and `ai.skills`'s default (no `--dir`) mode: `~/.agents/skills` +
+`~/.claude/skills` symlink, **plus** actually installing every `skills`-declared entry from
+`setup.toml` and merging `claude_permissions_allow` rules — genuinely global, user-level state, not
+project-scoped, and it's a load-bearing step of `inv setup`'s `PACKAGES_PHASE` (`tasks/setup.py`) —
+must keep working with zero project deps, per `plans/2026-08-20-runtime-dev-venv-split.md`.
+`_ensure_agents_skills` (the shared directory+symlink helper `ai.skills` depends on) stays put,
+untouched, for exactly that reason — it was never `ai.init`-exclusive to begin with.
+
+**Mechanism, verified empirically before committing to it, not assumed:** Copier has native symlink
+support, gated by `_preserve_symlinks: true` in `copier.yml`
+(`config_data.get
+("preserve_symlinks", False)` in the installed package — off by default). With
+that setting on, a literal symlink placed in the template tree (e.g.
+`template/CLAUDE.md -> AGENTS.md`, or a Jinja-rendered target) is materialized as a **real** symlink
+in every generated repo, not a dereferenced copy — confirmed by actually rendering a throwaway
+template both for the flat case (`CLAUDE.md -> AGENTS.md`) and the nested-relative case
+(`.claude/skills -> ../.agents/skills`, the exact shape needed here): both resolved correctly,
+content readable through the link. This matters specifically because this repo's own hard rule
+(`AGENTS.md`) is that `CLAUDE.md` must be a genuine symlink, never a file containing the
+`@AGENTS.md` import directive or a duplicated copy — `_preserve_symlinks` is what makes that
+achievable natively, no `_tasks` post-generation hook required at all (unlike the `_tasks`-hook idea
+floated and dropped during `dev_env`'s design, this one turned out not to need one).
+
+**`scaffoldapy` additions, unconditional — not gated behind a copier question, unlike `with_docs`:**
+
+- `copier.yml`: `_preserve_symlinks: true`.
+- `template/AGENTS.md.jinja` — same minimal shape as the deleted `tasks/ai.py::_AGENTS_MD_TEMPLATE`
+  (`# Agent instructions for {{ description }}` / Build & test / Conventions stubs), Jinja-rendered
+  instead of Python `.format()`.
+- `template/CLAUDE.md` — a real symlink to `AGENTS.md`.
+- `template/.agents/skills/README.md.jinja` — explains the `.agents/skills`-is-canonical,
+  `.claude/skills`-is-a-symlink-for-Claude-Code convention, and doubles as the placeholder that lets
+  git track an otherwise-empty directory (git has no concept of an empty dir on its own).
+- `template/.claude/skills` — a real symlink to `../.agents/skills`.
+- `README.md.jinja`'s "Dev loop" bullet pointing at a manual, PULSE-checkout-dependent
+  `inv ai.init --dir <this-repo-path>` step is deleted outright — no longer needed, since every
+  generated repo already has this from generation time, automatically, with zero PULSE dependency.
+- `copier.yml`'s existing comment explaining why no `_tasks` hook exists for `ai.init` (its whole
+  premise — that this template "has no reliable way to locate a `power-user-linux-setup` checkout on
+  an arbitrary machine" — is now moot, since nothing here depends on one) is deleted alongside it.
+- `tests/test_template.py` gets unconditional coverage (every `COMBINATIONS` entry, not just one):
+  `AGENTS.md`/`CLAUDE.md` exist and `CLAUDE.md` is a symlink resolving to `AGENTS.md`;
+  `.agents/skills/README.md` exists; `.claude/skills` is a symlink resolving to `.agents/skills`.
+
+**`power-user-linux-setup` deletions and doc updates:** `tasks/ai.py`'s `init` task and
+`_AGENTS_MD_TEMPLATE` deleted outright (mirrors how `dev_venv`/`claude_direnv_hook`/`tasks/docs.py`
+were deleted in §E, not just narrowed). Every stale reference needs updating, including one with
+real reach beyond this repo — **`config/global-AGENTS.md` is deployed verbatim to every PULSE
+machine's own `~/AGENTS.md`** via `[packages.claude-global-md]`, so its `inv ai.init` sentence is
+live, user-facing content on this machine (and any other) right now, not just internal docs:
+
+- `config/global-AGENTS.md` — rewrite the skills paragraph to describe `ai.skills` only; drop the
+  `inv ai.init` sentence, since the capability it described no longer exists.
+- `docs/claude-code.md` — same section drops its `ai.init` bullet/example.
+- This repo's own `AGENTS.md` (`## AI agent tooling (tasks/ai.py)`) — drops the `inv ai.init` half
+  of its opening sentence, keeps the `inv ai.skills` half.
+- `skills/mcp-skill-shipping/SKILL.md` — its dev-loop checklist item
+  `inv ai.init --dir <path>
+  (from a power-user-linux-setup checkout) once per repo` needs
+  replacing with a note that this now happens automatically at `scaffoldapy` generation time,
+  nothing to run.
+- Once `config/global-AGENTS.md` changes, re-running `inv tools.install` (the task that writes
+  `~/AGENTS.md` from it) picks the new content up — not automatic, same as any other
+  `[packages.claude-global-md]` edit.
+
+**Sibling-repo state, surveyed 2026-08-20 — no retrofit urgency:**
+
+| repo                                   | `AGENTS.md` | `CLAUDE.md` | `.agents/skills` | `.claude/skills`           |
+| -------------------------------------- | ----------- | ----------- | ---------------- | -------------------------- |
+| `olx-polite-mcp`                       | yes         | symlink     | yes              | symlink                    |
+| `freshful-polite-mcp`                  | yes         | symlink     | yes              | symlink                    |
+| `repo-tasks`                           | yes         | symlink     | yes              | symlink                    |
+| `temu-polite-mcp`                      | yes         | symlink     | no               | no                         |
+| `altex-polite-mcp` / `emag-polite-mcp` | —           | —           | —                | — (plan-only, no code yet) |
+| `product-research-pipeline`            | no          | no          | no               | no                         |
+| `scaffoldapy`                          | no          | no          | no               | no                         |
+
+Most already got this from a manual `inv ai.init` run before this change; nothing strands them —
+`AGENTS.md` content is meant to be hand-maintained per repo regardless, not kept in sync by tooling,
+so removing the syncing mechanism changes nothing about repos that already have the files.
+`scaffoldapy` not having its own `AGENTS.md` yet is a separate, pre-existing gap, unrelated to this
+change.
+
+**Sequencing:** independent of §E's `dev_env`/`docs` work and of §D — no shared code, no ordering
+dependency either direction.
+
 ## Open questions — resolved 2026-08-18
 
 Every question this section used to list is now resolved — see §A for the full design:
