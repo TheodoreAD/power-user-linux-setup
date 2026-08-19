@@ -310,16 +310,21 @@ was missing this), a new `.github/workflows/ci.yml` (no family precedent before 
 needs its cwd inside a `power-user-linux-setup` checkout, which the template can't reliably locate
 on an arbitrary machine); the generated README documents it as a one-time manual step instead.
 
-**Real bug caught during the build, worth remembering:** `Collection.from_module(quality)` assigned
-directly as a `tasks.py`'s `ns` (the two-line wrapper every consumer repo uses, including
-`repo-tasks` itself) puts tasks at the **root** — `inv precommit`/`inv check`, no `quality.` prefix.
-The `quality.`-prefixed form (`inv quality.precommit`) only exists in `power-user-linux-setup`
-itself, because its own `tasks/__init__.py` uses
-`namespace.add_collection(Collection.from_module(quality))` instead, which nests.
-`repo-tasks/README.md` itself had this exact typo (prose said `inv quality.precommit`, its own code
-example two lines later correctly said `inv precommit`) — fixed live. Any future doc/skill text
-describing "the one command a consumer repo runs" should say `inv precommit`/`inv check`, not
-`inv quality.*`, unless it's specifically about `power-user-linux-setup` itself.
+**Real bug caught during the build, and its permanent fix (same session):**
+`Collection.from_module
+(quality)` assigned directly as a `tasks.py`'s `ns` puts tasks at the
+**root** — `inv precommit`, no `quality.` prefix — unlike `power-user-linux-setup`'s own
+`tasks/__init__.py`, which nests via `namespace.add_collection(...)` and does get the prefix.
+`repo-tasks/README.md` had exactly this typo (prose said `inv quality.precommit`, its own code
+example two lines below correctly said `inv precommit`). Rather than just fixing every doc site to
+say the un-prefixed form, **`repo-tasks` now ships the fix as a feature**: `repo_tasks/__init__.py`
+exports a ready-made root `ns` with `quality` (and every future module — `docker`, `python_pkg`,
+`helm`, ...) nested under its own name, so a consumer's `tasks.py` is just
+`from repo_tasks import ns` and `inv quality.precommit` works everywhere, permanently, with no
+per-repo `add_collection` boilerplate and no consumer-side change needed as `repo-tasks` grows new
+modules. Each module stays individually importable (`from repo_tasks import quality`) for a consumer
+that wants to hand-pick a subset instead. Both `repo-tasks` and `scaffoldapy` (its own dogfooding
+`tasks.py`, and the template it seeds) were updated to this pattern and re-verified end-to-end.
 
 **`olx-polite-mcp` (stateless shape) and `temu-polite-mcp` (session-backed shape) were the two
 reference implementations the template's `core`/`sources` architecture was extracted from** — both
