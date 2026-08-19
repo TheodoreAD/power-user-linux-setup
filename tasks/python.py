@@ -3,43 +3,13 @@ from pathlib import Path
 
 from invoke import task
 
-from . import ai, util
+from . import util
 
 _REPO_ROOT = Path(__file__).parent.parent
 _SETUP_TOML = _REPO_ROOT / "setup.toml"
 _DEFAULT_RE = re.compile(r'(?m)^(\s*uv_python_default\s*=\s*)"[^"]*"')
 _EXTRA_RE = re.compile(r"(?m)^(\s*uv_python_extra\s*=\s*)\[[^\]]*\]")
 _UV_ENV_RE = re.compile(r'(UV_PYTHON=")[^"]*(")')
-
-_DPRINT_JSON = _REPO_ROOT / "dprint.json"
-# keep in sync with setup.toml's [packages.dprint].plugins
-_DPRINT_PLUGINS = ["json", "toml", "markdown", "g-plane/pretty_yaml", "dockerfile"]
-_DPRINT_SKELETON = """{
-  "$schema": "https://dprint.dev/schemas/v0.json",
-  "lineWidth": 120,
-  "markdown": {
-    "textWrap": "maintain"
-  },
-  "excludes": [
-    "cli-allowlist/help-cache", ".vscode", "uv.lock"
-  ],
-  "plugins": []
-}
-"""
-
-
-def _ensure_dprint_config(c, force):
-    if _DPRINT_JSON.exists() and not force:
-        print("[python] dprint.json: ok")
-        return
-    if not util.command_exists("dprint"):
-        print("[python] dprint not found — skipping dprint.json (see [packages.dprint] in setup.toml)")
-        return
-    _DPRINT_JSON.write_text(_DPRINT_SKELETON)
-    # dprint's own non-interactive `config add` pins each plugin to its latest real URL,
-    # unlike the interactive `dprint init` prompt.
-    c.run(f"dprint config add {' '.join(_DPRINT_PLUGINS)}")
-    print(f"[python] dprint.json {'recreated' if force else 'created'}: {', '.join(_DPRINT_PLUGINS)}")
 
 
 @task
@@ -98,43 +68,6 @@ def clean_cache_full(c):
         return
     c.run("uv cache clean")
     print("[python.clean-cache-full] uv cache cleared")
-
-
-@task(help={"force": "Recreate dprint.json even if it already exists, re-pinning plugin versions"})
-def dev_venv(c, force=False):
-    """Set up this repo's own dev/test venv (uv sync) and let direnv auto-activate it.
-
-    Run once after cloning — see tests/README.md. Creates .venv/ from pyproject.toml's dev
-    dependency group (pytest, invoke, ruff), then runs `direnv allow` so the .envrc in this repo's
-    root auto-exports VIRTUAL_ENV/PATH whenever direnv's shell hook fires (interactive shells and
-    IDEs — see [packages.direnv] in setup.toml), and `inv ai.claude-direnv-hook` so Claude Code's
-    Bash tool picks it up too — that tool runs non-interactive `zsh -c` shells where direnv's
-    normal hook never fires (see docs/claude-code.md).
-
-    Also idempotently creates dprint.json (skipped if it already exists, unless --force).
-    """
-    if not util.command_exists("uv"):
-        raise RuntimeError("uv not found — run ./bootstrap.sh first")
-    direnv_ok = util.command_exists("direnv")
-    if util.DRY_RUN:
-        venv_ok = (_SETUP_TOML.parent / ".venv").exists()
-        print(f"[python] .venv: {util.ok_label(venv_ok)}")
-        print(f"[python] direnv: {util.ok_label(direnv_ok)}")
-        print(f"[python] dprint.json: {util.ok_label(_DPRINT_JSON.exists())}")
-        ai.claude_direnv_hook(c, dir=str(_SETUP_TOML.parent))
-        return
-    c.run("uv sync")
-    _ensure_dprint_config(c, force)
-    if direnv_ok:
-        c.run("direnv allow")
-        ai.claude_direnv_hook(c, dir=str(_SETUP_TOML.parent))
-        print("[python] .venv ready — direnv will auto-activate it in interactive shells and Claude Code")
-    else:
-        print(
-            "[python] .venv ready — direnv not found, so no shell auto-activation; "
-            "install it (see [packages.direnv] in setup.toml) or `source .venv/bin/activate` "
-            "manually"
-        )
 
 
 @task(help={"version": "Python version to make the new default, e.g. 3.14"})

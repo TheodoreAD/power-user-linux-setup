@@ -127,7 +127,7 @@ outside the repo).
 
 ## Running the test suite
 
-`tests/README.md` has the exact commands. Short version: `inv python.dev-venv` once after cloning
+`tests/README.md` has the exact commands. Short version: `inv dev-env.setup` once after cloning
 (`uv sync` + `direnv allow`), then plain `pytest`/`python` — not `uv run pytest`/ `uv run python`.
 `tasks` is editable-installed into `.venv` via `pyproject.toml`, and direnv (`.envrc` +
 `[packages.direnv]` in `setup.toml`) puts `.venv/bin` on `PATH` automatically — no `sys.path` trick

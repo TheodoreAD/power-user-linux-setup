@@ -5,16 +5,16 @@ _use_ it (see the [docs site](https://theodoread.github.io/power-user-linux-setu
 
 ## Dev environment & tests
 
-See [tests/README.md](tests/README.md): `inv python.dev-venv` once after cloning (`uv sync` +
+See [tests/README.md](tests/README.md): `inv dev-env.setup` once after cloning (`uv sync` +
 `direnv allow`), then plain `pytest tests/` — no `uv run` prefix, no manual activation.
 
 ## Code quality
 
 This repo lints/formats Python with [ruff](https://docs.astral.sh/ruff/) and formats
 JSON/TOML/Markdown/YAML/Dockerfile with [dprint](https://dprint.dev/), both declared in the `dev`
-dependency group / `dprint.json` (see `[tool.ruff]` in `pyproject.toml`). `inv python.dev-venv`
-creates `dprint.json` automatically on first run — idempotent; pass `--force` to recreate it and
-re-pin plugin versions.
+dependency group / `dprint.json` (see `[tool.ruff]` in `pyproject.toml`). `dprint.json` is committed
+and hand-maintained — see `[packages.dprint]` in `setup.toml` for the plugin list to keep it in sync
+with.
 
 Don't call `ruff`/`dprint` directly — always go through the `inv quality.*` tasks below. They bake
 in required flags (see the note below) and keep the tools' invocation in one place instead of
