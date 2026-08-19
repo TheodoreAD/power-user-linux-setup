@@ -1431,9 +1431,8 @@ method = "script"
 script_url = "https://dprint.dev/install.sh"
 check_cmd = "dprint"
 single_binary = true
-# This repo's own dprint.json is created from this list by tasks/python.py's dev_venv task
-# (inv python.dev-venv) — keep the two in sync. "yaml" resolves via g-plane/pretty_yaml, not a
-# bare "yaml" plugin name.
+# This repo's own dprint.json (committed, hand-maintained) lists the same plugins — keep the two
+# in sync by hand. "yaml" resolves via g-plane/pretty_yaml, not a bare "yaml" plugin name.
 plugins = ["json", "toml", "markdown", "g-plane/pretty_yaml", "dockerfile"]
 
 [packages.dprint.env]

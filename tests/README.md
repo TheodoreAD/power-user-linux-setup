@@ -31,15 +31,16 @@ real `skills` CLI invocation to verify the -y/prompt/up-to-date-skip behavior.
 Set up once after cloning:
 
 ```shell
-inv python.dev-venv
+inv dev-env.setup
 ```
 
 This runs `uv sync` (creates `.venv/` from `pyproject.toml`'s `dev` dependency group —
 `pytest`/`invoke` — and editable-installs `tasks` as a real package so `import tasks` just works, no
 `sys.path` tricks needed) and `direnv allow`, so the repo's `.envrc` auto-exports
-`VIRTUAL_ENV`/`PATH` whenever direnv's shell hook fires (`[packages.direnv]` in `setup.toml`). Then
-just `cd` into the repo and run tests the plain way, same as any other Python project — no `uv run`
-prefix, no manual activation:
+`VIRTUAL_ENV`/`PATH` whenever direnv's shell hook fires (`[packages.direnv]` in `setup.toml`), plus
+wires Claude Code's Bash tool to pick up the same environment (`dev-env.claude-hook` — see
+docs/claude-code.md). Then just `cd` into the repo and run tests the plain way, same as any other
+Python project — no `uv run` prefix, no manual activation:
 
 ```shell
 pytest tests/

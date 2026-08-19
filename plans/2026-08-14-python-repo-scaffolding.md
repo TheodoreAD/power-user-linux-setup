@@ -1104,19 +1104,34 @@ install instead of `requirements-docs.txt`).
 **Landed 2026-08-20:** `repo_tasks.dev_env` (`venv`/`claude_hook`/`setup`) and `repo_tasks.docs`
 (`clean`/`build`/`serve`) both shipped in `repo-tasks`, with tests; `scaffoldapy`'s `with_docs`
 question plus the gated `mkdocs.yml`/`docs/index.md`/docs dependency group/`docs.yml` workflow
-templates shipped too, with `test_template.py` coverage for both the on and off paths. **Not done as
-part of this pass, deliberately:** migrating `power-user-linux-setup`'s own
-`tasks/python.py::
-dev_venv` and `tasks/ai.py::claude_direnv_hook` to consume `repo_tasks.dev_env`
-instead of their local copies (the way `tasks/quality.py` already consumes `repo_tasks.quality`) —
-blocked on a real decision neither asked for nor made here: those two still support `PULSE_DRY_RUN`,
-which `repo_tasks.dev_env`'s port deliberately dropped (§A precedent: `quality.py` never had it
-either). Swapping to the shared module without deciding "drop dry-run support here too" vs. "keep a
-dry-run-capable local copy indefinitely" would be a silent behavior change to already-working,
-untested-but-relied-on tooling, not a mechanical dedup. Same deferral for `tasks/docs.py` and the
-`[packages.zensical]`-vs-dependency-group unification noted above — lower-risk than the dry-run
-question but still an unrequested change to this repo's own working setup, not something either
-`dev_env`/`docs` landing in `repo-tasks` requires.
+templates shipped too, with `test_template.py` coverage for both the on and off paths.
+
+**Also landed 2026-08-20, same day, after resolving the dry-run question directly with the user:**
+`power-user-linux-setup` itself now consumes `repo_tasks.dev_env`/`repo_tasks.docs` instead of
+carrying local copies (`tasks/python.py::dev_venv` and `tasks/ai.py::claude_direnv_hook` deleted,
+`tasks/docs.py` deleted entirely, `tasks/__init__.py` adds the `dev-env`/`docs` collections from the
+now-bumped `repo-tasks` dependency) — the same "consume, don't duplicate" move `tasks/quality.py`
+already made. The blocking question from the first landing pass ("would dropping `PULSE_DRY_RUN`
+support here be a real regression?") turned out to have an easy answer: `PULSE_DRY_RUN` exists for
+the machine-setup tasks real PULSE _users_ run against their own machine (apt/gnome/wsl/...) — it
+was never meaningful for this repo's own internal dev-loop tasks (dev-env/docs), so dropping it
+there isn't a regression at all, just a scope clarification. Verified live:
+`inv dev-env.claude-hook` run against this repo's own already-configured `.claude/settings.json`
+correctly recognized it as already-configured (byte-identical logic to the old local copy) and made
+no changes; full `inv quality.precommit` stayed green (169 tests) throughout. Doc references updated
+everywhere (`AGENTS.md`, `CONTRIBUTING.md`, `tests/README.md`, `docs/claude-code.md`, a stale
+`setup.toml` comment about dprint.json auto-creation that no longer happens). Required pushing
+`repo-tasks`' and `scaffoldapy`'s local commits to their GitHub remotes first, since
+`power-user-linux-setup` resolves `repo-tasks` as a git dependency
+(`uv lock --upgrade-package repo-tasks`) rather than a local path — confirmed with the user before
+pushing.
+
+Still not done, and still a deliberate, lower-stakes deferral: the `[packages.zensical]`-vs-
+dependency-group unification noted above (`power-user-linux-setup`'s own docs build still resolves
+`zensical` from a machine-wide `uv tool install`, not the new `docs` dependency-group convention
+`scaffoldapy`-generated repos use) — this repo isn't itself a `scaffoldapy` target, so nothing
+forces this cleanup, and switching its already-working docs-build delivery mechanism wasn't part of
+what was asked.
 
 **Sequencing:** `dev_env`/`docs` land in `repo-tasks` independent of §D (`configs.pull` et al.) — no
 blocking dependency either direction, since the dprint-auto-create logic is simply dropped rather
