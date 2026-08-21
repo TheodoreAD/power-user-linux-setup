@@ -58,11 +58,22 @@ real, not hypothetically):
   sync the way `ruff.toml` should be. `scaffoldapy`, not `repo-tasks` (§F).
 - `pyrightconfig.json`'s `include` list — looked at first like it needed to differ per repo (`src`/
   `tests` for a `src`-layout consumer vs. `tasks`/`tests` for this repo's flat layout), which would
-  have meant it _couldn't_ be a single synced file. Turned out not to be true: `basedpyright`
-  silently no-ops on whichever of `["src", "tests", "tasks", "tasks.py"]` doesn't exist locally, so
-  one fixed list works everywhere — confirming it belongs in `repo-tasks`' synced baseline after
-  all, not a per-repo exception. Worth re-testing an assumption like this empirically before
-  concluding a file can't be shared, rather than reaching for a per-repo mechanism first.
+  have meant it _couldn't_ be a single synced file. **First conclusion — that `basedpyright`
+  silently no-ops on a nonexistent `include` entry, so one static
+  `["src", "tests", "tasks", "tasks.py"]` list just works everywhere — was wrong, and shipped broken
+  for a while before being caught.** Real behavior: `basedpyright` hard-errors (exit 3, a config
+  error) on any `include` entry that isn't a real path — the opposite of `exclude`, which does
+  tolerate missing ones. That silently aborted `inv quality.precommit` right after `type_check`,
+  before `shell_check`/`test` ever ran, in every repo missing one or more of the four candidates —
+  caught only once a later check verified the actual process exit code directly instead of
+  eyeballing "0 errors, N warnings" text piped through `tail`. Fixed in
+  `configs.pull`/`configs.diff` themselves: filter the canonical `include` list down to whichever
+  candidates actually exist at the pull target before writing, so the single declarative source of
+  truth survives without every consumer hand-tuning its own subset — the original goal, just
+  implemented one level down (a materialization-time filter, not a static value) instead of assumed
+  to already work for free. **The lesson that actually generalizes: re-testing an assumption
+  empirically means checking the real exit code, not scanning text output for the word "error" — a
+  tool can print a clean summary and still exit nonzero.**
 
 ## `configs.local.toml`: designed, not built
 

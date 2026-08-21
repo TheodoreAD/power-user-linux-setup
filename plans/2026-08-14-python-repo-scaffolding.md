@@ -863,20 +863,31 @@ stronger validation of "rely on `.gitignore`/`include`, keep true exceptions rar
 original two-line finding was — the true count is lower still, once exclude-list brittleness itself
 is treated as a bug to fix rather than a cost to document around.
 
-**Resolved 2026-08-22 — one fixed `include` list for every repo in the family, not
-layout-parameterized, by direct instruction.** The wrinkle above (src-layout vs. flat-layout needing
-different `include` values) turned out not to be real:
-`include: ["src", "tests", "tasks",
-"tasks.py"]` — every plausible top-level source location across
-the whole family in one list — works identically everywhere, confirmed empirically in all three
-repos (`power-user-linux-setup`, `repo-tasks`, `scaffoldapy`'s generated-repo template).
-basedpyright silently no-ops on whichever entries don't exist in a given repo
-(`power-user-linux-setup` has neither `src` nor `tasks.py`; `repo-tasks`/generated repos have no
-`tasks` dir) — zero errors, identical warning count, no error or warning about the missing paths
-either. No scalar-override capability needed, no per-repo exemption from `configs.pull` needed —
-`pyrightconfig.json`'s `include` line is a plain constant in the shared baseline like everything
-else in it, closing this question entirely rather than picking between the two options originally
-floated.
+**Resolved 2026-08-22, corrected same day — one fixed `include` _declaration_ for every repo in the
+family, by direct instruction, but not as a literal static value.** First pass concluded
+`include: ["src", "tests", "tasks", "tasks.py"]` — every plausible top-level source location in one
+list — could just be written verbatim into the canonical `pyrightconfig.json` and would work
+everywhere, since basedpyright supposedly "silently no-ops on whichever entries don't exist." **That
+conclusion was wrong, and shipped broken to all three repos before being caught** — verified only by
+`grep`ing "0 errors, N warnings" out of piped output, never by checking the actual process exit
+code. Real behavior, found once exit codes were checked directly: basedpyright hard-errors (exit 3,
+a config error, not a diagnostic) on any `include` entry that isn't a real path — `exclude`
+tolerates a missing entry fine, `include` does not. Every repo missing one or more of the four
+candidates (`power-user-linux-setup`: no `src`/`tasks.py`; `repo-tasks`: no `tasks`; `scaffoldapy`'s
+own root: neither `src` nor `tasks`) had `inv quality.precommit` silently aborting right after
+`type_check`, before `shell_check`/`test` ever ran — the pytest "N passed" lines this plan's own
+earlier commits cited as verification were, in every one of those cases, from a stale prior run's
+output still sitting in the terminal scrollback, not from that invocation.
+
+Real fix, landed in `repo-tasks` `23f1386`: `configs.pull`/`configs.diff` filter the canonical
+`include` list down to whichever of the four candidates actually exist at the pull target, before
+writing — so the single declarative list stays the source of truth (nothing to hand-tune per
+consumer, the original goal) without asserting something false about how basedpyright treats a
+missing path. Re-verified this time with real exit codes checked directly (`echo $?`, never through
+a pipe) in all three repos, plus `scaffoldapy`'s new
+`test_generated_repo_passes_quality_precommit_out_of_the_box` — a genuine, non-`skip_tasks`
+end-to-end render that asserts the generated repo's own `inv quality.precommit` exits 0 for real,
+not just that its files look right.
 
 **What `configs.local.toml` is for, stated plainly**: it's the one place a consumer repo declares
 config additions it genuinely needs beyond the shared `repo-tasks` baseline, so that re-running
