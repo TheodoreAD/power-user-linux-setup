@@ -128,7 +128,7 @@ wheels = [
 [[package]]
 name = "repo-tasks"
 version = "0.1.0"
-source = { git = "https://github.com/TheodoreAD/repo-tasks#79f07e18c93332f5829e3d45340f3ec631388b48" }
+source = { git = "https://github.com/TheodoreAD/repo-tasks#fe2e004e82c23ac1a6e31092dd18ed3732ae7c28" }
 dependencies = [
     { name = "invoke" },
 ]
