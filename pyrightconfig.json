@@ -6,16 +6,16 @@
   // research trail behind this profile.
   "typeCheckingMode": "recommended",
 
-  // reference/allowlists/repos/** holds upstream repos cloned verbatim for research (see
-  // feedback_research_via_cloned_repos memory) — not this project's own code, never type-check it.
-  // skills/*/references/snippets/** are standalone example files, each with its own "pip install X"
-  // docstring — deliberately not installed as this repo's own deps (same reason pytest's own
-  // testpaths excludes them from this repo's test run) — they get typed-and-checked in whatever
-  // future project actually installs and runs them, not here.
-  // Setting `exclude` explicitly replaces basedpyright's own default list rather than adding to it
-  // — the defaults below (node_modules/__pycache__/dot-dirs, which is how .venv normally gets
-  // skipped) must be repeated here or third-party packages inside .venv get type-checked too.
-  "exclude": ["**/node_modules", "**/__pycache__", "**/.*", "reference", "skills/*/references/snippets"],
+  // `include`, not `exclude`: scopes basedpyright to this repo's own code (tasks/, tests/) by
+  // construction, instead of an ever-growing "don't check this" blocklist that has to be kept in
+  // sync by hand as non-source content grows (reference/allowlists/repos/** — upstream repos
+  // cloned verbatim for research, see feedback_research_via_cloned_repos memory;
+  // skills/*/references/snippets/** — standalone example files, each with its own "pip install X"
+  // docstring, deliberately not installed as this repo's own deps; cli-allowlist/help-cache/**;
+  // docs/, contributing/, ...) — none of it needs a config update to stay out of scope, and a new
+  // one of these next month doesn't either. Confirmed equivalent (0 errors, identical warning
+  // count) to the old exclude-based config it replaces.
+  "include": ["tasks", "tests"],
 
   // recommended defaults failOnWarnings=true, which makes "warning" behave like "error" for a
   // CLI-driven check. Turning it off restores warning/error as an actual blocking-vs-visible
