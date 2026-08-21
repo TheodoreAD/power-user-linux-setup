@@ -100,9 +100,11 @@ is the real content, `~/.claude/CLAUDE.md` symlinks to it, same as this repo's o
 
 Skills go in `.agents/skills/` — the emerging cross-tool convention — with `.claude/skills`
 symlinked to it so Claude Code actually discovers them (`.agents/skills/` alone isn't read natively
-yet). `inv ai.skills` sets this up for `~`; `inv ai.init [--dir PATH]` scaffolds a full project
-(`AGENTS.md` + the `CLAUDE.md` symlink + the skills symlink) — both from the power-user-linux-setup
-repo. Neither ever overwrites a file or symlink that's already there.
+yet). `inv ai.skills` sets this up for `~` and installs every skill declared in `setup.toml` — never
+overwrites a file or symlink that's already there. A new Python project's own `AGENTS.md` +
+`CLAUDE.md` symlink + `.agents/skills`/`.claude/skills` scaffold comes from
+[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time instead, not from this
+machine.
 
 ## Cross-session memory
 

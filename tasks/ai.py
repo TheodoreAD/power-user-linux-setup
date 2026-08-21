@@ -295,23 +295,6 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
     print(f"[{label}] created .agents/skills, symlinked .claude/skills to it")
 
 
-_AGENTS_MD_TEMPLATE = """\
-# Agent instructions for {name}
-
-Cross-tool instructions for AI coding agents working in this repo. Universal conventions (sudo/ssh
-askpass, Bash/allowlist discipline, cross-session memory policy) live in `~/AGENTS.md` — no need
-to repeat them here, only what's specific to this repo.
-
-## Build & test
-
-<!-- e.g. `npm test`, `make build` -->
-
-## Conventions
-
-<!-- code style, architecture notes, anything an agent should know before making changes -->
-"""
-
-
 @task
 def skills(c, dir=None, yes=False):  # noqa: A002
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
@@ -339,37 +322,3 @@ def skills(c, dir=None, yes=False):  # noqa: A002
     if dir is None:
         _apply_static_claude_permissions()
         _note_copilot_permissions()
-
-
-@task
-def init(c, dir="."):  # noqa: A002
-    """Scaffold a project for AI agents: minimal AGENTS.md, CLAUDE.md as a symlink to it, and
-    .agents/skills/ (symlinked from .claude/skills). Never overwrites a file that already exists —
-    safe to re-run.
-    """
-    base = Path(dir).expanduser().resolve()
-    _ensure_agents_skills(base, label="ai.init")
-
-    agents_md = base / "AGENTS.md"
-    if agents_md.exists():
-        print("[ai.init] AGENTS.md already exists — left alone")
-    else:
-        agents_md.write_text(_AGENTS_MD_TEMPLATE.format(name=base.name))
-        print("[ai.init] AGENTS.md created")
-
-    claude_md = base / "CLAUDE.md"
-    claude_md_alt = base / ".claude" / "CLAUDE.md"
-    # A real symlink, not a file containing the `@AGENTS.md` import directive: the import syntax
-    # is Claude-Code-specific, so any other harness that also happens to read a literal CLAUDE.md
-    # (for compat) would see that text verbatim instead of actual instructions. A symlink presents
-    # byte-identical content to every harness, Claude Code included, with no special-case parsing
-    # required anywhere. Trade-off: unlike the import form, nothing can be appended below a
-    # symlink's target — a Claude-specific addendum, if one's ever truly needed, belongs in
-    # AGENTS.md itself (shared) rather than CLAUDE.md, or in a separate `.claude/`-scoped file.
-    if claude_md.is_symlink() and claude_md.resolve() == agents_md.resolve():
-        print("[ai.init] CLAUDE.md already symlinked to AGENTS.md")
-    elif claude_md.exists() or claude_md.is_symlink() or claude_md_alt.exists():
-        print("[ai.init] CLAUDE.md already exists — left alone")
-    else:
-        claude_md.symlink_to("AGENTS.md")
-        print("[ai.init] CLAUDE.md created (symlink to AGENTS.md)")

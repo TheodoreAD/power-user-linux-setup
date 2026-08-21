@@ -28,8 +28,9 @@ README for the full task catalog (one invoke module per facility — `quality`, 
   (`ruff`/`dprint`/`shfmt`), then runs the full CI-style gate (lint/format/type-check/shell-check/
   test). `pytest` runs against checked-in fixtures (saved HTML snapshots, etc.) — no live-network
   calls in tests.
-- `inv ai.init --dir <path>` (from a `power-user-linux-setup` checkout) once per repo, for
-  `AGENTS.md` + the `.claude/skills` symlink — never overwrites existing content.
+- `AGENTS.md` + `CLAUDE.md` symlink + `.agents/skills`/`.claude/skills` scaffold comes from
+  [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) automatically at generation time —
+  nothing to run for it.
 
 ## One entry point, `uv tool install` for a stable PATH binary
 

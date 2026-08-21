@@ -169,7 +169,7 @@ specifically — governs how long session transcripts/tasks/shell-snapshots/back
 to `365` here (default is `30`) as a deliberate preference, reviewed and confirmed while building
 the allowlist pipeline, not something PULSE enforces or will change on your behalf.
 
-## `.agents/skills/` and project scaffolding — `tasks/ai.py`
+## `.agents/skills/` — `inv ai.skills`
 
 `.agents/skills/` is the emerging cross-tool convention for Agent Skills, but Claude Code itself
 currently only discovers skills from `~/.claude/skills/` and `<project>/.claude/skills/` — not
@@ -180,14 +180,11 @@ PULSE symlinks `.claude/skills` to `.agents/skills`:
   to it, then installs every skill declared via a `skills` field anywhere in `setup.toml` (see
   below). Defaults to `~` (the personal, cross-project skills location); part of the standard
   `inv setup`/`inv wsl.install` chain.
-- `inv ai.init [--dir PATH]` — full project scaffold: the skills symlink above (not the declared
-  skills — those are meant for the shared `~`, not baked into every new project by default), plus a
-  minimal `AGENTS.md` and a `CLAUDE.md` symlinked to it, for any project on the machine (defaults to
-  the current directory). Run it from this repo against another project, e.g.
-  `inv ai.init --dir ~/projects/foo`.
 
-Both tasks check for existing files/symlinks first and skip rather than overwrite — safe to re-run,
-and safe to point at a project that already has hand-written `AGENTS.md`/`CLAUDE.md`/skills content.
+Checks for existing files/symlinks first and skips rather than overwrites — safe to re-run, and safe
+to point at a project that already has hand-written skills content. A new Python project's own
+`AGENTS.md`/`CLAUDE.md`/`.agents/skills`/`.claude/skills` scaffold isn't this task's job —
+[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) stamps that at generation time instead.
 
 ## Declaring skills to install — the `skills` field
 
