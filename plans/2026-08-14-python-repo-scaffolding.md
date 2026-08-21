@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-20
+updated: 2026-08-21
 ---
 
 # Standardizing scaffolding for personal Python agent-tool repos
@@ -1255,6 +1255,37 @@ change.
 
 **Sequencing:** independent of §E's `dev_env`/`docs` work and of §D — no shared code, no ordering
 dependency either direction.
+
+**Landed 2026-08-21.** `scaffoldapy`: `_preserve_symlinks: true`, `template/AGENTS.md` (plain
+`CLAUDE.md`, and a real `.claude/skills -> ../.agents/skills`; the `ai.init` README bullet and the
+copier.yml comment explaining its absent `_tasks` hook are both gone. `power-user-linux-setup`:
+`tasks/ai.py`'s `init` task and `_AGENTS_MD_TEMPLATE` deleted outright; every doc reference updated
+(`config/global-AGENTS.md`, this repo's own `AGENTS.md`, `docs/claude-code.md`,
+`skills/mcp-skill-shipping/SKILL.md`). `inv ai.skills` re-run to redeploy the updated
+`mcp-skill-shipping` copy; `inv tools.install` (which would pick up the `config/global-AGENTS.md`
+change into the live `~/AGENTS.md`) deliberately **not** run automatically — it's a much
+broader-scoped task (every `wrapper-script`/`script`/`binary` package) than this one file, so it's
+left for the user to run when they want it.
+
+One real gotcha hit during implementation, not anticipated in the design above: **a
+`.jinja`-suffixed source file can't be the target of a real symlink that also needs to survive being
+read at rest.** The first attempt made `AGENTS.md` a Jinja-templated `template/AGENTS.md.jinja` (for
+a `{{
+package_name }}` heading) with `template/CLAUDE.md` symlinked to `AGENTS.md` — copier only
+strips the `.jinja` suffix in its _rendered output_, never in the source template tree itself, so
+that symlink was genuinely broken pre-render (`AGENTS.md` doesn't exist in `template/`, only
+`AGENTS.md.jinja` does). Copier's own `run_copy` doesn't care (`_render_symlink` only reads the
+target string, never dereferences it), but `dprint fmt` — run directly against `scaffoldapy`'s own
+working tree as part of its `inv quality.*` gate — does try to read through it, and fails outright:
+`Failed to read template/CLAUDE.md: No such file or directory`. No way to route around this within
+copier's model: the destination target string has to literally say `AGENTS.md` for the _rendered_
+symlink to be correct, which means the _source_ symlink can never simultaneously be valid-at-rest
+and point at a `.jinja`-suffixed real file. Fix: `AGENTS.md` is a plain, non-templated file (dropped
+the `{{ package_name }}` heading substitution — acceptable, since this content is meant to be
+hand-edited immediately after generation anyway) — real target exists in the source tree, symlink
+valid both before and after rendering. Same reasoning holds for
+`.claude/skills -> ../.agents/skills`, and didn't need a workaround there: the target is a plain
+directory, not a `.jinja` file, so it's valid at rest already.
 
 ## Open questions — resolved 2026-08-18
 
