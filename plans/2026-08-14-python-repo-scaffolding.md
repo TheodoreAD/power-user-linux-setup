@@ -891,13 +891,13 @@ run. It is not a general override/customization system — see "kept deliberatel
 **Corrected 2026-08-22 — no live case for this mechanism exists anymore.** Both entries the worked
 example below used to carry (`pyrightconfig.json`'s `reference`/`skills/*/references/snippets`
 excludes, `dprint.json`'s `cli-allowlist/help-cache` exclude) are resolved differently now, per
-above: the first became a shared, layout-parameterized `include` value (not an addition to append —
-see the `NEEDS CLARIFICATION` immediately above, since a scalar `include` swap isn't expressible by
-this append-only mechanism either), the second was removed outright as unneeded. The mechanism is
-kept in the design on spec — a real future addition (some repo genuinely needing one extra
-`ruff.toml` rule, say) is still plausible — but nothing in the family needs it today, and nothing
-should be implemented against a fabricated example. Build the shape (below) when a real case
-actually appears, not preemptively against this now-stale one.
+above: the first became part of the shared, fixed `include` list every repo in the family now uses
+verbatim (see the resolved wrinkle below — not an addition to append at all, in the end), the second
+was removed outright as unneeded. The mechanism is kept in the design on spec — a real future
+addition (some repo genuinely needing one extra `ruff.toml` rule, say) is still plausible — but
+nothing in the family needs it today, and nothing should be implemented against a fabricated
+example. Build the shape (below) when a real case actually appears, not preemptively against this
+now-stale one.
 
 **Mechanism, kept deliberately dumb (no per-repo `select`/`extends`/deep-merge) — shape, not a
 current live example:** a single tracked `configs.local.toml` at a consumer repo's root, present
