@@ -831,61 +831,87 @@ tested against `power-user-linux-setup`'s actual config files (2026-08-19/20) ra
   by default — confirmed empirically: `ruff check .` surfaces 0 hits from the (gitignored)
   `reference/` tree, but explicitly targeting `ruff check reference/` (bypassing discovery) surfaces
   143. No `exclude` entry was ever needed for it, and `ruff.toml` has none.
-- **`pyrightconfig.json`'s `reference`/`skills/*/references/snippets` excludes are genuine and
-  unavoidable — basedpyright does _not_ respect `.gitignore`.** Confirmed empirically: stripping
-  those two entries from `exclude` (leaving only basedpyright's own defaults) took this repo from
-  `0 errors, 2811 warnings` to `132 errors, 3509 warnings`, entirely from `reference/`'s vendored
-  clones and the standalone example snippets under `skills/*/references/`. This is the one real,
-  irreducible per-repo exception found.
 - **`dprint.json`'s `.vscode`/`uv.lock` excludes are _not_ a `power-user-linux-setup`-specific
   exception at all** — `repo-tasks`'s own (stale) `dprint.json` already carries both. They belong in
   the shared baseline as-is, no local override needed.
-- **`dprint.json`'s `cli-allowlist/help-cache` exclude is genuine**: real, git-tracked (not
-  gitignored — confirmed via `git ls-files`), machine-generated JSON cache content specific to this
-  repo's own allowlist pipeline. Stays a local exception.
 
-Net: after reconciliation, **exactly two lines of local override exist across the whole family
-today** — `pyrightconfig.json`'s two extra `exclude` globs and `dprint.json`'s one extra `excludes`
-entry, both `power-user-linux-setup`-only. This is small enough to validate the whole "rely on
-gitignore, keep true exceptions rare and loud" premise rather than assume it.
+**Corrected 2026-08-22 — both of the two "genuine, irreducible" exceptions below turned out not to
+be, on a second, sharper pass driven directly by the user questioning the exclude-based approach
+itself:**
+
+- **`pyrightconfig.json`'s `reference`/`skills/*/references/snippets` excludes were genuine as
+  _exclude-list entries_ — but the exclude-based approach itself was the wrong shape, not something
+  to patch with more entries.** The original framing (basedpyright doesn't respect `.gitignore`, so
+  the two entries are unavoidable) was true as far as it went, but missed that `exclude` isn't the
+  only lever: switching to `"include": ["tasks", "tests"]` scopes basedpyright to this repo's own
+  code by construction, eliminating both entries — confirmed empirically equivalent (0 errors,
+  identical warning count) — and, unlike an exclude list, never needs a config update again as new
+  non-source content (a new skill's `references/snippets/`, a new generated cache directory, ...)
+  gets added. Landed in both `power-user-linux-setup`'s own `pyrightconfig.json` and, as the new
+  canonical shape, `repo-tasks`'s (`include: ["src", "tests"]` there, matching its `src/`-layout —
+  see below).
+- **`dprint.json`'s `cli-allowlist/help-cache` exclude was never actually needed at all** — not a
+  brittleness problem like the one above, a simple unverified assumption. Tested directly: removed
+  the exclude and ran `dprint check` against all 78 files in that directory — zero diff, exit 0,
+  already perfectly formatted. No documented reason for the exclude exists anywhere either. Removed
+  outright, no replacement needed.
+
+Net, corrected: **zero lines of local override exist across the family today** — both of the
+"genuine" cases were artifacts of not having tried the include-based fix (`pyrightconfig.json`) or
+not having actually tested the assumption (`dprint.json`), not real per-repo needs. This is a
+stronger validation of "rely on `.gitignore`/`include`, keep true exceptions rare and loud" than the
+original two-line finding was — the true count is lower still, once exclude-list brittleness itself
+is treated as a bug to fix rather than a cost to document around.
+
+**New wrinkle this surfaces, not yet resolved: `pyrightconfig.json`'s `include` value is
+layout-dependent, not a shared-baseline constant.** `repo-tasks` (and every `src`-layout consumer
+`scaffoldapy` generates) needs `include: ["src", "tests"]`; `power-user-linux-setup`'s own flat
+layout needs `include: ["tasks", "tests"]`. This isn't an _addition_ to the shared baseline the
+`configs.local.toml` append-only mechanism below could express (append would need a shared base list
+to append onto — there isn't one; the two values are simply different, not one plus an extra entry).
+Two ways this could resolve, neither decided yet:
+`[NEEDS CLARIFICATION: does pyrightconfig.json's include value become a configs.local.toml scalar
+override — a new capability beyond "append," reopening the "kept deliberately dumb" framing below —
+or does power-user-linux-setup simply keep its own hand-maintained pyrightconfig.json outside
+configs.pull entirely, consistent with §D's own "not itself a template target" framing for this
+repo? The latter is smaller and doesn't touch configs.local.toml's design at all.]`
 
 **What `configs.local.toml` is for, stated plainly**: it's the one place a consumer repo declares
-the small number of config additions it genuinely needs beyond the shared `repo-tasks` baseline, so
-that re-running `configs.pull` later (after a `repo-tasks` version bump) doesn't silently wipe them
-out. Without it, `configs.pull` would just overwrite each config file verbatim from the package
-every time — fine for the common case (most repos need nothing extra), but for the rare repo that
-does (`power-user-linux-setup` today), the person running the next pull would have to _remember_, by
-hand, which lines to re-add and why. `configs.local.toml` makes that unnecessary: it's a small,
-committed, human-and-agent-readable manifest — "this repo needs X, in addition to the shared config,
-because Y" — that `configs.pull` reads and folds in automatically on every run, so the addition
-survives indefinitely without depending on anyone's memory. It is not a general
-override/customization system — see the "kept deliberately dumb" framing below for exactly how
-narrow its actual scope is.
+config additions it genuinely needs beyond the shared `repo-tasks` baseline, so that re-running
+`configs.pull` later (after a `repo-tasks` version bump) doesn't silently wipe them out. Without it,
+`configs.pull` would just overwrite each config file verbatim from the package every time — fine for
+the common case, but for a repo that does need something extra, the person running the next pull
+would have to _remember_, by hand, which lines to re-add and why. `configs.local.toml` makes that
+unnecessary: a small, committed, human-and-agent-readable manifest — "this repo needs X, in addition
+to the shared config, because Y" — that `configs.pull` reads and folds in automatically on every
+run. It is not a general override/customization system — see "kept deliberately dumb" below.
 
-**Mechanism, kept deliberately dumb (no per-repo `select`/`extends`/deep-merge)**: a single tracked
-`configs.local.toml` at a consumer repo's root, present only in repos that need one (today: only
-`power-user-linux-setup`). Shape — additive-only, list-append per target file/key, each entry's
-_why_ required inline as a TOML comment (this is the concrete mechanism for "exceptions must always
-be explained in a comment," since the exceptions can't all carry a comment in the generated file
-itself — `dprint.json` is plain JSON, no comment syntax, while `pyrightconfig.json`'s JSONC _could_
-but shouldn't be relied on as the only place the reasoning lives):
+**Corrected 2026-08-22 — no live case for this mechanism exists anymore.** Both entries the worked
+example below used to carry (`pyrightconfig.json`'s `reference`/`skills/*/references/snippets`
+excludes, `dprint.json`'s `cli-allowlist/help-cache` exclude) are resolved differently now, per
+above: the first became a shared, layout-parameterized `include` value (not an addition to append —
+see the `NEEDS CLARIFICATION` immediately above, since a scalar `include` swap isn't expressible by
+this append-only mechanism either), the second was removed outright as unneeded. The mechanism is
+kept in the design on spec — a real future addition (some repo genuinely needing one extra
+`ruff.toml` rule, say) is still plausible — but nothing in the family needs it today, and nothing
+should be implemented against a fabricated example. Build the shape (below) when a real case
+actually appears, not preemptively against this now-stale one.
+
+**Mechanism, kept deliberately dumb (no per-repo `select`/`extends`/deep-merge) — shape, not a
+current live example:** a single tracked `configs.local.toml` at a consumer repo's root, present
+only in repos that need one. Additive-only, list-append per target file/key, each entry's _why_
+required inline as a TOML comment (since the exceptions can't all carry a comment in the generated
+file itself — `dprint.json` is plain JSON, no comment syntax, while `pyrightconfig.json`'s JSONC
+_could_ but shouldn't be relied on as the only place the reasoning lives):
 
 ```toml
-# basedpyright doesn't respect .gitignore (confirmed 2026-08-19) — reference/ is gitignored but
-# still gets type-checked without this. skills/*/references/snippets are standalone example files
-# with their own "pip install X" docstrings, not this project's own code.
-[pyrightconfig."exclude"]
-append = ["reference", "skills/*/references/snippets"]
-
-# cli-allowlist/help-cache is real, git-tracked generated JSON content specific to this repo's own
-# allowlist pipeline — not something any other repo in the family has.
-[dprint."excludes"]
-append = ["cli-allowlist/help-cache"]
+# illustrative shape only, not a real current case — see the correction above.
+[ruff."lint".exclude]
+append = ["some/repo/specific/generated/path"]
 ```
 
 `configs.pull` reads this file if present, and appends each listed entry onto the corresponding list
-in the pulled base file before writing — no scalar overrides, no arbitrary deep merge, exactly the
-two real cases found above and nothing more general than that.
+in the pulled base file before writing — no scalar overrides, no arbitrary deep merge.
 
 **Self-hosting, corrected 2026-08-19**: an earlier draft of this section had `repo-tasks`'s own root
 config files as pure generated output, kept identical to `src/repo_tasks/configs/*` at all times.
@@ -1079,7 +1105,7 @@ mechanism to split it into a synced shared-baseline file plus a small per-repo o
 `fence_code_format` fix from `contributing/zensical.md`) is copy-paste-identical boilerplate any
 consumer would want; the rest (`site_name`, `site_url`, `repo_url`, `repo_name`, and especially
 `nav` — actively hand-edited every time a doc page is added) is genuinely per-repo and not
-append-only the way `configs.local.toml`'s two known exceptions are. Conclusion: `mkdocs.yml`
+append-only the way `configs.local.toml`'s mechanism is designed for. Conclusion: `mkdocs.yml`
 belongs in the same bucket as `pyproject.toml` — **a `scaffoldapy`-owned, one-time generated
 structural file** (baseline boilerplate + copier-templated identity fields + a starter
 `nav: [index.md]`), not a `repo_tasks.configs` package-data file. A future fix to the shared
