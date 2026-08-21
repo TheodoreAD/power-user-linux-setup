@@ -4,7 +4,7 @@ Cross-tool instructions for AI coding agents working in this repo (Claude Code, 
 that reads `AGENTS.md`). This repo's own `CLAUDE.md` is a plain symlink to `AGENTS.md` — not a file
 containing Claude Code's `@AGENTS.md` import directive — so Claude Code and any other harness that
 also happens to read a literal `CLAUDE.md` see byte-identical content, no special-case import syntax
-required. See `tasks/ai.py` for why this replaced the import-line approach.
+required (see `~/AGENTS.md`'s "Project conventions" for the full rationale).
 
 ## Global conventions live in `~/AGENTS.md`
 
@@ -17,16 +17,16 @@ Nothing universal is repeated below — only what's specific to this repo.
 
 ## AI agent tooling (`tasks/ai.py`)
 
-`inv ai.skills` and `inv ai.init` scaffold the conventions this repo already follows — a minimal
-`AGENTS.md`, a `CLAUDE.md` symlinked to it, and `.agents/skills/` with `.claude/skills` symlinked to
-it (Claude Code doesn't read `.agents/skills/` natively, only the symlink target) — for _other_
-projects on this machine, not just this one. Both tasks check for existing files/symlinks first and
-never overwrite hand-written content. `init`'s `CLAUDE.md` symlink means nothing can be appended
-below it the way the old `@AGENTS.md`-import form allowed — a genuinely Claude-specific addendum now
-belongs in `AGENTS.md` itself (shared) or a separate `.claude/`-scoped file, not in `CLAUDE.md`. The
-cross-session-memory policy (don't use Claude Code's auto-memory for durable repo knowledge — use
-`AGENTS.md` instead) is documented once, globally, in `[packages.claude-global-md]` in `setup.toml`
-rather than repeated per-repo — see `docs/claude-code.md`.
+`inv ai.skills` ensures `.agents/skills/` exists with `.claude/skills` symlinked to it (Claude Code
+doesn't read `.agents/skills/` natively, only the symlink target) and installs every skill declared
+via a `skills` field anywhere in `setup.toml` — home-directory-scoped (`~`), never overwrites
+hand-written content. Project-scoped scaffolding (a new Python project's own
+`AGENTS.md`/`CLAUDE.md`/`.agents/skills` setup) isn't this repo's job anymore — see
+[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps that at generation time
+instead (`plans/2026-08-14-python-repo-scaffolding.md` §F). The cross-session-memory policy (don't
+use Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead) is documented
+once, globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated per-repo — see
+`docs/claude-code.md`.
 
 ## PULSE tag/method architecture
 
