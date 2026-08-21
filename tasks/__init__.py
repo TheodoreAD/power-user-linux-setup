@@ -6,9 +6,9 @@ try:
     # no `uv sync` — see docker/Dockerfile, which never installs this project's own dependencies
     # either) has nothing for it to resolve against, so these tasks just aren't available there
     # rather than taking down every other `inv` command with an import error.
-    from repo_tasks import dev_env, docs, quality
+    from repo_tasks import configs, dev_env, docs, quality
 except ImportError:
-    dev_env = docs = quality = None
+    configs = dev_env = docs = quality = None
 
 from . import (
     ai,
@@ -67,3 +67,8 @@ if dev_env is not None:
     namespace.add_collection(Collection.from_module(dev_env), name="dev-env")
 if docs is not None:
     namespace.add_collection(Collection.from_module(docs))
+if configs is not None:
+    # Not repo_tasks' bare top-level `configure` — this repo already has its own top-level
+    # entrypoints (`inv setup` for full machine bootstrap, `inv dev-env.setup` for the dev loop);
+    # only the nested `inv configs.pull`/`inv configs.diff` are relevant here.
+    namespace.add_collection(Collection.from_module(configs))

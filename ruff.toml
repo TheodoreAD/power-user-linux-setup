@@ -21,29 +21,30 @@ select = [
   "PTH", # flake8-use-pathlib
   "RET", # flake8-return
   "TID", # flake8-tidy-imports
-  # added 2026-08-16 (plans/2026-08-14-python-repo-scaffolding.md §C2): ruff's own zero-config
-  # default already includes RUF — an explicit `select` doesn't inherit it, so this repo was
-  # silently missing it until now.
+  # ruff's own zero-config default already includes RUF — an explicit `select` doesn't inherit
+  # it, so this needs listing explicitly or it's silently missing.
   "RUF", # ruff-specific rules (mutable class defaults, noqa hygiene, f-string pitfalls, ...)
-  "C90", # mccabe complexity — default threshold 10; 15 pre-existing @task handlers noqa'd, not
-  # refactored in this pass (see `rg "noqa: C901"`)
+  "C90", # mccabe complexity — default threshold 10; noqa individual @task handlers that
+  # genuinely need it rather than refactoring every one (see `rg "noqa: C901"`)
   "PERF", # perflint — real inefficiencies, low false-positive rate
-  "A", # flake8-builtins — shadowed builtins; a few deliberate invoke CLI names noqa'd (dir/all
-  # are also the actual --flag/subcommand names, changing them would break the CLI)
+  "A", # flake8-builtins — shadowed builtins; noqa a deliberate invoke CLI name if changing it
+  # would break the CLI (e.g. a task literally named `dir`/`all`/`list`)
   "DTZ", # flake8-datetimez — naive datetime.now()/utcnow(), a real timezone-bug class
   "PL", # pylint subset — PLR (refactor-suggestion codes: too-many-args/branches/statements,
   # magic-value-comparison) dropped below; every real-world config checked during research (Home
-  # Assistant, Litestar) carves it out the same way, and this repo's own hits confirmed why
-  # (PLR0912/0913/0915/0911/2004/0917 all fired on ordinary, not-actually-complex code)
+  # Assistant, Litestar) carves it out the same way
   "TRY", # tryceratops — exception-handling anti-patterns; TRY003 dropped below
 ]
 ignore = [
   "PLR", # see PL comment above — refactor-suggestion noise, not bug-catching
-  "TRY003", # "raise vanilla exception with a long message" — this repo deliberately keeps a
-  # minimal exception hierarchy (skills/python-conventions/references/rationale.md §3); Home
+  "TRY003", # "raise vanilla exception with a long message" — deliberately minimal exception
+  # hierarchies across this family (skills/python-conventions/references/rationale.md §3); Home
   # Assistant's own config drops this same code for being too opinionated for exactly this reason
 ]
 
 [lint.isort]
-known-first-party = ["tasks"]
+# No known-first-party: ruff auto-detects first-party imports from the project's own layout
+# (src/<pkg> or a flat top-level package) without needing it declared — confirmed empirically
+# against both a src-layout repo and a flat-layout one, `ruff check --select I` passes clean
+# either way. One fewer per-repo-varying field in an otherwise byte-identical shared file.
 section-order = ["future", "standard-library", "third-party", "first-party", "local-folder"]
