@@ -13,10 +13,21 @@ everywhere else.
 
 ## Per-repo dev loop
 
-- `uv sync` + `direnv allow` — uv-managed `pyproject.toml`, dev dependency group (`pytest`, `ruff`).
-- `pytest` runs against checked-in fixtures (saved HTML snapshots, etc.) — no live-network calls in
-  tests.
-- `ruff check` / `ruff format --check` before considering a change done.
+Every repo in this family takes [`repo-tasks`](https://github.com/TheodoreAD/repo-tasks) as a dev
+dependency (git-as-artifact-store, no PyPI —
+`uv add --dev git+https://github.com/TheodoreAD/repo-tasks`) instead of hand-rolled `tasks.py`
+logic; the repo's own `tasks.py` is then just `from repo_tasks
+import ns`. See that repo's own
+README for the full task catalog (one invoke module per facility — `quality`, `venv`, `deps`,
+`direnv`, `agents`, `docs`, ...) — the two that matter for day-to-day work here:
+
+- `inv dev-env.setup` once after cloning — syncs `.venv` from `uv.lock` (fails loudly on a missing
+  or stale lockfile rather than silently rewriting it), `direnv allow`s it, and wires Claude Code's
+  Bash tool to auto-activate the same venv (a no-op if the repo has no `.envrc`).
+- `inv quality.precommit` before considering a change done — fixes everything auto-fixable
+  (`ruff`/`dprint`/`shfmt`), then runs the full CI-style gate (lint/format/type-check/shell-check/
+  test). `pytest` runs against checked-in fixtures (saved HTML snapshots, etc.) — no live-network
+  calls in tests.
 - `inv ai.init --dir <path>` (from a `power-user-linux-setup` checkout) once per repo, for
   `AGENTS.md` + the `.claude/skills` symlink — never overwrites existing content.
 
