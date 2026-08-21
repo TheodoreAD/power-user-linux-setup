@@ -14,7 +14,7 @@
   // `power-user-linux-setup`, and every consumer's own `tasks.py` entry point) together —
   // basedpyright silently no-ops on whichever entries don't exist in a given repo, so one shared
   // list works everywhere with nothing to adjust per consumer.
-  "include": ["src", "tests", "tasks", "tasks.py"],
+  "include": ["tests", "tasks"],
   "failOnWarnings": false,
 
   "reportAny": "error",
