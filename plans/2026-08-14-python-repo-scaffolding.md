@@ -1018,6 +1018,21 @@ place.
 - Per-tool `.gitignore` relationships and the community-convention exclude set — deliberately not
   answered here, see `repo-tasks/plans/2026-08-19-gitignore-tool-alignment.md` above.
 
+**Landed 2026-08-22.** `repo_tasks.configs` (`pull`/`diff`) and `configure` (bare top-level
+entrypoint, `pre=[dev_env.setup, configs.pull]`) shipped in `repo-tasks`; `power-user-linux-setup`
+adopted `configs.pull` as a real consumer (no more hand-copying); `scaffoldapy`'s `copier.yml`
+gained a `_tasks` hook (`uv sync`, `uv run inv configure`) so a freshly generated repo is fully
+configured with no manual step. `configs_promote` (root → package, `repo-tasks`-local only) also
+shipped, per the design above. `configs.local.toml` stayed unbuilt, per the "no live case exists"
+finding earlier in this section — still just a spec. One real implementation bug found and fixed
+along the way, not anticipated in the design: `pyrightconfig.json`'s `include` list can't be a
+single static value the way the rest of these files can — `basedpyright` hard-errors on any
+`include` entry that isn't a real path (unlike `exclude`, which tolerates one fine), so
+`configs.pull`/`diff` filter the canonical list down to whichever candidates actually exist at the
+pull target before writing. Found only by checking real process exit codes directly instead of piped
+"0 errors, N warnings" text — see `contributing/repo-family-architecture.md` for the generalizable
+lesson.
+
 ### Retrofit path for existing repos
 
 **Deferred by direct instruction (2026-08-19) — `scaffoldapy` needs to stabilize on fresh-repo
@@ -1360,14 +1375,17 @@ per `mcp-skill-shipping`.
 
 ## Explicitly out of scope right now
 
-§A (`repo-tasks`) and §B (`scaffoldapy`) are both built; §D (config distribution mechanism,
-`repo_tasks.configs`) is designed but not yet implemented — see §D for the resolved design and its
-own open questions. §C's config _content_ was already piloted with real code changes directly in
-`power-user-linux-setup`'s own `tasks/quality.py`/`pyproject.toml`/`setup.toml`/`dprint.json`
-(commit `c01b53c`, 2026-08-16/17) and §C0's file-location convention has since been applied to
-`power-user-linux-setup` itself too — §D is what actually carries that content into `repo-tasks` as
-the enforced canonical copy, superseding §C0's "copy by hand" framing. Still open: the retrofit pass
-on `olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp`, deferred by direct instruction until
-`scaffoldapy` stabilizes on fresh-repo generation (see "Retrofit path" above), and the
-still-genuinely-open question of whether `core/`'s politeness/cache/fetch primitives eventually move
-into a shared package instead of being duplicated per generated repo.
+§A (`repo-tasks`), §B (`scaffoldapy`), §D (config distribution — `repo_tasks.configs` `pull`/`diff`,
+`configure`), §E (`dev_env`/`docs` modules), and §F (AGENTS.md/skills scaffolding) are all built and
+landed — see each section for its own history, including §D's real `include`-list bug (shipped
+broken, caught by checking actual process exit codes instead of piped text output, fixed in
+`repo-tasks` `23f1386`). §C's config _content_ was piloted with real code changes directly in
+`power-user-linux-setup`'s own `tasks/quality.py`/`pyproject.toml`/ `setup.toml`/`dprint.json`
+(commit `c01b53c`, 2026-08-16/17), and §D is what actually carries that content into `repo-tasks` as
+the enforced canonical copy every repo in the family now pulls from — superseding §C0's "copy by
+hand" framing entirely, not just designing a replacement for it. Still open: the retrofit pass on
+`olx-polite-mcp`/`temu-polite-mcp`/`freshful-polite-mcp`, deferred by direct instruction until
+`scaffoldapy` stabilizes on fresh-repo generation (see "Retrofit path" above — plausibly satisfied
+now, given §A/§B/§D/§E/§F have all since landed and been exercised for real, but not yet revisited),
+and the still-genuinely-open question of whether `core/`'s politeness/cache/fetch primitives
+eventually move into a shared package instead of being duplicated per generated repo.
