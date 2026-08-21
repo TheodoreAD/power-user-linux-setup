@@ -1,0 +1,75 @@
+# The `power-user-linux-setup`/`repo-tasks`/`scaffoldapy` split
+
+Three repos this session's own work made real, not just designed: `power-user-linux-setup` (this
+one), [`repo-tasks`](https://github.com/TheodoreAD/repo-tasks), and
+[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy). Reasoning about all three at once —
+which one owns a given piece of shared work, and why — got hard enough to be worth writing down
+once, durably, instead of re-deriving it per decision. See
+`plans/2026-08-14-python-repo-scaffolding.md` §A/§B/§D/§F for the full decision history this page
+distills.
+
+## What each one actually owns
+
+**`power-user-linux-setup`** — machine setup/bootstrap for an actual PULSE user: `./bootstrap.sh` +
+`inv setup`, zero project dependencies at runtime by design (see
+`plans/2026-08-20-runtime-dev-venv-split.md` — `tasks/__init__.py`'s `try/except ImportError` around
+`repo_tasks` is the mechanism, not decoration). This repo consumes `repo-tasks` for its own dev loop
+exactly like any other consumer — `inv dev-env.setup`, `inv quality.precommit`, `inv configs.pull` —
+but that's a dev-only dependency, invisible to a real PULSE user running `./bootstrap.sh`. Not
+itself a `scaffoldapy` template target — its own layout (flat `tasks/`, not `src/`) predates that
+whole effort and isn't shaped like the sibling repos `scaffoldapy` generates.
+
+**`repo-tasks`** — anything a repo in this family does _repeatedly_, identically, forever: quality
+tooling (`lint`/`format`/`type_check`/`test`), venv/dependency lifecycle (`venv`/`deps`), the
+dev-loop bootstrap (`dev_env`), docs builds (`docs`), and canonical tool config (`configs`) — the
+last one added specifically because a fix to
+`ruff.toml`/`pyrightconfig.json`/`dprint.json`/`pytest.ini`/ `.editorconfig` needs to reach every
+consumer without three repos' worth of hand-copying and silent drift. Distributed as a pinned git
+dependency (no PyPI — see `repo-tasks/README.md`), synced deliberately
+(`uv lock --upgrade-package repo-tasks`, `inv configs.pull`), never automatically. `inv configure`
+is the one command anything outside this package should ever need to name by value — it composes
+`dev_env.setup` + `configs.pull` internally, and that composition is free to change without anything
+outside `repo-tasks` (a `scaffoldapy` `_tasks` hook, a human) noticing.
+
+**`scaffoldapy`** — anything generated _once_ and then hand-maintained per repo, diverging
+immediately and legitimately: project structure, the `pyproject.toml` skeleton, `AGENTS.md`/
+`CLAUDE.md`/`.agents/skills` (real symlinks, via Copier's `_preserve_symlinks`, not a runtime task —
+see §F), `mkdocs.yml` when `with_docs` is set. Copier-driven, `_tasks` limited to exactly two lines
+(`uv sync`, `uv run inv configure`) — the universal bootstrap every `uv`-managed project needs, plus
+the one stable `repo-tasks` entrypoint. Nothing else about `repo-tasks`' internals is named in this
+template, on purpose.
+
+## The test that actually settles it
+
+When new shared work comes up, ask: **would this need to run again after the first time, identically
+everywhere?**
+
+- Yes → `repo-tasks`. A synced task, not a stamped file.
+- No — written once, then diverges per repo by design → `scaffoldapy`. A structural template, not a
+  task.
+- Neither — it's this one machine's own state (a real user's dotfiles, installed packages, desktop
+  config) → `power-user-linux-setup`.
+
+Two things that look like they could go either way, resolved by this test directly (both hit for
+real, not hypothetically):
+
+- `AGENTS.md`/`CLAUDE.md`/`.agents/skills` — tempting to think of as "config," but it's written once
+  and then hand-edited per repo forever; nothing about it should be silently overwritten by a later
+  sync the way `ruff.toml` should be. `scaffoldapy`, not `repo-tasks` (§F).
+- `pyrightconfig.json`'s `include` list — looked at first like it needed to differ per repo (`src`/
+  `tests` for a `src`-layout consumer vs. `tasks`/`tests` for this repo's flat layout), which would
+  have meant it _couldn't_ be a single synced file. Turned out not to be true: `basedpyright`
+  silently no-ops on whichever of `["src", "tests", "tasks", "tasks.py"]` doesn't exist locally, so
+  one fixed list works everywhere — confirming it belongs in `repo-tasks`' synced baseline after
+  all, not a per-repo exception. Worth re-testing an assumption like this empirically before
+  concluding a file can't be shared, rather than reaching for a per-repo mechanism first.
+
+## `configs.local.toml`: designed, not built
+
+`repo-tasks`' `configs.pull` overwrites the 5 config files unconditionally — no per-repo exception
+mechanism exists today, deliberately: every local exception found while designing this (two in
+`power-user-linux-setup`, believed genuine at the time) turned out to be either avoidable by
+construction (the `include`-list fix above) or simply never verified in the first place (a
+`dprint.json` exclude that turned out to change nothing when actually tested — removed outright). A
+`configs.local.toml` append-only mechanism is still designed on spec for a real future case, but
+nothing in the family needs it right now — see §D for the shape if one ever does.

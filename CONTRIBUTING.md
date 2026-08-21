@@ -12,9 +12,16 @@ See [tests/README.md](tests/README.md): `inv dev-env.setup` once after cloning (
 
 This repo lints/formats Python with [ruff](https://docs.astral.sh/ruff/) and formats
 JSON/TOML/Markdown/YAML/Dockerfile with [dprint](https://dprint.dev/), both declared in the `dev`
-dependency group / `dprint.json` (see `[tool.ruff]` in `pyproject.toml`). `dprint.json` is committed
-and hand-maintained — see `[packages.dprint]` in `setup.toml` for the plugin list to keep it in sync
-with.
+dependency group. `ruff.toml`/`pyrightconfig.json`/`dprint.json`/`pytest.ini`/`.editorconfig` are
+all committed, but no longer hand-maintained here — they're pulled from
+[`repo-tasks`](https://github.com/TheodoreAD/repo-tasks)'s canonical copies (`inv configs.pull`),
+same as every other repo in the family. `inv configs.diff` checks for drift without writing
+anything; a genuine local tuning here gets promoted back into `repo-tasks`' shipped baseline via
+that repo's own `inv configs-promote` (see `plans/2026-08-14-python-repo-scaffolding.md` §D and
+[`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md)).
+`dprint.json` still lists its plugins in `[packages.dprint]` in `setup.toml` too — keep the two in
+sync by hand, since `setup.toml` drives what actually gets installed on this machine independent of
+`configs.pull`.
 
 Don't call `ruff`/`dprint` directly — always go through the `inv quality.*` tasks below. They bake
 in required flags (see the note below) and keep the tools' invocation in one place instead of
@@ -73,6 +80,9 @@ live in [`contributing/`](contributing/) instead, one file per topic, never publ
   `skills/mcp-skill-shipping/SKILL.md`).
 - [`contributing/certs.md`](contributing/certs.md) — the corporate-CA-bundle feature's QA/fixture
   playbook (companion to [`docs/certs.md`](docs/certs.md)).
+- [`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md) — what each
+  of `power-user-linux-setup`/`repo-tasks`/`scaffoldapy` actually owns, and the decision rule for
+  where new shared work between them goes.
 
 If you're about to write a "why this is built this way" section in `docs/`, it probably belongs in
 `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
