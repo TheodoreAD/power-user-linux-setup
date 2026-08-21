@@ -6,7 +6,6 @@
     "lineWidth": 100
   },
   "excludes": [
-    "cli-allowlist/help-cache",
     ".vscode",
     "uv.lock"
   ],
