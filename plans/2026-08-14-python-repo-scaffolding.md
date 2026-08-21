@@ -843,13 +843,13 @@ itself:**
   _exclude-list entries_ — but the exclude-based approach itself was the wrong shape, not something
   to patch with more entries.** The original framing (basedpyright doesn't respect `.gitignore`, so
   the two entries are unavoidable) was true as far as it went, but missed that `exclude` isn't the
-  only lever: switching to `"include": ["tasks", "tests"]` scopes basedpyright to this repo's own
-  code by construction, eliminating both entries — confirmed empirically equivalent (0 errors,
-  identical warning count) — and, unlike an exclude list, never needs a config update again as new
-  non-source content (a new skill's `references/snippets/`, a new generated cache directory, ...)
-  gets added. Landed in both `power-user-linux-setup`'s own `pyrightconfig.json` and, as the new
-  canonical shape, `repo-tasks`'s (`include: ["src", "tests"]` there, matching its `src/`-layout —
-  see below).
+  only lever: switching to `include` scopes basedpyright to this repo's own code by construction,
+  eliminating both entries — confirmed empirically equivalent (0 errors, identical warning count) —
+  and, unlike an exclude list, never needs a config update again as new non-source content (a new
+  skill's `references/snippets/`, a new generated cache directory, ...) gets added. Landed in
+  `power-user-linux-setup`'s own `pyrightconfig.json`, `repo-tasks`'s canonical copy, and
+  `scaffoldapy`'s generated-repo template alike — see the unified-list resolution below for the
+  exact value used everywhere.
 - **`dprint.json`'s `cli-allowlist/help-cache` exclude was never actually needed at all** — not a
   brittleness problem like the one above, a simple unverified assumption. Tested directly: removed
   the exclude and ran `dprint check` against all 78 files in that directory — zero diff, exit 0,
@@ -863,18 +863,20 @@ stronger validation of "rely on `.gitignore`/`include`, keep true exceptions rar
 original two-line finding was — the true count is lower still, once exclude-list brittleness itself
 is treated as a bug to fix rather than a cost to document around.
 
-**New wrinkle this surfaces, not yet resolved: `pyrightconfig.json`'s `include` value is
-layout-dependent, not a shared-baseline constant.** `repo-tasks` (and every `src`-layout consumer
-`scaffoldapy` generates) needs `include: ["src", "tests"]`; `power-user-linux-setup`'s own flat
-layout needs `include: ["tasks", "tests"]`. This isn't an _addition_ to the shared baseline the
-`configs.local.toml` append-only mechanism below could express (append would need a shared base list
-to append onto — there isn't one; the two values are simply different, not one plus an extra entry).
-Two ways this could resolve, neither decided yet:
-`[NEEDS CLARIFICATION: does pyrightconfig.json's include value become a configs.local.toml scalar
-override — a new capability beyond "append," reopening the "kept deliberately dumb" framing below —
-or does power-user-linux-setup simply keep its own hand-maintained pyrightconfig.json outside
-configs.pull entirely, consistent with §D's own "not itself a template target" framing for this
-repo? The latter is smaller and doesn't touch configs.local.toml's design at all.]`
+**Resolved 2026-08-22 — one fixed `include` list for every repo in the family, not
+layout-parameterized, by direct instruction.** The wrinkle above (src-layout vs. flat-layout needing
+different `include` values) turned out not to be real:
+`include: ["src", "tests", "tasks",
+"tasks.py"]` — every plausible top-level source location across
+the whole family in one list — works identically everywhere, confirmed empirically in all three
+repos (`power-user-linux-setup`, `repo-tasks`, `scaffoldapy`'s generated-repo template).
+basedpyright silently no-ops on whichever entries don't exist in a given repo
+(`power-user-linux-setup` has neither `src` nor `tasks.py`; `repo-tasks`/generated repos have no
+`tasks` dir) — zero errors, identical warning count, no error or warning about the missing paths
+either. No scalar-override capability needed, no per-repo exemption from `configs.pull` needed —
+`pyrightconfig.json`'s `include` line is a plain constant in the shared baseline like everything
+else in it, closing this question entirely rather than picking between the two options originally
+floated.
 
 **What `configs.local.toml` is for, stated plainly**: it's the one place a consumer repo declares
 config additions it genuinely needs beyond the shared `repo-tasks` baseline, so that re-running
