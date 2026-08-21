@@ -6,16 +6,22 @@
   // research trail behind this profile.
   "typeCheckingMode": "recommended",
 
-  // `include`, not `exclude`: scopes basedpyright to this repo's own code (tasks/, tests/) by
-  // construction, instead of an ever-growing "don't check this" blocklist that has to be kept in
-  // sync by hand as non-source content grows (reference/allowlists/repos/** — upstream repos
-  // cloned verbatim for research, see feedback_research_via_cloned_repos memory;
-  // skills/*/references/snippets/** — standalone example files, each with its own "pip install X"
-  // docstring, deliberately not installed as this repo's own deps; cli-allowlist/help-cache/**;
-  // docs/, contributing/, ...) — none of it needs a config update to stay out of scope, and a new
-  // one of these next month doesn't either. Confirmed equivalent (0 errors, identical warning
-  // count) to the old exclude-based config it replaces.
-  "include": ["tasks", "tests"],
+  // `include`, not `exclude`: scopes basedpyright to this repo's own code by construction, instead
+  // of an ever-growing "don't check this" blocklist that has to be kept in sync by hand as
+  // non-source content grows (reference/allowlists/repos/** — upstream repos cloned verbatim for
+  // research, see feedback_research_via_cloned_repos memory; skills/*/references/snippets/** —
+  // standalone example files, each with its own "pip install X" docstring, deliberately not
+  // installed as this repo's own deps; cli-allowlist/help-cache/**; docs/, contributing/, ...) —
+  // none of it needs a config update to stay out of scope, and a new one of these next month
+  // doesn't either. Confirmed equivalent (0 errors, identical warning count) to the old
+  // exclude-based config it replaces.
+  //
+  // Same fixed list across every repo in the family, `src`/`tests` (library layout) and
+  // `tasks`/`tasks.py` (this repo's flat layout, and every consumer's own `tasks.py` entry point)
+  // together — basedpyright silently no-ops on whichever entries don't exist in a given repo
+  // (confirmed: this repo has no `src` or `tasks.py`, zero errors/warnings either way), so one
+  // shared list works everywhere with nothing to parameterize per consumer.
+  "include": ["src", "tests", "tasks", "tasks.py"],
 
   // recommended defaults failOnWarnings=true, which makes "warning" behave like "error" for a
   // CLI-driven check. Turning it off restores warning/error as an actual blocking-vs-visible
