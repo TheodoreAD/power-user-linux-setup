@@ -1,8 +1,39 @@
 ---
-status: planned
+status: in-progress
 updated: 2026-08-22
 depends_on: [repo-tasks, scaffoldapy]
 ---
+
+**2026-08-22 implementation progress:**
+
+- **§1 verification, resolved**: confirmed hands-on (sandboxed via `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR`,
+  no real machine state touched) that `uv tool install` does not expose a dependency's own console
+  scripts by default — same limitation pipx historically had via `--include-deps`. The fix is
+  `--with-executables-from invoke` on every install command (confirmed against a real throwaway test
+  package), not hand-mirroring invoke's entry points as `[project.scripts]` — simpler and survives
+  an invoke version bump for free.
+- **§1 landed** in `repo-tasks` (`4c57e06`): `invoke`/`python-dotenv` are now real `dependencies`;
+  `inv repo-tasks.{update,status,version,stamp}` implemented (nested `repo_tasks` collection,
+  dashified to `repo-tasks.*`); `inv configure` now also stamps `bootstrap-repo-tasks.sh`.
+  `repo-tasks.update` falls back to the default branch (no tag exists yet — repo-tasks hasn't cut
+  its first release) rather than failing.
+- **§2 landed** in PULSE (`08bc143`): `bootstrap.sh` defaults to installing `repo-tasks` instead of
+  bare `invoke`; unattended default reads `setup.toml`'s `[settings] install_repo_tasks` (an
+  existing top-level table already grep-read by this script for the `uv_python_*` keys, used as-is
+  rather than inventing a separate `[bootstrap]` table as first sketched below); interactive prompt
+  (`[ -t 0 ]`) when run from a terminal; `--repo-tasks`/`--invoke-only` override either.
+- **§3 resolved as originally sketched**: no dedicated `bootstrap.sh`-shaped script for `repo-tasks`
+  itself — the one-liner is documented in `repo-tasks/README.md`'s "Installing" section instead.
+- **§4 landed** in `contributing/repo-family-architecture.md` (`08bc143`).
+- **§6 landed** in PULSE (`08bc143`): `tasks/__init__.py`'s fallback is now
+  `_import_repo_tasks_modules(simulate_missing=False)` — a `simulate_missing` flag exercises the
+  degraded branch directly rather than needing `importlib.import_module` injection (which loses
+  pyright's static module typing on the success path — `Any` leaking into `Collection.from_module()`
+  calls otherwise) or `sys.modules` patching. `tests/test_tasks_init.py` covers both paths.
+- **Not yet done**: §5 (CI guardrail + PULSE's first general quality-gate workflow — the plan
+  already flags the exact CI YAML shape as deferred by the user); the `scaffoldapy` side (its
+  generated `pyproject.toml.jinja`'s `dependency-groups.dev` entry for `repo-tasks` and the `_tasks`
+  hook's `uv run inv configure` step, per "Files touched" below).
 
 # Guarding the runtime/dev-venv split
 
