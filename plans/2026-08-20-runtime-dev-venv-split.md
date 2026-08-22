@@ -30,10 +30,19 @@ depends_on: [repo-tasks, scaffoldapy]
   degraded branch directly rather than needing `importlib.import_module` injection (which loses
   pyright's static module typing on the success path — `Any` leaking into `Collection.from_module()`
   calls otherwise) or `sys.modules` patching. `tests/test_tasks_init.py` covers both paths.
-- **Not yet done**: §5 (CI guardrail + PULSE's first general quality-gate workflow — the plan
-  already flags the exact CI YAML shape as deferred by the user); the `scaffoldapy` side (its
-  generated `pyproject.toml.jinja`'s `dependency-groups.dev` entry for `repo-tasks` and the `_tasks`
-  hook's `uv run inv configure` step, per "Files touched" below).
+- **`scaffoldapy` investigated, deliberately left unchanged**: dropping `repo-tasks` from the
+  generated `pyproject.toml.jinja`'s `dependency-groups.dev` (relying on the now-global tool
+  instead, per this section's original guess) turns out entangled with §5, not independent of it —
+  the template's own `.github/workflows/ci.yml` does `uv sync` then `uv run inv quality.check`,
+  which structurally requires `repo-tasks`/`invoke` resolvable inside the project's own venv; a CI
+  runner has no pre-bootstrapped global tool to fall back on. Making the dependency-groups change
+  without also redesigning CI's bootstrap step (the stamped `bootstrap-repo-tasks.sh` pattern from
+  §1, per "CI owns zero embedded bash" above) would silently break every generated repo's CI. Since
+  the exact CI YAML shape is explicitly deferred by the user, `scaffoldapy` stays on the per-repo
+  pinned-dependency path (`repo-tasks/README.md`'s "Alternative" install method) until that CI
+  redesign actually happens — not a gap, a dependency ordering.
+- **Not yet done**: §5 (CI guardrail + PULSE's first general quality-gate workflow, and — now
+  entangled with it — the `scaffoldapy` `pyproject.toml.jinja`/`_tasks`/`ci.yml` changes above).
 
 # Guarding the runtime/dev-venv split
 

@@ -1,0 +1,33 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+
+jobs:
+  quality:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv sync
+      - run: uv run inv quality.check
+
+  # Mirrors bootstrap.sh's actual invocation shape for the *default-declined* --invoke-only path
+  # (never `uv sync`, never touches this project's own dependency groups) — the invariant this
+  # whole job exists to guard is plans/2026-08-20-runtime-dev-venv-split.md's Context: a machine
+  # with no repo_tasks available at all still gets a working `inv --list` via
+  # tasks/__init__.py's _import_repo_tasks_modules degrading to four Nones, rather than an import
+  # error taking down every other `inv` command. `quality` above already covers the
+  # everything-available case (a real `uv sync`), so this job deliberately installs bare `invoke`
+  # instead of `repo-tasks`.
+  runtime-guardrail:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: astral-sh/setup-uv@v9.0.0
+      - run: uv tool install --force invoke
+      - run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
+      - run: inv --list
+      - run: PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
