@@ -11,6 +11,9 @@ dev = [
   "pytest",
   "repo-tasks",
   "ruff",
+  "shellcheck-py",
+  "shfmt-py",
+  "dprint-py",
 ]
 
 [build-system]

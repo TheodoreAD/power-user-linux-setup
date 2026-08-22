@@ -11,20 +11,6 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v9.0.0
-      # quality.check shells out to a few non-Python CLI tools that were never `uv sync`-managed
-      # dependencies (a normal PULSE machine gets them via setup.toml's own install methods --
-      # [packages.dprint]/[packages.shellcheck]/[packages.shfmt]/[packages.fd]) -- provisioning
-      # them is infrastructure setup, same tier as setup-uv itself, not "custom logic" duplicating
-      # what `inv` already does.
-      - run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
-      - run: uv tool install shellcheck-py
-      - run: uv tool install shfmt-py
-      - run: curl -fsSL https://dprint.dev/install.sh | sh
-        env:
-          DPRINT_INSTALL: ${{ github.workspace }}/.dprint-home
-      - run: echo "${{ github.workspace }}/.dprint-home/bin" >> "${GITHUB_PATH}"
-      - run: sudo apt-get update && sudo apt-get install -y fd-find
-      - run: sudo ln -s "$(command -v fdfind)" /usr/local/bin/fd
       - run: ./.github/ci-bootstrap.sh
       - run: inv quality.check
 
