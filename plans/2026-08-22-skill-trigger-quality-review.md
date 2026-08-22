@@ -38,40 +38,85 @@ ai.skills`
 `setup.toml`)? If they apply as-is, this plan is mostly "go read the docs and run the tool," not
 "build something."
 
-## Open questions
+## Research findings (2026-08-22, second pass)
 
-[NEEDS CLARIFICATION: what exactly does `claude plugin eval` check, and does it (or could it easily)
-validate a skill's `description` against a corpus of realistic trigger phrases — i.e. does it catch
-the python-conventions under-triggering case, or does it check something orthogonal (tool
-permissions, sandboxing, whether the skill file is well-formed) that wouldn't have caught this?]
+**`claude plugin eval`**: confirmed real (embedded early-access reference, corroborated by
+independent third-party write-ups — Scott Spence, Medium, pasqualepillitteri.it) but **absent from
+public docs** (`plugins-reference.md`, the docs map) and **gated early-access, not enabled for this
+account**. What it actually checks: full scenario runs in sandboxed sessions, graded by `regex`,
+`tool_used`, `tool_order`, `file_exists`, an `llm` judge (2-of-3 vote), and a `baseline`
+with/without comparison — i.e. it's built to test a plugin's *behavior once invoked*, not
+specifically description-only cold-trigger matching. `skill-creator` (a separate, related
+early-access feature) is the one that's actually purpose-built for this repo's exact problem: it
+analyzes a skill's `description` against sample prompts, flags false positives/negatives, and
+suggests description rewrites — recommended pattern is **3 eval cases per skill: positive,
+negative, edge case**. One third-party source states trigger evals commonly score only ~50%
+*because descriptions summarize behavior instead of listing trigger conditions* — this is exactly
+the python-conventions failure mode from Context above, independently confirmed as a common,
+named failure pattern, not a one-off.
 
-[NEEDS CLARIFICATION: what does `/skill-doctor` actually report, and does it run against
-locally-authored `.agents/skills/` content the way this repo's skills are structured, or only
-against plugin-packaged skills pulled from a marketplace?]
+**`/skill-doctor`**: also gated/undocumented — reports per-skill 7-day token usage, invocation
+count, context cost, and never-invoked warnings. Usage-monitoring, not trigger-testing; doesn't
+address this plan's problem directly.
 
-[NEEDS CLARIFICATION: beyond Anthropic's own tooling, is there existing community writing/tooling on
-what makes an Agent Skill (or, more broadly, a tool/function description for an LLM) reliably
-trigger — e.g. prompt-engineering guidance on writing tool descriptions with the caller's vocabulary
-rather than the domain's internal vocabulary? This is a well-trodden problem in function-calling/
-tool-use contexts generally, not unique to Claude Code Skills — worth a real, hands-on-depth search
-pass (matching this user's usual bar for tool/library research, not a single search) before assuming
-nothing's been written.]
+**Scoping question (does either apply to this repo's bare `.agents/skills/<name>/` layout, not a
+packaged plugin)**: still not fully confirmed, but `claude plugin init` can reportedly scaffold a
+lightweight `plugin.json` directly into an *existing* skill directory with no marketplace step —
+suggesting conversion cost is low if it turns out to be required. Not verified hands-on.
 
-[NEEDS CLARIFICATION: if neither Anthropic tool nor existing community material fully covers this,
-what's the minimal version worth building? Candidate shape: a small reviewer skill/script that, for
-each `skills/<name>/SKILL.md`, generates or is fed a handful of realistic natural-language requests
-a user/agent might type for that skill's actual content, and checks (via a fresh, context-free model
-call — the same "cold" condition a real trigger decision happens under) whether the _description
-alone_ would surface the skill for each one. Low-boilerplate, matching this repo's own bias — not a
-generalized eval framework if a handful of realistic-request checks already catches drift like the
-python-conventions case.]
+**Community comparison** (real popularity data, not vibes): **promptfoo** (24,464★, actively
+maintained) and **DeepEval** (17,779★, pytest-native, active) are both far more popular than
+anything Claude-Code-specific, but neither is built for *cold* trigger-routing — both test whether
+a model calls the right tool correctly *once given full tool definitions in context* during a live
+run (DeepEval's `ToolCorrectnessMetric`/`ArgumentCorrectnessMetric`), which is an adjacent but
+different problem from "does the bare description text alone cause selection." Either could be
+adapted to simulate cold routing (feed only the description + a battery of prompts, assert the
+expected selection), but that means building the harness ourselves on top of a general eval
+library, not using an off-the-shelf feature. Anthropic's own "Writing effective tools for AI
+agents" engineering-blog guidance is qualitative prose only (avoid jargon, avoid ambiguous
+parameter names) — no automated methodology of its own; `skill-creator` is where Anthropic
+operationalized that advice into something testable.
 
 ## Recommended direction
 
-Research first (`claude plugin eval`, `/skill-doctor`, and general tool-description/function-calling
-trigger-reliability literature) before writing any new tooling — a real hands-on-depth comparison,
-not a decision made on one search pass. If existing tooling already covers this repo's skills, wire
-it in (likely as a step `inv ai.skills` or a dedicated task runs) instead of building a parallel
-mechanism. If it doesn't, build the smallest version that would have actually caught the
-python-conventions gap — a real, concrete test case to validate against before considering the tool
-done.
+**Adopt the trigger-eval methodology `skill-creator` uses — 3 cases per skill (positive, negative,
+edge case), checked cold (description text only, fresh context, no prior conversation) — as this
+repo's actual testing convention**, independent of whether Anthropic's own gated CLI ends up being
+the thing that runs it. This is the only candidate actually purpose-built for the specific failure
+already observed (python-conventions under-triggering on jargon-only description text), it has
+independent third-party validation of that exact failure mode, and it's cheap to implement as a
+small in-repo mechanism rather than adopting a general eval framework as a dependency — consistent
+with this repo's existing low-boilerplate bias.
+
+Concretely: for each `skills/<name>/SKILL.md`, author 3 short natural-language prompts (one that
+should trigger it, one plausible-but-shouldn't, one boundary/edge case) and check — via a fresh
+subagent/API call given *only* the skill's `description` frontmatter, not its body — whether it
+would correctly decide to invoke that skill for each. Where exactly the prompts live (inline in
+each `SKILL.md`'s frontmatter? a sibling `<name>.evals.yaml`? one shared file?), how the cold check
+is actually invoked (spawn a bare Task/Agent call with just the description text and the full list
+of other skill descriptions, matching real trigger conditions; or a direct Anthropic API call from
+a script/pytest test — has a real per-run token cost either way, worth deciding budget/cadence for),
+and whether it's wired into `inv ai.skills`, a dedicated `inv` task, or a manually-invoked check are
+all still open — implementation-level design, not resolved by this research pass.
+
+**Fallback**, only if the custom in-repo version proves too heavy or the description-only cold-check
+harness turns out non-trivial to build well: **promptfoo** over DeepEval — more stars, more mature,
+already has function/tool-calling eval primitives to build the cold-routing simulation on top of,
+and its YAML test-matrix format is lower-boilerplate than DeepEval's pytest classes even though
+DeepEval is pytest-native and this repo already uses pytest.
+
+[NEEDS CLARIFICATION: mechanism for the cold check — a live Agent/Task call each test run (real
+token cost, needs a budget/cadence decision — every `inv ai.skills` run? CI only? manual/on-demand
+only, matching this repo's stated aversion to auto-triggered mutation/cost) vs. a direct Anthropic
+API call from a plain script/pytest test (same cost question, different plumbing) vs. attempting to
+actually get `claude plugin eval`/`skill-creator` access via `/feedback` and using Anthropic's own
+gated tool once available.]
+
+[NEEDS CLARIFICATION: where do the 3 positive/negative/edge prompts per skill live — inline
+frontmatter, a sibling eval file per skill, or one shared corpus file — and does the "cold" check
+need to see the *other* skills' descriptions too (to catch cross-skill false positives — the wrong
+skill winning instead of the right one), not just a binary yes/no on the one skill in isolation?]
+
+[NEEDS CLARIFICATION: confirm hands-on whether `claude plugin init` can actually convert an existing
+bare `.agents/skills/<name>/` directory into something `claude plugin eval`/`skill-creator` can
+target, in case Anthropic's own tooling becomes available and preferable to a hand-built harness.]
