@@ -59,6 +59,15 @@ cloned with an explicit `--branch <tag>` keeps tracking only that pinned ref for
 default branch, until the fetch refspec is corrected (find the real default branch via
 `git ls-remote --symref origin HEAD`).
 
+## Grep the real source, don't trust docs/README prose
+
+Once a repo's cloned, prefer grepping its actual source for ground truth over trusting its README or
+a docs site's prose — both can be stale or wrong relative to the installed version. This has caught
+real bugs before: a docs page describing a GNOME keybinding schema that didn't actually exist in the
+installed GNOME version (only found by reading `gnome-shell` source directly), and a docs-site build
+tool whose real mount behavior only matched its actual minified JS bundle, not its rendered docs
+page.
+
 ## No symlinks into project repos
 
 Never symlink `$RESEARCH_HOME` or any entry in it into a project's working tree. That would put this
