@@ -97,10 +97,89 @@ grounding facts above; they differ in *when* drift is caught and *who* it's surf
 
 Fires the instant Claude Code edits a PULSE-deployed path; injects a non-blocking instruction telling
 *Claude* (not the human) to read the current repo-side file and mirror the edit there, leaving
-commit/push to the human. A full concrete design for this already exists (function names, file
-layout, mapping-file schema, hook script, setup.toml entry, tests) from prior work this session —
-whoever picks this up should ask for that design rather than re-deriving it, rather than have it
-duplicated stale into this file.
+commit/push to the human. Concrete design, grounded in the real code
+(`tasks/tools.py:_install_wrapper_script`, `tasks/ai.py:_install_local_skill`/`_SKILL_MARKER`,
+`tasks/util.py:PULSE_STATE_DIR`/`load_claude_settings`/`write_claude_settings`):
+
+- **New shared module `tasks/pulse_guard.py`** (no `@task`s of its own, like `ui.py`/`util.py` — no
+  `tasks/__init__.py` wiring needed):
+  - `_SKILL_MARKER = ".pulse-source"` — moved here from `tasks/ai.py`; `ai.py` imports it from here.
+  - `wrapper_script_mappings() -> dict[str, str]`: abs deployed path (`dest`, and `symlink_dest` if
+    declared — both map to the same repo source, so a hook lookup matches whichever of
+    `~/.claude/CLAUDE.md` / `~/AGENTS.md` Claude Code reports) → abs repo-side `content_file` path,
+    for every enabled `[packages.*]` entry with `method = "wrapper-script"` and a `content_file`.
+    Include all such packages unconditionally (not just `claude-global-md`) — generic and harmless.
+  - `installed_skill_dir_mappings(base: Path) -> dict[str, str]`: abs deployed skill dir → abs
+    repo-side skill dir, for every currently-installed `.pulse-source`-marked directory under
+    `<base>/.agents/skills/` (reads the marker's own recorded `repo_path`).
+  - `sync_wrapper_scripts()` / `sync_skill_dirs(base)`: regenerate the `"files"`/`"dirs"` section of
+    the map (each fully replaces its own section, leaves the other untouched), then call
+    `register_hook()`. No-op under `util.DRY_RUN`. `sync_skill_dirs` only called for the global run
+    (`base == home`) — mirrors the existing `if dir is None:` gate that already skips
+    `_apply_static_claude_permissions`/`_note_copilot_permissions` for `--dir` runs.
+  - `register_hook()`: idempotently merge a `PostToolUse`/`"Edit|Write"` hook entry into the global
+    `~/.claude/settings.json` (command = deployed path of `pulse-guard-hook`, read from
+    `util.load_config()["packages"]["pulse-guard-hook"]["dest"]`, not hardcoded a second time) using
+    `util.load_claude_settings()`/`write_claude_settings()`. Same merge-without-clobbering shape as
+    the `repo_tasks.agents.claude_hook` precedent (find-or-create the matcher group, append only if
+    the exact entry isn't already `in` that group's `"hooks"` list).
+  - **Wiring**: `tools.py:install()` calls `pulse_guard.sync_wrapper_scripts()` after its existing
+    wrapper-script loop; `ai.py:skills()` calls `pulse_guard.sync_skill_dirs(base)` alongside the
+    existing `if dir is None:` block.
+
+- **Mapping file** `~/.local/state/power-user-linux-setup/guard-map.json`:
+  ```json
+  {
+    "version": 1,
+    "generated_at": "2026-08-22T12:34:56+00:00",
+    "repo_root": "/home/.../power-user-linux-setup",
+    "files": { "/home/.../AGENTS.md": "/home/.../config/global-AGENTS.md" },
+    "dirs": { "/home/.../.agents/skills/research-library": "/home/.../skills/research-library" }
+  }
+  ```
+  Both sides absolute (no path-joining logic needed in the hook script itself). `repo_root` is for
+  human debugging only, not read by the hook.
+
+- **New `setup.toml` package**:
+  ```toml
+  [packages.pulse-guard-hook]
+  description = "PostToolUse hook that nags Claude Code to mirror an edit of a PULSE-deployed file back into this repo's own source"
+  method = "wrapper-script"
+  tags = ["shell", "ai"]
+  dest = "~/.local/bin/pulse-guard-hook"
+  content_file = "config/pulse-guard-hook.py"
+  ```
+  No `symlink_dest`. Being a `wrapper-script` entry itself, it's automatically picked up by
+  `wrapper_script_mappings()` too.
+
+- **Hook script `config/pulse-guard-hook.py`** — stdlib-only Python (first Python `wrapper-script`
+  content file in the repo; every existing one is `.sh`, but `_install_wrapper_script` is
+  content-agnostic and already `chmod`s to `0o755`). Reads stdin JSON, extracts
+  `tool_input.file_path`, resolves it (`Path.resolve()` — handles the `CLAUDE.md`/`AGENTS.md`
+  symlink case), looks it up against `guard-map.json` (exact match in `"files"`, then
+  directory-prefix match in `"dirs"`). No match → print nothing, exit 0 (confirmed sufficient — not
+  in the docs' "stdout shown to Claude" exception list). Match → print
+  `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "<path> is a
+  PULSE-managed deployed copy of <repo path> — a deliberate plain copy, not a symlink, silently lost
+  on the next inv tools.install/ai.skills. Read the CURRENT repo-side content first (it may have its
+  own uncommitted changes), decide whether the same edit still makes sense, and if so make it there
+  instead. Leave commit/push/re-running inv tools.install/ai.skills to the human."}}`. Exit code
+  always 0 — `PostToolUse` exit 2 has no blocking effect since the tool call already completed.
+
+- **Docs**: new `## pulse-guard` section in `docs/claude-code.md`, same placement/style as the
+  existing `## direnv auto-activation...`/`## ~/AGENTS.md` sections; amend the `## ~/AGENTS.md`
+  section's "a manual edit gets silently overwritten..." sentence to note `pulse-guard` catches this
+  specifically when Claude Code itself makes the edit.
+
+- **Tests**: `tests/test_pulse_guard.py` (tmp_path fixtures, monkeypatched `util.load_config`, same
+  shape as `tests/test_ai.py`) for the mapping/sync/register functions; `tests/test_pulse_guard_hook.py`
+  loading `config/pulse-guard-hook.py` via `importlib.util.spec_from_file_location` to unit-test its
+  match logic directly (no other `config/*.sh` content file is tested today, but this one has real
+  branching logic worth covering).
+
+- **Already-resolved design defaults** (no need to re-decide): matcher `"Edit|Write"` only, no
+  `MultiEdit` (not a documented current tool name); include *all* `wrapper-script` packages in the
+  map, not just `claude-global-md`; `--dir` project-local `ai.skills` runs never populate `"dirs"`.
 
 - **Catches:** drift caused by Claude Code specifically, the moment it happens, before it's forgotten.
 - **Misses:** drift from a human hand-edit, a different AI tool/agent, or any edit made outside a
