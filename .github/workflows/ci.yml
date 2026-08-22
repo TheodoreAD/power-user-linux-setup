@@ -11,8 +11,8 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - uses: astral-sh/setup-uv@v9.0.0
-      - run: uv sync
-      - run: uv run inv quality.check
+      - run: ./.github/ci-bootstrap.sh
+      - run: inv quality.check
 
   # Mirrors bootstrap.sh's actual invocation shape for the *default-declined* --invoke-only path
   # (never `uv sync`, never touches this project's own dependency groups) — the invariant this

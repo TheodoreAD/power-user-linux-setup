@@ -30,15 +30,29 @@ depends_on: [repo-tasks, scaffoldapy]
   degraded branch directly rather than needing `importlib.import_module` injection (which loses
   pyright's static module typing on the success path — `Any` leaking into `Collection.from_module()`
   calls otherwise) or `sys.modules` patching. `tests/test_tasks_init.py` covers both paths.
-- **§5 landed** in PULSE (`3f3b94c`, `.github/workflows/ci.yml`, live on push/PR — this repo's first
-  quality-gate CI, both gaps closed in one workflow as designed): `quality` job (`uv sync` +
-  `uv run inv quality.check`) alongside a `runtime-guardrail` job that mirrors bootstrap.sh's
-  `--invoke-only` shape — bare `uv tool install invoke` (never `uv sync`), `inv --list`, then
-  `PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install` (the exact smoke
+- **§5 landed** in PULSE (`3f3b94c`, refined `08bc143`-adjacent, `.github/workflows/ci.yml`, live on
+  push/PR — this repo's first quality-gate CI, both gaps closed in one workflow as designed):
+  `quality` job runs one bootstrap script (`.github/ci-bootstrap.sh`: `uv run inv dev-env.setup`,
+  the one unavoidable raw `uv` call — same commands as local dev, unchanged per Design §2) then a
+  bare `inv quality.check` — no inline `uv sync`/`uv run` in the workflow itself. A
+  `runtime-guardrail` job mirrors bootstrap.sh's `--invoke-only` shape — bare
+  `uv tool install
+  invoke` (never `uv sync`), `inv --list`, then
+  `PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb
+  tools.install fonts.install` (the exact smoke
   command already documented in `docs/index.md`, reused rather than inventing a new list). Guards
   the Context section's actual verified invariant — bare invoke with no `repo_tasks` at all still
   gets a working `inv --list` via `_import_repo_tasks_modules` degrading to four `None`s — not the
   now-default `--repo-tasks` path, which `quality` already exercises via a real `uv sync`.
+- **repo-tasks got its own CI too** (`740fd04` — it had none before): same pattern, a new root
+  `bootstrap.sh` (`uv run inv venv.create`, the one unavoidable raw `uv` call, also usable directly
+  by a human cloning the repo without direnv) then bare `inv quality.check`. `venv.py`'s `sync` now
+  registers `.venv/bin` onto `$GITHUB_PATH` when present (a no-op locally, where direnv already does
+  this) — CI's structural equivalent of direnv, so no raw PATH-activation line is ever needed in a
+  workflow either. Also fixed a real bug this surfaced: `selfinstall.stamp()` was writing an
+  unconditional `@v{version}` pin even when that tag doesn't exist upstream yet (true of this repo
+  right now) — would have made every consumer's stamped script fail on first run; now falls back to
+  an unpinned install the same way `update()` already does.
 - **`scaffoldapy` investigated, deliberately left unchanged**: dropping `repo-tasks` from the
   generated `pyproject.toml.jinja`'s `dependency-groups.dev` (relying on the now-global tool
   instead, per this section's original guess) turns out entangled with a _second_, still-undesigned
