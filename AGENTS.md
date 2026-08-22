@@ -28,6 +28,19 @@ use Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` ins
 once, globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated per-repo — see
 `docs/claude-code.md`.
 
+## Deployed dotfiles are generated — never edit `~/<file>` directly
+
+Before editing any file under `~/` that this repo might have deployed (a dotfile, a shell config,
+`~/AGENTS.md`, anything that looks hand-editable), grep `setup.toml` for a `[packages.*]` entry
+whose `dest` matches the path. If one exists, the real place to edit is that entry's
+`content_file`/source (e.g. `config/<file>` in this repo), not the deployed path — edit the source
+and re-deploy (the owning `inv` task, or by replicating that method's exact write logic for just
+that one package if running the full install task would have broader side effects than intended —
+see `tasks/tools.py`'s `_install_wrapper_script`). A direct edit to the deployed path is silently
+wiped on the next `inv tools.install` run — caught live once only because the user asked "would this
+actually be installed?", not because anything failed loudly. `~/AGENTS.md` specifically is
+`[packages.claude-global-md]`, generated from `config/global-AGENTS.md`.
+
 ## PULSE tag/method architecture
 
 The `setup.toml` config/tag system is fully documented in the repo — don't re-derive it by reading
@@ -161,6 +174,42 @@ Full details (rule selection, `dprint.json`, the individual `lint_check`/`lint_a
 [github.com/TheodoreAD/repo-tasks](https://github.com/TheodoreAD/repo-tasks)'s `quality.py`, a git
 dev dependency (`tasks/__init__.py` imports it lazily — see the comment there — so bootstrap.sh's
 zero-install path, which never runs `uv sync`, still works without it).
+
+## Never run GNOME session-mutating tasks yourself
+
+Don't execute `inv gnome.extensions`, `inv gnome.configure`, `inv gnome.status`'s mutating siblings,
+`inv screenshot.enable`/`inv screenshot.disable`, or any other invoke task that writes to the live
+GNOME session (gsettings/dconf/`gnome-extensions` CLI) via the Bash tool — treat this as the default
+for any future task that mutates GNOME keybindings/settings too. These require a live Wayland/X11
+session; running the mutating ones via the Bash tool can interact unexpectedly with the running
+desktop. Read-only tasks in the same modules (`inv screenshot.status`, dry-run via
+`PULSE_DRY_RUN=1`) are fine to run directly — the boundary is mutation of the live session, not the
+module. After making changes to `setup.toml`/a `tasks/*.py` module that touches gsettings/dconf,
+tell the user what to run and why, but don't run the mutating command yourself.
+
+## XDG Base Directory Specification for all user-scoped installs
+
+No tool installation should create its own dotdir directly in `~` (e.g. `~/.dprint`, `~/.nvm`) —
+home root is for dotfiles (config), not program installations. Multi-file runtimes (Go, nvm) install
+to `~/.local/share/<tool>` with a binary symlinked into `~/.local/bin/`; single-binary tools set
+`single_binary = true` and point the installer's env var at `~/.local` so the binary lands directly
+in `~/.local/bin/`, no symlink needed. In `setup.toml`, use a `[packages.<name>.env]` subtable for
+installer env vars (`~` paths expand automatically). `symlink_from` is only for multi-file installs
+where the binary needs linking into `~/.local/bin`.
+
+## Cross-repo family conventions: strict and mandatory, no per-repo allowances
+
+When a design task is about _convergence_ across the `repo-tasks`/`*-polite-mcp`/`scaffoldapy`
+family specifically (shared tooling, shared config conventions, shared invoke tasks) — as opposed to
+a single repo's own internal architecture, where normal per-project judgment and "best tool per
+concern" still apply (see `~/AGENTS.md`) — default to one mandatory, identical composite every
+consumer repo uses unmodified, not a menu of leaf pieces each repo composes differently, even when
+real current repos already diverge. The fact that repos diverge is the problem needing fixed, not
+evidence flexibility should be preserved. If a naive mandatory version would break on some repos
+(missing config, missing file types), the fix is making the shared logic degrade gracefully (e.g.
+`shell_check` no-ops cleanly on a repo with zero `.sh` files), not exempting those repos from the
+shared composite. Don't propose "each repo picks what it needs" as the design without being asked
+for it.
 
 ## Git workflow
 
