@@ -1,15 +1,5 @@
 from invoke import Collection
 
-try:
-    # repo_tasks (github.com/TheodoreAD/repo-tasks) is a dev-only dependency, resolved through
-    # this project's own venv. bootstrap.sh's zero-install path (a bare `uv tool install invoke`,
-    # no `uv sync` — see docker/Dockerfile, which never installs this project's own dependencies
-    # either) has nothing for it to resolve against, so these tasks just aren't available there
-    # rather than taking down every other `inv` command with an import error.
-    from repo_tasks import configs, dev_env, docs, quality
-except ImportError:
-    configs = dev_env = docs = quality = None
-
 from . import (
     ai,
     allowlist,
@@ -35,6 +25,28 @@ from . import (
     wsl,
     zsh,
 )
+
+
+def _import_repo_tasks_modules(simulate_missing=False):
+    """repo_tasks (github.com/TheodoreAD/repo-tasks) is a dev-only dependency, resolved through
+    this project's own venv. bootstrap.sh's zero-install path (a bare `uv tool install invoke`,
+    no `uv sync` — see docker/Dockerfile, which never installs this project's own dependencies
+    either) has nothing for it to resolve against, so this returns four Nones rather than taking
+    down every other `inv` command with an import error. The real `from repo_tasks import ...`
+    statement stays a literal import (so pyright keeps real module types instead of `Any`, unlike
+    an `importlib.import_module` indirection); `simulate_missing` exercises the degraded branch
+    directly and testably instead, with no need to fake an import failure via sys.modules
+    patching."""
+    if simulate_missing:
+        return None, None, None, None
+    try:
+        from repo_tasks import configs, dev_env, docs, quality  # noqa: PLC0415
+    except ImportError:
+        return None, None, None, None
+    return configs, dev_env, docs, quality
+
+
+configs, dev_env, docs, quality = _import_repo_tasks_modules()
 
 namespace = Collection(
     setup.setup,

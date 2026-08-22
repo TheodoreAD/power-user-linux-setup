@@ -12,24 +12,50 @@ distills.
 
 **`power-user-linux-setup`** — machine setup/bootstrap for an actual PULSE user: `./bootstrap.sh` +
 `inv setup`, zero project dependencies at runtime by design (see
-`plans/2026-08-20-runtime-dev-venv-split.md` — `tasks/__init__.py`'s `try/except ImportError` around
-`repo_tasks` is the mechanism, not decoration). This repo consumes `repo-tasks` for its own dev loop
-exactly like any other consumer — `inv dev-env.setup`, `inv quality.precommit`, `inv configs.pull` —
-but that's a dev-only dependency, invisible to a real PULSE user running `./bootstrap.sh`. Not
-itself a `scaffoldapy` template target — its own layout (flat `tasks/`, not `src/`) predates that
-whole effort and isn't shaped like the sibling repos `scaffoldapy` generates.
+`plans/2026-08-20-runtime-dev-venv-split.md` — `tasks/__init__.py`'s `_import_repo_tasks_modules`
+helper, which degrades to four `None`s when `repo_tasks` isn't importable, is the mechanism, not
+decoration). This repo consumes `repo-tasks` for its own dev loop exactly like any other consumer —
+`inv dev-env.setup`, `inv quality.precommit`, `inv configs.pull` — but that's a dev-only dependency,
+invisible to a real PULSE user running `./bootstrap.sh`. `bootstrap.sh` itself defaults to
+installing the shared `repo-tasks` global tool (not bare `invoke`) for that user's own machine —
+composing `repo-tasks`'s own installer as one orchestrated step, the same relationship this script
+already has with `uv` itself, never reaching into `repo-tasks`'s internals (see
+`plans/2026-08-20-runtime-dev-venv-split.md` §2). Not itself a `scaffoldapy` template target — its
+own layout (flat `tasks/`, not `src/`) predates that whole effort and isn't shaped like the sibling
+repos `scaffoldapy` generates.
 
 **`repo-tasks`** — anything a repo in this family does _repeatedly_, identically, forever: quality
 tooling (`lint`/`format`/`type_check`/`test`), venv/dependency lifecycle (`venv`/`deps`), the
-dev-loop bootstrap (`dev_env`), docs builds (`docs`), and canonical tool config (`configs`) — the
-last one added specifically because a fix to
+dev-loop bootstrap (`dev_env`), docs builds (`docs`), canonical tool config (`configs`), and its own
+daily-driver global install lifecycle (`repo_tasks`, nested as `repo-tasks.*` — `update`/`status`/
+`version`/`stamp`) — the last one added specifically so the shared task runner is a
+`uv tool
+install`, decoupled from any one consumer's dependency groups, the same way `make` is a
+system utility and not a per-project dependency of the `Makefile` it runs
+(`plans/2026-08-20-runtime-dev-venv-split.md` §1). `configs` exists because a fix to
 `ruff.toml`/`pyrightconfig.json`/`dprint.json`/`pytest.ini`/ `.editorconfig` needs to reach every
 consumer without three repos' worth of hand-copying and silent drift. Distributed as a pinned git
-dependency (no PyPI — see `repo-tasks/README.md`), synced deliberately
-(`uv lock --upgrade-package repo-tasks`, `inv configs.pull`), never automatically. `inv configure`
-is the one command anything outside this package should ever need to name by value — it composes
-`dev_env.setup` + `configs.pull` internally, and that composition is free to change without anything
-outside `repo-tasks` (a `scaffoldapy` `_tasks` hook, a human) noticing.
+dependency for a repo that wants its own locked version (no PyPI — see `repo-tasks/README.md`,
+synced deliberately via `uv lock --upgrade-package repo-tasks`, `inv configs.pull`, never
+automatically) — or, the recommended default, a single global `uv tool install` every repo in the
+family shares, moved forward by `inv repo-tasks.update` rather than a per-repo lockfile bump.
+`inv
+configure` is the one command anything outside this package should ever need to name by value —
+it composes `dev_env.setup` + `configs.pull` + `repo_tasks.stamp` internally, and that composition
+is free to change without anything outside `repo-tasks` (a `scaffoldapy` `_tasks` hook, a human)
+noticing.
+
+### Task modules are stdlib + `invoke` only
+
+Every `repo_tasks` module and every PULSE `tasks/*.py` module imports stdlib plus `invoke` only —
+verified by inspection across the whole family, zero exceptions. A task module is infrastructure
+that operates _on_ a project, the same way a `Makefile` target isn't coupled to whatever libraries
+the app it builds happens to link — nothing here should import an app-specific dependency (a web
+framework, a scraping library, ...) just because it happens to be sitting in the same `.venv`. The
+one third-party exception today, `python-dotenv` (a real `repo-tasks` dependency, not a bolted-on
+installer flag — see `plans/2026-08-20-runtime-dev-venv-split.md` §1), is the deliberate kind:
+small, generic, and it earns its place. A new third-party import in a task module needs the same bar
+cleared explicitly, not silently assumed because the package happens to be resolvable.
 
 **`scaffoldapy`** — anything generated _once_ and then hand-maintained per repo, diverging
 immediately and legitimately: project structure, the `pyproject.toml` skeleton, `AGENTS.md`/

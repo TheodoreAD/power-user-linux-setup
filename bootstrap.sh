@@ -30,6 +30,20 @@ UV_PYTHON_DEFAULT=$(grep '^\s*uv_python_default\s*=' "${SETUP_TOML}" | sed 's/.*
 UV_PYTHON_EXTRA=$(grep '^\s*uv_python_extra\s*=' "${SETUP_TOML}" | grep -o '"[^"]*"' | tr -d '"')
 UV_PYTHON_SET_DEFAULT=$(grep '^\s*uv_python_set_default\s*=' "${SETUP_TOML}" | grep -o 'true\|false')
 
+# Whether to install the shared repo-tasks tool (brings inv/invoke with it) or bare invoke —
+# unattended default from setup.toml's [settings], overridable per run with --repo-tasks/
+# --invoke-only, or by answering the interactive prompt below when run from a terminal.
+INSTALL_REPO_TASKS=$(grep '^\s*install_repo_tasks\s*=' "${SETUP_TOML}" | grep -o 'true\|false')
+INSTALL_REPO_TASKS="${INSTALL_REPO_TASKS:-true}"
+
+FORCE_INSTALL_REPO_TASKS=""
+for arg in "$@"; do
+  case "${arg}" in
+    --invoke-only) FORCE_INSTALL_REPO_TASKS=false ;;
+    --repo-tasks) FORCE_INSTALL_REPO_TASKS=true ;;
+  esac
+done
+
 if ! command -v uv &> /dev/null; then
   echo "Installing uv..."
   UV_NO_MODIFY_PATH=1 curl -LsSf https://astral.sh/uv/install.sh | sh
@@ -50,8 +64,31 @@ for version in ${UV_PYTHON_EXTRA}; do
   uv python install "${version}"
 done
 
-echo "Installing invoke (Python ${UV_PYTHON_DEFAULT})..."
-uv tool install --python "${UV_PYTHON_DEFAULT}" --force invoke --with python-dotenv
+if [ -n "${FORCE_INSTALL_REPO_TASKS}" ]; then
+  INSTALL_REPO_TASKS="${FORCE_INSTALL_REPO_TASKS}"
+elif [ -t 0 ]; then
+  default_prompt="Y/n"
+  [ "${INSTALL_REPO_TASKS}" = "false" ] && default_prompt="y/N"
+  echo ""
+  echo "This machine can install the shared repo-tasks tool alongside invoke — one daily-driver"
+  echo "task runner every repo in the personal repo family shares (not a per-repo pinned"
+  echo "dependency). Skip this if you only want PULSE's own machine setup."
+  read -r -p "Install repo-tasks? [${default_prompt}] " reply
+  case "${reply}" in
+    [yY]*) INSTALL_REPO_TASKS=true ;;
+    [nN]*) INSTALL_REPO_TASKS=false ;;
+    *) ;; # keep setup.toml's default
+  esac
+fi
+
+if [ "${INSTALL_REPO_TASKS}" = "true" ]; then
+  echo "Installing repo-tasks, which brings inv/invoke with it (Python ${UV_PYTHON_DEFAULT})..."
+  uv tool install --python "${UV_PYTHON_DEFAULT}" --force --with-executables-from invoke \
+    'repo-tasks @ git+https://github.com/TheodoreAD/repo-tasks'
+else
+  echo "Installing invoke (Python ${UV_PYTHON_DEFAULT})..."
+  uv tool install --python "${UV_PYTHON_DEFAULT}" --force invoke --with python-dotenv
+fi
 
 echo ""
 echo "Bootstrap complete. Run 'inv --list' to see available tasks."
