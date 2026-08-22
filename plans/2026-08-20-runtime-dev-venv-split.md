@@ -1,8 +1,71 @@
 ---
-status: in-progress
-updated: 2026-08-22
+status: landed
+updated: 2026-08-23
 depends_on: [repo-tasks, scaffoldapy]
 ---
+
+**2026-08-23 — closed the last remaining item, plus new asks surfaced this session:**
+
+- **Corporate-CI cleanup, landed in `repo-tasks`** (`2a85c22`/`8819307`/`83153ad`): the CI
+  provisioning from 2026-08-22 (`uv tool install shellcheck-py`/`shfmt-py`, a `curl | sh` dprint
+  installer, `sudo apt-get install fd-find`) is gone. `shellcheck-py`/`shfmt-py`/`dprint-py` are now
+  real `dependency-groups.quality` members (confirmed live: all three are genuine PyPI wheels
+  bundling the real binary + a console-script entry point) — never `[project.dependencies]` or an
+  installable extra, so `uv tool install repo-tasks` (the global daily-driver) stays exactly
+  `invoke`+`python-dotenv`+`bump-my-version`, nothing quality-tool-shaped leaks into it.
+  `quality.py`'s `_sh_files` drops `fd` entirely for `git ls-files --cached --others
+  --exclude-standard` (git's always a dependency here already). Both CI workflows (`repo-tasks`,
+  PULSE) collapse to `setup-uv` + one bootstrap script + bare `inv quality.check` — zero apt/curl,
+  zero raw `uv` calls beyond the one bootstrap script already had.
+- **Real bug found and fixed, unrelated to the cleanup itself but blocking it**: `uv tool install
+  --with-executables-from invoke repo-tasks` — the actual global-install command this plan's §1
+  landed last session — was broken against the real package (`--with-executables-from` only adds
+  *extra* executables on top of what a package already provides; it never satisfies uv's
+  requirement that the *primary* package have at least one of its own). Never caught before because
+  it was verified only against a throwaway fixture, not the real `repo-tasks`, and no CI job
+  actually exercised the global-tool path. Fixed with a real `[project.scripts] repo-tasks =
+  "repo_tasks.cli:program.run"` entry point (`src/repo_tasks/cli.py`) that reuses `selfinstall.py`'s
+  existing tasks (`update`/`status`/`version`/`stamp`) — confirmed against the real package this
+  time, sandboxed via `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR`.
+- **New capability, `inv configs.ensure-deps`** (`8819307`): makes a consumer's `pyproject.toml`
+  declare every quality dependency repo-tasks needs, sourced from repo-tasks' own real
+  `dependency-groups.quality` (force-included as package data — never a second hand-maintained
+  list) — additive only, never touches an entry already present, so existing lock files and CI runs
+  stay stable. Deliberately never adds `repo-tasks`/`invoke` themselves (a second design correction
+  this session, after an initial draft that mirrored them everywhere) — those only ever belong in
+  repo-tasks' own main dependencies; PULSE and repo-tasks-itself are the one deliberate exception,
+  keeping them by hand because their own test suites exercise real `repo_tasks` integration, not
+  just consume its tasks. Creates a minimal `pyproject.toml` (`[tool.uv] package = false`, project
+  name derived from the git remote/directory name) plus a `tasks.py` and the canonical tool configs
+  when neither exists yet, closing the original "no pyproject.toml" ask with a real, tested,
+  bare-repo-to-green-CI path — also nested into the standalone `repo-tasks` script (`repo-tasks
+  configs.ensure-deps`) since bare `inv` has no way to load a collection with zero local `tasks.py`
+  to begin with.
+- **`scaffoldapy` deferred item, closed** (`454ad32`/`d0496fd`): `pyproject.toml.jinja`'s dev group
+  no longer hand-lists `basedpyright`/`pytest`/`ruff`/`repo-tasks` — `copier.yml`'s `_tasks` now
+  calls `repo-tasks configs.ensure-deps` (populates it from repo-tasks' own canonical list) then
+  `uv lock`, then bare `inv configure` (not `uv run inv configure` — no project-level `invoke` to
+  run it through anymore, the whole point). The generated CI workflow follows the same shape:
+  `setup-uv`, the stamped `bootstrap-repo-tasks.sh`, bare `inv dev-env.setup` + `inv quality.check`.
+  Verified against a real generated repo (not just template inspection) via `copier copy` with a
+  sandboxed global `repo-tasks` install — confirmed `quality.check` passes clean, including
+  `tasks.py`'s now-necessary `# pyright: ignore[reportMissingImports]` (repo_tasks is genuinely
+  unresolvable to a type checker that only sees the generated project's own venv). Also fixed
+  `test_generated_repo_passes_quality_precommit_out_of_the_box`, which used `uv run inv
+  quality.precommit` (immune to PATH ordering) — switching to bare `inv` meant PATH order started
+  mattering, and the test's own dev venv was shadowing the generated repo's tools (a real inherited
+  PATH resolved `pytest` to scaffoldapy's own venv instead of the generated one, hiding the
+  generated project's `typer` dependency). And separately, scaffoldapy's own root CI was failing
+  (`dprint: command not found`, pre-existing, unrelated to any of the above) — same fix, `inv
+  configs.ensure-deps` against its own `pyproject.toml`.
+- **Not fixed, pre-existing, out of scope**: two real bugs surfaced by exercising the "skill"
+  interface's generated project for real — dprint reflow on the template's own `README.md`/
+  `SKILL.md` markdown content, and an `asyncio.contextlib.suppress` used with `async with` in
+  `orchestrator.py`'s generated boilerplate (`TypeError` at runtime, also a real basedpyright
+  error). Neither is related to dependency-management/CI-bootstrap architecture — flagged, not
+  touched.
+- **Status**: every section of this plan (§1–§6, the scaffoldapy deferral, and this session's new
+  asks) has landed. No remaining open items.
 
 **2026-08-22 implementation progress:**
 
