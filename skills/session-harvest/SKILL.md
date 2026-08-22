@@ -1,6 +1,6 @@
 ---
 name: session-harvest
-description: "Use when invoked explicitly as /session-harvest, or when the user asks what's worth saving before compacting/ending a session, wants a session reviewed for durable facts, or says something like 'harvest this session', 'anything to remember here', or 'is it safe to compact'. Reviews the conversation against Claude Code's built-in auto-memory taxonomy (user/feedback/project/reference), but routes plan-specific content to plans/*.md instead (per the plan-docs skill) and repo-specific durable knowledge to AGENTS.md/docs/contributing instead, so memory doesn't end up duplicating what those already own. Ends with a safe-to-compact report. On-demand only — never installs hooks or runs automatically."
+description: "Use when invoked explicitly as /session-harvest, or when the user asks what's worth saving before compacting/ending a session, wants a session reviewed for durable facts, or says something like 'harvest this session', 'anything to remember here', or 'is it safe to compact'. Reviews the conversation against Claude Code's built-in auto-memory taxonomy (user/feedback/project/reference), but routes plan-specific content to plans/*.md instead (per the plan-docs skill), repo-specific durable knowledge to that repo's AGENTS.md/docs/contributing, and cross-repo/personal preference to ~/AGENTS.md, so memory doesn't end up duplicating what those already own or silently siloing a preference in one project's memory folder. Ends with a safe-to-compact report. On-demand only — never installs hooks or runs automatically."
 ---
 
 # Session harvest
@@ -40,6 +40,17 @@ considered and rejected).
      - `contributing/*.md` (or a skill's own `references/*.md`, if the knowledge is about a skill
        itself rather than the repo) — design rationale, prior art, implementation gotchas, also on
        demand.
+   - **Cross-repo/personal preference (not tied to one project) → `~/AGENTS.md`, never memory
+     either.** Same logic as the repo-specific split above, one level up — version-controlled via
+     its real source (`power-user-linux-setup/config/global-AGENTS.md`; never edit the deployed
+     `~/AGENTS.md` directly, it's silently overwritten by the next `inv tools.install`) and loaded
+     into every session regardless of repo, so it's the actual bloat-avoidance-and-reviewability
+     lever for content that isn't tied to one project, the same way a repo's own `AGENTS.md` is for
+     that repo. Confirmed as a real gap 2026-08-22: a session found ~30 `feedback`-type memories
+     accumulated across multiple projects' memory folders — each project's memory is invisible to
+     every other project's sessions, so a genuinely cross-repo preference saved there never actually
+     reaches a session in a different repo. Most had simply never been promoted because nothing
+     routed them anywhere else.
    - **Already covered → skip.** If an existing memory file or doc already says this, don't write a
      duplicate — check first.
    - **Meta-conventions about how to build things in this ecosystem (e.g. "skills should do X by
