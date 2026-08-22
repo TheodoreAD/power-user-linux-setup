@@ -14,20 +14,22 @@ Root cause confirmed the same session (see `deployed-config-drift-guard.md`'s Co
 `config/global-AGENTS.md`'s "Built-in `Plan`/`Explore` subagents don't see this file at all" note,
 added as a direct result): Claude Code's built-in `Plan`/`Explore` agent types deliberately skip
 loading `CLAUDE.md`/`AGENTS.md` entirely (documented exception, for speed/cost). This is not a
-one-off model lapse — no rewording of the `AGENTS.md` rule fixes it for those two agent types,
-since they structurally never see the file. A hook enforces the rule at the harness level instead,
+one-off model lapse — no rewording of the `AGENTS.md` rule fixes it for those two agent types, since
+they structurally never see the file. A hook enforces the rule at the harness level instead,
 independent of which agent/system-prompt is active — the same class of fix as
 `deployed-config-drift-guard.md`'s Approach A, applied to a different problem.
 
 ## Confirmed hook mechanics
 
-`PreToolUse` hook, matcher `"Bash"`, supports the same non-blocking pattern `PostToolUse` does:
-exit 0 + JSON stdout `{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext":
-"..."}}` injects a reminder into the calling agent's context **without** blocking or denying the
-tool call. Verified against live Claude Code docs (`code.claude.com/docs/en/hooks.md`) the same
-session. Deliberately non-blocking, not a hard deny: `sed -n` is occasionally legitimate (e.g. one
-step of a larger pipe the Read tool can't express) — the existing `AGENTS.md` rule itself carves
-out that exception, and a hard block would fight it.
+`PreToolUse` hook, matcher `"Bash"`, supports the same non-blocking pattern `PostToolUse` does: exit
+0 + JSON stdout
+`{"hookSpecificOutput": {"hookEventName": "PreToolUse", "additionalContext":
+"..."}}` injects a
+reminder into the calling agent's context **without** blocking or denying the tool call. Verified
+against live Claude Code docs (`code.claude.com/docs/en/hooks.md`) the same session. Deliberately
+non-blocking, not a hard deny: `sed -n` is occasionally legitimate (e.g. one step of a larger pipe
+the Read tool can't express) — the existing `AGENTS.md` rule itself carves out that exception, and a
+hard block would fight it.
 
 ## Design sketch
 
@@ -35,21 +37,21 @@ out that exception, and a hard block would fight it.
   part of a larger pipe (`|`) or chain (`&&`/`;`), not paired with `-i`. Exact regex/heuristic is an
   implementation detail; false positives are low-cost since the hook never blocks, so err toward
   over-matching rather than under-matching.
-- **Nudge text**: something like "sed -n was used to view a file — Read (with offset/limit) does
-  the same job with zero Bash-allowlist friction and no subagent-CLAUDE.md-inheritance gap. Prefer
-  it unless this sed call is genuinely part of a larger pipeline Read can't express."
+- **Nudge text**: something like "sed -n was used to view a file — Read (with offset/limit) does the
+  same job with zero Bash-allowlist friction and no subagent-CLAUDE.md-inheritance gap. Prefer it
+  unless this sed call is genuinely part of a larger pipeline Read can't express."
 - **Deployment**: same infrastructure as `deployed-config-drift-guard.md`'s pulse-guard hook — a
   `wrapper-script`-deployed script + a merge into the global `~/.claude/settings.json`
   `hooks.PreToolUse` array, matcher `"Bash"`. If that plan's hook-registration task lands first,
   reuse it rather than duplicating the `settings.json`-merge logic a second time.
-- **Scope**: global (fires on every Bash call machine-wide, not just this repo) — same
-  global-hook precedent as the pulse-guard design.
+- **Scope**: global (fires on every Bash call machine-wide, not just this repo) — same global-hook
+  precedent as the pulse-guard design.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: exact detection regex/heuristic for "`sed -n` used for viewing" vs.
-"`sed -n` legitimately part of a larger pipe" — needs a handful of real positive/negative examples
-to validate against before considering it done.]
+[NEEDS CLARIFICATION: exact detection regex/heuristic for "`sed -n` used for viewing" vs. "`sed -n`
+legitimately part of a larger pipe" — needs a handful of real positive/negative examples to validate
+against before considering it done.]
 
 [NEEDS CLARIFICATION: should this hook and `deployed-config-drift-guard.md`'s `PostToolUse` hook
 share one deployed script/registration task (two matchers, one file) or stay fully independent?
