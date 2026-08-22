@@ -1515,6 +1515,18 @@ method = "skill"
 tags = ["dev"]
 skills = [{ source = "local", path = "skills/mcp-skill-shipping" }]
 
+[packages.polite-mcp-conventions]
+description = """
+Behavioral/collaboration conventions for the *-polite-mcp family (confirm before the first live
+mutating action against a real personal account, batch interactive per-item decisions via
+AskUserQuestion, write spike findings into PLAN.md before implementing) — distinct from
+mcp-skill-shipping (dev-loop/distribution mechanics for the same repos). No package attached; exists
+purely to declare the skill.
+"""
+method = "skill"
+tags = ["dev"]
+skills = [{ source = "local", path = "skills/polite-mcp-conventions" }]
+
 [packages.plan-docs]
 description = """
 Convention and workflow skill for plans/YYYY-MM-DD-topic.md files — one file per idea/design,
