@@ -235,6 +235,43 @@ def _apply_static_claude_permissions() -> None:
     print(f"[ai.skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
 
 
+def _apply_declared_statusline() -> None:
+    """Point ~/.claude/settings.json's top-level `statusLine` key at the managed script, declared
+    via `[packages.claude-statusline]`'s `claude_statusline` field.
+
+    Unlike `_apply_static_claude_permissions`, no manifest/diff bookkeeping: `statusLine` is a
+    single scalar value with exactly one desired state, not a list multiple packages contribute
+    to over time, so there's nothing to distinguish "ours to remove" from "user's to keep." Three
+    outcomes only: absent -> set it; already matches -> no-op; set to something else -> ask before
+    overwriting (default: leave it alone).
+    """
+    declared = util.load_config()["packages"].get("claude-statusline", {}).get("claude_statusline")
+    if not declared:
+        return
+
+    settings = util.load_claude_settings()
+    current = settings.get("statusLine")
+
+    if util.DRY_RUN:
+        print(f"[ai.skills] statusLine: {util.ok_label(current == declared)}")
+        return
+
+    if current == declared:
+        print("[ai.skills] statusLine: already up to date")
+        return
+
+    if current is not None and not ui.ask(
+        f"~/.claude/settings.json already has a custom statusLine ({current!r}) — replace it with the managed one?",
+        default=False,
+    ):
+        print("[ai.skills] statusLine: left existing custom value in place")
+        return
+
+    settings["statusLine"] = declared
+    util.write_claude_settings(settings)
+    print(f"[ai.skills] {util.CLAUDE_SETTINGS}: statusLine updated")
+
+
 def _copilot_present() -> bool:
     ext_dir = Path.home() / ".vscode" / "extensions"
     return ext_dir.is_dir() and any(ext_dir.glob("github.copilot-*"))
@@ -301,7 +338,8 @@ def skills(c, dir=None, yes=False):  # noqa: A002
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
     On the default (global) run, also merges every declared `claude_permissions_allow` rule into
-    ~/.claude/settings.json and checks for GitHub Copilot (see docs/claude-code.md).
+    ~/.claude/settings.json, syncs the declared `claude_statusline` value into its `statusLine`
+    key, and checks for GitHub Copilot (see docs/claude-code.md).
 
     Before actually installing or updating a skill, shows its own description and asks — same
     `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
@@ -313,12 +351,13 @@ def skills(c, dir=None, yes=False):  # noqa: A002
     without -y.
 
     Defaults to the home directory (the personal, cross-project skills location). Pass --dir to
-    set this up for a specific project instead — permissions/Copilot are skipped for a --dir run,
-    since those are global, user-level settings, not project-scoped.
+    set this up for a specific project instead — permissions/statusLine/Copilot are skipped for a
+    --dir run, since those are global, user-level settings, not project-scoped.
     """
     base = Path(dir).expanduser().resolve() if dir else Path.home()
     _ensure_agents_skills(base, label="ai.skills")
     _install_declared_skills(c, base, yes=yes)
     if dir is None:
         _apply_static_claude_permissions()
+        _apply_declared_statusline()
         _note_copilot_permissions()

@@ -916,6 +916,19 @@ dest = "~/AGENTS.md"
 symlink_dest = "~/.claude/CLAUDE.md"
 content_file = "config/global-AGENTS.md"
 
+[packages.claude-statusline]
+description = """
+Custom Claude Code statusline — dir/git-status (p10k-style), python env, model tier,
+context-window fill, both 5h/7d rate-limit windows, and session cost, all color-coded by a shared
+muted "weight" palette. See the script's own header comment for the full color/icon/threshold
+rationale — this repo only deploys it, never edits its logic.
+"""
+method = "wrapper-script"
+tags = ["ai"]
+dest = "~/.claude/statusline-command.sh"
+content_file = "config/statusline-command.sh"
+claude_statusline = { type = "command", command = "bash ~/.claude/statusline-command.sh" }
+
 [packages.zsh]
 description = "The zsh shell itself — Oh My Zsh and every zsh-method config entry need it installed first"
 method = "apt"

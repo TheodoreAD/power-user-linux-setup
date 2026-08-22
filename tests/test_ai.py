@@ -351,6 +351,7 @@ def _stub_skills_task_helpers(monkeypatch, calls):
     monkeypatch.setattr(ai, "_ensure_agents_skills", lambda base, *, label: calls.append(("ensure", base, label)))
     monkeypatch.setattr(ai, "_install_declared_skills", lambda c, base, *, yes: calls.append(("install", base, yes)))
     monkeypatch.setattr(ai, "_apply_static_claude_permissions", lambda: calls.append(("perms",)))
+    monkeypatch.setattr(ai, "_apply_declared_statusline", lambda: calls.append(("statusline",)))
     monkeypatch.setattr(ai, "_note_copilot_permissions", lambda: calls.append(("copilot",)))
 
 
@@ -364,6 +365,7 @@ def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch
     ai.skills.body(None, yes=True)  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
 
     assert ("perms",) in calls
+    assert ("statusline",) in calls
     assert ("copilot",) in calls
     assert any(entry[0] == "install" and entry[2] is True for entry in calls)
 
@@ -377,5 +379,92 @@ def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_pat
     )
 
     assert ("perms",) not in calls
+    assert ("statusline",) not in calls
     assert ("copilot",) not in calls
     assert ("install", tmp_path, False) in calls
+
+
+# ---------------------------------------------------------------------------
+# _apply_declared_statusline — no manifest, just absent/matches/conflicts
+# ---------------------------------------------------------------------------
+
+_DECLARED_STATUSLINE = {"type": "command", "command": "bash ~/.claude/statusline-command.sh"}
+
+
+def _stub_declared_statusline_package(monkeypatch, value=_DECLARED_STATUSLINE):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {"packages": {"claude-statusline": {"enabled": True, "claude_statusline": value}}},
+    )
+
+
+def test_apply_declared_statusline_writes_when_absent(monkeypatch, capsys):
+    _stub_declared_statusline_package(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("no existing value, must never prompt"))
+
+    ai._apply_declared_statusline()
+
+    assert written == [{"statusLine": _DECLARED_STATUSLINE}]
+    assert "statusLine updated" in capsys.readouterr().out
+
+
+def test_apply_declared_statusline_noop_when_already_correct(monkeypatch, capsys):
+    _stub_declared_statusline_package(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"statusLine": _DECLARED_STATUSLINE})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("already correct, must never write"))
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("already correct, must never prompt"))
+
+    ai._apply_declared_statusline()
+
+    assert "already up to date" in capsys.readouterr().out
+
+
+def test_apply_declared_statusline_declined_overwrite_leaves_existing(monkeypatch, capsys):
+    _stub_declared_statusline_package(monkeypatch)
+    existing = {"type": "command", "command": "some-other-script"}
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"statusLine": existing})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("declined, must never write"))
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
+
+    ai._apply_declared_statusline()
+
+    assert "left existing custom value in place" in capsys.readouterr().out
+
+
+def test_apply_declared_statusline_confirmed_overwrite_writes(monkeypatch, capsys):
+    _stub_declared_statusline_package(monkeypatch)
+    existing = {"type": "command", "command": "some-other-script"}
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"statusLine": existing, "theme": "dark"})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._apply_declared_statusline()
+
+    assert written == [{"statusLine": _DECLARED_STATUSLINE, "theme": "dark"}]
+    assert "statusLine updated" in capsys.readouterr().out
+
+
+def test_apply_declared_statusline_dry_run_never_writes_or_prompts(monkeypatch, capsys):
+    _stub_declared_statusline_package(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"statusLine": {"type": "command", "command": "x"}})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("dry run must never write"))
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("dry run must never prompt"))
+    util.DRY_RUN = True
+
+    ai._apply_declared_statusline()
+
+    assert "statusLine" in capsys.readouterr().out
+
+
+def test_apply_declared_statusline_noop_when_nothing_declared(monkeypatch):
+    monkeypatch.setattr(util, "load_config", lambda: {"packages": {}})
+    monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("nothing declared, must never write"))
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("nothing declared, must never prompt"))
+
+    ai._apply_declared_statusline()

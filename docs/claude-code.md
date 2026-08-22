@@ -256,3 +256,19 @@ confirmed, documented Copilot setting for path-scoped _file-read_ auto-approval 
 `github.copilot.chat.agent.autoApproveFileChanges` boolean, which governs edits, not reads, and
 isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse than
 an honest "nothing applied, here's why." Revisit if a scoped-read key is ever confirmed.
+
+## Declaring the statusline — the `claude_statusline` field
+
+`[packages.claude-statusline]` deploys the custom Claude Code statusline script
+(`config/statusline-command.sh` → `~/.claude/statusline-command.sh`, a `wrapper-script`-method
+entry, chmod 0o755 — same mechanism as `claude-global-md`/`pulse-proxy-start`) and declares
+`claude_statusline = { type = "command", command = "bash ~/.claude/statusline-command.sh" }` on that
+same package entry. `inv ai.skills` reads that value directly (not a scanned any-package field like
+`claude_permissions_allow` above — there's only ever one statusline, so no merge/manifest mechanism
+is needed) and syncs it into `~/.claude/settings.json`'s top-level `statusLine` key: absent → set
+it; already correct → no-op; set to something else → ask before overwriting (declines by default,
+same `ui.ask` convention used elsewhere, auto-skipped non-interactively).
+
+Edit `config/statusline-command.sh` and re-run `inv tools.install` to change the script's behavior —
+its own header comment documents the color palette, icon sources (powerlevel10k's nerdfont icon
+table), and threshold rationale in full; this doc only covers how it's _deployed_.
