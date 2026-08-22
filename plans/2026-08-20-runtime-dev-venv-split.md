@@ -53,6 +53,20 @@ depends_on: [repo-tasks, scaffoldapy]
   unconditional `@v{version}` pin even when that tag doesn't exist upstream yet (true of this repo
   right now) — would have made every consumer's stamped script fail on first run; now falls back to
   an unpinned install the same way `update()` already does.
+- **Both CI workflows verified green for real** (`gh run watch`, not just local
+  `inv
+  quality.precommit`) — two real gaps a purely-local check couldn't have caught, both now
+  fixed in both repos: (1) `dprint`/`shellcheck`/`shfmt`/`fd` were never `uv sync`-managed
+  dependencies even before today (a normal PULSE machine gets them via `setup.toml`'s own install
+  methods) — a fresh CI runner has none of them, so `quality` now provisions all four
+  (`uv tool install shellcheck-py`/ `shfmt-py`, dprint's own install script,
+  `apt-get install fd-find`) before the bootstrap script runs. (2) repo-tasks' own
+  `pyrightconfig.json` swept `tests/integration/` into basedpyright's `include`, but that tier needs
+  `uv sync --group integration` to even import — excluded now, matching `pytest.ini`'s existing
+  `--ignore` for the same reason. PULSE also needed its pinned `repo-tasks` dependency bumped
+  (`uv lock --upgrade-package repo-tasks`) — it was still on `23f1386`, predating every repo-tasks
+  change from today, including the `venv.py` GITHUB_PATH feature the new bootstrap script depends
+  on.
 - **`scaffoldapy` investigated, deliberately left unchanged**: dropping `repo-tasks` from the
   generated `pyproject.toml.jinja`'s `dependency-groups.dev` (relying on the now-global tool
   instead, per this section's original guess) turns out entangled with a _second_, still-undesigned
