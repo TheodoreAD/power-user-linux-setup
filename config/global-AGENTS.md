@@ -95,6 +95,15 @@ for Bash for the read/search/edit trio only when the dedicated tool genuinely ca
 needed (e.g. one step of a larger shell pipeline that has to run as a single command for other
 reasons, or an operation with no tool equivalent) — not out of habit.
 
+**Built-in `Plan`/`Explore` subagents don't see this file at all.** Claude Code's built-in `Plan`
+and `Explore` agent types deliberately skip loading `CLAUDE.md`/`AGENTS.md` (any level — user or
+project), to keep research fast and cheap. A rule added here — including every rule in this file —
+is invisible to a subagent of either type; it only reaches the main session and any custom subagent
+whose own definition doesn't override the system prompt. If a just-established or task-critical
+convention actually matters for what you're asking a `Plan`/`Explore` subagent to do (e.g. "use Read,
+not `sed -n`, when viewing files"), state it explicitly in that subagent's own prompt — don't assume
+it inherits this file.
+
 ## Preferred search tools
 
 When shelling out via Bash — not the dedicated Grep/Glob tools, which are already preferred by
