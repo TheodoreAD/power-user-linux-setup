@@ -30,19 +30,29 @@ depends_on: [repo-tasks, scaffoldapy]
   degraded branch directly rather than needing `importlib.import_module` injection (which loses
   pyright's static module typing on the success path — `Any` leaking into `Collection.from_module()`
   calls otherwise) or `sys.modules` patching. `tests/test_tasks_init.py` covers both paths.
+- **§5 landed** in PULSE (`3f3b94c`, `.github/workflows/ci.yml`, live on push/PR — this repo's first
+  quality-gate CI, both gaps closed in one workflow as designed): `quality` job (`uv sync` +
+  `uv run inv quality.check`) alongside a `runtime-guardrail` job that mirrors bootstrap.sh's
+  `--invoke-only` shape — bare `uv tool install invoke` (never `uv sync`), `inv --list`, then
+  `PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install` (the exact smoke
+  command already documented in `docs/index.md`, reused rather than inventing a new list). Guards
+  the Context section's actual verified invariant — bare invoke with no `repo_tasks` at all still
+  gets a working `inv --list` via `_import_repo_tasks_modules` degrading to four `None`s — not the
+  now-default `--repo-tasks` path, which `quality` already exercises via a real `uv sync`.
 - **`scaffoldapy` investigated, deliberately left unchanged**: dropping `repo-tasks` from the
   generated `pyproject.toml.jinja`'s `dependency-groups.dev` (relying on the now-global tool
-  instead, per this section's original guess) turns out entangled with §5, not independent of it —
-  the template's own `.github/workflows/ci.yml` does `uv sync` then `uv run inv quality.check`,
-  which structurally requires `repo-tasks`/`invoke` resolvable inside the project's own venv; a CI
+  instead, per this section's original guess) turns out entangled with a _second_, still-undesigned
+  CI question — not the one §5 just closed. §5 only guards PULSE's own CI; a `scaffoldapy`-generated
+  _consumer_ repo's own `.github/workflows/ci.yml` does `uv sync` then `uv run inv quality.check`,
+  which structurally requires `repo-tasks`/`invoke` resolvable inside that project's own venv — a CI
   runner has no pre-bootstrapped global tool to fall back on. Making the dependency-groups change
-  without also redesigning CI's bootstrap step (the stamped `bootstrap-repo-tasks.sh` pattern from
-  §1, per "CI owns zero embedded bash" above) would silently break every generated repo's CI. Since
-  the exact CI YAML shape is explicitly deferred by the user, `scaffoldapy` stays on the per-repo
-  pinned-dependency path (`repo-tasks/README.md`'s "Alternative" install method) until that CI
-  redesign actually happens — not a gap, a dependency ordering.
-- **Not yet done**: §5 (CI guardrail + PULSE's first general quality-gate workflow, and — now
-  entangled with it — the `scaffoldapy` `pyproject.toml.jinja`/`_tasks`/`ci.yml` changes above).
+  without also redesigning _that_ CI's bootstrap step (the stamped `bootstrap-repo-tasks.sh` pattern
+  from §1, per "CI owns zero embedded bash" above) would silently break every generated repo's CI.
+  Since the user has explicitly deferred that redesign ("we will build the CI later"), `scaffoldapy`
+  stays on the per-repo pinned-dependency path (`repo-tasks/README.md`'s "Alternative" install
+  method) until it's scoped — not a gap, a dependency ordering.
+- **Remaining**: only the `scaffoldapy` consumer-repo CI redesign above — everything else in this
+  plan (§1–§6) has landed.
 
 # Guarding the runtime/dev-venv split
 
