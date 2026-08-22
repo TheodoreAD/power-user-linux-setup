@@ -63,7 +63,14 @@ considered and rejected).
 
 3. **Survivors** get saved following the harness's own existing memory-save procedure exactly as
    specified in its system prompt (frontmatter format, `MEMORY.md` index entry, `[[links]]`) — not
-   reimplemented here.
+   reimplemented here. **Expect this to be rare.** Confirmed directly by the user 2026-08-23: memory
+   is not a durable store at all anymore — a prior session's restructuring moved everything durable
+   that used to live there into `AGENTS.md`/`~/AGENTS.md`, and step 2's filters exist precisely so
+   that keeps being true going forward. What's actually left to save here should be genuinely
+   temporary — expires on its own, isn't meant to persist indefinitely (a deadline, a "don't touch X
+   until Y happens" note) — not a preference, convention, or fact that would still be true in a
+   month. If a candidate feels durable but doesn't cleanly fit any filter in step 2, that's a signal
+   to add a new routing filter there (step 6's self-update), not to default to memory.
 
 4. **Loose-ends pass**, separate from the memory scan: is there in-progress state in _this_
    conversation that isn't memory-worthy (failed step 1) and isn't covered by a plan file either,

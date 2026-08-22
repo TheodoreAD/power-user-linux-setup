@@ -71,6 +71,20 @@ plan's status changes, since nothing prompts memory to be updated in lockstep. K
 plan-shaped content never gets a memory entry, full stop — avoids that drift entirely rather than
 trying to keep two systems in sync.
 
+## Why memory is now framed as "temporary-only, expect it to be rare"
+
+Originally this skill treated memory as a normal, if secondary, destination — routing filters carve
+off plan/`AGENTS.md`-shaped content, and whatever's left still gets saved as memory via the
+harness's own procedure. Confirmed directly by the user 2026-08-23 (same day as the cross-repo
+routing filter above) that this framing had already been overtaken by events: an earlier session did
+a full restructuring pass and moved everything durable that used to live in memory into
+`AGENTS.md`/`~/AGENTS.md` instead, on purpose — not an accident to restore. Memory's own `MEMORY.md`
+index was found empty on disk afterward, which read at first like data loss; it wasn't. The
+corrected mental model: memory holds nothing durable at all now. Step 2's filters were always meant
+to catch everything durable _before_ it reached memory — this just makes explicit that what's left
+over should be rare and genuinely temporary (a deadline, a hold-off note), not a quieter version of
+the same "personal preference" content the cross-repo filter already redirects to `~/AGENTS.md`.
+
 ## Why the self-update mechanism exists
 
 A convention skill that only ever gets read, never revised by what actually happens when it's used,
