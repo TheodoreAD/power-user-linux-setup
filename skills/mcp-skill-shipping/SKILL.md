@@ -32,6 +32,15 @@ README for the full task catalog (one invoke module per facility — `quality`, 
   [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) automatically at generation time —
   nothing to run for it.
 
+`invoke` is a per-project venv dependency (pulled in transitively via `repo-tasks`), never assumed
+to be a machine-wide tool — unlike `power-user-linux-setup`'s own `inv`, which `bootstrap.sh`
+installs as a global `uv tool` for real end users. Anything invoking `inv` from outside an
+already-activated shell (a CI step, a `copier.yml` `_tasks` hook, any automation) needs
+`uv run inv <task>`, not bare `inv` — nothing guarantees the latter resolves. `scaffoldapy`'s
+`copier.yml` (`_tasks: [uv sync, uv run inv configure]`) and every generated repo's own
+`.github/workflows/ci.yml` (`uv run inv quality.check`) both already follow this; keep new
+automation consistent with it rather than assuming a global `inv`.
+
 ## One entry point, `uv tool install` for a stable PATH binary
 
 Add a `[project.scripts]` entry point to the MCP repo's `pyproject.toml` (e.g.
