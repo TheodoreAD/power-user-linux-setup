@@ -29,6 +29,53 @@ in one session (destinations: `~/AGENTS.md` for ~20 universal ones,
 single repo-specific one) — see that session's actual commits for the destination mapping, not
 reconstructed here.
 
+**Second pass, same session:** the two `project`-type memories left in `power-user-linux-setup`'s
+folder (`project_screenshot_shortcuts.md`, `project_polite_mcp_repo_family.md`) weren't in scope for
+the `feedback`-type sweep above — they're status/narrative logs, not behavioral rules, a different
+_kind_ of thing than "instructions." Prompted by a direct follow-up question ("what can we do about
+the remaining memories?"), both got resolved too, surfacing two more destination kinds (see taxonomy
+below): `project_screenshot_shortcuts.md` was a pure duplicate of `docs/screen_capture.md` (every
+fact — the 2 real bugs found, the Wayland fix, verified-working status — already lived there in more
+detail) and was deleted with zero migration needed. `project_polite_mcp_repo_family.md` was ~90% a
+staler duplicate of this repo's own `plans/2026-08-14-python-repo-scaffolding.md` (confirmed by
+grep, not assumed — checked specifically for the memory's "still genuinely open" items and found
+them already tracked there, more currently); the memory's own "family roster" portion was explicitly
+self-distrusting (its text admits being caught incomplete twice, advises always re-listing the
+directory rather than trusting a cached list) so preserving a static copy would have reproduced the
+same staleness risk it already warned about. One genuinely unique, still-open nugget survived
+neither of those (a shopping-site-MCP registry idea, semantically about
+`product-research-pipeline`'s own future design, not this repo's) — migrated to
+`product-research-pipeline/ROADMAP.md` instead of being dropped, after asking the user rather than
+deciding unilaterally.
+
+## Destination taxonomy (confirmed this session, not theoretical)
+
+Every memory resolved this session landed in one of six places — this is the concrete input for
+"Recommended direction"'s memory-backlog-review mechanism below, not six independently-invented
+ideas:
+
+1. **`~/AGENTS.md`** — genuinely universal, applies regardless of which repo a session is in.
+2. **That repo's own `AGENTS.md`** — repo-specific technical/behavioral content.
+3. **A new skill** — content that's specific to a _family_ of repos (not universal, not one repo),
+   where no existing repo's `AGENTS.md` is actually loaded by a session working in a sibling repo.
+4. **An existing skill's own content** — the memory is superseded by a skill built after it was
+   written, but has one salvageable methodological nugget the skill doesn't already state.
+5. **Drop entirely, no migration** — exact/near-exact duplicate of content already living in (1) or
+   (2), or the memory's storage-mechanics half is superseded while its content half is fully covered
+   elsewhere too.
+6. **A different repo's own doc/plan/roadmap** — the memory's content is genuinely about a
+   _different_ project than the one the memory happened to accumulate in (captured mid-conversation
+   about that other project, but never written down there).
+
+Deciding between (5)/(6) vs. genuine content worth keeping, for a `project`-type memory
+specifically, used this procedure (worth stating explicitly, since it's the part a future automated
+pass would need to replicate): grep the repo's own `plans/*.md`/`docs/*.md` for the memory's key
+claims and compare dates — if a more current, more detailed doc/plan already covers it, that's (5);
+check whether the memory's own text hints at its own unreliability (stated omissions, "caught
+incomplete" admissions) — if so, lean toward (5) over preserving a stale snapshot; then check
+specifically for any small, still-open, genuinely-not-covered-elsewhere nugget before deleting —
+that's what makes it (6) instead of a clean (5).
+
 A second real finding from that same sweep, orthogonal to the memory backlog itself: `~/AGENTS.md`
 is a **deployed artifact** (`[packages.claude-global-md]`, generated from
 `config/global-AGENTS.md`), but had drifted from its own source — both from a fix made directly to
@@ -84,12 +131,13 @@ Two genuinely separate, small mechanisms, not one big one:
    about where it hooks in is resolved.
 2. **Memory-backlog review** — likely a new skill or a `session-harvest` extension, explicitly
    user-invoked (not automatic), that: lists every `~/.claude/projects/*/memory/*.md` file across
-   all projects, checks each against existing `AGENTS.md`/skill content for the three drift patterns
-   found this session (exact duplication, skill-supersession, stated-but-unactioned cross-repo
-   scope), and proposes a destination (which `AGENTS.md`, or "needs a new skill" per this session's
-   `polite-mcp-conventions` precedent) for human confirmation before writing anything — mirroring
-   how this session's actual migration worked, just without a human having to notice the backlog
-   existed first.
+   all projects, checks each against existing `AGENTS.md`/skill/plan/doc content for the drift
+   patterns found this session (exact duplication, skill-supersession, stated-but-unactioned
+   cross-repo scope, a `project`-type memory superseded by a more current doc/plan in its own repo,
+   content that's actually about a different project than the one it accumulated in), and proposes
+   one of the six "Destination taxonomy" outcomes above for human confirmation before writing
+   anything — mirroring how this session's actual migration worked, just without a human having to
+   notice the backlog existed first.
 
 Not implementing either here — this plan exists to capture the idea and the concrete precedent (this
 session's manual sweep) before it's lost, per explicit instruction.
