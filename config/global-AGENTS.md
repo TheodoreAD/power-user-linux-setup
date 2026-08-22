@@ -104,6 +104,26 @@ convention actually matters for what you're asking a `Plan`/`Explore` subagent t
 Read, not `sed -n`, when viewing files"), state it explicitly in that subagent's own prompt — don't
 assume it inherits this file.
 
+## Testing a different repo's code in a multi-working-directory session
+
+When a session has more than one working directory (the "additional working directories" the system
+prompt lists) and you need to actually run/test code that lives in a _different_ one than the
+session's primary project, a plain `cd other-repo && pytest`/`cd other-repo && inv <task>` (as its
+own Bash call, per the allowlist guidance above) does **not** put that repo's own `.venv` on `PATH`.
+direnv's shell hook fires on an interactive shell's prompt/precmd, not inside a non-interactive
+`bash -c` invocation — so PATH stays whatever it already was at session start (the _primary_
+project's direnv-activated `.venv/bin`), and a bare `pytest`/`inv` after the `cd` silently resolves
+to the primary project's interpreter and dependencies, not the target repo's. Concretely, this means
+testing against a stale/wrong package copy (an old pinned git commit, a different version) without
+any error — it just runs, and looks like it passed.
+
+The fix: invoke the target repo's own venv binary by absolute path —
+`/path/to/other-repo/.venv/bin/pytest`, `/path/to/other-repo/.venv/bin/inv <task>` — rather than
+relying on bare-command PATH resolution after a `cd`. Confirmed directly (2026-08-22/23): running
+plain `inv`/`pytest` after `cd`-ing into a secondary repo silently exercised the primary repo's
+pinned dependency copy of a package under active development in the secondary repo, until switching
+to the absolute-path form surfaced the real, current code.
+
 ## Preferred search tools
 
 When shelling out via Bash — not the dedicated Grep/Glob tools, which are already preferred by
@@ -226,6 +246,21 @@ is treated as final. Observed as a real pattern, not a one-off: pushed for more 
 planning session on a monorepo-versioning tool choice, both times because a search-summary-level
 survey wasn't considered sufficient to close out the decision.
 
+## Research before asking, when the answer is factual rather than a real preference
+
+Before reaching for `AskUserQuestion` on something that sounds like a judgment call, check whether
+it actually has a discoverable factual answer first — a web search away, not a preference only the
+user can supply. `AskUserQuestion` is for decisions genuinely the user's to make (a real preference,
+a trade-off with no objectively-better side); a question like "where does model X sit in
+capability/cost relative to the others" or "what's a realistic value for Y" is a lookup, not a
+preference, even when it's tempting to hand it to the user as a quick multiple-choice.
+
+**Confirmed directly** 2026-08-23: asked the user to pick a color tier for a newly-released Claude
+model ("Fable") in a statusline script, framing it as a stylistic choice. The user's reply — "look
+it up online, come on" — was a real correction: Fable's actual capability tier (above Opus, per
+Anthropic's own docs) was one search away, not something only the user could supply. Re-ran the
+research, found the answer, applied it without another round-trip.
+
 ## Pilot before generalizing
 
 Before writing a set of tool choices, configs, or conventions into a shareable skill/template meant
@@ -317,6 +352,29 @@ outside the real repo — but "slow" or "needs the network" is _not_ a valid rea
 script for something that already has, or trivially could have, real test coverage; write it as a
 real, clearly-labeled test instead (marked/skipped from the fast default suite if genuinely slow,
 per that repo's own convention for that).
+
+## This machine's locale silently breaks `date`/`awk` formatting in shell scripts
+
+This machine's `LC_TIME` and `LC_NUMERIC` default to `ro_RO.UTF-8` (while `LANG`/`LC_MESSAGES` stay
+`en_US.UTF-8` — a mixed locale, not a uniformly non-English one). Any bash script that formats a
+date or a decimal number without forcing the C locale can silently emit Romanian-locale output
+instead of the expected English/period-decimal form — with no error, so it passes a casual glance
+and only shows up on close inspection of the actual bytes.
+
+**Confirmed concretely** 2026-08-23, twice in one script (`~/.claude/statusline-command.sh`):
+`date -d ... '+%a'` returned `"Ma"` (Marți, Tuesday) instead of `"Tue"`, and
+`awk '{printf "%.2f",
+c}'` rendered `1,23` instead of `1.23`. Both were caught only by piping real
+output through `xxd`/ `cat -A` and reading the literal bytes — a rendered terminal glyph or a quick
+glance at "does this look like a number" would not have caught either.
+
+**How to apply:** in any bash script (on this machine specifically) that calls `date` with a
+locale-sensitive format specifier (`%a`, `%A`, `%b`, `%B`, ...) or `awk`/`printf` with a decimal
+format (`%f`, `%.Nf`), force the C locale explicitly — `LC_TIME=C date ...` or
+`LC_NUMERIC=C awk
+...` — rather than relying on the ambient locale. Don't assume "the terminal looks
+fine" is proof of correct output — same underlying lesson as "Verify what actually happened, not
+what output looks like" above, applied to locale instead of exit codes.
 
 ## Concurrent sessions: check before assuming ownership of unexpected state
 
