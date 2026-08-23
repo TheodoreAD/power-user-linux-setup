@@ -456,6 +456,15 @@ implementing it; a bug fix discovered mid-implementation folded into the commit 
 correct behavior (not committed broken-then-fixed); an unrelated incidental fix (see next section)
 as its own tiny commit rather than bundled into unrelated work.
 
+**Granularity itself is already settled — never offer it as a question.** Needing permission to
+commit at all (the harness's own "commit only when asked" default) is a separate thing from _how_ to
+split once committing is authorized; asking "want this split into three commits?" conflates the two
+and re-litigates a decision already made here. Ask only whether to commit, then split as a matter of
+course. Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a
+general rule") after exactly that conflated question — the second time this rule has needed
+restating, which is the signal it was being treated as a per-task preference rather than a standing
+one.
+
 ## Keep incidental lint/formatting fixes a quality gate surfaces
 
 When running a repo's own precommit/format/lint gate as part of unrelated work surfaces a formatting
