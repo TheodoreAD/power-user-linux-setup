@@ -30,6 +30,16 @@ just `from repo_tasks import ns`, resolved from whatever `inv` is on `PATH`. If 
 the symlink, that import fails in _every_ repo at once, and the traceback points at the repo's own
 `tasks.py` rather than at the machine's tool state — which is where the actual problem is.
 
+**Sibling failure mode, same symptom, different mechanism.**
+`plans/2026-08-23-cross-directory-command-execution.md` found the other half of this independently
+the same day: invoke resolves `tasks.py` by walking up from **cwd**, regardless of which binary
+runs, so running `inv` against another repo silently collects the _calling_ repo's tasks. The two
+compose — **cwd decides which `tasks.py` is found; the binary decides whether that `tasks.py` can
+import `repo_tasks`** — and both fail silently, which is why either one alone is easy to misdiagnose
+as the other. Relevant to this plan's `repo-tasks.doctor` idea below: a check that reports only the
+shadowing case would still leave the cwd half undiagnosed, and the two are hard to tell apart from
+the symptom.
+
 Found live 2026-08-23, from the other direction: this machine had `invoke` v3.0.3 installed
 standalone and **no `repo-tasks` tool at all**, despite `setup.toml`'s default preferring it. Every
 family repo that appeared to work was working only because it carried `repo-tasks` in its own dev
