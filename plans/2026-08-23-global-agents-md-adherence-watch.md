@@ -27,3 +27,44 @@ and the caveman register.]
   Never revert the cluster structure for a single rule's miss.
 - Close as `landed` once a handful of sessions pass with no rule regressions; a clean watch leaves
   nothing to migrate.
+
+## Observed misses
+
+### Session 1 — `repo-tasks`, 2026-08-24 (long implementation session)
+
+Four misses, all mine, all in the two clusters this watch flagged as highest-value. None caused
+lasting damage; each cost a detour, and three were caught only because a later step happened to
+surface them.
+
+1. **Verification — truncated my own search output and treated it as complete.** Ran a
+   `rg ... | head -20` to find every reference to a directory being moved, acted on the visible
+   subset, and missed a file. It failed a test one step later. Then repeated the same shape a second
+   time in the same session. `### Generalizing from a sample to a set` covers sampling _files_; it
+   does not name the case where the sample is the tail of your own truncated output. That is the
+   concrete tell worth adding — `| head` on a search whose purpose is completeness is the
+   anti-pattern, and `rg -c` or a bare count first is the cheap check.
+
+2. **Verification — verified commits against the wrong source.** Checked out three commits in a
+   worktree and ran their tests, but the venv's _editable install_ resolves the package to the main
+   working tree, so every run tested current code rather than the checkout. Produced one false pass
+   and one false fail before I noticed. `PYTHONPATH=<worktree>/src` fixed it. The rule's existing
+   framing ("clean stdout is not proof") did fire eventually; what was missing is that a _green test
+   run_ is also not proof when the import path is not what you assume.
+
+3. **Git — `git commit` commits the index, not the files just named.** Staged a specific file list
+   for one commit while `git mv` renames sat in the index from earlier, so the renames landed in the
+   wrong commit and a later commit was left referencing a module it did not yet contain. Unwound
+   with `reset --soft` and restaged. Nothing in the git cluster states this; it is arguably plain
+   git literacy rather than a rule gap.
+
+4. **Quality gate — committed a plan edit without re-running it.** Pushed a dprint-unformatted
+   markdown file to `main`; CI would have failed. Both `plan-docs` and `session-harvest` state this
+   explicitly ("Markdown is not exempt"), and it is the single most common CI-failure cause recorded
+   across these repos. So: not a rule-wording gap, a rule-adherence gap — the strongest signal in
+   this batch, because the rule is already as explicit as it can be.
+
+[NEEDS CLARIFICATION: which of these justify re-expanding wording? (1) has a genuinely missing
+concrete tell and looks worth adding to `### Generalizing from a sample to a set`. (2) is a real
+addition to the same cluster. (3) may be out of scope for a personal rules file. (4) argues for
+something other than wording — the rule is already explicit and was still missed, which is what
+`plans/2026-08-23-git-hooks-for-quality-gate.md` exists to make structural.]

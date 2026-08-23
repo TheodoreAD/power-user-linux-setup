@@ -78,8 +78,10 @@ Three rules:
 2. **Community conventions beat the rule.** Where a CLI convention already owns a name — `status`,
    `list`, `version`, `check`, `diff` — keep it. `inv gnome.status` is what a reader's instinct
    reaches for; `gnome.show-status` would be consistent and worse.
-3. **Some namespaces are themselves the action** (`setup`, `verify`, `clean`, `deploy`). There the
-   leaf names the scope or object instead: `verify.all`, `clean.caches`, `deploy.all`.
+3. **Some namespaces are themselves the action** (`setup`, `verify`, `clean`, `deploy`, `test`).
+   There the leaf names the scope or object instead: `verify.all`, `clean.caches`, `deploy.all`,
+   `test.unit`. This is the stated exception to "the namespace is the subject" above, not a
+   violation of it — read a summary of rule 1 without this rule and `test.unit` looks inverted.
 
 The Python function name is the CLI name with underscores (invoke derives one from the other), and
 `tasks/setup.py`/`tasks/wsl.py` reference task functions directly in their phase lists — so renaming
