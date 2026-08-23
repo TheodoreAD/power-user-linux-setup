@@ -508,3 +508,38 @@ freshly-set-up install) — this was a preference call, not a fix.
 - **Truncated trees (`max_nodes` exceeded) are flagged but not resolved automatically.** `status`
   and `review` surface a `truncated` marker; raising `max_nodes` for that specific tool in
   `tools.toml` and re-extracting is a manual follow-up, not something the pipeline does on its own.
+
+## `sed` — deliberately unreviewed, hand-maintained rules instead
+
+`sed` is `no_subcommands` — one classification unit (`"*"` node), `write`, because of `-i`. Since
+per-flag ratings don't drive `render`/`apply` (see above), that single `write` verdict became a
+blanket `Bash(sed:*)` `ask` rule that gated every sed invocation, including plain `sed -n` reads —
+confirmed as real friction (2026-08-23): every actual `sed` call Claude Code has ever issued on this
+machine, across every project, is a `sed -n '<range>p' <file>` view (zero `-i` calls — the Edit tool
+preference already works for mutation; the friction was entirely on the view side).
+
+Fixed by taking `sed` out of the generated pipeline rather than trying to make `render` express
+"allow this flag, not that one" (still structurally impossible, per the per-flag-ratings note
+above): `cli-allowlist/rules/sed.json` has `"reviewed": false` set by hand, so `render`/`apply` skip
+it entirely (same as any other never-reviewed tool) and the old blanket `Bash(sed:*)` `ask` rule was
+cleanly removed by a normal `apply` run's manifest-based diff — no hand-editing of `settings.json`
+needed for the removal itself. Three rules are then hand-maintained directly in
+`~/.claude/settings.json`, outside the generated/reviewed flow:
+
+- `Bash(sed -n *)` — `allow`. Covers the actual real-world usage shape. Deliberately requires `-n`
+  as the leading token: `Bash(sed -n *)`'s trailing-wildcard word boundary means it does **not**
+  match a combined `-ni`/`-in` invocation (mutates while filtering) — that falls through to no rule
+  at all, i.e. still prompts, which is the safe default. Known, accepted residual gap: a prefix-glob
+  rule can't see into the script argument's content, so a hostile `sed -n` script using GNU sed's
+  `w` command or `e`/`s///e` extensions to write files or run shell commands would still match this
+  allow rule — same class of gap the permissions doc's own `curl` example warns about. Accepted as a
+  low-probability trade-off for real day-to-day friction, not an oversight.
+- `Bash(sed -i*)` and `Bash(sed --in-place*)` — `ask`, added explicitly (not just left to fall
+  through to "no rule") so mutation stays visibly, deliberately gated rather than relying on
+  whatever Claude Code's own undocumented default happens to do for an ungoverned `sed` invocation.
+
+**Do not re-review `sed` via `inv allowlist.review` without deliberately deciding to** — marking it
+reviewed again would let the next `apply` regenerate the blanket `Bash(sed:*)` `ask` rule (sed's
+node classification itself hasn't changed, only whether the pipeline is allowed to act on it), which
+would silently shadow the hand-maintained `Bash(sed -n *)` allow rule via the same no-specificity-
+tiebreak precedence documented above.
