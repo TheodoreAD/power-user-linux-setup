@@ -354,6 +354,39 @@ None of these were hypothetical hardening — each was caught by actually runnin
 six tools and checking `help-cache` node keys against `rules` node keys for gaps, not by reading the
 code and assuming it was right.
 
+### Two things tool upgrades break, neither of which announces itself
+
+Found 2026-08-23 while committing a batch of regenerated artifacts after several tools had been
+upgraded (`dprint` 0.54.0 → 0.56.1, `twine` 6.2.0 → 7.0.0, `zensical` 0.0.44 → 0.0.56, `nuitka`
+4.1.2 → 4.1.3, `mkdocs` rebuilt against a new Python). Both are upgrade-triggered, so neither shows
+up in the one-tool-at-a-time development loop.
+
+1. **A `STALE` flag that doing exactly what it asks could never clear.** `status` calls a tool stale
+   by comparing the installed version against the `version` field in its rule entry, but `classify`
+   only wrote that entry when at least one node's help text had actually changed — the
+   `not to_classify and not new_invalid` path returned before `_save_rule`. An upgrade whose
+   `--help` is byte-identical (a patch release; or `mkdocs --version`, which merely names the Python
+   path it was installed against) therefore left the tool flagged `STALE` permanently: re-extract
+   and re-classify are what `STALE` asks for, both had been run, and neither could clear it.
+   `mkdocs`, `nuitka` and `zensical` were all sitting in that state. The cost isn't the flag itself
+   — it's that a flag which survives doing what it asks is one you learn to skip past, which defeats
+   the only signal `status` has for "this tool actually needs attention". Fixed with
+   `_version_only_refresh`: on that path, persist `version`/`extracted_at` and nothing else.
+   `nodes`, `reviewed` and `classified_at` deliberately stay put — identical help text means the
+   existing classification genuinely does describe the new version, so resetting `reviewed` would
+   send a human to the gate to approve a diff that doesn't exist, which is how a gate stops being
+   taken seriously. Split into its own helper rather than left inline so it's unit-testable like the
+   rest of the module.
+2. **Hand-pinned `subcommands` lists don't track upstream renames, and the extractor hides it.**
+   `dprint` 0.56 renamed `output-file-paths` to `file-paths` (and `output-resolved-config` /
+   `output-format-times` likewise, neither of which is tracked here). Nothing failed: the old name
+   is still accepted as an alias, so `extract` re-fetched help under the pinned key and got back
+   text whose usage line already read `Usage: dprint file-paths`. The rule therefore covered a
+   deprecated spelling while the canonical name had no rule at all and would prompt. A version bump
+   is not evidence the pinned list still matches reality — the help text itself is, and the mismatch
+   is only visible by reading it. Worth re-reading pinned `subcommands` lists against the
+   re-extracted `_top` help whenever a tool takes a minor-version bump, not just a major one.
+
 ### Review — the human gate
 
 `inv allowlist.review` shows what's new or changed since the last reviewed snapshot — printed as an
