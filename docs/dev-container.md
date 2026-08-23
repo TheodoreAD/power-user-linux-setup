@@ -199,13 +199,14 @@ to go looking for it.
 Convention, not a hand-written test per package: the default check is
 `<check_cmd or table-key>
 --version`, with existence checks (no invocation) for methods that install
-something with no command by nature — `git-clone`/`wrapper-script`/`apparmor-profile` dest/profile
-paths. `gnome-extension` always skips, since no automated path (not even `inv setup`) ever calls
-`inv gnome.extensions` — see `tasks/gnome.py`, GNOME sessions are never touched programmatically in
-this repo. Per-package `setup.toml` fields override the convention: `verify_cmd` for a different
-invocation, `verify = false` for "no functional check is possible at all." No fallback chain
-anywhere — the first failure aborts `inv setup` immediately, deliberately the opposite of `apt.py`'s
-`warn=True`-and-continue pattern.
+something with no command by nature — `git-clone`/`apparmor-profile` dest/profile paths, and a
+byte-exact content comparison against `content_file` for `wrapper-script` (existence alone doesn't
+catch a deploy that landed stale or hand-edited content). `gnome-extension` always skips, since no
+automated path (not even `inv setup`) ever calls `inv gnome.extensions` — see `tasks/gnome.py`,
+GNOME sessions are never touched programmatically in this repo. Per-package `setup.toml` fields
+override the convention: `verify_cmd` for a different invocation, `verify = false` for "no
+functional check is possible at all." No fallback chain anywhere — the first failure aborts
+`inv setup` immediately, deliberately the opposite of `apt.py`'s `warn=True`-and-continue pattern.
 
 Auditing this against a real, fully-provisioned machine (not just reading the code) surfaced real
 bugs the convention alone wouldn't have predicted:

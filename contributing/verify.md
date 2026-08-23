@@ -56,6 +56,19 @@ the same path (`dest`/`dest`/`profile`) the install-time "already installed" che
 never an invocation. This is strictly weaker evidence than actually running something, but it's the
 only _safe_ default for methods whose installed artifact isn't meant to be run standalone.
 
+**`wrapper-script` was later strengthened from existence to content comparison** (2026-08-23):
+existence alone doesn't catch a deploy that landed stale or hand-edited content, only that
+_something_ is at `dest`. Confirmed as a real gap, not theoretical, the same session it was fixed —
+manually diffing `~/AGENTS.md` against `config/global-AGENTS.md` twice to confirm a redeploy
+actually took (once after a fresh write, once again after `dprint` reflowed the source) is exactly
+the kind of check an agent shouldn't need to do by hand. Every `wrapper-script` entry in
+`setup.toml` declares `content_file` (no inline-`content` variant is actually in use), so
+`_resolve_wrapper_script` (`tasks/verify.py`) compares `dest`'s actual bytes against `content_file`
+run through the same `.strip() + "\n"` transform `_install_wrapper_script` applies before writing —
+still safe, since reading a file's content and diffing it is not the same risk class as invoking it.
+Falls back to the old existence-only check if a future entry ever omits `content_file`, rather than
+erroring.
+
 ### `gnome-extension` needed a different fix entirely: always skip
 
 Originally these defaulted to a read-only `gnome-extensions list | grep -qF <uuid>` check — safe (no

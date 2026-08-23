@@ -4,6 +4,8 @@ from invoke import task
 
 from . import util
 
+_REPO_ROOT = Path(__file__).parent.parent
+
 # Hard ceiling on any single check, via coreutils `timeout` — not a fallback/retry, just a bound
 # on the one attempt. Necessary in practice, not just in theory: auditing this task against a real
 # machine hung the whole session when it hit `nyancat --version` — nyancat ignores unrecognized
@@ -32,9 +34,35 @@ _INVOKABLE = {
 # background proxy, not run standalone and re-entered as a health check.
 _PATH_ONLY = {
     util.PackageMethod.GIT_CLONE: "dest",
-    util.PackageMethod.WRAPPER_SCRIPT: "dest",
     util.PackageMethod.APPARMOR_PROFILE: "profile",
 }
+
+_CONTENT_SEP = "||"  # joins dest/content_file in a "content" check's target — no repo path uses it
+
+
+def _wrapper_script_expected(content_file: str) -> str:
+    """Same transform `tasks/tools.py`'s `_install_wrapper_script` applies before writing —
+    duplicated rather than imported to avoid a verify->tools import for one string transform;
+    diverging would just mean this check stops meaning anything, so keep the two in sync by hand
+    if `_install_wrapper_script` ever changes it."""
+    return (_REPO_ROOT / content_file).read_text().strip() + "\n"
+
+
+def _wrapper_script_up_to_date(dest: str, content_file: str) -> bool:
+    dest_path = Path(dest).expanduser()
+    return dest_path.exists() and dest_path.read_text() == _wrapper_script_expected(content_file)
+
+
+def _resolve_wrapper_script(cfg: dict) -> tuple[str, str]:
+    """Existence alone doesn't catch a deploy that landed stale/partial/hand-edited content —
+    confirmed as a real gap, not theoretical: this session needed a manual diff twice to confirm
+    ~/AGENTS.md actually matched config/global-AGENTS.md after a redeploy, exactly what this check
+    exists to make unnecessary. Every wrapper-script package currently declares content_file (no
+    inline-`content` variant is actually in use), but fall back to existence-only for a
+    hypothetical future one that doesn't, rather than erroring."""
+    if content_file := cfg.get("content_file"):
+        return "content", f"{cfg['dest']}{_CONTENT_SEP}{content_file}"
+    return "path", cfg["dest"]
 
 
 def _resolve(name: str, cfg: dict, method: util.PackageMethod) -> tuple[str, str]:
@@ -56,6 +84,9 @@ def _resolve(name: str, cfg: dict, method: util.PackageMethod) -> tuple[str, str
         if (check_path := cfg.get("check_path")) and not cfg.get("check_cmd"):
             return "path", check_path
         return "cmd", f"{cfg.get('check_cmd', name)} --version"
+
+    if method == util.PackageMethod.WRAPPER_SCRIPT:
+        return _resolve_wrapper_script(cfg)
 
     if method in _PATH_ONLY:
         return "path", cfg[_PATH_ONLY[method]]
@@ -100,7 +131,9 @@ def _all_checks() -> list[tuple[str, str, str]]:
 def all(c):  # noqa: A001, C901
     """Prove every package this run installed actually works, not just that it's present.
     Convention-based: default check is `<check_cmd or name> --version` for invocable methods,
-    existence for methods with no command by nature (git-clone/wrapper-script/apparmor-profile).
+    existence for methods with no command by nature (git-clone/apparmor-profile), and a byte-exact
+    content comparison against `content_file` for wrapper-script — existence alone doesn't catch a
+    deploy that landed stale/partial/hand-edited content, only that something is there.
     gnome-extension always skips (inv setup never installs extensions — see tasks/gnome.py).
     Override per package in setup.toml with `verify_cmd` (different invocation) or
     `verify = false` (no functional check is possible at all). No fallback chain — first failure
@@ -117,6 +150,9 @@ def all(c):  # noqa: A001, C901
                 print(f"[verify] {name}: skipped")
             elif kind == "path":
                 print(f"[verify] {name}: {util.ok_label(Path(target).expanduser().exists())}")
+            elif kind == "content":
+                dest, content_file = target.split(_CONTENT_SEP, 1)
+                print(f"[verify] {name}: {util.ok_label(_wrapper_script_up_to_date(dest, content_file))}")
             elif kind == "cmd":
                 print(f"[verify] {name}: {util.ok_label(util.command_exists(target.split()[0]))}")
             else:
@@ -129,6 +165,11 @@ def all(c):  # noqa: A001, C901
         elif kind == "path":
             if not Path(target).expanduser().exists():
                 raise RuntimeError(f"[verify] {name}: {target} not found")
+            print(f"[verify] {name}: ok")
+        elif kind == "content":
+            dest, content_file = target.split(_CONTENT_SEP, 1)
+            if not _wrapper_script_up_to_date(dest, content_file):
+                raise RuntimeError(f"[verify] {name}: {dest} doesn't match {content_file} — redeploy needed")
             print(f"[verify] {name}: ok")
         elif kind == "cmd":
             c.run(f"timeout {_TIMEOUT_SECS}s {target}", hide=True)
