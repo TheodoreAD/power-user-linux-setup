@@ -1,6 +1,6 @@
 {
   "classified_at": "2026-08-09T16:59:33Z",
-  "extracted_at": "2026-08-09T16:46:57Z",
+  "extracted_at": "2026-08-23T12:43:05Z",
   "nodes": {
     "build": {
       "classification": "write",
@@ -22,5 +22,5 @@
   "reviewed": true,
   "reviewed_at": "2026-08-09T18:35:33Z",
   "truncated": false,
-  "version": "0.0.44"
+  "version": "0.0.56"
 }

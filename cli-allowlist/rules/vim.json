@@ -1,10 +1,10 @@
 {
-  "classified_at": "2026-08-10T15:38:02Z",
-  "extracted_at": "2026-08-09T23:06:14Z",
+  "classified_at": "2026-08-23T12:48:47Z",
+  "extracted_at": "2026-08-23T12:46:27Z",
   "nodes": {},
   "note": "interactive-only TUI, no non-interactive command surface to classify",
   "reviewed": true,
-  "reviewed_at": "2026-08-10T15:38:02Z",
+  "reviewed_at": "2026-08-23T12:48:47Z",
   "truncated": false,
   "version": null
 }

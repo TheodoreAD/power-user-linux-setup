@@ -1,23 +1,26 @@
 {
-  "extracted_at": "2026-08-09T23:06:14Z",
+  "extracted_at": "2026-08-23T12:43:05Z",
   "interactive": false,
   "nodes": {
     "_top": {
       "children": [],
       "content_hash": "9bc7707db63e805f",
-      "help_text": "Usage: zensical [OPTIONS] COMMAND [ARGS]...\n\n  Zensical - A modern static site generator.\n\nOptions:\n  --version  Show the version and exit.\n  --help     Show this message and exit.\n\nCommands:\n  build  Build a project.\n  new    Create a new template project in the current or given directory.\n  serve  Build and serve a project."
+      "help_text": "Usage: zensical [OPTIONS] COMMAND [ARGS]...\n\n  Zensical - A modern static site generator.\n\nOptions:\n  --version  Show the version and exit.\n  --help     Show this message and exit.\n\nCommands:\n  build  Build a project.\n  new    Create a new template project in the current or given directory.\n  serve  Build and serve a project.",
+      "likely_invalid": false
     },
     "build": {
       "children": [],
       "content_hash": "923fb0bcd35776c9",
-      "help_text": "Usage: zensical build [OPTIONS]\n\n  Build a project.\n\nOptions:\n  -f, --config-file PATH  Path to config file.\n  -c, --clean             Clean cache.\n  -s, --strict            Enable strict mode - abort the build on warnings.\n  --help                  Show this message and exit."
+      "help_text": "Usage: zensical build [OPTIONS]\n\n  Build a project.\n\nOptions:\n  -f, --config-file PATH  Path to config file.\n  -c, --clean             Clean cache.\n  -s, --strict            Enable strict mode - abort the build on warnings.\n  --help                  Show this message and exit.",
+      "likely_invalid": false
     },
     "serve": {
       "children": [],
       "content_hash": "1eb32fd6843c3605",
-      "help_text": "Usage: zensical serve [OPTIONS]\n\n  Build and serve a project.\n\nOptions:\n  -f, --config-file PATH    Path to config file.\n  -a, --dev-addr <IP:PORT>  IP address and port (default: localhost:8000).\n  -o, --open                Open preview in default browser.\n  -s, --strict              Strict mode (currently unsupported).\n  --help                    Show this message and exit."
+      "help_text": "Usage: zensical serve [OPTIONS]\n\n  Build and serve a project.\n\nOptions:\n  -f, --config-file PATH    Path to config file.\n  -a, --dev-addr <IP:PORT>  IP address and port (default: localhost:8000).\n  -o, --open                Open preview in default browser.\n  -s, --strict              Strict mode (currently unsupported).\n  --help                    Show this message and exit.",
+      "likely_invalid": false
     }
   },
   "truncated": false,
-  "version": "0.0.44"
+  "version": "0.0.56"
 }
