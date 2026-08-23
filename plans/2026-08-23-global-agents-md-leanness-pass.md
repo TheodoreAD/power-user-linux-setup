@@ -1,7 +1,21 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-08-23
 ---
+
+## Migrated to
+
+- **The deliverable**: `config/global-AGENTS.md`, restructured across this plan's commit series
+  (pilot `2564a07`..close) and deployed to `~/AGENTS.md`.
+- **Evidence per rule, admission criteria, the design rationale/research summary (with every
+  citation), and the two re-measure commands**: `contributing/global-agents-md.md` — sections
+  "Admitting a new rule", "Why the deployed file is shaped this way", "Re-measuring the deployed
+  file", plus one evidence section per rule.
+- **The one UNVERIFIED (live adherence over following sessions)**:
+  `plans/2026-08-23-global-agents-md-adherence-watch.md`, a small follow-up watch.
+- Deliberately not migrated: the per-section measurement tables and cluster mapping (superseded by
+  the landed shape; this file's git history records them), and the candidate-admission narratives
+  (resolved as DECISION tags below, outcomes visible in the two files above).
 
 ## Progress
 
@@ -26,11 +40,8 @@ live-with-it window), terminology pass done, redeployed:
   (skills-over-enforcement, parked by a concurrent session mid-conversion) admitted as its own rule,
   `### Proposing an enforcement mechanism for agent behavior` — 30 rules total.
 
-[UNVERIFIED: verification item 5 — live adherence over the following sessions. Do the converted
-rules (git/commit especially, now also allowlist/research/verification) still fire from the
-compressed trigger+rule form? This is the only thing keeping this plan from `landed`; regression
-here outweighs the size win and would mean re-expanding the affected rule, not reverting the
-structure.]
+Verification item 5 (live adherence over the following sessions) is deferred to
+`plans/2026-08-23-global-agents-md-adherence-watch.md`, which carries its UNVERIFIED tag.
 
 ### Earlier the same day — sequencing steps 1–2:
 
