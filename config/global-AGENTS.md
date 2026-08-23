@@ -296,60 +296,37 @@ treat "implement and document..." as clear approval to exit plan mode and execut
 including state-changing commands — the caution is about not editing ahead of an agreed plan, not
 about avoiding real system changes once a plan is approved.
 
-## Verify what actually happened, not what output looks like
+## Verification
 
-A command's stdout looking clean is not proof it exited zero — always check the real exit code
-directly (`command; echo $?`, or redirect to a file first if a pipe is needed for readability, then
-check `$?` in a separate unpiped step). `tail`/`grep` in a pipeline return _their own_ exit code,
-not the upstream command's, so `$?` right after a piped command never reflects the real failure.
-Confirmed concretely: `basedpyright` hard-errors (exit 3) on a config error while still printing a
-clean `"0 errors, N warnings, 0 notes"` summary line — a real regression across three repos went
-unnoticed for a stretch of a session because every check was read via `... | tail -N`. Assume any
-CLI's "clean summary text" and "process exit code" can disagree until verified otherwise.
+### Reading a command's result
 
-Sampling one file and generalizing to a set is the same failure one scale up — a clean-looking
-sample is not evidence about its siblings, and "they're all the same kind of file" is not evidence
-either. `--stat`'s per-file line counts are the cheap tell: when they disagree, read the outliers,
-not the representative-looking one. Confirmed live 2026-08-23: nine modified `cli-allowlist` files
-were reported as "timestamp-only churn" after reading one of them (`vim.json`) in full; five carried
-real upstream version bumps (`dprint` 0.54.0 → 0.56.1, `twine` 6.2.0 → 7.0.0, and three more), and
-`--stat` had already shown 27 changed lines against `vim.json`'s 6. Harmless that time because the
-conclusion was only "leave it alone" — the identical reasoning behind a discard would have thrown
-away real data.
+Clean-looking stdout is not proof of success — check the real exit code (`command; echo $?`, or
+redirect to a file and check `$?` in a separate unpiped step). A piped `tail`/`grep` returns _its
+own_ exit code, so `$?` after a pipeline never reflects the upstream failure. Assume a CLI's clean
+summary text and its exit code can disagree until verified otherwise.
 
-Once a repo has real test coverage (or a trivial addition would cover it), verify behavior by
-running the test suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in
-`/tmp`, etc.) — even for a quick "let me just check this" moment. Check whether an existing test (or
-a trivial addition to one) already covers what's being checked before reaching for a throwaway
-script. Genuinely exploratory prototyping that has no natural home in the test suite yet (confirming
-a brand-new, unproven mechanism works at all) is legitimate throwaway exploration, done deliberately
-outside the real repo — but "slow" or "needs the network" is _not_ a valid reason to fall back to a
-script for something that already has, or trivially could have, real test coverage; write it as a
-real, clearly-labeled test instead (marked/skipped from the fast default suite if genuinely slow,
-per that repo's own convention for that).
+### Generalizing from a sample to a set
 
-## This machine's locale silently breaks `date`/`awk` formatting in shell scripts
+A clean-looking sample is not evidence about its siblings, and "they're all the same kind of file"
+is not evidence either. `--stat`'s per-file line counts are the cheap tell: when they disagree,
+read the outliers, not the representative-looking one.
 
-This machine's `LC_TIME` and `LC_NUMERIC` default to `ro_RO.UTF-8` (while `LANG`/`LC_MESSAGES` stay
-`en_US.UTF-8` — a mixed locale, not a uniformly non-English one). Any bash script that formats a
-date or a decimal number without forcing the C locale can silently emit Romanian-locale output
-instead of the expected English/period-decimal form — with no error, so it passes a casual glance
-and only shows up on close inspection of the actual bytes.
+### Verifying behavior in a repo with test coverage
 
-**Confirmed concretely** 2026-08-23, twice in one script (`~/.claude/statusline-command.sh`):
-`date -d ... '+%a'` returned `"Ma"` (Marți, Tuesday) instead of `"Tue"`, and
-`awk '{printf "%.2f",
-c}'` rendered `1,23` instead of `1.23`. Both were caught only by piping real
-output through `xxd`/ `cat -A` and reading the literal bytes — a rendered terminal glyph or a quick
-glance at "does this look like a number" would not have caught either.
+Run the test suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in `/tmp`)
+— check whether an existing test, or a trivial addition to one, already covers it. "Slow" or "needs
+the network" is not a reason to fall back to a throwaway script: write a real, clearly-labeled test
+instead (marked/skipped from the fast default suite per that repo's convention). Genuinely
+exploratory prototyping with no natural home in the suite yet stays legitimate, done deliberately
+outside the real repo.
 
-**How to apply:** in any bash script (on this machine specifically) that calls `date` with a
-locale-sensitive format specifier (`%a`, `%A`, `%b`, `%B`, ...) or `awk`/`printf` with a decimal
-format (`%f`, `%.Nf`), force the C locale explicitly — `LC_TIME=C date ...` or
-`LC_NUMERIC=C awk
-...` — rather than relying on the ambient locale. Don't assume "the terminal looks
-fine" is proof of correct output — same underlying lesson as "Verify what actually happened, not
-what output looks like" above, applied to locale instead of exit codes.
+### Formatting a date or decimal in a shell script
+
+This machine's `LC_TIME`/`LC_NUMERIC` default to `ro_RO.UTF-8` (mixed locale — `LANG`/`LC_MESSAGES`
+stay `en_US.UTF-8`), so `date` with a locale-sensitive specifier (`%a`, `%b`, ...) or
+`awk`/`printf` with a decimal format silently emits Romanian-locale output. Force the C locale —
+`LC_TIME=C date ...`, `LC_NUMERIC=C awk ...`. "The terminal looks fine" is not proof — verify the
+actual bytes.
 
 ## Genuine pushback is a standing invitation, not a courtesy
 

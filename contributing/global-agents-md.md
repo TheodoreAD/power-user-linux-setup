@@ -53,8 +53,9 @@ admission gate for the candidates that taxonomy routes here.
 - [Research before asking](#research-before-asking)
 - [Pilot before generalizing](#pilot-before-generalizing)
 - [Naming collisions](#naming-collisions)
-- [Verify what actually happened](#verify-what-actually-happened)
-- [This machine's locale breaks `date`/`awk` formatting](#this-machines-locale-breaks-dateawk-formatting)
+- [Reading a command's result](#reading-a-commands-result)
+- [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
+- [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
 - [Committing multi-part work](#committing-multi-part-work)
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
 - [Flag apparent typos and mental slips](#flag-apparent-typos-and-mental-slips)
@@ -202,21 +203,23 @@ The originating incident: "pulse-setup" was proposed to disambiguate a `~/.confi
 PulseAudio; the full canonical name "power-user-linux-setup" was the right answer — a short alias
 that half-repeats the disambiguating word reads as awkward rather than clean.
 
-## Verify what actually happened
+## Reading a command's result
 
-Exit codes: `basedpyright` hard-errors (exit 3) on a config error while still printing a clean
+`basedpyright` hard-errors (exit 3) on a config error while still printing a clean
 `"0 errors, N warnings, 0 notes"` summary line — a real regression across three repos went unnoticed
 for a stretch of a session because every check was read via `... | tail -N`, and `tail`/`grep` in a
 pipeline return their own exit code, not the upstream command's.
 
-Sampling: confirmed live 2026-08-23 — nine modified `cli-allowlist` files were reported as
+## Generalizing from a sample to a set
+
+Confirmed live 2026-08-23 — nine modified `cli-allowlist` files were reported as
 "timestamp-only churn" after reading one of them (`vim.json`) in full; five carried real upstream
 version bumps (`dprint` 0.54.0 → 0.56.1, `twine` 6.2.0 → 7.0.0, and three more), and `--stat` had
 already shown 27 changed lines against `vim.json`'s 6. Harmless that time only because the
 conclusion was "leave it alone" — the identical reasoning behind a discard would have thrown away
 real data.
 
-## This machine's locale breaks `date`/`awk` formatting
+## Formatting a date or decimal in a shell script
 
 Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-command.sh`):
 `date -d ... '+%a'` returned `"Ma"` (Marți, Tuesday) instead of `"Tue"`, and
