@@ -1,282 +1,383 @@
 ---
-status: idea
-updated: 2026-08-23
+status: planned
+updated: 2026-08-24
 ---
+
+# One way to write a file into `~`
 
 ## Context
 
-**Required reading before picking this up:**
-`plans/2026-08-22-memory-to-agents-md-migration-sweep.md` — its "Recommended direction" item 1
-("Deployed-vs-source drift guard for `~/AGENTS.md`... mechanical, no LLM needed") and its second
-finding (`~/AGENTS.md` found drifted from `config/global-AGENTS.md` _twice_ in one session — once
-from a same-session hand-edit to the deployed file, once from an older, pre-existing drift nobody
-had caught) are this plan's direct origin. This plan exists to work that open item into concrete,
-comparable designs rather than leaving it as a single bullet.
+**Origin.** `plans/2026-08-22-memory-to-agents-md-migration-sweep.md` — its "Recommended direction"
+item 1 ("Deployed-vs-source drift guard for `~/AGENTS.md`... mechanical, no LLM needed") and its
+finding that `~/AGENTS.md` was found drifted from `config/global-AGENTS.md` _twice_ in one session
+(once a same-session hand-edit to the deployed file, once older pre-existing drift nobody had
+caught). A third, independent instance the same day, in an unrelated `scaffoldapy` session: a rule
+added to the deployed `~/AGENTS.md` via the Edit tool, which the next `inv tools.install` would have
+silently wiped, caught only by chance.
 
-A second, independent live instance of the same failure happened in a separate session the same day
-(a `scaffoldapy`-focused Claude Code session, unrelated to the memory-sweep work): a rule got added
-to the deployed `~/AGENTS.md` directly via the Edit tool, and would have been silently lost on the
-next `inv tools.install` had it not been caught by chance. Two independent sessions hitting the same
-failure mode on the same day is real signal, not a hypothetical.
+**Reframing, 2026-08-24.** This plan previously offered four comparable approaches (A: a real-time
+`PostToolUse` hook nagging the agent; B: a mechanical check in `inv verify.all`; C: a pre-push git
+hook; D: A+B). That framing treated the problem as _detection at a distance_ — catch the edit before
+the next install destroys it. The user's reframing, which this rewrite adopts wholesale, is that the
+problem is the **writer**: PULSE decides to overwrite a file in `~` without ever establishing
+whether it put the current content there. Fix the writer so it cannot silently destroy, and the loss
+window closes — nothing is lost, only deferred until a human sees a diff and decides. Detection at a
+distance becomes a nice-to-have, not the mechanism.
 
-**Deployment mechanics** (grounding facts, not to be re-derived by whoever picks this up):
+The second half of the reframing: **there are too many ways to write into `~`.** That is measurably
+true (inventory below), and any design that adds a fifth writer — Approach A's hook plus its own
+`guard-map.json` would have been exactly that — makes the underlying problem worse while patching
+one symptom of it.
 
-- `~/AGENTS.md` (+ `~/.claude/CLAUDE.md` symlinked to it) deploys from `config/global-AGENTS.md` via
-  `tasks/tools.py:_install_wrapper_script`, the generic `wrapper-script` method every `[packages.*]`
-  entry with a `content_file` uses (`askpass-zenity`, etc.) — a **plain copy**,
-  `dest.write_text(content)`, not a symlink.
-- Skills under `~/.agents/skills/<name>/` deploy from `skills/<name>/` via
-  `tasks/ai.py:_install_local_skill` — also a **plain copy** (`shutil.copytree`), with a
-  `.pulse-source` marker file (`_SKILL_MARKER = ".pulse-source"`) recording the `repo_path` that
-  installed it, so re-runs can tell "ours" from "foreign."
-- Both are **deliberately** copies, not symlinks — skills used to be symlinked and were
-  intentionally switched to copying (to match the npx-sourced remote-skill installer's own copy
-  behavior and keep local/remote skills symmetric; see the comment above `_install_local_skill`).
-  Any drift-guard design needs to work with copy-based deployment as a fixed constraint, not propose
-  reverting it.
-- State-dir convention already exists for exactly this kind of generated/tracked metadata:
-  `tasks/util.py:PULSE_STATE_DIR` (`~/.local/state/power-user-linux-setup`), already home to
-  `_STATIC_PERMS_MANIFEST` in `tasks/ai.py`.
-- `tasks/util.py:load_claude_settings()`/`write_claude_settings()` already do generic, backed-up
-  read/write of the global `~/.claude/settings.json` (used by `ai.py`/`allowlist.py`) — reuse rather
-  than re-deriving JSON I/O, for any approach that touches Claude Code hook config.
-- `tasks/verify.py` currently verifies `wrapper-script` packages generically, by `dest` existence
-  only (`_PATH_ONLY`) — it does not currently check deployed content against repo source at all.
-- **There is a _third_ deployment mechanism this plan's scope originally missed: `config_files`.**
-  Any `[packages.*]` entry, whatever its `method`, may declare
-  `config_files = [{ src = "config/<file>", dst = "~/..." }]` — currently `wezterm` and
-  `terminator`. Applied by `tasks/apt.py:_apply_config_files`, called from `apt.base` and both deb
-  installers. Two differences from `wrapper-script` that matter to any generalized design: the field
-  name is `dst`, **not** `dest` (so a lookup keyed on `dest` silently skips these packages
-  entirely), and the install-time write is **skip-if-exists**, not an unconditional overwrite — a
-  deployed `config_files` destination is _expected_ to drift, because the user owns it after first
-  install. "Deployed content != repo source" is therefore not on its own an error for this mechanism
-  the way it is for `wrapper-script`.
+[DECISION: Approach A (`PostToolUse` hook) and Approach C (pre-push git hook) are dropped, not
+deferred. A existed only because the writer could destroy content unseen; once it can't, A's whole
+value is catching the edit slightly earlier, at the cost of a fifth home-dir writer, a second
+mapping file, and a per-Edit interpreter startup machine-wide. C was already pre-declined by
+`plans/2026-08-23-git-hooks-for-quality-gate.md` (git hooks considered and rejected for this repo)
+and by `config/global-AGENTS.md`'s "Proposing an enforcement mechanism for agent behavior" rule —
+teach the agent what to run, don't fire behind its back. Approach B survives, demoted from
+standalone mechanism to a read-only call into the shared classifier.]
 
-**Prior art now in-repo, added 2026-08-23** (`inv system.configs`, `tasks/system.py`, tests in
-`tests/test_system.py`): Approach B's diff already exists for the `config_files` mechanism, and it
-does fix rather than only report. It resolves each declared mapping, compares deployed against
-source, and either reports a match, creates a missing destination without prompting, or prints a
-unified diff and asks before overwriting. `--name <pkg>` scopes it, `-y`/`--yes` skips the prompt,
-`PULSE_DRY_RUN=1` reports without writing. Whoever picks this plan up should treat it as the
-reference implementation of B's diff half and extend/unify with it rather than writing a second,
-parallel deployed-vs-source comparison.
+### Inventory: what writes into `~` today
 
-[DECISION: an interactive, human-invoked drift fixer defaults to _not_ overwriting — prompt is on by
-default, answers no on empty input, and `-y`/`--yes` skips it, matching apt/dnf rather than an
-opt-in `--confirm`. `util.confirm()` returns its default when stdin isn't a terminal, so a piped or
-CI run without `-y` skips the overwrite instead of clobbering unattended. Chosen over an
-auto-sync-on-detect design because the deployed file is the one carrying the edit that would be
-lost, so the diff has to be seen by a human before it's discarded.]
+**Whole-file deploy from a repo-side source — three implementations, four policies:**
 
-**Confirmed Claude Code hook mechanics** (verified against live docs this session, relevant to any
-approach involving a Claude Code hook specifically — not relevant to a pure `inv verify.all`
-mechanical check):
+| writer                                   | ownership check                        | behavior on an existing destination                                        |
+| ---------------------------------------- | -------------------------------------- | -------------------------------------------------------------------------- |
+| `tasks/tools.py:_install_wrapper_script` | none                                   | **unconditional overwrite** — the actual loss mechanism                    |
+| `tasks/ai.py:_install_local_skill`       | `.pulse-source` marker + `_dir_digest` | foreign → warn and leave; ours+stale → `ui.ask()`; ours+identical → silent |
+| `tasks/apt.py:_apply_config_files`       | none                                   | skip-if-exists, silently                                                   |
+| `tasks/system.py:_deploy_config_file`    | none                                   | diff → `util.confirm(default=False)` → overwrite; `--yes` skips the prompt |
 
-- `PostToolUse` hooks, matcher `"Edit|Write"`, can exit 0 and print
-  `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "..."}}` on stdout
-  to inject a **non-blocking** instruction into the calling agent's own context, right after the
-  edit completes — the edit itself is never blocked or undone. Printing nothing and exiting 0 is
-  sufficient for "no match, nothing to say."
-- Separately confirmed, relevant background: Claude Code's **built-in** `Plan`/`Explore` subagent
-  types deliberately skip loading `CLAUDE.md`/`AGENTS.md` entirely (documented exception, for
-  speed/cost) — so a written instruction in `AGENTS.md` alone ("don't hand-edit `~/AGENTS.md`
-  directly") structurally cannot reach those two agent types. A hook-based guard does not have this
-  gap, since hooks gate the tool call at the harness level, independent of which system prompt is
-  active. This is direct evidence that a docs-only fix is insufficient here, not just a preference.
+Same operation, four answers, and the `config_files` mechanism alone is split across two modules
+with opposite behavior. `_install_local_skill` is the most evolved of the four and already
+implements almost exactly the policy this plan generalizes: a marker recording who installed it, a
+digest comparison, and a refusal to touch anything it didn't install. The design below is largely
+"promote that policy into one shared writer and make the other three use it," not a new invention.
 
-## Open questions
+**Two other ownership models that must NOT be folded in:**
 
-[NEEDS CLARIFICATION: real-time, agent-facing (Approach A below) vs. mechanical periodic/verify-time
-check (Approach B) vs. both together (Approach D) — see "Recommended direction" for the full
-tradeoffs. The memory-sweep plan's own open question ("should this hook into `inv verify.all` or a
-pre-push hook") already leans toward B/D existing in some form; A is additive, not a replacement, if
-the goal is to catch drift regardless of which tool caused it.]
+- `util.ensure_block` / `util.ensure_block_text` — a marker-delimited region inside a file the
+  **user** owns. ~12 call sites (`certs`, `ssh`, `proxy`,
+  `system.curlrc/dns/disable_ipv6/
+  journal_size/initramfs_compression`, `zsh`, `devcontainer`,
+  `next_steps`). Whole-file deploy semantics here would destroy user content on first run.
+- structured merge into a co-owned JSON — `util.write_claude_settings` (`ai.py`, `allowlist.py`),
+  `fonts.py`'s VS Code settings merge. PULSE owns some keys; the user and other tools own others.
 
-[NEEDS CLARIFICATION: if a verify-time check (B) is built, does it belong in `inv verify.all` proper
-(implying it runs at whatever cadence/CI-adjacency `verify.all` already runs at) or as its own
-explicitly-invoked task? The memory-sweep plan flags the user's stated aversion to auto-triggered
-mutation of _tracked artifacts_ specifically (`~/AGENTS.md`'s own "Commit regenerated artifacts
-deliberately" section) — note this is about auto-_writing_, not auto-_reporting_; a read-only diff
-check folded into `verify.all` doesn't mutate anything and may not trigger the same concern that an
-auto-sync action would.]
+[DECISION: "one way to write into `~`" means **one way per ownership model**, not one writer for
+everything. Three models are legitimate — whole-file deploy, marker-delimited block, structured
+merge — because they differ in who owns what, not in style. Only the first is unified here. The
+other two get a shared _registry_ entry (so "is this path PULSE-managed?" has one answer for all
+three) but keep their own writers.]
 
-[NEEDS CLARIFICATION: should a verify-time drift check ever offer to _fix_ the drift
-(deployed→source, interactively confirmed via the same `ui.ask()` pattern `_install_local_skill`
-already uses for "Update skill?"), or only report/fail and leave the human to diff and copy by hand?
-Note this re-opens a question that was already answered _for the real-time hook case specifically_ —
-no auto-copy, ever, because the PULSE repo could be mid-edit when an agent triggers the hook
-mid-session. That rationale is weaker for a deliberate, human-invoked "check for drift now" moment —
-worth deciding fresh rather than assuming the earlier answer transfers. **Narrowed 2026-08-23:** the
-deliberate human-invoked half now has a shipped answer in `inv system.configs` (yes, it fixes;
-diff-then-confirm, prompt defaults to no — see the `[DECISION:]` above). What's still open is
-whether a check running inside `verify.all` should offer the same thing, or stay strictly
-report-only because it runs as part of a broader batch nobody is watching closely.]
+### Grounding facts (do not re-derive)
 
-[NEEDS CLARIFICATION: scope — just `~/AGENTS.md`, or generalize to every `wrapper-script`-deployed
-package (`askpass-zenity`, etc.) plus PULSE-authored skill directories under `~/.agents/skills/`?
-Recommend generalizing (the underlying mechanism is generic either way — iterate
-`util.packages_by_method(util.PackageMethod.WRAPPER_SCRIPT)` for the first kind,
-`.pulse-source`-marked dirs for the second) but flagging since it's not forced by anything above.
-**Extended 2026-08-23:** `config_files` destinations are a third kind, reachable via the new
-`util.enabled_packages()` (method-agnostic, since any method may declare the field). Whether they
-belong in the same check at all is a genuine question, not a given: unlike `wrapper-script`, their
-install-time write is skip-if-exists, so drift there is the expected steady state rather than a
-warning sign — a check that flags them the same way would cry wolf on every `config_files` package
-the user has ever customized. Options are excluding them, or reporting them in a separate,
-informational "your local copy differs, `inv system.configs` would overwrite it" tier.]
+- `~/AGENTS.md` (+ `~/.claude/CLAUDE.md` via `symlink_dest`) deploys from `config/global-AGENTS.md`
+  through the generic `wrapper-script` method — a **plain copy** (`dest.write_text(content)`), where
+  `content` is the source file `.strip() + "\n"`.
+- Skills under `~/.agents/skills/<name>/` deploy from `skills/<name>/` via `shutil.copytree`, with a
+  `.pulse-source` marker file recording the installing `repo_path`.
+- Both are **deliberately** copies, not symlinks — skills were switched from symlink to copy to stay
+  symmetric with the npx-sourced remote-skill installer. Copy-based deployment is a fixed
+  constraint, not something to revert.
+- `config_files` is a **third** mechanism, declarable by any `method`, keyed `dst` (not `dest`) — so
+  any lookup keyed on `dest` alone silently skips it. Currently `wezterm` and `terminator`. Its
+  install-time write is skip-if-exists: the destination is _expected_ to diverge, because the user
+  owns it after first install.
+- `tasks/util.py` already provides `PULSE_STATE_DIR` (`~/.local/state/power-user-linux-setup`),
+  `confirm()` (returns its default unmodified when stdin isn't a tty), `DRY_RUN`,
+  `enabled_packages()` (method-agnostic), `packages_by_method()`.
+- `PULSE_STATE_DIR` already holds exactly this kind of per-machine generated metadata:
+  `ai.py:_STATIC_PERMS_MANIFEST`, `allowlist.py:_APPLIED_MANIFEST`.
 
-## Recommended direction
+[PITFALL: `inv verify.all` **already** does a byte-exact content comparison of every
+`wrapper-script` package against its `content_file` (`verify.py:_resolve_wrapper_script` /
+`_wrapper_script_up_to_date`), and it runs as the last step of `inv setup`. An earlier revision of
+this plan asserted it checked `dest` existence only, and that stale claim survived into the
+four-approach design — it is why "Approach B" was written up as unbuilt work. Detection for the
+wrapper-script mechanism already ships. What does not exist is (a) coverage for skill dirs and
+`config_files`, (b) the stale-vs-dirty distinction, and (c) a writer that acts on any of it.]
 
-Not implementing here — this plan exists to lay out comparable concrete approaches for whoever picks
-it up, per explicit instruction to be creative and not converge on one. All four reuse the same
-grounding facts above; they differ in _when_ drift is caught and _who_ it's surfaced to.
+### Confirmed hook mechanics — recorded, then discarded
 
-### Approach A — real-time, agent-facing `PostToolUse` hook ("nag the agent")
+`PostToolUse` with matcher `"Edit|Write"` can exit 0 and print
+`{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "..."}}` to inject a
+non-blocking instruction into the calling agent's context; printing nothing and exiting 0 is a valid
+no-op. Verified against live docs 2026-08-22. Kept here only so a future revisit doesn't re-research
+it. Also confirmed and still relevant as context: Claude Code's built-in `Plan`/`Explore` subagent
+types deliberately skip loading `CLAUDE.md`/`AGENTS.md` entirely, so no wording fix in `~/AGENTS.md`
+can reach those two agent types — which is why the fix has to live in the writer rather than in
+instructions.
 
-Fires the instant Claude Code edits a PULSE-deployed path; injects a non-blocking instruction
-telling _Claude_ (not the human) to read the current repo-side file and mirror the edit there,
-leaving commit/push to the human. Concrete design, grounded in the real code
-(`tasks/tools.py:_install_wrapper_script`, `tasks/ai.py:_install_local_skill`/`_SKILL_MARKER`,
-`tasks/util.py:PULSE_STATE_DIR`/`load_claude_settings`/`write_claude_settings`):
+## Design
 
-- **New shared module `tasks/pulse_guard.py`** (no `@task`s of its own, like `ui.py`/`util.py` — no
-  `tasks/__init__.py` wiring needed):
-  - `_SKILL_MARKER = ".pulse-source"` — moved here from `tasks/ai.py`; `ai.py` imports it from here.
-  - `wrapper_script_mappings() -> dict[str, str]`: abs deployed path (`dest`, and `symlink_dest` if
-    declared — both map to the same repo source, so a hook lookup matches whichever of
-    `~/.claude/CLAUDE.md` / `~/AGENTS.md` Claude Code reports) → abs repo-side `content_file` path,
-    for every enabled `[packages.*]` entry with `method = "wrapper-script"` and a `content_file`.
-    Include all such packages unconditionally (not just `claude-global-md`) — generic and harmless.
-  - `installed_skill_dir_mappings(base: Path) -> dict[str, str]`: abs deployed skill dir → abs
-    repo-side skill dir, for every currently-installed `.pulse-source`-marked directory under
-    `<base>/.agents/skills/` (reads the marker's own recorded `repo_path`).
-  - `sync_wrapper_scripts()` / `sync_skill_dirs(base)`: regenerate the `"files"`/`"dirs"` section of
-    the map (each fully replaces its own section, leaves the other untouched), then call
-    `register_hook()`. No-op under `util.DRY_RUN`. `sync_skill_dirs` only called for the global run
-    (`base == home`) — mirrors the existing `if dir is None:` gate that already skips
-    `_apply_static_claude_permissions`/`_note_copilot_permissions` for `--dir` runs.
-  - `register_hook()`: idempotently merge a `PostToolUse`/`"Edit|Write"` hook entry into the global
-    `~/.claude/settings.json` (command = deployed path of `pulse-guard-hook`, read from
-    `util.load_config()["packages"]["pulse-guard-hook"]["dest"]`, not hardcoded a second time) using
-    `util.load_claude_settings()`/`write_claude_settings()`. Same merge-without-clobbering shape as
-    the `repo_tasks.agents.claude_hook` precedent (find-or-create the matcher group, append only if
-    the exact entry isn't already `in` that group's `"hooks"` list).
-  - **Wiring**: `tools.py:install()` calls `pulse_guard.sync_wrapper_scripts()` after its existing
-    wrapper-script loop; `ai.py:skills()` calls `pulse_guard.sync_skill_dirs(base)` alongside the
-    existing `if dir is None:` block.
+### 1. `tasks/deploy.py` — the registry, the classifier, the writer
 
-- **Mapping file** `~/.local/state/power-user-linux-setup/guard-map.json`:
-  ```json
-  {
-    "version": 1,
-    "generated_at": "2026-08-22T12:34:56+00:00",
-    "repo_root": "/home/.../power-user-linux-setup",
-    "files": { "/home/.../AGENTS.md": "/home/.../config/global-AGENTS.md" },
-    "dirs": { "/home/.../.agents/skills/research-library": "/home/.../skills/research-library" }
+New module. Holds both the shared functions (no `@task`) and the two user-facing tasks (§5), in the
+shape of `system.py`/`ai.py` rather than the pure-helper shape of `util.py`/`ui.py`.
+
+**Registry.** `managed_paths() -> dict[Path, Managed]` resolves every home-directory path PULSE
+claims, from `setup.toml` alone:
+
+- every enabled `[packages.*]` with `method = "wrapper-script"` and a `content_file` → its `dest`,
+  **and its `symlink_dest` if declared** (both map to the same repo source, so a lookup matches
+  whichever of `~/.claude/CLAUDE.md` / `~/AGENTS.md` is asked about);
+- every enabled `[packages.*]` declaring `config_files`, whatever its `method` → each mapping's
+  `dst` (via `util.enabled_packages()`, not `packages_by_method()`);
+- every `skills = [...]` entry → its installed directory under `<base>/.agents/skills/<name>`.
+
+`Managed` carries `package`, `source` (repo-relative), `kind` (`FILE` | `DIR`), and `policy` (§3).
+
+**Classifier.** `classify(path) -> State`, four states, computed from the destination, the repo
+source, and the state manifest (§2):
+
+| state     | signal                                                   | meaning                                      |
+| --------- | -------------------------------------------------------- | -------------------------------------------- |
+| `ABSENT`  | destination doesn't exist                                | first install                                |
+| `CLEAN`   | destination hash == manifest hash == current source hash | nothing to do                                |
+| `STALE`   | destination hash == manifest hash != current source hash | we wrote it, source moved on — safe redeploy |
+| `DIRTY`   | destination hash != manifest hash                        | edited since we wrote it                     |
+| `UNKNOWN` | destination exists, no manifest entry                    | provenance unknown — never assume it's ours  |
+
+`STALE` vs `DIRTY` is the distinction that makes the user-facing message accurate, and it is exactly
+what a plain deployed-vs-source comparison (all that exists today) cannot express.
+
+[DECISION: five states, not the four originally sketched. `UNKNOWN` has to be separate from `DIRTY`:
+on a machine where the state manifest was never written (a fresh clone, a wiped state dir, a base
+image that shipped its own `~/.zshrc`) every managed path would otherwise classify as `DIRTY` and
+prompt. `UNKNOWN` is also what §8's backfill resolves.]
+
+**Writer.** `deploy(managed, *, assume_yes) -> Action` — the single whole-file writer:
+
+- `ABSENT` → create, silently. Record in the manifest.
+- `CLEAN` → no-op, no output beyond a status line. Routine re-runs stay quiet.
+- `STALE` → overwrite, silently. This is a redeploy of content we own; nothing is lost.
+- `DIRTY` → **never silent.** Print the unified diff (reuse `system.py:_config_diff`), then
+  `util.confirm(f"Overwrite {dst}?", default=False)`. `--yes` skips the prompt and overwrites.
+- `UNKNOWN` → same as `DIRTY` for a `MANAGED` policy; leave alone with a note for `SEEDED` (§3).
+
+Post-write verification is preserved from both current writers: re-read/re-hash and raise if the
+written content doesn't match, before recording the manifest entry, so a partial copy is never
+recorded as clean.
+
+**Unmanaged paths.** `classify()` on a path with no registry entry returns nothing, and the
+user-facing task reports it as the user asked for: _not managed by PULSE — if you want this file
+deployed and version-controlled, add a `[packages.*]` entry for it_. This is the teaching moment
+that replaces Approach A's hook: an agent or human running the task learns both what happened and
+what to do, from PULSE itself.
+
+### 2. State manifest
+
+`~/.local/state/power-user-linux-setup/deployed.json`:
+
+```json
+{
+  "version": 1,
+  "entries": {
+    "/home/tdumitrescu/AGENTS.md": {
+      "package": "claude-global-md",
+      "source": "config/global-AGENTS.md",
+      "hash": "sha256:...",
+      "deployed_at": "2026-08-24T09:14:02+00:00"
+    }
   }
-  ```
-  Both sides absolute (no path-joining logic needed in the hook script itself). `repo_root` is for
-  human debugging only, not read by the hook.
+}
+```
 
-- **New `setup.toml` package**:
-  ```toml
-  [packages.pulse-guard-hook]
-  description = "PostToolUse hook that nags Claude Code to mirror an edit of a PULSE-deployed file back into this repo's own source"
-  method = "wrapper-script"
-  tags = ["shell", "ai"]
-  dest = "~/.local/bin/pulse-guard-hook"
-  content_file = "config/pulse-guard-hook.py"
-  ```
-  No `symlink_dest`. Being a `wrapper-script` entry itself, it's automatically picked up by
-  `wrapper_script_mappings()` too.
+Absolute paths on the key side (no path-joining in any consumer). `hash` is of **what PULSE wrote**,
+not of the source — that is the whole point; for a `DIR` entry it is `ai.py:_dir_digest`, reused
+as-is.
 
-- **Hook script `config/pulse-guard-hook.py`** — stdlib-only Python (first Python `wrapper-script`
-  content file in the repo; every existing one is `.sh`, but `_install_wrapper_script` is
-  content-agnostic and already `chmod`s to `0o755`). Reads stdin JSON, extracts
-  `tool_input.file_path`, resolves it (`Path.resolve()` — handles the `CLAUDE.md`/`AGENTS.md`
-  symlink case), looks it up against `guard-map.json` (exact match in `"files"`, then
-  directory-prefix match in `"dirs"`). No match → print nothing, exit 0 (confirmed sufficient — not
-  in the docs' "stdout shown to Claude" exception list). Match → print
-  `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "<path> is a
-  PULSE-managed deployed copy of <repo path> — a deliberate plain copy, not a symlink, silently lost
-  on the next inv tools.install/ai.skills. Read the CURRENT repo-side content first (it may have its
-  own uncommitted changes), decide whether the same edit still makes sense, and if so make it there
-  instead. Leave commit/push/re-running inv tools.install/ai.skills to the human."}}`.
-  Exit code always 0 — `PostToolUse` exit 2 has no blocking effect since the tool call already
-  completed.
+[DECISION: the deploy record goes in `PULSE_STATE_DIR`, never into `setup.toml`. `setup.toml` is a
+tracked, git-shared _declaration_; writing per-machine runtime timestamps into it would churn the
+diff on every install on every machine, make `git blame` on the declaration useless, and constitute
+auto-mutation of a tracked artifact — the thing `~/AGENTS.md`'s "Regenerating a file from a
+canonical source" rule exists to prevent. `PULSE_STATE_DIR` is the established home for exactly this
+(`_STATIC_PERMS_MANIFEST`, `_APPLIED_MANIFEST`).]
 
-- **Docs**: new `## pulse-guard` section in `docs/claude-code.md`, same placement/style as the
-  existing `## direnv auto-activation...`/`## ~/AGENTS.md` sections; amend the `## ~/AGENTS.md`
-  section's "a manual edit gets silently overwritten..." sentence to note `pulse-guard` catches this
-  specifically when Claude Code itself makes the edit.
+[DECISION: store a content hash, with the timestamp as a human-facing extra — not a date alone.
+"When did we last write this" cannot answer "has it been edited since"; only the hash can.
+`deployed_at` earns its place in the message ("deployed 2026-08-14, edited since") and in debugging,
+never in the branching logic.]
 
-- **Tests**: `tests/test_pulse_guard.py` (tmp_path fixtures, monkeypatched `util.load_config`, same
-  shape as `tests/test_ai.py`) for the mapping/sync/register functions;
-  `tests/test_pulse_guard_hook.py` loading `config/pulse-guard-hook.py` via
-  `importlib.util.spec_from_file_location` to unit-test its match logic directly (no other
-  `config/*.sh` content file is tested today, but this one has real branching logic worth covering).
+[DECISION: keep `.pulse-source` as well; the manifest does not replace it. The marker lives _inside_
+the deployed artifact, so it survives a wiped state dir, and it is how `_install_local_skill`
+distinguishes "the skill we installed" from "a hand-installed skill that happens to share a name."
+Marker answers _whose is this_; manifest answers _what did we write and when_. Two questions, two
+records, no working code ripped out.]
 
-- **Already-resolved design defaults** (no need to re-decide): matcher `"Edit|Write"` only, no
-  `MultiEdit` (not a documented current tool name); include _all_ `wrapper-script` packages in the
-  map, not just `claude-global-md`; `--dir` project-local `ai.skills` runs never populate `"dirs"`.
+### 3. Two ownership policies, one writer
 
-- **Catches:** drift caused by Claude Code specifically, the moment it happens, before it's
-  forgotten.
-- **Misses:** drift from a human hand-edit, a different AI tool/agent, or any edit made outside a
-  Claude Code Edit/Write tool call (e.g. a raw `vim ~/AGENTS.md`). Also only as good as the mapping
-  file being fresh (regenerated at `inv tools.install`/`inv ai.skills` time).
-- **Cost:** one Python interpreter startup + small JSON read on _every_ Edit/Write tool call
-  machine-wide (not just PULSE-related edits) — accepted as cheap (~10-20ms) but non-zero and
-  global.
+The three mechanisms differ in one real way, and it is not the write itself:
 
-### Approach B — mechanical drift check in `inv verify.all` ("catch it whoever caused it")
+- `MANAGED` — `wrapper-script`, skill dirs. PULSE owns the content. `DIRTY` is a **problem**: the
+  edit will be lost on redeploy and hasn't reached the repo. Message says so and names the repo-side
+  source to port it into.
+- `SEEDED` — `config_files`. PULSE seeds the file once; the user owns it afterwards. `DIRTY` is the
+  **expected steady state**. Message is informational: _your copy differs from `config/wezterm.lua`;
+  `inv deploy.sync --name wezterm` would overwrite it._ Never a warning, never a `verify.all`
+  failure.
 
-A new check alongside `tasks/verify.py`'s existing package verification: for every `wrapper-script`
-package with a `content_file`, and every `.pulse-source`-marked skill dir, diff live deployed
-content against the repo source; report (or fail) on mismatch. No LLM, no hook, no
-Claude-Code-specific mechanism at all — a plain `Path.read_text()` comparison, same shape
-`_install_wrapper_script`/`_install_local_skill` already do internally to decide "already installed"
-vs. "needs update" (reuse that comparison logic rather than reimplementing it).
+[DECISION: the policy is a severity/messaging distinction on a shared classification, not a
+different writer or a separate "informational tier" bolted on. An earlier revision proposed either
+excluding `config_files` from the check or reporting it separately, because without a manifest
+"deployed != source" is genuinely unclassifiable for a skip-if-exists mechanism and would cry wolf
+on every customized config. The manifest removes that constraint: `SEEDED` + `DIRTY` is precisely
+"the user customized what we seeded," and is now sayable.]
 
-- **Catches:** drift from _any_ cause — human hand-edit, any AI agent/tool, partial/interrupted
-  installs, filesystem corruption — the moment `inv verify.all` (or whatever wraps it, e.g. a
-  pre-push hook) next runs.
-- **Misses:** anything between runs — if `verify.all` only runs before a push, an edit made and lost
-  between pushes is never caught. Cadence entirely depends on when the check is invoked (see open
-  question above).
-- **Cost:** cheap, one-time, only pays when `verify.all` actually runs — no standing per-edit cost.
+### 4. Converting the call sites
 
-### Approach C — PULSE-repo-side pre-push warning ("last safe moment before it's easy to lose track")
+- `tools.py:_install_wrapper_script` → resolves its `Managed` entry and calls `deploy.deploy()`.
+  Keeps its own `symlink_dest` handling (creating/validating the symlink is not a content write).
+  **Behavior change:** unconditional overwrite becomes classify-then-act. See §7.
+- `apt.py:_apply_config_files` → calls `deploy.deploy()`. Its skip-if-exists behavior is now
+  expressed as the `SEEDED` policy rather than an unconditional `if not dst.exists()`, so a
+  first-install on a machine where the file already exists is _reported_ instead of silently
+  skipped.
+- `system.py:_deploy_config_file` → deleted; `system.configs` becomes `deploy.sync` (§5).
+- `ai.py:_install_local_skill` → keeps its `.pulse-source`/`_dir_digest` logic, but reports through
+  the same `State` vocabulary and records to the same manifest, so `deploy.status` covers skills
+  without a second scan. Its existing `ui.ask()` prompt stays as the `DIRTY`/`STALE` prompt for
+  dirs.
 
-Narrower variant of B: instead of (or in addition to) `verify.all`, a git hook in the PULSE repo
-itself, firing on `git push`, that diffs the _live deployed_ `~/AGENTS.md` (and other tracked
-dotfiles/skills) against what's about to be pushed — warning specifically "the deployed copy has
-content not reflected in what you're about to push, did you forget to port an edit back?" This is
-the last moment before the human's own PULSE work solidifies a state that no longer matches what's
-actually deployed — closer to the actual moment of loss than a generic `verify.all` run might be if
-that's invoked rarely.
+[DECISION: `_install_local_skill` is adapted rather than replaced. It is the only one of the four
+writers whose policy is already right, its `foreign` branch is a real behavior worth preserving
+verbatim, and directory deployment has genuine mechanics (rmtree-then-copytree, per-file digest)
+that a file writer doesn't. Sharing the classifier and manifest is where the value is; sharing the
+byte-level write is not.]
 
-- **Catches:** the same drift as B, but specifically framed around the moment it's cheapest to
-  notice and fix (right before a push, when the diff is fresh in the pusher's mind).
-- **Misses:** anyone who doesn't push often, or drift that's introduced and then further overwritten
-  by a _subsequent_ legitimate `inv tools.install` run before any push happens (the original edit is
-  already gone by push time in that case — nothing left to warn about).
-- **Cost:** same diff logic as B, wired to a different trigger (a git hook instead of an `inv` task)
-  — largely a packaging/trigger choice layered on B's core check, not a separate implementation.
+### 5. Task surface
 
-### Approach D — combine A + B (or A + C): defense in depth
+`inv deploy.status` — read-only. Every registry entry, its state, and for `DIRTY` the diff. Never
+writes, never prompts, honors `--name`. This is the "what happened / what should I do" surface.
 
-Real-time agent nag (A) for the common case (Claude Code causes the drift, catch it immediately,
-teach the agent to fix its own mess) plus a periodic mechanical check (B or C) as a safety net for
-everything A structurally can't see (human edits, other tools, a missed/stale hook registration,
-drift introduced before the hook mechanism existed). Marginal cost of building both is small since
-B/C's diff logic and A's mapping-generation logic overlap heavily (both need "deployed path → repo
-source path" for every `wrapper-script` package and skill dir) — a shared mapping/lookup module
-could serve both, avoiding two independent implementations of the same lookup.
+`inv deploy.sync` — the repair path. Same flags as today's `system.configs` (`--name`, `--yes`),
+same interactive contract.
 
-Given the memory-sweep plan already treats "drift guard" as one clearly-wanted mechanism and A's
-concrete design already exists from prior work, D (build B or C as a lightweight complement to the
-already-designed A) is probably the lowest-total-effort path to closing this gap completely — but
-that's a lean, not a decision; genuinely fine to land just B alone first if the mechanical check
-alone feels sufficient for now and A gets deferred.
+[DECISION: `inv system.configs` (landed 2026-08-23) is renamed and generalized into
+`inv
+deploy.sync` rather than kept alongside. It is the same operation with a narrower registry, and
+keeping both would restore the exact duplication this plan exists to remove. Two extra reasons:
+`configs` is _already_ a top-level namespace imported from `repo-tasks` in `tasks/__init__.py`, so
+`inv configs.*` and `inv system.configs` currently coexist as unrelated things; and the task no
+longer deals only with the `config_files` mechanism, so its name would be actively wrong. This is a
+one-day-old task in a single-user repo — cheap to rename now, expensive later. Reversible on
+request.]
+
+Register `deploy` in `tasks/__init__.py`'s `Collection`.
+
+### 6. `verify.all` integration
+
+`verify.py` calls `deploy.classify()` read-only for every registry entry, replacing
+`_resolve_wrapper_script`/`_wrapper_script_up_to_date`'s bespoke comparison and extending coverage
+to skill dirs and `config_files`. `MANAGED` + (`DIRTY` | `UNKNOWN`) fails, consistent with
+`verify.py`'s existing fail-fast contract. `SEEDED` + `DIRTY` reports and passes.
+
+[DECISION: read-only inside `verify.all` — it never prompts and never fixes. The user's stated
+aversion is to auto-_mutating_ tracked artifacts, which a report doesn't do; and `verify.all` runs
+inside `inv setup` as part of a batch nobody is watching line by line, which is the wrong moment to
+ask a destructive question. `deploy.sync` is the deliberate, human-invoked moment for that.]
+
+### 7. Unattended paths — the one real regression risk
+
+`_install_wrapper_script` going from unconditional-overwrite to prompt-on-`DIRTY`/`UNKNOWN` changes
+behavior on every non-interactive path. `util.confirm()` returns its default when stdin isn't a tty,
+and the default is `False` — so a container or CI bootstrap that hits a pre-existing destination
+would silently **not deploy**, where today it overwrites. That is a genuine regression, and it fails
+quietly, which is the worst shape.
+
+Every unattended entry point must pass `--yes` (or set `PULSE_ASSUME_YES`) explicitly and be tested
+for it: `bootstrap.sh`, `bootstrap-devcontainer.sh`, `docker/Dockerfile`, and the CI workflows.
+
+[PITFALL: this is the one change in the plan that can break something that works today. The failure
+mode is a container image that looks like it built fine but is missing a deployed dotfile — no error
+anywhere. Cover it with an explicit test asserting that a non-tty run without `--yes` leaves a
+`DIRTY` destination alone _and_ says so on stdout, and one asserting the unattended entry points
+pass the flag.]
+
+### 8. Backfill on first run
+
+Every currently-deployed path has no manifest entry, so a naive first run classifies the whole
+machine as `UNKNOWN` and prompts for each one.
+
+On first run (`deployed.json` absent, or a path missing from it): if the destination's content
+matches its current repo source byte-for-byte, record it as ours and classify `CLEAN` — no prompt.
+Only a genuine mismatch stays `UNKNOWN` and asks. This makes the upgrade a no-op on a machine that
+is already in sync, which this one currently is for every `MANAGED` path.
+
+### 9. Docs
+
+- `docs/claude-code.md`'s `## ~/AGENTS.md` section: amend the "a manual edit gets silently
+  overwritten" sentence — it is no longer true once §4 lands.
+- `AGENTS.md`'s "Deployed dotfiles are generated" redeploy table: `inv system.configs` →
+  `inv
+deploy.sync`, and the `content_file` row gains it too (`inv tools.install` deploys;
+  `inv
+deploy.sync` repairs).
+- `docs/configuration.md`: note that `wrapper-script` and `config_files` destinations differ in
+  ownership policy, not just in field name.
+
+## Files touched
+
+| file                                                                           | change                                                         |
+| ------------------------------------------------------------------------------ | -------------------------------------------------------------- |
+| `tasks/deploy.py`                                                              | new — registry, classifier, writer, `status`/`sync` tasks      |
+| `tasks/__init__.py`                                                            | register the `deploy` collection                               |
+| `tasks/tools.py`                                                               | `_install_wrapper_script` delegates the content write          |
+| `tasks/apt.py`                                                                 | `_apply_config_files` delegates                                |
+| `tasks/ai.py`                                                                  | `_install_local_skill` reports/records through `deploy`        |
+| `tasks/system.py`                                                              | `_deploy_config_file`/`configs` removed (moved to `deploy.py`) |
+| `tasks/verify.py`                                                              | wrapper-script check → `deploy.classify()`, coverage extended  |
+| `bootstrap.sh`, `bootstrap-devcontainer.sh`, `docker/Dockerfile`, CI workflows | pass `--yes`                                                   |
+| `tests/test_deploy.py`                                                         | new — absorbs `tests/test_system.py`'s config-deploy tests     |
+| `AGENTS.md`, `docs/claude-code.md`, `docs/configuration.md`                    | §9                                                             |
+
+## Verification
+
+- Unit: each of the five states, for `FILE` and `DIR`, for both policies, via `tmp_path` +
+  monkeypatched `util.load_config()` (the shape `tests/test_ai.py` and `tests/test_system.py`
+  already use).
+- Backfill: a fixture with a deployed file matching source and no manifest classifies `CLEAN`
+  without prompting; one that differs stays `UNKNOWN`.
+- Non-tty: a `DIRTY` destination with stdin not a terminal and no `--yes` is left alone, and says so
+  on stdout (§7).
+- `PULSE_DRY_RUN=1` reports every state without writing or prompting.
+- Live: hand-edit `~/AGENTS.md`, run `inv tools.install`, confirm it shows the diff and asks rather
+  than overwriting; answer no; confirm the edit survives. Then port it to `config/global-AGENTS.md`
+  and confirm the next run classifies `STALE` and redeploys silently.
+- `inv verify.all` passes on this machine with no new failures (§8's backfill is what makes this
+  true).
+
+## Sequencing
+
+Five steps, each independently committable and independently useful:
+
+1. **`tasks/deploy.py` + manifest + tests**, wired to nothing. Pure addition, no behavior change.
+2. **`inv deploy.status`** — read-only. Immediately answers "what's drifted on this machine right
+   now" and validates the classifier against reality before anything can overwrite.
+3. **`inv deploy.sync`**, absorbing `system.configs` (+ the `AGENTS.md` table update). Repair path
+   available before any writer changes behavior.
+4. **Convert the writers** (`tools.py`, `apt.py`, `ai.py`) + the `--yes` wiring on unattended paths.
+   This is the step that actually closes the loss window, and the one carrying §7's risk — land it
+   on its own so a bisect points straight at it.
+5. **`verify.py`** → shared classifier, coverage extended to skills and `config_files`. Docs.
+
+## Explicitly not building
+
+- The `PostToolUse` hook (old Approach A) and the pre-push git hook (old Approach C) — see the
+  `[DECISION:]` in Context.
+- Any auto-porting of a deployed edit back into the repo source. PULSE reports and asks; the human
+  decides and commits.
+- Folding `ensure_block` or `write_claude_settings` into the shared writer — different ownership
+  models, see the `[DECISION:]` in Context.
+
+[DEFERRED: the agent that dirties a deployed file still learns nothing _at edit time_ — only whoever
+next runs a PULSE task does. Accepted: the actual harm was silent loss, which this closes; "port it
+back to the repo" is ergonomics, and `~/AGENTS.md`'s own header already says it. If drift keeps
+happening after this lands, revisit the real-time hook _then_, with evidence rather than on
+prediction.]
+
+[DEFERRED: `ensure_block` and `write_claude_settings` call sites get registry entries (so "is this
+path PULSE-managed?" has one answer) but no drift classification of their own — a marker-delimited
+block and a merged JSON key each need their own notion of "dirty" that this plan doesn't design.]
