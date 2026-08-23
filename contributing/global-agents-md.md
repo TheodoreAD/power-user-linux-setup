@@ -57,7 +57,7 @@ admission gate for the candidates that taxonomy routes here.
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
 - [Committing multi-part work](#committing-multi-part-work)
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
-- [Flag apparent typos and mental slips](#flag-apparent-typos-and-mental-slips)
+- [Something the user wrote looks like a typo or mental slip](#something-the-user-wrote-looks-like-a-typo-or-mental-slip)
 
 ## Editing `~/.claude/settings.json` (or similar) in auto mode
 
@@ -257,7 +257,7 @@ consequence spelled out: bumping the shared package's own dev/quality group chan
 project that merely depends on it, because PEP 735 groups aren't pulled in transitively the way
 `[project.dependencies]`/extras are.
 
-## Flag apparent typos and mental slips
+## Something the user wrote looks like a typo or mental slip
 
 Concrete instance: a name used consistently across two messages while designing a naming convention
 was read as deliberate and written into a plan doc as a genuine undecided design fork — it was
