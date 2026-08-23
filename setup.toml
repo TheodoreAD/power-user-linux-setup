@@ -916,6 +916,24 @@ dest = "~/AGENTS.md"
 symlink_dest = "~/.claude/CLAUDE.md"
 content_file = "config/global-AGENTS.md"
 
+[packages.repo-tasks]
+description = """
+Cross-repo Claude Code permission grant for `repo-tasks`' `quality.*` task namespace (lint/format/
+type-check/shell-check/test plus the fix/check/precommit composite) — identical across every
+consumer repo by design (see repo-tasks' own README "Design": no per-repo allowances), local-only,
+and reversible (git-tracked file edits, no network/publish/push side effects), unlike the rest of
+`inv`'s surface (dist.publish, docker.push/release, gitflow.*, version.bump, ...) which run
+arbitrary per-repo tasks and must stay ask-gated. No `method` here — this entry exists purely to
+declare the permission grant, not to install anything; repo-tasks itself is bootstrapped by
+`bootstrap.sh`/`install_repo_tasks` above, not by this package mechanism. See
+`cli-allowlist/tools.toml`'s `[inv]` entry (classified `write`, deliberately left unreviewed/
+ask-by-default) for why this can't just be a blanket `inv` allow rule.
+"""
+tags = ["ai"]
+claude_permissions_allow = [
+  "Bash(inv quality.*)",
+]
+
 [packages.claude-statusline]
 description = """
 Custom Claude Code statusline — dir/git-status (p10k-style), python env, model tier,
