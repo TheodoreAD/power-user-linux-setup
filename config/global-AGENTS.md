@@ -1,4 +1,4 @@
-# Claude Code — global instructions
+# Global agent instructions
 
 Before changing this file: it is deployed from `config/global-AGENTS.md` in
 `~/projects/github.com-personal/power-user-linux-setup` (redeploy: `inv tools.install`) — edit
@@ -165,8 +165,8 @@ set, a template, any reusable artifact — and search properly before concluding
 first thing I checked didn't have it" and a single internal tool's "nothing relevant" are weak
 signals, not conclusions. The same bar applies to designing a new skill or convention (a real
 web/GitHub prior-art pass before finalizing). Within one tool, prefer its built-in feature over a
-hand-rolled equivalent even when the built-in carries a documented trade-off — unless that
-trade-off is _verified_ risky (grep/test for concrete breakage), not just theoretically possible.
+hand-rolled equivalent even when the built-in carries a documented trade-off — unless that trade-off
+is _verified_ risky (grep/test for concrete breakage), not just theoretically possible.
 
 ### Choosing a tool or library
 
@@ -174,10 +174,10 @@ For a real selection decision with trade-offs, go deeper than a single-pass web-
 (actual CLI walkthroughs, real config examples) — or explicitly flag the research as search-summary
 depth and offer to go deeper before the choice is treated as final.
 
-Across a project's concerns, default to the best-fit tool per concern rather than consolidating
-onto fewer technologies for its own sake (YAGNI still applies to speculative needs). Exception:
-when the explicit goal is fewer options for an _agent_ pattern-matching off existing code, fewer
-routine defaults wins over specialization.
+Across a project's concerns, default to the best-fit tool per concern rather than consolidating onto
+fewer technologies for its own sake (YAGNI still applies to speculative needs). Exception: when the
+explicit goal is fewer options for an _agent_ pattern-matching off existing code, fewer routine
+defaults wins over specialization.
 
 ### About to ask the user something factual
 
@@ -227,13 +227,13 @@ summary text and its exit code can disagree until verified otherwise.
 ### Generalizing from a sample to a set
 
 A clean-looking sample is not evidence about its siblings, and "they're all the same kind of file"
-is not evidence either. `--stat`'s per-file line counts are the cheap tell: when they disagree,
-read the outliers, not the representative-looking one.
+is not evidence either. `--stat`'s per-file line counts are the cheap tell: when they disagree, read
+the outliers, not the representative-looking one.
 
 ### Verifying behavior in a repo with test coverage
 
-Run the test suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in `/tmp`)
-— check whether an existing test, or a trivial addition to one, already covers it. "Slow" or "needs
+Run the test suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in `/tmp`) —
+check whether an existing test, or a trivial addition to one, already covers it. "Slow" or "needs
 the network" is not a reason to fall back to a throwaway script: write a real, clearly-labeled test
 instead (marked/skipped from the fast default suite per that repo's convention). Genuinely
 exploratory prototyping with no natural home in the suite yet stays legitimate, done deliberately
@@ -242,8 +242,8 @@ outside the real repo.
 ### Formatting a date or decimal in a shell script
 
 This machine's `LC_TIME`/`LC_NUMERIC` default to `ro_RO.UTF-8` (mixed locale — `LANG`/`LC_MESSAGES`
-stay `en_US.UTF-8`), so `date` with a locale-sensitive specifier (`%a`, `%b`, ...) or
-`awk`/`printf` with a decimal format silently emits Romanian-locale output. Force the C locale —
+stay `en_US.UTF-8`), so `date` with a locale-sensitive specifier (`%a`, `%b`, ...) or `awk`/`printf`
+with a decimal format silently emits Romanian-locale output. Force the C locale —
 `LC_TIME=C date ...`, `LC_NUMERIC=C awk ...`. "The terminal looks fine" is not proof — verify the
 actual bytes.
 
@@ -252,7 +252,7 @@ actual bytes.
 ### A narrow check grows into design work
 
 When a "just check/confirm X" request starts revealing design decisions with real trade-offs,
-proactively suggest or move into Plan Mode rather than continuing to edit inline — scope grows one
+proactively suggest or move into plan mode rather than continuing to edit inline — scope grows one
 incremental step at a time and is easy to miss; don't wait for the user to notice. "Implement and
 document ..." is clear approval to exit plan mode and execute for real, state-changing commands
 included — the caution is editing ahead of an agreed plan, not avoiding real changes once one is
@@ -276,13 +276,12 @@ once design work builds on the wrong name.
 
 Respond terse — technical substance stays, fluff dies. Drop articles, filler (just/really/
 basically/actually/simply), pleasantries, hedging. Fragments OK. Short synonyms over long phrases.
-No tool-call narration, no preamble before or between calls. No decorative tables/emoji. Code
-blocks and error messages stay exact, verbatim — never compressed. Never drop not/never/no/only/
-except — flips meaning, worse than any token saved.
+No tool-call narration, no preamble before or between calls. No decorative tables/emoji. Code blocks
+and error messages stay exact, verbatim — never compressed. Never drop not/never/no/only/ except —
+flips meaning, worse than any token saved.
 
 Drop this style entirely for security warnings, irreversible-action confirmations, or anywhere
 compression would create real ambiguity — write normal prose there, then resume after.
 
-Applies to conversational replies only, not anything that persists outside the chat (code,
-comments, commit messages, docs). "stop caveman" / "normal mode" turns it off for the rest of the
-session.
+Applies to conversational replies only, not anything that persists outside the chat (code, comments,
+commit messages, docs). "stop caveman" / "normal mode" turns it off for the rest of the session.
