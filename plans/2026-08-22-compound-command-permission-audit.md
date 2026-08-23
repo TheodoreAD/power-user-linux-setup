@@ -77,6 +77,25 @@ checking the specific repo before assuming the global config is the only relevan
 command caution get corrected (if genuinely stale) or strengthened/clarified (if it was actually
 half-right about a real edge case)? Don't resolve this before the above is answered.]
 
+## Second, independent confirmation of the per-subcommand model (2026-08-23)
+
+While investigating an unrelated complaint (`gh run view`/`gh run list` still prompting despite
+being correctly classified read-only — see the new "parent ask/dangerous rule shadows read-only
+child rules" work landed in `tasks/allowlist.py` and `contributing/cli-allowlist.md` the same
+session), fetched `code.claude.com/docs/en/permissions.md` directly and read its "Compound commands"
+section in full, independent of this plan's earlier live test. It states the same model explicitly:
+Claude Code parses shell operators and evaluates each subcommand independently; the recognized
+separators are `&&`, `||`, `;`, `|`, `|&`, `&`, and newlines — a rule must match each subcommand on
+its own. Also directly answers a side question the user raised the same session: reformatting an
+existing chain with `\` line continuations for readability has zero effect on matching, since
+newline is already a recognized separator in its own right — whitespace/newline placement around
+`&&`/`;` doesn't change how a command splits.
+
+This doesn't chase down the open incident below — still don't know its actual mechanism — but it is
+a second, independently-sourced confirmation (docs text, not just live-testing) that the
+subcommand-splitting model itself is correct as documented. The `~/AGENTS.md` edit should still wait
+on the open questions below, per this plan's own existing stance.
+
 ## Recommended direction
 
 Two tracks, only one of which depends on resolving the open questions above:

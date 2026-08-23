@@ -72,3 +72,21 @@ cover the several Bash-vs-harness-tool anti-patterns `config/global-AGENTS.md` a
 just `sed -n`) in one script with several independent checks. Reuse
 `deployed-config-drift-guard.md`'s hook-deployment/registration infrastructure if that lands first,
 rather than building a second copy of the `settings.json`-merge logic.
+
+## Parallel track landed (2026-08-23): allowlist-level fix for when `sed -n` is genuinely called
+
+This plan reduces _how often_ `sed -n` gets called at all — the hook above is still open/unbuilt. A
+separate, complementary fix landed the same session that reduces _the cost_ when `sed -n` is still
+genuinely needed (a subagent that hasn't gotten the nudge yet, or a real pipe step `Read` can't
+express): see `contributing/cli-allowlist.md`'s new "`sed` — deliberately unreviewed,
+hand-maintained rules instead" section. Summary: `cli-allowlist/rules/sed.json` was marked
+`"reviewed": false` by hand (taking `sed` out of the generated pipeline, which structurally can't
+split `-n` from `-i` in one prefix-glob rule), and three rules are now hand-maintained directly in
+`~/.claude/settings.json`: `Bash(sed -n *)` allow, `Bash(sed -i*)`/`Bash(sed --in-place*)` ask.
+Grounded in real data, not guessing: every `sed` call Claude Code has ever issued on this machine,
+across every project's transcripts, was a `sed -n '<range>p' <file>` view — zero `-i` calls.
+
+Neither track replaces the other: this one doesn't reduce how often the model reaches for `sed -n`
+over `Read` (the nudge hook's whole point), and the nudge hook won't help the cases where `sed -n`
+is the genuinely right call (a real pipe step, or a subagent Read can't reach via `AGENTS.md`). Both
+should still land.
