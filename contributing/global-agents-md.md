@@ -43,7 +43,9 @@ admission gate for the candidates that taxonomy routes here.
 
 - [Composing a Bash call](#composing-a-bash-call)
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
-- [Auto mode blocks self-editing `~/.claude/settings.json` via Bash](#auto-mode-blocks-self-editing-claudesettingsjson-via-bash)
+- [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
+- [Saving to cross-session memory](#saving-to-cross-session-memory)
+- [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
 - [Reuse maintained upstream work](#reuse-maintained-upstream-work)
 - [Tool-native over hand-rolled](#tool-native-over-hand-rolled)
 - [Best tool per concern](#best-tool-per-concern)
@@ -55,16 +57,25 @@ admission gate for the candidates that taxonomy routes here.
 - [This machine's locale breaks `date`/`awk` formatting](#this-machines-locale-breaks-dateawk-formatting)
 - [Committing multi-part work](#committing-multi-part-work)
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
-- [Two `uv` traps](#two-uv-traps)
 - [Flag apparent typos and mental slips](#flag-apparent-typos-and-mental-slips)
 
-## Auto mode blocks self-editing `~/.claude/settings.json` via Bash
+## Editing `~/.claude/settings.json` (or similar) in auto mode
 
 Confirmed directly 2026-08-23: a `python3 -c "..."` one-liner making a temporary, explicitly
 user-approved edit to `~/.claude/settings.json` was denied outright by auto mode's background
 classifier both before and after the user said "I will approve it" — auto mode has no per-call
 interactive step for that approval to land on. The Edit tool, which goes through a separate
 permission path, was not blocked for the identical change.
+
+## Saving to cross-session memory
+
+Confirmed 2026-08-22: auto-memory is a separate `memory/` folder per project directory —
+`repo-tasks`, `power-user-linux-setup`, `scaffoldapy`, and the `*-polite-mcp` repos each had their
+own, none shared — so even a general cross-repo preference saved there is invisible everywhere else.
+The same session found ~30 accumulated entries, several duplicating `~/AGENTS.md` or existing skills
+verbatim; the full migration story is `plans/2026-08-22-memory-to-agents-md-migration-sweep.md`. The
+underlying reason `AGENTS.md` beats memory (reviewable, one source of truth instead of N per-project
+copies) applies across repos exactly as it does within one.
 
 ## Composing a Bash call
 
@@ -229,11 +240,15 @@ of habit while direnv was already active and plain `pytest tests/integration/` w
 to the identical binary; corrected mid-session. The absolute path added nothing except a novel
 command string that breaks Bash-allowlist prefix matching.
 
-## Two `uv` traps
+## Designing a uv tool-install or shared-dependency mechanism
 
-Both confirmed live 2026-08-23 while building `repo-tasks`' shared-tool-list mechanism. For the
-`--with-executables-from` trap specifically: verify against the real target package, not a sandboxed
-fixture — a fixture package having its own console script (even accidentally) hides the failure.
+Both traps confirmed live 2026-08-23 while building `repo-tasks`' shared-tool-list mechanism. The
+`--with-executables-from` failure presents as "No executables are provided by package `X`; removing
+tool" — and must be verified against the real target package, not a sandboxed fixture: a fixture
+package having its own console script (even accidentally) hides it. The dependency-groups trap's
+consequence spelled out: bumping the shared package's own dev/quality group changes nothing for any
+project that merely depends on it, because PEP 735 groups aren't pulled in transitively the way
+`[project.dependencies]`/extras are.
 
 ## Flag apparent typos and mental slips
 

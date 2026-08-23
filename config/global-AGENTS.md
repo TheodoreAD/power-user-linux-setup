@@ -10,30 +10,60 @@ Built-in `Plan`/`Explore` subagents never load this file — Claude Code deliber
 session and custom subagents whose definitions don't override the system prompt; when a rule here
 matters for a `Plan`/`Explore` task, restate it in that subagent's own prompt.
 
-## sudo
+## This machine & the harness
 
-Always use `sudo -A` (not plain `sudo`). The `SUDO_ASKPASS` environment variable points to
-`~/.local/bin/askpass-zenity`, which opens a Zenity GUI dialog for the password. Plain `sudo` fails
-because there is no TTY attached to the Bash tool.
+### sudo
+
+Always `sudo -A`, never plain `sudo` — `SUDO_ASKPASS` points at `~/.local/bin/askpass-zenity`, a
+Zenity GUI password dialog, and plain `sudo` fails because the Bash tool has no TTY.
 
 ```shell
-# correct
-sudo -A apt install -y something
-sudo -A cp /tmp/foo /etc/bar
-
-# wrong — hangs or fails with "sudo: a terminal is required"
-sudo apt install -y something
+sudo -A apt install -y something   # correct
+sudo apt install -y something      # wrong — hangs or "sudo: a terminal is required"
 ```
 
-## git fetch/push over SSH
+### git fetch/push needing an SSH key
 
-`SSH_ASKPASS` (same `askpass-zenity` helper) and `SSH_ASKPASS_REQUIRE=prefer` are set, so a
-`git fetch`/`git push` that needs to unlock an SSH key (no key loaded yet in the `keychain`-managed
-agent this session) pops the same GUI passphrase dialog instead of failing with "Permission denied
-(publickey)". `prefer` only engages the dialog when there's no usable TTY — your own interactive
-terminal is unaffected and still prompts normally. Just run the `git` command as normal; no
-HTTPS/token workaround needed. The dialog blocks on user input, so if nobody is at the machine to
-enter the passphrase it will time out rather than hang forever.
+Run the `git` command as normal — `SSH_ASKPASS` (same Zenity helper, with
+`SSH_ASKPASS_REQUIRE=prefer`) pops a GUI passphrase dialog when no key is loaded in the
+`keychain`-managed agent, instead of failing with "Permission denied (publickey)". No HTTPS/token
+workaround needed. The dialog blocks on user input and times out if nobody is at the machine.
+
+### Editing `~/.claude/settings.json` (or similar) in auto mode
+
+Use the Edit tool, not a Bash-invoked script: auto mode's background classifier reviews every Bash
+call with no interactive prompt for a user approval to land on, and denies edits to
+self-referential/sensitive files outright even when the user has approved them — Edit goes through a
+separate permission path that isn't blocked. If Edit is also blocked, stop and ask the user rather
+than hunting for another scripted workaround.
+
+### Setting up a repo's agent instructions and skills
+
+`AGENTS.md` at the repo root is the real file — the cross-tool convention read by 30+ agents.
+`CLAUDE.md`, if present at all, is a plain **symlink** to it, never a file containing the
+`@AGENTS.md` import directive (Claude-Code-specific syntax other harnesses would read as literal
+text); `~/AGENTS.md` itself follows this, with `~/.claude/CLAUDE.md` symlinking to it. Nothing can
+be appended below a symlink's target, so a genuinely Claude-specific addendum goes in `AGENTS.md`
+itself or a separate `.claude/`-scoped file. Skills live in `.agents/skills/` with `.claude/skills`
+symlinked to it; `inv ai.skills` sets this up for `~` (never overwriting existing content), and a
+new Python project's own scaffold comes from
+[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time.
+
+### Saving to cross-session memory
+
+Claude Code's auto-memory (`~/.claude/projects/.../memory/`) is a staging area only, never a durable
+store — it's siloed per project directory, so anything left there is invisible to every other repo's
+sessions. Durable repo-specific knowledge → that repo's own `AGENTS.md` (or a `docs/*.md` it points
+to); durable cross-repo/personal preference → `~/AGENTS.md`. Once a piece of guidance is clear and
+general enough to state as a rule, migrate it and delete the memory entry.
+
+### Designing a uv tool-install or shared-dependency mechanism
+
+Two traps: `uv tool install --with-executables-from <dep> <pkg>` only adds _extra_ console scripts
+from `<dep>` — a package with zero `[project.scripts]` of its own still fails to install as a tool.
+And `dependency-groups` (PEP 735) are per-project, never inherited through a regular dependency — a
+shared package that wants consumers to pick up its tool list needs an explicit mechanism (a task
+editing the consumer's own `pyproject.toml`, or an optional-dependencies extra).
 
 ## Git & commits
 
@@ -125,64 +155,6 @@ Check `which <tool>` before prefixing `uv run` or spelling out `.venv/bin/<tool>
 user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`), so the bare command already resolves
 into the venv and a wrapper or absolute path only adds prompt friction. If a repo's `AGENTS.md`
 Build & test section is empty or stale, fix it rather than silently working around it.
-
-## Auto mode blocks self-editing `~/.claude/settings.json` (or similar) via Bash — use Edit instead
-
-In **auto mode**, a background classifier reviews every Bash call instead of showing an interactive
-prompt — there is no dialog for the user to approve, even if they say they will. Confirmed directly
-(2026-08-23): a `python3 -c "..."` one-liner that made a temporary, explicitly user-approved edit to
-`~/.claude/settings.json` was denied outright by the classifier both before and after the user said
-"I will approve it" — auto mode simply has no per-call interactive step for that approval to land
-on.
-
-**How to apply:** the Edit tool goes through a separate permission path from Bash and was not
-blocked for the identical change — read the file, then use Edit rather than a Bash-invoked script to
-mutate `~/.claude/settings.json` (or any other file the classifier treats as self-referential/
-sensitive) while in auto mode. If Edit is also blocked for some future case, treat that as a signal
-to stop and ask the user directly rather than to hunt for a different scripted workaround.
-
-## Project conventions
-
-If a repo has (or should have) instructions for AI coding agents, prefer `AGENTS.md` at the repo
-root over `CLAUDE.md` — it's the cross-tool convention read by 30+ agents (Claude Code, Cursor,
-Copilot, Aider, ...), not just this one. `CLAUDE.md`, if it exists at all, should be a plain
-**symlink** to `AGENTS.md` — not a file containing the `@AGENTS.md` import directive. The import
-syntax is Claude-Code-specific, so any other harness that also happens to read a literal `CLAUDE.md`
-(for compat) would see that text verbatim instead of real instructions; a symlink presents
-byte-identical content to every harness with no special-case parsing anywhere. Trade-off worth
-knowing: unlike the import form, nothing can be appended below a symlink's target — a genuinely
-Claude-specific addendum belongs in `AGENTS.md` itself (shared) or a separate `.claude/`-scoped
-file, never a duplicate copy of `AGENTS.md`'s content. This file follows its own rule: `~/AGENTS.md`
-is the real content, `~/.claude/CLAUDE.md` symlinks to it, same as this repo's own root.
-
-Skills go in `.agents/skills/` — the emerging cross-tool convention — with `.claude/skills`
-symlinked to it so Claude Code actually discovers them (`.agents/skills/` alone isn't read natively
-yet). `inv ai.skills` sets this up for `~` and installs every skill declared in `setup.toml` — never
-overwrites a file or symlink that's already there. A new Python project's own `AGENTS.md` +
-`CLAUDE.md` symlink + `.agents/skills`/`.claude/skills` scaffold comes from
-[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time instead, not from this
-machine.
-
-## Cross-session memory
-
-Don't use Claude Code's auto-memory system (`~/.claude/projects/.../memory/`) as a durable store at
-all — it's scoped per project directory (a separate `memory/` folder per repo, confirmed 2026-08-22:
-`repo-tasks`, `power-user-linux-setup`, `scaffoldapy`, the `*-polite-mcp` repos each have their own,
-none shared), so anything saved there is invisible to every other repo's sessions regardless of
-whether the content itself is repo-specific or a general cross-repo preference. Treat it as a
-**staging area only**, never the final resting place:
-
-- Durable, repo-specific knowledge → that repo's own `AGENTS.md` (or a `docs/*.md` file it points
-  to).
-- Durable, cross-repo/personal preference (collaboration style, tool defaults, workflow rules that
-  apply no matter which repo a session is in) → **this file**, `~/AGENTS.md` — not memory. Same
-  underlying reason `AGENTS.md` beats memory for a single repo (reviewable, one source of truth
-  instead of N per-project copies) applies just as much across repos as within one.
-
-A memory entry is fine to exist _temporarily_ — mid-session capture of something just learned or
-corrected — but once a piece of guidance is clear and general enough to state as a rule, migrate it
-into the relevant `AGENTS.md` and delete the memory entry rather than letting it sit there
-indefinitely as a second, competing, per-repo-siloed copy of the same instruction.
 
 ## Reuse maintained upstream work
 
@@ -378,25 +350,6 @@ format (`%f`, `%.Nf`), force the C locale explicitly — `LC_TIME=C date ...` or
 ...` — rather than relying on the ambient locale. Don't assume "the terminal looks
 fine" is proof of correct output — same underlying lesson as "Verify what actually happened, not
 what output looks like" above, applied to locale instead of exit codes.
-
-## Two `uv` traps worth checking for before designing around them
-
-Both confirmed live (2026-08-23) while building `repo-tasks`' shared-tool-list mechanism — neither
-is specific to that repo, both apply to any future `uv`-based tool-install/shared-dependency design:
-
-- **`uv tool install --with-executables-from <dep> <pkg>` only adds _extra_ console-scripts from
-  `<dep>` — it never substitutes for `<pkg>` having at least one entry point of its own.** A package
-  with zero `[project.scripts]` still fails to install as a tool ("No executables are provided by
-  package `X`; removing tool"), even when `--with-executables-from` points at a dependency that does
-  have scripts. Verify this against the real target package, not a sandboxed fixture — a fixture
-  package having its own script (even accidentally) will hide the failure.
-- **`dependency-groups` (PEP 735) are per-project, never inherited from a regular dependency.**
-  Adding a tool to package A's own dev/quality group does nothing for project B just because B
-  depends on A — dependency-groups aren't pulled in transitively the way `[project.dependencies]`/
-  extras are. A shared package that wants every consumer to pick up its own tool list needs an
-  explicit mechanism (a task that edits the consumer's own `pyproject.toml`, or a
-  `[project.optional-dependencies]` extra) — bumping the shared package's own group changes nothing
-  for anyone depending on it.
 
 ## Genuine pushback is a standing invitation, not a courtesy
 
