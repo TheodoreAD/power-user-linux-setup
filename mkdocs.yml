@@ -102,6 +102,7 @@ nav:
   - How it works: configuration.md
   - Shell & desktop:
       - zsh.md
+      - terminal.md
       - keybindings.md
       - shortcuts.md
       - input_devices.md

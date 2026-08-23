@@ -45,6 +45,8 @@ content changed, or left untouched if it matches. New blocks are appended. No du
 | `~/.config/px/px.ini`                                  | **not PULSE-managed** — owned entirely by Px's own `--save` | Upstream proxy address, bypass list, username. `inv proxy.*` never hand-authors this file's schema.                                                                                                     |
 | `/usr/local/share/ca-certificates/pulse-corporate.crt` | `inv certs.install`                                         | Corporate CA bundle, auto-converted to PEM from whatever format IT provided — feeds `update-ca-certificates`, see [certs.md](certs.md)                                                                  |
 | `~/.zshenv` (separate `certs` block)                   | `inv certs.install`                                         | `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`/`AWS_CA_BUNDLE`, pointed at the rebuilt system trust bundle — written only after `update-ca-certificates` succeeds, see [certs.md](certs.md) |
+| `~/.config/wezterm/wezterm.lua`                        | `inv system.configs`                                        | Whole file, not a block — pane layout and keybindings, see [terminal.md](terminal.md). Written on install only if absent; redeployed on demand, see "Whole-file configs" below.                         |
+| `~/.config/terminator/config`                          | `inv system.configs`                                        | Whole file, not a block — Terminator profile. Same install-once / redeploy-on-demand rules as above.                                                                                                    |
 
 ### Adding a new block
 
@@ -63,6 +65,89 @@ Run `inv zsh.configure` — the block is written on first run and updated in pla
 For non-shell config files, call `util.ensure_block(path, name, content)` or
 `util.ensure_block_text(text, name, content)` (returns new text without writing, for files that
 require `sudo`).
+
+---
+
+## Whole-file configs — `config_files`
+
+Sentinel blocks only work for files PULSE _shares_ with other writers. Some config files aren't
+shared at all: a tool's config is a single document PULSE authors end to end, in a syntax where a
+`# ╔══ PULSE::name ══╗` comment would be noise (or invalid). WezTerm's Lua config is the clearest
+case — the whole file is one Lua program returning one config table; there's no meaningful "PULSE's
+region" of it.
+
+For those, a package declares `config_files`: a list of `{ src, dst }` mappings copying a file from
+this repo into place.
+
+```toml
+[packages.wezterm]
+method = "deb-github"
+config_files = [{ src = "config/wezterm.lua", dst = "~/.config/wezterm/wezterm.lua" }]
+```
+
+`src` is relative to the repo root, `dst` expands `~`. Any method can declare it.
+
+### Install never clobbers; redeploy is a separate, deliberate command
+
+The install tasks that apply `config_files` (`inv apt.base`, `inv apt.deb`) **only ever write a
+destination that doesn't exist yet.** If the file is already there, they skip it silently — because
+after the first install that file is yours, and a re-run of `inv setup` must never throw away edits
+you made by hand.
+
+The consequence surprises people: **editing `config/<file>` in this repo does not update the
+deployed copy.** Re-running the install task won't do it either. That's what `inv system.configs` is
+for.
+
+```shell
+inv system.configs                     # every declared config_files mapping
+inv system.configs --name wezterm      # just one package's
+inv system.configs --name wezterm -y   # ...without the confirmation prompt
+```
+
+It compares each `dst` against its `src` and does one of three things:
+
+| State                   | What happens                                                              |
+| ----------------------- | ------------------------------------------------------------------------- |
+| identical               | reports `already matches`, writes nothing                                 |
+| destination missing     | creates it, no prompt — nothing is being destroyed                        |
+| destination has drifted | prints a unified diff, then asks `Overwrite <path>? [y/N]` before writing |
+
+The prompt defaults to **no**, and `-y`/`--yes` skips it (same shape as `apt`/`dnf`). Piped or
+non-interactive runs without `-y` skip the overwrite rather than clobbering unattended.
+`PULSE_DRY_RUN=1` shows the diffs and reports what it would do without touching anything.
+
+Sample run:
+
+```console
+$ inv system.configs --name wezterm
+
+[configs] wezterm: /home/you/.config/wezterm/wezterm.lua differs from config/wezterm.lua
+
+  --- /home/you/.config/wezterm/wezterm.lua
+  +++ config/wezterm.lua
+  @@ -1,16 +1,43 @@
+   local wezterm = require "wezterm"
+  +local act = wezterm.action
+   local mux = wezterm.mux
+  ...
+
+Overwrite /home/you/.config/wezterm/wezterm.lua? [y/N]
+```
+
+### Editing one of these files
+
+Because the destination is a real, hand-editable file, there are two valid workflows — pick one per
+change, don't mix them:
+
+1. **Change it for good** — edit `config/<file>` in this repo, commit it, then
+   `inv system.configs --name <pkg>` to push it out. This is the right path for anything you want on
+   the next machine too.
+2. **Try something locally** — edit the deployed `~/...` file directly. Nothing will overwrite it
+   until you explicitly run `inv system.configs`, at which point the diff shows exactly what you'd
+   be discarding. Copy anything worth keeping back into `config/<file>` first.
+
+Currently declared: [`config/wezterm.lua`](terminal.md) → `~/.config/wezterm/wezterm.lua`, and
+`config/terminator.conf` → `~/.config/terminator/config`.
 
 ---
 
