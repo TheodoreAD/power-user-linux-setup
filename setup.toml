@@ -1533,15 +1533,15 @@ dest = "~/.local/bin/research-update"
 content_file = "config/research-update.sh"
 zshenv = 'export RESEARCH_HOME="${HOME}/research"'
 skills = [{ source = "local", path = "skills/research-library" }]
-# Grants Read/Glob/Grep on the whole library without a per-call prompt — this is curated,
+# Grants read access on the whole library without a per-call prompt — this is curated,
 # read-only reference material, not arbitrary internet content, so treating it like project files
-# rather than gating every lookup is the point of building this in the first place. Applied
-# declaratively by `inv ai.skills` (tasks/ai.py), tracked via its own manifest — deliberately
-# separate from tasks/allowlist.py's CLI-classification pipeline, which this isn't part of; see
-# docs/claude-code.md.
+# rather than gating every lookup is the point of building this in the first place. A single Read
+# rule covers every file-reading tool (Read, Glob, Grep); Glob(...)/Grep(...) rule types aren't
+# matched by Claude Code's file permission checks at all (its launch-time linter flags them).
+# Applied declaratively by `inv ai.skills` (tasks/ai.py), tracked via its own manifest —
+# deliberately separate from tasks/allowlist.py's CLI-classification pipeline, which this isn't
+# part of; see docs/claude-code.md.
 claude_permissions_allow = [
-  "Glob(//home/tdumitrescu/research/**)",
-  "Grep(//home/tdumitrescu/research/**)",
   "Read(//home/tdumitrescu/research/**)",
 ]
 
