@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-23
+updated: 2026-08-24
 ---
 
 ## Context
@@ -16,8 +16,18 @@ added as a direct result): Claude Code's built-in `Plan`/`Explore` agent types d
 loading `CLAUDE.md`/`AGENTS.md` entirely (documented exception, for speed/cost). This is not a
 one-off model lapse — no rewording of the `AGENTS.md` rule fixes it for those two agent types, since
 they structurally never see the file. A hook enforces the rule at the harness level instead,
-independent of which agent/system-prompt is active — the same class of fix as
-`deployed-config-drift-guard.md`'s Approach A, applied to a different problem.
+independent of which agent/system-prompt is active.
+
+[NEEDS CLARIFICATION: this plan originally leaned on `deployed-config-drift-guard.md`'s Approach A
+(a `PostToolUse` nag hook) as precedent — "the same class of fix, applied to a different problem."
+That precedent is gone: on 2026-08-24 the drift-guard plan dropped its hook entirely, on the grounds
+that the fix belonged in the writer and that a harness hook conflicts with
+`config/global-AGENTS.md`'s "Proposing an enforcement mechanism for agent behavior" rule (teach the
+agent what to run; don't fire behind its back). This plan's hook has no equivalent writer to fix —
+there is no PULSE-side code path that issues the `sed -n` call — so the "just fix the mechanism"
+escape doesn't exist here, and the `Plan`/`Explore` blind spot is still real. But the hook now has
+to justify itself standalone against that rule rather than riding on a sibling plan's precedent.
+Decide that before building.]
 
 ## Confirmed hook mechanics
 
@@ -40,12 +50,13 @@ hard block would fight it.
 - **Nudge text**: something like "sed -n was used to view a file — Read (with offset/limit) does the
   same job with zero Bash-allowlist friction and no subagent-CLAUDE.md-inheritance gap. Prefer it
   unless this sed call is genuinely part of a larger pipeline Read can't express."
-- **Deployment**: same infrastructure as `deployed-config-drift-guard.md`'s pulse-guard hook — a
-  `wrapper-script`-deployed script + a merge into the global `~/.claude/settings.json`
-  `hooks.PreToolUse` array, matcher `"Bash"`. If that plan's hook-registration task lands first,
-  reuse it rather than duplicating the `settings.json`-merge logic a second time.
-- **Scope**: global (fires on every Bash call machine-wide, not just this repo) — same global-hook
-  precedent as the pulse-guard design.
+- **Deployment**: a `wrapper-script`-deployed script + a merge into the global
+  `~/.claude/settings.json` `hooks.PreToolUse` array, matcher `"Bash"`, via
+  `util.load_claude_settings()`/`write_claude_settings()` (the same merge-without-clobbering shape
+  `ai.py`/`allowlist.py` already use). Note there is no longer a sibling hook to share registration
+  logic with — `deployed-config-drift-guard.md` dropped its `PostToolUse` hook on 2026-08-24, so
+  this plan owns the whole hook-registration mechanism if it goes ahead.
+- **Scope**: global (fires on every Bash call machine-wide, not just this repo).
 
 ## Second root cause, found 2026-08-23: auto mode instructs the opposite
 
@@ -96,10 +107,10 @@ there — worth measuring before assuming the rule's rationale survives unchange
 legitimately part of a larger pipe" — needs a handful of real positive/negative examples to validate
 against before considering it done.]
 
-[NEEDS CLARIFICATION: should this hook and `deployed-config-drift-guard.md`'s `PostToolUse` hook
-share one deployed script/registration task (two matchers, one file) or stay fully independent?
-Unrelated problems solved by the same mechanism class — worth deciding once one of the two is
-actually being implemented, not before.]
+[NEEDS CLARIFICATION: resolved as moot on 2026-08-24 — `deployed-config-drift-guard.md` no longer
+has a `PostToolUse` hook to share a script or registration task with, so this hook stands alone if
+built. Kept as an open item only because it folds into the prior question of whether to build it at
+all.]
 
 [NEEDS CLARIFICATION: worth generalizing beyond `sed -n` to the other Bash-vs-harness-tool
 anti-patterns `config/global-AGENTS.md` already names (`cat`/`head`/`tail` instead of Read,

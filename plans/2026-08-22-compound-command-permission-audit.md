@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-22
+updated: 2026-08-24
 ---
 
 ## Context
@@ -129,7 +129,8 @@ Two tracks, only one of which depends on resolving the open questions above:
    patch — get the forensic detail from the open questions above first. If it turns out to be a
    subagent-dispatch prompt-surfacing gap rather than a compound-command-parsing gap, the correct
    fix is entirely different (and likely belongs alongside
-   `plans/2026-08-22-sed-read-nudge-hook.md`'s and
-   `plans/2026-08-22-deployed-config-drift-guard.md`'s hook-based mechanisms, which already
-   establish the pattern of enforcing things at the harness/hook level rather than relying on
-   documentation an agent may or may not see).
+   `plans/2026-08-22-sed-read-nudge-hook.md`'s hook-based mechanism — note that this is now the
+   repo's only remaining harness-hook proposal, since
+   `plans/2026-08-22-deployed-config-drift-guard.md` dropped its own hook on 2026-08-24 in favor of
+   fixing the writer, so "we already enforce things at the harness level" is no longer an
+   established pattern here to lean on).
