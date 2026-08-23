@@ -220,6 +220,19 @@ that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zpro
 Add a skill to install without attaching it to some other tool's entry by giving it its own
 `[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
 
+**Caveat found live (2026-08-23): don't run `inv ai.skills` from an agent session (or any other
+non-interactive context) if you only need the permissions/statusline side effects.** The npx-source
+install confirmation (`_install_remote_skill`'s `ui.ask(...)`) defaults to **proceed**, not skip,
+when `not yes` — unlike the statusline-overwrite prompt above, which defaults to decline. Per "The
+core problem: no TTY" up top, an agent's Bash tool is always non-interactive, so `ui.ask()` always
+returns that default with no real prompt ever shown. Running the full `skills` task from inside an
+agent session would therefore silently install every declared-but-not-yet-installed npx-source skill
+with no approval gate at all — exactly the scenario this doc's own security-risk-assessment
+paragraph above assumes a human is present to read. To apply just a new `claude_permissions_allow`
+rule or statusline change without touching skill installation, call
+`tasks.ai._apply_static_claude_permissions()` (or `_apply_declared_statusline()`) directly instead
+of the `skills` task.
+
 The `npx` source was validated end-to-end against a real package
 ([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
 before being trusted for `research-library`'s own `local` source — but caveman itself ended up
