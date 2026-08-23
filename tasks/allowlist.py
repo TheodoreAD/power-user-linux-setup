@@ -1269,17 +1269,25 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
     analysis/review-only until there's an actual consumer that can act on it (e.g. a future
     PreToolUse hook, deliberately not built yet — see contributing/cli-allowlist.md).
 
-    A read_only node that has children of its own is skipped entirely — deliberately, not an
-    oversight. Its read_only verdict describes what happens when it's invoked *bare* (`docker
-    network` with no further args just lists/describes, same as any other read_only command), but
-    real usage always goes through a child (`docker network rm`, `docker network create`), each of
-    which already gets its own independently-correct rule. Rendering a rule for the bare parent
-    too is pure noise: Claude Code's permission precedence is deny > ask > allow with no
-    specificity tiebreak (confirmed against the actual docs, not assumed), so a stricter rule for
-    a child always wins over a looser allow for its parent regardless — the omitted rule was never
-    doing anything a more specific one wasn't already doing more correctly. The rare case of the
-    bare parent actually being invoked with no subcommand falls through to Claude's own default
-    behavior instead (typically still a prompt), not silent approval and not silent denial."""
+    Any node that has children of its own is skipped entirely, regardless of its own
+    classification — deliberately, not an oversight. Its own verdict describes what happens when
+    it's invoked *bare* (`docker network` with no further args just lists/describes, same as any
+    other read_only command), but real usage always goes through a child (`docker network rm`,
+    `docker network create`), each of which already gets its own independently-correct rule.
+    Rendering a rule for the bare parent too is pure noise at best: Claude Code's permission
+    precedence is deny > ask > allow with no specificity tiebreak (confirmed against the actual
+    docs, not assumed), so a stricter rule for a child always wins over a looser allow for its
+    parent regardless — the omitted allow rule was never doing anything a more specific one wasn't
+    already doing more correctly. But for a `write`/`dangerous` parent it's actively harmful, not
+    just noise: that same no-specificity-tiebreak precedence means the parent's `ask` rule
+    unconditionally shadows a correctly-classified `read_only` child's `allow` rule (confirmed
+    live: `gh run` classified `dangerous` was shadowing `gh run view`/`gh run list`'s own
+    `read_only` `allow` rules, forcing a prompt every time despite the more specific rule being
+    exactly right). Skipping every parent-with-children rule, not just read_only ones, fixes that
+    for every recursed tool where a parent verb is riskier than one of its own children (also hit
+    `docker`, `git`, `go`, `helm`, `kubectl` — not a gh-specific bug). The rare case of the bare
+    parent actually being invoked with no subcommand falls through to Claude's own default behavior
+    instead (typically still a prompt), not silent approval and not silent denial."""
     registry = _load_registry()
     allow, ask = [], []
     for name, entry in sorted(rules.items()):
@@ -1300,7 +1308,7 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
         cache_nodes = (_load_cache(name) or {}).get("nodes", {})
         for path, v in sorted(entry.get("nodes", {}).items()):
             classification = v["classification"]
-            if classification == Classification.READ_ONLY and cache_nodes.get(path, {}).get("children"):
+            if cache_nodes.get(path, {}).get("children"):
                 continue
             pattern = f"Bash({name}:*)" if path == _NO_SUBCOMMANDS_KEY else f"Bash({name} {path}:*)"
             if classification == Classification.READ_ONLY and not is_cloud_cli:
