@@ -97,6 +97,13 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
         dest.parent.mkdir(parents=True, exist_ok=True)
         dest.write_text(content)
         dest.chmod(0o755)
+        # Re-read rather than trust the write call succeeded — a full disk, a permission race, or
+        # anything else that leaves dest not actually matching `content` should fail loudly right
+        # here, not silently surface later as a stale-looking file someone has to go diff by hand
+        # (see tasks/verify.py's own wrapper-script content check for the same problem caught
+        # after the fact, on any later run — this is the same guarantee, immediately).
+        if dest.read_text() != content:
+            raise RuntimeError(f"[{name}] wrote {dest} but its content doesn't match {cfg['content_file']}")
         print(f"[{name}] installed")
 
     if link is None or link_ok:

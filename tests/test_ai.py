@@ -6,6 +6,7 @@ util.load_config rather than any real system call, same shape as tests/test_phas
 tests/README.md.
 """
 
+import shutil
 from pathlib import Path
 
 import pytest
@@ -166,6 +167,32 @@ def test_install_local_skill_declining_prompt_skips_install(tmp_path, monkeypatc
 
     assert not (base / ".agents" / "skills" / "foo").exists()
     assert "skipped (declined)" in capsys.readouterr().out
+
+
+def test_install_local_skill_raises_when_copy_doesnt_match_source(tmp_path, monkeypatch):
+    # The exact gap this check exists to catch: copytree "succeeds" (no exception) but what
+    # actually landed on disk doesn't match the source — simulated via a real digest mismatch
+    # (corrupting one file post-copy) rather than mocking _dir_digest, so the comparison itself is
+    # exercised for real.
+    repo_root = tmp_path / "repo"
+    src = _make_src_skill(repo_root, "skills/foo")
+    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+    base = tmp_path / "home"
+
+    real_copytree = shutil.copytree
+
+    def corrupting_copytree(s, d, *args, **kwargs):
+        result = real_copytree(s, d, *args, **kwargs)
+        (Path(d) / "SKILL.md").write_text("corrupted during copy")
+        return result
+
+    monkeypatch.setattr(shutil, "copytree", corrupting_copytree)
+
+    with pytest.raises(RuntimeError, match="doesn't match"):
+        ai._install_local_skill(base, "skills/foo", label="test", yes=False)
+
+    assert src.exists()  # source untouched by the corruption
 
 
 def test_install_local_skill_yes_skips_prompt(tmp_path, monkeypatch):

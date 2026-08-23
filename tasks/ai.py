@@ -127,6 +127,12 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
         dest.unlink() if dest.is_symlink() else shutil.rmtree(dest)
     dest.parent.mkdir(parents=True, exist_ok=True)
     shutil.copytree(src, dest)
+    # Re-hash rather than trust copytree succeeded — a partial copy (disk full mid-tree, a file
+    # permission race) should fail loudly right here, not silently look "installed" until some
+    # later up_to_date check (or a human) notices the content doesn't actually match. Raised
+    # before the marker is written, so a failed copy is never recorded as "ours, up to date".
+    if _dir_digest(dest) != _dir_digest(src):
+        raise RuntimeError(f"[{label}] copied {name} from {repo_path} but its content doesn't match the source")
     marker.write_text(repo_path + "\n")
     print(f"[{label}] {name} copied from {repo_path}")
 
