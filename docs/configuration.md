@@ -153,14 +153,33 @@ Currently declared: [`config/wezterm.lua`](terminal.md) → `~/.config/wezterm/w
 
 ## Tags, `enabled`, and which tasks actually respect either
 
-Every `[packages.*]` entry has two independent, unrelated ways to be skipped:
+Every `[packages.*]` entry has three independent, unrelated ways to be skipped:
 
-- **`enabled = false`** — a permanent, environment-independent switch baked into `setup.toml`. Used
-  for things that are evaluated-but-not-wanted (e.g. `freon`, superseded by `vitals`) or opt-in
-  extras (e.g. `glab`, `atuin`).
+- **`enabled = false`** — the default for every machine that clones this repo, baked into
+  `setup.toml`. Used for things that are evaluated-but-not-wanted (e.g. `freon`, superseded by
+  `vitals`), opt-in extras (e.g. `glab`, `atuin`), and machine-specific workarounds that would be
+  wrong as a universal default (e.g. `google-chrome-x11`).
+- **`~/.config/power-user-linux-setup/overrides.toml`** — one machine's disagreement with that
+  default, written in `setup.toml`'s own shape:
+
+  ```toml
+  [packages.google-chrome-x11]
+  enabled = true
+  ```
+
+  Only `enabled` is honoured, and only for a package `setup.toml` already declares — every package
+  _definition_ stays in git where it can be reviewed. The file is deliberately outside git and is
+  not backed up by anything here: preserving a home directory is the user's own job. What this repo
+  guarantees is the stability of its defaults, not of any one machine's customizations on top of
+  them.
 - **`tags = [...]` + `PULSE_EXCLUDE_TAGS`** — a runtime filter layered on top, for building
   environment-specific profiles (headless, container, WSL) without editing `setup.toml` per
   environment. See [index.md's Quick start](index.md#quick-start) for a live example.
+
+Precedence is `setup.toml` → `overrides.toml` → `PULSE_EXCLUDE_TAGS`, environment last and absolute.
+Tags describe _capability_ (no display server means a `gui` package genuinely cannot work); an
+override describes _intent_. So a container that excluded `gui` still skips the package even on a
+machine whose `overrides.toml` asked for it.
 
 **Both are only checked by `util.packages_by_method(method)`** (`tasks/util.py`) — the dispatcher
 every _generic_ install-method task loops over: `apt`, `apt-repo`, `deb-github`, `deb-url`,
