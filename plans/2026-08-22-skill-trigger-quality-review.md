@@ -96,8 +96,8 @@ would correctly decide to invoke that skill for each. Where exactly the prompts 
 actually invoked (spawn a bare Task/Agent call with just the description text and the full list of
 other skill descriptions, matching real trigger conditions; or a direct Anthropic API call from a
 script/pytest test — has a real per-run token cost either way, worth deciding budget/cadence for),
-and whether it's wired into `inv ai.skills`, a dedicated `inv` task, or a manually-invoked check are
-all still open — implementation-level design, not resolved by this research pass.
+and whether it's wired into `inv ai.install-skills`, a dedicated `inv` task, or a manually-invoked
+check are all still open — implementation-level design, not resolved by this research pass.
 
 **Fallback**, only if the custom in-repo version proves too heavy or the description-only cold-check
 harness turns out non-trivial to build well: **promptfoo** over DeepEval — more stars, more mature,
@@ -106,11 +106,11 @@ and its YAML test-matrix format is lower-boilerplate than DeepEval's pytest clas
 DeepEval is pytest-native and this repo already uses pytest.
 
 [NEEDS CLARIFICATION: mechanism for the cold check — a live Agent/Task call each test run (real
-token cost, needs a budget/cadence decision — every `inv ai.skills` run? CI only? manual/on-demand
-only, matching this repo's stated aversion to auto-triggered mutation/cost) vs. a direct Anthropic
-API call from a plain script/pytest test (same cost question, different plumbing) vs. attempting to
-actually get `claude plugin eval`/`skill-creator` access via `/feedback` and using Anthropic's own
-gated tool once available.]
+token cost, needs a budget/cadence decision — every `inv ai.install-skills` run? CI only?
+manual/on-demand only, matching this repo's stated aversion to auto-triggered mutation/cost) vs. a
+direct Anthropic API call from a plain script/pytest test (same cost question, different plumbing)
+vs. attempting to actually get `claude plugin eval`/`skill-creator` access via `/feedback` and using
+Anthropic's own gated tool once available.]
 
 [NEEDS CLARIFICATION: where do the 3 positive/negative/edge prompts per skill live — inline
 frontmatter, a sibling eval file per skill, or one shared corpus file — and does the "cold" check

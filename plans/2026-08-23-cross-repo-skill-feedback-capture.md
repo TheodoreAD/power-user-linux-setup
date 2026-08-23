@@ -6,8 +6,9 @@ updated: 2026-08-23
 ## Context
 
 This repo is the source of truth for everything user-wide that agents read: `skills/*` (deployed by
-`inv ai.skills`) and `config/global-AGENTS.md` (deployed as `~/AGENTS.md` /`~/.claude/CLAUDE.md`).
-Design work on those belongs here — `plans/` here, `setup.toml` here, `inv quality.precommit` here.
+`inv ai.install-skills`) and `config/global-AGENTS.md` (deployed as `~/AGENTS.md`
+/`~/.claude/CLAUDE.md`). Design work on those belongs here — `plans/` here, `setup.toml` here,
+`inv quality.precommit` here.
 
 But the _need_ for a change almost never surfaces here. It surfaces mid-task in `repo-tasks`,
 `scaffoldapy`, an `*-polite-mcp` repo: a skill fails to trigger on the request it exists for, a
@@ -19,10 +20,10 @@ picks the topic up, that evidence is gone, and what's left is a second-hand para
 Two existing mechanisms touch this and neither closes it:
 
 - `skills/session-harvest/SKILL.md` "Self-update mechanics" already says: from wherever you are,
-  locate this repo, edit `skills/<name>/SKILL.md`, re-run `inv ai.skills`. That's the right answer
-  for a one-line additive fix and the wrong one for anything needing design, a `setup.toml` change,
-  new reference files, or the quality gate — and it drags a foreign session into a second repo,
-  which `~/AGENTS.md` "Testing a different repo's code in a multi-working-directory session"
+  locate this repo, edit `skills/<name>/SKILL.md`, re-run `inv ai.install-skills`. That's the right
+  answer for a one-line additive fix and the wrong one for anything needing design, a `setup.toml`
+  change, new reference files, or the quality gate — and it drags a foreign session into a second
+  repo, which `~/AGENTS.md` "Testing a different repo's code in a multi-working-directory session"
   explicitly warns against.
 - `skills/plan-docs` owns plan lifecycle and already has `depends_on:` for _outbound_ cross-repo
   dependency. It has nothing for _inbound_ provenance — a plan that arrived here from elsewhere and
@@ -158,7 +159,7 @@ the direct answer to "context from the other repo is key to debugging."
 `skills/plan-docs/SKILL.md` gains a short "Plans that arrive from another repo" section defining
 these fields, and the rule that a plan carrying `source_repo` isn't done until its `## Verification`
 names the original repro in that repo — the fix has to be checked against the case that produced it,
-after `inv ai.skills` re-deploys.
+after `inv ai.install-skills` re-deploys.
 
 ### 4. Commit prompt, immediately
 
@@ -241,12 +242,12 @@ file was written and committed in the same breath, no untracked-file window.
 [PITFALL: **§2's lane boundary did not survive contact.** Lane 1 (fix-in-place) is bounded to "a
 single additive edit… no design decisions, no new files, no `setup.toml` change." This session did
 far more from a foreign cwd — a multi-section rewrite of `skills/plan-docs/SKILL.md` plus its
-`references/`, and a new `--skill` option on `ai.skills` with 14 tests — and it went cleanly: 215
-tests green, `basedpyright` 0 errors, committed without incident. The bound wasn't wrong about risk
-so much as about _authority_: the user explicitly said "you should be able to do your work there"
-each time. So the real dividing line is whether the user has authorized foreign-repo work in this
-session, not how large the edit is. Worth reconciling before the lane bound is written into
-`session-harvest`, or that rule will be routinely and correctly ignored.]
+`references/`, and a new `--skill` option on `ai.install-skills` with 14 tests — and it went
+cleanly: 215 tests green, `basedpyright` 0 errors, committed without incident. The bound wasn't
+wrong about risk so much as about _authority_: the user explicitly said "you should be able to do
+your work there" each time. So the real dividing line is whether the user has authorized
+foreign-repo work in this session, not how large the edit is. Worth reconciling before the lane
+bound is written into `session-harvest`, or that rule will be routinely and correctly ignored.]
 
 **Also confirmed against §5's rationale:** the traps `pulse-capture` is designed to dodge are real
 but narrower than assumed. `git -C`, `dprint --config`, `ruff --config`, `basedpyright --project`

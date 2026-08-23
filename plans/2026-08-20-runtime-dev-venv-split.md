@@ -109,12 +109,12 @@ depends_on: [repo-tasks, scaffoldapy]
   `runtime-guardrail` job mirrors bootstrap.sh's `--invoke-only` shape — bare
   `uv tool install
   invoke` (never `uv sync`), `inv --list`, then
-  `PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb
-  tools.install fonts.install` (the exact smoke
-  command already documented in `docs/index.md`, reused rather than inventing a new list). Guards
-  the Context section's actual verified invariant — bare invoke with no `repo_tasks` at all still
-  gets a working `inv --list` via `_import_repo_tasks_modules` degrading to four `None`s — not the
-  now-default `--repo-tasks` path, which `quality` already exercises via a real `uv sync`.
+  `PULSE_DRY_RUN=1 inv apt.install-repos apt.base apt.deb
+  tools.install fonts.install` (the exact
+  smoke command already documented in `docs/index.md`, reused rather than inventing a new list).
+  Guards the Context section's actual verified invariant — bare invoke with no `repo_tasks` at all
+  still gets a working `inv --list` via `_import_repo_tasks_modules` degrading to four `None`s — not
+  the now-default `--repo-tasks` path, which `quality` already exercises via a real `uv sync`.
 - **repo-tasks got its own CI too** (`740fd04` — it had none before): same pattern, a new root
   `bootstrap.sh` (`uv run inv venv.create`, the one unavoidable raw `uv` call, also usable directly
   by a human cloning the repo without direnv) then bare `inv quality.check`. `venv.py`'s `sync` now

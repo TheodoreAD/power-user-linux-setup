@@ -727,9 +727,9 @@ CI-friendly install over any system package at all (`shellcheck-py`/`shfmt-py`, 
 actively maintained via the PyPI index directly, not just search-result summaries) — then, once it
 became clear shell scripts aren't Python-project-specific and both tools should be available
 machine-wide, to `uv-tool` instead of a plain project dev-dependency, installed through this repo's
-_own_ declarative package pipeline (`setup.toml` + `inv python.tools`), explicitly **not** a manual
-`uv tool install` run by hand — "that defeats the purpose of this setup." Both `shellcheck` and
-`shfmt` (previously apt, now `uv-tool`) ended up in `setup.toml` exactly like every other
+_own_ declarative package pipeline (`setup.toml` + `inv python.install-tools`), explicitly **not** a
+manual `uv tool install` run by hand — "that defeats the purpose of this setup." Both `shellcheck`
+and `shfmt` (previously apt, now `uv-tool`) ended up in `setup.toml` exactly like every other
 user-scoped uv tool this repo already manages (`gnome-extensions-cli`, `nox`, `mkdocs`, `glances`,
 ...). Checked whether Rust/Go's own quality tools set a precedent either way, since shell tools now
 being machine-wide (not Python-project-scoped) raised the same question §A/§B will face for any
@@ -1052,7 +1052,7 @@ actually begins, so no separate retrofit step for those two regardless of this d
 (already extracted per §A), is actually generic per-repo dev tooling rather than
 machine-setup-only.** Most of `tasks/` (`apt`, `gnome`, `wsl`, `docker`, `certs`, `proxy`, `fonts`,
 `screenshot`, `node`, `system`, `ide`, `zsh`, `devcontainer`, `cleanup`, `identity`, `allowlist`,
-`verify`, `ai.skills`/ `ai.init`) is tied to this machine or this repo's own
+`verify`, `ai.install-skills`/ `ai.init`) is tied to this machine or this repo's own
 `setup.toml`/`identity.toml` and isn't portable. Two things are: `python.dev_venv` +
 `ai.claude_direnv_hook` (the "set up my dev loop after cloning" pair — `dev_venv` already calls
 `claude_direnv_hook` as a step), and `docs.{clean,build,
@@ -1215,22 +1215,23 @@ _whole_ repo-scoped AI-agent scaffold — `AGENTS.md`, `CLAUDE.md` as a symlink 
   no longer be in pulse") was explicit and unambiguous on a second pass.
 
 **Explicitly no skill installation in the generated scaffold** — narrower than `ai.init` even was.
-`ai.init` already didn't install any skill content (`ai.skills`'s job, home-directory-scoped, see
-below), only ever created the empty `.agents/skills/` dir + symlink; the new `scaffoldapy` version
-keeps exactly that shape, per direct instruction: "the repos shouldn't install skills by default,
-probably just t[he] symlinks and create the directories and maybe have a readme explaining the
-symlinking."
+`ai.init` already didn't install any skill content (`ai.install-skills`'s job,
+home-directory-scoped, see below), only ever created the empty `.agents/skills/` dir + symlink; the
+new `scaffoldapy` version keeps exactly that shape, per direct instruction: "the repos shouldn't
+install skills by default, probably just t[he] symlinks and create the directories and maybe have a
+readme explaining the symlinking."
 
 **What stays in `power-user-linux-setup`, confirmed explicitly, not just left alone by omission:**
 everything home-directory-scoped — `~/AGENTS.md` (written by `[packages.claude-global-md]` +
 `tasks/tools.py`'s `wrapper-script` method from `config/global-AGENTS.md`, a completely separate
-mechanism from `tasks/ai.py`) and `ai.skills`'s default (no `--dir`) mode: `~/.agents/skills` +
-`~/.claude/skills` symlink, **plus** actually installing every `skills`-declared entry from
-`setup.toml` and merging `claude_permissions_allow` rules — genuinely global, user-level state, not
-project-scoped, and it's a load-bearing step of `inv setup`'s `PACKAGES_PHASE` (`tasks/setup.py`) —
-must keep working with zero project deps, per `plans/2026-08-20-runtime-dev-venv-split.md`.
-`_ensure_agents_skills` (the shared directory+symlink helper `ai.skills` depends on) stays put,
-untouched, for exactly that reason — it was never `ai.init`-exclusive to begin with.
+mechanism from `tasks/ai.py`) and `ai.install-skills`'s default (no `--dir`) mode:
+`~/.agents/skills` + `~/.claude/skills` symlink, **plus** actually installing every
+`skills`-declared entry from `setup.toml` and merging `claude_permissions_allow` rules — genuinely
+global, user-level state, not project-scoped, and it's a load-bearing step of `inv setup`'s
+`PACKAGES_PHASE` (`tasks/setup.py`) — must keep working with zero project deps, per
+`plans/2026-08-20-runtime-dev-venv-split.md`. `_ensure_agents_skills` (the shared directory+symlink
+helper `ai.install-skills` depends on) stays put, untouched, for exactly that reason — it was never
+`ai.init`-exclusive to begin with.
 
 **Mechanism, verified empirically before committing to it, not assumed:** Copier has native symlink
 support, gated by `_preserve_symlinks: true` in `copier.yml`
@@ -1275,11 +1276,11 @@ real reach beyond this repo — **`config/global-AGENTS.md` is deployed verbatim
 machine's own `~/AGENTS.md`** via `[packages.claude-global-md]`, so its `inv ai.init` sentence is
 live, user-facing content on this machine (and any other) right now, not just internal docs:
 
-- `config/global-AGENTS.md` — rewrite the skills paragraph to describe `ai.skills` only; drop the
-  `inv ai.init` sentence, since the capability it described no longer exists.
+- `config/global-AGENTS.md` — rewrite the skills paragraph to describe `ai.install-skills` only;
+  drop the `inv ai.init` sentence, since the capability it described no longer exists.
 - `docs/claude-code.md` — same section drops its `ai.init` bullet/example.
 - This repo's own `AGENTS.md` (`## AI agent tooling (tasks/ai.py)`) — drops the `inv ai.init` half
-  of its opening sentence, keeps the `inv ai.skills` half.
+  of its opening sentence, keeps the `inv ai.install-skills` half.
 - `skills/mcp-skill-shipping/SKILL.md` — its dev-loop checklist item
   `inv ai.init --dir <path>
   (from a power-user-linux-setup checkout) once per repo` needs
@@ -1315,7 +1316,7 @@ dependency either direction.
 copier.yml comment explaining its absent `_tasks` hook are both gone. `power-user-linux-setup`:
 `tasks/ai.py`'s `init` task and `_AGENTS_MD_TEMPLATE` deleted outright; every doc reference updated
 (`config/global-AGENTS.md`, this repo's own `AGENTS.md`, `docs/claude-code.md`,
-`skills/mcp-skill-shipping/SKILL.md`). `inv ai.skills` re-run to redeploy the updated
+`skills/mcp-skill-shipping/SKILL.md`). `inv ai.install-skills` re-run to redeploy the updated
 `mcp-skill-shipping` copy; `inv tools.install` (which would pick up the `config/global-AGENTS.md`
 change into the live `~/AGENTS.md`) deliberately **not** run automatically — it's a much
 broader-scoped task (every `wrapper-script`/`script`/`binary` package) than this one file, so it's

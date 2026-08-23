@@ -1,6 +1,7 @@
 ---
-status: planned
+status: blocked on the repo-tasks follow-up
 updated: 2026-08-24
+depends_on: [repo-tasks]
 ---
 
 # Uniform verb-first naming for invoke tasks
@@ -172,6 +173,30 @@ a problem.]
 - `inv docs.build` (strict) passes — catches the heading-anchor pitfall.
 - After landing: `inv tools.install` and `inv ai.install-skills` to redeploy the two edited deployed
   sources, then `inv deploy.status` reports everything clean again.
+
+## Landed 2026-08-24 — steps 1–4 of 5
+
+All 24 renames plus the `cleanup`→`clean` namespace are in, across code, tests, `setup.toml`, the
+Dockerfile, CI, 27 prose files, and the deployed sources (redeployed; `inv deploy.status` reports
+every managed path ok). `CONTRIBUTING.md` carries the rule. Only step 5 — the `repo-tasks` follow-up
+— is outstanding, which is what this plan is now blocked on.
+
+What the execution turned up that the plan didn't predict:
+
+[PITFALL: a mechanical rename cannot tell a CLI name from a Python identifier by context alone, and
+both spellings of the same task appear in the same file. The pass put `[ai.install_skills]` into
+`ai.py`'s user-facing output labels — a bare f-string prefix looks like neither code nor prose.
+Caught by _running_ `inv ai.install-skills` and reading its output, not by the suite, which never
+asserts on label text. Grep for the snake spelling inside string literals after any future rename.]
+
+[PITFALL: the heading-anchor risk this plan flagged as its main danger was a non-issue —
+`docs/claude-code.md`'s `## .agents/skills/ — inv ai.skills` is the only heading citing a renamed
+task, and nothing links to its anchor. Two greps (`claude-code.md#`, then `^#+ .*<task>`) settled it
+in seconds, and `inv docs.build` (`zensical --strict`) confirmed. Cheap to check, so check — but the
+real cost was elsewhere.]
+
+[PITFALL: three lines crossed ruff's 120-char limit purely because the new names are longer. Wrap
+the line; never shorten a name to fit a formatter.]
 
 ## Sequencing
 
