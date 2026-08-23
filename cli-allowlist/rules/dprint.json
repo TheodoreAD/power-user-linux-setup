@@ -1,6 +1,6 @@
 {
-  "classified_at": "2026-08-23T12:47:18Z",
-  "extracted_at": "2026-08-23T12:43:01Z",
+  "classified_at": "2026-08-23T14:10:35Z",
+  "extracted_at": "2026-08-23T14:09:58Z",
   "nodes": {
     "check": {
       "classification": "read_only",
@@ -18,6 +18,14 @@
       "rationale": "Parent command for configuration management; its subcommands (init, update, add, edit) all modify the configuration file.",
       "source": "llm"
     },
+    "file-paths": {
+      "classification": "read_only",
+      "content_hash": "cafee2a75a2bb965",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Only inspects and prints resolved file paths based on configuration; makes no modifications to files or state.",
+      "source": "llm"
+    },
     "fmt": {
       "classification": "write",
       "content_hash": "23b209cd1a475900",
@@ -25,18 +33,10 @@
       "model": "haiku",
       "rationale": "Writes formatted code to the file system; bounded, expected, and reversible.",
       "source": "llm"
-    },
-    "output-file-paths": {
-      "classification": "invalid",
-      "content_hash": "cafee2a75a2bb965",
-      "flags": {},
-      "model": "haiku",
-      "rationale": "The heading doesn't match the actual subcommand (usage line shows 'dprint file-paths', not 'output-file-paths'); appears to be a labeling error.",
-      "source": "llm"
     }
   },
-  "reviewed": true,
-  "reviewed_at": "2026-08-23T13:16:22Z",
+  "reviewed": false,
+  "reviewed_at": null,
   "truncated": false,
   "version": "dprint 0.56.1"
 }

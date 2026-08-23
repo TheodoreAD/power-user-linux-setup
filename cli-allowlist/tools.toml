@@ -400,7 +400,7 @@ subcommands = [
 subcommands = ["status", "dump", "allow", "edit", "deny", "reload"]
 
 [dprint]
-subcommands = ["check", "fmt", "config", "output-file-paths"]
+subcommands = ["check", "fmt", "config", "file-paths"]
 
 [zensical]
 help_flag = "--help"
