@@ -1,5 +1,10 @@
 # Claude Code — global instructions
 
+Before changing this file: it is deployed from `config/global-AGENTS.md` in
+`~/projects/github.com-personal/power-user-linux-setup` (redeploy: `inv tools.install`) — edit
+there, never here, and first read that repo's `contributing/global-agents-md.md`: it holds each
+rule's evidence and the admission criteria a new rule must pass.
+
 ## sudo
 
 Always use `sudo -A` (not plain `sudo`). The `SUDO_ASKPASS` environment variable points to
@@ -25,16 +30,46 @@ terminal is unaffected and still prompts normally. Just run the `git` command as
 HTTPS/token workaround needed. The dialog blocks on user input, so if nobody is at the machine to
 enter the passphrase it will time out rather than hang forever.
 
-## git push on personal repos
+## Git & commits
 
-Direct-pushing to `main`/`master` is expected and fine on the user's own personal repos
-(`power-user-linux-setup`, `repo-tasks`, `scaffoldapy`, etc.) — sole contributor and repo owner, so
-a PR-based workflow doesn't make sense there. This holds even when GitHub reports bypassing a
-"changes must be made through a pull request" branch-protection rule on push — that rule exists for
-some other purpose (e.g. an accidental force-push guard), not to gate solo work through review.
-Don't flag a bypassed-protection-rule push message as something to double check, and don't suggest
-routing through a PR instead. Specific to repos where the user is sole owner — a shared/team repo
-with real other contributors is a different situation this doesn't transfer to.
+### Pushing to a personal repo's default branch
+
+Direct pushes to `main`/`master` are the norm on the user's own personal repos
+(`power-user-linux-setup`, `repo-tasks`, `scaffoldapy`, ...) — sole contributor and owner, so PR
+review gates nothing. A "bypassing branch protection" message on push is expected there (the rule is
+a force-push guard, not a review gate) — don't flag it and don't suggest a PR. None of this
+transfers to a shared/team repo with real other contributors.
+
+### Committing multi-part work
+
+Split it into small single-concern commits, even when the request was a single ask — git history is
+how future agents learn why a change happened. A doc update commits separately from the code
+implementing it; a bug fix found mid-implementation folds into the commit introducing the correct
+behavior, never broken-then-fixed. Granularity is settled — ask only _whether_ to commit, never how
+to split.
+
+When a quality gate run for unrelated work fixes formatting in a file you didn't mean to touch, keep
+the fix as its own tiny commit — reverting it just schedules the same CI failure for someone else to
+rediscover. Revert an incidental change only when the repo's CI would not enforce it (a stray
+content edit, not a formatting fix); that distinction is the line, not "did I mean to touch this
+file."
+
+### Regenerating a file from a canonical source
+
+Commit the regenerated output, and run regeneration as its own deliberate standalone command — never
+gitignored as "reproducible," never auto-wired into routine `fix`/`check`/`precommit` runs.
+`git blame`/`git log` on the output is how "what was actually in effect" gets answered, and routine
+work silently pulling in an upstream bump nobody chose to take is exactly the surprise to avoid.
+Regeneration is reviewed, tested, and committed like any other change.
+
+### Unexplained git/file state in a working tree
+
+This user runs parallel sessions on the same repos, so an unrecognized commit, diff, or untracked
+file may belong to another live session — don't assume it's yours, a subagent's, or any specific
+cause; surface it and ask neutrally before building on it. Once the user assigns it to another
+session, it's fully hands-off — don't re-read or reference it further. Before committing to a repo
+that showed concurrent activity, `git fetch` and check `git log origin/<branch>` to see whether the
+remote moved.
 
 ## Bash tool discipline: work with the CLI allowlist, not against it
 
@@ -329,20 +364,6 @@ both the interaction flow itself (minimal necessary prompts, skip whatever doesn
 concrete examples in helper text rather than an abstract label) and the first-run experience of the
 output (nothing that reads as a diff against unchosen branches).
 
-## Commit regenerated artifacts deliberately, don't auto-wire regeneration
-
-When a mechanism regenerates a file from some canonical/shared source (a shared config package, a
-template, a pulled dependency), default to **committing the regenerated output** and running
-regeneration as its own **deliberate, standalone command** — not gitignoring the output "because
-it's reproducible," and not auto-wiring regeneration into commands that run constantly (`pre=` of a
-routine `fix`/`check`/`precommit`). Reasons: some CI setups need the file present without an extra
-generation step running first; `git blame`/`git log` on the file is how you answer "what config was
-actually in effect for this change," impossible if it was never checked in; and silently rewriting a
-tracked file as a side effect of routine work (possibly pulling in an upstream bump nobody decided
-to take yet) is exactly the kind of surprise this should avoid. Reproducible is not the same
-requirement as disposable — regeneration should be intentional, reviewed (diffed), tested, and
-committed like any other code change.
-
 ## Naming collisions: prefer the canonical name over a new short alias
 
 When a short/abbreviated name collides with something else, don't invent a new compound short alias
@@ -427,63 +448,6 @@ format (`%f`, `%.Nf`), force the C locale explicitly — `LC_TIME=C date ...` or
 ...` — rather than relying on the ambient locale. Don't assume "the terminal looks
 fine" is proof of correct output — same underlying lesson as "Verify what actually happened, not
 what output looks like" above, applied to locale instead of exit codes.
-
-## Concurrent sessions: check before assuming ownership of unexpected state
-
-This user frequently runs multiple Claude Code sessions in parallel across the same small set of
-personal repos (Remote Control, cloud sessions, forks not run with `isolation: "worktree"` sharing a
-working tree, etc.). Git/file state that looks unexplained — an untracked file, a diff that doesn't
-match anything this session did, a commit you don't recognize — is not necessarily this session's
-own leftover work, and not necessarily a background fork/subagent gone out of scope either (a real
-possibility, just not the default assumption). It can belong to a different, actively-running
-session on the same repo.
-
-**How to apply:**
-
-- When unexplained state turns up, don't assume ownership or a specific culpable cause. Ask
-  neutrally ("I see a commit I didn't make — was that you or another session, or should I
-  investigate further?") rather than asserting a cause before confirming it.
-- If the user identifies something as belonging to a separate session, treat that as fully hands-off
-  from then on — don't re-verify it, re-read it, or reference its content further, unless later told
-  otherwise.
-- Before committing your own changes to a repo that showed any sign of concurrent activity, use
-  `git fetch`/`git log origin/<branch>` to check whether the remote has moved since you last looked
-  — cheap, and resolves "is this a live conflict or just an earlier commit I hadn't seen yet"
-  definitively instead of guessing.
-- Still worth surfacing unexpected state before building on top of it — that instinct is right, only
-  the assumed cause needs to stay neutral.
-
-## Granular commits, split by logical concern
-
-Split multi-part work into multiple small, single-concern commits rather than one commit per
-task/request, even when the user's own instruction was a single ask — this is a standing cross-repo
-practice ("as we usually do"), not a one-off. Git history is a resource future agents (not just
-humans) rely on to understand _why_ a change happened; a single monolithic commit mixing e.g. a bug
-fix, a new feature module, and a doc update makes that history much less useful to bisect or read
-later. When staging/committing multi-part work, split by logical unit even if it means several
-`git add`/`git commit` cycles: a research/design doc update as its own commit separate from the code
-implementing it; a bug fix discovered mid-implementation folded into the commit that introduces the
-correct behavior (not committed broken-then-fixed); an unrelated incidental fix (see next section)
-as its own tiny commit rather than bundled into unrelated work.
-
-**Granularity itself is already settled — never offer it as a question.** Needing permission to
-commit at all (the harness's own "commit only when asked" default) is a separate thing from _how_ to
-split once committing is authorized; asking "want this split into three commits?" conflates the two
-and re-litigates a decision already made here. Ask only whether to commit, then split as a matter of
-course. Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a
-general rule") after exactly that conflated question — the second time this rule has needed
-restating, which is the signal it was being treated as a per-task preference rather than a standing
-one.
-
-## Keep incidental lint/formatting fixes a quality gate surfaces
-
-When running a repo's own precommit/format/lint gate as part of unrelated work surfaces a formatting
-fix to a file you didn't intend to touch, keep the fix (as its own small commit, per above) rather
-than reverting it with `git checkout -- <file>` to keep the diff minimal. If the repo's CI enforces
-the same formatting check, reverting the fix just guarantees a future CI failure someone else has to
-re-discover and fix again later — actively worse than leaving the tiny diff in. Only revert an
-incidental change if it's _not_ something the repo's own CI would enforce (a stray content edit, not
-a formatting fix) — that distinction is the actual line, not "did I mean to touch this file."
 
 ## Check for direnv before reflexively prefixing `uv run`
 
