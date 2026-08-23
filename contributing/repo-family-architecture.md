@@ -60,10 +60,58 @@ cleared explicitly, not silently assumed because the package happens to be resol
 **`scaffoldapy`** — anything generated _once_ and then hand-maintained per repo, diverging
 immediately and legitimately: project structure, the `pyproject.toml` skeleton, `AGENTS.md`/
 `CLAUDE.md`/`.agents/skills` (real symlinks, via Copier's `_preserve_symlinks`, not a runtime task —
-see §F), `mkdocs.yml` when `with_docs` is set. Copier-driven, `_tasks` limited to exactly two lines
-(`uv sync`, `uv run inv configure`) — the universal bootstrap every `uv`-managed project needs, plus
-the one stable `repo-tasks` entrypoint. Nothing else about `repo-tasks`' internals is named in this
-template, on purpose.
+see §F), `mkdocs.yml` when `with_docs` is set. Copier-driven, `_tasks` is three bare `inv`/
+`repo-tasks` calls, never `uv run`/a raw `uv` subcommand: `repo-tasks configs.ensure-deps`
+(populates the generated `dependency-groups.dev` — deliberately empty in the template itself — from
+`repo-tasks`' own canonical `dependency-groups.quality`), `inv deps.lock`, then `inv configure`.
+Neither `repo-tasks` nor `invoke` is ever a project dependency of a generated repo at all (see
+"Quality tools vs. public-API deps" below) — both `_tasks` and the generated CI workflow assume the
+global `uv tool install`ed daily-driver is already on PATH, the same assumption
+`power-user-linux-setup`'s own `bootstrap.sh` makes real. Nothing else about `repo-tasks`' internals
+is named in this template, on purpose.
+
+### Quality tools vs. public-API deps: which dependency list a thing belongs in
+
+`repo-tasks`' own `pyproject.toml` splits three ways, and the split is the actual design, not an
+implementation detail:
+
+- **`[project.dependencies]`** (main deps — inherited transitively by anything depending on
+  `repo-tasks`, and pulled into the global `uv tool install` too): `invoke`, `python-dotenv`,
+  `bump-my-version`. The test: does a repo need this just by depending on `repo-tasks` at all, or by
+  having the global tool installed? `bump-my-version` is here because `version.py`'s public `bump`
+  task (and `gitflow.py`'s release/hotfix flows) shell out to it — any consumer running
+  `inv
+  version.bump` needs it resolvable, not just `repo-tasks`' own dev loop.
+- **`dependency-groups.quality`** (basedpyright/pytest/ruff/shellcheck-py/shfmt-py/dprint-py) — the
+  test: does a repo need this only if it opts into `repo-tasks`' quality gates. Never a main
+  dependency or an installable extra — either would leak these into the global tool venv, which
+  should stay exactly the three main deps above, nothing quality-tool-shaped. **Getting these into a
+  _consumer's_ own `dependency-groups.dev` isn't automatic** — PEP 735 dependency-groups are
+  per-project, never inherited transitively through a regular dependency (confirmed real: adding a
+  tool to `repo-tasks`' own group did nothing for `power-user-linux-setup`'s `.venv` until its own
+  `pyproject.toml` was updated too) — `inv configs.ensure-deps` is the mechanism: reads
+  `repo-tasks`' own `dependency-groups.quality` (force-included as package data) and additively
+  patches a consumer's `pyproject.toml`, never touching an entry already present.
+  `power-user-linux-setup` and `repo-tasks` itself are the one deliberate exception to "never add
+  `repo-tasks`/`invoke` to a consumer" — they keep both by hand in their own dev groups because
+  their own test suites exercise real `repo_tasks` integration (e.g. `tasks/__init__.py`'s
+  degrade-to-`None` path), not just consume its tasks.
+- **`bump-my-version`'s own transitive weight** (rich-click, questionary, pydantic, ...) lands in
+  the global tool venv now too, same as any main dependency — accepted deliberately, it's a small,
+  single-purpose CLI wrapper, not a quality tool.
+
+**A related uv/packaging trap, worth remembering for any future tool-install work, not just this
+family**: `uv tool install --with-executables-from <dep> <pkg>` only _adds_ console-scripts from
+`<dep>` on top of whatever `<pkg>` already exposes — it does not substitute for `<pkg>` having at
+least one entry point of its own. `repo-tasks` had zero `[project.scripts]` and failed to install as
+a tool ("No executables are provided by package `repo-tasks`") even with
+`--with-executables-from invoke` supplying `inv`/`invoke` — confirmed against the real package, not
+a hypothetical (the original design was only ever verified against a throwaway fixture). Fixed with
+`src/repo_tasks/cli.py`'s own `[project.scripts] repo-tasks = "repo_tasks.cli:program.run"`, which
+also solves a second, unrelated gap: bare `inv <task>` needs a `tasks.py`/`tasks/` in the current
+directory to find any collection at all — there's no way to point it at an arbitrary installed
+package's submodule — so the standalone `repo-tasks` script is also how `configs.ensure-deps` stays
+reachable in a directory with nothing invoke-related in it yet.
 
 ## The test that actually settles it
 
