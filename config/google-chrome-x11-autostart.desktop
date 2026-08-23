@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Google Chrome (XWayland pre-start)
+Comment=Start Chrome on XWayland before any Chrome-generated autostart entry can start it on Wayland
+Exec=/usr/bin/google-chrome-stable --ozone-platform=x11 %U
+Icon=google-chrome
+Terminal=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true

@@ -1132,6 +1132,27 @@ tags = ["browser", "desktop", "gui"]
 dest = "~/.local/share/applications/google-chrome.desktop"
 content_file = "config/google-chrome-x11.desktop"
 
+[packages.google-chrome-x11-autostart]
+description = """
+The other half of [packages.google-chrome-x11], and the half that actually decides the outcome.
+Ozone platform is chosen once, by the FIRST Chrome process of the session; every later launch joins
+that instance instead of spawning a new one, so its --ozone-platform flag is silently discarded. At
+login, Chrome's own session-restore entry and each installed PWA's entry (all Chrome-generated, all
+rewritten whenever a PWA is reinstalled, none carrying the flag) start Chrome long before the
+app-grid launcher is ever clicked — which is why the sibling package alone looks deployed and
+correct while Netflix still renders black.
+This entry is a PULSE-owned autostart file named to sort ahead of both `chrome-*` and
+`google-chrome*`, so it wins the race and every later entry attaches to an XWayland instance. No
+Chrome-generated file is touched, which is the point: they cannot be kept patched.
+Enable together with [packages.google-chrome-x11] — see
+plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md for the options this was chosen over.
+"""
+method = "wrapper-script"
+enabled = false
+tags = ["browser", "desktop", "gui"]
+dest = "~/.config/autostart/00-google-chrome-x11.desktop"
+content_file = "config/google-chrome-x11-autostart.desktop"
+
 [packages.gh]
 description = "GitHub CLI — create PRs, manage issues, clone repos, and authenticate from the terminal"
 method = "apt-repo"
