@@ -479,9 +479,9 @@ already have the answer more often than not, if kept current.
 
 The same applies to reflexively invoking a tool by its absolute `.venv/bin/<tool>` path (e.g.
 `.venv/bin/python -m pytest`) instead of the bare command — not just to `uv run`. Once direnv has
-activated, the bare command already resolves to that exact binary, so the absolute path adds
-nothing except a novel command string that breaks Bash-allowlist prefix matching (see "Bash tool
-discipline" above) for no benefit. Confirmed live 2026-08-23 in `repo-tasks`: used
+activated, the bare command already resolves to that exact binary, so the absolute path adds nothing
+except a novel command string that breaks Bash-allowlist prefix matching (see "Bash tool discipline"
+above) for no benefit. Confirmed live 2026-08-23 in `repo-tasks`: used
 `.venv/bin/python -m pytest tests/integration/` out of habit while direnv was already active and
 plain `pytest tests/integration/` would have resolved identically; corrected mid-session.
 
