@@ -1,4 +1,3 @@
-import hashlib
 import json
 import shlex
 import shutil
@@ -7,7 +6,7 @@ from typing import cast
 
 from invoke import task
 
-from . import ui, util
+from . import deploy, ui, util
 
 _REPO_ROOT = Path(__file__).parent.parent
 # Deliberately separate from tasks/allowlist.py's _APPLIED_MANIFEST — that one tracks
@@ -16,18 +15,11 @@ _REPO_ROOT = Path(__file__).parent.parent
 # rule strings we previously wrote are ever removed), different manifest, so the two mechanisms
 # can never step on each other's rules even though they touch the same settings.json file.
 _STATIC_PERMS_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-applied.json"
-_SKILL_MARKER = ".pulse-source"
-
-
-def _dir_digest(path: Path) -> str:
-    """Hash of a skill directory's file contents, keyed by relative path — order-independent,
-    ignores the marker file itself so a freshly-copied dest compares equal to its source."""
-    h = hashlib.sha256()
-    for f in sorted(path.rglob("*")):
-        if f.is_file() and f.name != _SKILL_MARKER:
-            h.update(f.relative_to(path).as_posix().encode())
-            h.update(f.read_bytes())
-    return h.hexdigest()
+# Both live in tasks/deploy.py: the skill installer and deploy.py's own registry need the same
+# marker name and the same directory hash, and two copies of a content comparison are exactly the
+# kind of drift this repo's single-deploy-path work exists to remove.
+_SKILL_MARKER = deploy.SKILL_MARKER
+_dir_digest = deploy.dir_digest
 
 
 def _parse_frontmatter_description(text: str) -> str | None:
