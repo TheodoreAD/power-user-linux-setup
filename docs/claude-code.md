@@ -194,14 +194,14 @@ Two sources:
 
 - **`{ source = "local", path = "skills/<name>" }`** — for skills authored _in this repo_. Real
   skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references, assets)
-  live under `skills/` at the repo root, tracked by git like any other repo content — deliberately
-  not gitignored `reference/`, and not nested under this repo's own `.agents/skills/` (that's the
-  _deployed_, tool-agnostic location on a given machine; this repo is where some skills happen to be
-  authored, not where they run from). `inv ai.install-skills` **copies** the repo's `skills/<name>/`
-  to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching how the `npx`
-  source below behaves (it copies too). A `.pulse-source` marker file inside the copy records which
-  entry installed it, so a re-run can tell "ours, safe to refresh to match the repo" apart from
-  "something else is already here, leave it alone" — editing the repo copy needs an
+  live under `skills/` at the repo root, tracked by git like any other repo content — not tucked
+  away as untracked research material, and not nested under this repo's own `.agents/skills/`
+  (that's the _deployed_, tool-agnostic location on a given machine; this repo is where some skills
+  happen to be authored, not where they run from). `inv ai.install-skills` **copies** the repo's
+  `skills/<name>/` to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching
+  how the `npx` source below behaves (it copies too). A `.pulse-source` marker file inside the copy
+  records which entry installed it, so a re-run can tell "ours, safe to refresh to match the repo"
+  apart from "something else is already here, leave it alone" — editing the repo copy needs an
   `inv ai.install-skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
   `[packages.research-library]` is the example: its `skills` field points at
   `skills/research-library/`, which documents `$RESEARCH_HOME` (see

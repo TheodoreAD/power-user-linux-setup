@@ -19,8 +19,8 @@ Before this, reference material (vendor repo clones, PDFs) lived in this repo's 
    the _default_ blast radius of repo-scoped operations; it only enters an agent's context when a
    task explicitly names the external path — deliberate, not ambient.
 2. **Not shareable.** Every repo that wanted the same reference material (GNOME internals, Claude
-   Code allowlist research) re-cloned it into its own gitignored `reference/`, duplicating disk and
-   staleness.
+   Code allowlist research) re-cloned it into its own gitignored `reference/` tree, duplicating disk
+   and staleness.
 
 ## Layout and naming
 

@@ -109,8 +109,9 @@ the key. See [keybindings.md](keybindings.md) for the full set of Super-based bi
 
 ### SmartSet direct-programming syntax reference
 
-Reference PDFs (large, not checked in — see `reference/kinesis/`, which is gitignored; re-download
-from https://kinesis-ergo.com/support/kb360/ if missing):
+Reference PDFs (large, not checked in — they live in the shared research library at
+`$RESEARCH_HOME/docs/`, see `contributing/research-library.md`; re-download from
+https://kinesis-ergo.com/support/kb360/ if missing):
 
 - `adv360-smartset-direct-programming-guide-v12-2-22.pdf` — syntax rules, section 4
 - `adv360-smartset-action-tokens-v3-31-23.pdf` — full list of position/action tokens

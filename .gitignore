@@ -141,11 +141,6 @@ dmypy.json
 # to ship so a fresh clone gets auto-activation via `inv python.dev-venv`
 !/.envrc
 
-# Downloaded vendor reference docs (large binaries, not needed by other contributors)
-# Lives outside docs/ so the docs-site build (zensical/mkdocs) never walks into it —
-# its markdown files aren't site content and its walker isn't gitignore-aware.
-reference/
-
 # Claude Code — personal/runtime state, not shared config.
 # .claude/settings.json itself IS committed (project-level, shared hooks/env — see
 # docs/claude-code.md), so this only excludes the machine-local pieces alongside it.

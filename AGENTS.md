@@ -138,7 +138,7 @@ iteration; don't "fix" it by uncommenting the trigger without checking with the 
 
 ## CLI permission allowlist pipeline
 
-`cli-allowlist/` (tracked, unlike the gitignored `reference/` research dump it grew out of) keeps a
+`cli-allowlist/` (tracked, unlike the research dump it grew out of) keeps a
 read_only/write/dangerous classification for every CLI tool this machine has installed — base system
 included, not just what `setup.toml` installs — so Claude Code / Copilot permission rules can be
 generated from real `--help` output instead of hand-written guesses, and `inv

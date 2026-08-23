@@ -2,13 +2,13 @@
 
 **Status: staged for migration, not a permanent home.** `power-user-linux-setup` is Linux-only in
 scope (it never provisions a Windows host) — this file doesn't belong here long-term. It's committed
-under `to-migrate/` (a deliberate exception to the normal `reference/`-is-gitignored convention —
-see `docs/index.md`/`AGENTS.md`) purely so the Windows-specific research from the conversation that
-produced this repo's Linux corporate-proxy daemon feature (`docs/corporate-proxy.md`,
-`contributing/corporate-proxy.md`) doesn't live only on one machine's local disk until a separate,
-Windows-only project exists to receive it. **When that project starts: move this file there
-(`git mv`/copy + delete here), then delete `to-migrate/` from this repo** — don't leave it behind
-once it has a real home.
+under `to-migrate/` (a deliberate exception — research material normally lives outside this repo
+entirely, in `$RESEARCH_HOME`; see `contributing/research-library.md`) purely so the
+Windows-specific research from the conversation that produced this repo's Linux corporate-proxy
+daemon feature (`docs/corporate-proxy.md`, `contributing/corporate-proxy.md`) doesn't live only on
+one machine's local disk until a separate, Windows-only project exists to receive it. **When that
+project starts: move this file there (`git mv`/copy + delete here), then delete `to-migrate/` from
+this repo** — don't leave it behind once it has a real home.
 
 The Linux/WSL/devcontainer side of this research is now the real, implemented feature — see
 `docs/corporate-proxy.md` (usage) and `contributing/corporate-proxy.md` (design rationale) in this
