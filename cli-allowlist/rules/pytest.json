@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-23T12:48:32Z",
+  "extracted_at": "2026-08-23T12:43:03Z",
+  "nodes": {
+    "*": {
+      "classification": "read_only",
+      "content_hash": "57ce0863f389e487",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Discovers and executes tests to validate code behavior; reads test files and config, produces report output. Test-induced state changes (filesystem, DB modifications within test code) are inherent to testing, not pytest's own action.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-08-23T13:03:49Z",
+  "truncated": false,
+  "version": "pytest 9.1.1"
+}

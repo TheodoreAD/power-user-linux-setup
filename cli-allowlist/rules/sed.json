@@ -11,8 +11,9 @@
       "source": "llm"
     }
   },
+  "note": "Deliberately kept unreviewed -- do NOT mark reviewed. Re-reviewing regenerates a blanket Bash(sed:*) ask rule on the next apply, which shadows the hand-maintained Bash(sed -n *) allow rule (ask beats allow, no specificity tiebreak). See contributing/cli-allowlist.md's 'sed -- deliberately unreviewed' section.",
   "reviewed": false,
-  "reviewed_at": "2026-08-09T18:34:37Z",
+  "reviewed_at": null,
   "truncated": false,
   "version": "sed (GNU sed) 4.9"
 }

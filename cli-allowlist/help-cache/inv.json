@@ -1,0 +1,14 @@
+{
+  "extracted_at": "2026-08-23T12:43:02Z",
+  "interactive": false,
+  "nodes": {
+    "*": {
+      "children": [],
+      "content_hash": "baa810962858e957",
+      "help_text": "Usage: inv[oke] [--core-opts] task1 [--task1-opts] ... taskN [--taskN-opts]\n\nCore options:\n\n  --complete                         Print tab-completion candidates for given\n                                     parse remainder.\n  --hide=STRING                      Set default value of run()'s 'hide' kwarg.\n  --no-dedupe                        Disable task deduplication.\n  --print-completion-script=STRING   Print the tab-completion script for your\n                                     preferred shell (bash|zsh|fish).\n  --prompt-for-sudo-password         Prompt user at start of session for the\n                                     sudo.password config value.\n  --write-pyc                        Enable creation of .pyc files.\n  -c STRING, --collection=STRING     Specify collection name to load.\n  -d, --debug                        Enable debug output.\n  -D INT, --list-depth=INT           When listing tasks, only show the first\n                                     INT levels.\n  -e, --echo                         Echo executed commands before running.\n  -f STRING, --config=STRING         Runtime configuration file to use.\n  -F STRING, --list-format=STRING    Change the display format used when\n                                     listing tasks. Should be one of: flat\n                                     (default), nested, json.\n  -h [STRING], --help[=STRING]       Show core or per-task help and exit.\n  -l [STRING], --list[=STRING]       List available tasks, optionally limited\n                                     to a namespace.\n  -p, --pty                          Use a pty when executing shell commands.\n  -r STRING, --search-root=STRING    Change root directory used for finding\n                                     task modules.\n  -R, --dry                          Echo commands instead of running.\n  -T INT, --command-timeout=INT      Specify a global command execution\n                                     timeout, in seconds.\n  -V, --version                      Show version and exit.\n  -w, --warn-only                    Warn, instead of failing, when shell\n                                     commands fail.",
+      "likely_invalid": false
+    }
+  },
+  "truncated": false,
+  "version": "Invoke 3.0.3"
+}

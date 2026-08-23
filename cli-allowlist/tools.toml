@@ -369,6 +369,16 @@ subcommands = [
 [uv]
 subcommands = ["pip", "tree", "add", "sync", "run", "tool", "venv", "python", "init", "build"]
 
+[pytest]
+no_subcommands = true
+
+[inv]
+# invoke's own CLI surface (--list, --dry, --echo, -c, ...) is static and flag-only; the actual
+# task names it dispatches to are per-repo (tasks.py-defined) and not part of `inv --help`'s own
+# output at all, so there's no subcommand tree to discover here the way there is for git/docker —
+# same "arbitrary user-defined script" shape as `npm run`, already precedented in this file.
+no_subcommands = true
+
 [jq]
 no_subcommands = true
 

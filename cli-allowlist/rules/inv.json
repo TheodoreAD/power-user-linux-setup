@@ -1,0 +1,18 @@
+{
+  "classified_at": "2026-08-23T12:48:09Z",
+  "extracted_at": "2026-08-23T12:43:02Z",
+  "nodes": {
+    "*": {
+      "classification": "write",
+      "content_hash": "baa810962858e957",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Runs project-defined tasks which are typically bounded development operations (test, build, format) that are reversible.",
+      "source": "llm"
+    }
+  },
+  "reviewed": false,
+  "reviewed_at": null,
+  "truncated": false,
+  "version": "Invoke 3.0.3"
+}

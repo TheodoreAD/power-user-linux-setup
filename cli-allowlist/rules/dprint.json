@@ -1,13 +1,13 @@
 {
-  "classified_at": "2026-08-09T16:51:23Z",
-  "extracted_at": "2026-08-09T16:46:35Z",
+  "classified_at": "2026-08-23T12:47:18Z",
+  "extracted_at": "2026-08-23T12:43:01Z",
   "nodes": {
     "check": {
       "classification": "read_only",
-      "content_hash": "988d0be66913f0de",
+      "content_hash": "06de8e4eb9c81db8",
       "flags": {},
       "model": "haiku",
-      "rationale": "Only inspects files and reports formatting violations without modifying anything.",
+      "rationale": "Validates files for formatting without modifying any state.",
       "source": "llm"
     },
     "config": {
@@ -20,23 +20,23 @@
     },
     "fmt": {
       "classification": "write",
-      "content_hash": "cd73656a31cececa",
+      "content_hash": "23b209cd1a475900",
       "flags": {},
       "model": "haiku",
-      "rationale": "Reformats source files in place; effect is expected, bounded by file patterns, and reversible via git or re-running.",
+      "rationale": "Writes formatted code to the file system; bounded, expected, and reversible.",
       "source": "llm"
     },
     "output-file-paths": {
-      "classification": "read_only",
-      "content_hash": "b7673c4bb772217d",
+      "classification": "invalid",
+      "content_hash": "cafee2a75a2bb965",
       "flags": {},
       "model": "haiku",
-      "rationale": "Prints resolved file paths for inspection based on configuration without modifying state.",
+      "rationale": "The heading doesn't match the actual subcommand (usage line shows 'dprint file-paths', not 'output-file-paths'); appears to be a labeling error.",
       "source": "llm"
     }
   },
   "reviewed": true,
-  "reviewed_at": "2026-08-09T18:29:09Z",
+  "reviewed_at": "2026-08-23T13:16:22Z",
   "truncated": false,
-  "version": "dprint 0.54.0"
+  "version": "dprint 0.56.1"
 }
