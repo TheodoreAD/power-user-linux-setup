@@ -22,7 +22,9 @@ live-with-it window), terminology pass done, redeployed:
 - Section-inventory check (verification 2): 30 old sections → 29 rules + preamble; merges
   reuse+tool-native, deep+best-tool, granular+incidental; splits verify→3; subagent fact → preamble.
   No rule deleted; no rule moved to tier 2.
-- Both §11 candidates decided (clause admissions, no new sections).
+- All three §11 candidates decided: 1 and 2 as clause admissions into existing rules; the third
+  (skills-over-enforcement, parked by a concurrent session mid-conversion) admitted as its own rule,
+  `### Proposing an enforcement mechanism for agent behavior` — 30 rules total.
 
 [UNVERIFIED: verification item 5 — live adherence over the following sessions. Do the converted
 rules (git/commit especially, now also allowlist/research/verification) still fire from the
@@ -335,17 +337,12 @@ existing `CLI flag conventions` section rather than earning its own, per the var
 rule — but that section is currently about flag _shape_ (`-y` vs a bespoke opt-in), and this is
 about whether the flag should exist at all, so the fit needs checking.]
 
-[NEEDS CLARIFICATION: **"Skills are the mainstay of directing agents — prefer teaching the agent
-what to run over mechanisms that fire behind its back."** Trigger: proposing an enforcement
-mechanism (git hook, harness hook, CI auto-fix bot) to correct a recurring agent behavior that a
-skill/instruction could teach instead. Evidence: git-hooks-for-quality-gate decision (2026-08-23,
-`plans/2026-08-23-git-hooks-for-quality-gate.md` decision-context section) — user rejected
-researched hook enforcement in favor of skill-level guidance, stating agents should _know_ what to
-run, the same standard as developers ("i've always been against companies imposing git precommit
-hooks for devs. i see no reason to treat a dev differently from an agent"). Broader than that one
-plan and outlives its retirement; routed here by `session-harvest` 2026-08-23 because ~/AGENTS.md is
-mid-restructure under this pass. May belong as a short standalone principle or a clause in whatever
-section owns "how agents get directed" after the restructure.]
+[DECISION: **"Skills are the mainstay of directing agents"** — admitted 2026-08-23 (the third
+candidate, parked by a concurrent session mid-conversion) as
+`### Proposing an enforcement mechanism for agent behavior` in the Research & design cluster. It
+passed §9 cleanly: sharp trigger, no overlap with any existing rule, and the user's position is
+explicit in the evidence. Evidence (the git-hooks-for-quality-gate rejection and the user's
+dev-standard quote) is in `contributing/global-agents-md.md` under the matching heading.]
 
 ## Files touched
 

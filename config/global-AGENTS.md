@@ -208,6 +208,13 @@ genuinely destructive-by-default. And don't add a bypass flag that overrides a m
 tool uses to decide what it owns — that gives ownership two meanings, one with the flag and one
 without; no hacks that complicate the mental model unless the alternative is utterly impractical.
 
+### Proposing an enforcement mechanism for agent behavior
+
+Skills and instructions are the mainstay of directing agents — to correct a recurring agent
+behavior, prefer teaching the agent what to run over a mechanism that fires behind its back (a git
+hook, a harness hook, a CI auto-fix bot). Agents get the same standard as developers: they should
+know what to run, not be silently corrected.
+
 ### Naming around a collision
 
 Use the full, unambiguous canonical name (e.g. "power-user-linux-setup"), not a new compound short

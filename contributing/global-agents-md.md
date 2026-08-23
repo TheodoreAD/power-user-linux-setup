@@ -51,6 +51,7 @@ admission gate for the candidates that taxonomy routes here.
 - [About to ask the user something factual](#about-to-ask-the-user-something-factual)
 - [Writing conventions into a shareable skill or template](#writing-conventions-into-a-shareable-skill-or-template)
 - [Adding a CLI flag](#adding-a-cli-flag)
+- [Proposing an enforcement mechanism for agent behavior](#proposing-an-enforcement-mechanism-for-agent-behavior)
 - [Naming around a collision](#naming-around-a-collision)
 - [Reading a command's result](#reading-a-commands-result)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
@@ -196,10 +197,19 @@ consumer.
 
 The bypass-flag clause's originating incident (2026-08-23): a `--force` on `inv ai.skills` that
 would have overwritten foreign content was rejected because the `.pulse-source` marker _is_ the
-ownership model — a flag overriding it would make ownership mean one thing with the flag and
-another without. Stated by the user as "we shouldn't have hacks that make the mental model
-difficult, unless something is utterly impractical." Folded into this rule (which previously
-covered only flag _shape_) during the leanness pass, as the second §11 candidate admission.
+ownership model — a flag overriding it would make ownership mean one thing with the flag and another
+without. Stated by the user as "we shouldn't have hacks that make the mental model difficult, unless
+something is utterly impractical." Folded into this rule (which previously covered only flag
+_shape_) during the leanness pass, as the second §11 candidate admission.
+
+## Proposing an enforcement mechanism for agent behavior
+
+Originating decision (2026-08-23): researched git-hook enforcement of the quality gate was rejected
+in favor of skill-level guidance — the user: "i've always been against companies imposing git
+precommit hooks for devs. i see no reason to treat a dev differently from an agent." Recorded in
+`plans/2026-08-23-git-hooks-for-quality-gate.md`'s decision context; routed here by
+`session-harvest` the same day as the leanness pass's third candidate admission, because the
+principle is broader than that one plan and outlives its retirement.
 
 ## Naming around a collision
 
@@ -216,12 +226,11 @@ pipeline return their own exit code, not the upstream command's.
 
 ## Generalizing from a sample to a set
 
-Confirmed live 2026-08-23 — nine modified `cli-allowlist` files were reported as
-"timestamp-only churn" after reading one of them (`vim.json`) in full; five carried real upstream
-version bumps (`dprint` 0.54.0 → 0.56.1, `twine` 6.2.0 → 7.0.0, and three more), and `--stat` had
-already shown 27 changed lines against `vim.json`'s 6. Harmless that time only because the
-conclusion was "leave it alone" — the identical reasoning behind a discard would have thrown away
-real data.
+Confirmed live 2026-08-23 — nine modified `cli-allowlist` files were reported as "timestamp-only
+churn" after reading one of them (`vim.json`) in full; five carried real upstream version bumps
+(`dprint` 0.54.0 → 0.56.1, `twine` 6.2.0 → 7.0.0, and three more), and `--stat` had already shown 27
+changed lines against `vim.json`'s 6. Harmless that time only because the conclusion was "leave it
+alone" — the identical reasoning behind a discard would have thrown away real data.
 
 ## Formatting a date or decimal in a shell script
 
