@@ -31,15 +31,32 @@ once, globally, in `[packages.claude-global-md]` in `setup.toml` rather than rep
 ## Deployed dotfiles are generated — never edit `~/<file>` directly
 
 Before editing any file under `~/` that this repo might have deployed (a dotfile, a shell config,
-`~/AGENTS.md`, anything that looks hand-editable), grep `setup.toml` for a `[packages.*]` entry
-whose `dest` matches the path. If one exists, the real place to edit is that entry's
-`content_file`/source (e.g. `config/<file>` in this repo), not the deployed path — edit the source
-and re-deploy (the owning `inv` task, or by replicating that method's exact write logic for just
-that one package if running the full install task would have broader side effects than intended —
-see `tasks/tools.py`'s `_install_wrapper_script`). A direct edit to the deployed path is silently
-wiped on the next `inv tools.install` run — caught live once only because the user asked "would this
-actually be installed?", not because anything failed loudly. `~/AGENTS.md` specifically is
-`[packages.claude-global-md]`, generated from `config/global-AGENTS.md`.
+`~/AGENTS.md`, anything that looks hand-editable), grep `setup.toml` for a `[packages.*]` entry that
+targets the path. **Grep the path itself, not a field name** — two different fields point at a
+deployed file: `dest` (the `wrapper-script` method) and `dst` (inside a `config_files` mapping,
+which any method may declare). A grep for `dest` alone silently misses every `config_files` package.
+
+If an entry exists, the real place to edit is its repo-side source (`content_file`, or a
+`config_files` mapping's `src` — e.g. `config/<file>`), not the deployed path. A direct edit to the
+deployed path is silently wiped on the next `inv tools.install` run — caught live once only because
+the user asked "would this actually be installed?", not because anything failed loudly.
+`~/AGENTS.md` specifically is `[packages.claude-global-md]`, generated from
+`config/global-AGENTS.md`.
+
+**Re-deploy by running a task, not by hand-replicating its write logic.** Each mechanism has one:
+
+| Deployed via                      | Redeploy with                               |
+| --------------------------------- | ------------------------------------------- |
+| `content_file` (`wrapper-script`) | `inv tools.install`                         |
+| `config_files` (`src`/`dst`)      | `inv system.configs [--name <pkg>] [--yes]` |
+
+If running the full install task would have broader side effects than intended, that is a reason to
+**add or extend a task that redeploys just that one package** — not a licence to `cp` the file into
+place yourself. Confirmed live 2026-08-23: `config/wezterm.lua` had no redeploy path at all (the
+install-time writer skips any destination that already exists), and a one-off `cp` was rejected with
+"there should be a pulse invoke task that deploys the wezterm config." The whole point of the repo
+is that every change this machine has is reproducible from a declared, re-runnable command; a manual
+copy is a change nobody can re-run. `inv system.configs` exists because of that correction.
 
 ## PULSE tag/method architecture
 
