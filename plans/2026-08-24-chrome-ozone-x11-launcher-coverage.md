@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-24
 ---
 
@@ -60,11 +60,43 @@ process, so "x11 only for the Netflix tab" has nowhere to live. A second instanc
 Also still true on 2026-08-24 with driver **595.84** on GNOME Wayland: the bug is live, not
 something newer explicit-sync work has already fixed. No "just delete the workaround" exit.
 
+## Status: option B is built and deployed, awaiting one login
+
+[DECISION: **Option B**, chosen by the user on 2026-08-24 with the rest kept as the fallback ladder
+("do option B, i'll check it and get back to you. if that doesn't work we'll try the rest"). It is
+the only option that writes exclusively files PULSE owns, which is the ownership rule
+`plans/2026-08-22-deployed-config-drift-guard.md` is converging on.]
+
+Landed:
+
+- `config/google-chrome-x11-autostart.desktop` and `[packages.google-chrome-x11-autostart]`
+  (`wrapper-script`, `enabled = false` — machine-specific, like its sibling), deploying to
+  `~/.config/autostart/00-google-chrome-x11.desktop`.
+- Enabled on this machine via `~/.config/power-user-linux-setup/overrides.toml`, the mechanism from
+  `plans/2026-08-24-machine-local-setup-toml-overrides.md`, which had to be built first — there was
+  otherwise no way to deploy a package `setup.toml` ships disabled, and hand-copying it is what this
+  repo forbids.
+- Verified deployed, and both halves now show `ok` in `inv deploy.status`.
+
+[UNVERIFIED: The whole premise — that gnome-session processes `~/.config/autostart/` in filename
+order, so `00-…` wins the race against `chrome-*` and `google-chrome.desktop`. This is what the next
+login tests, and it is the only thing standing between option B and the fallback ladder. If Chrome
+comes up on Wayland anyway, ordering is not filename-based and B is dead as designed.]
+
+[DEFERRED: **B2, a cosmetic refinement to try only if B works.** The entry currently launches Chrome
+normally (`--ozone-platform=x11 %U`), so at login it does the session restore and Chrome's own
+autostart entry may then open a second window. `--no-startup-window` exists in this Chrome build
+(confirmed via `strings`) and would start the browser process without any window, purely to claim
+the ozone platform. It was not used first because its failure mode is silent: with no windows and no
+background apps, Chrome may simply exit, leaving the PWA entries to start a fresh Wayland instance
+and making the test look like an ordering failure. Try it only once ordering itself is proven.]
+
 ## Open questions
 
-[NEEDS CLARIFICATION: Which of the five options below to build. They differ mostly in _where the
-ongoing friction lands_ — on Chrome regenerating files, on autostart ordering being reliable, or on
-a root-level diversion nobody remembers exists.]
+[NEEDS CLARIFICATION: Which fallback if B's ordering assumption fails — C (`dpkg-divert`, the only
+option Chrome cannot silently undo) or A (patch every `.desktop`, which loses to the file generator
+over time). C is recommended below; the user's ladder says "we'll try the rest" without fixing an
+order.]
 
 ### A. A task that patches every Chrome-launching `.desktop`
 
@@ -128,15 +160,15 @@ Keep the launcher fix, and record "black Netflix → fully quit Chrome, relaunch
 - **Against:** the recovery is only obvious once you know the first-process-wins mechanism; without
   it the symptom looks like a Netflix or driver problem.
 
-[NEEDS CLARIFICATION: This package is `enabled = false`, so it is invisible to `enabled_packages()`
-and therefore to `deploy.status` — the deployed `google-chrome.desktop` is currently an untracked
-orphan. Whichever option lands, it inherits that problem unless
-`plans/2026-08-24-machine-local-setup-toml-overrides.md` resolves it first. That plan may be a
-prerequisite rather than a sibling.]
+Resolved: the `enabled = false` orphan problem (a disabled package is invisible to
+`enabled_packages()` and so to `deploy.status`, while its file sits deployed in `~`) went away for
+these two packages when `overrides.toml` turned them on here. The general case — a package deployed
+and _later_ disabled — is still open, and is tracked in
+`plans/2026-08-24-machine-local-setup-toml-overrides.md` rather than here.
 
 ## Recommended direction
 
-**B first, C as the fallback, A only as a checker.**
+**B first (done), C as the fallback, A only as a checker.**
 
 B is the least friction _if_ autostart ordering holds, and the test is one login — cheap enough that
 it should be settled before designing anything larger. It keeps PULSE writing only files PULSE owns,

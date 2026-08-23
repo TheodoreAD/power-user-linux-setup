@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-24
 ---
 
@@ -69,21 +69,21 @@ because tags describe _capability_ (no display server means the package genuinel
 the override describes _intent_. Needs stating either way, since the container/WSL profiles depend
 on tags being authoritative.]
 
-[NEEDS CLARIFICATION: This cuts against the repo's founding principle — `CLAUDE.md`: "every change
-this machine has is reproducible from a declared, re-runnable command." A file outside git is not
-reproducible; restore this machine from a fresh clone and the override is gone, silently, with the
-Netflix bug back. Two ways out, and they are genuinely different designs:
+[DECISION: **(a) — a plain machine-local file, with no export/import and no backup.** The pushback
+above (that a file outside git weakens "every change is reproducible from a declared, re-runnable
+command") was put to the user and rejected on principle, not on convenience:
 
-- **(a) Machine-local file, accept the gap.** Add `inv <something>.export` /`import` so the override
-  set can be round-tripped, and have `deploy.status` / `verify.all` name every override in effect so
-  it is at least _visible_ rather than reproducible.
-- **(b) Keep it in git, key it on machine identity.** `[packages.google-chrome-x11] enabled = false`
-  plus `enabled_on_hosts = ["<hostname>"]`, or a `[machines.<name>]` section listing overrides.
-  Fully reproducible, reviewable, and diffable; costs a repo edit per machine and leaks hostnames
-  into a public repo.
+> "each user has a duty to preserve his home if they want to. this is not a pulse responsibility.
+> git is not for data on individual hosts. all the pulse behaviors are indeed stable, but around its
+> defaults, it can't guarantee stability for each user's customizations."
 
-The user asked for (a). (b) is worth one round of pushback before (a) is built, because the whole
-argument for this repo's design is the one (a) weakens.]
+That resolves the fork cleanly, and it is a sharper statement of the repo's scope than the original
+framing: what PULSE guarantees is the stability of its **defaults**. A machine's divergence from
+those defaults is that machine's own data, and backing up a home directory is the user's job. Option
+(b) — hostname-keyed overrides in git — is dropped, not deferred; it would put per-host data in a
+repo on the stated principle that repos are not for per-host data. The `export`/`import` round-trip
+idea from (a) is dropped for the same reason: it exists only to smuggle the same data back into
+somewhere shared.]
 
 [NEEDS CLARIFICATION: File name and location — `~/.config/power-user-linux-setup/overrides.toml` as
 its own file, versus new sections inside the existing `identity.toml`. Separate file is cleaner
@@ -95,18 +95,48 @@ verification is convention-based and aborts on first failure; an override that e
 one machine changes what "every package this run installed" means. Probably free (verification reads
 the same `enabled_packages()`), but it should be checked rather than assumed.]
 
-## Recommended direction
+## What landed (2026-08-24)
 
-1. **Settle the git-vs-home question first** (the fourth clarification above). Everything else is
-   downstream of it, and the answer changes what gets built, not just where a file lives.
-2. **Scope the override to `enabled` only**, at least for v1. It is the entire motivating use case,
-   it is the field `enabled_packages()` actually reads, and it keeps every package _definition_ in
-   git where it can be reviewed. Widening later is additive; narrowing later is a break.
-3. **Fix the orphan problem in the same pass**, independently of the override design.
-   `deploy.status` should be able to report a path that PULSE declares but has disabled — as a
-   distinct state ("declared, not managed here, but present on disk"), not by silently omitting it.
-   This is a small change to `managed_paths()`'s filter plus a new status word, and it is worth
-   doing even if the override layer is never built. Coordinate with
-   `plans/2026-08-22-deployed-config-drift-guard.md`, which owns that registry.
-4. Load order, once decided: `setup.toml` → machine-local overrides → `PULSE_EXCLUDE_TAGS`, with the
-   environment last so capability always beats intent.
+The minimal version, built as a prerequisite for deploying
+`plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md`'s option B on this machine — there was no
+way to deploy a package `setup.toml` ships disabled, and hand-copying the file is exactly what this
+repo forbids.
+
+- `util.OVERRIDES_PATH` = `~/.config/power-user-linux-setup/overrides.toml`, beside `identity.toml`
+  in the existing machine-local namespace.
+- `util.load_overrides()` — tolerant of a missing file (the common case), `@cache`d because
+  `enabled_packages()` calls it many times per run, and it prints a warning for any package name the
+  file mentions that `setup.toml` does not declare, since nothing else validates this file and a
+  typo would otherwise be a silent no-op.
+- `util.enabled_packages()` applies it: `setup.toml` → `overrides.toml` → `PULSE_EXCLUDE_TAGS`.
+- Scope is **`enabled` only, on packages `setup.toml` already declares** — the v1 recommendation
+  below, adopted as built. Every package _definition_ stays in git.
+- `config/overrides.toml.example` and the rewritten `enabled` section of `docs/configuration.md`
+  (which previously stated the opposite contract — "a permanent, environment-independent switch").
+- Five tests in `tests/test_util.py`, including the precedence case where an excluded tag beats an
+  override that asked for the package.
+
+Both `google-chrome-x11` packages are enabled on this machine through it, and now appear in
+`inv deploy.status` — which incidentally resolves the orphan described above _for enabled packages_.
+
+## Remaining
+
+[DEFERRED: `deploy.status` still cannot report a path for a package that is declared but disabled
+here. The orphan case is narrower now (it needs a package that was deployed and later disabled) but
+it has not gone away: `managed_paths()` still filters through `enabled_packages()`, so such a file
+is invisible rather than reported as "declared, not managed here, but present on disk". Wants a
+distinct status word rather than silent omission. Coordinate with
+`plans/2026-08-22-deployed-config-drift-guard.md`, which owns that registry.]
+
+[DEFERRED: Whether an override may carry anything beyond `enabled` — `tags` is the only other field
+`enabled_packages()` consults. Not needed by any real use case yet; recorded so the question is not
+re-derived. Widening is additive, so there is no cost to waiting.]
+
+[DEFERRED: Whether an override may _define_ a package absent from `setup.toml`. Currently it cannot,
+and `load_overrides()` warns on the attempt. The argument against allowing it stands — it would make
+the home file a place where undeclared, unreviewed installs accumulate — but it was decided by
+implementation rather than deliberately, so it is worth one look before it becomes load-bearing.]
+
+[UNVERIFIED: What `verify.all` does with an overridden package. It reads the same
+`enabled_packages()`, so it should be free, but this was reasoned rather than run — the next full
+`inv setup` on this machine is what would actually prove it.]
