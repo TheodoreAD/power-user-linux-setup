@@ -57,7 +57,18 @@ considered and rejected).
      accumulated across multiple projects' memory folders — each project's memory is invisible to
      every other project's sessions, so a genuinely cross-repo preference saved there never actually
      reaches a session in a different repo. Most had simply never been promoted because nothing
-     routed them anywhere else.
+     routed them anywhere else. **A candidate that's a _variant_ of a rule already in `~/AGENTS.md`
+     extends that rule's existing section — it doesn't get a new one.** "Already covered → skip"
+     (below) is for an exact duplicate; this is the near-miss case, where the principle is written
+     down but this particular shape of it isn't. Default to appending a short paragraph to the
+     section that already frames it, because that file is loaded into every session in every repo,
+     so a new heading costs context everywhere and a reader who sees three instances under one
+     principle generalizes better than one holding three unrelated rules. Reach for a new section
+     only when the trigger and the detection signal are both genuinely different from anything
+     already there. Resolved 2026-08-23: "don't characterize a multi-file diff from one sampled
+     file" was folded into "Verify what actually happened, not what output looks like" — which
+     already covered clean-stdout-vs-exit-code and test-suite-vs-throwaway-script, both the same
+     "the convenient surface signal isn't the real signal" shape.
    - **Already covered → skip.** If an existing memory file or doc already says this, don't write a
      duplicate — check first.
    - **Meta-conventions about how to build things in this ecosystem (e.g. "skills should do X by
