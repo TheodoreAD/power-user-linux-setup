@@ -257,6 +257,35 @@ text. `Naming collisions` and `Composable design` — the two flagged as low-yie
 they get sharper triggers and their evidence relocated, nothing more. Moving a rule to tier 2 is a
 form of removal from the always-loaded set and needs the same per-rule approval.
 
+### 11. Candidate admissions raised while this plan was open
+
+Deliberately parked here rather than appended to `config/global-AGENTS.md`, so they go through §9's
+admission criteria (state a trigger, don't duplicate an existing rule, evidence to tier 3) instead
+of growing the file by two more sections while this pass is trying to shrink it. Routed here by
+`session-harvest` 2026-08-23; decide them as part of the relevant cluster's conversion, not
+separately.
+
+[NEEDS CLARIFICATION: **"A rule whose stated rationale is a friction cost is not a prohibition."**
+Trigger: about to skip or scale down real work in order to obey a rule in this file. If the rule's
+own reason is an approval prompt or similar friction, pay it and do the work; only correctness and
+safety rationales are blockers. Evidence: `plans/2026-08-23-cross-directory-command-execution.md` —
+an agent read the `&&` ban as a prohibition, concluded cross-repo work was impossible, and reported
+that as a limitation, when one chained command would have completed it. That plan already fixes the
+`cd`/`&&` instance; the open question is whether the general form earns always-loaded space or is
+adequately covered by fixing each instance as found. Note it partly duplicates the harness's own
+standing "finish the whole task, scaling the work down is the user's call" instruction, which argues
+against a new section.]
+
+[NEEDS CLARIFICATION: **"Don't add a bypass flag that gives an ownership marker two meanings."**
+Trigger: designing an escape hatch that overrides a marker/manifest the tool uses to decide what it
+owns. Evidence: rejecting a `--force` on `inv ai.skills` for foreign content (2026-08-23) — the
+`.pulse-source` marker _is_ the ownership model, so a flag overriding it would make ownership mean
+one thing with the flag and another without. Stated by the user as "we shouldn't have hacks that
+make the mental model difficult, unless something is utterly impractical." Likely extends the
+existing `CLI flag conventions` section rather than earning its own, per the variant-not-new-section
+rule — but that section is currently about flag _shape_ (`-y` vs a bespoke opt-in), and this is
+about whether the flag should exist at all, so the fit needs checking.]
+
 ## Files touched
 
 - `config/global-AGENTS.md` — restructured; the deliverable.

@@ -219,6 +219,42 @@ be re-deriving in a foreign repo — and `~/AGENTS.md` "Verify what actually hap
   should become the primary channel instead is a real question with a plausible "yes", tracked
   separately in `plans/2026-08-23-github-issues-plan-lifecycle.md` — not rejected here.
 
+### Pilot 1, by hand (2026-08-23) — sequencing step 3, run before it was planned
+
+A `repo-tasks` session hit exactly the friction this plan describes (`~/AGENTS.md`'s `cd`/chaining
+guidance turned out to be wrong) and captured it by hand as
+`plans/2026-08-23-cross-directory-command-execution.md`, without knowing this plan existed. Useful
+as unprompted evidence rather than a rehearsal of the design.
+
+**What matched:** lane 2 was the right call and was chosen unprompted — capture, don't fix in place,
+because the leanness pass owns those paragraphs. §4's immediate-commit also happened naturally: the
+file was written and committed in the same breath, no untracked-file window.
+
+**What the pilot did not do**, i.e. what remains untested:
+
+- No `source_repo`/`source_session`/`source_moment` frontmatter, and no `## Evidence` section. The
+  capture paraphrased the incident instead of pointing at the transcript — the exact failure mode
+  this plan's §3 exists to prevent, reproduced by an agent that had every reason to do better.
+  Strong argument that the fields must be _prompted for by a tool_, not left to an agent's judgment.
+- Committed but **not pushed**, contrary to §4's "push, not just commit."
+
+[PITFALL: **§2's lane boundary did not survive contact.** Lane 1 (fix-in-place) is bounded to "a
+single additive edit… no design decisions, no new files, no `setup.toml` change." This session did
+far more from a foreign cwd — a multi-section rewrite of `skills/plan-docs/SKILL.md` plus its
+`references/`, and a new `--skill` option on `ai.skills` with 14 tests — and it went cleanly: 215
+tests green, `basedpyright` 0 errors, committed without incident. The bound wasn't wrong about risk
+so much as about _authority_: the user explicitly said "you should be able to do your work there"
+each time. So the real dividing line is whether the user has authorized foreign-repo work in this
+session, not how large the edit is. Worth reconciling before the lane bound is written into
+`session-harvest`, or that rule will be routinely and correctly ignored.]
+
+**Also confirmed against §5's rationale:** the traps `pulse-capture` is designed to dodge are real
+but narrower than assumed. `git -C`, `dprint --config`, `ruff --config`, `basedpyright --project`
+and an absolute-path `pytest` all worked fine from a foreign cwd with no `cd`; only `inv` genuinely
+needed one, because task discovery walks up from cwd. That strengthens the "runnable from any cwd"
+requirement for the script and weakens the general "don't touch another repo" framing it cites. See
+`plans/2026-08-23-cross-directory-command-execution.md` for the full exercised list.
+
 ### Suggested sequencing
 
 1. Resolve the `CLAUDE_CODE_SESSION_ID` question (cheap: one interactive session, one subagent).
