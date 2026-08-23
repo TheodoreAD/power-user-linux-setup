@@ -408,7 +408,10 @@ _SUMMARY = {
     State.CLEAN: "ok",
     State.STALE: "source has changed since it was deployed",
     State.DIRTY: "edited since PULSE deployed it",
-    State.UNKNOWN: "differs, and PULSE has no record of deploying it",
+    # Deliberately non-committal: with no manifest entry there is no way to tell an edit under ~
+    # apart from a repo-side change that simply hasn't been deployed yet, and claiming either would
+    # be wrong half the time. Says what is actually known, and what to do about it.
+    State.UNKNOWN: "differs from its source — either edited here, or the source moved on",
 }
 
 
@@ -461,12 +464,17 @@ def status(c, name=None, path=None):
             print(diff(m))
 
     if attention:
+        edited = [m for m in attention if classify(m, manifest) == State.DIRTY]
         ui.warn(
-            f"{len(attention)} deployed file(s) hold content that isn't in this repo.",
-            "The next `inv tools.install` / `inv ai.install-skills` would ask before overwriting, but the "
-            "edit still only exists under ~ until it's ported back:",
+            f"{len(attention)} deployed file(s) no longer match their repo source.",
+            "Read each diff above before redeploying: content that exists only at the destination "
+            "is discarded by the next deploy, and only the diff tells you whether there is any.",
             *(f"  {m.path}  ->  {m.source}" for m in attention),
-            "Port each edit into its repo-side source, or run `inv deploy.all` to discard it.",
+            (
+                "Port anything worth keeping into the repo-side source, then `inv deploy.all`."
+                if edited
+                else "If the diffs are all repo-side changes, `inv deploy.all` deploys them."
+            ),
         )
 
 

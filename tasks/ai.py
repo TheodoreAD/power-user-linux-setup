@@ -268,7 +268,7 @@ def _apply_static_claude_permissions() -> None:
 
     if util.DRY_RUN:
         missing = [r for r in declared if r not in existing_allow]
-        print(f"[ai.install_skills] static Claude permissions: {'ok' if not missing else f'MISSING {len(missing)}'}")
+        print(f"[ai.install-skills] static Claude permissions: {'ok' if not missing else f'MISSING {len(missing)}'}")
         return
 
     previous: set[str] = (
@@ -280,7 +280,7 @@ def _apply_static_claude_permissions() -> None:
     merged = kept + [r for r in declared if r not in kept]
 
     if set(merged) == set(existing_allow):
-        print(f"[ai.install_skills] static Claude permissions: already up to date ({len(declared)} rule(s))")
+        print(f"[ai.install-skills] static Claude permissions: already up to date ({len(declared)} rule(s))")
         return
 
     perms = settings.setdefault("permissions", {})
@@ -290,7 +290,7 @@ def _apply_static_claude_permissions() -> None:
 
     _STATIC_PERMS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     _STATIC_PERMS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n")
-    print(f"[ai.install_skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
 
 
 def _apply_declared_statusline() -> None:
@@ -311,23 +311,23 @@ def _apply_declared_statusline() -> None:
     current = settings.get("statusLine")
 
     if util.DRY_RUN:
-        print(f"[ai.install_skills] statusLine: {util.ok_label(current == declared)}")
+        print(f"[ai.install-skills] statusLine: {util.ok_label(current == declared)}")
         return
 
     if current == declared:
-        print("[ai.install_skills] statusLine: already up to date")
+        print("[ai.install-skills] statusLine: already up to date")
         return
 
     if current is not None and not ui.ask(
         f"~/.claude/settings.json already has a custom statusLine ({current!r}) — replace it with the managed one?",
         default=False,
     ):
-        print("[ai.install_skills] statusLine: left existing custom value in place")
+        print("[ai.install-skills] statusLine: left existing custom value in place")
         return
 
     settings["statusLine"] = declared
     util.write_claude_settings(settings)
-    print(f"[ai.install_skills] {util.CLAUDE_SETTINGS}: statusLine updated")
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: statusLine updated")
 
 
 def _copilot_present() -> bool:
@@ -349,7 +349,7 @@ def _note_copilot_permissions() -> None:
     """
     if _copilot_present():
         print(
-            "[ai.install_skills] GitHub Copilot detected — no permissions applied for it. No confirmed, "
+            "[ai.install-skills] GitHub Copilot detected — no permissions applied for it. No confirmed, "
             "path-scoped file-read auto-approve setting exists for Copilot Chat (see "
             "docs/claude-code.md); not guessing at one."
         )
@@ -422,7 +422,7 @@ def install_skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     """
     base = Path(dir).expanduser().resolve() if dir else Path.home()
     selected = _selected_skill_names(skill)
-    _ensure_agents_skills(base, label="ai.install_skills")
+    _ensure_agents_skills(base, label="ai.install-skills")
     _install_declared_skills(c, base, yes=yes, selected=selected)
     if dir is None and selected is None:
         _apply_static_claude_permissions()

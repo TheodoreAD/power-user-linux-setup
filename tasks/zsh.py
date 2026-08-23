@@ -114,7 +114,7 @@ def set_default_shell(c):
     """
     zsh_path = shutil.which("zsh")
     if not zsh_path:
-        print("[zsh] zsh not found on PATH — install it first (apt.install_base)")
+        print("[zsh] zsh not found on PATH — install it first (apt.install-base)")
         return
     if util.DRY_RUN:
         print(f"[zsh] default shell: {util.ok_label(_shell_is_zsh(_current_shell()))}")

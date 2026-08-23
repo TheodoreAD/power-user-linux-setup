@@ -483,7 +483,7 @@ def test_status_shows_the_diff_and_warns_for_a_dirty_managed_path(wrapper_pkg, c
     out = capsys.readouterr().out
     assert "edited since PULSE deployed it" in out
     assert "-hand-edited" in out
-    assert "isn't in this repo" in out
+    assert "no longer match their repo source" in out
 
 
 def test_status_doesnt_warn_about_a_seeded_path_that_differs(tmp_path, src, monkeypatch, capsys):
@@ -498,8 +498,8 @@ def test_status_doesnt_warn_about_a_seeded_path_that_differs(tmp_path, src, monk
     _status(None)
 
     out = capsys.readouterr().out
-    assert "no record of deploying it" in out
-    assert "isn't in this repo" not in out
+    assert "either edited here, or the source moved on" in out
+    assert "no longer match their repo source" not in out
 
 
 def test_status_name_scopes_to_one_package(tmp_path, src, monkeypatch, capsys):

@@ -1,6 +1,6 @@
 ---
 name: mcp-skill-shipping
-description: "Use when developing or distributing a personal MCP server or Agent Skill repo (e.g. the `*-polite-mcp` family, `product-research-pipeline`), or deciding how to register one with Claude Code — dev-loop setup, git-as-artifact-store distribution (no PyPI), local-vs-deployed registration, and how skills ship via the existing `inv ai.skills` mechanism."
+description: "Use when developing or distributing a personal MCP server or Agent Skill repo (e.g. the `*-polite-mcp` family, `product-research-pipeline`), or deciding how to register one with Claude Code — dev-loop setup, git-as-artifact-store distribution (no PyPI), local-vs-deployed registration, and how skills ship via the existing `inv ai.install-skills` mechanism."
 ---
 
 # Shipping personal MCP servers and skills
@@ -97,15 +97,15 @@ default branch) is fine while iterating.
 ## Skills ship via the existing mechanism — don't build a new one
 
 A skill repo (like `product-research-pipeline`'s orchestrator skill) doesn't need any of the above.
-`inv ai.skills` (`tasks/ai.py`) already installs a named skill from any public GitHub repo via the
-`skills` CLI. Once the repo is public with a real skill directory, add to a `power-user-linux-setup`
-`setup.toml` package:
+`inv ai.install-skills` (`tasks/ai.py`) already installs a named skill from any public GitHub repo
+via the `skills` CLI. Once the repo is public with a real skill directory, add to a
+`power-user-linux-setup` `setup.toml` package:
 
 ```toml
 skills = [{ source = "npx", repo = "TheodoreAD/product-research-pipeline" }]
 ```
 
-then `inv ai.skills` makes it available globally, same as every other declared skill.
+then `inv ai.install-skills` makes it available globally, same as every other declared skill.
 
 ## Convention skills should self-update on friction
 
@@ -114,10 +114,10 @@ real usage, not just get read and followed. Default pattern for any new conventi
 it produces a genuinely ambiguous call the skill's own rules don't resolve, or the user corrects a
 decision it made, escalate to the user with `AskUserQuestion` rather than guessing — then fold the
 resolution back into the skill's own source as a small, additive edit (never the installed
-`~/.agents/skills/<name>` copy, which is a plain file copy clobbered by the next `inv ai.skills`
-run) and re-run `inv ai.skills` so the fix reaches every project. `skills/session-harvest/SKILL.md`
-is the worked example — its own "On friction, ask" + "Self-update mechanics" sections are the
-pattern to copy when authoring the next one.
+`~/.agents/skills/<name>` copy, which is a plain file copy clobbered by the next
+`inv ai.install-skills` run) and re-run `inv ai.install-skills` so the fix reaches every project.
+`skills/session-harvest/SKILL.md` is the worked example — its own "On friction, ask" + "Self-update
+mechanics" sections are the pattern to copy when authoring the next one.
 
 ## Full rationale
 

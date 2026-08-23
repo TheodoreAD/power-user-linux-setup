@@ -7,7 +7,7 @@
 #
 # Used by:
 #   inv git.configure  — per-directory git identities (~/projects/<directory>/.gitconfig)
-#   inv ssh.keys       — create one ed25519 key per unique email
+#   inv ssh.create-keys       — create one ed25519 key per unique email
 #   inv ssh.configure  — write ~/.ssh/config
 #   inv ssh.forward    — ssh-copy-id to non-git server hosts
 #   inv ssh.add        — ssh-add all keys for this machine

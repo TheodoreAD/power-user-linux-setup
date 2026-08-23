@@ -234,8 +234,8 @@ def check(c):  # noqa: C901
         print(
             f"[wsl] distro: {os_id or 'unknown'} — has apt, but PULSE is only tested against "
             "Ubuntu 24.04.  ← apt/apt-repo/deb-github/deb-url methods should work; anything "
-            "assuming Ubuntu specifically (apt.install_repos' `lsb_release -cs` codename in repo source "
-            "lines, apt.install_base's exact package names) may not resolve or may pull the wrong repo."
+            "assuming Ubuntu specifically (apt.install-repos' `lsb_release -cs` codename in repo source "
+            "lines, apt.install-base's exact package names) may not resolve or may pull the wrong repo."
         )
     else:
         print(
@@ -250,7 +250,7 @@ def check(c):  # noqa: C901
         print("[wsl] systemd: running ✓")
     else:
         print(
-            "[wsl] systemd: NOT running  ← system.set_locale, system.configure_dns, system.cap_journal_size, and "
+            "[wsl] systemd: NOT running  ← system.set-locale, system.configure-dns, system.cap-journal-size, and "
             "docker.configure now abort immediately instead of failing partway (util.require_systemd).\n"
             "       Fix: `inv wsl.fix` sets systemd=true in /etc/wsl.conf, then `wsl.exe --shutdown` "
             "from Windows and reopen the terminal."
@@ -491,8 +491,8 @@ def install(c, wslg="auto", docker=False, dns="auto"):  # noqa: C901
     post = (_wsl_conf_value("boot", "systemd"), _wsl_conf_value("network", "generateResolvConf"))
     if pre != post:
         ui.warn(
-            "/etc/wsl.conf just changed — system.set_locale"
-            + ("/system.configure_dns" if use_public_dns else "")
+            "/etc/wsl.conf just changed — system.set-locale"
+            + ("/system.configure-dns" if use_public_dns else "")
             + " below will be skipped until you `wsl.exe --shutdown` (from Windows) and reopen, "
             "then re-run `inv wsl.install`. Continuing with the rest of the install now."
         )
@@ -508,7 +508,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):  # noqa: C901
     if _systemd_running():
         system.set_locale(c)
     else:
-        print("[wsl.install] systemd not live yet — skipping system.set_locale (restart WSL and re-run)")
+        print("[wsl.install] systemd not live yet — skipping system.set-locale (restart WSL and re-run)")
 
     if not use_public_dns:
         print("[wsl.install] leaving /etc/resolv.conf to WSL's own generateResolvConf")
@@ -542,7 +542,7 @@ def install(c, wslg="auto", docker=False, dns="auto"):  # noqa: C901
                     "Windows host's own (working) DNS server instead."
                 )
     else:
-        print("[wsl.install] systemd/DNS not both live yet — skipping system.configure_dns (restart WSL and re-run)")
+        print("[wsl.install] systemd/DNS not both live yet — skipping system.configure-dns (restart WSL and re-run)")
 
     use_wslg = _wslg_available() if wslg == "auto" else _parse_tristate(wslg, "wslg")
 

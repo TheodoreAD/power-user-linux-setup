@@ -332,8 +332,8 @@ straight to its own file.
 
 ## Editing this skill
 
-This file is _copied_, not symlinked, into `~/.agents/skills/python-conventions` by `inv ai.skills`
-(`setup.toml`'s `[packages.python-conventions]`). Edit the source at
-`power-user-linux-setup/skills/python-conventions/SKILL.md`, then re-run `inv ai.skills` to refresh
-every project's copy — editing a deployed copy in place is local drift, the exact thing this skill
-exists to prevent.
+This file is _copied_, not symlinked, into `~/.agents/skills/python-conventions` by
+`inv ai.install-skills` (`setup.toml`'s `[packages.python-conventions]`). Edit the source at
+`power-user-linux-setup/skills/python-conventions/SKILL.md`, then re-run `inv ai.install-skills` to
+refresh every project's copy — editing a deployed copy in place is local drift, the exact thing this
+skill exists to prevent.

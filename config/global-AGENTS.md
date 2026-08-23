@@ -45,8 +45,8 @@ than hunting for another scripted workaround.
 text); `~/AGENTS.md` itself follows this, with `~/.claude/CLAUDE.md` symlinking to it. Nothing can
 be appended below a symlink's target, so a genuinely Claude-specific addendum goes in `AGENTS.md`
 itself or a separate `.claude/`-scoped file. Skills live in `.agents/skills/` with `.claude/skills`
-symlinked to it; `inv ai.skills` sets this up for `~` (never overwriting existing content), and a
-new Python project's own scaffold comes from
+symlinked to it; `inv ai.install-skills` sets this up for `~` (never overwriting existing content),
+and a new Python project's own scaffold comes from
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time.
 
 ### Saving to cross-session memory

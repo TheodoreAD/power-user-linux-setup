@@ -133,5 +133,5 @@ resurfaces next session, and the user ends up re-explaining the same judgment ca
 Folding the resolution back into `SKILL.md` — small, additive edits, not a rewrite — is what makes
 this genuinely reusable across sessions and projects rather than a one-shot script. The mandatory
 step of finding and editing the _source_ repo (not the installed copy) matters because
-`inv ai.skills`-installed copies are plain file copies, not symlinks — editing one silently doesn't
-propagate anywhere and gets overwritten on the next install run.
+`inv ai.install-skills`-installed copies are plain file copies, not symlinks — editing one silently
+doesn't propagate anywhere and gets overwritten on the next install run.

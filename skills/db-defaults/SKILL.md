@@ -178,11 +178,11 @@ facing recommendation. Each category's "Escalate to" line is the pick for that s
 
 ## Editing this table
 
-This file is _copied_, not symlinked, into `~/.agents/skills/db-defaults` by `inv ai.skills`
+This file is _copied_, not symlinked, into `~/.agents/skills/db-defaults` by `inv ai.install-skills`
 (`setup.toml`'s `[packages.db-defaults]`). Edit the source at
-`power-user-linux-setup/skills/db-defaults/SKILL.md`, then re-run `inv ai.skills` to refresh every
-project's copy — editing a deployed copy in place is local drift, the exact thing this skill exists
-to prevent.
+`power-user-linux-setup/skills/db-defaults/SKILL.md`, then re-run `inv ai.install-skills` to refresh
+every project's copy — editing a deployed copy in place is local drift, the exact thing this skill
+exists to prevent.
 
 ## Starter snippets
 

@@ -136,9 +136,10 @@ Resolving friction (step 6) means editing the skill's _source_, not whatever cop
 current session:
 
 - The running copy — `~/.agents/skills/session-harvest/` (or a project-local
-  `.agents/skills/session-harvest/`) — is a plain file copy dropped there by `inv ai.skills`. Its
-  `.pulse-source` marker means hand-editing it is silently clobbered on the next `inv ai.skills` run
-  and never reaches any other project anyway. Never edit it directly.
+  `.agents/skills/session-harvest/`) — is a plain file copy dropped there by
+  `inv ai.install-skills`. Its `.pulse-source` marker means hand-editing it is silently clobbered on
+  the next `inv ai.install-skills` run and never reaches any other project anyway. Never edit it
+  directly.
 - Find the canonical source: the repo whose `setup.toml` declares `[packages.session-harvest]` —
   `power-user-linux-setup`, normally at `~/projects/github.com-personal/power-user-linux-setup` on
   this machine. If that's not obviously reachable from the current session (invoked from an
@@ -149,9 +150,9 @@ current session:
   escalation process itself. Not a rewrite. Rationale for _why_ a resolution was made a particular
   way goes in `references/rationale.md` instead, matching the split already used for the rest of
   this skill.
-- Re-run `inv ai.skills` from that repo so the update actually reaches every project. Then tell the
-  user what changed and that it's a durable convention update worth a commit — don't commit it
-  unasked, same standing rule as everything else in that repo.
+- Re-run `inv ai.install-skills` from that repo so the update actually reaches every project. Then
+  tell the user what changed and that it's a durable convention update worth a commit — don't commit
+  it unasked, same standing rule as everything else in that repo.
 
 ## Full rationale
 
