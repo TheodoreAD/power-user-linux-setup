@@ -21,8 +21,8 @@ extensions.gnome.org directly. No browser extension or native host connector req
 All extensions are declared in `setup.toml` under `method = "gnome-extension"`. The key commands:
 
 ```shell
-inv python.tools       # installs gext if not already present
-inv gnome.extensions   # install + enable all enabled = true entries; handles conflicts; applies dconf config
+inv python.install-tools       # installs gext if not already present
+inv gnome.install-extensions   # install + enable all enabled = true entries; handles conflicts; applies dconf config
 inv gnome.enable       # re-enable installed extensions without reinstalling (use when extensions go inactive)
 inv gnome.configure    # re-apply dconf settings without reinstalling (idempotent)
 inv gnome.status       # diagnostic: show active state + setup.toml alignment
@@ -52,10 +52,10 @@ GNOME Shell loads extensions from two locations. Understanding the distinction m
 Owned by Ubuntu apt packages. Cannot be removed without purging those packages. PULSE does not
 install or remove these; `inv gnome.clean` leaves them untouched.
 
-| UUID                              | State       | apt package                          | Role                                                                                        |
-| --------------------------------- | ----------- | ------------------------------------ | ------------------------------------------------------------------------------------------- |
-| `ubuntu-appindicators@ubuntu.com` | **ACTIVE**  | `gnome-shell-extension-appindicator` | AppIndicator/KStatusNotifierItem tray icons — keep enabled                                  |
-| `ubuntu-dock@ubuntu.com`          | INITIALIZED | `gnome-shell-extension-ubuntu-dock`  | Ubuntu dock — disabled automatically by `inv gnome.extensions` when dash-to-panel is active |
+| UUID                              | State       | apt package                          | Role                                                                                                |
+| --------------------------------- | ----------- | ------------------------------------ | --------------------------------------------------------------------------------------------------- |
+| `ubuntu-appindicators@ubuntu.com` | **ACTIVE**  | `gnome-shell-extension-appindicator` | AppIndicator/KStatusNotifierItem tray icons — keep enabled                                          |
+| `ubuntu-dock@ubuntu.com`          | INITIALIZED | `gnome-shell-extension-ubuntu-dock`  | Ubuntu dock — disabled automatically by `inv gnome.install-extensions` when dash-to-panel is active |
 
 #### Apt-package extensions — `gnome-shell-extensions`
 
@@ -87,16 +87,16 @@ later if you apply a custom Shell theme. If that comes up, reinstall the package
 
 #### User extensions — `~/.local/share/gnome-shell/extensions/`
 
-Installed by gext (or left over from old installs). Owned entirely by PULSE. `inv gnome.extensions`
-installs declared extensions here. `inv gnome.clean` removes every directory not matching an
-`enabled = true` UUID in `setup.toml`.
+Installed by gext (or left over from old installs). Owned entirely by PULSE.
+`inv gnome.install-extensions` installs declared extensions here. `inv gnome.clean` removes every
+directory not matching an `enabled = true` UUID in `setup.toml`.
 
 ---
 
 ### PULSE-managed extension list
 
 All entries below have a `[packages.gnome-ext-*]` section in `setup.toml`. Set `enabled = true` and
-run `inv gnome.extensions` to install and activate. Currently 12 `enabled = true`, 10
+run `inv gnome.install-extensions` to install and activate. Currently 12 `enabled = true`, 10
 `enabled = false` (22 total).
 
 #### Currently active
@@ -110,7 +110,7 @@ All 12 confirmed active as of 2026-06-09:
 | `lockkeys@vaina.lt`                       | [#36](https://extensions.gnome.org/extension/36/)     | `gnome-ext-lockkeys`            | CapsLock / NumLock state in top bar — defaults fine (`style=both`, always-on)                                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | `tophat@fflewddur.github.io`              | [#5219](https://extensions.gnome.org/extension/5219/) | `gnome-ext-tophat`              | CPU/mem/net sparklines + disk I/O; no extra deps                                                                                                                                                                                                                                                                                                                                                                                                                                                                |
 | `Vitals@CoreCoding.com`                   | [#1460](https://extensions.gnome.org/extension/1460/) | `gnome-ext-vitals`              | Hardware sensors: CPU/GPU temps, load average; redundant readings disabled via dconf                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| `tilingshell@ferrarodomenico.com`         | [#7065](https://extensions.gnome.org/extension/7065/) | `gnome-ext-tiling-shell`        | Snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native. `inv gnome.extensions` auto-disables `tiling-assistant@ubuntu.com` (confirmed conflict on fresh Ubuntu 24.04 installs — gsettings key collision). Its own `override-alt-tab` setting conflicts with AATWS (see below) and is disabled via dconf.                                                                                                                                                                     |
+| `tilingshell@ferrarodomenico.com`         | [#7065](https://extensions.gnome.org/extension/7065/) | `gnome-ext-tiling-shell`        | Snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native. `inv gnome.install-extensions` auto-disables `tiling-assistant@ubuntu.com` (confirmed conflict on fresh Ubuntu 24.04 installs — gsettings key collision). Its own `override-alt-tab` setting conflicts with AATWS (see below) and is disabled via dconf.                                                                                                                                                             |
 | `advanced-alt-tab@G-dH.github.com`        | [#4412](https://extensions.gnome.org/extension/4412/) | `gnome-ext-aatws`               | Replaces Alt+Tab/Super+Tab with a searchable, filterable switcher — type to find running windows by title; actively maintained for GNOME 46–50. Replaces Switcher (maintainer inactive). Tiling Shell's `override-alt-tab` (default on) monkey-patches the same native `WindowSwitcherPopup.show` and crashes it with `TypeError: this._switcherList is null`, breaking Alt+Tab entirely — confirmed conflict, fixed by setting `gnome-ext-tiling-shell`'s dconf `override-alt-tab` to `false` in `setup.toml`. |
 | `clipboard-indicator@tudmotu.com`         | [#779](https://extensions.gnome.org/extension/779/)   | `gnome-ext-clipboard-indicator` | Clipboard history in the top bar; Ctrl+F9. Works on Wayland via shell extension privilege.                                                                                                                                                                                                                                                                                                                                                                                                                      |
 | `smart-auto-move@khimaros.com`            | [#4736](https://extensions.gnome.org/extension/4736/) | `gnome-ext-smart-auto-move`     | Learns and restores window positions/workspaces across sessions.                                                                                                                                                                                                                                                                                                                                                                                                                                                |
@@ -118,7 +118,7 @@ All 12 confirmed active as of 2026-06-09:
 | `just-perfection-desktop@just-perfection` | [#3843](https://extensions.gnome.org/extension/3843/) | `gnome-ext-just-perfection`     | GUI for all GNOME Shell UI tweaks: Activities button, clock position, hot corners, animations.                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `space-bar@luchrioh`                      | [#5090](https://extensions.gnome.org/extension/5090/) | `gnome-ext-space-bar`           | Named i3-style workspace bar replacing the dot indicator; pairs with dash-to-panel.                                                                                                                                                                                                                                                                                                                                                                                                                             |
 
-**Applied dconf configuration** (stored in `setup.toml`, applied by `inv gnome.extensions` /
+**Applied dconf configuration** (stored in `setup.toml`, applied by `inv gnome.install-extensions` /
 `inv gnome.configure`):
 
 | Extension     | Key                | Value                                                                    |
@@ -152,7 +152,7 @@ All 12 confirmed active as of 2026-06-09:
 #### Not installed — disabled in setup.toml
 
 These 3 extensions are `enabled = false` in `setup.toml` and not on disk. Enable individually if
-needed; `inv gnome.extensions` will install and activate.
+needed; `inv gnome.install-extensions` will install and activate.
 
 | UUID                                    | EGO                                                       | setup.toml key       | Notes                                                                                                                                                                                         |
 | --------------------------------------- | --------------------------------------------------------- | -------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

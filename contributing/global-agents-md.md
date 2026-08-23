@@ -266,8 +266,8 @@ consumer.
 
 ## Adding a CLI flag
 
-The bypass-flag clause's originating incident (2026-08-23): a `--force` on `inv ai.skills` that
-would have overwritten foreign content was rejected because the `.pulse-source` marker _is_ the
+The bypass-flag clause's originating incident (2026-08-23): a `--force` on `inv ai.install-skills`
+that would have overwritten foreign content was rejected because the `.pulse-source` marker _is_ the
 ownership model — a flag overriding it would make ownership mean one thing with the flag and another
 without. Stated by the user as "we shouldn't have hacks that make the mental model difficult, unless
 something is utterly impractical." Folded into this rule (which previously covered only flag

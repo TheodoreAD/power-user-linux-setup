@@ -17,10 +17,10 @@ Nothing universal is repeated below — only what's specific to this repo.
 
 ## AI agent tooling (`tasks/ai.py`)
 
-`inv ai.skills` ensures `.agents/skills/` exists with `.claude/skills` symlinked to it (Claude Code
-doesn't read `.agents/skills/` natively, only the symlink target) and installs every skill declared
-via a `skills` field anywhere in `setup.toml` — home-directory-scoped (`~`), never overwrites
-hand-written content. Project-scoped scaffolding (a new Python project's own
+`inv ai.install-skills` ensures `.agents/skills/` exists with `.claude/skills` symlinked to it
+(Claude Code doesn't read `.agents/skills/` natively, only the symlink target) and installs every
+skill declared via a `skills` field anywhere in `setup.toml` — home-directory-scoped (`~`), never
+overwrites hand-written content. Project-scoped scaffolding (a new Python project's own
 `AGENTS.md`/`CLAUDE.md`/`.agents/skills` setup) isn't this repo's job anymore — see
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps that at generation time
 instead (`plans/2026-08-14-python-repo-scaffolding.md` §F). The cross-session-memory policy (don't
@@ -80,13 +80,13 @@ check the docs/configuration.md table for what each task actually respects befor
 — never a manual `apt install`/`sudo apt install`/`uv tool install`/`pip install`.** Add a
 `[packages.<name>]` entry to `setup.toml` (matching an existing entry's `method` for the same kind
 of tool — e.g. `uv-tool` for a PyPI-distributed CLI, see `gnome-extensions-cli`/`nox`/`glances` for
-the shape) and run the corresponding install task (`inv python.tools` for every `uv-tool` package,
-`inv apt.base` for `apt`, etc.) instead. This is not a style preference — running the install by
-hand outside `setup.toml` defeats the entire point of the repo, which is that every install this
-machine has is declared in one reproducible, re-runnable place. Caught live during the
+the shape) and run the corresponding install task (`inv python.install-tools` for every `uv-tool`
+package, `inv apt.install-base` for `apt`, etc.) instead. This is not a style preference — running
+the install by hand outside `setup.toml` defeats the entire point of the repo, which is that every
+install this machine has is declared in one reproducible, re-runnable place. Caught live during the
 `python-conventions` pilot (`plans/2026-08-14-python-repo-scaffolding.md` §C4): `shellcheck`/`shfmt`
 were first installed via a direct `uv tool install`, then corrected on the spot to go through
-`setup.toml` and `inv python.tools` instead.
+`setup.toml` and `inv python.install-tools` instead.
 
 ## Post-install verification (`inv verify.all`)
 
@@ -194,12 +194,12 @@ zero-install path, which never runs `uv sync`, still works without it).
 
 ## Never run GNOME session-mutating tasks yourself
 
-Don't execute `inv gnome.extensions`, `inv gnome.configure`, `inv gnome.status`'s mutating siblings,
-`inv screenshot.enable`/`inv screenshot.disable`, or any other invoke task that writes to the live
-GNOME session (gsettings/dconf/`gnome-extensions` CLI) via the Bash tool — treat this as the default
-for any future task that mutates GNOME keybindings/settings too. These require a live Wayland/X11
-session; running the mutating ones via the Bash tool can interact unexpectedly with the running
-desktop. Read-only tasks in the same modules (`inv screenshot.status`, dry-run via
+Don't execute `inv gnome.install-extensions`, `inv gnome.configure`, `inv gnome.status`'s mutating
+siblings, `inv screenshot.enable`/`inv screenshot.disable`, or any other invoke task that writes to
+the live GNOME session (gsettings/dconf/`gnome-extensions` CLI) via the Bash tool — treat this as
+the default for any future task that mutates GNOME keybindings/settings too. These require a live
+Wayland/X11 session; running the mutating ones via the Bash tool can interact unexpectedly with the
+running desktop. Read-only tasks in the same modules (`inv screenshot.status`, dry-run via
 `PULSE_DRY_RUN=1`) are fine to run directly — the boundary is mutation of the live session, not the
 module. After making changes to `setup.toml`/a `tasks/*.py` module that touches gsettings/dconf,
 tell the user what to run and why, but don't run the mutating command yourself.

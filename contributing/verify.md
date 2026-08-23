@@ -75,12 +75,12 @@ Originally these defaulted to a read-only `gnome-extensions list | grep -qF <uui
 side effects), and it worked when tested by hand on a machine with extensions actually installed.
 The bug wasn't unsafety, it was a false assumption: `gnome/gui` tags being present on an entry
 doesn't mean `inv setup` (or anything else automated) ever actually installs it.
-`inv gnome.extensions` is never called from `tasks/setup.py` or `tasks/wsl.py` — confirmed by
-grepping for the call, not assumed — because this repo's own standing rule is to never touch a live
-GNOME session programmatically (see `tasks/gnome.py`). On a normal desktop install (no `gnome`/`gui`
-tag exclusion, the common case this repo is built for), every `gnome-extension` entry is fully
-tag-eligible for `packages_by_method()` but was never actually installed by the run being verified —
-checking it by default would fail `inv setup` for something it never promised to do.
+`inv gnome.install-extensions` is never called from `tasks/setup.py` or `tasks/wsl.py` — confirmed
+by grepping for the call, not assumed — because this repo's own standing rule is to never touch a
+live GNOME session programmatically (see `tasks/gnome.py`). On a normal desktop install (no
+`gnome`/`gui` tag exclusion, the common case this repo is built for), every `gnome-extension` entry
+is fully tag-eligible for `packages_by_method()` but was never actually installed by the run being
+verified — checking it by default would fail `inv setup` for something it never promised to do.
 
 Wiring `inv verify.all` into `packages_phase` (the step this bug would have made fatal, not just
 noisy) is what surfaced it — it wasn't visible when the task only ran standalone on a machine that

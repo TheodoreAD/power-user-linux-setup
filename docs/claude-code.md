@@ -169,16 +169,16 @@ specifically — governs how long session transcripts/tasks/shell-snapshots/back
 to `365` here (default is `30`) as a deliberate preference, reviewed and confirmed while building
 the allowlist pipeline, not something PULSE enforces or will change on your behalf.
 
-## `.agents/skills/` — `inv ai.skills`
+## `.agents/skills/` — `inv ai.install-skills`
 
 `.agents/skills/` is the emerging cross-tool convention for Agent Skills, but Claude Code itself
 currently only discovers skills from `~/.claude/skills/` and `<project>/.claude/skills/` — not
 `.agents/skills/` directly. To get both the cross-tool convention _and_ a working Claude Code setup,
 PULSE symlinks `.claude/skills` to `.agents/skills`:
 
-- `inv ai.skills [--dir PATH]` — ensures `.agents/skills/` exists and `.claude/skills` is symlinked
-  to it, then installs every skill declared via a `skills` field anywhere in `setup.toml` (see
-  below). Defaults to `~` (the personal, cross-project skills location); part of the standard
+- `inv ai.install-skills [--dir PATH]` — ensures `.agents/skills/` exists and `.claude/skills` is
+  symlinked to it, then installs every skill declared via a `skills` field anywhere in `setup.toml`
+  (see below). Defaults to `~` (the personal, cross-project skills location); part of the standard
   `inv setup`/`inv wsl.install` chain.
 
 Checks for existing files/symlinks first and skips rather than overwrites — safe to re-run, and safe
@@ -188,22 +188,24 @@ to point at a project that already has hand-written skills content. A new Python
 
 ## Declaring skills to install — the `skills` field
 
-Any `setup.toml` package entry can carry a `skills` list, checked by `inv ai.skills` regardless of
-that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zprofile`. Two sources:
+Any `setup.toml` package entry can carry a `skills` list, checked by `inv ai.install-skills`
+regardless of that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zprofile`.
+Two sources:
 
 - **`{ source = "local", path = "skills/<name>" }`** — for skills authored _in this repo_. Real
   skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references, assets)
   live under `skills/` at the repo root, tracked by git like any other repo content — deliberately
   not gitignored `reference/`, and not nested under this repo's own `.agents/skills/` (that's the
   _deployed_, tool-agnostic location on a given machine; this repo is where some skills happen to be
-  authored, not where they run from). `inv ai.skills` **copies** the repo's `skills/<name>/` to
-  `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching how the `npx` source
-  below behaves (it copies too). A `.pulse-source` marker file inside the copy records which entry
-  installed it, so a re-run can tell "ours, safe to refresh to match the repo" apart from "something
-  else is already here, leave it alone" — editing the repo copy needs an `inv ai.skills` re-run to
-  take effect, it doesn't apply instantly the way a symlink would. `[packages.research-library]` is
-  the example: its `skills` field points at `skills/research-library/`, which documents
-  `$RESEARCH_HOME` (see `contributing/research-library.md`).
+  authored, not where they run from). `inv ai.install-skills` **copies** the repo's `skills/<name>/`
+  to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching how the `npx`
+  source below behaves (it copies too). A `.pulse-source` marker file inside the copy records which
+  entry installed it, so a re-run can tell "ours, safe to refresh to match the repo" apart from
+  "something else is already here, leave it alone" — editing the repo copy needs an
+  `inv ai.install-skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
+  `[packages.research-library]` is the example: its `skills` field points at
+  `skills/research-library/`, which documents `$RESEARCH_HOME` (see
+  `contributing/research-library.md`).
 - **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — for skills
   published on GitHub. Installed via the real `skills` CLI (`[packages.node].global_packages`,
   [skills.sh](https://skills.sh)):
@@ -220,16 +222,16 @@ that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zpro
 Add a skill to install without attaching it to some other tool's entry by giving it its own
 `[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
 
-**Caveat found live (2026-08-23): don't run `inv ai.skills` from an agent session (or any other
-non-interactive context) if you only need the permissions/statusline side effects.** The npx-source
-install confirmation (`_install_remote_skill`'s `ui.ask(...)`) defaults to **proceed**, not skip,
-when `not yes` — unlike the statusline-overwrite prompt above, which defaults to decline. Per "The
-core problem: no TTY" up top, an agent's Bash tool is always non-interactive, so `ui.ask()` always
-returns that default with no real prompt ever shown. Running the full `skills` task from inside an
-agent session would therefore silently install every declared-but-not-yet-installed npx-source skill
-with no approval gate at all — exactly the scenario this doc's own security-risk-assessment
-paragraph above assumes a human is present to read. To apply just a new `claude_permissions_allow`
-rule or statusline change without touching skill installation, call
+**Caveat found live (2026-08-23): don't run `inv ai.install-skills` from an agent session (or any
+other non-interactive context) if you only need the permissions/statusline side effects.** The
+npx-source install confirmation (`_install_remote_skill`'s `ui.ask(...)`) defaults to **proceed**,
+not skip, when `not yes` — unlike the statusline-overwrite prompt above, which defaults to decline.
+Per "The core problem: no TTY" up top, an agent's Bash tool is always non-interactive, so `ui.ask()`
+always returns that default with no real prompt ever shown. Running the full `skills` task from
+inside an agent session would therefore silently install every declared-but-not-yet-installed
+npx-source skill with no approval gate at all — exactly the scenario this doc's own
+security-risk-assessment paragraph above assumes a human is present to read. To apply just a new
+`claude_permissions_allow` rule or statusline change without touching skill installation, call
 `tasks.ai._apply_static_claude_permissions()` (or `_apply_declared_statusline()`) directly instead
 of the `skills` task.
 
@@ -245,7 +247,7 @@ version covers every agent tool on this machine for less overall complexity than
 
 A second any-section field, same pattern as `skills`: any package entry can carry
 `claude_permissions_allow`, a list of literal Claude Code permission-rule strings, checked
-regardless of that entry's `method`. `inv ai.skills` merges every declared rule into
+regardless of that entry's `method`. `inv ai.install-skills` merges every declared rule into
 `~/.claude/settings.json`'s `permissions.allow` — same safe-merge shape as `tasks/allowlist.py`'s
 `apply` (every other key untouched, `.json.bak` written before any real change, only rule strings
 this mechanism wrote previously are ever removed) but through its own, separate manifest
@@ -260,7 +262,7 @@ everything under `$RESEARCH_HOME` — deliberately treating that curated, read-o
 project files rather than gating every lookup, which is the entire point of building a shared
 library instead of fetching things ad hoc.
 
-**GitHub Copilot, if present, gets checked but not written to.** `inv ai.skills` looks for a
+**GitHub Copilot, if present, gets checked but not written to.** `inv ai.install-skills` looks for a
 `github.copilot-*` VS Code extension and, if found, prints a note rather than guessing: research
 turned up `chat.tools.terminal.autoApprove` (terminal commands — already handled by
 `inv allowlist.render --target=copilot`) and `chat.tools.urls.autoApprove` (URL fetches), but no
@@ -276,11 +278,11 @@ an honest "nothing applied, here's why." Revisit if a scoped-read key is ever co
 (`config/statusline-command.sh` → `~/.claude/statusline-command.sh`, a `wrapper-script`-method
 entry, chmod 0o755 — same mechanism as `claude-global-md`/`pulse-proxy-start`) and declares
 `claude_statusline = { type = "command", command = "bash ~/.claude/statusline-command.sh" }` on that
-same package entry. `inv ai.skills` reads that value directly (not a scanned any-package field like
-`claude_permissions_allow` above — there's only ever one statusline, so no merge/manifest mechanism
-is needed) and syncs it into `~/.claude/settings.json`'s top-level `statusLine` key: absent → set
-it; already correct → no-op; set to something else → ask before overwriting (declines by default,
-same `ui.ask` convention used elsewhere, auto-skipped non-interactively).
+same package entry. `inv ai.install-skills` reads that value directly (not a scanned any-package
+field like `claude_permissions_allow` above — there's only ever one statusline, so no merge/manifest
+mechanism is needed) and syncs it into `~/.claude/settings.json`'s top-level `statusLine` key:
+absent → set it; already correct → no-op; set to something else → ask before overwriting (declines
+by default, same `ui.ask` convention used elsewhere, auto-skipped non-interactively).
 
 Edit `config/statusline-command.sh` and re-run `inv tools.install` to change the script's behavior —
 its own header comment documents the color palette, icon sources (powerlevel10k's nerdfont icon

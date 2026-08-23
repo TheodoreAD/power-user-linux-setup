@@ -13,10 +13,10 @@ Two distribution paths, both built on the same underlying fix (the systemd gap, 
 
 ## `inv setup` in a container — the systemd gap, and why it's handled automatically
 
-`inv setup` runs a `system` phase first (`system.locale`, `system.dns`) that needs `systemctl`/
-`localectl` — meaningless, and previously fatal, in a container with no init system. `inv setup` now
-detects this itself (`util.has_systemd()`, the same check `require_systemd()` uses) and, when
-there's no systemd and it isn't WSL, skips both the `system` phase and the `desktop` phase
+`inv setup` runs a `system` phase first (`system.set-locale`, `system.configure-dns`) that needs
+`systemctl`/ `localectl` — meaningless, and previously fatal, in a container with no init system.
+`inv setup` now detects this itself (`util.has_systemd()`, the same check `require_systemd()` uses)
+and, when there's no systemd and it isn't WSL, skips both the `system` phase and the `desktop` phase
 (`fonts.install`/`fonts.configure` — irrelevant in a headless container, same reasoning
 `wsl.install` already applies) instead of raising. Nothing to configure for this — it Just Works the
 same way `inv setup` already auto-detects WSL and delegates to `wsl.install`. Both distribution
@@ -65,19 +65,19 @@ self-heal preamble and every `[packages.*]` `apt`/`apt-repo`/`deb-github`/`deb-u
 
 ### Mounting host directories
 
-A fresh container has none of your credentials: `inv identity.init` has to be re-run, `ssh.keys`
-mints a brand-new keypair (which then needs re-adding to GitHub), and a corporate CA bundle
-`certs.install` needs isn't present at all. `inv devcontainer.mounts` discovers what's actually
-available on **this host** and prints a ready-to-paste `devcontainer.json` `mounts`/`remoteEnv`
-fragment for whichever of it you select — it never writes or edits any file itself, including this
-repo's own `.devcontainer/devcontainer.json` (that file is shared and CI-smoke-tested; your personal
-host paths don't belong in it). Run it on the **host**, before `devcontainer up` or opening the
-folder in VS Code — devcontainer mounts are fixed at container-creation time, `postCreateCommand`
-runs too late to add any, which is also why this can't just be folded into
-`bootstrap-devcontainer.sh`.
+A fresh container has none of your credentials: `inv identity.init` has to be re-run,
+`ssh.create-keys` mints a brand-new keypair (which then needs re-adding to GitHub), and a corporate
+CA bundle `certs.install` needs isn't present at all. `inv devcontainer.print-mounts` discovers
+what's actually available on **this host** and prints a ready-to-paste `devcontainer.json`
+`mounts`/`remoteEnv` fragment for whichever of it you select — it never writes or edits any file
+itself, including this repo's own `.devcontainer/devcontainer.json` (that file is shared and
+CI-smoke-tested; your personal host paths don't belong in it). Run it on the **host**, before
+`devcontainer up` or opening the folder in VS Code — devcontainer mounts are fixed at
+container-creation time, `postCreateCommand` runs too late to add any, which is also why this can't
+just be folded into `bootstrap-devcontainer.sh`.
 
 ```shell
-inv devcontainer.mounts
+inv devcontainer.print-mounts
 ```
 
 It only prompts for candidates that actually exist on this host (no `~/.aws`? no prompt for it).
@@ -87,13 +87,13 @@ It only prompts for candidates that actually exist on this host (no `~/.aws`? no
 time, so it survives the host socket path changing between login sessions) plus a `remoteEnv`
 override pointing the container's `SSH_AUTH_SOCK` at the mounted socket — private key material never
 enters the container. On WSL2 + Docker Desktop specifically, this path has multiple open, unresolved
-upstream bugs (`microsoft/vscode-remote-release#3902`/`#8689`/`#2925`); `inv
-devcontainer.mounts`
-prints this caveat automatically when it detects WSL. The reliable fix there is running `ssh-agent`
-natively _inside_ WSL2 itself, not relying on the Windows-side agent — not solved or automated here,
-just called out. If no `$SSH_AUTH_SOCK` is found at all, the task falls back to offering a direct
-`~/.ssh` mount instead, defaulting to selected — with the tradeoff printed alongside it: private key
-bytes become visible inside the container.
+upstream bugs (`microsoft/vscode-remote-release#3902`/`#8689`/`#2925`);
+`inv
+devcontainer.print-mounts` prints this caveat automatically when it detects WSL. The reliable
+fix there is running `ssh-agent` natively _inside_ WSL2 itself, not relying on the Windows-side
+agent — not solved or automated here, just called out. If no `$SSH_AUTH_SOCK` is found at all, the
+task falls back to offering a direct `~/.ssh` mount instead, defaulting to selected — with the
+tradeoff printed alongside it: private key bytes become visible inside the container.
 
 **Corporate CA bundle — same absolute path on both sides.** `identity.toml`'s `[certs] bundle` field
 is an absolute host path, read verbatim by `tasks/certs.py` at runtime; mounting it at the
@@ -171,22 +171,23 @@ a system that already has them (every bare-metal/WSL/VM install, per `README.md`
 - `python3`/`python3-pip` were never actually needed — `inv setup` never touches system Python at
   all; `bootstrap.sh` provisions Python itself via `uv python install`.
 - `git`/`zsh` are ordinary `[packages.*]` apt entries (`setup.toml`'s `git`/`zsh` sections),
-  installed by `apt.base` well before anything in `inv setup` needs either.
+  installed by `apt.install-base` well before anything in `inv setup` needs either.
 - `curl`/`sudo`/`ca-certificates`/`gnupg` are genuine prerequisites, but `bootstrap.sh`'s job, not
   the Dockerfile's — the same self-heal preamble every other use case (bare metal, WSL, the
   `postCreateCommand` path above) already runs unconditionally.
 
 `gnupg` specifically matters because every `apt-repo`-method package (`gh`, `kubectl`, `docker`,
 `terraform`, ...) registers its repo by piping a downloaded key through `gpg --dearmor` — without
-`gpg` present, that pipe fails (`curl: (23) Failure writing output to destination`), `apt.repos`
-treats the failed key fetch as "skip this repo, print a WARNING, keep going" rather than fatal, and
-`inv setup` used to still exit 0 while silently missing `kubectl`/`docker`/`terraform` entirely and
-getting whatever stale version of `gh` happens to already be in Ubuntu's own `universe` repo instead
-of the pinned upstream one. `tasks/apt.py`'s `repos()` task independently self-ensures
-`gnupg`/`lsb-release` too (a second, narrower layer — see `tasks/apt.py`'s comment on that block) so
-a standalone `inv apt.repos` run stays protected even outside the `bootstrap.sh` flow. This specific
-bug is also exactly the shape of thing `inv verify.all` now catches automatically and generally —
-see below — so `inv setup` no longer exits 0 while quietly missing something.
+`gpg` present, that pipe fails (`curl: (23) Failure writing output to destination`),
+`apt.install-repos` treats the failed key fetch as "skip this repo, print a WARNING, keep going"
+rather than fatal, and `inv setup` used to still exit 0 while silently missing
+`kubectl`/`docker`/`terraform` entirely and getting whatever stale version of `gh` happens to
+already be in Ubuntu's own `universe` repo instead of the pinned upstream one. `tasks/apt.py`'s
+`repos()` task independently self-ensures `gnupg`/`lsb-release` too (a second, narrower layer — see
+`tasks/apt.py`'s comment on that block) so a standalone `inv apt.install-repos` run stays protected
+even outside the `bootstrap.sh` flow. This specific bug is also exactly the shape of thing
+`inv verify.all` now catches automatically and generally — see below — so `inv setup` no longer
+exits 0 while quietly missing something.
 
 ### Automated functional verification (`inv verify.all`)
 
@@ -202,11 +203,12 @@ Convention, not a hand-written test per package: the default check is
 something with no command by nature — `git-clone`/`apparmor-profile` dest/profile paths, and a
 byte-exact content comparison against `content_file` for `wrapper-script` (existence alone doesn't
 catch a deploy that landed stale or hand-edited content). `gnome-extension` always skips, since no
-automated path (not even `inv setup`) ever calls `inv gnome.extensions` — see `tasks/gnome.py`,
-GNOME sessions are never touched programmatically in this repo. Per-package `setup.toml` fields
-override the convention: `verify_cmd` for a different invocation, `verify = false` for "no
-functional check is possible at all." No fallback chain anywhere — the first failure aborts
-`inv setup` immediately, deliberately the opposite of `apt.py`'s `warn=True`-and-continue pattern.
+automated path (not even `inv setup`) ever calls `inv gnome.install-extensions` — see
+`tasks/gnome.py`, GNOME sessions are never touched programmatically in this repo. Per-package
+`setup.toml` fields override the convention: `verify_cmd` for a different invocation,
+`verify = false` for "no functional check is possible at all." No fallback chain anywhere — the
+first failure aborts `inv setup` immediately, deliberately the opposite of `apt.py`'s
+`warn=True`-and-continue pattern.
 
 Auditing this against a real, fully-provisioned machine (not just reading the code) surfaced real
 bugs the convention alone wouldn't have predicted:
@@ -234,13 +236,14 @@ bugs the convention alone wouldn't have predicted:
   here — `inv verify.all` caught that too; running `inv tools.install` once fixed it. This is the
   mechanism doing exactly its job, not a false positive.
 
-`COPY skills/ skills/` (in `docker/Dockerfile`) is easy to miss and not optional — `ai.skills` (part
-of the `packages` phase `inv setup` always runs) copies this repo's own `skills/research-library/`
-into the image and fails with a `FileNotFoundError` if that directory wasn't copied in. `PATH` needs
-`/root/.local/bin` up front since that's where `uv`, `invoke`, and most script/binary/archive-method
-tools land (`~/.local/bin` when running as root during a build is `/root/.local/bin`).
+`COPY skills/ skills/` (in `docker/Dockerfile`) is easy to miss and not optional —
+`ai.install-skills` (part of the `packages` phase `inv setup` always runs) copies this repo's own
+`skills/research-library/` into the image and fails with a `FileNotFoundError` if that directory
+wasn't copied in. `PATH` needs `/root/.local/bin` up front since that's where `uv`, `invoke`, and
+most script/binary/archive-method tools land (`~/.local/bin` when running as root during a build is
+`/root/.local/bin`).
 
-`inv cleanup.all-full` is the container-appropriate cleanup call — see
+`inv clean.all-full` is the container-appropriate cleanup call — see
 [Cleanup](#cleanup-reclaiming-image-layer-space) below for what it does, what it actually saves
 (less than you'd think), and why the container case wants the _full_ variant specifically, not the
 conservative one a workstation should use.
@@ -256,10 +259,10 @@ Re-running `inv setup` inside an already-provisioned container (not a fresh `doc
 running it twice against the same live container. Everything already installed reports
 `already installed`/`already configured` and the `shell` phase offers to skip outright; nothing gets
 reinstalled or duplicated. The one thing that doesn't participate in that skip logic is
-`python.tools` (`uv tool install` for `keyring`/`nox`/`mkdocs-material`/etc.) — it re-resolves each
-package on every run rather than probing first, which is harmless (`uv` no-ops instantly on an
-already-satisfied install) but means you'll see it "reinstall" on every re-run regardless of whether
-anything changed.
+`python.install-tools` (`uv tool install` for `keyring`/`nox`/`mkdocs-material`/etc.) — it
+re-resolves each package on every run rather than probing first, which is harmless (`uv` no-ops
+instantly on an already-satisfied install) but means you'll see it "reinstall" on every re-run
+regardless of whether anything changed.
 
 ### Non-root user
 
@@ -309,7 +312,7 @@ Every layer `inv setup` writes is permanent once committed — a later `RUN rm -
 _earlier_ layer, it only hides those files from the final filesystem view while the bytes stay in
 the image. This is why `docker/Dockerfile` puts cleanup in the _same_ `RUN` as
 `bootstrap-devcontainer.sh` (chained with `&&`), not a separate step — a separate
-`RUN inv cleanup.all-full` after the fact would add a new layer on top without reclaiming anything
+`RUN inv clean.all-full` after the fact would add a new layer on top without reclaiming anything
 from the layer where the caches were actually written. If you split the install across multiple
 `RUN` lines for better build-cache reuse, run the matching cleanup inside whichever `RUN` created
 the mess, or switch to a multi-stage build.
@@ -329,7 +332,7 @@ tasks in `tasks/apt.py`/`tasks/python.py`/`tasks/node.py`/`tasks/tools.py`/ `tas
 cache has both a conservative and a full-wipe variant, since the two audiences for this want
 different tradeoffs:
 
-| Cache                                     | Conservative (`inv cleanup.caches`)       | Full (`inv cleanup.caches-full`)                                 |
+| Cache                                     | Conservative (`inv clean.caches`)         | Full (`inv clean.caches-full`)                                   |
 | ----------------------------------------- | ----------------------------------------- | ---------------------------------------------------------------- |
 | apt `.deb` archive cache                  | `apt.clean-cache` (`apt-get autoclean`)   | `apt.clean-cache-full` (`apt-get clean`)                         |
 | uv build/wheel cache (`~/.cache/uv`)      | `python.clean-cache` (`uv cache prune`)   | `python.clean-cache-full` (`uv cache clean`)                     |
@@ -337,18 +340,18 @@ different tradeoffs:
 | cargo registry cache (rust, if installed) | `tools.clean-cache` (downloads only)      | `tools.clean-cache-full` (downloads + extracted sources + index) |
 | Docker images/containers/build cache      | `docker.clean` (`docker system prune -f`) | `docker.clean-full` (`docker system prune -af`)                  |
 
-`inv cleanup.all` / `inv cleanup.all-full` run every row above (conservative or full, respectively)
-plus Docker pruning — invoke `pre=[...]` task dependencies, same pattern as
+`inv clean.all` / `inv clean.all-full` run every row above (conservative or full, respectively) plus
+Docker pruning — invoke `pre=[...]` task dependencies, same pattern as
 [repo-tasks](https://github.com/TheodoreAD/repo-tasks)'s `quality.py`'s `check`/`fix`/`precommit`.
 Neither Docker variant touches volumes; those can hold irreplaceable data, a different risk class
 than a rebuildable cache.
 
 **Conservative on a workstation, full in a container, and why that split matters**: the uv/npm/
 cargo caches directly speed up your _next_ install of the same tool. On a persistent workstation
-that's worth keeping — `inv cleanup.caches`/`inv cleanup.all` (conservative) is the one to run by
-hand occasionally, and neither is part of `inv setup`. A container image has no "next install" on
-that machine to speed up, so `docker/Dockerfile` calls `inv cleanup.all-full` unconditionally at the
-end of its `RUN` — there's no downside to being aggressive there.
+that's worth keeping — `inv clean.caches`/`inv clean.all` (conservative) is the one to run by hand
+occasionally, and neither is part of `inv setup`. A container image has no "next install" on that
+machine to speed up, so `docker/Dockerfile` calls `inv clean.all-full` unconditionally at the end of
+its `RUN` — there's no downside to being aggressive there.
 
 One more cache found only by actually inspecting a built image, not by reading code: Node's own V8
 compile cache under `/tmp` (small, a few MB, created by any `node`/`npm` invocation during install —
@@ -364,7 +367,7 @@ artifacts). Only `~/.local/share/cargo/registry` (crate download/build cache, se
 `RUSTUP_HOME`) is genuinely reclaimable, which is exactly what `tools.clean-cache*` targets.
 
 **How much cleanup actually saves, measured**: building the identical image with and without the
-`inv cleanup.all-full` step (default tag profile, otherwise byte-for-byte the same Dockerfile) —
+`inv clean.all-full` step (default tag profile, otherwise byte-for-byte the same Dockerfile) —
 4.40GB without cleanup vs. 4.28GB with it, a **~120MB saving, about 2.7% of image size**. Worth
 knowing before reaching for it as the main size lever: it isn't one. `PULSE_EXCLUDE_TAGS` is —
 leaving out toolchains you don't need (rust, go, k8s tooling are each hundreds of MB to multiple GB)

@@ -18,8 +18,8 @@
 > `~/.citrix` dir, orphaned `/usr/local/bin` symlinks, and — for `citrix-workspace` — the
 > AppProtection dconf lock at `/etc/dconf/db/local.d/locks/extensions-mandatory`) so
 > `inv apt.uninstall <section-name>` removes not just the dpkg package but every trace, the same way
-> the 2026-08-08 uninstall did. To pick this back up: flip `enabled = true`, `inv apt.deb`, then
-> re-open this doc from the top.
+> the 2026-08-08 uninstall did. To pick this back up: flip `enabled = true`, `inv apt.install-debs`,
+> then re-open this doc from the top.
 
 ## What Citrix Secure Access is
 

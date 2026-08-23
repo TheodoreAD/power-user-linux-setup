@@ -13,9 +13,10 @@ The workflow applies across several sibling repos, none of which is `power-user-
 preference either, so per this machine's own cross-session-memory policy (see `~/AGENTS.md`) it
 doesn't belong in chat history or Claude Code's auto-memory. It's durable, cross-repo procedural
 knowledge — exactly what `skills/research-library/SKILL.md` already established the pattern for:
-author it once in `power-user-linux-setup` (where the declarative `setup.toml` + `inv ai.skills`
-machinery already lives), and `inv ai.skills` deploys a real copy to `~/.agents/skills/<name>` so
-every project on the machine picks it up automatically, not just this one.
+author it once in `power-user-linux-setup` (where the declarative `setup.toml` +
+`inv ai.install-skills` machinery already lives), and `inv ai.install-skills` deploys a real copy to
+`~/.agents/skills/<name>` so every project on the machine picks it up automatically, not just this
+one.
 
 ## Why git+`uv` instead of PyPI
 
@@ -50,9 +51,9 @@ default), `project` (writes `.mcp.json` into the project, checked into git, shar
 clones it), and `user` (`~/.claude.json`, available in every project on the machine). These are
 personal cross-project tools, not something a specific project's collaborators need pinned in its
 own repo — `user` scope is the direct analogue of how skills already install globally via
-`inv ai.skills`, so both mechanisms end up with the same reach. `project` scope would make sense for
-a _consumer_ repo (e.g. `product-research-pipeline` wanting to pin exactly which site-MCP versions
-it was built against) — not ruled out, just not the default case this skill covers.
+`inv ai.install-skills`, so both mechanisms end up with the same reach. `project` scope would make
+sense for a _consumer_ repo (e.g. `product-research-pipeline` wanting to pin exactly which site-MCP
+versions it was built against) — not ruled out, just not the default case this skill covers.
 
 ## Same registered command, two install sources — why that matters
 

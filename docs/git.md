@@ -33,7 +33,7 @@ Then apply:
 
 ```shell
 inv git.configure   # creates each profile's directory + per-dir .gitconfig with includeIf
-inv git.settings    # applies global git settings (editor, push, pull, log, etc.)
+inv git.apply-settings    # applies global git settings (editor, push, pull, log, etc.)
 ```
 
 `inv git.configure` disables the global `user.name`/`user.email` and wires up `includeIf.gitdir` so
@@ -68,7 +68,7 @@ SSH will route through the alias and use the correct key. See [ssh.md](ssh.md) f
 
 ## Global configuration
 
-Applied by `inv git.settings`:
+Applied by `inv git.apply-settings`:
 
 | Setting                | Value         | Purpose                                              |
 | ---------------------- | ------------- | ---------------------------------------------------- |

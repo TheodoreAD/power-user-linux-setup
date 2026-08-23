@@ -3,20 +3,20 @@
 All apt packages are declared in `setup.toml` and installed via invoke tasks. Each package has a
 `method` field that determines how it is installed:
 
-| Method       | Command                | Description                                                                       |
-| ------------ | ---------------------- | --------------------------------------------------------------------------------- |
-| `apt`        | `inv apt.base`         | Standard packages from Ubuntu's default repos                                     |
-| `apt-repo`   | `inv apt.repos`        | External repos — registers GPG key + sources, then installs                       |
-| `deb-github` | `inv apt.deb`          | Latest `.deb` from a GitHub release page                                          |
-| `deb-url`    | `inv apt.deb`          | `.deb` from a direct URL (e.g. Chrome, which self-manages its sources afterwards) |
-| —            | `inv apt.configure`    | Write `/etc/apt/apt.conf.d/99-pulse` — disable dpkg progress bars                 |
-| —            | `inv apt.refresh-keys` | Re-download all apt-repo GPG keys                                                 |
-| —            | `inv apt.audit-keys`   | Audit key hygiene across all key stores                                           |
+| Method       | Command                 | Description                                                                       |
+| ------------ | ----------------------- | --------------------------------------------------------------------------------- |
+| `apt`        | `inv apt.install-base`  | Standard packages from Ubuntu's default repos                                     |
+| `apt-repo`   | `inv apt.install-repos` | External repos — registers GPG key + sources, then installs                       |
+| `deb-github` | `inv apt.install-debs`  | Latest `.deb` from a GitHub release page                                          |
+| `deb-url`    | `inv apt.install-debs`  | `.deb` from a direct URL (e.g. Chrome, which self-manages its sources afterwards) |
+| —            | `inv apt.configure`     | Write `/etc/apt/apt.conf.d/99-pulse` — disable dpkg progress bars                 |
+| —            | `inv apt.refresh-keys`  | Re-download all apt-repo GPG keys                                                 |
+| —            | `inv apt.audit-keys`    | Audit key hygiene across all key stores                                           |
 
-`inv apt.repos` is a two-phase command. Phase 1 registers all GPG keys and sources files in one
-pass, then runs a single `apt update`. Phase 2 installs the packages. If a GPG key URL or sources
-write fails for any entry (e.g. a dead URL), that repo is skipped with a `WARNING:` message and the
-rest continue — a broken third-party repo does not abort the run.
+`inv apt.install-repos` is a two-phase command. Phase 1 registers all GPG keys and sources files in
+one pass, then runs a single `apt update`. Phase 2 installs the packages. If a GPG key URL or
+sources write fails for any entry (e.g. a dead URL), that repo is skipped with a `WARNING:` message
+and the rest continue — a broken third-party repo does not abort the run.
 
 Run everything at once:
 
@@ -29,9 +29,9 @@ Or selectively:
 ```shell
 sudo apt update && sudo apt full-upgrade -y
 inv apt.configure
-inv apt.base
-inv apt.repos
-inv apt.deb
+inv apt.install-base
+inv apt.install-repos
+inv apt.install-debs
 ```
 
 !!! WARNING

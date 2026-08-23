@@ -65,7 +65,7 @@ input.
 
 ```shell
 # Check what's missing before running setup
-PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
+PULSE_DRY_RUN=1 inv apt.install-repos apt.install-base apt.install-debs tools.install fonts.install
 
 # Headless / container install — no GUI or hardware-specific packages
 PULSE_EXCLUDE_TAGS=$(inv devcontainer.print-exclude-tags) inv setup
@@ -83,8 +83,8 @@ These cannot be automated — they require hardware knowledge, a browser, or int
 | GRUB `nomodeset`   | Only needed on machines with GPU driver conflicts at boot — see [troubleshooting.md](troubleshooting.md)                                    |
 | SSH key generation | `ssh-keygen -t ed25519` — see [ssh.md](ssh.md)                                                                                              |
 | GitHub auth        | `gh auth login`                                                                                                                             |
-| GNOME extensions   | Installed via gext (`inv gnome.extensions`), then logout/login to activate — see [gnome_extensions.md](gnome_extensions.md)                 |
-| PyCharm font       | `inv ide.pycharm-configure` — run after installing PyCharm via Toolbox (see [ide.md](ide.md))                                               |
+| GNOME extensions   | Installed via gext (`inv gnome.install-extensions`), then logout/login to activate — see [gnome_extensions.md](gnome_extensions.md)         |
+| PyCharm font       | `inv ide.configure-pycharm` — run after installing PyCharm via Toolbox (see [ide.md](ide.md))                                               |
 | p10k prompt        | `p10k configure` — interactive wizard to rebuild `~/.p10k.zsh` from scratch; use when the baseline doesn't suit you or the prompt is broken |
 | JetBrains IDEs     | Run `jetbrains-toolbox` after install to configure and download IDEs                                                                        |
 | Scala              | Optional — see [scala.md](scala.md)                                                                                                         |
@@ -118,14 +118,13 @@ decides what to check and why.
 ### Reclaiming disk space (apt/uv/npm/cargo/Docker caches)
 
 ```shell
-inv cleanup.all          # conservative: keeps caches that speed up your next install
-inv cleanup.all-full     # full wipe: reclaims more, next install of each is slower
+inv clean.all          # conservative: keeps caches that speed up your next install
+inv clean.all-full     # full wipe: reclaims more, next install of each is slower
 ```
 
 Opt-in only — neither runs as part of `inv setup`, since a persistent workstation usually wants to
 _keep_ these caches. Each covers apt's `.deb` archive cache, uv's build/wheel cache, npm's package
 cache, cargo's registry cache (if rust is installed), and Docker images/containers/build cache (if
 Docker is installed) — see [dev-container.md](dev-container.md#cleanup-reclaiming-image-layer-space)
-for the full breakdown and the reasoning behind the conservative/full split. `inv cleanup.caches`/
-`inv cleanup.caches-full` run the same set minus Docker, if you just want the package-manager
-caches.
+for the full breakdown and the reasoning behind the conservative/full split. `inv clean.caches`/
+`inv clean.caches-full` run the same set minus Docker, if you just want the package-manager caches.

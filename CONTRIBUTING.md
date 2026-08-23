@@ -62,6 +62,30 @@ Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_
 > specifically so it doesn't also collapse ordinary hand-wrapped prose — don't change it to
 > `"never"`, which means "never wrap," i.e. join every paragraph onto one line.
 
+## Naming a task
+
+`inv <namespace>.<task>` should read as an imperative command — the namespace is the subject, the
+task is the action. `inv apt.install-base` is "apt: install base"; `inv zsh.fix-history` is "zsh:
+fix history". This is the same shape modern CLIs use for subcommands (`gh pr create`,
+`docker image prune`, `kubectl config set-context`).
+
+Three rules:
+
+1. **Task names lead with a verb.** Not the thing being produced — `apt.install-base`, not
+   `apt.base`; `ai.install-skills`, not `ai.skills`. Multi-word names put the verb first
+   (`zsh.configure-omz`, `ide.configure-pycharm`), unless an object-first pair reads as a family in
+   `inv --list` and that adjacency is the point (`format-check`/`format-apply`).
+2. **Community conventions beat the rule.** Where a CLI convention already owns a name — `status`,
+   `list`, `version`, `check`, `diff` — keep it. `inv gnome.status` is what a reader's instinct
+   reaches for; `gnome.show-status` would be consistent and worse.
+3. **Some namespaces are themselves the action** (`setup`, `verify`, `clean`, `deploy`). There the
+   leaf names the scope or object instead: `verify.all`, `clean.caches`, `deploy.all`.
+
+The Python function name is the CLI name with underscores (invoke derives one from the other), and
+`tasks/setup.py`/`tasks/wsl.py` reference task functions directly in their phase lists — so renaming
+one is a code change, not just a string change. Full rationale and the audit that produced the
+current names: `plans/2026-08-24-invoke-task-naming-convention.md`.
+
 ## Design notes
 
 `docs/*.md` is published to the public site (`docs_dir: docs` in `mkdocs.yml`) — it's for people
@@ -88,8 +112,8 @@ If you're about to write a "why this is built this way" section in `docs/`, it p
 `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
 writeup is documentation for a shipped skill (something under `skills/<name>/`), it belongs inside
 that skill's own directory instead — e.g. `skills/<name>/references/*.md` — so it travels with every
-`inv ai.skills` copy into every other repo. `contributing/` stays for rationale that's internal to
-this repo and never leaves it (see `skills/plan-docs/references/design-rationale.md` vs.
+`inv ai.install-skills` copy into every other repo. `contributing/` stays for rationale that's
+internal to this repo and never leaves it (see `skills/plan-docs/references/design-rationale.md` vs.
 `skills/mcp-skill-shipping/`'s and `skills/research-library/`'s external `contributing/<name>.md`
 companions for both patterns side by side).
 

@@ -3,7 +3,7 @@
 ## Setup
 
 ```shell
-inv system.locale
+inv system.set-locale
 ```
 
 Runs `sudo localectl set-locale LANG=en_US.UTF-8`, writes to `/etc/locale.conf` (systemd-integrated,

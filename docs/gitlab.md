@@ -5,7 +5,7 @@ with a `version_cmd` that resolves the latest release via the GitLab API (GitLab
 aren't mirrored to GitHub, so `deb-github` doesn't apply here):
 
 ```shell
-inv apt.deb
+inv apt.install-debs
 ```
 
 ## Config

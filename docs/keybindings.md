@@ -73,8 +73,8 @@ dconf read /org/gnome/shell/extensions/tilingshell/overridden-settings
 | drag near screen edge        | Edge tiling (`org.gnome.mutter edge-tiling` forced `true`)                                                     |
 
 **Known conflict:** `tiling-assistant@ubuntu.com` (ships enabled by default on fresh Ubuntu 24.04)
-writes to the same gsettings keys — `inv gnome.extensions` auto-disables it when Tiling Shell is
-active. See [gnome_extensions.md](gnome_extensions.md).
+writes to the same gsettings keys — `inv gnome.install-extensions` auto-disables it when Tiling
+Shell is active. See [gnome_extensions.md](gnome_extensions.md).
 
 ## Dash to Panel (`dash-to-panel@jderose9.github.com`)
 

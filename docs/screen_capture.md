@@ -47,7 +47,7 @@ launches immediately after capture. Everything below comes from reading the Flam
 directly (`flameshot-org/flameshot`, cloned into
 `$RESEARCH_HOME/repos/github.com--flameshot-org--flameshot`), not its docs.
 
-**Install:** via `[packages.flameshot]` in `setup.toml` (`inv apt.deb`) — **not**
+**Install:** via `[packages.flameshot]` in `setup.toml` (`inv apt.install-debs`) — **not**
 `apt install
 flameshot`. Two real bugs were found and fixed getting this working on this machine
 (2026-08-08), both worth knowing about if screen capture ever breaks again:

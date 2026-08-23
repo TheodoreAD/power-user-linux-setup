@@ -7,8 +7,8 @@
 All tools are declared in `setup.toml` and installed via invoke:
 
 ```shell
-inv apt.repos   # kubectl, helm, tilt
-inv apt.deb  # k9s, freelens
+inv apt.install-repos   # kubectl, helm, tilt
+inv apt.install-debs  # k9s, freelens
 inv tools.install  # kind
 ```
 
@@ -44,12 +44,12 @@ kind delete cluster
 ## k9s
 
 Terminal UI for Kubernetes — browse clusters, pods, logs, exec into containers, port-forward, all
-from the keyboard. Installed as a `.deb` from the latest GitHub release via `inv apt.deb`.
+from the keyboard. Installed as a `.deb` from the latest GitHub release via `inv apt.install-debs`.
 
 ## Freelens
 
 Open-source Kubernetes IDE (community fork of Lens). Installed as a `.deb` from the latest GitHub
-release via `inv apt.deb`.
+release via `inv apt.install-debs`.
 
 ## Tilt
 

@@ -47,14 +47,14 @@ below), but most of them shouldn't, by default — see
 [Windows-native duplicates](#windows-native-duplicates) for `windows-native`:
 
 ```shell
-PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos apt.base apt.deb tools.install
+PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.install-repos apt.install-base apt.install-debs tools.install
 ```
 
 Without WSLg — no display server at all — exclude the full GUI set instead (`windows-native` and
 `ide` become redundant with `gui`/`desktop` in that case, but including them doesn't hurt):
 
 ```shell
-PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb tools.install
+PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.install-repos apt.install-base apt.install-debs tools.install
 ```
 
 | Tag              | Excludes                                                                                                                                                                                                                                                   |
@@ -101,10 +101,11 @@ availability all require action from the Windows side instead — `inv wsl.check
 those, but there's nothing to write from inside WSL to fix them.
 
 **`systemd=true`** — Ubuntu 24.04's WSL image ships with this by default, but confirm it.
-`system.locale` (`localectl`), `system.dns` and `system.journal-size` (`systemctl`), and
-`docker.configure`'s daemon restart all shell out to systemd and now abort immediately via
-`util.require_systemd()` if it isn't running, rather than failing partway through. `inv wsl.check`
-verifies `/run/systemd/system` is actually mounted, not just that the config file says so.
+`system.set-locale` (`localectl`), `system.configure-dns` and `system.cap-journal-size`
+(`systemctl`), and `docker.configure`'s daemon restart all shell out to systemd and now abort
+immediately via `util.require_systemd()` if it isn't running, rather than failing partway through.
+`inv wsl.check` verifies `/run/systemd/system` is actually mounted, not just that the config file
+says so.
 
 **`generateResolvConf`** — WSL's own default (`true`) regenerates `/etc/resolv.conf` from the
 Windows host's DNS settings on every restart, and `inv wsl.fix`/`inv wsl.install` leave it there by
@@ -113,22 +114,23 @@ default too: it's the safe choice (see
 nothing further — DNS just works, mirroring whatever Windows itself resolves. Nothing here is
 required unless you're opting into the public-DNS override (`--dns=yes`/`inv wsl.fix --dns`), in
 which case `generateResolvConf=false` is set and `inv
-system.dns` writes a systemd-resolved drop-in
-— but setting it doesn't finish the job by itself: on stock Ubuntu `/etc/resolv.conf` is a symlink
-to systemd-resolved's stub (`/run/systemd/resolve/stub-resolv.conf`), and `inv system.dns` (same as
-on bare metal) only ever edits systemd-resolved's own drop-in config — it never touches
-`/etc/resolv.conf` itself. WSL's `generateResolvConf` replaces that symlink with a plain file, and
-disabling the setting only stops WSL from touching the file _going forward_ — it does not restore
-the symlink. So after `wsl.exe
---shutdown` and reopening, `/etc/resolv.conf` is still the stale
-plain file WSL last wrote, `inv
-system.dns` has nothing to point at, and DNS resolution breaks
+system.configure-dns` writes a
+systemd-resolved drop-in — but setting it doesn't finish the job by itself: on stock Ubuntu
+`/etc/resolv.conf` is a symlink to systemd-resolved's stub
+(`/run/systemd/resolve/stub-resolv.conf`), and `inv system.configure-dns` (same as on bare metal)
+only ever edits systemd-resolved's own drop-in config — it never touches `/etc/resolv.conf` itself.
+WSL's `generateResolvConf` replaces that symlink with a plain file, and disabling the setting only
+stops WSL from touching the file _going forward_ — it does not restore the symlink. So after
+`wsl.exe
+--shutdown` and reopening, `/etc/resolv.conf` is still the stale plain file WSL last wrote,
+`inv
+system.configure-dns` has nothing to point at, and DNS resolution breaks
 (`curl: (6) Could not resolve
 host`, etc.) until the symlink is put back:
 
 ```shell
 sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-inv system.dns
+inv system.configure-dns
 ```
 
 `inv wsl.install --dns=yes` does this relink automatically; `inv wsl.check` detects and reports
@@ -141,8 +143,8 @@ symlink, or correctly symlinked) if you're running the steps by hand instead.
 see below) makes WSL regenerate `/etc/resolv.conf` on every restart from whatever DNS server Windows
 itself is configured to use. Overriding that (`generateResolvConf=false`, what
 `--dns=yes`/`inv wsl.fix --dns` does) points `/etc/resolv.conf` at public resolvers
-(`1.1.1.1`/`1.0.0.1`/`8.8.8.8`, what `inv system.dns` configures) instead — and that's not risk-free
-even when those resolvers are reachable:
+(`1.1.1.1`/`1.0.0.1`/`8.8.8.8`, what `inv system.configure-dns` configures) instead — and that's not
+risk-free even when those resolvers are reachable:
 
 - **They might not be reachable at all.** On some corporate networks a VPN client or firewall allows
   general internet traffic but blocks DNS (UDP 53) to anything except an internal resolver. The
@@ -168,12 +170,12 @@ the default answer. Only opt in if you know you don't need any internal-only hos
 inv wsl.install --dns=yes
 ```
 
-Needs the usual `wsl.exe --shutdown` + reopen to take effect, and does the relink/`system.dns`/
-fallback dance described above. **Pass `--dns=yes` on every future `inv wsl.install` run on this
-machine** — without it, `--dns=auto`'s default reverts `generateResolvConf` back to `true` and the
-override is gone again. (In a real terminal, `wsl.install` asks this exact question interactively
-before doing anything if you leave `--dns` unset — see [Interactive prompts](#interactive-prompts)
-below.)
+Needs the usual `wsl.exe --shutdown` + reopen to take effect, and does the
+relink/`system.configure-dns`/ fallback dance described above. **Pass `--dns=yes` on every future
+`inv wsl.install` run on this machine** — without it, `--dns=auto`'s default reverts
+`generateResolvConf` back to `true` and the override is gone again. (In a real terminal,
+`wsl.install` asks this exact question interactively before doing anything if you leave `--dns`
+unset — see [Interactive prompts](#interactive-prompts) below.)
 
 ## Docker
 
@@ -188,9 +190,9 @@ local `dockerd` binary) and skips with an explanatory message instead of failing
 `systemctl restart docker`. Manage Docker Desktop settings from Windows instead.
 
 **Native `dockerd` inside the distro** — drop `workstation` from `PULSE_EXCLUDE_TAGS` (or run
-`inv apt.repos apt.base` without any exclusion) and treat it like a normal Linux box. This needs
-`systemd=true` from the prerequisites above; `docker.configure`'s `systemctl restart docker` then
-works unmodified.
+`inv apt.install-repos apt.install-base` without any exclusion) and treat it like a normal Linux
+box. This needs `systemd=true` from the prerequisites above; `docker.configure`'s
+`systemctl restart docker` then works unmodified.
 
 `inv wsl.check` tells you which situation you're in — presence of a local `dockerd` binary is a
 reliable signal for "native", its absence alongside a working `docker` CLI means Desktop
@@ -327,15 +329,17 @@ inv wsl.install --dns=yes    # opt into the public-DNS override — see "If publ
                               # (--dns=no is the default and needs no flag; shown here for clarity)
 ```
 
-It calls `wsl.check` and `wsl.fix` first, then `system.locale`/`system.dns` (only if systemd/DNS are
-actually live yet — skipped with a message otherwise, if `wsl.fix` just changed `/etc/wsl.conf` and
-you haven't restarted WSL), _then_ two named phases run through `tasks/phases.py`: **packages**
-(`apt.repos`/`apt.base`/`apt.deb`/`tools.install`/`ai.skills`/
-`python.tools`/`node.install`/`verify.all`) and **shell** (`zsh.omz-configure`/`zsh.configure`/
-`zsh.p10k-configure`/`zsh.set-default-shell`). DNS has to be fixed before the packages/shell phases
-— on a re-run after a restart with `generateResolvConf=false` already active, DNS is broken (see
-[Prerequisites](#prerequisites-etcwslconf) above) until `system.dns` runs, and every one of those
-later steps needs working DNS itself. It finishes by printing the next concrete manual step (see
+It calls `wsl.check` and `wsl.fix` first, then `system.set-locale`/`system.configure-dns` (only if
+systemd/DNS are actually live yet — skipped with a message otherwise, if `wsl.fix` just changed
+`/etc/wsl.conf` and you haven't restarted WSL), _then_ two named phases run through
+`tasks/phases.py`: **packages**
+(`apt.install-repos`/`apt.install-base`/`apt.install-debs`/`tools.install`/`ai.install-skills`/
+`python.install-tools`/`node.install`/`verify.all`) and **shell**
+(`zsh.configure-omz`/`zsh.configure`/ `zsh.configure-p10k`/`zsh.set-default-shell`). DNS has to be
+fixed before the packages/shell phases — on a re-run after a restart with `generateResolvConf=false`
+already active, DNS is broken (see [Prerequisites](#prerequisites-etcwslconf) above) until
+`system.configure-dns` runs, and every one of those later steps needs working DNS itself. It
+finishes by printing the next concrete manual step (see
 ["next steps" reporting](#next-steps-reporting) below).
 
 Each phase prints a labeled banner, then probes itself with `PULSE_DRY_RUN` forced on (every task
@@ -416,25 +420,25 @@ inv wsl.fix     # sets systemd=true; leaves generateResolvConf=true (WSL-managed
 # and reopen your terminal before continuing
 
 # only if /etc/wsl.conf has systemd=true:
-inv system.locale
+inv system.set-locale
 
 # only if you ran `inv wsl.fix --dns` (generateResolvConf=false) — fix DNS *before* anything below
 # that needs network access, and restore the symlink WSL replaced first, see "Prerequisites" above:
 sudo ln -sf /run/systemd/resolve/stub-resolv.conf /etc/resolv.conf
-inv system.dns
+inv system.configure-dns
 # if you didn't run `inv wsl.fix --dns`, skip both lines above — WSL is already managing
 # /etc/resolv.conf itself and DNS works out of the box
 
 # with WSLg (default on current Windows 11):
-PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.repos apt.base apt.deb
+PULSE_EXCLUDE_TAGS=gnome,ide,windows-native,workstation,corporate inv apt.install-repos apt.install-base apt.install-debs
 # without WSLg:
-# PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.repos apt.base apt.deb
+# PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.install-repos apt.install-base apt.install-debs
 
 inv tools.install
-inv ai.skills
-inv python.tools
+inv ai.install-skills
+inv python.install-tools
 inv node.install
-inv zsh.omz-configure zsh.configure zsh.p10k-configure
+inv zsh.configure-omz zsh.configure zsh.configure-p10k
 inv zsh.set-default-shell   # usermod -s — takes a new terminal to actually apply
 ```
 

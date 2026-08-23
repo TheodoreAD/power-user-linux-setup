@@ -6,7 +6,7 @@ All zsh configuration is declared in `setup.toml` and applied via invoke:
 
 ```shell
 inv tools.install      # installs OMZ, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting
-inv zsh.omz-configure  # updates plugins=() and ZSH_THEME in ~/.zshrc
+inv zsh.configure-omz  # updates plugins=() and ZSH_THEME in ~/.zshrc
 inv zsh.configure      # writes sentinel blocks (completions, aliases, keybindings, direnv, etc.)
 ```
 
@@ -31,7 +31,7 @@ Config is saved to `~/.p10k.zsh`. Re-run any time to change the prompt layout.
 
 ## Plugins
 
-Applied by `inv zsh.omz-configure`, which rewrites the `plugins=(...)` block in `~/.zshrc` in-place.
+Applied by `inv zsh.configure-omz`, which rewrites the `plugins=(...)` block in `~/.zshrc` in-place.
 `zsh-syntax-highlighting` is always kept last — it post-processes already-parsed input.
 
 The final plugins list is assembled from two sources:
@@ -102,7 +102,7 @@ combinations:
 - `urldecode`: URI-decode stdin — wraps `python3 urllib.parse.unquote` (no jq equivalent)
 - `k` → `kubectl`: provided by the OMZ `kubectl` plugin, not declared here
 - `curl` defaults: `--silent --show-error --location` written to `~/.config/curlrc` by
-  `inv system.curlrc` — no alias needed
+  `inv system.write-curlrc` — no alias needed
 
 ## Clipboard
 
@@ -153,7 +153,7 @@ standard `fcntl()` locking instead of zsh's ad-hoc default. If `~/.zsh_history` 
 (unreadable lines, `zsh: corrupt history file`), recover it with:
 
 ```shell
-inv zsh.history-fix   # strings(1) strips non-printable bytes, then reloads history
+inv zsh.fix-history   # strings(1) strips non-printable bytes, then reloads history
 ```
 
 **Atuin** (SQLite-backed history with a richer Ctrl+R UI, exit codes, durations, optional sync) was

@@ -30,7 +30,7 @@ entries by hand later — nothing about the simple path locks you out of the adv
 Then run the tasks in order:
 
 ```shell
-inv ssh.keys       # create one ed25519 key per unique email (prompts for passphrase per key)
+inv ssh.create-keys       # create one ed25519 key per unique email (prompts for passphrase per key)
 inv ssh.configure  # write ~/.ssh/config (idempotent)
 inv ssh.forward    # ssh-copy-id to non-git server hosts (skips GitHub/GitLab)
 inv ssh.add        # add all keys for this machine to ssh-agent

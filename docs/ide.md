@@ -4,8 +4,8 @@
 
 ### Install method: apt deb (not snap)
 
-VS Code is installed via the Microsoft apt repo, managed by `inv apt.repos`. The snap version was
-removed in favour of the deb.
+VS Code is installed via the Microsoft apt repo, managed by `inv apt.install-repos`. The snap
+version was removed in favour of the deb.
 
 **Why deb over snap:**
 
@@ -32,14 +32,14 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://packages.microsof
 ```
 
 ```shell
-inv apt.repos    # sets up GPG key + sources, installs code
+inv apt.install-repos    # sets up GPG key + sources, installs code
 ```
 
 **Migration from snap (done 2026-06-08):**
 
 ```shell
 sudo snap remove code   # profile at ~/.config/Code/ — same path for deb, nothing to migrate
-inv apt.repos
+inv apt.install-repos
 ```
 
 Settings/extensions are preserved because both snap (classic confinement) and deb use
@@ -120,7 +120,7 @@ This is caused by `kernel.apparmor_restrict_unprivileged_userns = 1`, which Ubun
 default. The Chromium sandbox that PyCharm's embedded browser (JCEF) uses requires unprivileged user
 namespaces.
 
-Fix: `inv system.apparmor-profiles` — this is also called automatically by `inv setup` after
+Fix: `inv system.install-apparmor-profiles` — this is also called automatically by `inv setup` after
 `inv tools.install`. Two AppArmor profiles are installed to `/etc/apparmor.d/jbr-cef`:
 
 - `jbr_pycharm` — targets the `pycharm` binary; `flags=(unconfined)` so it only adds `userns`
@@ -135,7 +135,7 @@ file is ever created (e.g. by installing Google Chrome's AppArmor profile).
 JetBrains IDEs do not pick up the system monospace font. For PyCharm, run:
 
 ```shell
-inv ide.pycharm-configure
+inv ide.configure-pycharm
 ```
 
 This copies `config/pycharm/editor-font.xml` and `config/pycharm/terminal-font.xml` into the active
@@ -175,7 +175,8 @@ their configs tracked in the repo.
 
 GPU-accelerated terminal with native Lua config, split panes, tabs, and SSH multiplexing.
 
-**Install:** `inv apt.deb` — method `deb-github`, nightly rolling release from `wez/wezterm`.
+**Install:** `inv apt.install-debs` — method `deb-github`, nightly rolling release from
+`wez/wezterm`.
 
 **Config:** `config/wezterm.lua` — copied to `~/.config/wezterm/wezterm.lua` on first install.
 Features:
@@ -194,7 +195,7 @@ installs as `/usr/bin/wezterm`.
 
 Classic GTK terminal with split panes, profiles, and GNOME integration.
 
-**Install:** `inv apt.base` — method `apt`.
+**Install:** `inv apt.install-base` — method `apt`.
 
 **Config:** `config/terminator.conf` — copied to `~/.config/terminator/config` on first install.
 Profile settings:

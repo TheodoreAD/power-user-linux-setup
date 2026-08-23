@@ -1,7 +1,7 @@
 # Docker
 
-Installed via apt-repo by `inv apt.repos` (or `inv setup`). Installs: `docker-ce`, `docker-ce-cli`,
-`containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`.
+Installed via apt-repo by `inv apt.install-repos` (or `inv setup`). Installs: `docker-ce`,
+`docker-ce-cli`, `containerd.io`, `docker-buildx-plugin`, `docker-compose-plugin`.
 
 `inv docker.configure` (part of `inv setup`) adds the current user to the `docker` group and
 configures the daemon.
@@ -57,8 +57,8 @@ sets how many rotated files to keep. With the defaults above each container uses
 log space (3 × 50 MB). Per-container overrides work via `--log-opt` or the `logging:` key in
 docker-compose.
 
-**DNS:** optional but makes containers use Cloudflare, matching `inv system.dns`. Without it, Docker
-falls back to `8.8.8.8` automatically. See [networking.md](networking.md).
+**DNS:** optional but makes containers use Cloudflare, matching `inv system.configure-dns`. Without
+it, Docker falls back to `8.8.8.8` automatically. See [networking.md](networking.md).
 
 ## Troubleshooting
 

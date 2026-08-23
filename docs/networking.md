@@ -11,12 +11,12 @@ required and running a local unauthenticated daemon so apps never see the real c
 Ubuntu 24.04 uses **systemd-resolved** exclusively. `resolvconf` is gone — do not use it.
 
 DNS is configured via a drop-in file at `/etc/systemd/resolved.conf.d/pulse-dns.conf`, managed by
-`inv system.dns`:
+`inv system.configure-dns`:
 
 ```shell
-inv system.dns
+inv system.configure-dns
 # or with custom servers:
-inv system.dns --primary=9.9.9.9 --secondary=149.112.112.112 --fallback=8.8.8.8
+inv system.configure-dns --primary=9.9.9.9 --secondary=149.112.112.112 --fallback=8.8.8.8
 ```
 
 ### Default servers
@@ -64,7 +64,7 @@ for external resolution they read the host's `/etc/resolv.conf` at container sta
 With systemd-resolved active, `/etc/resolv.conf` contains `nameserver 127.0.0.53` (the stub
 listener). That address is only reachable on the host's loopback interface, not from inside a
 container's network namespace. Docker detects this and **silently falls back to `8.8.8.8`**,
-ignoring the Cloudflare servers configured by `inv system.dns`.
+ignoring the Cloudflare servers configured by `inv system.configure-dns`.
 
 Without explicit config, Docker falls back to Google DNS (`8.8.8.8`) automatically — containers
 resolve fine, just not via Cloudflare. To make containers match the host DNS, set it explicitly in

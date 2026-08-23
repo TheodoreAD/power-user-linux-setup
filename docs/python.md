@@ -85,7 +85,7 @@ All tools are installed as isolated uv-managed executables and defined in `setup
 `method = "uv-tool"`. Install or upgrade all of them with:
 
 ```shell
-inv python.tools
+inv python.install-tools
 ```
 
 Current tools: `nox`, `mkdocs` (with `mkdocs-material`), `twine`, `glances`, `nuitka`, `zensical`,
@@ -102,7 +102,7 @@ method = "uv-tool"
 package = "mytool"
 ```
 
-Then run `inv python.tools` again.
+Then run `inv python.install-tools` again.
 
 ## Project virtual environments
 
@@ -205,7 +205,7 @@ url = "https://pypi.org/simple"
 
 ## Nuitka
 
-Nuitka is installed as a uv tool (`inv python.tools`). It compiles Python to C and produces
+Nuitka is installed as a uv tool (`inv python.install-tools`). It compiles Python to C and produces
 standalone native executables. `patchelf` (apt) is required at compile time and is listed in
 `setup.toml`.
 

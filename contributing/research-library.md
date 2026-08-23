@@ -183,8 +183,8 @@ Sources:
 
 The library's own conventions are packaged as a skill (`skills/research-library/SKILL.md`, declared
 via `setup.toml`'s `skills = [{ source = "local", path = "..." }]` field, deployed as a real copy —
-not a symlink — by `inv ai.skills`; full mechanism documented in `docs/claude-code.md`). That
-`npx`-source path (installing a skill straight from a GitHub repo via the `skills` CLI) was
+not a symlink — by `inv ai.install-skills`; full mechanism documented in `docs/claude-code.md`).
+That `npx`-source path (installing a skill straight from a GitHub repo via the `skills` CLI) was
 validated end-to-end against a real package, [caveman](https://github.com/JuliusBrussee/caveman) —
 worth recording why it _isn't_ installed that way today, since the reasoning generalizes:
 

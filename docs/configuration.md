@@ -35,9 +35,9 @@ content changed, or left untouched if it matches. New blocks are appended. No du
 | `~/.zshenv`                                            | `inv zsh.configure`                                         | environment variables, PATH — from `zshenv` fields in `setup.toml`                                                                                                                                      |
 | `~/.zshenv` (separate `proxy` block)                   | `inv proxy.install`                                         | `http_proxy`/`https_proxy`/`no_proxy` pointed at the local Px daemon — written only once verified working, see [corporate-proxy.md](corporate-proxy.md)                                                 |
 | `~/.zprofile`                                          | `inv zsh.configure`                                         | login-shell config — from `zprofile` fields in `setup.toml`                                                                                                                                             |
-| `~/.config/curlrc`                                     | `inv system.curlrc`                                         | curl defaults (silent, follow redirects)                                                                                                                                                                |
+| `~/.config/curlrc`                                     | `inv system.write-curlrc`                                   | curl defaults (silent, follow redirects)                                                                                                                                                                |
 | `/etc/sysctl.conf`                                     | `inv system.disable-ipv6`                                   | IPv6 disable keys                                                                                                                                                                                       |
-| `/etc/systemd/journald.conf.d/size.conf`               | `inv system.journal-size`                                   | `SystemMaxUse` drop-in                                                                                                                                                                                  |
+| `/etc/systemd/journald.conf.d/size.conf`               | `inv system.cap-journal-size`                               | `SystemMaxUse` drop-in                                                                                                                                                                                  |
 | `/etc/apt/apt.conf.d/99-pulse`                         | `inv apt.configure`                                         | Disable dpkg progress bars                                                                                                                                                                              |
 | `~/.local/bin/askpass-zenity`                          | `inv tools.install`                                         | Zenity GUI askpass helper — enables `sudo -A` without a TTY                                                                                                                                             |
 | `~/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it)   | `inv tools.install`                                         | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline)                                                                                                                 |
@@ -89,10 +89,10 @@ config_files = [{ src = "config/wezterm.lua", dst = "~/.config/wezterm/wezterm.l
 
 ### Install never clobbers; redeploy is a separate, deliberate command
 
-The install tasks that apply `config_files` (`inv apt.base`, `inv apt.deb`) **only ever write a
-destination that doesn't exist yet.** If the file is already there, they skip it silently — because
-after the first install that file is yours, and a re-run of `inv setup` must never throw away edits
-you made by hand.
+The install tasks that apply `config_files` (`inv apt.install-base`, `inv apt.install-debs`) **only
+ever write a destination that doesn't exist yet.** If the file is already there, they skip it
+silently — because after the first install that file is yours, and a re-run of `inv setup` must
+never throw away edits you made by hand.
 
 The consequence surprises people: **editing `config/<file>` in this repo does not update the
 deployed copy.** Re-running the install task won't do it either. That's what `inv system.configs` is
@@ -184,7 +184,7 @@ see [dev-container.md](dev-container.md#automated-functional-verification-inv-ve
 neither bucket cleanly. For every method except `gnome-extension` it goes through
 `packages_by_method()` like the generic install tasks, so it only checks what the current tag
 profile actually installed. `gnome-extension` is force-skipped regardless of tags/enabled — no
-automated path, not even `inv setup` itself, ever calls `inv gnome.extensions` (see
+automated path, not even `inv setup` itself, ever calls `inv gnome.install-extensions` (see
 `tasks/gnome.py`), so checking those by default would fail `inv setup` for extensions it never
 attempted to install. It also does a manual scan for `method = "zsh"` entries (`enabled`-only, tags
 ignored — same bypass `zsh.configure` already uses), always skipping them since they're config-only
@@ -241,9 +241,10 @@ instead of the phases below — different tag exclusions, DNS handling, and it s
 `docker.configure`/`fonts.*` by default. See [wsl.md](wsl.md) for what that runs instead.
 
 In a container or any other environment with no systemd and not WSL, `inv setup` detects that too
-(`util.has_systemd()`) and skips Phase 1 and Phase 4 below entirely — `system.locale`/ `system.dns`
-need `systemctl`/`localectl`, and fonts have no meaning in a headless container. Phases 2 and 3 run
-as normal. See [dev-container.md](dev-container.md) for the tested Dockerfile.
+(`util.has_systemd()`) and skips Phase 1 and Phase 4 below entirely — `system.set-locale`/
+`system.configure-dns` need `systemctl`/`localectl`, and fonts have no meaning in a headless
+container. Phases 2 and 3 run as normal. See [dev-container.md](dev-container.md) for the tested
+Dockerfile.
 
 Each phase below is a group of task calls run through `tasks/phases.py`'s `run()` helper, which
 prints a labeled banner naming the phase before it starts. Before running for real, it probes the
@@ -260,12 +261,12 @@ All of these take effect immediately (sysctl, DNS, journald restart) or on next 
 reboot needed.
 
 ```shell
-inv system.locale
-inv system.curlrc
-inv system.dns
+inv system.set-locale
+inv system.write-curlrc
+inv system.configure-dns
 inv system.disable-ipv6          # optional — sysctl -p applies immediately
-inv system.journal-size          # optional — restarts journald
-inv system.initramfs-compression # optional — deferred to next reboot
+inv system.cap-journal-size          # optional — restarts journald
+inv system.set-initramfs-compression # optional — deferred to next reboot
 ```
 
 GRUB (`nomodeset`) is manual and hardware-specific — see [troubleshooting.md](troubleshooting.md).
@@ -275,24 +276,24 @@ If applied, it also defers to next reboot.
 
 ```shell
 inv apt.configure      # write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)
-inv apt.repos          # register external repo GPG keys + sources, then install their packages
-inv apt.base           # install from Ubuntu default repos
+inv apt.install-repos          # register external repo GPG keys + sources, then install their packages
+inv apt.install-base           # install from Ubuntu default repos
 inv docker.configure   # merge log limits/DNS into daemon.json, add user to docker group
-inv apt.deb            # install .deb packages from GitHub releases or direct URLs
+inv apt.install-debs            # install .deb packages from GitHub releases or direct URLs
 inv tools.install      # install tools via scripts, binaries, archives; also writes askpass-zenity
-inv ai.skills          # symlink ~/.claude/skills to ~/.agents/skills — see ai.md
-inv system.apparmor-profiles
-inv python.tools
+inv ai.install-skills          # symlink ~/.claude/skills to ~/.agents/skills — see ai.md
+inv system.install-apparmor-profiles
+inv python.install-tools
 inv node.install
 ```
 
 `inv apt.configure` writes a drop-in that suppresses dpkg's progress bar output — run it once before
 any other apt tasks.
 
-`inv apt.repos` is a two-phase command: Phase 1 registers all GPG keys and sources files, then runs
-`apt update` once; Phase 2 installs the packages. The two phases are bundled because the packages
-can't be installed without the repo. If a GPG key URL or sources write fails, that repo is skipped
-with a `WARNING:` message rather than aborting the whole run.
+`inv apt.install-repos` is a two-phase command: Phase 1 registers all GPG keys and sources files,
+then runs `apt update` once; Phase 2 installs the packages. The two phases are bundled because the
+packages can't be installed without the repo. If a GPG key URL or sources write fails, that repo is
+skipped with a `WARNING:` message rather than aborting the whole run.
 
 After `inv tools.install` + `inv zsh.configure`, all new shell sessions have `SUDO_ASKPASS` set to
 `~/.local/bin/askpass-zenity`. Any sudo call via `sudo -A` (used by the task scripts when
@@ -302,17 +303,17 @@ terminal prompt.
 ### Phase 3 — Shell config
 
 ```shell
-inv zsh.omz-configure
+inv zsh.configure-omz
 inv zsh.configure
-inv zsh.p10k-configure       # copies config/p10k.zsh to ~/.p10k.zsh if not already present
+inv zsh.configure-p10k       # copies config/p10k.zsh to ~/.p10k.zsh if not already present
 inv zsh.set-default-shell    # usermod -s — takes a new terminal to actually apply, doesn't chsh
 ```
 
-`zsh.p10k-configure` installs the repo's opinionated baseline (lean style, Nerd Fonts icons,
+`zsh.configure-p10k` installs the repo's opinionated baseline (lean style, Nerd Fonts icons,
 transient prompt, instant prompt) and is a no-op if `~/.p10k.zsh` already exists — manual
 customizations are never overwritten.
 
-To redo or fix the prompt: delete `~/.p10k.zsh` and run `inv zsh.p10k-configure` to restore the
+To redo or fix the prompt: delete `~/.p10k.zsh` and run `inv zsh.configure-p10k` to restore the
 baseline, or run `p10k configure` to go through the interactive wizard. To update the baseline
 itself, copy your `~/.p10k.zsh` to `config/p10k.zsh`.
 
@@ -347,8 +348,8 @@ GNOME extensions require manual installation — see [gnome_extensions.md](gnome
 
 ```shell
 inv identity.init                # wizard: writes ~/.config/power-user-linux-setup/identity.toml (simple or advanced)
-inv git.configure git.settings   # per-directory git identity + global settings from identity.toml
-inv ssh.keys                     # one ed25519 key per unique email — prompts for a passphrase each
+inv git.configure git.apply-settings   # per-directory git identity + global settings from identity.toml
+inv ssh.create-keys                     # one ed25519 key per unique email — prompts for a passphrase each
 inv ssh.configure                # write ~/.ssh/config
 inv ssh.add                      # load this node's keys into ssh-agent
 gh auth login                    # GitHub CLI — opens browser, not automatable
