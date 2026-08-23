@@ -1,5 +1,5 @@
 ---
-status: idea
+status: planned
 updated: 2026-08-23
 ---
 
@@ -9,27 +9,21 @@ updated: 2026-08-23
 unconditionally into every session in every repo on this machine. It is now **563 lines / 6,053 body
 words across 30 `##` sections** — roughly 8–9k tokens paid on turn zero, everywhere, forever.
 
-No existing plan covers this. The two adjacent ones are about what _lands_ in the file and whether
-the deployed copy matches its source, not about the file's own shape:
+No existing plan covers its shape. The two adjacent ones:
 
 - `plans/2026-08-22-memory-to-agents-md-migration-sweep.md` — routing memory entries into
-  `AGENTS.md`/skills/docs. It is the reason the file grew: ~20 promoted memories landed here in one
-  sweep. It never asked whether they should have landed as full sections.
+  `AGENTS.md`/skills/docs. It is _why_ the file grew: ~20 promoted memories landed here in one
+  sweep. It never asked whether they should land as full sections.
 - `plans/2026-08-22-deployed-config-drift-guard.md` — deployed-vs-source drift, mechanical.
 
-The trigger for this pass: the file's own growth rate. Six of its sections were added or extended on
-2026-08-23 alone.
+Trigger for this pass: growth rate. Six sections were added or extended on 2026-08-23 alone.
 
-### What the measurement actually says
+### What the measurement says — the starting hypothesis was wrong
 
-Measured, not eyeballed — the first hypothesis was wrong and worth recording as such.
+**Hypothesis going in:** the bulk is dated anecdote, so relocating provenance is the main lever.
 
-**Hypothesis going in:** the bulk is dated anecdote ("Confirmed live 2026-08-22: …"), so moving
-provenance to a reference doc is the main lever.
-
-**Measured:** sentences carrying dated/provenance markers are **813 words, ~13%** of the file. Real,
-worth relocating, but nowhere near the dominant cost. The five largest sections carry **zero** dated
-provenance between them:
+**Measured:** provenance-bearing sentences are **813 words, ~13%**. Real, worth relocating, not the
+dominant cost. The largest sections carry little or no dated provenance:
 
 | words | dated provenance | section                                         |
 | ----: | ---------------: | ----------------------------------------------- |
@@ -41,15 +35,11 @@ provenance between them:
 |   256 |                0 | Concurrent sessions                             |
 |   234 |                0 | Project conventions                             |
 
-**The real cost is explanatory redundancy, not storytelling.** Each rule is stated, re-justified,
-then restated with a caveat. "Bash tool discipline" says "don't produce a novel command prefix" in
-five paragraphs — `cd`, directory-scoping flags, `cd`-as-its-own-call, chained commands, and
-"parallel means separate tool calls" are all the same principle applied to five surfaces, each
-re-deriving the principle from scratch.
+**The real cost is explanatory redundancy.** "Bash tool discipline" states one principle — a novel
+command prefix forfeits an existing allow rule — across five paragraphs, re-deriving it each time
+for `cd`, scoping flags, `cd`-as-own-call, chaining, and parallel-means-separate-calls.
 
-### Second finding: 30 flat sections are really 6 clusters
-
-Grouping by theme, with no section counted twice:
+### 30 flat sections are really 6 clusters
 
 | cluster                      | words | sections                                                                                                                                              |
 | ---------------------------- | ----: | ----------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -60,102 +50,231 @@ Grouping by theme, with no section counted twice:
 | Verification                 |   633 | verify-what-happened, locale                                                                                                                          |
 | Collaboration & output style |   512 | pushback, typos/slips, caveman, move-to-plan                                                                                                          |
 
-Flatness has a measurable cost: it forces cross-reference paragraphs that exist _only_ because
-related rules are far apart. "Reuse maintained upstream work" spends 40 words explaining how it
-differs from "Tool-native over hand-rolled" four sections later. Adjacent bullets need no such
-paragraph.
+Flatness forces cross-reference paragraphs that exist _only_ because related rules sit far apart:
+"Reuse maintained upstream work" spends 40 words explaining how it differs from "Tool-native over
+hand-rolled" four sections later.
 
-### Third finding: headings are inconsistent as triggers
+### Headings are inconsistent as triggers
 
-The whole file is in context, so a heading isn't a navigation aid — it's a **retrieval cue**, the
-thing that makes the model notice a rule applies right now. Judged on that:
+The whole file is in context, so a heading is not navigation — it is a **retrieval cue**, the thing
+that makes the model notice a rule applies right now.
 
 - Strong (name the situation): `sudo`, `Preferred search tools`, `Granular commits`,
   `Check for direnv before reflexively prefixing uv run`, `Caveman-style terse output`.
-- Weak (name a topic, not a trigger): `Project conventions`, `Composable design, UX designed first`,
+- Weak (name a topic): `Project conventions`, `Composable design, UX designed first`,
   `Tool-native over hand-rolled`, `Reuse maintained upstream work`,
   `Best tool per concern, not fewer technologies for their own sake`.
 
-A rule whose heading doesn't state when it fires needs its body read to find out — which for an
-always-loaded file means it competes with everything else for attention at the wrong moment.
+### Misfiled and low-yield content
 
-### Misfiled and low-yield content spotted in the pass
-
-- **`Plan`/`Explore` subagents don't load this file** (108 words) sits inside "Bash tool discipline"
-  and has nothing to do with the allowlist. It's arguably the single highest-consequence fact in the
-  file — it says a third of the rules here silently don't apply to a subagent — and it's buried.
-- **Two `uv` traps** (196 words) is pure reference: factual gotchas whose trigger ("designing a
-  uv-based shared-tool-install mechanism") has fired once, ever.
-- **Naming collisions** (73 words) generalizes from a single past incident that is unlikely to
-  recur.
-- **Composable design, UX designed first** (141 words) has no stated trigger and no concrete test —
-  the hardest kind of rule to act on.
+- **`Plan`/`Explore` subagents don't load this file** (108 words) is buried inside "Bash tool
+  discipline" and has nothing to do with the allowlist. It governs whether every other rule applies
+  at all.
+- **Two `uv` traps** (196 words) is pure reference; its trigger has fired once, ever.
+- **Naming collisions** (73 words) generalizes from a single incident.
+- **Composable design, UX designed first** (141 words) states no trigger and no concrete test.
 - **`Check for direnv…`'s second paragraph** re-derives the allowlist-prefix argument already made
   in full under "Bash tool discipline".
 
-## Open questions
+## Research: what actually makes an always-loaded instruction file work
 
-- [NEEDS CLARIFICATION: where does the relocated provenance live? (a) a new deployed sibling —
-  `config/agents-md-rationale.md` → `~/.claude/agents-md-rationale.md` via its own `wrapper-script`
-  package, so it exists wherever `~/AGENTS.md` does; or (b) `contributing/global-agents-md.md` in
-  this repo, matching the `docs/` vs `contributing/` split already used for `verify` and
-  `cli-allowlist`, with `~/AGENTS.md` naming its absolute path. (b) is cheaper and conventional; (a)
-  survives a machine where the repo isn't checked out. Lean: (b), since `~/AGENTS.md` only exists on
-  machines this repo has provisioned anyway.]
-- [NEEDS CLARIFICATION: does clustering into 6 `##` groups with `###` rules underneath actually help
-  retrieval, or does burying rules one level deeper hurt it? No evidence either way. Cheapest test:
-  restructure one cluster (Git & commits — 5 sections, 909 words, self-contained) and live with it
-  before converting the rest.]
-- [NEEDS CLARIFICATION: what's the target size, and is there a check that keeps it there? A word
-  budget is enforceable (`inv` task, or a `verify.all` step) but arbitrary; no budget means this
-  pass gets repeated in three months. Lean: measure after the rewrite, set the budget at that number
-  plus headroom, fail loudly rather than silently.]
-- [NEEDS CLARIFICATION: cut or keep the low-yield sections named above (`Naming collisions`,
-  `Composable design`)? Deleting a rule the user deliberately added is a different decision from
-  relocating its evidence, and isn't mine to make unilaterally.]
+Run 2026-08-23 per `~/AGENTS.md`'s own "Reuse maintained upstream work" and "Deep research" rules,
+and because the size target and the structure question both needed an external answer rather than an
+invented one.
 
-## Recommended direction
+### Size and rule count
 
-**Two files, one rule per trigger, evidence one hop away.** Not a rewrite of the rules themselves —
-every rule stays, in force, with its meaning unchanged. What changes is where the _justification_
-lives and how the rule is phrased.
+- [Anthropic's CLAUDE.md guidance](https://claude.com/blog/using-claude-md-files) — keep it concise
+  and human-readable; secondary write-ups of Anthropic's own engineers' practice put the working
+  limit at **under 200 lines**, with teams running well under that.
+  ([XDA summary](https://www.xda-developers.com/your-claude-md-is-probably-wrong-how-anthropics-engineers-structure/),
+  [betterclaw](https://www.betterclaw.io/blog/agents-md-best-practices))
+- **"Keep this section under 15 rules. If you have more than 15, you have not done the work of
+  deciding which rules are genuinely load-bearing."** This file has 30 sections.
+- **Bloated instruction files cause models to ignore instructions _wholesale_ rather than
+  selectively filtering the irrelevant ones**
+  ([morphllm's AGENTS.md guide](https://www.morphllm.com/agents-md-guide)). This is the load-bearing
+  finding: the failure mode isn't "the file is expensive", it's "past some size, adherence falls off
+  a cliff for everything in it, including the rules that matter."
+- [Anthropic, _Effective context engineering for AI agents_](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+  — models have a finite "attention budget"; "as the number of tokens in the context window
+  increases, the model's ability to accurately recall information from that context decreases." Aim
+  for "the minimal set of information that fully outlines your expected behavior" — and explicitly,
+  **"minimal does not necessarily mean short."**
 
-1. **`~/AGENTS.md` keeps: trigger + rule + the one clause that makes the rule make sense.** Target
-   the shape "when X, do Y (because Z, in one clause)". Dated confirmations, reproduction details,
-   tool versions, and the story of how a rule was discovered all move out.
-2. **The rationale file keeps everything else**, section-for-section, so a rule and its evidence are
-   findable from each other by heading. It's read on demand — before editing, removing, or arguing
-   with a rule, which is exactly when the provenance matters and the only time it's worth its
-   tokens.
-3. **`~/AGENTS.md` opens with one line pointing at it**, framed as a precondition for changing the
-   file rather than as optional background.
-4. **Headings become triggers.** Every `##`/`###` names the situation that fires it, not the topic
-   it covers. `Project conventions` → `AGENTS.md over CLAUDE.md; skills live in .agents/skills/`.
-   `Composable design, UX designed first` → `Designing a generator or multi-mode tool`.
-5. **Promote the `Plan`/`Explore` subagent fact out of "Bash tool discipline"** to its own top-level
-   rule. It governs whether every other rule in the file applies at all, which makes it a preamble,
-   not a footnote to one section.
-6. **Collapse the five allowlist paragraphs into one principle plus a bullet per surface.** The
-   principle ("anything that changes the command's leading text forfeits an existing allow rule") is
-   stated once; `cd`, scoping flags, chaining, `bash -c`, and parallel-means-separate-calls become
-   one line each.
-7. **Merge the pairs that already cross-reference each other**: reuse-upstream with tool-native;
-   granular-commits with incidental-lint-fixes; verify-what-happened with the locale rule (whose own
-   text already says it's "the same underlying lesson"). Each merge deletes a disambiguation
-   paragraph that exists only because the two halves are far apart.
+### Structure — does clustering help? (resolves the old open question 2)
 
-Rough projection, to be measured rather than trusted: **~6,050 → ~3,200–3,500 words** in the
-always-loaded file, with ~2,500 words of evidence relocated and nothing deleted outright except what
-question 4 resolves.
+Yes, and the mechanism is not the one assumed.
 
-### Sequencing
+- Structured prompts with markdown/XML section boundaries produce measurably better adherence than
+  free-form text; **clear section boundaries prevent "instruction bleed", where rules from one
+  context contaminate another**, and help the model differentiate sections that share vocabulary.
+  That is exactly this file's situation: four separate sections all discuss `cd`, three discuss
+  commits, two discuss `uv`.
+- **Position is not the lever.** "Lost in the middle" is real for _retrieval_ (>30% degradation),
+  but the instruction-following literature found **no consistent relationship between instruction
+  position and follow rate** — middle instructions were not followed less often
+  ([arXiv 2511.13900](https://arxiv.org/pdf/2511.13900),
+  [arXiv 2510.10276](https://arxiv.org/html/2510.10276v1)). So don't reorder for primacy/recency.
+- **Conflict between instructions is a primary driver of degradation as instruction count grows**
+  ([_Boosting Instruction Following at Scale_, arXiv 2510.14842](https://arxiv.org/abs/2510.14842) —
+  introduces a conflict-scoring tool and the SCALEDIF benchmark). Deduplication and merging are
+  therefore not just cosmetic: overlapping near-duplicate rules are the thing that measurably
+  degrades adherence. Absolute effects are modest (their mitigation buys ~7pp at two instructions,
+  ~4pp at ten), so the honest claim is "real but not dramatic" — worth doing, not worth overselling.
+- Attention dilutes when "instructions compete for attention with lengthy knowledge snippets"
+  ([arXiv 2601.03269](https://arxiv.org/html/2601.03269v1)) — i.e. narrative evidence sitting inline
+  with rules actively costs adherence, independent of token count. This is the strongest argument
+  for relocating provenance, stronger than the token saving.
 
-1. Resolve the four open questions (only the first two block starting).
-2. Pilot on the **Git & commits** cluster alone — 5 sections, 909 words, no dependencies on the rest
-   — and live with it for a few sessions before converting anything else (`~/AGENTS.md`'s own "Pilot
-   before generalizing").
-3. Convert the remaining clusters one commit each, so any single one can be reverted on its own.
-4. Re-measure, set the budget, and decide whether it's worth enforcing mechanically.
-5. Redeploy and verify the deployed copy matches source —
-   `plans/2026-08-22-deployed-config-drift-guard.md` is the mechanism if it has landed by then, a
-   manual diff if not.
+### What transfers from skill authoring (the user's framing: "as it does when loading a matching skill description")
+
+From
+[Anthropic's Skill authoring best practices](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices).
+The honest answer first: **an always-loaded file has no trigger mechanism at all.** A skill gets
+description-matched before its body is ever loaded; `~/AGENTS.md` is simply present, always, in
+full. So the file cannot be made to work "like" a skill description — but three things do transfer:
+
+1. **Progressive disclosure.** SKILL.md is an overview pointing at detail loaded on demand. Maps
+   directly to AGENTS.md + a rationale doc.
+2. **"Keep references one level deep."** Claude may _partially_ read a file reached through a nested
+   reference (previewing with `head -100` instead of reading it whole). So AGENTS.md → the rationale
+   doc must be one hop, and the rationale doc must not chain onward to a third file.
+3. **"For reference files longer than 100 lines, include a table of contents at the top"** — so the
+   rationale file needs a TOC even though AGENTS.md itself does not (AGENTS.md is always loaded
+   whole; the rationale file may be previewed).
+
+Four content rules transfer verbatim and are already this file's weak points:
+
+- **Use consistent terminology.** "Choose one term and use it throughout… Mixing 'API endpoint',
+  'URL', 'API route', 'path' hurts parsing." Directly matches the requirement to keep terminology
+  consistent and correct.
+- **Avoid time-sensitive information**, with historical context in an explicit "old patterns"
+  section rather than inline. Every "Confirmed live 2026-08-23:" passage is this anti-pattern.
+- **Concrete examples beat abstract prose.**
+- **Match degrees of freedom to fragility** — low freedom (exact command, no deviation) for fragile
+  operations, high freedom (heuristics) where many paths work. `sudo -A` is a low-freedom rule;
+  "Composable design" is a high-freedom one; the file currently writes both in the same register.
+
+Also: **"avoid offering too many options — provide a default with an escape hatch"**, and when a
+rule is observed being missed, **strengthen its language** ("MUST" over "always") rather than
+lengthening its explanation. The current file's instinct has been to add another paragraph.
+
+### The three-tier consequence
+
+The research implies a tier assignment this plan did not previously have:
+
+| tier                                       | holds                                                                                                  | cost                           |
+| ------------------------------------------ | ------------------------------------------------------------------------------------------------------ | ------------------------------ |
+| **1 — `~/AGENTS.md`**                      | rules that can fire on any turn, or whose miss is silent and expensive (`sudo -A`, caveman, allowlist) | paid every session             |
+| **2 — a skill**                            | rules with a sharp, statable trigger (`CLI flag conventions`, `Two uv traps`, `Composable design`)     | free until description-matched |
+| **3 — `contributing/global-agents-md.md`** | provenance, reproductions, rejected alternatives                                                       | free until read                |
+
+**Caveat that keeps tier 2 small:** this repo has already established that skill description
+matching under-triggers (`plans/2026-08-22-skill-trigger-quality-review.md`). A rule only moves to
+tier 2 if missing it is cheap and recoverable. Anything whose miss is silent stays in tier 1
+regardless of how sharp its trigger is.
+
+## Design
+
+### 1. `contributing/global-agents-md.md` — the rationale file
+
+Lives in this repo, not deployed. Decided by the user: **`~/AGENTS.md` is a deployed artifact and
+must never be worked on directly**, so its rationale belongs where the file is actually developed. A
+deployed sibling would additionally have to live under `~/.agents/` with a symlink, per this
+machine's own convention — more moving parts for no benefit.
+
+Matches the existing `docs/` (usage) vs `contributing/` (rationale) split already used by
+`contributing/verify.md` and `contributing/cli-allowlist.md`. Structure: a TOC at the top (>100
+lines, per the skill-authoring rule), then one `##` section per AGENTS.md rule, same heading text,
+so a rule and its evidence are findable from each other by name.
+
+`~/AGENTS.md` gets one pointer line near the top, framed as a precondition for _changing_ the file
+rather than as optional reading, and naming the absolute path on this machine.
+
+### 2. Rewrite each rule to "trigger + rule + one clause of why"
+
+Everything else — dated confirmations, reproductions, tool versions, rejected alternatives, the
+story of discovery — moves to tier 3. No rule loses force; the register changes.
+
+### 3. Cluster the 30 sections into the 6 groups above
+
+`##` per cluster, `###` per rule. Justified by the instruction-bleed finding, not by position
+effects. Each merge deletes a cross-reference paragraph that only existed because the two halves
+were far apart.
+
+### 4. Headings become triggers
+
+Every `###` names the situation that fires it. `Project conventions` →
+`AGENTS.md over CLAUDE.md; skills live in .agents/skills/`. `Composable design, UX designed first` →
+`Designing a generator or multi-mode tool`.
+
+### 5. Promote the `Plan`/`Explore` subagent fact to a preamble
+
+It states that a large fraction of the file silently does not apply to those subagents. That is a
+precondition on the whole document, not a footnote inside the allowlist section.
+
+### 6. Collapse the five allowlist paragraphs
+
+Principle stated once; `cd`, scoping flags, chaining, `bash -c`, and parallel-means-separate-calls
+become one line each.
+
+### 7. Merge the pairs that already cross-reference each other
+
+reuse-upstream + tool-native; granular-commits + incidental-lint-fixes; verify-what-happened + the
+locale rule (whose own text says it is "the same underlying lesson"). Per the conflict finding, this
+is the change most likely to improve adherence rather than just shrink the file.
+
+### 8. Terminology pass
+
+One term per concept throughout, checked against what the referenced tools/files are actually
+called. Standing requirement, not a one-off step: correct and consistent terminology, no informal
+coinages where a canonical name exists — consistent with `~/AGENTS.md`'s own "Naming collisions"
+rule and Anthropic's "Use consistent terminology".
+
+### 9. No word budget, no mechanical gate
+
+Decided by the user: a budget adds complexity and would be arbitrary. Instead the external
+benchmarks above (≤200 lines, ≤15 rules, "conciseness is a public good") serve as **review reference
+points**, and the discipline moves upstream to what gets _admitted_: a new rule must state its
+trigger, must not duplicate an existing rule, and must put its evidence in tier 3. Re-review as the
+file grows rather than failing a build.
+
+### 10. Nothing is deleted without asking
+
+Standing constraint for this work, per the user: a rule may carry intent that isn't visible in its
+text. `Naming collisions` and `Composable design` — the two flagged as low-yield — are **kept**;
+they get sharper triggers and their evidence relocated, nothing more. Moving a rule to tier 2 is a
+form of removal from the always-loaded set and needs the same per-rule approval.
+
+## Files touched
+
+- `config/global-AGENTS.md` — restructured; the deliverable.
+- `contributing/global-agents-md.md` — new; rationale, TOC-first, one section per rule.
+- `~/AGENTS.md` + `~/.claude/CLAUDE.md` — redeployed from source, never edited directly.
+- `plans/2026-08-22-memory-to-agents-md-migration-sweep.md` — add a pointer: its intake taxonomy is
+  the upstream half of §9's admission rules.
+
+## Verification
+
+1. Re-measure words/sections after each cluster; record actual against the ~3,200–3,500 projection
+   rather than trusting it.
+2. Every rule in the old file maps to exactly one rule in the new file or to an approved tier move —
+   checked by diffing section inventories, not by reading impressions.
+3. `inv quality.precommit` clean.
+4. Deployed copy byte-identical to `source.strip() + "\n"` after redeploy, and `~/.claude/CLAUDE.md`
+   still a symlink to `~/AGENTS.md`.
+5. Live check on the pilot cluster: over the following sessions, do the git/commit rules still fire
+   when they should? Regression here outweighs any size win — a smaller file that stops working is a
+   failure, not a trade-off.
+
+## Sequencing
+
+1. Write `contributing/global-agents-md.md` with the provenance already relocatable today.
+2. Pilot the **Git & commits** cluster alone — 5 sections, 909 words, self-contained — and live with
+   it for several sessions before converting anything else (`~/AGENTS.md`'s own "Pilot before
+   generalizing").
+3. Convert remaining clusters, one commit each, so any single one can be reverted alone.
+4. Terminology pass across the whole file last, once section boundaries have settled.
+5. Redeploy and verify; `plans/2026-08-22-deployed-config-drift-guard.md` is the mechanism if it has
+   landed by then, a manual diff if not.
