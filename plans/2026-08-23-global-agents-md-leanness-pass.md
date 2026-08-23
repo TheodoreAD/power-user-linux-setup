@@ -258,7 +258,36 @@ form of removal from the always-loaded set and needs the same per-rule approval.
 ## Verification
 
 1. Re-measure words/sections after each cluster; record actual against the ~3,200–3,500 projection
-   rather than trusting it.
+   rather than trusting it. The two commands that produced every number in Context above, so a later
+   pass compares like with like instead of re-inventing the metric:
+
+   ```shell
+   # per-section word count, largest first (the 6,053 / 30-section figures)
+   python3 -c "
+   import re
+   from pathlib import Path
+   secs = re.split(r'^## ', Path('config/global-AGENTS.md').read_text(), flags=re.M)[1:]
+   rows = [(len(s.split(chr(10), 1)[1].split()), s.split(chr(10), 1)[0]) for s in secs]
+   for w, h in sorted(rows, reverse=True): print(f'{w:5d}  {h[:70]}')
+   print(f'--- {sum(w for w, _ in rows)} words in {len(rows)} sections')
+   "
+
+   # share of words in provenance-bearing sentences (the 813 / ~13% figure)
+   python3 -c "
+   import re
+   from pathlib import Path
+   body = re.sub(r'\`\`\`.*?\`\`\`', '', Path('config/global-AGENTS.md').read_text(), flags=re.S)
+   sents = re.split(r'(?<=[.!?])\s+', body.replace(chr(10), ' '))
+   prov = re.compile(r'2026-\d\d-\d\d|Confirmed|Reaffirmed|Validated|Observed as a real|Caught live|Concrete instance|Example:')
+   tw = sum(len(s.split()) for s in sents)
+   pw = sum(len(s.split()) for s in sents if prov.search(s))
+   print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
+   "
+   ```
+
+   Known limit of the second one, worth stating so a later pass doesn't over-trust it: it matches at
+   sentence granularity, so narrative that continues past the sentence carrying the marker is
+   undercounted. Treat 13% as a floor, not a measurement.
 2. Every rule in the old file maps to exactly one rule in the new file or to an approved tier move —
    checked by diffing section inventories, not by reading impressions.
 3. `inv quality.precommit` clean.
