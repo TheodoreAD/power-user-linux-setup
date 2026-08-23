@@ -38,6 +38,16 @@ Body: `## Context` → `## Open questions` (mark each unresolved point with an i
 `[NEEDS CLARIFICATION: ...]` tag — see "Tags" below) → `## Recommended direction` (rough,
 non-prescriptive).
 
+## Committing a plan file
+
+A plan file goes through the repo's quality gate like any other change — run it
+(`inv quality.precommit` in repos on the repo-tasks quality tasks, or the repo's own equivalent)
+before committing any `plans/*.md` create, update, or retirement. "Just markdown" is not an
+exemption: dprint reformats markdown prose (line-wrap reflow), and doc-only commits that skipped the
+gate were the one recurring CI-failure cause across this machine's repos (confirmed 2026-08-23 —
+every recurring failure was a `plans/*.md`/`AGENTS.md`/`SKILL.md` reflow that `dprint fmt` would
+have fixed locally).
+
 ## Tags
 
 Five inline markers, all `[SHOUTY-WORD: text]`. They exist so the judgment calls below become greps

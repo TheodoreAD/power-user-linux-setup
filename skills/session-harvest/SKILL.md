@@ -123,6 +123,12 @@ considered and rejected).
    same friction doesn't recur next time. Resolving it for one session only defeats the point of a
    shared convention skill.
 
+Everything this harvest writes into a repo — a `plans/*.md` entry, an `AGENTS.md` addition, a
+`docs/`/`contributing/` page, a skill's own source — goes through that repo's quality gate
+(`inv quality.precommit`, or the repo's equivalent) before committing, same as code. Markdown is not
+exempt: dprint reformats prose line-wrapping, and doc-only commits that skipped the gate were the
+one recurring CI-failure cause across these repos (confirmed 2026-08-23).
+
 ## Self-update mechanics
 
 Resolving friction (step 6) means editing the skill's _source_, not whatever copy is in front of the
