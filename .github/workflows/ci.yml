@@ -30,4 +30,4 @@ jobs:
       - run: uv tool install --force invoke
       - run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
       - run: inv --list
-      - run: PULSE_DRY_RUN=1 inv apt.repos apt.base apt.deb tools.install fonts.install
+      - run: PULSE_DRY_RUN=1 inv apt.install-repos apt.install-base apt.install-debs tools.install fonts.install

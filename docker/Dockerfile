@@ -28,5 +28,5 @@ COPY config/ config/
 COPY skills/ skills/
 
 RUN bash bootstrap-devcontainer.sh --local \
-    && inv cleanup.all-full \
+    && inv clean.all-full \
     && rm -rf /var/lib/apt/lists/* /tmp/*

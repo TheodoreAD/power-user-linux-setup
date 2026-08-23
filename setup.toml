@@ -15,7 +15,7 @@
 #
 # Tag-based exclusion:
 #   Set PULSE_EXCLUDE_TAGS=<tag> or PULSE_EXCLUDE_TAGS=<tag1>,<tag2> to skip packages with matching tags.
-#   Example: PULSE_EXCLUDE_TAGS=gui inv apt.repos   — skips all GUI packages on a headless server.
+#   Example: PULSE_EXCLUDE_TAGS=gui inv apt.install-repos   — skips all GUI packages on a headless server.
 #   Only respected by util.packages_by_method() — the generic per-method install tasks (apt,
 #   apt-repo, deb-github, deb-url, archive, uv-tool, script, binary, git-clone, wrapper-script,
 #   gnome-extension, apparmor-profile). A few core tasks read one [packages.*] section directly and
@@ -139,14 +139,14 @@
 # gnome-extension sections:
 #   uuid          extension UUID (e.g. "dash-to-panel@jderose9.github.com") — shown in gnome-extensions list
 #   ego_id        numeric EGO package ID from extensions.gnome.org — fallback when UUID is not yet confirmed
-#   gext accepts both. Managed by: inv gnome.extensions
+#   gext accepts both. Managed by: inv gnome.install-extensions
 #   Requires a live GNOME session; newly installed extensions activate after logout/login.
 #   dconf (optional table)   dconf-key -> GVariant-literal-string pairs (e.g. "false", "'slow'",
 #                 "['a', 'b']") applied after install/enable via _apply_dconf() in tasks/gnome.py.
 #                 Use for per-extension settings: silencing overlap with another extension (see
 #                 gnome-ext-vitals), disabling a default that conflicts with another extension
 #                 (see gnome-ext-tiling-shell's override-alt-tab vs. gnome-ext-aatws), etc.
-#                 Re-applied on every run of inv gnome.extensions, or standalone via
+#                 Re-applied on every run of inv gnome.install-extensions, or standalone via
 #                 inv gnome.configure (no reinstall). Prefer this over telling someone to run a
 #                 one-off dconf/gsettings command — it keeps the fix declarative and idempotent.
 #
@@ -181,31 +181,31 @@
 #   Snippets are wrapped in named sentinel comments and are idempotent across runs.
 #   Use method = "zsh" for config-only entries with no associated package to install.
 #
-#   skills        list of Agent Skills to install, read by `inv ai.skills` (tasks/ai.py) —
+#   skills        list of Agent Skills to install, read by `inv ai.install-skills` (tasks/ai.py) —
 #                 independent of this section's own method, same as zshenv/zshrc/zprofile above.
 #                 Use method = "skill" for entries that exist purely to declare skills, with no
 #                 other package attached. Each list item is one of:
 #                   { source = "local", path = "skills/<name>" }
 #                     Copies to ~/.agents/skills/<name> (or <dir>/.agents/skills/<name> with
-#                     `inv ai.skills --dir`) from this repo's own skills/<name>/ — author real
+#                     `inv ai.install-skills --dir`) from this repo's own skills/<name>/ — author real
 #                     skill directories (SKILL.md + any supporting files) under skills/ at the
 #                     repo root, tracked by git. A real copy, not a symlink, same as the npx
 #                     source below; a `.pulse-source` marker in the copy tracks provenance so a
-#                     re-run can refresh it safely. Edit the repo copy, then `inv ai.skills` to
+#                     re-run can refresh it safely. Edit the repo copy, then `inv ai.install-skills` to
 #                     apply.
 #                   { source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...], description = "..." }
 #                     Installs via the `skills` CLI (global npm package, see [packages.node]),
 #                     e.g. `skills add <owner>/<repo> --global --skill <names...> --agent
 #                     <agents...> --yes`. `names` omitted installs every skill in the repo;
 #                     `agents` defaults to ["claude-code"]. `description` is optional and shown
-#                     alongside the repo/skill names when `inv ai.skills` asks before installing —
+#                     alongside the repo/skill names when `inv ai.install-skills` asks before installing —
 #                     a remote skill has no local SKILL.md to read a description from the way a
 #                     `local` entry does, so there's nothing to show without it.
 #
-#                 `inv ai.skills` shows each skill's description (from its SKILL.md frontmatter
+#                 `inv ai.install-skills` shows each skill's description (from its SKILL.md frontmatter
 #                 for a `local` entry, or this `description` field for an `npx` one) and asks
 #                 before installing/updating it — pass -y/--yes (same convention as the `skills`
-#                 CLI's own --yes) to skip the prompts. See ai.skills' docstring.
+#                 CLI's own --yes) to skip the prompts. See ai.install-skills' docstring.
 
 [settings]
 # Default Python for all uv tool installs — uv downloads it if not already managed.
@@ -582,14 +582,14 @@ enabled = false
 tags = ["gnome", "desktop", "gui"]
 
 [packages.gnome-extensions-cli]
-description = "gext — CLI tool for installing, enabling, and updating GNOME Shell extensions from extensions.gnome.org. Powers inv gnome.extensions."
+description = "gext — CLI tool for installing, enabling, and updating GNOME Shell extensions from extensions.gnome.org. Powers inv gnome.install-extensions."
 method = "uv-tool"
 package = "gnome-extensions-cli"
 check_cmd = "gext"
 tags = ["gnome", "desktop", "gui"]
 
 # ---------------------------------------------------------------------------
-# GNOME Shell extensions — installed and enabled via: inv gnome.extensions
+# GNOME Shell extensions — installed and enabled via: inv gnome.install-extensions
 # Each entry uses method = "gnome-extension". Set enabled = true to include.
 # Use uuid (the string identifier) or ego_id (numeric EGO package number) —
 # uuid is preferred; ego_id is a fallback when the UUID still needs confirming.
@@ -754,7 +754,7 @@ tags = ["gnome", "desktop", "gui"]
 uuid = "blur-my-shell@aunetx"
 
 [packages.gnome-ext-tiling-shell]
-description = "Tiling Shell — snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native; inv gnome.extensions auto-disables tiling-assistant@ubuntu.com (conflict)"
+description = "Tiling Shell — snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native; inv gnome.install-extensions auto-disables tiling-assistant@ubuntu.com (conflict)"
 method = "gnome-extension"
 enabled = true
 tags = ["gnome", "desktop", "gui"]
@@ -1538,7 +1538,7 @@ skills = [{ source = "local", path = "skills/research-library" }]
 # rather than gating every lookup is the point of building this in the first place. A single Read
 # rule covers every file-reading tool (Read, Glob, Grep); Glob(...)/Grep(...) rule types aren't
 # matched by Claude Code's file permission checks at all (its launch-time linter flags them).
-# Applied declaratively by `inv ai.skills` (tasks/ai.py), tracked via its own manifest —
+# Applied declaratively by `inv ai.install-skills` (tasks/ai.py), tracked via its own manifest —
 # deliberately separate from tasks/allowlist.py's CLI-classification pipeline, which this isn't
 # part of; see docs/claude-code.md.
 claude_permissions_allow = [
