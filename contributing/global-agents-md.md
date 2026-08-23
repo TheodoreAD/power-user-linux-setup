@@ -41,8 +41,9 @@ admission gate for the candidates that taxonomy routes here.
 
 ## Contents
 
+- [Composing a Bash call](#composing-a-bash-call)
+- [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
 - [Auto mode blocks self-editing `~/.claude/settings.json` via Bash](#auto-mode-blocks-self-editing-claudesettingsjson-via-bash)
-- [Testing a different repo's code in a multi-working-directory session](#testing-a-different-repos-code-in-a-multi-working-directory-session)
 - [Reuse maintained upstream work](#reuse-maintained-upstream-work)
 - [Tool-native over hand-rolled](#tool-native-over-hand-rolled)
 - [Best tool per concern](#best-tool-per-concern)
@@ -53,7 +54,7 @@ admission gate for the candidates that taxonomy routes here.
 - [Verify what actually happened](#verify-what-actually-happened)
 - [This machine's locale breaks `date`/`awk` formatting](#this-machines-locale-breaks-dateawk-formatting)
 - [Committing multi-part work](#committing-multi-part-work)
-- [Check for direnv before prefixing `uv run`](#check-for-direnv-before-prefixing-uv-run)
+- [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
 - [Two `uv` traps](#two-uv-traps)
 - [Flag apparent typos and mental slips](#flag-apparent-typos-and-mental-slips)
 
@@ -65,7 +66,33 @@ classifier both before and after the user said "I will approve it" — auto mode
 interactive step for that approval to land on. The Edit tool, which goes through a separate
 permission path, was not blocked for the identical change.
 
-## Testing a different repo's code in a multi-working-directory session
+## Composing a Bash call
+
+The rule's earlier form claimed a chained command can never match an allow rule
+("`cd some/dir &&
+git status` no longer starts with `git status`, so it can't match
+`Bash(git status:*)`") and banned `&&` outright. Corrected 2026-08-23 on two independent sources: a
+live test (`cd /tmp && git
+status` and `cd /tmp && cat /etc/hostname`, neither prompted) and
+`code.claude.com/docs/en/permissions.md`'s "Compound commands" section, read in full twice in
+separate sessions — Claude Code splits on `&&`, `||`, `;`, `|`, `|&`, `&`, and newlines, and
+evaluates each subcommand against the rules independently (newline being a recognized separator also
+means `\` line continuations have zero effect on matching). The `bash -c` claim survives because the
+outer `bash` is itself classified dangerous (`cli-allowlist/rules/bash.json`) and renders as `ask`.
+
+Held conservative rather than loosened further:
+`plans/2026-08-22-compound-command-permission-audit.md` still carries an unexplained report of a
+write-classified command executing without a prompt inside a compound command — until that
+incident's mechanism is understood, the guidance stays "prefer simple separate calls" even though
+the documented per-subcommand model would permit more chaining.
+
+The "friction cost, never a prohibition" clause exists because the old ban was obeyed literally: an
+agent in a `repo-tasks` session concluded legitimate cross-repo work was impossible (the fix needed
+one chained command, chaining was "banned") and reported it as a limitation instead of paying one
+approval prompt — abandoning real work to dodge friction, strictly worse than any number of prompts
+(`plans/2026-08-23-cross-directory-command-execution.md`, retired).
+
+## Running a command against a different repo than the session's project
 
 Confirmed directly 2026-08-22/23: running plain `inv`/`pytest` after `cd`-ing into a secondary repo
 silently exercised the primary repo's pinned dependency copy of a package under active development
@@ -79,6 +106,27 @@ discovers `tasks.py`/`tasks/` by walking up from the current working directory, 
 venv's `inv` binary executes. The `pytest` fix (absolute-path binary is enough, because
 site-packages resolution depends on the interpreter, not cwd) and the `inv` fix (an actual `cd` is
 required) are not the same fix.
+
+The rule's earlier form prescribed the opposite of what now stands: it discouraged directory-scoping
+flags and prescribed "run `cd` as its own call, then the command, then `cd` back" — which cannot
+work, because the harness resets cwd to the session's primary directory after every Bash call.
+Observed twice 2026-08-23: a standalone `cd` into another directory returned "Shell cwd was reset",
+and a chained `cd <repo> && .venv/bin/inv …` printed the same reset line after the command ran (i.e.
+the chain worked precisely because the `cd` and the command shared one call). Whether the reset is
+universal or specific to this harness version/configuration is unpinned; the current guidance holds
+either way, which is why it no longer depends on cwd persistence.
+
+Scoping flags were validated live the same day, all against this repo from a `repo-tasks` session
+with no `cd`: `git -C <path> status`/`log`/`add`/`commit` (full commit workflow),
+`dprint fmt --config <path>`, `ruff check --config <path>`, `ruff format --config <path>`,
+`basedpyright --project <path>` (exit 0), and `<venv>/bin/pytest <abs path>` over a 215-test suite.
+
+The "bare `inv` may be either uv tool" clause: `repo-tasks` and standalone `invoke` both provide
+`inv`/`invoke` console scripts, and whichever was `--force`-installed last owns the `~/.local/bin`
+symlinks (`plans/2026-08-23-invoke-repo-tasks-tool-conflict.md`). The two `inv` failure modes
+compose: cwd decides which `tasks.py` is found; the binary decides whether that `tasks.py` can
+import `repo_tasks`. Both misses are silent, and `<repo>/.venv/bin/inv` addresses the second for
+free.
 
 ## Reuse maintained upstream work
 
@@ -174,7 +222,7 @@ restating, which is the signal it was being treated as a per-task preference rat
 one. The conflation to avoid: needing permission to commit at all (the harness's own default) is
 separate from how to split once committing is authorized.
 
-## Check for direnv before prefixing `uv run`
+## Invoking a venv tool in the session's own project
 
 Confirmed live 2026-08-23 in `repo-tasks`: used `.venv/bin/python -m pytest tests/integration/` out
 of habit while direnv was already active and plain `pytest tests/integration/` would have resolved
