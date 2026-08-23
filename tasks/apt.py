@@ -4,6 +4,8 @@ from invoke import task
 
 from . import util
 
+_REPO_ROOT = Path(__file__).parent.parent
+
 # Ubuntu system keys that legitimately live in trusted.gpg.d — everything else is old-style.
 _SYSTEM_TRUSTED_D = frozenset(
     {
@@ -184,9 +186,15 @@ def repos(c):
 
 
 def _apply_config_files(name: str, cfg: dict) -> None:
-    """Copy config_files entries to their destinations, skipping any that already exist."""
+    """Copy config_files entries to their destinations, skipping any that already exist.
+
+    Deliberately never overwrites: a destination that exists may have been hand-edited since
+    install. `inv system.configs` is the redeploy path for a repo-side source that has since
+    changed — it diffs and prompts first.
+    """
     for mapping in cfg.get("config_files", []):
-        src = Path(mapping["src"])
+        # Resolved against the repo root, not the cwd, so installs work from any directory.
+        src = _REPO_ROOT / mapping["src"]
         dst = Path(mapping["dst"]).expanduser()
         if not dst.exists():
             dst.parent.mkdir(parents=True, exist_ok=True)
