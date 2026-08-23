@@ -562,3 +562,11 @@ reviewed again would let the next `apply` regenerate the blanket `Bash(sed:*)` `
 node classification itself hasn't changed, only whether the pipeline is allowed to act on it), which
 would silently shadow the hand-maintained `Bash(sed -n *)` allow rule via the same no-specificity-
 tiebreak precedence documented above.
+
+**Near-miss confirmed 2026-08-23**: this prose warning alone wasn't enough — `sed` got re-approved
+by habit in a later session (an agent triaging an unrelated batch of pending reviews, `sed` included
+among them with no visible signal it was different from an ordinary new classification), caught only
+because the approver double-checked before the next `apply` ran. Fixed by adding a `note` field
+directly to `cli-allowlist/rules/sed.json` — `review()` already prints `entry["note"]` inline before
+the confirm prompt (see the `review` section above), so the warning now surfaces at the moment of
+the decision itself, not only in a doc someone has to already know to open.
