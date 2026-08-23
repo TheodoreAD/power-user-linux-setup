@@ -3,7 +3,7 @@
 The same `setup.toml` and invoke tasks that configure a workstation can provision a dev container.
 Two distribution paths, both built on the same underlying fix (the systemd gap, described next):
 
-- **[Recommended: devcontainer.json + postCreateCommand](#recommended-devcontainerjson--postcreatecommand)**
+- **[Recommended: devcontainer.json + postCreateCommand](#recommended-devcontainerjson-postcreatecommand)**
   — layer PULSE's tooling onto _any_ base image you already use, at container-create time. No custom
   image to build or maintain; consumers aren't forced onto one shared base image.
 - **[Alternative: baking a custom base image](#alternative-baking-a-custom-base-image)** — bake
@@ -300,7 +300,7 @@ at `docker/Dockerfile` (`context` set to the repo root) and run
 `npx @devcontainers/cli build --workspace-folder .`, then `devcontainer up`, then
 `devcontainer exec -- inv --list`. The primary, CI-smoke-tested artifact for this round-trip is this
 repo's own `.devcontainer/devcontainer.json` (the `postCreateCommand` path above), not
-`docker/Dockerfile` — see [Recommended](#recommended-devcontainerjson--postcreatecommand).
+`docker/Dockerfile` — see [Recommended](#recommended-devcontainerjson-postcreatecommand).
 
 ## Cleanup — reclaiming image-layer space
 
