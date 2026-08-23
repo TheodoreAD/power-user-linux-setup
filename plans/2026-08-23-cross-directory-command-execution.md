@@ -80,6 +80,19 @@ own `pytest` resolves site-packages correctly with no `cd`, which this session c
 215-test suite. The existing text already draws this pytest/invoke distinction correctly and it must
 survive the rewrite.]
 
+**Second, independent reason to spell the binary out**, found the same day from the opposite
+direction by `plans/2026-08-23-invoke-repo-tasks-tool-conflict.md`: bare `inv` on `PATH` may be
+_either_ uv tool, since `repo-tasks` and standalone `invoke` both provide `inv`/`invoke` and
+whichever was `--force`-installed last silently owns the symlinks. If bare `invoke` wins, every
+family repo's `tasks.py` (`from repo_tasks import ns`) fails to import at all.
+
+The two findings are orthogonal mechanisms that both surface as "`inv` did the wrong thing", and
+they compose: **cwd decides which `tasks.py` is found; the binary decides whether that `tasks.py`
+can import `repo_tasks`.** Getting either wrong is silent. `<repo>/.venv/bin/inv` addresses the
+second for free, which is a stronger argument for the absolute path than the dependency-resolution
+reason this plan originally gave on its own — worth carrying into whatever guidance the rewrite
+produces, rather than presenting the absolute path as mere tidiness.
+
 ## Open questions
 
 [NEEDS CLARIFICATION: is the cwd reset universal, or specific to something about this setup — a
