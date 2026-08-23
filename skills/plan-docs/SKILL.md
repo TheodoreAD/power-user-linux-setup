@@ -1,6 +1,6 @@
 ---
 name: plan-docs
-description: "Use when capturing an idea, drafting a design, or tracking work-in-progress in a repo's plans/ directory — creating or updating a plans/YYYY-MM-DD-topic.md file, choosing or advancing its status, retiring a landed/abandoned plan once its durable content has a permanent home in code, docs/, or contributing/, migrating a repo's legacy monolithic plan file (PLAN.md, DESIGN.md, ...) onto this convention, or auditing AGENTS.md for planning/status content that has drifted in and belongs elsewhere."
+description: "Use when capturing an idea, drafting a design, or tracking work-in-progress in a repo's plans/ directory — creating or updating a plans/YYYY-MM-DD-topic.md file (including for a bug, idea, or risk turned up incidentally by other work, not just a deliberate planning request), choosing or advancing its status, retiring a landed/abandoned plan once its durable content has a permanent home in code, docs/, or contributing/, migrating a repo's legacy monolithic plan file (PLAN.md, DESIGN.md, ...) onto this convention, or auditing AGENTS.md/README.md/docs for planning/status/future-work content that has drifted in and belongs in plans/ instead."
 ---
 
 # Structured, stateful plan files
@@ -11,6 +11,18 @@ working set, not a permanent archive. Full rationale, prior-art citations, and t
 every design choice below: see [`references/design-rationale.md`](references/design-rationale.md).
 
 ## Creating a plan
+
+Not just for deliberate "let's design something" requests — the same trigger applies whenever other
+work incidentally turns up a bug worth fixing later, an idea worth brainstorming, or a risk worth
+mitigating that isn't being handled right now. That goes into its own `plans/YYYY-MM-DD-topic.md`
+(`status: idea`), never left as pending/future-work prose in `README.md`, `AGENTS.md`, `docs/*.md`,
+or a code comment — those describe current state, not a to-do list, and prose future-work has no
+status field, so nothing ever prompts anyone to circle back (see "Don't stash future work in prose
+docs" below, which generalizes what "Keeping AGENTS.md itself clean" already said just for
+`AGENTS.md`). Confirmed live 2026-08-23: a real, already-identified test-coverage gap
+(`scaffoldapy`'s `library` interface can't be covered by its e2e quality-check test) sat as a
+sentence in `README.md` — "a real gap... not yet fixed" — instead of a plan file, so it was
+invisible to anything that scans `plans/` for open work.
 
 New idea → `plans/YYYY-MM-DD-topic.md` (date = today, topic = kebab-case, one file per topic).
 Frontmatter:
@@ -99,12 +111,21 @@ unit — first split it by thread, then apply the lifecycle above to each piece:
    (naming every destination, since there may be several) and go through the normal commit-then-
    delete sequence.
 
-## Keeping AGENTS.md itself clean
+## Don't stash future work in prose docs
 
-A repo's `AGENTS.md` (or equivalent instructions file) should only ever hold instructions for
-developing/deploying the repo — never planning or ideation, and never a status report. It drifts
-away from that over time in two recognizable ways worth auditing for, independent of any specific
-plan's lifecycle:
+Applies to any narrative doc in a repo — `README.md` and `docs/*.md` included, not only
+`AGENTS.md`. Each should describe the repo as it is right now; a known bug, an unfinished feature,
+or an open risk belongs in its own `plans/*.md` entry (`status: idea` or further along), linked from
+the doc if it's worth a pointer, not spelled out in prose there. Prose future-work has no status
+field and nothing ever prompts a return visit — it just rots into a permanently-true-sounding
+sentence, or, worse, an already-fixed problem left calling itself "not yet fixed" (exactly what
+"Stale implementation claims" below catches, but the fix is to not write it that way in the first
+place).
+
+`AGENTS.md` (or an equivalent instructions file) gets the strictest version of this rule: it should
+only ever hold instructions for developing/deploying the repo — never planning, ideation, or a
+status report. It drifts away from that over time in two recognizable ways worth auditing for,
+independent of any specific plan's lifecycle:
 
 - **Dated status narrative.** A heading like "Status: implemented and exercised live 2026-08-14"
   reads as a changelog entry, not an instruction — it's true today and stale tomorrow. Trim it to an
