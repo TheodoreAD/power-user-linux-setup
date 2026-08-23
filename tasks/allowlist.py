@@ -16,6 +16,8 @@ tradeoffs rather than TODOs: `contributing/cli-allowlist.md`.
     inv allowlist.render     deterministic: reviewed rules -> Claude or Copilot rule syntax
     inv allowlist.apply      deterministic: merges reviewed Claude rules into ~/.claude/settings.json
     inv allowlist.status     quick table: installed/stale/unreviewed
+    inv allowlist.check-coverage  every node-with-children's child has its own renderable rule —
+                              apply already refuses to run when this finds anything
 
 `render` only prints — `apply` is the only task that writes anywhere, and it only ever touches
 `~/.claude/settings.json`'s `permissions` block (see its docstring for the merge safety design).
@@ -1320,6 +1322,45 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
     return allow, ask
 
 
+def _coverage_gaps(rules: dict[str, dict], caches: dict[str, dict]) -> list[tuple[str, str, str, str]]:
+    """For every *reviewed* tool, find children of a node that has children of its own — i.e. a
+    node whose own rule `_compute_claude_rules` now always skips, regardless of its classification
+    tier — that won't themselves render any rule at all.
+
+    Before that skip was generalized to every tier (not just read_only), a write/dangerous
+    parent's own rule was still a fallback for a child that fell through the cracks: missing from
+    rules.json entirely (the "chunk silently dropped nodes" class of bug documented in
+    contributing/cli-allowlist.md), or stuck at `needs_review` forever (excluded from render by
+    design). Now that the parent's rule is *always* skipped once it has children, a child with no
+    renderable rule of its own gets literally zero coverage from this pipeline — not just a looser
+    rule, none at all. `invalid` children are not gaps: that classification means "not a real
+    command" (a fabricated/duplicate/error-text node), so there's nothing real to cover.
+
+    Returns (tool, parent_path, child_path, reason) tuples; empty means every discovered child of
+    every node-with-children is covered by its own read_only/write/dangerous rule. Unreviewed
+    tools are skipped entirely — nothing renders for them at all yet (parent or child alike), so
+    there's no partial-coverage gap to report until they're reviewed."""
+    gaps = []
+    for tool, entry in sorted(rules.items()):
+        if not entry.get("reviewed"):
+            continue
+        nodes = entry.get("nodes", {})
+        cache_nodes = (caches.get(tool) or {}).get("nodes", {})
+        for path, cache_node in sorted(cache_nodes.items()):
+            for child in cache_node.get("children") or []:
+                child_entry = nodes.get(child)
+                if child_entry is None:
+                    gaps.append((tool, path, child, "missing from rules.json"))
+                elif child_entry["classification"] == Classification.NEEDS_REVIEW:
+                    gaps.append((tool, path, child, "needs_review (excluded from render)"))
+    return gaps
+
+
+def _print_coverage_gaps(gaps: list[tuple[str, str, str, str]]) -> None:
+    for tool, parent, child, reason in gaps:
+        print(f"[allowlist] COVERAGE GAP: {tool} {parent!r} has child {child!r} with no rule of its own ({reason})")
+
+
 def _render_claude(rules: dict) -> str:
     allow, ask = _compute_claude_rules(rules)
     return json.dumps({"permissions": {"allow": allow, "ask": ask}}, indent=2)
@@ -1352,6 +1393,11 @@ def render(c, target="claude", out=None):
     if unreviewed:
         joined = ", ".join(sorted(unreviewed))
         print(f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded from output: {joined}")
+
+    gaps = _coverage_gaps(rules, {name: _load_cache(name) or {} for name in rules})
+    if gaps:
+        _print_coverage_gaps(gaps)
+        print(f"[allowlist] note: {len(gaps)} coverage gap(s) above — see `inv allowlist.check-coverage`")
 
     if target == "claude":
         text = _render_claude(rules)
@@ -1414,6 +1460,16 @@ def apply(c):
     if unreviewed:
         print(
             f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded: {', '.join(sorted(unreviewed))}"
+        )
+
+    gaps = _coverage_gaps(rules, {name: _load_cache(name) or {} for name in rules})
+    if gaps:
+        _print_coverage_gaps(gaps)
+        raise RuntimeError(
+            f"{len(gaps)} coverage gap(s) found — refusing to apply. A node with children never renders "
+            "its own rule (see _compute_claude_rules), so an uncovered child above would get zero rule at "
+            "all, not just a looser one. Run `inv allowlist.check-coverage` for details, then reconfirm/"
+            "classify the missing/needs_review child before re-running apply."
         )
 
     allow, ask = _compute_claude_rules(rules)
@@ -1504,6 +1560,31 @@ def status(c):  # noqa: C901
         flag_str = f" [{', '.join(flags)}]" if flags else ""
         depth = cfg.get("max_depth", 1)
         print(f"[allowlist] {name}: {entry.get('version') or '?'} ({len(nodes)} node(s), depth={depth}){flag_str}")
+
+
+@task
+def check_coverage(c):
+    """Does every child of a node-with-children actually have its own renderable rule?
+
+    `_compute_claude_rules` never renders a rule for a node that has children — deliberately, and
+    now for every classification tier, not just read_only (see its docstring: a write/dangerous
+    parent's own rule was silently shadowing its correctly-classified read_only children's allow
+    rules, e.g. `gh run` hiding `gh run view`). The flip side of that fix: a parent's rule is no
+    longer there as a fallback for a child that's missing from rules.json entirely, or stuck at
+    `needs_review` forever — that child now gets zero rule at all instead of at least the parent's
+    (looser but present) one. This walks every reviewed tool's discovered tree and flags exactly
+    that gap. `apply` already refuses to run when this finds anything; run this on its own after
+    `classify`/`reconfirm` to catch it before `review` even signs off, or after registering/
+    recursing a new tool.
+    """
+    rules = _load_all_rules()
+    gaps = _coverage_gaps(rules, {name: _load_cache(name) or {} for name in rules})
+    if not gaps:
+        reviewed = sum(1 for entry in rules.values() if entry.get("reviewed"))
+        print(f"[allowlist] checked {reviewed} reviewed tool(s) — every parent-with-children's child is covered")
+        return
+    _print_coverage_gaps(gaps)
+    raise RuntimeError(f"{len(gaps)} coverage gap(s) — see output above")
 
 
 # ---------------------------------------------------------------------------

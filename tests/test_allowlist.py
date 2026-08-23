@@ -1,8 +1,9 @@
 """Unit tests for tasks/allowlist.py's pure helpers: Classification/Source enum interop with the
 plain-string JSON that flows through cli-allowlist/rules/*.json and the LLM's JSON responses,
 _resolve_flat_verdict/_classify_flag_result (pure data transforms, no subprocess/LLM calls of their
-own), and check_man_deps()'s _should_check_man_deps/_man_dependency (no strace/subprocess calls of
-their own). See tests/README.md.
+own), _merge_rule_sets/_coverage_gaps (render/apply's pure logic, given in-memory rules/cache
+fixtures), and check_man_deps()'s _should_check_man_deps/_man_dependency (no strace/subprocess
+calls of their own). See tests/README.md.
 """
 
 import json
@@ -281,6 +282,66 @@ def test_merge_rule_sets_detects_rule_moving_from_allow_to_ask():
     assert removed_allow == {"Bash(docker network:*)"}
     assert added_ask == {"Bash(docker network:*)"}
     assert not removed_ask
+
+
+def _rule_node(classification: str) -> dict:
+    return {"classification": classification, "content_hash": "x", "flags": {}, "model": "haiku", "source": "llm"}
+
+
+def test_coverage_gaps_none_when_every_child_has_own_rule():
+    rules = {
+        "gh": {
+            "reviewed": True,
+            "nodes": {
+                "run": _rule_node("dangerous"),
+                "run view": _rule_node("read_only"),
+                "run cancel": _rule_node("write"),
+            },
+        }
+    }
+    caches = {"gh": {"nodes": {"run": {"children": ["run view", "run cancel"]}}}}
+    assert allowlist._coverage_gaps(rules, caches) == []
+
+
+def test_coverage_gaps_flags_child_missing_from_rules_json():
+    # The "chunk silently dropped a node" failure mode contributing/cli-allowlist.md documents —
+    # the child was discovered by extraction but never made it into rules.json at all.
+    rules = {"gh": {"reviewed": True, "nodes": {"run": _rule_node("dangerous")}}}
+    caches = {"gh": {"nodes": {"run": {"children": ["run view"]}}}}
+    gaps = allowlist._coverage_gaps(rules, caches)
+    assert gaps == [("gh", "run", "run view", "missing from rules.json")]
+
+
+def test_coverage_gaps_flags_child_stuck_needs_review():
+    rules = {
+        "gh": {
+            "reviewed": True,
+            "nodes": {"run": _rule_node("dangerous"), "run view": _rule_node("needs_review")},
+        }
+    }
+    caches = {"gh": {"nodes": {"run": {"children": ["run view"]}}}}
+    gaps = allowlist._coverage_gaps(rules, caches)
+    assert gaps == [("gh", "run", "run view", "needs_review (excluded from render)")]
+
+
+def test_coverage_gaps_invalid_child_is_not_a_gap():
+    # invalid means "not a real command" (fabricated/duplicate/error-text) — nothing to cover.
+    rules = {
+        "helm": {
+            "reviewed": True,
+            "nodes": {"list": _rule_node("read_only"), "list maudlin-arachnid": _rule_node("invalid")},
+        }
+    }
+    caches = {"helm": {"nodes": {"list": {"children": ["list maudlin-arachnid"]}}}}
+    assert allowlist._coverage_gaps(rules, caches) == []
+
+
+def test_coverage_gaps_skips_unreviewed_tools():
+    # Nothing renders for an unreviewed tool at all yet (parent or child) — no partial-coverage
+    # gap to report until it's reviewed.
+    rules = {"sed": {"reviewed": False, "nodes": {"*": _rule_node("write")}}}
+    caches = {"sed": {"nodes": {"*": {"children": ["*"]}}}}
+    assert allowlist._coverage_gaps(rules, caches) == []
 
 
 def test_should_check_man_deps_skips_tools_marked_skip_interactive():

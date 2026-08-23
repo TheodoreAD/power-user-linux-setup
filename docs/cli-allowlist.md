@@ -46,6 +46,7 @@ inv allowlist.review      # look at what's new/changed, approve it
 inv allowlist.apply       # merge into ~/.claude/settings.json
 
 inv allowlist.status                        # what's tracked, stale, or still unreviewed
+inv allowlist.check-coverage                # every node-with-children's child has its own rule
 inv allowlist.render --target=copilot       # Copilot's format instead — still print-only, no apply yet
 inv allowlist.check-man-deps                # re-check for new man-page dependencies
 ```

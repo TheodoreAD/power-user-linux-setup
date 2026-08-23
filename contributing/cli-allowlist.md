@@ -395,20 +395,39 @@ the pattern-building code doesn't need to know how deep a node is, a path is jus
 ratings aren't rendered here at all — see the "important limitation" note above. It never writes
 anywhere by itself.
 
-One deliberate exception to "one rule per node": a `read_only` node that has children of its own
-(checked against `help-cache/<tool>.json`'s `children` list, not `rules/`, since that's where tree
-structure actually lives) is skipped entirely. Its read_only verdict describes the _bare_ invocation
-(`docker network` with no further args just lists/describes, like any other read_only command), but
-real usage always goes through a child (`docker network rm`, `docker network
-create`), each already
-getting its own, independently-correct rule. Rendering a rule for the bare parent too would be pure
-noise, not a safety gap: Claude Code's permission precedence is deny > ask > allow with **no
-specificity tiebreak** — confirmed against the actual docs
-(<https://code.claude.com/docs/en/permissions.md>), not assumed — so a stricter rule for a child
-always wins over a looser `allow` for its parent regardless of whether the parent's rule exists at
-all. The one behavior change from omitting it: a bare invocation with no subcommand at all (rare)
-falls through to Claude's own default instead of being pre-approved — typically still a prompt, not
-silent approval and not silent denial.
+One deliberate exception to "one rule per node": **any** node that has children of its own (checked
+against `help-cache/<tool>.json`'s `children` list, not `rules/`, since that's where tree structure
+actually lives) is skipped entirely, regardless of its own classification tier — not just
+`read_only` ones, as an earlier version of this logic had it. A `read_only` parent's bare-invocation
+verdict (`docker network` with no further args just lists/describes, like any other read_only
+command) was always pure noise once real usage goes through a child (`docker network rm`,
+`docker
+network create`), each already getting its own, independently-correct rule: Claude Code's
+permission precedence is deny > ask > allow with **no specificity tiebreak** — confirmed against the
+actual docs (<https://code.claude.com/docs/en/permissions.md>), not assumed — so a stricter rule for
+a child always wins over a looser `allow` for its parent regardless of whether the parent's rule
+exists at all. But for a `write`/`dangerous` parent, rendering its rule anyway wasn't just noise —
+it was actively harmful: that same no-specificity-tiebreak precedence means the parent's `ask` rule
+unconditionally _shadows_ a correctly-classified `read_only` child's `allow` rule. Caught live
+(2026-08-23): `gh run` classified `dangerous` was shadowing `gh run view`/`gh run list`'s own
+already-correct `read_only` `allow` rules, forcing a prompt every time despite the more specific
+rule being exactly right — not gh-specific, the same shape hit `docker`, `git`, `go`, `glab`,
+`helm`, and `kubectl`. Generalizing the skip to every tier fixed all of them at once. The one
+behavior change from omitting a parent rule: a bare invocation with no subcommand at all (rare)
+falls through to Claude's own default instead of being pre-approved/pre-gated — typically still a
+prompt, not silent approval and not silent denial.
+
+**Flip side of that generalization, and why `check-coverage` exists**: a `write`/`dangerous`
+parent's own rule used to be a real (if imprecise) safety net for a child that fell through the
+cracks — missing from `rules.json` entirely (the "chunk silently dropped nodes" bug documented
+below), or stuck at `needs_review` forever (excluded from render/apply by design). Once the parent's
+rule is _always_ skipped when it has children, that fallback is gone: an uncovered child now gets
+zero rule at all, not just a looser one. `inv allowlist.check-coverage` walks every reviewed tool's
+discovered tree and flags exactly that gap (missing-from-rules.json or stuck-needs_review children
+of any node with children); `apply` calls the same check and refuses to write
+`~/.claude/settings.json` if it finds anything, rather than silently shipping a coverage hole.
+`render` prints the same warning but still completes, since it's output-only and someone may want to
+see the (partial, gappy) result while debugging.
 
 A second, unrelated exception: **`cloud_cli` tools never get an `allow` rule, full stop**, whatever
 their own classification says. This one _is_ a real safety gap that was caught before it ever
