@@ -294,13 +294,21 @@ class PackageMethod(StrEnum):
     GNOME_EXTENSION = "gnome-extension"
 
 
-def packages_by_method(method: PackageMethod) -> dict:
+def enabled_packages() -> dict:
+    """Every [packages.*] section that isn't disabled or excluded by PULSE_EXCLUDE_TAGS, whatever
+    its method — the entry point for cross-method concerns like `config_files`, which any method
+    may declare. Method-specific install tasks want packages_by_method() instead.
+    """
     excluded = _excluded_tags()
     return {
         name: cfg
         for name, cfg in load_config()["packages"].items()
-        if cfg.get("method") == method and cfg.get("enabled", True) and not (excluded & set(cfg.get("tags", [])))
+        if cfg.get("enabled", True) and not (excluded & set(cfg.get("tags", [])))
     }
+
+
+def packages_by_method(method: PackageMethod) -> dict:
+    return {name: cfg for name, cfg in enabled_packages().items() if cfg.get("method") == method}
 
 
 def apt_packages(name: str, cfg: dict) -> list[str]:
