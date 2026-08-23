@@ -4,10 +4,9 @@ updated: 2026-08-23
 ---
 
 > **Pointer (2026-08-23):** this plan's intake taxonomy is the upstream half of the admission rules
-> now stated in `contributing/global-agents-md.md` ("Admitting a new rule", from
-> `plans/2026-08-23-global-agents-md-leanness-pass.md` §9) — the taxonomy decides _where_ a
-> candidate belongs; those criteria gate _whether_ a `~/AGENTS.md`-bound candidate gets in and in
-> what shape.
+> stated in `contributing/global-agents-md.md` ("Admitting a new rule", from the now-retired
+> leanness pass) — the taxonomy decides _where_ a candidate belongs; those criteria gate _whether_ a
+> `~/AGENTS.md`-bound candidate gets in and in what shape.
 
 ## Context
 

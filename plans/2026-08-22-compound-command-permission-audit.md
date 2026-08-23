@@ -98,14 +98,15 @@ on the open questions below, per this plan's own existing stance.
 
 ## Update 2026-08-23: `config/global-AGENTS.md`'s text corrected, conservatively
 
-The leanness pass's Bash-cluster rewrite (`plans/2026-08-23-global-agents-md-leanness-pass.md` §6)
-went ahead and corrected the compound-command passage this plan had held off on: the "a chain can't
-match" claim is gone, replaced by the documented per-subcommand model (this plan's own live test
-plus the docs section, twice-confirmed). Deliberately conservative pending this plan's forensics:
-the guidance still says "prefer several simple separate calls" rather than endorsing chaining, and
-the evidence note in `contributing/global-agents-md.md` ("Composing a Bash call") records that the
-open incident here is why. This resolves the fourth open question below (corrected, not
-strengthened); the incident forensics and the regression-suite track remain this plan's scope.
+The leanness pass's Bash-cluster rewrite (that plan is retired; its rationale lives in
+`contributing/global-agents-md.md`) went ahead and corrected the compound-command passage this plan
+had held off on: the "a chain can't match" claim is gone, replaced by the documented per-subcommand
+model (this plan's own live test plus the docs section, twice-confirmed). Deliberately conservative
+pending this plan's forensics: the guidance still says "prefer several simple separate calls" rather
+than endorsing chaining, and the evidence note in `contributing/global-agents-md.md` ("Composing a
+Bash call") records that the open incident here is why. This resolves the fourth open question below
+(corrected, not strengthened); the incident forensics and the regression-suite track remain this
+plan's scope.
 
 ## Recommended direction
 

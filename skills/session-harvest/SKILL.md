@@ -76,9 +76,10 @@ considered and rejected).
      Appending bypasses the criteria that plan exists to enforce, risks the addition being
      restructured away unread, and conflicts with whatever session is doing the restructuring.
      Applies to any destination with an open plan owning its shape, not just `~/AGENTS.md`. Resolved
-     2026-08-23: two cross-repo rules routed to `~/AGENTS.md` while
-     `plans/2026-08-23-global-agents-md-leanness-pass.md` was actively cutting it from 30 sections
-     and adding admission rules of its own; both were parked in that plan's §11 instead of appended.
+     2026-08-23: two cross-repo rules routed to `~/AGENTS.md` while the (since retired) leanness
+     pass was actively cutting it from 30 sections and adding admission rules of its own — now
+     permanent in `contributing/global-agents-md.md` ("Admitting a new rule"); both candidates were
+     parked in that plan instead of appended, and were decided at its close.
    - **Already covered → skip.** If an existing memory file or doc already says this, don't write a
      duplicate — check first.
    - **Meta-conventions about how to build things in this ecosystem (e.g. "skills should do X by
