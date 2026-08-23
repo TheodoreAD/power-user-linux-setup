@@ -156,134 +156,64 @@ user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`), so the bare comman
 into the venv and a wrapper or absolute path only adds prompt friction. If a repo's `AGENTS.md`
 Build & test section is empty or stale, fix it rather than silently working around it.
 
-## Reuse maintained upstream work
+## Research & design
 
-Before authoring new content, config, or reference data from scratch — a `.gitignore`, a rule set, a
-template, any reusable artifact a design needs — actively check whether an actively-maintained
-external/community project already provides it. Don't treat "the first thing I checked didn't have
-it" as proof nothing exists; search properly before concluding that.
+### About to author content, config, or a workaround from scratch
 
-Validated concretely, not just asserted: designing `.gitignore` ownership for a shared dev-tooling
-package (`power-user-linux-setup`'s `repo-tasks`/`scaffoldapy`), checked for prior art before
-drafting a Python `.gitignore` in-house — found that PyCharm's own bundled `.ignore` plugin
-(`JetBrains/idea-gitignore`) doesn't maintain its own list either: it generates from
-`github/gitignore`, GitHub's officially-maintained template repo. A mainstream, widely-used tool had
-already made the identical "don't roll your own" call.
+Check whether an actively-maintained external project already provides it — a `.gitignore`, a rule
+set, a template, any reusable artifact — and search properly before concluding it doesn't: "the
+first thing I checked didn't have it" and a single internal tool's "nothing relevant" are weak
+signals, not conclusions. The same bar applies to designing a new skill or convention (a real
+web/GitHub prior-art pass before finalizing). Within one tool, prefer its built-in feature over a
+hand-rolled equivalent even when the built-in carries a documented trade-off — unless that
+trade-off is _verified_ risky (grep/test for concrete breakage), not just theoretically possible.
 
-Distinct from, and broader than, "prefer a tool's own built-in feature over a hand-rolled workaround
-for that same tool" (see "Tool-native over hand-rolled" below) — this is about reusing an external
-maintained artifact/dataset instead of authoring new content, not just choosing between two ways of
-using one tool.
+### Choosing a tool or library
 
-Same bar applies when designing a new skill or convention, not just content/data: run a real
-`WebSearch`/GitHub research pass for prior art before finalizing the design — don't stop at an
-internal signal (a `skills find`/repo grep) even when it looks conclusive. Caught live designing
-`session-harvest`: an initial internal search surfaced one loosely-related hit and looked like
-enough to conclude "nothing fits, build from scratch" — a real web search turned up a much closer
-match (`melodykoh/learning-loop-skill`) that meaningfully changed the design. Treat a single narrow
-tool's "nothing relevant" as a weak signal, not a conclusion, whenever the task is "build/design X"
-and X is a plausible thing others have already built.
+For a real selection decision with trade-offs, go deeper than a single-pass web-search summary
+(actual CLI walkthroughs, real config examples) — or explicitly flag the research as search-summary
+depth and offer to go deeper before the choice is treated as final.
 
-## Tool-native over hand-rolled
+Across a project's concerns, default to the best-fit tool per concern rather than consolidating
+onto fewer technologies for its own sake (YAGNI still applies to speculative needs). Exception:
+when the explicit goal is fewer options for an _agent_ pattern-matching off existing code, fewer
+routine defaults wins over specialization.
 
-When two implementation options achieve the same practical outcome — one hand-rolled, one using a
-tool's own built-in feature — prefer the tool-native option, even if it carries a documented
-trade-off the hand-rolled option would avoid, unless the trade-off is _verified_ risky (grep/test
-for concrete breakage), not just theoretically possible. Example: choosing
-`uv python install --default` (creates an unversioned `python3` shim that shadows apt's own
-`/usr/bin/python3` on `PATH`) over a hand-rolled `python`-only symlink that would have preserved a
-"system `python3` never shadowed" invariant byte-for-byte — picked the tool-managed option after
-confirming the shadowing risk was theoretical (grepped every `#!/usr/bin/env python3` script on the
-system, none needed distro-specific bindings), citing "rule of least surprise" and "a non-managed
-symlink is worse than a uv-managed one" (the tool's own shim is understood by
-`uv python uninstall`/`--reinstall`/upgrades; a raw `ln -sf` is one more thing to hand-maintain).
+### About to ask the user something factual
 
-## Best tool per concern, not fewer technologies for their own sake
+Check whether it has a discoverable answer first — `AskUserQuestion` is for decisions genuinely the
+user's to make (a real preference, a trade-off with no objectively better side), not for lookups a
+web search resolves, however tempting the quick multiple-choice framing.
 
-When picking libraries/tools for different concerns in a project (caching, analytics, time-series,
-...), default to the best-fit tool for each concern rather than consolidating onto fewer
-technologies for its own sake. YAGNI still applies to speculative dependencies for needs that don't
-exist yet — this is about not being needlessly consolidation-driven once a real need is already
-established.
+### Writing conventions into a shareable skill or template
 
-**Exception:** when the explicit goal is reducing how many options an _agent_ has to choose between
-when pattern-matching off existing code — not reducing dependency count or technology diversity —
-that goal wins instead. A data-modeling decision table trimmed from six routine choices
-(Pydantic/dataclass/attrs/NamedTuple/TypedDict/msgspec) to two (Pydantic for boundaries, frozen
-dataclass for everything else) is the concrete instance: "best tool per concern" argues for more
-specialized tools, "fewer options for an agent to mimic incorrectly" argues for fewer routine
-defaults — these can point opposite ways, and the second wins when the stated audience is
-agent-authored code specifically.
+Apply them to one real, already-working repo first — never straight from research to the shareable
+artifact. A pilot surfaces what research can't: rules that are noise against a repo's deliberate
+style, and config footguns that would ship to every consumer verbatim.
 
-## Deep research for real tool/library choices
+### Designing a generator or multi-mode tool
 
-For a genuine tool/library-selection decision with real trade-offs (not a simple factual lookup), go
-deeper than a single-pass web-search summary before presenting a recommendation. Either do a deeper
-pass up front (actual CLI walkthroughs, real config file examples, not just doc summaries) or
-explicitly flag that the research is search-summary depth and offer to go deeper before the choice
-is treated as final. Observed as a real pattern, not a one-off: pushed for more depth twice in one
-planning session on a monorepo-versioning tool choice, both times because a search-summary-level
-survey wasn't considered sufficient to close out the decision.
+Default to independent, combinable axes/flags, each gating a small module, over one top-level enum
+branching into near-duplicate trees — ask whether the "modes" are really orthogonal concerns
+conflated into one axis. Design the user-facing interaction as a first-class concern: minimal
+necessary prompts, skip what doesn't apply, concrete examples in helper text, and first-run output
+that doesn't read as a diff against unchosen branches.
 
-## Research before asking, when the answer is factual rather than a real preference
+### Adding a CLI flag
 
-Before reaching for `AskUserQuestion` on something that sounds like a judgment call, check whether
-it actually has a discoverable factual answer first — a web search away, not a preference only the
-user can supply. `AskUserQuestion` is for decisions genuinely the user's to make (a real preference,
-a trade-off with no objectively-better side); a question like "where does model X sit in
-capability/cost relative to the others" or "what's a realistic value for Y" is a lookup, not a
-preference, even when it's tempting to hand it to the user as a quick multiple-choice.
+Match the surrounding ecosystem's shape (check the wrapped CLI's own flags too) rather than
+inventing a bespoke one. For confirmation prompts that means apt/dnf's: prompt on by default,
+`-y`/`--yes` to skip — never an opt-in `--confirm`; `rm -i`'s inverted shape is only for the
+genuinely destructive-by-default. And don't add a bypass flag that overrides a marker/manifest the
+tool uses to decide what it owns — that gives ownership two meanings, one with the flag and one
+without; no hacks that complicate the mental model unless the alternative is utterly impractical.
 
-**Confirmed directly** 2026-08-23: asked the user to pick a color tier for a newly-released Claude
-model ("Fable") in a statusline script, framing it as a stylistic choice. The user's reply — "look
-it up online, come on" — was a real correction: Fable's actual capability tier (above Opus, per
-Anthropic's own docs) was one search away, not something only the user could supply. Re-ran the
-research, found the answer, applied it without another round-trip.
+### Naming around a collision
 
-## Pilot before generalizing
-
-Before writing a set of tool choices, configs, or conventions into a shareable skill/template meant
-to be copied across multiple repos, apply them directly to one real, already-working repo first —
-don't go from research straight to the shareable artifact. Piloting researched typing/lint/format
-tool choices on one real repo before writing them into a skill surfaced real mistakes pure research
-couldn't have caught: a lint rule that was pure noise against that repo's actual deliberate style, a
-rule that doesn't fit the repo's shape at all, and two config-file footguns that would have silently
-misconfigured every repo that copied the config verbatim. A skill built straight from research, no
-pilot step, would have shipped all of these to every consumer.
-
-## Composable design, UX designed first
-
-When building something that will need to support several distinct "kinds" of thing — now or
-foreseeably (a scaffolding template, a CLI with growing subcommands, a config generator) — default
-to independent, combinable axes/questions/flags, each gating a small module, rather than one
-top-level enum/choice that branches into separate near-duplicate trees. Before designing a
-generator/template/ multi-mode tool, ask whether the "modes" are really orthogonal concerns being
-conflated into one axis; if so, split them so a new kind is a new small module, not a new branch
-duplicating everything else.
-
-Design the user-facing interaction as a first-class concern alongside this, not an afterthought:
-both the interaction flow itself (minimal necessary prompts, skip whatever doesn't apply, real
-concrete examples in helper text rather than an abstract label) and the first-run experience of the
-output (nothing that reads as a diff against unchosen branches).
-
-## Naming collisions: prefer the canonical name over a new short alias
-
-When a short/abbreviated name collides with something else, don't invent a new compound short alias
-to disambiguate (e.g. "pulse-setup" for a `~/.config/pulse` clash with PulseAudio). Use the full,
-unambiguous canonical name instead (e.g. "power-user-linux-setup") — a short alias that half-repeats
-the disambiguating word reads as awkward rather than clean. Offer the short form only if asked, or
-if the full name is genuinely too unwieldy for the context (e.g. an env var prefix).
-
-## CLI flag conventions: match the ecosystem, don't invent a bespoke shape
-
-When a CLI task needs a flag that controls whether it prompts before doing something impactful,
-default to the apt/dnf/`skills`-CLI convention: prompt is on by default, `-y`/`--yes` skips it and
-proceeds. Don't invent a bespoke opt-in flag (e.g. `--confirm`) that defaults to _not_ prompting and
-requires a flag to turn prompting _on_ — the less common, more surprising shape. Before adding a
-flag like this, check whether the surrounding ecosystem (or a wrapped CLI's own flags in the same
-file) has a standard for it. `rm`'s `-i` (opt-in prompting, off by default) is the well-known
-exception to the apt/dnf shape — don't reach for that pattern unless the task is genuinely
-destructive-by-default the way `rm` isn't.
+Use the full, unambiguous canonical name (e.g. "power-user-linux-setup"), not a new compound short
+alias (e.g. "pulse-setup") — an alias that half-repeats the disambiguating word reads as awkward,
+not clean. Offer a short form only if asked, or where the full name is genuinely unwieldy (an env
+var prefix).
 
 ## Move to a written plan once scope grows past a narrow check
 

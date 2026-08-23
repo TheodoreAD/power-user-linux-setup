@@ -46,13 +46,12 @@ admission gate for the candidates that taxonomy routes here.
 - [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
 - [Saving to cross-session memory](#saving-to-cross-session-memory)
 - [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
-- [Reuse maintained upstream work](#reuse-maintained-upstream-work)
-- [Tool-native over hand-rolled](#tool-native-over-hand-rolled)
-- [Best tool per concern](#best-tool-per-concern)
-- [Deep research for real tool/library choices](#deep-research-for-real-toollibrary-choices)
-- [Research before asking](#research-before-asking)
-- [Pilot before generalizing](#pilot-before-generalizing)
-- [Naming collisions](#naming-collisions)
+- [About to author content, config, or a workaround from scratch](#about-to-author-content-config-or-a-workaround-from-scratch)
+- [Choosing a tool or library](#choosing-a-tool-or-library)
+- [About to ask the user something factual](#about-to-ask-the-user-something-factual)
+- [Writing conventions into a shareable skill or template](#writing-conventions-into-a-shareable-skill-or-template)
+- [Adding a CLI flag](#adding-a-cli-flag)
+- [Naming around a collision](#naming-around-a-collision)
 - [Reading a command's result](#reading-a-commands-result)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
@@ -140,9 +139,9 @@ compose: cwd decides which `tasks.py` is found; the binary decides whether that 
 import `repo_tasks`. Both misses are silent, and `<repo>/.venv/bin/inv` addresses the second for
 free.
 
-## Reuse maintained upstream work
+## About to author content, config, or a workaround from scratch
 
-Validated concretely, not just asserted: designing `.gitignore` ownership for a shared dev-tooling
+Reuse-upstream, validated concretely: designing `.gitignore` ownership for a shared dev-tooling
 package (`power-user-linux-setup`'s `repo-tasks`/`scaffoldapy`), a prior-art check before drafting a
 Python `.gitignore` in-house found that PyCharm's own bundled `.ignore` plugin
 (`JetBrains/idea-gitignore`) doesn't maintain its own list either — it generates from
@@ -155,32 +154,28 @@ real web search then turned up a much closer match (`melodykoh/learning-loop-ski
 meaningfully changed the design. A single narrow tool's "nothing relevant" is a weak signal, not a
 conclusion.
 
-## Tool-native over hand-rolled
-
-The defining instance: choosing `uv python install --default` (which creates an unversioned
-`python3` shim shadowing apt's `/usr/bin/python3` on `PATH`) over a hand-rolled `python`-only
-symlink that would have preserved a "system `python3` never shadowed" invariant byte-for-byte. The
-tool-managed option won after the shadowing risk was verified theoretical — every
-`#!/usr/bin/env python3` script on the system was grepped, none needed distro-specific bindings —
-citing rule of least surprise, and that the tool's own shim is understood by
-`uv python uninstall`/`--reinstall`/upgrades while a raw `ln -sf` is one more thing to
+Tool-native over hand-rolled, the defining instance: choosing `uv python install --default` (which
+creates an unversioned `python3` shim shadowing apt's `/usr/bin/python3` on `PATH`) over a
+hand-rolled `python`-only symlink that would have preserved a "system `python3` never shadowed"
+invariant byte-for-byte. The tool-managed option won after the shadowing risk was verified
+theoretical — every `#!/usr/bin/env python3` script on the system was grepped, none needed
+distro-specific bindings — citing rule of least surprise, and that the tool's own shim is understood
+by `uv python uninstall`/`--reinstall`/upgrades while a raw `ln -sf` is one more thing to
 hand-maintain.
 
-## Best tool per concern
+## Choosing a tool or library
 
-The concrete instance of the exception: a data-modeling decision table trimmed from six routine
-choices (Pydantic/dataclass/attrs/NamedTuple/TypedDict/msgspec) to two (Pydantic for boundaries,
-frozen dataclass for everything else). "Best tool per concern" argued for more specialized tools;
-"fewer options for an agent to mimic incorrectly" argued for fewer routine defaults — the second won
-because the stated audience was agent-authored code specifically.
+Research depth, observed as a real pattern rather than a one-off: the user pushed for more depth
+twice in one planning session on a monorepo-versioning tool choice, both times because a
+search-summary-level survey wasn't considered sufficient to close out the decision.
 
-## Deep research for real tool/library choices
+The agent-audience exception's concrete instance: a data-modeling decision table trimmed from six
+routine choices (Pydantic/dataclass/attrs/NamedTuple/TypedDict/msgspec) to two (Pydantic for
+boundaries, frozen dataclass for everything else). "Best tool per concern" argued for more
+specialized tools; "fewer options for an agent to mimic incorrectly" argued for fewer routine
+defaults — the second won because the stated audience was agent-authored code specifically.
 
-Observed as a real pattern, not a one-off: the user pushed for more depth twice in one planning
-session on a monorepo-versioning tool choice, both times because a search-summary-level survey
-wasn't considered sufficient to close out the decision.
-
-## Research before asking
+## About to ask the user something factual
 
 Confirmed directly 2026-08-23: asked the user to pick a color tier for a newly-released Claude model
 ("Fable") in a statusline script, framing it as a stylistic choice. The user's reply — "look it up
@@ -188,7 +183,7 @@ online, come on" — was a real correction: Fable's actual capability tier (abov
 Anthropic's own docs) was one search away, not something only the user could supply. Re-ran the
 research, found the answer, applied it without another round-trip.
 
-## Pilot before generalizing
+## Writing conventions into a shareable skill or template
 
 Piloting researched typing/lint/format tool choices on one real repo before writing them into a
 skill surfaced real mistakes pure research couldn't have caught: a lint rule that was pure noise
@@ -197,7 +192,16 @@ config-file footguns that would have silently misconfigured every repo copying t
 A skill built straight from research, with no pilot step, would have shipped all of these to every
 consumer.
 
-## Naming collisions
+## Adding a CLI flag
+
+The bypass-flag clause's originating incident (2026-08-23): a `--force` on `inv ai.skills` that
+would have overwritten foreign content was rejected because the `.pulse-source` marker _is_ the
+ownership model — a flag overriding it would make ownership mean one thing with the flag and
+another without. Stated by the user as "we shouldn't have hacks that make the mental model
+difficult, unless something is utterly impractical." Folded into this rule (which previously
+covered only flag _shape_) during the leanness pass, as the second §11 candidate admission.
+
+## Naming around a collision
 
 The originating incident: "pulse-setup" was proposed to disambiguate a `~/.config/pulse` clash with
 PulseAudio; the full canonical name "power-user-linux-setup" was the right answer — a short alias
