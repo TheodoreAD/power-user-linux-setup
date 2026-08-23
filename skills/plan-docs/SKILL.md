@@ -113,14 +113,13 @@ unit — first split it by thread, then apply the lifecycle above to each piece:
 
 ## Don't stash future work in prose docs
 
-Applies to any narrative doc in a repo — `README.md` and `docs/*.md` included, not only
-`AGENTS.md`. Each should describe the repo as it is right now; a known bug, an unfinished feature,
-or an open risk belongs in its own `plans/*.md` entry (`status: idea` or further along), linked from
-the doc if it's worth a pointer, not spelled out in prose there. Prose future-work has no status
-field and nothing ever prompts a return visit — it just rots into a permanently-true-sounding
-sentence, or, worse, an already-fixed problem left calling itself "not yet fixed" (exactly what
-"Stale implementation claims" below catches, but the fix is to not write it that way in the first
-place).
+Applies to any narrative doc in a repo — `README.md` and `docs/*.md` included, not only `AGENTS.md`.
+Each should describe the repo as it is right now; a known bug, an unfinished feature, or an open
+risk belongs in its own `plans/*.md` entry (`status: idea` or further along), linked from the doc if
+it's worth a pointer, not spelled out in prose there. Prose future-work has no status field and
+nothing ever prompts a return visit — it just rots into a permanently-true-sounding sentence, or,
+worse, an already-fixed problem left calling itself "not yet fixed" (exactly what "Stale
+implementation claims" below catches, but the fix is to not write it that way in the first place).
 
 `AGENTS.md` (or an equivalent instructions file) gets the strictest version of this rule: it should
 only ever hold instructions for developing/deploying the repo — never planning, ideation, or a
