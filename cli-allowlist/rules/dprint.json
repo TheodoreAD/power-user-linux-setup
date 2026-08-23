@@ -35,8 +35,8 @@
       "source": "llm"
     }
   },
-  "reviewed": false,
-  "reviewed_at": null,
+  "reviewed": true,
+  "reviewed_at": "2026-08-23T14:27:31Z",
   "truncated": false,
   "version": "dprint 0.56.1"
 }
