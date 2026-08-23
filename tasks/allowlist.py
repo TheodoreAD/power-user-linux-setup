@@ -1049,6 +1049,14 @@ def classify(c, tool=None, force=False, model="haiku"):
         to_classify, carried, new_invalid = _diff_nodes(classifiable_keys, cache_nodes, existing_nodes, force)
 
         if not to_classify and not new_invalid:
+            refreshed = _version_only_refresh(existing, cached)
+            if refreshed is not None:
+                _save_rule(name, refreshed)
+                print(
+                    f"[allowlist] {name}: help unchanged, version now {cached.get('version')} — "
+                    f"recorded, classification kept"
+                )
+                continue
             print(f"[allowlist] {name}: unchanged since last classification — skipped")
             continue
 
@@ -1084,6 +1092,26 @@ def classify(c, tool=None, force=False, model="haiku"):
             f"[allowlist] {name}: classified {len(to_classify)} new/changed node(s) "
             f"({flag_count} flag rating(s) total), carried {len(carried)} unchanged{invalid_note} via {model}"
         )
+
+
+def _version_only_refresh(existing: dict | None, cached: dict) -> dict | None:
+    """The rule entry to save when a tool upgraded but its --help text didn't change, or None if
+    there's nothing to record.
+
+    `status` calls a tool stale by comparing the installed version against the version recorded in
+    its rule entry, and `classify` only ever wrote that entry when at least one node's help text
+    had actually changed. An upgrade whose help is byte-identical — a patch release, or mkdocs'
+    --version merely naming a new Python path — therefore left the tool flagged STALE permanently:
+    re-extract and re-classify are what STALE asks for, both had already been run, and neither
+    could clear it. A flag that can't be cleared by doing what it asks is one you learn to ignore.
+
+    Only `version`/`extracted_at` move. `nodes`, `reviewed` and `classified_at` stay put on
+    purpose: the existing classification does describe this version's help (that's what identical
+    text means), so resetting `reviewed` here would ask a human to re-approve a diff that doesn't
+    exist — the opposite of the human gate being meaningful."""
+    if not existing or existing.get("version") == cached.get("version"):
+        return None
+    return {**existing, "version": cached.get("version"), "extracted_at": cached.get("extracted_at")}
 
 
 def _build_reconfirm_prompt(tool: str, candidates: dict[str, dict]) -> str:

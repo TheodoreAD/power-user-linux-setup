@@ -106,6 +106,35 @@ def test_classify_flag_result_falls_back_to_base_classification():
     assert result["classification"] == "dangerous"
 
 
+def test_version_only_refresh_records_new_version_and_keeps_classification():
+    existing = {
+        "version": "0.0.44",
+        "extracted_at": "old",
+        "classified_at": "old",
+        "reviewed": True,
+        "nodes": {"build": {"classification": "write"}},
+    }
+    cached = {"version": "0.0.56", "extracted_at": "new"}
+    refreshed = allowlist._version_only_refresh(existing, cached)
+    assert refreshed is not None
+    assert refreshed["version"] == "0.0.56"
+    assert refreshed["extracted_at"] == "new"
+    # The whole point: an identical-help upgrade must not send an already-reviewed tool back
+    # through the human gate, or reset when it was classified.
+    assert refreshed["reviewed"] is True
+    assert refreshed["classified_at"] == "old"
+    assert refreshed["nodes"] == existing["nodes"]
+
+
+def test_version_only_refresh_none_when_version_unchanged():
+    existing = {"version": "1.0.0", "reviewed": True, "nodes": {}}
+    assert allowlist._version_only_refresh(existing, {"version": "1.0.0"}) is None
+
+
+def test_version_only_refresh_none_when_no_existing_entry():
+    assert allowlist._version_only_refresh(None, {"version": "1.0.0"}) is None
+
+
 def test_diff_nodes_carries_unchanged_node():
     cache_nodes = {"status": {"content_hash": "abc"}}
     existing_nodes = {"status": {"content_hash": "abc", "classification": "read_only", "source": "llm"}}
