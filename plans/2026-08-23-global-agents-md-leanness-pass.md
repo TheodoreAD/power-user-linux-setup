@@ -8,18 +8,27 @@ updated: 2026-08-23
 2026-08-23 — sequencing steps 1–2 done:
 
 - `contributing/global-agents-md.md` written: intro, admission criteria (§9), TOC, one section per
-  rule with relocatable evidence (15 rules carry any; the rest have none recorded). Pointer
-  preamble added to `config/global-AGENTS.md` naming the repo path and framing the rationale file
-  as a precondition for changing it.
+  rule with relocatable evidence (15 rules carry any; the rest have none recorded). Pointer preamble
+  added to `config/global-AGENTS.md` naming the repo path and framing the rationale file as a
+  precondition for changing it.
 - **Git & commits cluster piloted**: 5 sections → `## Git & commits` with 4 trigger-named `###`
   rules (granular-commits + incidental-lint merged per §7). 909 → 385 words; file 6,053 → 5,529
   words, 30 → 26 top-level sections. Provenance (scaffoldapy reaffirmation) relocated.
 - Now in the live-with-it window (sequencing step 2): watch whether the git/commit rules still fire
   over the next sessions before converting remaining clusters.
-- Deferred to their own clusters: §5 preamble promotion (Bash cluster), §6 allowlist collapse with
-  `cross-directory-command-execution` corrections (Bash cluster), §11 candidate admissions
-  (prohibition-vs-friction → Bash cluster; bypass-flag → Research & design cluster's
-  `CLI flag conventions`).
+- **Bash cluster converted** (same day, user-directed): 4 sections (Bash tool discipline,
+  multi-workdir testing, preferred search tools, direnv-vs-`uv run`) →
+  `## Bash & the CLI
+  allowlist` with 4 trigger-named `###` rules. 1,738 → ~460 words. Took the
+  `cross-directory-command-execution` corrections (that plan is now retired): per-subcommand rule
+  matching stated (conservatively, pending `plans/2026-08-22-compound-command-permission-audit.md`'s
+  forensics), cwd-reset replaces the false cwd-persists premise, scoping flags now preferred,
+  chained `cd && <venv>/bin/inv` is the documented invoke form. §5 done — the `Plan`/`Explore` fact
+  is a document preamble now. §11 candidate 1 (friction-vs-prohibition) resolved: folded as one
+  clause into the cluster intro ("a prompt is a friction cost, never a prohibition"), no new section
+  — its general form is adequately covered there plus the harness's own finish-the-task instruction.
+- Deferred to its own cluster: §11 candidate 2 (bypass-flag/ownership-marker) → Research & design
+  cluster's `CLI flag conventions`.
 - Note: non-Git rules' evidence now exists in both the contributing file and inline in the source —
   deliberate transitional duplication; each cluster conversion deletes its inline copies.
 
@@ -239,15 +248,13 @@ precondition on the whole document, not a footnote inside the allowlist section.
 Principle stated once; `cd`, scoping flags, chaining, `bash -c`, and parallel-means-separate-calls
 become one line each.
 
-**Overlap, read before rewriting these:** `plans/2026-08-23-cross-directory-command-execution.md`
-found that three of these paragraphs are factually wrong, not merely verbose — cwd does **not**
-persist between Bash tool calls (so the prescribed "`cd` as its own call, then `cd` back" cannot
-work), and the scoping flags the text discourages are what actually works.
-`plans/2026-08-22-compound-command-permission-audit.md` separately contradicts the
-`cd x && git status` prefix-matching claim in the same passage. Collapsing these to one line each
-without correcting them would bake the errors in more compactly, so this section's rewrite should
-take the corrections rather than only shortening. That plan is `blocked on` this one precisely to
-avoid two passes editing the same paragraphs.
+**Overlap (resolved 2026-08-23):** the now-retired `cross-directory-command-execution` plan found
+three of these paragraphs factually wrong, not merely verbose — cwd does **not** persist between
+Bash tool calls, and the scoping flags the text discouraged are what actually works — and
+`plans/2026-08-22-compound-command-permission-audit.md` separately contradicted the
+`cd x && git status` prefix-matching claim. The Bash-cluster conversion took all of these
+corrections rather than only shortening; the evidence lives in `contributing/global-agents-md.md`
+("Composing a Bash call", "Running a command against a different repo than the session's project").
 
 ### 7. Merge the pairs that already cross-reference each other
 
@@ -285,16 +292,13 @@ of growing the file by two more sections while this pass is trying to shrink it.
 `session-harvest` 2026-08-23; decide them as part of the relevant cluster's conversion, not
 separately.
 
-[NEEDS CLARIFICATION: **"A rule whose stated rationale is a friction cost is not a prohibition."**
-Trigger: about to skip or scale down real work in order to obey a rule in this file. If the rule's
-own reason is an approval prompt or similar friction, pay it and do the work; only correctness and
-safety rationales are blockers. Evidence: `plans/2026-08-23-cross-directory-command-execution.md` —
-an agent read the `&&` ban as a prohibition, concluded cross-repo work was impossible, and reported
-that as a limitation, when one chained command would have completed it. That plan already fixes the
-`cd`/`&&` instance; the open question is whether the general form earns always-loaded space or is
-adequately covered by fixing each instance as found. Note it partly duplicates the harness's own
-standing "finish the whole task, scaling the work down is the user's call" instruction, which argues
-against a new section.]
+[DECISION: **"A rule whose stated rationale is a friction cost is not a prohibition"** — admitted as
+one clause in the Bash cluster's intro ("An approval prompt is a friction cost, never a prohibition
+— pay the prompt and do the work"), not as its own section: the observed harm was
+allowlist-specific, and the general form is already carried by the harness's standing
+finish-the-whole-task instruction. Evidence (an agent read the `&&` ban as a prohibition and
+declined real cross-repo work) is in `contributing/global-agents-md.md`, "Composing a Bash call";
+the plan that captured it (`cross-directory-command-execution`) is retired.]
 
 [NEEDS CLARIFICATION: **"Don't add a bypass flag that gives an ownership marker two meanings."**
 Trigger: designing an escape hatch that overrides a marker/manifest the tool uses to decide what it
