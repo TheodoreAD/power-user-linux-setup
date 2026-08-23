@@ -384,6 +384,16 @@ clean `"0 errors, N warnings, 0 notes"` summary line — a real regression acros
 unnoticed for a stretch of a session because every check was read via `... | tail -N`. Assume any
 CLI's "clean summary text" and "process exit code" can disagree until verified otherwise.
 
+Sampling one file and generalizing to a set is the same failure one scale up — a clean-looking
+sample is not evidence about its siblings, and "they're all the same kind of file" is not evidence
+either. `--stat`'s per-file line counts are the cheap tell: when they disagree, read the outliers,
+not the representative-looking one. Confirmed live 2026-08-23: nine modified `cli-allowlist` files
+were reported as "timestamp-only churn" after reading one of them (`vim.json`) in full; five carried
+real upstream version bumps (`dprint` 0.54.0 → 0.56.1, `twine` 6.2.0 → 7.0.0, and three more), and
+`--stat` had already shown 27 changed lines against `vim.json`'s 6. Harmless that time because the
+conclusion was only "leave it alone" — the identical reasoning behind a discard would have thrown
+away real data.
+
 Once a repo has real test coverage (or a trivial addition would cover it), verify behavior by
 running the test suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in
 `/tmp`, etc.) — even for a quick "let me just check this" moment. Check whether an existing test (or
