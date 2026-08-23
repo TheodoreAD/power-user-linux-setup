@@ -380,4 +380,16 @@ prediction.]
 
 [DEFERRED: `ensure_block` and `write_claude_settings` call sites get registry entries (so "is this
 path PULSE-managed?" has one answer) but no drift classification of their own — a marker-delimited
-block and a merged JSON key each need their own notion of "dirty" that this plan doesn't design.]
+block and a merged JSON key each need their own notion of "dirty" that this plan doesn't design.
+**Narrowed in step 2:** `inv deploy.status --path` now at least _detects_ a block-owned file (any
+file containing a `PULSE::` marker, covering both `MarkerStyle`s in one scan) and says PULSE owns
+only the marked regions inside it. That's detection, not classification — it still can't say whether
+a block has drifted from what the task would write. `write_claude_settings` targets remain entirely
+undetected.]
+
+[PITFALL: the first live run of `inv deploy.status --path ~/.zshrc` reported "not deployed by PULSE
+— nothing here deploys, tracks, or restores it", which is false: `zsh.configure` writes marked
+blocks into that exact file. The unmanaged-path message is the whole teaching moment this mechanism
+exists for, and it was confidently wrong in the most-likely-to-be-asked case. Found by running the
+command against a real home directory, not by review or by any unit test — the tests only ever asked
+about paths the fixtures had invented.]
