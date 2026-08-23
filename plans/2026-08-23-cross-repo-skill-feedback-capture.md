@@ -223,8 +223,8 @@ be re-deriving in a foreign repo — and `~/AGENTS.md` "Verify what actually hap
 
 A `repo-tasks` session hit exactly the friction this plan describes (`~/AGENTS.md`'s `cd`/chaining
 guidance turned out to be wrong) and captured it by hand as
-`plans/2026-08-23-cross-directory-command-execution.md`, without knowing this plan existed. Useful
-as unprompted evidence rather than a rehearsal of the design.
+`plans/2026-08-23-cross-directory-command-execution.md` (since landed and retired), without knowing
+this plan existed. Useful as unprompted evidence rather than a rehearsal of the design.
 
 **What matched:** lane 2 was the right call and was chosen unprompted — capture, don't fix in place,
 because the leanness pass owns those paragraphs. §4's immediate-commit also happened naturally: the
@@ -253,7 +253,8 @@ but narrower than assumed. `git -C`, `dprint --config`, `ruff --config`, `basedp
 and an absolute-path `pytest` all worked fine from a foreign cwd with no `cd`; only `inv` genuinely
 needed one, because task discovery walks up from cwd. That strengthens the "runnable from any cwd"
 requirement for the script and weakens the general "don't touch another repo" framing it cites. See
-`plans/2026-08-23-cross-directory-command-execution.md` for the full exercised list.
+`contributing/global-agents-md.md` ("Running a command against a different repo than the session's
+project") for the full exercised list.
 
 ### Suggested sequencing
 
