@@ -119,7 +119,7 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
     from "foreign content, don't touch" the same way _ensure_agents_skills does for the
     .claude/skills symlink — without a marker, two directory copies are indistinguishable by
     content alone. Refreshed to exactly match the repo on every run once it's ours; an edit to
-    the repo copy needs `inv ai.skills` re-run to take effect, unlike the old symlink approach.
+    the repo copy needs `inv ai.install-skills` re-run to take effect, unlike the old symlink approach.
 
     Asks (showing the skill's own SKILL.md description) before an actual install/update, unless
     `yes` is set — same `-y`/`--yes` convention as the `skills` CLI's own `--yes` flag used below.
@@ -268,7 +268,7 @@ def _apply_static_claude_permissions() -> None:
 
     if util.DRY_RUN:
         missing = [r for r in declared if r not in existing_allow]
-        print(f"[ai.skills] static Claude permissions: {'ok' if not missing else f'MISSING {len(missing)}'}")
+        print(f"[ai.install_skills] static Claude permissions: {'ok' if not missing else f'MISSING {len(missing)}'}")
         return
 
     previous: set[str] = (
@@ -280,7 +280,7 @@ def _apply_static_claude_permissions() -> None:
     merged = kept + [r for r in declared if r not in kept]
 
     if set(merged) == set(existing_allow):
-        print(f"[ai.skills] static Claude permissions: already up to date ({len(declared)} rule(s))")
+        print(f"[ai.install_skills] static Claude permissions: already up to date ({len(declared)} rule(s))")
         return
 
     perms = settings.setdefault("permissions", {})
@@ -290,7 +290,7 @@ def _apply_static_claude_permissions() -> None:
 
     _STATIC_PERMS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     _STATIC_PERMS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n")
-    print(f"[ai.skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
+    print(f"[ai.install_skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
 
 
 def _apply_declared_statusline() -> None:
@@ -311,23 +311,23 @@ def _apply_declared_statusline() -> None:
     current = settings.get("statusLine")
 
     if util.DRY_RUN:
-        print(f"[ai.skills] statusLine: {util.ok_label(current == declared)}")
+        print(f"[ai.install_skills] statusLine: {util.ok_label(current == declared)}")
         return
 
     if current == declared:
-        print("[ai.skills] statusLine: already up to date")
+        print("[ai.install_skills] statusLine: already up to date")
         return
 
     if current is not None and not ui.ask(
         f"~/.claude/settings.json already has a custom statusLine ({current!r}) — replace it with the managed one?",
         default=False,
     ):
-        print("[ai.skills] statusLine: left existing custom value in place")
+        print("[ai.install_skills] statusLine: left existing custom value in place")
         return
 
     settings["statusLine"] = declared
     util.write_claude_settings(settings)
-    print(f"[ai.skills] {util.CLAUDE_SETTINGS}: statusLine updated")
+    print(f"[ai.install_skills] {util.CLAUDE_SETTINGS}: statusLine updated")
 
 
 def _copilot_present() -> bool:
@@ -349,7 +349,7 @@ def _note_copilot_permissions() -> None:
     """
     if _copilot_present():
         print(
-            "[ai.skills] GitHub Copilot detected — no permissions applied for it. No confirmed, "
+            "[ai.install_skills] GitHub Copilot detected — no permissions applied for it. No confirmed, "
             "path-scoped file-read auto-approve setting exists for Copilot Chat (see "
             "docs/claude-code.md); not guessing at one."
         )
@@ -391,7 +391,7 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
 
 
 @task
-def skills(c, dir=None, yes=False, skill=None):  # noqa: A002
+def install_skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
@@ -411,7 +411,7 @@ def skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     Pass --skill=<name> (comma-separated for several) to act on just those skills instead of every
     declared one — the fast path for refreshing a skill you just edited in this repo, since an edit
     here doesn't reach the installed copy under ~/.agents/skills until this task re-runs.
-    `inv ai.skills --skill=plan-docs -y` is the unattended one-skill form. A --skill that matches
+    `inv ai.install-skills --skill=plan-docs -y` is the unattended one-skill form. A --skill that matches
     nothing raises, rather than quietly doing no work and looking like a successful refresh.
     Permissions/statusLine/Copilot are skipped for a --skill run, same as for --dir: they're global
     settings with nothing to do with which skill was named.
@@ -422,7 +422,7 @@ def skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     """
     base = Path(dir).expanduser().resolve() if dir else Path.home()
     selected = _selected_skill_names(skill)
-    _ensure_agents_skills(base, label="ai.skills")
+    _ensure_agents_skills(base, label="ai.install_skills")
     _install_declared_skills(c, base, yes=yes, selected=selected)
     if dir is None and selected is None:
         _apply_static_claude_permissions()

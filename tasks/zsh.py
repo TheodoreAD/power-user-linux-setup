@@ -22,7 +22,7 @@ def _shell_is_zsh(shell_path: str) -> bool:
 
 
 @task
-def omz_configure(c):  # noqa: C901
+def configure_omz(c):  # noqa: C901
     """Update Oh My Zsh theme and plugins list in ~/.zshrc in-place."""
     all_cfg = util.load_config()["packages"]
     cfg = all_cfg.get("oh-my-zsh", {})
@@ -114,7 +114,7 @@ def set_default_shell(c):
     """
     zsh_path = shutil.which("zsh")
     if not zsh_path:
-        print("[zsh] zsh not found on PATH — install it first (apt.base)")
+        print("[zsh] zsh not found on PATH — install it first (apt.install_base)")
         return
     if util.DRY_RUN:
         print(f"[zsh] default shell: {util.ok_label(_shell_is_zsh(_current_shell()))}")
@@ -127,7 +127,7 @@ def set_default_shell(c):
 
 
 @task
-def history_fix(c):
+def fix_history(c):
     """Recover a corrupt ~/.zsh_history using strings(1) to strip non-printable bytes."""
     hist = Path.home() / ".zsh_history"
     bad = Path.home() / ".zsh_history_bad"
@@ -145,7 +145,7 @@ def history_fix(c):
 
 
 @task
-def p10k_configure(c):
+def configure_p10k(c):
     """Copy repo baseline config/p10k.zsh to ~/.p10k.zsh if not already present."""
     dest = Path.home() / ".p10k.zsh"
     if util.DRY_RUN:

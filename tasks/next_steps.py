@@ -67,7 +67,7 @@ def print_next_steps(extra_note: str | None = None) -> None:
     identity.toml, then the git/ssh/gh chain once identity.toml exists.
 
     Checks real state each time rather than a stored "did we already tell you" flag: a flag can
-    drift from reality (exactly the bug that made system.dns() unreliable — see git history), a
+    drift from reality (exactly the bug that made system.configure_dns() unreliable — see git history), a
     fresh check can't. Safe to re-run after doing what it suggests; it just reports whatever's
     still outstanding, one step at a time so it's never ambiguous what to run next.
 
@@ -102,14 +102,14 @@ def print_next_steps(extra_note: str | None = None) -> None:
     identity = util.load_identity()
 
     if not _git_settings_applied() or not _git_profiles_applied(identity):
-        ui.block("Run: inv git.configure git.settings", label="next steps")
+        ui.block("Run: inv git.configure git.apply-settings", label="next steps")
         return
 
     missing_keys = _missing_ssh_keys(identity)
     if missing_keys:
         ui.block(
             f"SSH key(s) missing for: {', '.join(missing_keys)}",
-            "Run: inv ssh.keys   (prompts for a passphrase per key)",
+            "Run: inv ssh.create-keys   (prompts for a passphrase per key)",
             label="next steps",
         )
         return

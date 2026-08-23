@@ -122,7 +122,7 @@ def clean(c):
     (`docker system prune -f`). Conservative on purpose: doesn't remove images that are tagged
     but unused by any container — see `docker.clean-full` for that. Neither touches volumes —
     those can hold irreplaceable data, a different risk class than a rebuildable cache. Opt-in,
-    not part of `inv setup` — see `inv cleanup.all`.
+    not part of `inv setup` — see `inv clean.all`.
     """
     _prune(c, "docker.clean", "-f", "stopped containers, dangling images, unused networks/build cache")
 
@@ -131,6 +131,6 @@ def clean(c):
 def clean_full(c):
     """Prune everything `docker.clean` does, plus all images not currently used by a container
     — tagged or not (`docker system prune -af`). Still doesn't touch volumes — see `docker.clean`
-    for why. Opt-in, not part of `inv setup` — see `inv cleanup.all-full`.
+    for why. Opt-in, not part of `inv setup` — see `inv clean.all-full`.
     """
     _prune(c, "docker.clean-full", "-af", "stopped containers, all unused images, unused networks/build cache")

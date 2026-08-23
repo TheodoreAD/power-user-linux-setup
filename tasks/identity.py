@@ -98,4 +98,4 @@ def init(c):
     util.IDENTITY_PATH.write_text(_render(name, email, directory, hosts))
     util.IDENTITY_PATH.chmod(0o600)
     print(f"[identity] wrote {util.IDENTITY_PATH}")
-    print("[identity] next: inv git.configure git.settings ssh.keys ssh.configure ssh.add")
+    print("[identity] next: inv git.configure git.apply-settings ssh.create-keys ssh.configure ssh.add")

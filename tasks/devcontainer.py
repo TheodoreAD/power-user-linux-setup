@@ -133,7 +133,7 @@ def check(c):
 
 
 # ---------------------------------------------------------------------------
-# inv devcontainer.mounts — host-side credential/config mount helper. See docs/dev-container.md's
+# inv devcontainer.print-mounts — host-side credential/config mount helper. See docs/dev-container.md's
 # "Mounting host directories" section.
 
 _DEFAULT_CONTAINER_HOME = "/home/vscode"
@@ -154,7 +154,7 @@ _CERT_BUNDLE_CAVEAT_TEMPLATE = (
 
 @dataclass(frozen=True)
 class MountCandidate:
-    """One discoverable host directory/socket offered by `inv devcontainer.mounts`. `source` is
+    """One discoverable host directory/socket offered by `inv devcontainer.print-mounts`. `source` is
     the devcontainer.json mount "source=" value as-is (already using ${localEnv:...} where that
     makes the fragment portable across machines). `target` is an absolute container path when
     fixed (ssh-agent socket, the corporate cert bundle — same path as the host); otherwise None,
@@ -343,7 +343,7 @@ def _render_mounts_json(selected: list[MountCandidate], container_home: str) -> 
 
 
 @task
-def mounts(c):
+def print_mounts(c):
     """Host-side interactive helper: discover credential-shaped directories/sockets on this
     machine (~/.ssh or $SSH_AUTH_SOCK, ~/.config/power-user-linux-setup, the corporate CA bundle from
     identity.toml, ~/.gitconfig, ~/.gnupg, ~/.aws, ~/.kube, ~/.config/{gcloud,gh}) and print a

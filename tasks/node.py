@@ -61,7 +61,7 @@ def install(c):
 def clean_cache(c):
     """Garbage-collect npm's package cache (~/.npm), removing invalid/unneeded entries while
     verifying the rest — conservative, npm's own recommended way to reclaim cache space. Opt-in,
-    not part of `inv setup`/`node.install` — see `inv cleanup.caches`. For a full wipe instead,
+    not part of `inv setup`/`node.install` — see `inv clean.caches`. For a full wipe instead,
     see `node.clean-cache-full`.
     """
     _cfg, nvm_dir, nvm_sh = _node_cfg()
@@ -79,7 +79,7 @@ def clean_cache(c):
 def clean_cache_full(c):
     """Wipe npm's entire package cache (~/.npm). Safe any time — npm re-downloads as needed;
     only affects install speed, not what's installed. Opt-in, not part of `inv setup`/
-    `node.install` — see `inv cleanup.all-full`.
+    `node.install` — see `inv clean.all-full`.
     """
     _cfg, nvm_dir, nvm_sh = _node_cfg()
     if not nvm_dir.exists():

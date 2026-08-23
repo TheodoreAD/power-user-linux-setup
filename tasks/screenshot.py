@@ -133,7 +133,10 @@ def enable(c):  # noqa: C901
     (Ctrl+Shift+Alt+R) is untouched too — Flameshot has no video capability.
     """
     if not util.command_exists("flameshot"):
-        print("[screenshot] flameshot not installed — enable [packages.flameshot] in setup.toml and run inv apt.base")
+        print(
+            "[screenshot] flameshot not installed — enable [packages.flameshot] in setup.toml "
+            "and run inv apt.install-base"
+        )
         return
 
     bindings = _bindings()

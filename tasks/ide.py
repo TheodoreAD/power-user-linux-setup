@@ -15,7 +15,7 @@ def _pycharm_dir() -> Path | None:
 
 
 @task
-def pycharm_configure(c):
+def configure_pycharm(c):
     """Copy font settings into the active PyCharm config directory."""
     pycharm = _pycharm_dir()
     if not pycharm:

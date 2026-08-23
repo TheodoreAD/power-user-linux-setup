@@ -201,7 +201,7 @@ def _skill_entries(base: Path) -> Iterator[Managed]:
 def managed_paths(base: Path | None = None) -> dict[Path, Managed]:
     """Every home-directory path this repo deploys, keyed by absolute destination.
 
-    `base` is the skills root (defaults to the home directory) — `inv ai.skills --dir` installs
+    `base` is the skills root (defaults to the home directory) — `inv ai.install-skills --dir` installs
     project-local skills elsewhere, and passing that directory here scopes the registry to match.
     """
     home = base or Path.home()
@@ -463,7 +463,7 @@ def status(c, name=None, path=None):
     if attention:
         ui.warn(
             f"{len(attention)} deployed file(s) hold content that isn't in this repo.",
-            "The next `inv tools.install` / `inv ai.skills` would ask before overwriting, but the "
+            "The next `inv tools.install` / `inv ai.install-skills` would ask before overwriting, but the "
             "edit still only exists under ~ until it's ported back:",
             *(f"  {m.path}  ->  {m.source}" for m in attention),
             "Port each edit into its repo-side source, or run `inv deploy.all` to discard it.",

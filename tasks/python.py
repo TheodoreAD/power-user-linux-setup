@@ -13,7 +13,7 @@ _UV_ENV_RE = re.compile(r'(UV_PYTHON=")[^"]*(")')
 
 
 @task
-def tools(c):
+def install_tools(c):
     """Install global Python CLI tools via uv tool install."""
     if not util.command_exists("uv"):
         raise RuntimeError("uv not found — run ./bootstrap.sh first")
@@ -39,7 +39,7 @@ def tools(c):
 def clean_cache(c):
     """Prune unreachable entries from uv's build/wheel cache (~/.cache/uv) — conservative, keeps
     entries still reachable from any installed environment. Opt-in, not part of `inv setup`/
-    `python.tools` — see `inv cleanup.caches`. For a full wipe instead, see
+    `python.install-tools` — see `inv clean.caches`. For a full wipe instead, see
     `python.clean-cache-full`.
     """
     if not util.command_exists("uv"):
@@ -57,7 +57,7 @@ def clean_cache(c):
 def clean_cache_full(c):
     """Wipe uv's entire build/wheel cache (~/.cache/uv). Safe any time — uv re-populates it as
     needed; only affects install speed, not what's installed. Opt-in, not part of `inv setup`/
-    `python.tools` — see `inv cleanup.all-full`.
+    `python.install-tools` — see `inv clean.all-full`.
     """
     if not util.command_exists("uv"):
         print("[python.clean-cache-full] uv not found — nothing to do")

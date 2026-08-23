@@ -66,7 +66,7 @@ def _install_apt_package(c, name: str, cfg: dict) -> None:
 
 
 @task
-def base(c):
+def install_base(c):
     """Install base apt packages from config."""
     util.require_apt()
     pkgs = util.packages_by_method(util.PackageMethod.APT)
@@ -140,7 +140,7 @@ def _status_repo(name: str, cfg: dict) -> None:
 
 
 @task
-def repos(c):
+def install_repos(c):
     """Set up external apt repos and install their packages."""
     util.require_apt()
     pkgs = util.packages_by_method(util.PackageMethod.APT_REPO)
@@ -151,7 +151,7 @@ def repos(c):
         return
 
     # lsb_release (package lsb-release) and gpg (package gnupg) aren't guaranteed present on a
-    # fresh/minimal install, and this runs before apt.base — which is where setup.toml's other
+    # fresh/minimal install, and this runs before apt.install_base — which is where setup.toml's other
     # apt packages get installed — ever gets a chance to. Not declared as [packages.*] entries for
     # that reason: they wouldn't install in time to help here anyway, so they're ensured directly.
     # gnupg matters because _register_repo() below pipes each repo's signing key through
@@ -329,7 +329,7 @@ def _cache_size_report(c, label: str) -> None:
 def clean_cache(c):
     """Remove apt's downloaded .deb cache for packages no longer available at their cached
     version (`apt-get autoclean`) — conservative, keeps .debs for currently-installed versions
-    cached for reinstall. Opt-in, not part of `inv setup`/`apt.base` — see `inv cleanup.caches`.
+    cached for reinstall. Opt-in, not part of `inv setup`/`apt.install-base` — see `inv clean.caches`.
     For a full wipe of /var/cache/apt/archives instead, see `apt.clean-cache-full`.
     """
     util.require_apt()
@@ -344,7 +344,7 @@ def clean_cache(c):
 def clean_cache_full(c):
     """Remove apt's entire downloaded .deb cache (/var/cache/apt/archives), including .debs for
     currently-installed packages — apt just re-downloads them if reinstalled. Opt-in, not part of
-    `inv setup`/`apt.base` — see `inv cleanup.all-full`.
+    `inv setup`/`apt.install-base` — see `inv clean.all-full`.
     """
     util.require_apt()
     if util.DRY_RUN:
@@ -355,7 +355,7 @@ def clean_cache_full(c):
 
 
 @task
-def deb(c):
+def install_debs(c):
     """Install packages sourced from GitHub releases or direct deb URLs."""
     util.require_apt()
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():

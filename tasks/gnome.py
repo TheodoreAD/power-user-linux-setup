@@ -48,7 +48,7 @@ def _apply_dconf(c, name: str, cfg: dict) -> None:
 
 
 @task
-def extensions(c):  # noqa: C901
+def install_extensions(c):  # noqa: C901
     """Install and enable GNOME Shell extensions declared in setup.toml via gext."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:
@@ -80,7 +80,7 @@ def extensions(c):  # noqa: C901
         return
 
     if not util.command_exists("gext"):
-        print("[gnome-extensions] gext not found — run 'inv python.tools' first")
+        print("[gnome-extensions] gext not found — run 'inv python.install-tools' first")
         return
 
     # Ubuntu ships with disable-user-extensions = true in some configurations;
@@ -151,7 +151,7 @@ def enable(c):  # noqa: C901
             continue
 
         if uuid not in installed:
-            print(f"[{name}] not installed — run inv gnome.extensions to install")
+            print(f"[{name}] not installed — run inv gnome.install-extensions to install")
             continue
 
         for conflict_uuid in CONFLICTS.get(uuid, []):
@@ -231,7 +231,7 @@ def status(c):
         elif installed:
             state = "installed, NOT active — logout/login needed?"
         else:
-            state = "MISSING — run inv gnome.extensions"
+            state = "MISSING — run inv gnome.install-extensions"
 
         marker = "[ ]" if not want else "[x]"
         print(f"  {marker} {name}: {state}")
@@ -239,7 +239,7 @@ def status(c):
     conflicts_active = [uuid for uuids in CONFLICTS.values() for uuid in uuids if uuid in active]
     if conflicts_active:
         print(f"\nActive conflicts: {', '.join(conflicts_active)}")
-        print("  → run inv gnome.extensions to resolve")
+        print("  → run inv gnome.install-extensions to resolve")
 
 
 @task
@@ -276,7 +276,7 @@ def clean(c):
 def update(c):
     """Update all gext-managed GNOME Shell extensions."""
     if not util.command_exists("gext"):
-        print("[gnome-update] gext not found — run 'inv python.tools' first")
+        print("[gnome-update] gext not found — run 'inv python.install-tools' first")
         return
     if util.DRY_RUN:
         print("[gnome-update] dry run — would run: gext update")

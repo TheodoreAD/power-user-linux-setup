@@ -93,15 +93,15 @@ def _resolve(name: str, cfg: dict, method: util.PackageMethod) -> tuple[str, str
 
     if method == util.PackageMethod.GNOME_EXTENSION:
         # Always skipped by default, not just tag-gated: no automated path — not even inv setup —
-        # ever calls inv gnome.extensions (deliberately; see tasks/gnome.py, never touch a live
+        # ever calls inv gnome.install-extensions (deliberately; see tasks/gnome.py, never touch a live
         # GNOME session automatically). Tags alone don't capture that, since gnome/gui aren't
         # excluded on a default desktop install where this method's entries are otherwise fully
         # tag-eligible — checking them by default would fail inv setup for extensions it never
         # attempted to install in the first place. Still checkable per-package via an explicit
-        # verify_cmd (e.g. after running inv gnome.extensions by hand): the
+        # verify_cmd (e.g. after running inv gnome.install-extensions by hand): the
         # `gnome-extensions list | grep -qF <uuid>` query itself is safe and read-only, just not
         # the default here.
-        return "skip", "gnome-extension — not installed by inv setup, see inv gnome.extensions"
+        return "skip", "gnome-extension — not installed by inv setup, see inv gnome.install-extensions"
 
     return "error", f"unhandled method={method.value}"
 

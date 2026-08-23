@@ -36,7 +36,7 @@ SETTINGS = {
 
 
 @task
-def settings(c):
+def apply_settings(c):
     """Apply global git configuration (idempotent, no identity data required)."""
     if util.DRY_RUN:
         for key, want in SETTINGS.items():

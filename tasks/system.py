@@ -77,7 +77,7 @@ def _deploy_config_file(pkg: str, mapping: dict, *, assume_yes: bool) -> None:
 def configs(c, name=None, yes=False):
     """Deploy every setup.toml `config_files` mapping, overwriting destinations that have drifted.
 
-    The install tasks that also apply `config_files` (apt.base, apt.deb) only ever write a
+    The install tasks that also apply `config_files` (apt.install_base, apt.install_debs) only ever write a
     destination that doesn't exist yet, so editing a repo-side `config/*` source never reaches an
     already-deployed file. This is the deliberate redeploy path: it diffs each mapping and prompts
     before overwriting, so a hand-edited destination is never clobbered unasked.
@@ -99,7 +99,7 @@ def configs(c, name=None, yes=False):
 
 
 @task
-def apparmor_profiles(c):
+def install_apparmor_profiles(c):
     """Install AppArmor profiles declared in setup.toml with method = 'apparmor-profile'."""
     profiles = util.packages_by_method(util.PackageMethod.APPARMOR_PROFILE)
     if not profiles:
@@ -122,7 +122,7 @@ def apparmor_profiles(c):
 
 
 @task
-def curlrc(c):
+def write_curlrc(c):
     """Write ~/.config/curlrc: silent, show errors, follow redirects. Idempotent."""
     content = "--silent\n--show-error\n--location"
     if util.DRY_RUN:
@@ -138,7 +138,7 @@ def curlrc(c):
 
 
 @task
-def locale(c, lang="en_US.UTF-8"):
+def set_locale(c, lang="en_US.UTF-8"):
     """Set system locale via localectl (default: en_US.UTF-8). Idempotent."""
     util.require_systemd()
     current = c.run("localectl status", hide=True).stdout
@@ -171,7 +171,7 @@ def disable_ipv6(c):
 
 
 @task
-def journal_size(c, max_use="500M"):
+def cap_journal_size(c, max_use="500M"):
     """Cap persistent journal size (default: 500M) and restart journald if changed."""
     util.require_systemd()
     content = f"[Journal]\nSystemMaxUse={max_use}"
@@ -190,7 +190,7 @@ def journal_size(c, max_use="500M"):
 
 
 @task
-def initramfs_compression(c, algorithm="xz"):
+def set_initramfs_compression(c, algorithm="xz"):
     """Set initramfs compression algorithm (default: xz) and rebuild if changed."""
     text = util.sudo_read(c, _INITRAMFS_CONF)
     pattern = re.compile(r"^([ \t]*#?[ \t]*COMPRESS[ \t]*=[ \t]*)(\S+)$", re.MULTILINE)
@@ -213,7 +213,7 @@ def initramfs_compression(c, algorithm="xz"):
 
 
 @task
-def dns(c, primary="1.1.1.1", secondary="1.0.0.1", fallback="8.8.8.8"):
+def configure_dns(c, primary="1.1.1.1", secondary="1.0.0.1", fallback="8.8.8.8"):
     """Configure DNS via systemd-resolved drop-in (Cloudflare + Google fallback). Idempotent."""
     util.require_systemd()
     content = f"[Resolve]\nDNS={primary} {secondary}\nFallbackDNS={fallback}\nDNSSEC=no"

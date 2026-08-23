@@ -27,7 +27,7 @@ def key_path(email: str, node: str) -> Path:
 
 
 @task
-def keys(c):
+def create_keys(c):
     """Create ed25519 SSH keys for each unique email in identity.toml (skips existing)."""
     identity = util.load_identity()
     hosts = identity.get("ssh_hosts", [])
@@ -91,7 +91,7 @@ def forward(c):
     for h in server_hosts:
         pub = Path(str(key_path(h["email"], node)) + ".pub")
         if not pub.exists():
-            print(f"[ssh] missing public key for {h['email']} — run inv ssh.keys first")
+            print(f"[ssh] missing public key for {h['email']} — run inv ssh.create-keys first")
             continue
         c.run(f'ssh-copy-id -f -i "{pub}" "{h["user"]}@{h["alias"]}"', pty=True)
 

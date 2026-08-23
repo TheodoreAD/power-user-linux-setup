@@ -204,7 +204,7 @@ def clean_cache(c):
     """Remove cargo's compressed crate-download cache (~/.local/share/cargo/registry/cache), if
     rust is installed — conservative, leaves the extracted sources and index alone (slower to
     rebuild than a plain re-download). Opt-in, not part of `inv setup`/`tools.install` — see
-    `inv cleanup.caches`. For a full wipe of the whole registry instead, see
+    `inv clean.caches`. For a full wipe of the whole registry instead, see
     `tools.clean-cache-full`.
     """
     if not _CARGO_REGISTRY_CACHE.exists():
@@ -223,7 +223,7 @@ def clean_cache_full(c):
     downloads, extracted sources, and index — if rust is installed. Safe any time — cargo
     re-fetches and re-syncs as needed; doesn't touch the installed rustc/cargo/clippy/rustfmt
     toolchain itself. Opt-in, not part of `inv setup`/`tools.install` — see
-    `inv cleanup.all-full`.
+    `inv clean.all-full`.
     """
     if not _CARGO_REGISTRY.exists():
         print("[tools.clean-cache-full] cargo registry cache not found — nothing to do")

@@ -501,13 +501,13 @@ def _stub_skills_task_helpers(monkeypatch, calls):
 
 
 def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch):
-    # ai.skills is @task-wrapped, and invoke's Task.__call__ insists its first arg be a real
+    # ai.install_skills is @task-wrapped, and invoke's Task.__call__ insists its first arg be a real
     # Context — .body is the plain underlying function, same pattern as calling any other
     # helper directly.
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.skills.body(None, yes=True)  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+    ai.install_skills.body(None, yes=True)  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
 
     assert ("perms",) in calls
     assert ("statusline",) in calls
@@ -519,7 +519,7 @@ def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_pat
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.skills.body(  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+    ai.install_skills.body(  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
         None, dir=str(tmp_path), yes=False
     )
 
@@ -534,7 +534,7 @@ def test_skills_task_with_skill_filters_and_skips_global_settings(monkeypatch):
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.skills.body(  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+    ai.install_skills.body(  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
         None, yes=True, skill="plan-docs"
     )
 
