@@ -5,7 +5,32 @@ updated: 2026-08-23
 
 ## Progress
 
-2026-08-23 — sequencing steps 1–2 done:
+2026-08-23, later the same day — **all clusters converted** (user directed continuing past the
+live-with-it window), terminology pass done, redeployed:
+
+- Final shape: **2,499 body words, 6 `##` clusters, 29 `###` trigger-named rules, 288 lines** — from
+  6,053 words / 30 flat sections / 563 lines. Well under the ~3,200–3,500 projection.
+  Provenance-sentence share by the plan's own metric: 13% → **0%** (all evidence in
+  `contributing/global-agents-md.md`).
+- Environment cluster (`## This machine & the harness`, 6 rules), Verification (4 rules — the old
+  verify-what-happened section split into its 3 real triggers, locale merged in per §7), Research &
+  design (7 rules — reuse-upstream + tool-native merged, deep-research + best-tool merged, §11
+  candidate 2 admitted as the bypass-flag clause of "Adding a CLI flag"), Collaboration & output (4
+  rules, caveman kept near-verbatim). One commit each, per sequencing step 3.
+- Terminology pass (§8): H1 renamed "Global agent instructions" (old title said "Claude Code" —
+  contradicted the file's own cross-tool rule), "plan mode" casing unified.
+- Section-inventory check (verification 2): 30 old sections → 29 rules + preamble; merges
+  reuse+tool-native, deep+best-tool, granular+incidental; splits verify→3; subagent fact → preamble.
+  No rule deleted; no rule moved to tier 2.
+- Both §11 candidates decided (clause admissions, no new sections).
+
+[UNVERIFIED: verification item 5 — live adherence over the following sessions. Do the converted
+rules (git/commit especially, now also allowlist/research/verification) still fire from the
+compressed trigger+rule form? This is the only thing keeping this plan from `landed`; regression
+here outweighs the size win and would mean re-expanding the affected rule, not reverting the
+structure.]
+
+### Earlier the same day — sequencing steps 1–2:
 
 - `contributing/global-agents-md.md` written: intro, admission criteria (§9), TOC, one section per
   rule with relocatable evidence (15 rules carry any; the rest have none recorded). Pointer preamble
