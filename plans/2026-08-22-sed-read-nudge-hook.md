@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-22
+updated: 2026-08-23
 ---
 
 ## Context
@@ -46,6 +46,49 @@ hard block would fight it.
   reuse it rather than duplicating the `settings.json`-merge logic a second time.
 - **Scope**: global (fires on every Bash call machine-wide, not just this repo) — same global-hook
   precedent as the pulse-guard design.
+
+## Second root cause, found 2026-08-23: auto mode instructs the opposite
+
+The Context section above attributes the problem entirely to `Plan`/`Explore` subagents structurally
+never loading `AGENTS.md`. There is a second, independent cause, and it reaches the **main
+session**, not just subagents: **Claude Code's auto mode injects a system-reminder that actively
+instructs the agent to prefer Bash over the dedicated tools** — the direct inverse of the
+`config/global-AGENTS.md` rule this plan exists to enforce. Observed verbatim at the start of a
+`power-user-linux-setup` session that day:
+
+> While auto mode is active: Do your work through the Bash tool wherever it can accomplish the job:
+> read files with cat, head, or sed -n, search with grep and find, and make file changes with sed,
+> heredocs, or short scripts, rather than using the dedicated Read, Edit, or Write tools. Fall back
+> to a dedicated tool only when Bash genuinely cannot do the job.
+
+It names the same four anti-patterns `global-AGENTS.md` names, and reverses each one. The session
+that observed it followed the reminder (it is a live harness directive, injected mid-conversation)
+over the standing `AGENTS.md` preference.
+
+This substantially changes the design space, so it is not just background colour:
+
+- **A nudge hook would fire near-constantly in auto mode**, because the agent is being told to do
+  the thing the hook nudges against. The "occasional legitimate `sed -n`" framing under "Confirmed
+  hook mechanics" assumed the anti-pattern is rare; under auto mode it is the instructed default.
+- **Two harness-level mechanisms would be contradicting each other**, with the hook losing on
+  ordering — the reminder is in the system prompt for the whole turn, the nudge arrives per tool
+  call. Nudging against a standing instruction is a worse position than nudging against a habit.
+- **A hook cannot be the whole fix here even in principle.** For the `Plan`/`Explore` gap a hook
+  works precisely because the rule can't reach the agent any other way; for this one the rule _does_
+  reach the agent and is _overridden_. That is a precedence problem, not a delivery problem.
+
+[NEEDS CLARIFICATION: which instruction should actually win when auto mode is active — the harness's
+own reminder, or `global-AGENTS.md`'s preference? Deliberately left open 2026-08-23 rather than
+written into `global-AGENTS.md` as a rule, since it's this plan's to decide. Worth checking first
+whether the reminder is configurable or suppressible per-project (settings, or the auto-mode
+classifier's own config) — if it is, that's a cleaner fix than either a hook or a precedence rule,
+and it removes the contradiction instead of ranking it.]
+
+[NEEDS CLARIFICATION: does the auto-mode reminder actually change the cost calculus the
+`global-AGENTS.md` rule is built on? The rule's stated reasons are allowlist-prefix friction and the
+dedicated tools having a separate permission gate from Bash. Under auto mode a background classifier
+reviews Bash calls instead of prompting interactively, so "prompt friction" may be the wrong frame
+there — worth measuring before assuming the rule's rationale survives unchanged.]
 
 ## Open questions
 
