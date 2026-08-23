@@ -12,9 +12,8 @@ This file is deliberately exactly one reference hop from `~/AGENTS.md`; don't ch
 third file (per Anthropic's skill-authoring guidance, files reached through nested references get
 partially read).
 
-Design and research behind the split (including the external evidence that oversized instruction
-files degrade adherence to _everything_ in them, and that inline narrative next to rules costs
-adherence independent of token count): `plans/2026-08-23-global-agents-md-leanness-pass.md`.
+Design and research behind the split: the "Why the deployed file is shaped this way" section below
+(extracted from the now-retired `plans/2026-08-23-global-agents-md-leanness-pass.md`).
 
 ## Admitting a new rule
 
@@ -38,6 +37,78 @@ The intake side of this — deciding whether a candidate is durable at all and w
 `AGENTS.md`, skill, plan, this file) it belongs to — is
 `plans/2026-08-22-memory-to-agents-md-migration-sweep.md`'s taxonomy; these criteria are the
 admission gate for the candidates that taxonomy routes here.
+
+## Why the deployed file is shaped this way
+
+Researched 2026-08-23 for the leanness pass that restructured the file from 30 flat sections / 6,053
+body words to 6 trigger-clustered sections of trigger-named rules. The findings that drove each
+structural choice:
+
+- **Size.** [Anthropic's CLAUDE.md guidance](https://claude.com/blog/using-claude-md-files) says
+  concise and human-readable; secondary write-ups of Anthropic engineers' practice put the working
+  limit near **200 lines / 15 rules**
+  ([XDA](https://www.xda-developers.com/your-claude-md-is-probably-wrong-how-anthropics-engineers-structure/),
+  [betterclaw](https://www.betterclaw.io/blog/agents-md-best-practices)). The load-bearing finding:
+  **bloated instruction files cause models to ignore instructions wholesale**, not selectively
+  filter the irrelevant ones ([morphllm](https://www.morphllm.com/agents-md-guide)); and
+  [Anthropic's context-engineering post](https://www.anthropic.com/engineering/effective-context-engineering-for-ai-agents)
+  — recall degrades as context grows, so aim for the minimal set that fully outlines expected
+  behavior ("minimal does not necessarily mean short"). Those numbers are review reference points,
+  not a gate — the discipline lives upstream, in the admission criteria above.
+- **Clustering.** Clear markdown section boundaries measurably improve adherence and prevent
+  "instruction bleed" between rules sharing vocabulary. Position is **not** a lever: the
+  instruction-following literature found no consistent relationship between position and follow rate
+  ([arXiv 2511.13900](https://arxiv.org/pdf/2511.13900),
+  [arXiv 2510.10276](https://arxiv.org/html/2510.10276v1)) — don't reorder for primacy/recency.
+- **Merging near-duplicates.** Conflict between overlapping instructions is a primary driver of
+  degradation as instruction count grows ([arXiv 2510.14842](https://arxiv.org/abs/2510.14842),
+  SCALEDIF) — real but modest (~4–7pp), so dedup/merge is the change most likely to improve
+  adherence, worth doing without overselling.
+- **Evidence out of the deployed file.** Instructions compete for attention with inline narrative
+  ([arXiv 2601.03269](https://arxiv.org/html/2601.03269v1)) — relocating provenance here buys
+  adherence independent of the token saving. This file exists because of that finding.
+- **What transfers from
+  [skill authoring](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices):**
+  progressive disclosure (the deployed file is the overview, this file the on-demand detail);
+  references one level deep (why this file must not chain onward — nested references get partially
+  read); a TOC for reference files over 100 lines; consistent terminology; no time-sensitive info
+  inline; concrete examples over abstract prose; degrees of freedom matched to fragility (`sudo -A`
+  is low-freedom/exact, design rules are high-freedom/heuristic); and when a rule is observed being
+  missed, **strengthen its language rather than lengthen its explanation**.
+- **Three tiers.** Tier 1, `~/AGENTS.md`: rules that can fire on any turn or whose miss is silent
+  and expensive — paid every session. Tier 2, a skill: sharp statable trigger, cheap recoverable
+  miss — kept small because skill descriptions under-trigger
+  (`plans/2026-08-22-skill-trigger-quality-review.md`). Tier 3, this file: free until read.
+
+## Re-measuring the deployed file
+
+The two commands behind every measurement in the leanness pass, so a later review compares like with
+like. Landed shape 2026-08-23: ~2,500 body words, 6 clusters, 30 rules, 294 lines, provenance share
+0%.
+
+```shell
+# per-section word count, largest first
+python3 -c "
+import re
+from pathlib import Path
+secs = re.split(r'^## ', Path('config/global-AGENTS.md').read_text(), flags=re.M)[1:]
+rows = [(len(s.split(chr(10), 1)[1].split()), s.split(chr(10), 1)[0]) for s in secs]
+for w, h in sorted(rows, reverse=True): print(f'{w:5d}  {h[:70]}')
+print(f'--- {sum(w for w, _ in rows)} words in {len(rows)} sections')
+"
+
+# share of words in provenance-bearing sentences (sentence-granularity: treat as a floor)
+python3 -c "
+import re
+from pathlib import Path
+body = re.sub(r'\`\`\`.*?\`\`\`', '', Path('config/global-AGENTS.md').read_text(), flags=re.S)
+sents = re.split(r'(?<=[.!?])\s+', body.replace(chr(10), ' '))
+prov = re.compile(r'2026-\d\d-\d\d|Confirmed|Reaffirmed|Validated|Observed as a real|Caught live|Concrete instance|Example:')
+tw = sum(len(s.split()) for s in sents)
+pw = sum(len(s.split()) for s in sents if prov.search(s))
+print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
+"
+```
 
 ## Contents
 
