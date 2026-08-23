@@ -149,6 +149,18 @@ just confirm what you'd already do, weight the ones that don't.
 - Model default: **overrides.** The modularity section above already pushes a model toward
   abstracting — without this entry, that instinct leaks into test bodies too, which is the specific
   failure this section exists to block.
+- Never run a code-mutating command as part of a test's exercised behavior unless the test's actual
+  subject is that mutation. A fix/format/autocorrect command run before the assertion silently masks
+  the exact defect a check-only equivalent would have caught. Confirmed live 2026-08-23 in
+  `scaffoldapy`: an e2e test ran `inv quality.precommit` (fixes formatting, _then_ checks) against a
+  freshly generated repo — real CI runs the check-only `inv quality.check` with no such gate, so a
+  dprint markdown-wrapping bug in the generated `README.md`/`SKILL.md` passed this test while
+  failing every generated repo's actual first CI run. Prefer the check-only/dry-run form of a
+  command in a test unless the mutation itself is under test.
+- Model default: **overrides.** A model reaches for the "full" fix-then-check invocation of a
+  quality/build tool by habit (it's the everyday command, and "make sure everything's clean" reads
+  as the safe choice) — this entry blocks that instinct in tests specifically, where it silently
+  narrows what the test can catch.
 
 ## Type hygiene
 
