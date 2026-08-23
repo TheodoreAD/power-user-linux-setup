@@ -104,7 +104,16 @@ convention actually matters for what you're asking a `Plan`/`Explore` subagent t
 Read, not `sed -n`, when viewing files"), state it explicitly in that subagent's own prompt — don't
 assume it inherits this file.
 
-## Testing a different repo's code in a multi-working-directory session
+## Testing a different repo's code in a multi-working-directory session — avoid this if at all possible
+
+Working across several projects in one session is itself the thing to avoid going forward, not just
+a source of the PATH/cwd gotchas below — it was a deliberate mistake to correct, not a fixed cost of
+doing this work. Keep a session focused on its own primary project. If a task genuinely needs
+substantial work in another repo, that's a signal it likely belongs in its own separate session, not
+a reason to build more elaborate cross-repo workarounds into this one. For the session's own primary
+project, everything should run correctly with plain commands from the project root — no `cd`, no
+absolute-path binaries, none of what follows. The rest of this section is for the unavoidable case
+only (a quick lookup or a small, genuinely-necessary cross-repo fix).
 
 When a session has more than one working directory (the "additional working directories" the system
 prompt lists) and you need to actually run/test code that lives in a _different_ one than the
@@ -117,12 +126,30 @@ to the primary project's interpreter and dependencies, not the target repo's. Co
 testing against a stale/wrong package copy (an old pinned git commit, a different version) without
 any error — it just runs, and looks like it passed.
 
-The fix: invoke the target repo's own venv binary by absolute path —
-`/path/to/other-repo/.venv/bin/pytest`, `/path/to/other-repo/.venv/bin/inv <task>` — rather than
-relying on bare-command PATH resolution after a `cd`. Confirmed directly (2026-08-22/23): running
-plain `inv`/`pytest` after `cd`-ing into a secondary repo silently exercised the primary repo's
-pinned dependency copy of a package under active development in the secondary repo, until switching
-to the absolute-path form surfaced the real, current code.
+**The fix differs by tool, and conflating the two causes a second silent failure:**
+
+- **`pytest` and anything resolving a real, `src/`-layout installed package** (importable because
+  it's actually installed into that venv's site-packages, not just sitting in the cwd): invoking the
+  target repo's own venv binary by absolute path is sufficient —
+  `/path/to/other-repo/.venv/bin/pytest`. Site-packages resolution doesn't depend on cwd, only on
+  which Python/venv is running, so the absolute-path binary alone fixes it.
+- **`inv` (invoke) — anything task-related — absolute path alone is NOT enough.** Invoke discovers
+  `tasks.py`/`tasks/` by walking up from the **current working directory**, completely independent
+  of which venv's `inv` binary you actually execute. Running
+  `/path/to/other-repo/.venv/bin/inv sometask` from the wrong cwd silently collects and runs the
+  **primary** project's own `tasks.py`/`tasks/` instead — same silent-wrong-code failure mode as the
+  PATH issue above, just one layer deeper, and the absolute-path fix that works for `pytest` does
+  nothing for it. For invoke, an actual `cd` into the target repo is required: `cd other-repo` as
+  its own Bash call (never chained with `&&`, per the allowlist guidance above — cwd persists across
+  calls, only shell state resets), then `.venv/bin/inv sometask` as a separate call in that
+  now-correct cwd, then `cd` back to the primary project's root when done.
+
+Confirmed directly (2026-08-22/23): running plain `inv`/`pytest` after `cd`-ing into a secondary
+repo silently exercised the primary repo's pinned dependency copy of a package under active
+development in the secondary repo. Confirmed again (2026-08-23), one layer deeper: even switching to
+`/path/to/other-repo/.venv/bin/inv` by absolute path, without actually changing cwd, still silently
+ran the **primary** repo's own tasks — because invoke's task discovery is cwd-based, not
+binary-path-based. The `pytest` fix and the `inv` fix are not the same fix.
 
 ## Preferred search tools
 
@@ -434,6 +461,25 @@ and `uv run` is redundant. Check `which <tool>` or the repo's `.envrc`/`AGENTS.m
 to a wrapper prefix. If a repo's `AGENTS.md` Build & test section is empty or stale, that's itself
 worth fixing (fill it in / correct it), not just working around silently — these repos' own docs
 already have the answer more often than not, if kept current.
+
+## Two `uv` traps worth checking for before designing around them
+
+Both confirmed live (2026-08-23) while building `repo-tasks`' shared-tool-list mechanism — neither
+is specific to that repo, both apply to any future `uv`-based tool-install/shared-dependency design:
+
+- **`uv tool install --with-executables-from <dep> <pkg>` only adds _extra_ console-scripts from
+  `<dep>` — it never substitutes for `<pkg>` having at least one entry point of its own.** A package
+  with zero `[project.scripts]` still fails to install as a tool ("No executables are provided by
+  package `X`; removing tool"), even when `--with-executables-from` points at a dependency that does
+  have scripts. Verify this against the real target package, not a sandboxed fixture — a fixture
+  package having its own script (even accidentally) will hide the failure.
+- **`dependency-groups` (PEP 735) are per-project, never inherited from a regular dependency.**
+  Adding a tool to package A's own dev/quality group does nothing for project B just because B
+  depends on A — dependency-groups aren't pulled in transitively the way `[project.dependencies]`/
+  extras are. A shared package that wants every consumer to pick up its own tool list needs an
+  explicit mechanism (a task that edits the consumer's own `pyproject.toml`, or a
+  `[project.optional-dependencies]` extra) — bumping the shared package's own group changes nothing
+  for anyone depending on it.
 
 ## Genuine pushback is a standing invitation, not a courtesy
 
