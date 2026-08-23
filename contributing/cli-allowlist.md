@@ -570,3 +570,34 @@ because the approver double-checked before the next `apply` ran. Fixed by adding
 directly to `cli-allowlist/rules/sed.json` — `review()` already prints `entry["note"]` inline before
 the confirm prompt (see the `review` section above), so the warning now surfaces at the moment of
 the decision itself, not only in a doc someone has to already know to open.
+
+## `inv` — deliberately unreviewed, same shape as `sed`
+
+Structurally identical to `sed` above, and worth stating separately because the trigger looks
+nothing alike. `inv` (invoke) is `no_subcommands` — one `"*"` node, classified `write`, which is a
+_correct_ verdict: `inv <task>` runs whatever the current repo's `tasks.py` defines, which can
+build, deploy, or delete. The problem isn't accuracy, it's that a machine-wide verdict for a task
+runner can't be useful — the real command surface is per-repo and changes with whatever repo you
+happen to be standing in, so there is nothing to recurse into and no child node that could ever
+correct the parent.
+
+Left reviewed, that single verdict renders a blanket `Bash(inv:*)` `ask` rule, which shadows the
+hand-maintained `Bash(inv quality.*)` `allow` rule (added for `repo-tasks`' quality namespace) by
+the same deny > ask > allow, no-specificity-tiebreak precedence documented above. Net effect: every
+`inv quality.precommit` in every repo prompts, and the allow rule that exists specifically to
+prevent that does nothing.
+
+Caught 2026-08-23 by the reviewer asking the right question — "I marked `inv` as write, does that
+mean the quality rule gets denied?" — _before_ the next `apply` ran, so the blanket rule never
+reached `settings.json`. Worth noting the answer to the literal question was "no": `write` renders
+as `ask`, never `deny` (see above), so nothing would have been blocked. It would just have prompted
+forever, which is the failure mode that gets lived with rather than noticed.
+
+Fixed the same way as `sed`: `cli-allowlist/rules/inv.json` carries `"reviewed": false` plus a
+`note` that `review()` prints inline at the confirm prompt, so the next reviewer sees why before
+deciding rather than re-approving by habit. Rules for `inv` stay hand-maintained in
+`~/.claude/settings.json` — today just `Bash(inv quality.*)` as `allow`; a genuinely impactful
+namespace worth gating gets its own explicit `ask` rule there, not a blanket one.
+
+`pytest`, registered in the same batch, needs none of this: it classified `read_only`, renders
+`Bash(pytest:*)` as `allow`, and shadows nothing.

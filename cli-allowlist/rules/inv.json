@@ -11,6 +11,7 @@
       "source": "llm"
     }
   },
+  "note": "Deliberately kept unreviewed -- do NOT mark reviewed. The write verdict is accurate but unusable: inv is flat (one \"*\" node), so it renders a blanket Bash(inv:*) ask rule that shadows the hand-maintained Bash(inv quality.*) allow rule (ask beats allow, no specificity tiebreak). A task runner's real surface is per-repo, so no machine-wide classification can be right. See contributing/cli-allowlist.md's 'inv -- deliberately unreviewed' section.",
   "reviewed": false,
   "reviewed_at": null,
   "truncated": false,
