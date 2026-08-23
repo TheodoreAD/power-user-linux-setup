@@ -76,6 +76,7 @@ def test_packages_by_method_filters_by_method_and_enabled(monkeypatch):
         },
     )
     monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "load_overrides", dict)
 
     result = util.packages_by_method(util.PackageMethod.APT)
 
@@ -94,7 +95,67 @@ def test_packages_by_method_filters_by_excluded_tags(monkeypatch):
         },
     )
     monkeypatch.setattr(util, "_excluded_tags", lambda: {"gui"})
+    monkeypatch.setattr(util, "load_overrides", dict)
 
     result = util.packages_by_method(util.PackageMethod.APT)
 
     assert set(result) == {"ripgrep"}
+
+
+def _config_with_disabled_workaround():
+    return {
+        "packages": {
+            "ripgrep": {"method": "apt", "tags": ["cli"]},
+            "chrome-x11": {"method": "wrapper-script", "enabled": False, "tags": ["gui"]},
+        }
+    }
+
+
+def test_machine_local_override_enables_a_package_disabled_in_setup_toml(monkeypatch):
+    monkeypatch.setattr(util, "load_config", _config_with_disabled_workaround)
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "load_overrides", lambda: {"chrome-x11": True})
+
+    assert set(util.enabled_packages()) == {"ripgrep", "chrome-x11"}
+
+
+def test_machine_local_override_can_also_disable_a_default_on_package(monkeypatch):
+    monkeypatch.setattr(util, "load_config", _config_with_disabled_workaround)
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "load_overrides", lambda: {"ripgrep": False})
+
+    assert set(util.enabled_packages()) == set()
+
+
+def test_excluded_tags_beat_a_machine_local_override(monkeypatch):
+    # Capability beats intent: a machine can ask for a gui package, but a container that excluded
+    # `gui` genuinely cannot run it, so the environment stays authoritative.
+    monkeypatch.setattr(util, "load_config", _config_with_disabled_workaround)
+    monkeypatch.setattr(util, "_excluded_tags", lambda: {"gui"})
+    monkeypatch.setattr(util, "load_overrides", lambda: {"chrome-x11": True})
+
+    assert set(util.enabled_packages()) == {"ripgrep"}
+
+
+def test_load_overrides_reads_enabled_flips_and_skips_unknown_packages(monkeypatch, tmp_path, capsys):
+    overrides = tmp_path / "overrides.toml"
+    overrides.write_text(
+        "[packages.chrome-x11]\nenabled = true\n"
+        "[packages.ripgrep]\ndescription = 'no enabled key, so no opinion'\n"
+        "[packages.typo-not-in-setup-toml]\nenabled = true\n"
+    )
+    monkeypatch.setattr(util, "OVERRIDES_PATH", overrides)
+    monkeypatch.setattr(util, "load_config", _config_with_disabled_workaround)
+    util.load_overrides.cache_clear()
+
+    assert util.load_overrides() == {"chrome-x11": True}
+    assert "typo-not-in-setup-toml" in capsys.readouterr().out
+    util.load_overrides.cache_clear()
+
+
+def test_load_overrides_is_empty_when_the_file_does_not_exist(monkeypatch, tmp_path):
+    monkeypatch.setattr(util, "OVERRIDES_PATH", tmp_path / "absent.toml")
+    util.load_overrides.cache_clear()
+
+    assert util.load_overrides() == {}
+    util.load_overrides.cache_clear()

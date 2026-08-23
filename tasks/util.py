@@ -30,6 +30,7 @@ PULSE_CONFIG_DIR = Path.home() / ".config" / "power-user-linux-setup"
 PULSE_STATE_DIR = Path.home() / ".local" / "state" / "power-user-linux-setup"
 
 IDENTITY_PATH = PULSE_CONFIG_DIR / "identity.toml"
+OVERRIDES_PATH = PULSE_CONFIG_DIR / "overrides.toml"
 CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 
 
@@ -253,6 +254,49 @@ def load_certs_override() -> dict:
         return cast(dict[str, Any], tomllib.load(f).get("certs", {}))
 
 
+@cache
+def load_overrides() -> dict[str, bool]:
+    """Machine-local `enabled` flips from ~/.config/power-user-linux-setup/overrides.toml, keyed by
+    package name.
+
+    setup.toml's `enabled` is the *default* for every machine that clones this repo; a package like
+    google-chrome-x11 (an NVIDIA+Wayland workaround) has to ship off for everyone while being on
+    here. This file is how one machine says otherwise, in setup.toml's own shape:
+
+        [packages.google-chrome-x11]
+        enabled = true
+
+    Deliberately out of git, and deliberately not backed up by anything here: preserving a home
+    directory is the user's own job, not this repo's. What PULSE guarantees is the stability of its
+    defaults, not of any one machine's customizations on top of them.
+
+    Only `enabled` is honoured, and only for a package setup.toml already declares — every package
+    *definition* stays in git where it can be reviewed. Tolerant of a missing file, like
+    load_proxy_override()/load_certs_override(), since the common case is a machine with no
+    overrides at all. Cached like load_identity(): unlike the proxy/certs tables this is read on
+    every enabled_packages() call, which happens many times per task run.
+    """
+    if not OVERRIDES_PATH.exists():
+        return {}
+    with OVERRIDES_PATH.open("rb") as f:
+        # `object`, not `Any`, as the value type: every field here is read back through bool()
+        # below, and Any would silently disable type checking on it.
+        raw = cast(dict[str, dict[str, object]], tomllib.load(f).get("packages", {}))
+
+    declared = load_config()["packages"]
+    overrides: dict[str, bool] = {}
+    for name, cfg in raw.items():
+        if name not in declared:
+            # A typo here would otherwise do nothing at all, silently — the whole file is
+            # unvalidated by anything else, so this is the only place it can be caught.
+            print(f"[overrides] no [packages.{name}] in setup.toml — ignoring (typo?)")
+            continue
+        enabled = cfg.get("enabled")
+        if enabled is not None:
+            overrides[name] = bool(enabled)
+    return overrides
+
+
 def load_claude_settings() -> dict:
     """Read CLAUDE_SETTINGS (~/.claude/settings.json), or {} if it doesn't exist yet."""
     return json.loads(CLAUDE_SETTINGS.read_text()) if CLAUDE_SETTINGS.exists() else {}
@@ -298,12 +342,18 @@ def enabled_packages() -> dict:
     """Every [packages.*] section that isn't disabled or excluded by PULSE_EXCLUDE_TAGS, whatever
     its method — the entry point for cross-method concerns like `config_files`, which any method
     may declare. Method-specific install tasks want packages_by_method() instead.
+
+    Precedence is setup.toml → overrides.toml → PULSE_EXCLUDE_TAGS, environment last and absolute.
+    Tags describe *capability* (no display server means a gui package genuinely cannot work), while
+    an override describes *intent* — so an excluded tag wins over a machine that asked for the
+    package, and the container/WSL profiles stay authoritative about what they can run.
     """
     excluded = _excluded_tags()
+    overrides = load_overrides()
     return {
         name: cfg
         for name, cfg in load_config()["packages"].items()
-        if cfg.get("enabled", True) and not (excluded & set(cfg.get("tags", [])))
+        if overrides.get(name, cfg.get("enabled", True)) and not (excluded & set(cfg.get("tags", [])))
     }
 
 
