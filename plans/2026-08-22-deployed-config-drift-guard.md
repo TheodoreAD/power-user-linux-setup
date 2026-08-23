@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-22
+updated: 2026-08-23
 ---
 
 ## Context
@@ -42,6 +42,32 @@ failure mode on the same day is real signal, not a hypothetical.
   than re-deriving JSON I/O, for any approach that touches Claude Code hook config.
 - `tasks/verify.py` currently verifies `wrapper-script` packages generically, by `dest` existence
   only (`_PATH_ONLY`) — it does not currently check deployed content against repo source at all.
+- **There is a _third_ deployment mechanism this plan's scope originally missed: `config_files`.**
+  Any `[packages.*]` entry, whatever its `method`, may declare
+  `config_files = [{ src = "config/<file>", dst = "~/..." }]` — currently `wezterm` and
+  `terminator`. Applied by `tasks/apt.py:_apply_config_files`, called from `apt.base` and both deb
+  installers. Two differences from `wrapper-script` that matter to any generalized design: the field
+  name is `dst`, **not** `dest` (so a lookup keyed on `dest` silently skips these packages
+  entirely), and the install-time write is **skip-if-exists**, not an unconditional overwrite — a
+  deployed `config_files` destination is _expected_ to drift, because the user owns it after first
+  install. "Deployed content != repo source" is therefore not on its own an error for this mechanism
+  the way it is for `wrapper-script`.
+
+**Prior art now in-repo, added 2026-08-23** (`inv system.configs`, `tasks/system.py`, tests in
+`tests/test_system.py`): Approach B's diff already exists for the `config_files` mechanism, and it
+does fix rather than only report. It resolves each declared mapping, compares deployed against
+source, and either reports a match, creates a missing destination without prompting, or prints a
+unified diff and asks before overwriting. `--name <pkg>` scopes it, `-y`/`--yes` skips the prompt,
+`PULSE_DRY_RUN=1` reports without writing. Whoever picks this plan up should treat it as the
+reference implementation of B's diff half and extend/unify with it rather than writing a second,
+parallel deployed-vs-source comparison.
+
+[DECISION: an interactive, human-invoked drift fixer defaults to _not_ overwriting — prompt is on by
+default, answers no on empty input, and `-y`/`--yes` skips it, matching apt/dnf rather than an
+opt-in `--confirm`. `util.confirm()` returns its default when stdin isn't a terminal, so a piped or
+CI run without `-y` skips the overwrite instead of clobbering unattended. Chosen over an
+auto-sync-on-detect design because the deployed file is the one carrying the edit that would be
+lost, so the diff has to be seen by a human before it's discarded.]
 
 **Confirmed Claude Code hook mechanics** (verified against live docs this session, relevant to any
 approach involving a Claude Code hook specifically — not relevant to a pure `inv verify.all`
@@ -81,13 +107,24 @@ already uses for "Update skill?"), or only report/fail and leave the human to di
 Note this re-opens a question that was already answered _for the real-time hook case specifically_ —
 no auto-copy, ever, because the PULSE repo could be mid-edit when an agent triggers the hook
 mid-session. That rationale is weaker for a deliberate, human-invoked "check for drift now" moment —
-worth deciding fresh rather than assuming the earlier answer transfers.]
+worth deciding fresh rather than assuming the earlier answer transfers. **Narrowed 2026-08-23:** the
+deliberate human-invoked half now has a shipped answer in `inv system.configs` (yes, it fixes;
+diff-then-confirm, prompt defaults to no — see the `[DECISION:]` above). What's still open is
+whether a check running inside `verify.all` should offer the same thing, or stay strictly
+report-only because it runs as part of a broader batch nobody is watching closely.]
 
 [NEEDS CLARIFICATION: scope — just `~/AGENTS.md`, or generalize to every `wrapper-script`-deployed
 package (`askpass-zenity`, etc.) plus PULSE-authored skill directories under `~/.agents/skills/`?
 Recommend generalizing (the underlying mechanism is generic either way — iterate
 `util.packages_by_method(util.PackageMethod.WRAPPER_SCRIPT)` for the first kind,
-`.pulse-source`-marked dirs for the second) but flagging since it's not forced by anything above.]
+`.pulse-source`-marked dirs for the second) but flagging since it's not forced by anything above.
+**Extended 2026-08-23:** `config_files` destinations are a third kind, reachable via the new
+`util.enabled_packages()` (method-agnostic, since any method may declare the field). Whether they
+belong in the same check at all is a genuine question, not a given: unlike `wrapper-script`, their
+install-time write is skip-if-exists, so drift there is the expected steady state rather than a
+warning sign — a check that flags them the same way would cry wolf on every `config_files` package
+the user has ever customized. Options are excluding them, or reporting them in a separate,
+informational "your local copy differs, `inv system.configs` would overwrite it" tier.]
 
 ## Recommended direction
 
