@@ -101,6 +101,27 @@ inline. Any future friction about _how_ a plan should be retired belongs in `pla
 rationale file, not here — this skill only needs to remember to hand off, not to re-derive the
 answer.
 
+## Why a mid-restructure destination routes to the plan, not the file
+
+The routing filters answer "which file owns this?" and silently assume that file is in a steady
+state. Confirmed as a gap 2026-08-23: two cross-repo rules routed cleanly to `~/AGENTS.md` by the
+filters, but `plans/2026-08-23-global-agents-md-leanness-pass.md` was mid-flight against that exact
+file — cutting it from 30 sections on the finding that oversized instruction files degrade adherence
+_wholesale_, and adding admission criteria (state a trigger, don't duplicate, evidence to a tier-3
+rationale doc) precisely to control what gets in. Appending two new sections would have been
+correctly routed and wrong anyway: it bypasses criteria written to stop that, adds to a file being
+measured as it shrinks, and lands in a tree another session is editing.
+
+The resolution generalizes past `~/AGENTS.md`. Any destination can be under an open plan reshaping
+it, and in that window the plan — not the file — is what owns admissions. Recording the candidate as
+a `[NEEDS CLARIFICATION: ...]` with its trigger stated (the `plan-docs` tag vocabulary) keeps it in
+the same backlog grep as everything else that plan must decide, so it is judged in context rather
+than discovered later as an anomaly in the diff.
+
+Worth noting what this does _not_ license: parking a candidate in a plan is not a way to avoid
+deciding. It applies only when a plan genuinely owns the destination's shape right now. Absent that,
+the ordinary filters stand and the content goes in the file.
+
 ## Why the self-update mechanism exists
 
 A convention skill that only ever gets read, never revised by what actually happens when it's used,

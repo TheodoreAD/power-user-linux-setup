@@ -69,6 +69,16 @@ considered and rejected).
      file" was folded into "Verify what actually happened, not what output looks like" — which
      already covered clean-stdout-vs-exit-code and test-suite-vs-throwaway-script, both the same
      "the convenient surface signal isn't the real signal" shape.
+   - **Destination mid-restructure → the plan reshaping it, not the file.** When a candidate's
+     correct home is currently the subject of an open `plans/*.md` that is reshaping it — especially
+     one that defines its own criteria for what may be added — record the candidate _in that plan_,
+     as a `[NEEDS CLARIFICATION: ...]` item stating its trigger, rather than appending to the file.
+     Appending bypasses the criteria that plan exists to enforce, risks the addition being
+     restructured away unread, and conflicts with whatever session is doing the restructuring.
+     Applies to any destination with an open plan owning its shape, not just `~/AGENTS.md`. Resolved
+     2026-08-23: two cross-repo rules routed to `~/AGENTS.md` while
+     `plans/2026-08-23-global-agents-md-leanness-pass.md` was actively cutting it from 30 sections
+     and adding admission rules of its own; both were parked in that plan's §11 instead of appended.
    - **Already covered → skip.** If an existing memory file or doc already says this, don't write a
      duplicate — check first.
    - **Meta-conventions about how to build things in this ecosystem (e.g. "skills should do X by
