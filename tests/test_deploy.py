@@ -8,6 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
+from invoke import Exit
 
 from tasks import deploy, util
 
@@ -423,3 +424,140 @@ def test_a_managed_path_is_absolute_even_when_setup_toml_uses_a_tilde(tmp_path, 
     (path,) = deploy.managed_paths(tmp_path)
 
     assert path == Path.home() / ".local" / "bin" / "x"
+
+
+# ---------------------------------------------------------------------------
+# inv deploy.status
+# ---------------------------------------------------------------------------
+
+# deploy.status is @task-wrapped and invoke's Task.__call__ insists its first arg be a real
+# Context — .body is the plain underlying function, same pattern as tests/test_ai.py.
+_status = deploy.status.body  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+
+
+@pytest.fixture
+def wrapper_pkg(tmp_path, src, monkeypatch):
+    """One wrapper-script package deploying config/app.conf, with the registry stubbed to it."""
+    dest = tmp_path / "home" / "app.conf"
+    _stub_config(
+        monkeypatch,
+        {"app": {"method": "wrapper-script", "dest": str(dest), "content_file": "config/app.conf"}},
+    )
+    return dest
+
+
+def _entry(path) -> deploy.Managed:
+    """The registry entry for `path`, asserted present — lookup() is Managed | None."""
+    m = deploy.lookup(path)
+    assert m is not None
+    return m
+
+
+def test_status_never_writes_or_prompts(wrapper_pkg, monkeypatch):
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("status must not prompt"))
+    monkeypatch.setattr(deploy, "_write", lambda _: pytest.fail("status must not write"))
+
+    _status(None)
+
+    assert not wrapper_pkg.exists()
+
+
+def test_status_reports_a_clean_path_without_a_diff(wrapper_pkg, capsys):
+    deploy.deploy(_entry(wrapper_pkg))
+    capsys.readouterr()
+
+    _status(None)
+
+    out = capsys.readouterr().out
+    assert "ok" in out
+    assert "+++" not in out
+
+
+def test_status_shows_the_diff_and_warns_for_a_dirty_managed_path(wrapper_pkg, capsys):
+    deploy.deploy(_entry(wrapper_pkg))
+    wrapper_pkg.write_text("hand-edited\n")
+    capsys.readouterr()
+
+    _status(None)
+
+    out = capsys.readouterr().out
+    assert "edited since PULSE deployed it" in out
+    assert "-hand-edited" in out
+    assert "isn't in this repo" in out
+
+
+def test_status_doesnt_warn_about_a_seeded_path_that_differs(tmp_path, src, monkeypatch, capsys):
+    dst = tmp_path / "home" / "app.conf"
+    dst.parent.mkdir(parents=True)
+    dst.write_text("customized by the user\n")
+    _stub_config(
+        monkeypatch,
+        {"app": {"method": "archive", "config_files": [{"src": "config/app.conf", "dst": str(dst)}]}},
+    )
+
+    _status(None)
+
+    out = capsys.readouterr().out
+    assert "no record of deploying it" in out
+    assert "isn't in this repo" not in out
+
+
+def test_status_name_scopes_to_one_package(tmp_path, src, monkeypatch, capsys):
+    _stub_config(
+        monkeypatch,
+        {
+            "app": {"method": "wrapper-script", "dest": str(tmp_path / "a"), "content_file": "config/app.conf"},
+            "other": {"method": "wrapper-script", "dest": str(tmp_path / "b"), "content_file": "config/app.conf"},
+        },
+    )
+
+    _status(None, name="app")
+
+    out = capsys.readouterr().out
+    assert "app:" in out
+    assert "other:" not in out
+
+
+def test_status_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeypatch):
+    _stub_config(monkeypatch, {})
+
+    with pytest.raises(Exit, match="no enabled"):
+        _status(None, name="nonexistent")
+
+
+def test_status_path_reports_an_unmanaged_file_as_not_deployed(tmp_path, monkeypatch, capsys):
+    _stub_config(monkeypatch, {})
+    stray = tmp_path / "hand-written.conf"
+    stray.write_text("mine\n")
+
+    _status(None, path=str(stray))
+
+    out = capsys.readouterr().out
+    assert "not deployed by PULSE" in out
+    assert "[packages.*]" in out
+
+
+def test_status_path_distinguishes_a_block_owned_file_from_an_unmanaged_one(tmp_path, monkeypatch, capsys):
+    # ~/.zshrc is not a deploy destination, but util.ensure_block writes marked regions into it —
+    # calling that "not deployed by PULSE, an edit lives only on this machine" is wrong, and wrong
+    # in exactly the message meant to teach.
+    _stub_config(monkeypatch, {})
+    zshrc = tmp_path / ".zshrc"
+    zshrc.write_text(f"export FOO=1\n{util._marker('nvm', open_=True)}\nnvm stuff\n")
+
+    _status(None, path=str(zshrc))
+
+    out = capsys.readouterr().out
+    assert "PULSE-managed block" in out
+    assert "not deployed by PULSE" not in out
+
+
+def test_status_path_reports_a_managed_file_with_its_source(wrapper_pkg, capsys):
+    deploy.deploy(_entry(wrapper_pkg))
+    capsys.readouterr()
+
+    _status(None, path=str(wrapper_pkg))
+
+    out = capsys.readouterr().out
+    assert "config/app.conf" in out
+    assert "managed" in out

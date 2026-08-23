@@ -29,7 +29,9 @@ from functools import cached_property
 from pathlib import Path
 from typing import Any, cast
 
-from . import util
+from invoke import Exit, task
+
+from . import ui, util
 
 _REPO_ROOT = Path(__file__).parent.parent
 
@@ -395,3 +397,118 @@ def deploy(m: Managed, *, assume_yes: bool = False, manifest: dict[str, dict] | 
     record(m, _write(m))
     print(f"[deploy] {m.package}: overwrote {m.path}")
     return Action.UPDATED
+
+
+# ---------------------------------------------------------------------------
+# Tasks
+# ---------------------------------------------------------------------------
+
+_SUMMARY = {
+    State.ABSENT: "not deployed yet",
+    State.CLEAN: "ok",
+    State.STALE: "source has changed since it was deployed",
+    State.DIRTY: "edited since PULSE deployed it",
+    State.UNKNOWN: "differs, and PULSE has no record of deploying it",
+}
+
+
+def _needs_attention(m: Managed, state: State) -> bool:
+    """Whether a state is a problem worth surfacing, as opposed to normal. Only MANAGED paths
+    qualify: a SEEDED destination that differs is the user's own customization, which is what
+    that mechanism is for — flagging it would cry wolf on every config the user has ever touched.
+    """
+    return m.policy == Policy.MANAGED and state in (State.DIRTY, State.UNKNOWN)
+
+
+def _scoped(name: str | None, base: Path | None = None) -> list[Managed]:
+    entries = [m for m in managed_paths(base).values() if name is None or m.package == name]
+    if name is not None and not entries:
+        raise Exit(f"[deploy] no enabled [packages.{name}] section deploys anything into your home directory")
+    return entries
+
+
+@task(
+    help={
+        "name": "Only report paths declared by this [packages.*] section, e.g. claude-global-md.",
+        "path": "Report on one path instead of the whole registry — including whether PULSE deploys it at all.",
+    }
+)
+def status(c, name=None, path=None):
+    """Report every path this repo deploys under ~, and whether it still matches its repo source.
+
+    Strictly read-only: never writes, never prompts, never fixes. `inv deploy.sync` is the repair
+    path. A path that differs from what PULSE last wrote there is shown with its full diff, since
+    that content only exists at the destination — it has not reached the repo, and the next
+    redeploy is what would discard it.
+
+    Pass --path to ask about one specific file, whether or not this repo deploys it: the answer for
+    an unmanaged path ("not deployed by PULSE") is as useful as the answer for a managed one, and
+    is the thing to check before assuming an edit under ~ will survive.
+    """
+    if path is not None:
+        _status_one(Path(path).expanduser())
+        return
+
+    entries = _scoped(name)
+    manifest = load_manifest()
+    attention: list[Managed] = []
+
+    for m in entries:
+        state = classify(m, manifest)
+        print(f"[deploy] {m.package}: {m.path} — {_SUMMARY[state]}")
+        if _needs_attention(m, state):
+            attention.append(m)
+            print(diff(m))
+
+    if attention:
+        ui.warn(
+            f"{len(attention)} deployed file(s) hold content that isn't in this repo.",
+            "The next `inv tools.install` / `inv ai.skills` would ask before overwriting, but the "
+            "edit still only exists under ~ until it's ported back:",
+            *(f"  {m.path}  ->  {m.source}" for m in attention),
+            "Port each edit into its repo-side source, or run `inv deploy.sync` to discard it.",
+        )
+
+
+def _has_pulse_block(target: Path) -> bool:
+    """Whether a file the registry doesn't own nonetheless carries a PULSE-written block.
+
+    util.ensure_block writes marker-delimited regions into files the *user* owns (~/.zshrc,
+    ~/.zshenv, ~/.ssh/config, /etc/sysctl.conf, ...). Those aren't deploy destinations and this
+    module never writes them — but reporting one as "not deployed by PULSE, an edit to it lives
+    only on this machine" would be actively wrong, since re-running the task that wrote the block
+    rewrites that region. Both marker styles embed the same "PULSE::" tag, so one scan covers both.
+    """
+    try:
+        return "PULSE::" in target.read_text()
+    except (OSError, UnicodeDecodeError):
+        return False
+
+
+def _status_one(target: Path) -> None:
+    m = lookup(target)
+    if m is None and _has_pulse_block(target):
+        print(f"[deploy] {target}: not a deploy destination, but contains a PULSE-managed block")
+        ui.note(
+            f"{target} is yours — PULSE only owns the marked `PULSE::<name>` region(s) inside it, "
+            "written by util.ensure_block (inv zsh.configure, ssh.configure, certs.*, proxy.*, "
+            "system.*). Re-running the task that wrote a block rewrites that region and leaves the "
+            "rest of the file untouched.",
+            "Content outside those markers is never deployed, tracked, or restored by this repo.",
+        )
+        return
+    if m is None:
+        print(f"[deploy] {target}: not deployed by PULSE")
+        ui.note(
+            f"{target} isn't declared in setup.toml, so nothing here deploys, tracks, or restores "
+            "it — an edit to it lives only on this machine.",
+            "To bring it under PULSE, add a [packages.*] entry declaring it: `content_file` (with "
+            'method = "wrapper-script") for a file this repo should own outright, or a '
+            "`config_files` mapping for one PULSE seeds once and you own afterwards.",
+        )
+        return
+
+    state = classify(m)
+    print(f"[deploy] {m.package}: {m.path} — {_SUMMARY[state]} (source: {m.source}, {m.policy})")
+    if state in (State.DIRTY, State.UNKNOWN, State.STALE):
+        print(diff(m))
