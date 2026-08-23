@@ -216,7 +216,7 @@ The three mechanisms differ in one real way, and it is not the write itself:
   source to port it into.
 - `SEEDED` — `config_files`. PULSE seeds the file once; the user owns it afterwards. `DIRTY` is the
   **expected steady state**. Message is informational: _your copy differs from `config/wezterm.lua`;
-  `inv deploy.sync --name wezterm` would overwrite it._ Never a warning, never a `verify.all`
+  `inv deploy.all --name wezterm` would overwrite it._ Never a warning, never a `verify.all`
   failure.
 
 [DECISION: the policy is a severity/messaging distinction on a shared classification, not a
@@ -235,7 +235,7 @@ on every customized config. The manifest removes that constraint: `SEEDED` + `DI
   expressed as the `SEEDED` policy rather than an unconditional `if not dst.exists()`, so a
   first-install on a machine where the file already exists is _reported_ instead of silently
   skipped.
-- `system.py:_deploy_config_file` → deleted; `system.configs` becomes `deploy.sync` (§5).
+- `system.py:_deploy_config_file` → deleted; `system.configs` becomes `deploy.all` (§5).
 - `ai.py:_install_local_skill` → keeps its `.pulse-source`/`_dir_digest` logic, but reports through
   the same `State` vocabulary and records to the same manifest, so `deploy.status` covers skills
   without a second scan. Its existing `ui.ask()` prompt stays as the `DIRTY`/`STALE` prompt for
@@ -252,14 +252,14 @@ byte-level write is not.]
 `inv deploy.status` — read-only. Every registry entry, its state, and for `DIRTY` the diff. Never
 writes, never prompts, honors `--name`. This is the "what happened / what should I do" surface.
 
-`inv deploy.sync` — the repair path. Same flags as today's `system.configs` (`--name`, `--yes`),
-same interactive contract.
+`inv deploy.all` — the repair path. Same flags as today's `system.configs` (`--name`, `--yes`), same
+interactive contract.
 
-[DECISION: `inv system.configs` (landed 2026-08-23) is renamed and generalized into
-`inv
-deploy.sync` rather than kept alongside. It is the same operation with a narrower registry, and
-keeping both would restore the exact duplication this plan exists to remove. Two extra reasons:
-`configs` is _already_ a top-level namespace imported from `repo-tasks` in `tasks/__init__.py`, so
+[DECISION: `inv system.configs` (landed 2026-08-23) is renamed and generalized into `inv
+deploy.all`
+rather than kept alongside. It is the same operation with a narrower registry, and keeping both
+would restore the exact duplication this plan exists to remove. Two extra reasons: `configs` is
+_already_ a top-level namespace imported from `repo-tasks` in `tasks/__init__.py`, so
 `inv configs.*` and `inv system.configs` currently coexist as unrelated things; and the task no
 longer deals only with the `config_files` mechanism, so its name would be actively wrong. This is a
 one-day-old task in a single-user repo — cheap to rename now, expensive later. Reversible on
@@ -277,7 +277,7 @@ to skill dirs and `config_files`. `MANAGED` + (`DIRTY` | `UNKNOWN`) fails, consi
 [DECISION: read-only inside `verify.all` — it never prompts and never fixes. The user's stated
 aversion is to auto-_mutating_ tracked artifacts, which a report doesn't do; and `verify.all` runs
 inside `inv setup` as part of a batch nobody is watching line by line, which is the wrong moment to
-ask a destructive question. `deploy.sync` is the deliberate, human-invoked moment for that.]
+ask a destructive question. `deploy.all` is the deliberate, human-invoked moment for that.]
 
 ### 7. Unattended paths — the one real regression risk
 
@@ -312,9 +312,9 @@ is already in sync, which this one currently is for every `MANAGED` path.
   overwritten" sentence — it is no longer true once §4 lands.
 - `AGENTS.md`'s "Deployed dotfiles are generated" redeploy table: `inv system.configs` →
   `inv
-deploy.sync`, and the `content_file` row gains it too (`inv tools.install` deploys;
+deploy.all`, and the `content_file` row gains it too (`inv tools.install` deploys;
   `inv
-deploy.sync` repairs).
+deploy.all` repairs).
 - `docs/configuration.md`: note that `wrapper-script` and `config_files` destinations differ in
   ownership policy, not just in field name.
 
@@ -356,7 +356,7 @@ Five steps, each independently committable and independently useful:
 1. **`tasks/deploy.py` + manifest + tests**, wired to nothing. Pure addition, no behavior change.
 2. **`inv deploy.status`** — read-only. Immediately answers "what's drifted on this machine right
    now" and validates the classifier against reality before anything can overwrite.
-3. **`inv deploy.sync`**, absorbing `system.configs` (+ the `AGENTS.md` table update). Repair path
+3. **`inv deploy.all`**, absorbing `system.configs` (+ the `AGENTS.md` table update). Repair path
    available before any writer changes behavior.
 4. **Convert the writers** (`tools.py`, `apt.py`, `ai.py`) + the `--yes` wiring on unattended paths.
    This is the step that actually closes the loss window, and the one carrying §7's risk — land it

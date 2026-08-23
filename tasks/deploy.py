@@ -381,7 +381,7 @@ def deploy(m: Managed, *, assume_yes: bool = False, manifest: dict[str, dict] | 
     if m.policy == Policy.SEEDED:
         print(
             f"[deploy] {m.package}: {m.path} differs from {m.source} — yours to own, leaving it "
-            f"alone (`inv deploy.sync --name {m.package} --yes` would overwrite it)"
+            f"alone (`inv deploy.all --name {m.package} --yes` would overwrite it)"
         )
         return Action.LEFT_ALONE
 
@@ -436,7 +436,7 @@ def _scoped(name: str | None, base: Path | None = None) -> list[Managed]:
 def status(c, name=None, path=None):
     """Report every path this repo deploys under ~, and whether it still matches its repo source.
 
-    Strictly read-only: never writes, never prompts, never fixes. `inv deploy.sync` is the repair
+    Strictly read-only: never writes, never prompts, never fixes. `inv deploy.all` is the repair
     path. A path that differs from what PULSE last wrote there is shown with its full diff, since
     that content only exists at the destination — it has not reached the repo, and the next
     redeploy is what would discard it.
@@ -466,7 +466,7 @@ def status(c, name=None, path=None):
             "The next `inv tools.install` / `inv ai.skills` would ask before overwriting, but the "
             "edit still only exists under ~ until it's ported back:",
             *(f"  {m.path}  ->  {m.source}" for m in attention),
-            "Port each edit into its repo-side source, or run `inv deploy.sync` to discard it.",
+            "Port each edit into its repo-side source, or run `inv deploy.all` to discard it.",
         )
 
 
