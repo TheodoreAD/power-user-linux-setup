@@ -219,6 +219,16 @@ precondition on the whole document, not a footnote inside the allowlist section.
 Principle stated once; `cd`, scoping flags, chaining, `bash -c`, and parallel-means-separate-calls
 become one line each.
 
+**Overlap, read before rewriting these:** `plans/2026-08-23-cross-directory-command-execution.md`
+found that three of these paragraphs are factually wrong, not merely verbose — cwd does **not**
+persist between Bash tool calls (so the prescribed "`cd` as its own call, then `cd` back" cannot
+work), and the scoping flags the text discourages are what actually works.
+`plans/2026-08-22-compound-command-permission-audit.md` separately contradicts the
+`cd x && git status` prefix-matching claim in the same passage. Collapsing these to one line each
+without correcting them would bake the errors in more compactly, so this section's rewrite should
+take the corrections rather than only shortening. That plan is `blocked on` this one precisely to
+avoid two passes editing the same paragraphs.
+
 ### 7. Merge the pairs that already cross-reference each other
 
 reuse-upstream + tool-native; granular-commits + incidental-lint-fixes; verify-what-happened + the
