@@ -29,7 +29,14 @@ considered and rejected).
      does not get a memory entry. Check whether the relevant `plans/YYYY-MM-DD-*.md` already
      captures it; if the repo uses `plan-docs` and it doesn't, say so and offer to create/update the
      plan file instead of saving to memory. Memory has no retirement mechanism, so a plan snapshot
-     parked there would just rot silently — `plans/` already owns that lifecycle.
+     parked there would just rot silently — `plans/` already owns that lifecycle. **If a plan file
+     already exists but its `status` is now stale** (e.g. `planned`/`in-progress` when the session
+     just finished landing and verifying the work), invoke the `plan-docs` skill directly to apply
+     its own status-bump/retirement procedure — don't improvise an `AskUserQuestion` about whether
+     to retire it. Confirmed as friction 2026-08-23: asked the user a retirement judgment call that
+     `plan-docs`'s own "Retiring a plan" section already answers (default: preserve unless the
+     rationale is already covered elsewhere in the repo); the user's correction was "why isn't the
+     plan docs skill kicking in?"
    - **Repo-specific durable knowledge → `AGENTS.md`/`docs/`/`contributing/`, never memory.** Use
      this split, not a flat "put it in AGENTS.md":
      - `AGENTS.md` (or equivalent instructions file) — only operating instructions an agent needs on

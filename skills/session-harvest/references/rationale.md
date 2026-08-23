@@ -85,6 +85,22 @@ to catch everything durable _before_ it reached memory — this just makes expli
 over should be rare and genuinely temporary (a deadline, a hold-off note), not a quieter version of
 the same "personal preference" content the cross-repo filter already redirects to `~/AGENTS.md`.
 
+## Why plan lifecycle decisions defer to `plan-docs` instead of a session-harvest judgment call
+
+The plan-specific routing filter's original wording ("check whether the relevant plan file already
+captures it") only covered the case of content with no plan file yet — it said nothing about a plan
+file that already exists but has drifted stale (marked `planned` when the work has since landed).
+Confirmed as a real gap 2026-08-23: mid-harvest, a plan for a just-landed feature was still marked
+`status: planned`, and rather than invoking `plan-docs` to apply its own documented retirement
+procedure, an ad hoc `AskUserQuestion` was raised asking whether to retire it — duplicating a
+decision tree (`plan-docs`'s "Retiring a plan": default preserve, migrate rationale if not already
+covered elsewhere, commit-then-delete) that already existed and already had a considered default.
+The user's correction — "why isn't the plan docs skill kicking in?" — was exactly right: session-
+harvest's job is to _notice_ the drift and route it, not to reinvent `plan-docs`'s own procedure
+inline. Any future friction about _how_ a plan should be retired belongs in `plan-docs`'s own
+rationale file, not here — this skill only needs to remember to hand off, not to re-derive the
+answer.
+
 ## Why the self-update mechanism exists
 
 A convention skill that only ever gets read, never revised by what actually happens when it's used,
