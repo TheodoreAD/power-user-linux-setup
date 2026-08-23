@@ -64,6 +64,37 @@ parent directory that holds every repo as a sibling), while `blocked on <reason>
 statement of _why work is currently stalled_, which may or may not be about a cross-repo dependency
 at all. Optional, omitted by default — most plans are single-repo and gain nothing from it.
 
+## Tag vocabulary
+
+The `status` field describes a whole file. The five inline tags describe individual _claims_ inside
+it, and they exist for one concrete reason: without them, retiring a plan means re-reading it and
+judging every passage, and the thing that gets missed is unfinished work. Discovered by measuring
+rather than by reasoning — auditing one real repo's five `landed` plans found **three** carrying
+live unfinished work inside files the retirement procedure ends by deleting. `[DEFERRED:]` and
+`[UNVERIFIED:]` turn that from a reading task into a gate that blocks.
+
+`[NEEDS CLARIFICATION: ...]` came from GitHub Spec Kit and predates the rest. The other four extend
+its shape rather than introducing a second one — Spec Kit has no other inline semantic marker, so
+there was no upstream vocabulary to adopt wholesale.
+
+**Naming.** `PITFALL` over `GOTCHA`, which is too informal for a doc that outlives the session, and
+over `WARNING`/`CAUTION`, since GitHub markdown alerts already own `[!WARNING]`/`[!CAUTION]` and
+would muddy both the semantics and the grep. `CAVEAT` was the runner-up, rejected because a caveat
+_qualifies a claim_ whereas these entries are traps someone actually fell into. `FOOTGUN` was
+considered and rejected as too casual.
+
+**Why line-anchored.** Found by piloting: a bare `rg '\[DEFERRED:'` also matches prose _mentions_ of
+a tag, so the document defining the convention reports the largest backlog in the repo. Requiring
+tags to open their own line, and anchoring the pattern, took false positives to zero on the pilot
+repo. This is the cost of choosing a bracketed marker over something syntactically rarer — worth
+paying for consistency with the existing Spec Kit marker.
+
+**Why not more tags.** Vocabulary size trades against consistency of use, and inconsistent tags are
+strictly worse than no tags: the greps still return results, so they get trusted while being
+incomplete. Related, `[VERIFIED:]` is deliberately absent — it is a landed plan's default state, so
+it would tag nearly every paragraph. Its absence is the signal instead, which costs nothing to
+check.
+
 ## Retirement, not archiving
 
 Architecture Decision Records, Python PEPs, and Rust RFCs all use an explicit status field — and all
@@ -223,6 +254,13 @@ were rejected where they didn't fit a personal/small-team, poly-repo, single-mac
   chat scratchpad) rather than inside Spec Kit's own tracked files at all — a gap this design closes
   by giving `idea` its own status and section template inside the same file, rather than punting
   ideation to a second system.
+- **Conventional Comments** — [conventionalcomments.org](https://conventionalcomments.org/) — a
+  closed label set plus free text (`<label> [decorations]: <subject>`) for code-review comments,
+  with machine-parseability as an explicit goal. The direct precedent for this design's inline tag
+  vocabulary: a small fixed set of labels, each signalling intent, prefixed so both a human skimming
+  and a grep can pick them out. Its labels themselves (`praise`, `nitpick`, `suggestion`, `issue`,
+  `question`, `thought`, `chore`) are review-flow concepts and don't transfer — a plan file needs
+  lifecycle concepts instead — but the shape and the "seven, not twenty" restraint both do.
 - **Claude Code's own plan mode** — no persistent status convention of its own; a plan is transient
   until approved, then the plan file's job is done. Confirms there's no existing
   Anthropic-sanctioned answer to "how do I track a plan after approval" — this convention fills a

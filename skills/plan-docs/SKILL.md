@@ -35,15 +35,52 @@ updated: YYYY-MM-DD
 ```
 
 Body: `## Context` → `## Open questions` (mark each unresolved point with an inline
-`[NEEDS CLARIFICATION: ...]` tag, greppable via `rg "NEEDS CLARIFICATION" plans/`) →
-`## Recommended direction` (rough, non-prescriptive).
+`[NEEDS CLARIFICATION: ...]` tag — see "Tags" below) → `## Recommended direction` (rough,
+non-prescriptive).
+
+## Tags
+
+Five inline markers, all `[SHOUTY-WORD: text]`. They exist so the judgment calls below become greps
+instead of re-reads, and so nothing costly is lost when a file is deleted.
+
+| tag                        | means                                           | at retirement                          |
+| -------------------------- | ----------------------------------------------- | -------------------------------------- |
+| `[NEEDS CLARIFICATION: …]` | open question                                   | must be zero to leave `idea`           |
+| `[DECISION: …]`            | settled choice + why it beat the alternatives   | → `contributing/`                      |
+| `[PITFALL: …]`             | non-obvious trap, confirmed by hitting it       | → `contributing/`                      |
+| `[DEFERRED: …]`            | consciously scoped out, still wanted            | → an open plan; **blocks deletion**    |
+| `[UNVERIFIED: …]`          | designed or implemented but not actually proven | → verify or defer; **blocks `landed`** |
+
+Five is the whole vocabulary. A larger set doesn't get applied consistently, and inconsistent tags
+are worse than none — they make the greps look authoritative while being incomplete. There is
+deliberately no `[VERIFIED:]`: that is a landed plan's default state, so tagging it would mark
+everything and destroy the signal. What matters is the _absence_ of `[UNVERIFIED:`.
+
+Not bare `TODO`/`FIXME`: those collide with code comments, so `rg TODO` is useless in a repo that
+also contains source.
+
+**Tag the claim, not the section** — one tag per discrete, individually-extractable fact. A tag
+scoped to "everything below this heading" can't be migrated mechanically, which is the whole point.
+
+**A tag opens its own line**, starting a paragraph or immediately following a list marker. This is
+what makes the greps precise: an unanchored `rg '\[DEFERRED:'` also matches every prose _mention_ of
+a tag, so any document discussing the convention reports a false backlog. Anchor them:
+
+```shell
+rg '^\s*[-*]?\s*\[DEFERRED:' plans/          # the repo's whole backlog, no file opened
+rg '^\s*[-*]?\s*\[NEEDS CLARIFICATION:' plans/<file>.md
+```
+
+Tagging is required at status transitions, not while drafting — those are the moments someone is
+already reading the file closely. Retrofit a repo's existing plans in one pass rather than lazily; a
+half-tagged corpus is the failure mode above.
 
 ## Promoting a plan
 
 Promote in place, in the same file — never split into a second file for the same topic. Resolve
-every `NEEDS CLARIFICATION` marker, then bump `status` to `planned` and rewrite the body as
-`## Context` → `## Design` (numbered subsections, one per file/component touched, rationale inline)
-→ `## Files touched` → `## Verification`.
+every `NEEDS CLARIFICATION` marker (the promotion gate: that grep must come back empty), then bump
+`status` to `planned` and rewrite the body as `## Context` → `## Design` (numbered subsections, one
+per file/component touched, rationale inline) → `## Files touched` → `## Verification`.
 
 As work proceeds, bump `status` again — the sections above don't change:
 
@@ -64,30 +101,63 @@ On reaching `landed`, `abandoned`, or an old `superseded by ...`: `plans/` is a 
 empties out, not an ADR-style archive — but nothing genuinely costly to work out gets silently
 dropped either.
 
+**Triage the file's content by lifecycle first.** Split by what each passage _is_, never by how long
+the file is — a long file that is all one lifecycle stays one file, while a short one mixing several
+gets split. Most plans hold four or five distinguishable kinds:
+
+| kind               | example                                   | destination                         |
+| ------------------ | ----------------------------------------- | ----------------------------------- |
+| settled decision   | why tool X beat tool Y, with the evidence | `contributing/`                     |
+| pitfall            | a trap confirmed by hitting it            | `contributing/`                     |
+| code contract      | signatures, flags, behavior               | already in code/tests/README — drop |
+| verification log   | "ran it, it worked", dry-run transcripts  | drop, except the unverified residue |
+| **live open work** | anything still wanted but not done        | **an open plan — see step 2**       |
+
+Code contracts and verification logs are usually the bulk of the deletable volume.
+
 1. **Default: preserve.** Assume debugging, investigation, and rejected-alternative reasoning has
    future value unless it's already written down elsewhere in the repo. Often it already is — check
    `docs/*.md` before assuming new `contributing/*.md` content is needed; a plan whose design
    rationale is already fully covered in prose there needs no new file at all.
-2. Add a `## Migrated to` section naming the destination: nothing needed for pure-code changes, a
+2. **A plan carrying live unfinished work is not deletable.** Run the deletion gate —
+   `rg '^\s*[-*]?\s*\[DEFERRED:|^\s*[-*]?\s*\[UNVERIFIED:' plans/<file>.md` — and move everything it
+   finds into a plan that stays before going further. This is the "Don't stash future work in prose
+   docs" rule applied to plans themselves: a `landed` plan is the same failure mode one level up,
+   and worse, because this procedure ends in `rm`. Prefer appending the item to an existing open
+   plan that already owns the concern over spawning a new file. On an untagged legacy plan, grep
+   prose instead (`deferred|not yet|follow-up|TODO|known limitation`) and read what it finds.
+3. **Grep inbound references before starting, not after** — the count decides whether this is one
+   commit or several, and retiring a batch means rewiring a citation graph rather than fixing a
+   couple of links. Grep the **whole repo**, not just `AGENTS.md`/`docs/`/`contributing/`: code
+   comments and docstrings cite plan paths too. Match on the bare filename, not the full `plans/`
+   path — short-form references (`docker-image-tasks.md`) are easy to miss otherwise.
+4. Add a `## Migrated to` section naming the destination: nothing needed for pure-code changes, a
    `docs/*.md` link if the content is usage-facing, and/or a `contributing/<topic>.md` entry (new or
-   existing) for design rationale and gotchas — the same bucket `contributing/verify.md` and
-   `contributing/cli-allowlist.md` already use in this repo. **Commit this addition on its own,
-   before deleting the file** — add-and-delete in the same commit means the section is never
-   recorded in git history at all (the deletion commit's diff only ever shows what a _prior_ commit
-   last recorded), which defeats the entire point of writing it.
-3. Grep the **whole repo**, not just `AGENTS.md`/`docs/`/`contributing/`, for the plan's own
-   filename and fix or drop any references before they go stale — code comments and docstrings
-   (`tasks/*.py`, etc.) cite plan paths too, not only narrative docs. Don't blindly swap the old
-   path for the new one at every hit, though: a reference to a _specific quoted section title_
-   (`PLAN.md "Setup"`) needs that title updated to match wherever that content actually landed, not
-   just the path — a technically-valid path pointing at the wrong or a since-renamed heading is
-   still a dangling reference. And some cited content may already be duplicated at a third location
-   (e.g. an operational recipe that was always also written out in full in `AGENTS.md`) — point the
-   reference at that existing copy instead of migrating a second copy into `contributing/`.
-4. Delete `plans/<file>.md` — **only** once step 2 is genuinely covered. If there's any doubt
-   whether something worth keeping was actually captured, ask before deleting rather than deciding
-   unilaterally; it's a one-way door once the commit lands.
-5. Run the repo's own lint/format/test commands before committing the reference fixes — editing many
+   existing) for design rationale and pitfalls. Name what you deliberately did _not_ migrate, and
+   why. **Commit this addition on its own, before deleting the file** — add-and-delete in the same
+   commit means the section is never recorded in git history at all (the deletion commit's diff only
+   ever shows what a _prior_ commit last recorded), which defeats the entire point of writing it.
+   - Organize `contributing/` by **the question a reader arrives with**, not one file per retired
+     plan (that just reproduces each plan's own lifecycle mixing under a new name). Expect the most
+     valuable file to be one that existed in no single plan — cross-cutting conventions are usually
+     scattered across several.
+   - Before dropping anything as "already in the code," actually check it is. Verify the claims you
+     migrate, too: prose written months ago about a module drifts, and a plan is not evidence about
+     current behavior.
+5. Fix the references from step 3, then delete `plans/<file>.md` — **only** once step 4 is genuinely
+   covered. If there's any doubt whether something worth keeping was captured, ask before deleting
+   rather than deciding unilaterally; it's a one-way door once the commit lands.
+   - Don't blindly swap the old path for the new one at every hit: a reference to a _specific quoted
+     section title_ (`PLAN.md "Setup"`) needs that title updated to match wherever the content
+     actually landed — a valid path aimed at a since-renamed heading is still dangling. Some cited
+     content may already be duplicated at a third location (an operational recipe also written out
+     in `AGENTS.md`) — point at that existing copy rather than migrating a second one. And some
+     references are better rewritten than repointed: "X landed in `<plan>`" just becomes "X landed."
+   - The finishing grep should return **no live pointers**, which is not the same as zero hits.
+     Provenance legitimately survives ("extracted from the now-retired `plans/X.md`") and should —
+     but must say _retired_, so a reader knows not to go looking. Only a bare path offered as
+     somewhere to read more is dangling.
+6. Run the repo's own lint/format/test commands before committing the reference fixes — editing many
    docstrings/comments in one pass is exactly the kind of change that quietly trips a line-length
    rule or similar, and it's cheap to catch immediately rather than in a later session.
 
