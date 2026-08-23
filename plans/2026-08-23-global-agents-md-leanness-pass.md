@@ -310,6 +310,18 @@ existing `CLI flag conventions` section rather than earning its own, per the var
 rule — but that section is currently about flag _shape_ (`-y` vs a bespoke opt-in), and this is
 about whether the flag should exist at all, so the fit needs checking.]
 
+[NEEDS CLARIFICATION: **"Skills are the mainstay of directing agents — prefer teaching the agent
+what to run over mechanisms that fire behind its back."** Trigger: proposing an enforcement
+mechanism (git hook, harness hook, CI auto-fix bot) to correct a recurring agent behavior that a
+skill/instruction could teach instead. Evidence: git-hooks-for-quality-gate decision (2026-08-23,
+`plans/2026-08-23-git-hooks-for-quality-gate.md` decision-context section) — user rejected
+researched hook enforcement in favor of skill-level guidance, stating agents should _know_ what to
+run, the same standard as developers ("i've always been against companies imposing git precommit
+hooks for devs. i see no reason to treat a dev differently from an agent"). Broader than that one
+plan and outlives its retirement; routed here by `session-harvest` 2026-08-23 because ~/AGENTS.md is
+mid-restructure under this pass. May belong as a short standalone principle or a clause in whatever
+section owns "how agents get directed" after the restructure.]
+
 ## Files touched
 
 - `config/global-AGENTS.md` — restructured; the deliverable.
