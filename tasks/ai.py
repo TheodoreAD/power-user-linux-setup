@@ -68,6 +68,48 @@ def _local_skill_plan(*, present: bool, ours: bool, up_to_date: bool) -> str:
     return "update" if present else "install"
 
 
+def _selected_skill_names(skill: str | None) -> set[str] | None:
+    """Parse `--skill`'s comma-separated value into a set of names, or None when the flag wasn't
+    passed at all — None means "every declared skill", the default. Same comma-split shape as
+    util._excluded_tags. Pure, so it's unit-testable without touching a filesystem."""
+    if skill is None:
+        return None
+    return {s.strip() for s in skill.split(",") if s.strip()}
+
+
+def _entry_skill_names(entry: dict) -> list[str] | None:
+    """The skill names a setup.toml `skills` entry provides, or None when that can't be known
+    without network access.
+
+    A local entry's name is its directory's, matching what _install_local_skill installs it as. A
+    remote entry declares `names` explicitly, but may omit it to mean "every skill in that repo" —
+    only the `skills` CLI can enumerate those, so there's nothing to match against here.
+    """
+    if entry.get("source") == "local":
+        return [Path(entry["path"]).name]
+    return entry.get("names")
+
+
+def _select_entry(entry: dict, selected: set[str] | None) -> dict | None:
+    """Filter one `skills` entry against `--skill`: the entry to install, or None to skip it.
+
+    A remote entry is narrowed to just the requested names rather than installed wholesale, so
+    `--skill=a` against an entry declaring `names = ["a", "b"]` installs only `a`. An entry whose
+    names aren't knowable (see _entry_skill_names) is skipped whenever a selection is active — it
+    can't be confirmed to match, and installing it on the chance that it might would defeat the
+    point of naming one skill.
+    """
+    if selected is None:
+        return entry
+    names = _entry_skill_names(entry)
+    if names is None:
+        return None
+    matched = [n for n in names if n in selected]
+    if not matched:
+        return None
+    return entry if entry.get("source") == "local" else {**entry, "names": matched}
+
+
 def _remote_skill_label(names: list[str] | None, repo: str) -> str:
     return f"{', '.join(names) if names else 'all skills'} from {repo}"
 
@@ -173,21 +215,39 @@ def _install_remote_skill(c, entry: dict, *, label: str, yes: bool) -> None:
     print(f"[{label}] installed {desc}")
 
 
-def _install_declared_skills(c, base: Path, *, yes: bool) -> None:
+def _install_declared_skills(c, base: Path, *, yes: bool, selected: set[str] | None = None) -> None:
     """Process every `skills` list found on any setup.toml package entry, regardless of that
     entry's own `method` — same any-section pattern as zshenv/zshrc/zprofile.
+
+    `selected` (from `--skill`) narrows this to named skills only; None processes everything.
+    A selection that matches nothing raises rather than exiting quietly — a typo'd `--skill` that
+    silently did no work would look exactly like a successful refresh.
     """
+    known: set[str] = set()
+    matched = False
+
     for name, cfg in util.load_config()["packages"].items():
         if not cfg.get("enabled", True):
             continue
         for entry in cfg.get("skills", []):
-            source = entry.get("source")
+            known.update(_entry_skill_names(entry) or [])
+            chosen = _select_entry(entry, selected)
+            if chosen is None:
+                continue
+            matched = True
+            source = chosen.get("source")
             if source == "local":
-                _install_local_skill(base, entry["path"], label=name, yes=yes)
+                _install_local_skill(base, chosen["path"], label=name, yes=yes)
             elif source == "npx":
-                _install_remote_skill(c, entry, label=name, yes=yes)
+                _install_remote_skill(c, chosen, label=name, yes=yes)
             else:
                 ui.warn(f"[{name}] skills entry has unknown source {source!r} — skipping")
+
+    if selected is not None and not matched:
+        raise ValueError(
+            f"--skill matched no declared skill: {', '.join(sorted(selected))}. "
+            f"Declared: {', '.join(sorted(known)) or '(none)'}."
+        )
 
 
 def _apply_static_claude_permissions() -> None:
@@ -339,7 +399,7 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
 
 
 @task
-def skills(c, dir=None, yes=False):  # noqa: A002
+def skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
@@ -356,14 +416,23 @@ def skills(c, dir=None, yes=False):  # noqa: A002
     CI, PULSE_DRY_RUN) skips the prompt and proceeds — this never hangs a scripted run even
     without -y.
 
+    Pass --skill=<name> (comma-separated for several) to act on just those skills instead of every
+    declared one — the fast path for refreshing a skill you just edited in this repo, since an edit
+    here doesn't reach the installed copy under ~/.agents/skills until this task re-runs.
+    `inv ai.skills --skill=plan-docs -y` is the unattended one-skill form. A --skill that matches
+    nothing raises, rather than quietly doing no work and looking like a successful refresh.
+    Permissions/statusLine/Copilot are skipped for a --skill run, same as for --dir: they're global
+    settings with nothing to do with which skill was named.
+
     Defaults to the home directory (the personal, cross-project skills location). Pass --dir to
     set this up for a specific project instead — permissions/statusLine/Copilot are skipped for a
     --dir run, since those are global, user-level settings, not project-scoped.
     """
     base = Path(dir).expanduser().resolve() if dir else Path.home()
+    selected = _selected_skill_names(skill)
     _ensure_agents_skills(base, label="ai.skills")
-    _install_declared_skills(c, base, yes=yes)
-    if dir is None:
+    _install_declared_skills(c, base, yes=yes, selected=selected)
+    if dir is None and selected is None:
         _apply_static_claude_permissions()
         _apply_declared_statusline()
         _note_copilot_permissions()

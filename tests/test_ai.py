@@ -325,6 +325,63 @@ def test_install_remote_skill_dry_run_never_prompts_or_runs(monkeypatch):
 
 
 # ---------------------------------------------------------------------------
+# --skill selection — pure filtering, no filesystem
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    ("value", "expected"),
+    [
+        (None, None),
+        ("plan-docs", {"plan-docs"}),
+        ("a,b", {"a", "b"}),
+        (" a , b ", {"a", "b"}),
+        ("a,,b,", {"a", "b"}),
+        ("", set()),
+    ],
+)
+def test_selected_skill_names(value, expected):
+    assert ai._selected_skill_names(value) == expected
+
+
+def test_entry_skill_names_local_uses_directory_name():
+    assert ai._entry_skill_names({"source": "local", "path": "skills/plan-docs"}) == ["plan-docs"]
+
+
+def test_entry_skill_names_remote_uses_declared_names():
+    assert ai._entry_skill_names({"source": "npx", "repo": "o/r", "names": ["a", "b"]}) == ["a", "b"]
+
+
+def test_entry_skill_names_remote_without_names_is_unknowable():
+    # No `names` means "every skill in that repo" — only the `skills` CLI can enumerate those.
+    assert ai._entry_skill_names({"source": "npx", "repo": "o/r"}) is None
+
+
+def test_select_entry_without_selection_passes_everything_through():
+    entry = {"source": "npx", "repo": "o/r"}
+    assert ai._select_entry(entry, None) is entry
+
+
+def test_select_entry_local_match_and_miss():
+    entry = {"source": "local", "path": "skills/plan-docs"}
+    assert ai._select_entry(entry, {"plan-docs"}) is entry
+    assert ai._select_entry(entry, {"something-else"}) is None
+
+
+def test_select_entry_narrows_remote_names_to_the_requested_ones():
+    entry = {"source": "npx", "repo": "o/r", "names": ["a", "b"]}
+
+    assert ai._select_entry(entry, {"a"}) == {"source": "npx", "repo": "o/r", "names": ["a"]}
+    # the original entry is not mutated
+    assert entry["names"] == ["a", "b"]
+
+
+def test_select_entry_skips_remote_entry_whose_names_are_unknowable():
+    # Installing it on the chance it might contain the named skill would defeat --skill's point.
+    assert ai._select_entry({"source": "npx", "repo": "o/r"}, {"a"}) is None
+
+
+# ---------------------------------------------------------------------------
 # _install_declared_skills — dispatch by source, threading `yes` through
 # ---------------------------------------------------------------------------
 
@@ -355,6 +412,63 @@ def test_install_declared_skills_dispatches_by_source_and_threads_yes(monkeypatc
     assert calls == [("local", "skills/a", "pkg-a", True), ("npx", "o/r", "pkg-b", True)]
 
 
+def _stub_two_skill_packages(monkeypatch, calls):
+    monkeypatch.setattr(ai, "_install_local_skill", lambda base, path, *, label, yes: calls.append(("local", path)))
+    monkeypatch.setattr(
+        ai, "_install_remote_skill", lambda c, entry, *, label, yes: calls.append(("npx", entry.get("names")))
+    )
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {
+            "packages": {
+                "pkg-a": {"enabled": True, "skills": [{"source": "local", "path": "skills/plan-docs"}]},
+                "pkg-b": {"enabled": True, "skills": [{"source": "local", "path": "skills/db-defaults"}]},
+                "pkg-c": {"enabled": True, "skills": [{"source": "npx", "repo": "o/r", "names": ["a", "b"]}]},
+            }
+        },
+    )
+
+
+def test_install_declared_skills_selection_installs_only_the_named_skill(monkeypatch):
+    calls = []
+    _stub_two_skill_packages(monkeypatch, calls)
+
+    ai._install_declared_skills(None, Path("/base"), yes=True, selected={"plan-docs"})
+
+    assert calls == [("local", "skills/plan-docs")]
+
+
+def test_install_declared_skills_selection_narrows_a_remote_entrys_names(monkeypatch):
+    calls = []
+    _stub_two_skill_packages(monkeypatch, calls)
+
+    ai._install_declared_skills(None, Path("/base"), yes=True, selected={"a"})
+
+    assert calls == [("npx", ["a"])]
+
+
+def test_install_declared_skills_no_selection_installs_everything(monkeypatch):
+    calls = []
+    _stub_two_skill_packages(monkeypatch, calls)
+
+    ai._install_declared_skills(None, Path("/base"), yes=True)
+
+    assert len(calls) == 3
+
+
+def test_install_declared_skills_unmatched_selection_raises_and_lists_declared(monkeypatch):
+    # A typo'd --skill that silently did no work would look exactly like a successful refresh.
+    calls = []
+    _stub_two_skill_packages(monkeypatch, calls)
+
+    with pytest.raises(ValueError, match="matched no declared skill") as excinfo:
+        ai._install_declared_skills(None, Path("/base"), yes=True, selected={"plan-doc"})
+
+    assert "plan-docs" in str(excinfo.value)
+    assert calls == []
+
+
 def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
     monkeypatch.setattr(ai, "_install_local_skill", _fail_if_asked("should not install"))
     monkeypatch.setattr(ai, "_install_remote_skill", _fail_if_asked("should not install"))
@@ -376,7 +490,11 @@ def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
 
 def _stub_skills_task_helpers(monkeypatch, calls):
     monkeypatch.setattr(ai, "_ensure_agents_skills", lambda base, *, label: calls.append(("ensure", base, label)))
-    monkeypatch.setattr(ai, "_install_declared_skills", lambda c, base, *, yes: calls.append(("install", base, yes)))
+    monkeypatch.setattr(
+        ai,
+        "_install_declared_skills",
+        lambda c, base, *, yes, selected=None: calls.append(("install", base, yes, selected)),
+    )
     monkeypatch.setattr(ai, "_apply_static_claude_permissions", lambda: calls.append(("perms",)))
     monkeypatch.setattr(ai, "_apply_declared_statusline", lambda: calls.append(("statusline",)))
     monkeypatch.setattr(ai, "_note_copilot_permissions", lambda: calls.append(("copilot",)))
@@ -394,7 +512,7 @@ def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch
     assert ("perms",) in calls
     assert ("statusline",) in calls
     assert ("copilot",) in calls
-    assert any(entry[0] == "install" and entry[2] is True for entry in calls)
+    assert ("install", Path.home(), True, None) in calls
 
 
 def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_path):
@@ -408,7 +526,22 @@ def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_pat
     assert ("perms",) not in calls
     assert ("statusline",) not in calls
     assert ("copilot",) not in calls
-    assert ("install", tmp_path, False) in calls
+    assert ("install", tmp_path, False, None) in calls
+
+
+def test_skills_task_with_skill_filters_and_skips_global_settings(monkeypatch):
+    # Permissions/statusLine/Copilot are global — nothing to do with which skill was named.
+    calls = []
+    _stub_skills_task_helpers(monkeypatch, calls)
+
+    ai.skills.body(  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+        None, yes=True, skill="plan-docs"
+    )
+
+    assert ("perms",) not in calls
+    assert ("statusline",) not in calls
+    assert ("copilot",) not in calls
+    assert ("install", Path.home(), True, {"plan-docs"}) in calls
 
 
 # ---------------------------------------------------------------------------
