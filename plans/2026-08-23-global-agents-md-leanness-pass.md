@@ -1,7 +1,27 @@
 ---
-status: planned
+status: in-progress
 updated: 2026-08-23
 ---
+
+## Progress
+
+2026-08-23 — sequencing steps 1–2 done:
+
+- `contributing/global-agents-md.md` written: intro, admission criteria (§9), TOC, one section per
+  rule with relocatable evidence (15 rules carry any; the rest have none recorded). Pointer
+  preamble added to `config/global-AGENTS.md` naming the repo path and framing the rationale file
+  as a precondition for changing it.
+- **Git & commits cluster piloted**: 5 sections → `## Git & commits` with 4 trigger-named `###`
+  rules (granular-commits + incidental-lint merged per §7). 909 → 385 words; file 6,053 → 5,529
+  words, 30 → 26 top-level sections. Provenance (scaffoldapy reaffirmation) relocated.
+- Now in the live-with-it window (sequencing step 2): watch whether the git/commit rules still fire
+  over the next sessions before converting remaining clusters.
+- Deferred to their own clusters: §5 preamble promotion (Bash cluster), §6 allowlist collapse with
+  `cross-directory-command-execution` corrections (Bash cluster), §11 candidate admissions
+  (prohibition-vs-friction → Bash cluster; bypass-flag → Research & design cluster's
+  `CLI flag conventions`).
+- Note: non-Git rules' evidence now exists in both the contributing file and inline in the source —
+  deliberate transitional duplication; each cluster conversion deletes its inline copies.
 
 ## Context
 
