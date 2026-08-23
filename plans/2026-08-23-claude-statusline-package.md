@@ -1,7 +1,18 @@
 ---
-status: planned
+status: landed
 updated: 2026-08-23
 ---
+
+## Migrated to
+
+Implemented as designed below — `[packages.claude-statusline]` in `setup.toml`,
+`_apply_declared_statusline()` in `tasks/ai.py`, and the "Declaring the statusline" section in
+`docs/claude-code.md`. The design rationale (why this deliberately has no manifest/diff bookkeeping,
+unlike `_apply_static_claude_permissions()` — `statusLine` is a single scalar with one desired
+state, not a list many packages contribute to over time) lives in
+`_apply_declared_statusline()`'s own docstring, right next to the code it explains — no separate
+`contributing/*.md` entry needed. Verified: 179/179 tests pass, `quality.precommit` clean (commits
+`e0821af`/`7e019e9`/`c900ee4`).
 
 ## Context
 
