@@ -1,7 +1,29 @@
 ---
-status: blocked on plans/2026-08-23-global-agents-md-leanness-pass.md landing
+status: landed
 updated: 2026-08-23
 ---
+
+## Migrated to
+
+Absorbed by `plans/2026-08-23-global-agents-md-leanness-pass.md`'s Bash-cluster conversion
+(2026-08-23), which took this plan's corrections rather than only compressing:
+
+- **The rules** — `config/global-AGENTS.md` "Bash & the CLI allowlist", section "Running a command
+  against a different repo than the session's project": scoping flags preferred (this plan's
+  DECISION), cwd-reset stated, the chained `cd <repo> && <venv>/bin/inv` form for invoke (this
+  plan's PITFALL), the pytest/invoke distinction preserved, and the cluster intro's "a prompt is a
+  friction cost, never a prohibition" clause (from this plan's observed harm).
+- **The evidence** — `contributing/global-agents-md.md`, sections "Composing a Bash call" and
+  "Running a command against a different repo than the session's project": cwd-reset observations,
+  the exercised scoping-flag list, the inv-binary-conflict compose note, the declined-work incident.
+
+Open questions not migrated, and why: whether the cwd reset is version/config-specific, and whether
+subagents see the same reset, are both moot for guidance — the landed rules hold whether or not cwd
+persists (contributing notes the reset as observed behavior, not a universal fact). The
+audit-interaction question resolved as option (b): the prefix-matching claim was corrected in the
+same rewrite, stated conservatively; incident forensics remain with
+`plans/2026-08-22-compound-command-permission-audit.md`. The rule-vs-decision-table question
+resolved as the decision-list form now in tier 1.
 
 ## Context
 
