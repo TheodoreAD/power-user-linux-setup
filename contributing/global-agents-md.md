@@ -204,6 +204,20 @@ with no `cd`: `git -C <path> status`/`log`/`add`/`commit` (full commit workflow)
 `dprint fmt --config <path>`, `ruff check --config <path>`, `ruff format --config <path>`,
 `basedpyright --project <path>` (exit 0), and `<venv>/bin/pytest <abs path>` over a 215-test suite.
 
+Corrected 2026-08-24, a third layer: `cd <repo> && <repo>/.venv/bin/inv <task>` — the form this rule
+previously called "the only working form" — still ran the wrong tools. Invoke's tasks are thin
+wrappers around `c.run("pytest …")`, `c.run("ruff check .")`, `c.run("basedpyright")`; `c.run`
+inherits the caller's environment, so every bare tool name resolved through the **primary** repo's
+direnv-activated `.venv/bin`. The result was a phantom test failure that cost real time before the
+mismatch was spotted: the target repo's task list running the session repo's `pytest`, its
+dependencies, and its plugins. Prefixing PATH is the fix that reaches the subprocesses; pointing at
+the `inv` binary never could, because the binary's location says nothing about what its children
+resolve. Note this is the case the "Composing a Bash call" rule means by "unless the step genuinely
+needs them" — the leading env assignment is load-bearing here, and the approval prompt is the price.
+
+Not every repo has `inv` in its own venv (`scaffoldapy` did not, 2026-08-24), which is why the
+`~/.local/bin` fallback clause survives the rewrite rather than being replaced by the PATH prefix.
+
 The "bare `inv` may be either uv tool" clause: `repo-tasks` and standalone `invoke` both provide
 `inv`/`invoke` console scripts, and whichever was `--force`-installed last owns the `~/.local/bin`
 symlinks (`plans/2026-08-23-invoke-repo-tasks-tool-conflict.md`). The two `inv` failure modes

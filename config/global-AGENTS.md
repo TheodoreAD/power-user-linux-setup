@@ -141,10 +141,14 @@ in its own session. For the unavoidable quick cross-repo command:
 - Prefer the tool's own directory-scoping option (`git -C <path>`, `ruff --config <path>`,
   `basedpyright --project <path>`, the target repo's own `.venv/bin/pytest` by absolute path —
   site-packages resolve from the interpreter, not cwd) and expect a one-off prompt.
-- `inv` is the exception: invoke finds `tasks.py` by walking up from cwd, so no flag redirects it —
-  `cd <repo> && <repo>/.venv/bin/inv <task>`, chained in one call, is the only working form. The
-  `cd` supplies task discovery; the absolute venv path supplies the right dependencies and dodges
-  the ambiguity of bare `inv` (which of two uv tools owns it varies).
+- `inv` is the exception: invoke finds `tasks.py` by walking up from cwd, so no flag redirects it,
+  and its tasks shell out to bare tool names (`pytest`, `ruff`, `basedpyright`) that resolve from
+  PATH rather than from the `inv` that launched them — an absolute `<repo>/.venv/bin/inv` fixes
+  neither. `cd <repo> && PATH="<repo>/.venv/bin:$PATH" inv <task>`, chained in one call, is the
+  working form: the `cd` supplies task discovery, the PATH prefix supplies that repo's `inv` and
+  every tool underneath it. Expect a prompt — a leading env assignment matches no rule's prefix. A
+  repo with no `inv` in its own venv still falls back to `~/.local/bin`, where which of two uv tools
+  owns the name varies.
 - Never a bare `pytest`/`inv` against another repo: PATH stays the primary project's
   direnv-activated `.venv/bin` (direnv hooks don't fire in non-interactive shells), so the command
   silently runs the wrong repo's interpreter, dependencies, or tasks — and looks like it passed.
