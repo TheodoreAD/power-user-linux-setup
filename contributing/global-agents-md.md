@@ -117,6 +117,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
 - [Saving to cross-session memory](#saving-to-cross-session-memory)
 - [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
+- [Installing a tool on this machine](#installing-a-tool-on-this-machine)
 - [About to author content, config, or a workaround from scratch](#about-to-author-content-config-or-a-workaround-from-scratch)
 - [Choosing a tool or library](#choosing-a-tool-or-library)
 - [About to ask the user something factual](#about-to-ask-the-user-something-factual)
@@ -406,6 +407,21 @@ package having its own console script (even accidentally) hides it. The dependen
 consequence spelled out: bumping the shared package's own dev/quality group changes nothing for any
 project that merely depends on it, because PEP 735 groups aren't pulled in transitively the way
 `[project.dependencies]`/extras are.
+
+## Installing a tool on this machine
+
+Confirmed 2026-08-24: an agent reached for `gh extension install nektos/gh-act` and
+`curl … download-actionlint.bash | bash` to get `act` and `actionlint` onto the machine, with no
+`setup.toml` entry — the user stopped both before they ran. Both tools had maintained PyPI wrappers
+(`act-bin` 0.2.89, tracking upstream act's 0.2.x monthly releases; `actionlint-py` 1.7.12.24,
+tracking actionlint 1.7.12) that fit the existing `uv-tool` method with zero new mechanism, exactly
+as `shellcheck-py`/`shfmt-py` already did. The user's framing: "we don't install anything without
+also making a note to do it through pulse later. we can't afford to do things manually and forget
+about them later", and PyPI-first because each extra install method is permanent setup complexity.
+The rule was written and both wrappers landed in `setup.toml` in the same pass, so the "note to do
+it later" never had to exist. `[packages.dprint]` still uses `method = "script"` although
+`dprint-py` exists and `repo-tasks` already depends on it — a candidate for the same treatment, left
+alone because its plugin list is handled by the script installer.
 
 ## Something the user wrote looks like a typo or mental slip
 

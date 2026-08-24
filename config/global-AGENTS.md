@@ -65,6 +65,18 @@ And `dependency-groups` (PEP 735) are per-project, never inherited through a reg
 shared package that wants consumers to pick up its tool list needs an explicit mechanism (a task
 editing the consumer's own `pyproject.toml`, or an optional-dependencies extra).
 
+### Installing a tool on this machine
+
+Never as a one-off manual step (`curl | bash`, a release tarball into `~/.local/bin`,
+`gh extension install`) — every tool is a `[packages.<name>]` entry in `power-user-linux-setup`'s
+`setup.toml`, installed by its `inv` task, or the machine silently diverges from its own setup and
+the next machine never gets it. Look for a maintained PyPI wrapper first (`shellcheck-py`,
+`shfmt-py`, `actionlint-py`, `act-bin` — `method = "uv-tool"`) before any other method, so setup
+stays one mechanism deep; "maintained" means its version tracks the upstream release, checked
+against the upstream changelog, not assumed. A tool a repo's quality gate or test tasks run also
+goes in that repo's dependency group — the user-wide install is for the human at the shell, the
+group is what CI and consumers resolve.
+
 ## Git & commits
 
 ### Pushing to a personal repo's default branch
