@@ -130,6 +130,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Reading a command's result](#reading-a-commands-result)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
+- [About to commit](#about-to-commit)
 - [Committing multi-part work](#committing-multi-part-work)
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
 - [Something the user wrote looks like a typo or mental slip](#something-the-user-wrote-looks-like-a-typo-or-mental-slip)
@@ -456,6 +457,26 @@ made the same pull clean. That is why the rule is stated as sequence rather than
 The clause deliberately extends the existing section rather than opening one of its own, per
 "Admitting a new rule" criterion 2 — the trigger (regenerating from a canonical source) is
 identical, and only the "tested" half of the existing sentence is being sharpened.
+
+## About to commit
+
+Admitted 2026-08-25, from `plans/2026-08-23-git-hooks-for-quality-gate.md`'s measurement. A
+2026-08-23 CI-failure sweep across `power-user-linux-setup`/`repo-tasks`/`scaffoldapy` found every
+recurring failure was one shape: markdown-only commits (`plans/*.md`, skill files,
+`config/global-AGENTS.md`) pushed without the gate, failing `dprint check` (exit 20) on line-wrap
+reflows `dprint fmt` would have fixed — 11 red runs in one day. The first fix was skill-level:
+`plan-docs` and `session-harvest` gained "run the gate before committing" (`c84cbe4`, 17:46Z that
+day). Re-measured 2026-08-25 over every failed run since: 4 of 5 were the same shape again, all
+`plans/*.md`, all in `plans:` commits — the skill instruction only reaches a session that loaded the
+skill for that commit, and a status bump made as a side task of other work never does. That reach
+limit is why the rule is here (tier 1 — fires on any turn, miss is silent until CI) and not only in
+the skills.
+
+The rule was chosen over a git hook deliberately: the user's standing position (recorded in that
+plan) is that agents should know what to run rather than be corrected behind their back, same as
+developers — see "Proposing an enforcement mechanism for agent behavior". If the shape recurs at a
+real rate after this rule has been deployed for a while, that plan holds the researched hook design
+as the next step.
 
 ## Committing multi-part work
 

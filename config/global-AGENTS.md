@@ -92,6 +92,14 @@ review gates nothing. A "bypassing branch protection" message on push is expecte
 a force-push guard, not a review gate) — don't flag it and don't suggest a PR. None of this
 transfers to a shared/team repo with real other contributors.
 
+### About to commit
+
+Run the repo's quality gate first (`inv quality.precommit` where the repo-tasks tasks exist, else
+the repo's own equivalent) — every commit, including a markdown-only one. "Just docs" is not exempt:
+`dprint` formats markdown, and plan/skill/AGENTS.md reflows are the single most common CI failure in
+these repos, all of them pushed from commits that skipped the gate. The gate is what CI runs;
+skipping it schedules a red run that someone else reads.
+
 ### Committing multi-part work
 
 Split it into small single-concern commits, even when the request was a single ask — git history is
