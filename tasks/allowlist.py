@@ -1317,12 +1317,35 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
     for every recursed tool where a parent verb is riskier than one of its own children (also hit
     `docker`, `git`, `go`, `helm`, `kubectl` — not a gh-specific bug). The rare case of the bare
     parent actually being invoked with no subcommand falls through to Claude's own default behavior
-    instead (typically still a prompt), not silent approval and not silent denial."""
+    instead (typically still a prompt), not silent approval and not silent denial.
+
+    Two per-tool registry knobs shape the output without touching the classification itself (the
+    verdict stays on disk, reviewed, and reportable — only what `render`/`apply` do with it
+    changes; see tools.toml's header and contributing/cli-allowlist.md "render / apply"):
+
+    - `mode_covered` — the tool's write/dangerous verdict is *not* rendered as an `ask` rule,
+      because the active permission mode already gates it more precisely than a prefix rule can.
+      `acceptEdits` auto-approves `mkdir`/`cp`/`rm`/... on paths inside the working directory or
+      `additionalDirectories` and still prompts outside them; an explicit `ask` rule beats that
+      mode grant (ask > allow, no specificity tiebreak — the same precedence documented below), so
+      rendering one would re-prompt for every in-scope `mkdir`. Read-only nodes of such a tool
+      still render as `allow` normally.
+    - `global_option_prefixes` — extra `allow` patterns for read_only subcommand nodes, one per
+      prefix, so `git -C <path> status` matches `Bash(git -C * status:*)` instead of falling
+      through to a prompt just because a global option sits between the tool and its verb.
+      Deliberately allow-only: an `ask` variant would be redundant (an unmatched mutating
+      subcommand prompts anyway in every mode that prompts), and a mid-pattern `*` spans any
+      number of arguments, so the allow side is an accepted, documented hole (`git -C x commit -m
+      status` also matches) taken in exchange for friction-free cross-repo reads.
+    """
     registry = _load_registry()
     allow, ask = [], []
     for name, entry in sorted(rules.items()):
         if not entry.get("reviewed"):
             continue
+        cfg = registry.get(name, {})
+        mode_covered = bool(cfg.get("mode_covered"))
+        global_prefixes: list[str] = cfg.get("global_option_prefixes", [])
         # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
         # top-level service-group command, classified on what *that* does with no args (usually
         # "shows help/lists things"), never on what its real subcommands do. That's the wrong
@@ -1334,7 +1357,7 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
         # allow rule for a cloud_cli tool, full stop — every node renders as ask at most,
         # regardless of its own classification. This is the one place a node's classification is
         # capped rather than trusted outright.
-        is_cloud_cli = bool(registry.get(name, {}).get("cloud_cli"))
+        is_cloud_cli = bool(cfg.get("cloud_cli"))
         cache_nodes = (_load_cache(name) or {}).get("nodes", {})
         for path, v in sorted(entry.get("nodes", {}).items()):
             classification = v["classification"]
@@ -1343,10 +1366,13 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
             pattern = f"Bash({name}:*)" if path == _NO_SUBCOMMANDS_KEY else f"Bash({name} {path}:*)"
             if classification == Classification.READ_ONLY and not is_cloud_cli:
                 allow.append(pattern)
+                if path != _NO_SUBCOMMANDS_KEY:
+                    allow.extend(f"Bash({name} {prefix} {path}:*)" for prefix in global_prefixes)
             elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
                 classification == Classification.READ_ONLY and is_cloud_cli
             ):
-                ask.append(pattern)
+                if not mode_covered:
+                    ask.append(pattern)
     return allow, ask
 
 

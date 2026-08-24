@@ -515,6 +515,38 @@ that didn't seem worth the added complexity of a custom interception script. Wha
 dangerous-tier commands still surface a real, interactively-approvable prompt instead of running
 silently — plain `ask` rules already get that.
 
+### `mode_covered` and `global_option_prefixes` — shaping output without touching verdicts
+
+Both are `tools.toml` registry fields read only by `_compute_claude_rules`; the classification on
+disk is untouched, still reviewed, still reported by `status`. They exist because the machine's
+default permission mode moved from `auto` to `acceptEdits` on 2026-08-24 (dogfooding; the design
+comparison and the transcript audit behind the decision are in the `session-bash-audit` skill's
+`references/research.md`), and two facts about that mode interact with prefix rules:
+
+- **`mode_covered = true`** (`cp`, `mv`, `rm`, `rmdir`, `mkdir`, `touch`). `acceptEdits`
+  auto-approves exactly these filesystem commands for paths inside the working directory or
+  `additionalDirectories`, and prompts for paths outside — a path-aware gate no prefix rule can
+  express. But an explicit `ask` rule beats a mode grant (same ask-over-allow, no-specificity
+  precedence as everywhere else in this doc), so the pipeline's honest `write` verdict rendered as
+  `Bash(mkdir:*)` `ask` re-prompted every in-scope `mkdir`. The field keeps the verdict and drops
+  the rendered `ask`. Under `default`/manual mode nothing is silently opened up: an unmatched
+  non-read-only command prompts anyway; the difference is only that the prompt comes from Claude
+  Code's own default instead of an explicit rule. `apply`'s manifest diff removed the six old `ask`
+  rules cleanly on the next run — no hand edit.
+- **`global_option_prefixes = ["-C *", "-c *"]`** (`git`). Every rendered rule assumes the
+  subcommand is the second word; `git -C <path> status` isn't, so it matched nothing and prompted —
+  the most common unmatched git shape in the 4-day transcript audit (81 `git -C` calls). The field
+  emits an extra `allow` per prefix for each read_only leaf: `Bash(git -C * status:*)`. Allow-only:
+  an `ask` twin would be redundant (unmatched `git -C x push` already prompts in every mode that
+  prompts), and Claude Code's mid-pattern `*` spans any number of arguments, so the allow side has a
+  known hole — `git -C x commit -m status` also matches `Bash(git -C * status:*)`. Chosen with eyes
+  open (2026-08-24) over accepting a prompt on every cross-repo read; revisit if the rule syntax
+  ever gains a single-argument wildcard.
+
+Under `auto` mode the picture differs: the classifier, not the prompt, catches an unmatched
+`git -C x push`, and it approved all 81 of those calls in the audit window — one of the reasons the
+mode was dropped. `plans/2026-08-22-compound-command-permission-audit.md` has the forensics.
+
 ### End-to-end confirmed live
 
 This isn't just tested in isolation — after `apply`, the actual rules were exercised in a live
@@ -586,9 +618,13 @@ needed for the removal itself. Three rules are then hand-maintained directly in
   `w` command or `e`/`s///e` extensions to write files or run shell commands would still match this
   allow rule — same class of gap the permissions doc's own `curl` example warns about. Accepted as a
   low-probability trade-off for real day-to-day friction, not an oversight.
-- `Bash(sed -i*)` and `Bash(sed --in-place*)` — `ask`, added explicitly (not just left to fall
-  through to "no rule") so mutation stays visibly, deliberately gated rather than relying on
-  whatever Claude Code's own undocumented default happens to do for an ungoverned `sed` invocation.
+- `Bash(sed -i*)` and `Bash(sed --in-place*)` — were `ask`, added explicitly so mutation stayed
+  visibly gated rather than relying on Claude Code's default for an ungoverned `sed`. **Removed
+  2026-08-24** with the move to `acceptEdits` (see the `mode_covered` section below): that mode
+  auto-approves `sed` on in-scope paths and prompts outside them, and an explicit `ask` rule would
+  have beaten the in-scope grant. Under a mode that doesn't grant `sed`, an unmatched `sed -i` still
+  prompts — nothing became silently allowed. Re-add them by hand if the machine ever runs a mode
+  where an ungoverned `sed -i` would run unprompted.
 
 **Do not re-review `sed` via `inv allowlist.review` without deliberately deciding to** — marking it
 reviewed again would let the next `apply` regenerate the blanket `Bash(sed:*)` `ask` rule (sed's

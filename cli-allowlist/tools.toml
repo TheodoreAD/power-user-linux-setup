@@ -38,6 +38,22 @@
 #                     read_only this way despite having genuinely destructive subcommands
 #                     (`storage rm -r`, `sql instances delete`, ...) with no narrower rule to catch
 #                     them. See contributing/cli-allowlist.md's "render / apply" section.
+#   mode_covered     true = keep the classification but don't render the tool's write/dangerous
+#                     verdict as an `ask` rule. For the filesystem commands `acceptEdits` mode
+#                     already auto-approves *inside* the working directory/additionalDirectories
+#                     and still prompts *outside* them (mkdir/cp/rm/rmdir/mv/touch/sed): an
+#                     explicit `ask` rule beats that mode grant (ask > allow, no specificity
+#                     tiebreak), so rendering one re-prompts for every in-scope `mkdir`. Under a
+#                     mode that doesn't grant them (default/manual) the command falls through to
+#                     Claude Code's own prompt anyway — nothing becomes silently allowed. Read-only
+#                     nodes still render as `allow`. Flip it off to get the prefix `ask` rule back.
+#   global_option_prefixes
+#                    list of option shapes that can sit between the tool and its subcommand
+#                     (git's `-C <path>`, `-c <key>=<val>`): for every read_only subcommand node,
+#                     render an extra allow rule per prefix — `Bash(git -C * status:*)` — so a
+#                     directory-scoped read doesn't prompt just because the verb isn't the second
+#                     word. Allow-only by design; the mid-pattern `*` spans any number of
+#                     arguments, an accepted hole documented in contributing/cli-allowlist.md.
 #
 # Tree discovery can surface a node that isn't actually a real command — a discovery regex
 # matching a sample-output table row, a deprecated/plugin subcommand whose --help silently echoes
@@ -88,6 +104,9 @@
 help_flag = "-h" # not --help: that renders through `man`, which depends on git-man being installed
 max_depth = 2 # real per-verb risk lives one level down: remote add/rm, stash pop/drop, worktree remove
 max_nodes = 100
+# cross-repo reads from an agent session (`git -C <other repo> status`) were the single most common
+# unmatched git shape in a 4-day transcript audit (2026-08-24); `-c` covers the same for one-off config
+global_option_prefixes = ["-C *", "-c *"]
 subcommands = [
   "status",
   "log",
@@ -539,23 +558,30 @@ subcommands = [
 [cat]
 no_subcommands = true
 
+# acceptEdits auto-approves these in-scope and prompts out-of-scope — see `mode_covered` above.
 [cp]
 no_subcommands = true
+mode_covered = true
 
 [mv]
 no_subcommands = true
+mode_covered = true
 
 [rm]
 no_subcommands = true
+mode_covered = true
 
 [mkdir]
 no_subcommands = true
+mode_covered = true
 
 [rmdir]
 no_subcommands = true
+mode_covered = true
 
 [touch]
 no_subcommands = true
+mode_covered = true
 
 [chmod]
 no_subcommands = true

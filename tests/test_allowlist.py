@@ -317,6 +317,52 @@ def _rule_node(classification: str) -> dict:
     return {"classification": classification, "content_hash": "x", "flags": {}, "model": "haiku", "source": "llm"}
 
 
+def _stub_registry(monkeypatch, registry: dict, caches: dict | None = None):
+    monkeypatch.setattr(allowlist, "_load_registry", lambda: registry)
+    monkeypatch.setattr(allowlist, "_load_cache", (caches or {}).get)
+
+
+def test_compute_claude_rules_mode_covered_drops_ask_but_keeps_classification(monkeypatch):
+    # acceptEdits already gates in-scope mkdir; an explicit ask rule would beat that grant and
+    # re-prompt every time. The verdict on disk stays "write" — only the rendered output changes.
+    _stub_registry(monkeypatch, {"mkdir": {"no_subcommands": True, "mode_covered": True}})
+    rules: dict[str, Any] = {"mkdir": {"reviewed": True, "nodes": {allowlist._NO_SUBCOMMANDS_KEY: _rule_node("write")}}}
+    allow, ask = allowlist._compute_claude_rules(rules)
+    assert allow == []
+    assert ask == []
+    assert rules["mkdir"]["nodes"][allowlist._NO_SUBCOMMANDS_KEY]["classification"] == "write"
+
+
+def test_compute_claude_rules_without_mode_covered_still_renders_ask(monkeypatch):
+    _stub_registry(monkeypatch, {"mkdir": {"no_subcommands": True}})
+    rules = {"mkdir": {"reviewed": True, "nodes": {allowlist._NO_SUBCOMMANDS_KEY: _rule_node("write")}}}
+    assert allowlist._compute_claude_rules(rules) == ([], ["Bash(mkdir:*)"])
+
+
+def test_compute_claude_rules_mode_covered_keeps_read_only_allow(monkeypatch):
+    # mode_covered only suppresses the ask side; a read_only node of the same tool is unaffected.
+    _stub_registry(monkeypatch, {"tool": {"mode_covered": True}})
+    rules = {"tool": {"reviewed": True, "nodes": {"list": _rule_node("read_only"), "wipe": _rule_node("dangerous")}}}
+    assert allowlist._compute_claude_rules(rules) == (["Bash(tool list:*)"], [])
+
+
+def test_compute_claude_rules_global_option_prefixes_add_allow_variants_for_read_only_only(monkeypatch):
+    _stub_registry(monkeypatch, {"git": {"global_option_prefixes": ["-C *", "-c *"]}})
+    rules = {"git": {"reviewed": True, "nodes": {"status": _rule_node("read_only"), "push": _rule_node("dangerous")}}}
+    allow, ask = allowlist._compute_claude_rules(rules)
+    assert allow == ["Bash(git status:*)", "Bash(git -C * status:*)", "Bash(git -c * status:*)"]
+    # No ask variant: an unmatched `git -C x push` prompts anyway in every mode that prompts.
+    assert ask == ["Bash(git push:*)"]
+
+
+def test_compute_claude_rules_global_option_prefixes_ignored_for_no_subcommands_tool(monkeypatch):
+    # `Bash(tool -x * *:*)` would be meaningless — the prefix shape only applies between a tool
+    # and a real subcommand.
+    _stub_registry(monkeypatch, {"flat": {"no_subcommands": True, "global_option_prefixes": ["-x *"]}})
+    rules = {"flat": {"reviewed": True, "nodes": {allowlist._NO_SUBCOMMANDS_KEY: _rule_node("read_only")}}}
+    assert allowlist._compute_claude_rules(rules) == (["Bash(flat:*)"], [])
+
+
 def test_coverage_gaps_none_when_every_child_has_own_rule():
     rules = {
         "gh": {
