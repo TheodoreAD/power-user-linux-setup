@@ -97,6 +97,12 @@ gitignored as "reproducible," never auto-wired into routine `fix`/`check`/`preco
 work silently pulling in an upstream bump nobody chose to take is exactly the surprise to avoid.
 Regeneration is reviewed, tested, and committed like any other change.
 
+When the canonical file names paths, ordering is part of that review: adopt the structure it assumes
+_before_ pulling it, then run the repo's own gate. A pull is not inert — a canonical `pytest.ini`
+whose `testpaths` named a `tests/unit/` the repo hadn't created yet sent pytest's fallback search
+into a second `tests/` tree and broke collection outright, exit 2 rather than the documented
+warning.
+
 ### Unexplained git/file state in a working tree
 
 This user runs parallel sessions on the same repos, so an unrecognized commit, diff, or untracked

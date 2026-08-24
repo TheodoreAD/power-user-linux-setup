@@ -360,6 +360,28 @@ The recovery was cheap only because nothing had been pushed: `git reset --soft H
 index, and commit the two groups separately. Had the commit been pushed first, splitting it would
 have meant a force-push against a branch another session may have been building on.
 
+## Regenerating a file from a canonical source
+
+The ordering clause was added 2026-08-24, from `scaffoldapy` adopting `repo-tasks`' two-tier test
+layout. `inv configs.pull` was run first, on the assumption that a config regeneration is inert and
+the repo's structure could follow. It is not inert: the pulled `pytest.ini` names
+`testpaths = tests/unit`, that directory did not exist yet, and pytest's documented fallback
+("Searching recursively from the current directory instead") walked into `template/` — a second
+`tests/` tree that repo maintains as copier template content. `template/tests/conftest.py` was then
+imported as `conftest`, shadowing the real `tests/conftest.py`, and collection failed with
+`ImportError: cannot import name 'BASE_ANSWERS' from 'conftest'`. Exit 2, not a warning.
+
+Two things generalize past that repo. The fallback is documented as benign and usually is, so its
+failure mode is invisible until a repo has something else for it to find — which is a property of
+the consuming repo, not of the config being pulled, and therefore not something the canonical source
+can guard. And the fix was purely ordering: adopting `tests/unit/` first, then pulling, then gating,
+made the same pull clean. That is why the rule is stated as sequence rather than as a warning about
+`testpaths` specifically.
+
+The clause deliberately extends the existing section rather than opening one of its own, per
+"Admitting a new rule" criterion 2 — the trigger (regenerating from a canonical source) is
+identical, and only the "tested" half of the existing sentence is being sharpened.
+
 ## Committing multi-part work
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general
