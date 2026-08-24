@@ -339,6 +339,27 @@ Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-comm
 output through `xxd`/`cat -A` and reading the literal bytes; a rendered terminal glyph or a quick
 "does this look like a number" glance would have caught neither.
 
+## Unexplained git/file state in a working tree
+
+The `git add -A` clause, added 2026-08-24 after doing exactly what it forbids. Working in
+`power-user-linux-setup` while a parallel session edited `config/global-AGENTS.md` and
+`contributing/global-agents-md.md` in the same tree, a
+`git add -A && git status --short && git
+commit` chain swept both files into a commit whose message
+was about invoke task naming and said nothing about them. The tree had been clean at session start
+and the edits landed mid-session.
+
+Two things this teaches beyond "be careful". First, the existing rule above covers _noticing_
+unexplained state; it said nothing about how to stage, so the safe-reading habit and the unsafe
+staging habit coexisted without friction. Second, the `git status --short` in that same chain looked
+like a check but wasn't one — it ran after `git add -A`, so it faithfully reported a staged set that
+already included the other session's work. A verification step positioned after the action it's
+meant to guard is worse than none, because it produces output that reads like confirmation.
+
+The recovery was cheap only because nothing had been pushed: `git reset --soft HEAD~1`, restore the
+index, and commit the two groups separately. Had the commit been pushed first, splitting it would
+have meant a force-push against a branch another session may have been building on.
+
 ## Committing multi-part work
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general
