@@ -134,6 +134,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Committing multi-part work](#committing-multi-part-work)
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
 - [Something the user wrote looks like a typo or mental slip](#something-the-user-wrote-looks-like-a-typo-or-mental-slip)
+- [Ending a turn with a next step](#ending-a-turn-with-a-next-step)
 
 ## Editing `~/.claude/settings.json` (or similar) in auto mode
 
@@ -526,3 +527,14 @@ actually a slip, and the user had to correct it explicitly: "remember to push ba
 apparent mental slips. people, unlike machines, get tired and their brains connect the wrong things
 despite good intentions." Repetition across messages is not proof of intent — repetition is exactly
 what a tired mental slip looks like too.
+
+## Ending a turn with a next step
+
+Stated directly 2026-08-25 in `repo-tasks`, after a recap closed with "Push when ready —
+`git push`": "don't tell me to run commands, i only work via prompts, ideally ask me with
+askuserquestions what i choose to do next." The instruction was first saved as a project-scoped
+memory entry, which the `session-harvest` pass then promoted here — memory is siloed per project
+directory, so a preference about how every session should end would never have reached the next
+repo. Admitted as its own rule rather than a variant of "About to ask the user something factual":
+that rule is about _not_ asking when the answer is discoverable; this one is about asking, via the
+tool, when the answer is genuinely the user's.

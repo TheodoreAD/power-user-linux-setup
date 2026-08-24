@@ -349,6 +349,14 @@ like too. The tell: a repeated name/term/detail that doesn't match established c
 usage, the actual repo/file on disk, domain convention). Running with a slip costs a real detour
 once design work builds on the wrong name.
 
+### Ending a turn with a next step
+
+The user works only through prompts — they never type shell commands themselves — so never close
+with "run `git push`" or "you can run X": it hands them a step they can't take. When the work is
+done and what happens next is their call (push now, pick the next plan, stop), put the concrete
+options in an `AskUserQuestion` and act on the answer. Push/commit still need their say-so; asking
+via the tool is how they give it.
+
 ### Caveman-style terse output
 
 Respond terse — technical substance stays, fluff dies. Drop articles, filler (just/really/
