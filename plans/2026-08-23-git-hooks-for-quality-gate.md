@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-23
+status: blocked on the user's adopt/don't decision — revisit trigger fired, see Observation
+updated: 2026-08-25
 depends_on: [repo-tasks, scaffoldapy]
 ---
 
@@ -65,6 +65,35 @@ User position (2026-08-23), the actual gate on this plan, not a detail:
 The skill-level handling that was adopted instead: `plan-docs` and `session-harvest` (this repo's
 `skills/`) now instruct running the repo's quality gate before committing any file they produce,
 closing the "docs are exempt" gap at the moment the failing commits actually happen.
+
+## Observation 2026-08-25 — the revisit trigger fired
+
+The skill-level fix (`c84cbe4`, `plan-docs`/`session-harvest` instruct running the gate before
+committing) landed 2026-08-23 17:46Z and was deployed to `~/.agents/skills` at the same time.
+`gh run list` over the three repos, every non-success run after that point, each failed log read:
+
+| repo                   | run (commit)          | when (UTC)  | shape                                                                           |
+| ---------------------- | --------------------- | ----------- | ------------------------------------------------------------------------------- |
+| power-user-linux-setup | 32657051750 (6ef6794) | 08-23 18:07 | dprint exit 20, `plans/…leanness-pass.md` — `plans:` commit                     |
+| repo-tasks             | 32670708287 (aead666) | 08-23 22:28 | dprint exit 20, `plans/…configs-round-trip-divergence.md`                       |
+| repo-tasks             | 32670809070 (6d4f630) | 08-23 22:30 | dprint exit 20, same file, next commit                                          |
+| repo-tasks             | 32785071646 (7ba7299) | 08-24 22:31 | dprint exit 20, `plans/…written-files-fail-own-formatters.md` — `plans:` commit |
+| scaffoldapy            | 32769297205 (77d06bb) | 08-24 19:38 | exit 127, `actionlint: command not found` — CI tool gap, not this plan's shape  |
+
+**4 of 5 post-fix failures are exactly the shape this plan exists for**, all on `plans/*.md`, all in
+commits whose subject starts with `plans:`/`Plan:` — i.e. produced under the very skill that now
+says to run the gate first. Rate: 4 in ~30 hours across two repos, versus 11 in the single day
+before the fix; lower, not gone. The pre-fix `power-user-linux-setup` run at 17:20Z (57a9e89) is
+excluded above because it predates `c84cbe4`.
+
+Read: an instruction inside a skill body only reaches a session that loaded the skill for that
+commit; a session that writes a plan file as a side task of other work (the common case for a
+status-bump commit) never loads `plan-docs` and never sees the rule. That is the same reach limit
+`~/AGENTS.md` notes for `Plan`/`Explore` subagents. The `~/AGENTS.md`-level rule ("run the gate
+before committing") would have wider reach than a skill-level one; it is the cheapest next step that
+stays inside the no-imposed-hooks philosophy, and the one to try before reopening the hook design.
+The `actionlint` 127 is a separate one-off of the "missing quality tool in CI" kind already fixed
+once on 2026-08-23 — worth its own look in `scaffoldapy`'s CI bootstrap, not here.
 
 ## Open questions
 
