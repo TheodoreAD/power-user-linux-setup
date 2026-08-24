@@ -171,6 +171,12 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
     if _dir_digest(dest) != _dir_digest(src):
         raise RuntimeError(f"[{label}] copied {name} from {repo_path} but its content doesn't match the source")
     marker.write_text(repo_path + "\n")
+    # Record it in the deploy manifest too, so `inv deploy.status`/`deploy.all` classify this copy
+    # as ours (CLEAN/STALE) instead of "not deployed by PULSE". The marker answers *whose* it is;
+    # the manifest answers *what we wrote* — both are needed until this writer is folded into
+    # deploy.deploy() (drift-guard plan, step 4).
+    managed = deploy.Managed(path=dest, package=label, source=repo_path, mechanism=deploy.Mechanism.SKILL)
+    deploy.record(managed, _dir_digest(dest))  # already verified equal to the source's digest above
     print(f"[{label}] {name} copied from {repo_path}")
 
 

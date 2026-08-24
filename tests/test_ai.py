@@ -12,7 +12,7 @@ from pathlib import Path
 
 import pytest
 
-from tasks import ai, ui, util
+from tasks import ai, deploy, ui, util
 
 
 @pytest.fixture(autouse=True)
@@ -21,6 +21,12 @@ def _reset_dry_run():
     util.DRY_RUN = False
     yield
     util.DRY_RUN = saved
+
+
+@pytest.fixture(autouse=True)
+def _isolated_deploy_manifest(tmp_path, monkeypatch):
+    """_install_local_skill records into the deploy manifest — never the real one under ~/.local/state."""
+    monkeypatch.setattr(deploy, "_MANIFEST", tmp_path / "state" / "deployed.json")
 
 
 def _fail_if_asked(message):
@@ -194,6 +200,23 @@ def test_install_local_skill_raises_when_copy_doesnt_match_source(tmp_path, monk
         ai._install_local_skill(base, "skills/foo", label="test", yes=False)
 
     assert src.exists()  # source untouched by the corruption
+
+
+def test_install_local_skill_records_the_copy_in_the_deploy_manifest(tmp_path, monkeypatch):
+    # Without this, `inv deploy.status`/`deploy.all` reported every skill as "not deployed by
+    # PULSE" — the marker said whose it was, but nothing said what PULSE had written.
+    repo_root = tmp_path / "repo"
+    src = _make_src_skill(repo_root, "skills/foo")
+    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    base = tmp_path / "home"
+
+    ai._install_local_skill(base, "skills/foo", label="pkg", yes=True)
+
+    entry = deploy.load_manifest()[str(base / ".agents" / "skills" / "foo")]
+    assert entry["package"] == "pkg"
+    assert entry["source"] == "skills/foo"
+    assert entry["mechanism"] == "skill"
+    assert entry["digest"] == deploy.dir_digest(src)
 
 
 def test_install_local_skill_yes_skips_prompt(tmp_path, monkeypatch):
