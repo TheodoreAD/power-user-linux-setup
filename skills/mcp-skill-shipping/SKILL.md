@@ -119,6 +119,18 @@ resolution back into the skill's own source as a small, additive edit (never the
 `skills/session-harvest/SKILL.md` is the worked example — its own "On friction, ask" + "Self-update
 mechanics" sections are the pattern to copy when authoring the next one.
 
+## A skill's follow-up checks are procedures it runs, not chores it hands back
+
+When a skill's own research ends in "re-measure after a week", "verify X live", "compare against the
+baseline", that list is the skill's job, not the user's: encode each item as something the skill
+executes on the next invocation — a script flag with pass/fail output (`--compare <baseline>` with
+per-expectation verdicts), a stored baseline file the skill diffs against, a printed probe plan with
+expected outcomes the agent runs step by step. What genuinely can't be automated (a human watching
+for a permission prompt) is reduced to one yes/no question, not left as a numbered to-do. Stated by
+the user 2026-08-24 on `session-bash-audit`'s first version, which closed with a manual "open / to
+re-measure" list: "i don't want to do this manually, the skill should do this for me." That skill's
+Measure / Compare / Probe split is the pattern to copy.
+
 ## Full rationale
 
 See [`contributing/mcp-skill-shipping.md`](../../contributing/mcp-skill-shipping.md) in the
