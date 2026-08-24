@@ -130,6 +130,14 @@ PATTERNS: dict[str, tuple[Predicate, str]] = {
         _rx(r"2>&1\s*\|\s*(tail|head|grep|rg)\b"),
         "$? after a pipe is the filter's, not the command's — a failing gate reads as clean",
     ),
+    "redirect-then-filter": (
+        _rx(r">\s*\S+\s+2>&1\s*;.*\|\s*(rg|grep|head|tail)\b"),
+        "capture-to-log is fine; filtering the log in the same call is not — Grep/Read the log as a second call",
+    ),
+    "echo-exit": (
+        _rx(r";\s*echo\s+[\"']?(EXIT|exit)[=: ]"),
+        "reflexive `; echo EXIT=$?` — the Bash tool already reports a non-zero exit",
+    ),
     "search|head": (
         _rx(r"\b(rg|grep|fd|find)\b[^|]*\|\s*head\b"),
         "turns a completeness search into a sample without saying so (count first: rg -c / wc -l)",
@@ -230,7 +238,16 @@ def load_calls(days: float, project_filter: str | None) -> list[Call]:
     return calls
 
 
-RATE_COLUMNS = ["head/tail", "exit-masked", "sed-n", "cat-view", "heredoc", "cd-own-repo", "git-mutating-in-chain"]
+RATE_COLUMNS = [
+    "head/tail",
+    "exit-masked",
+    "redirect-then-filter",
+    "sed-n",
+    "cat-view",
+    "heredoc",
+    "cd-own-repo",
+    "git-mutating-in-chain",
+]
 
 # What a re-measurement after the 2026-08-24 changes (acceptEdits default, rewritten ~/AGENTS.md
 # Bash cluster) should show, per model, relative to the stored baseline. "down": lower share;
@@ -238,6 +255,8 @@ RATE_COLUMNS = ["head/tail", "exit-masked", "sed-n", "cat-view", "heredoc", "cd-
 EXPECTATIONS: dict[str, str] = {
     "chain": "down",
     "head/tail": "down",
+    "redirect-then-filter": "zero",
+    "echo-exit": "zero",
     "sed-n": "down",
     "cat-view": "down",
     "heredoc": "down",
@@ -252,7 +271,7 @@ def rates(calls: list[Call]) -> dict[str, float]:
     n = len(calls)
     counts = Counter(t for c in calls for t in c.tags)
     out = {"chain": sum(counts[f"chain{i}"] for i in range(2, 6)) / n, "chain5": counts["chain5"] / n}
-    for col in [*RATE_COLUMNS, "git-C-mutating"]:
+    for col in [*RATE_COLUMNS, "git-C-mutating", "echo-exit"]:
         out[col] = counts[col] / n
     return out
 

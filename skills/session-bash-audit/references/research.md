@@ -89,6 +89,18 @@ Ranked by how much of the behaviour each explains. The first two are structural;
    prompt-inducing by harness design (`cd` + `git` in one command always prompts), which is part of
    why `git -C` became popular.
 
+6. **Knowing the rule is not the same as loading it — and neither changes the reflex without a
+   substitute.** The session that rewrote the Bash cluster audited itself an hour later: 124 calls,
+   65% chained, 36% `head`/`tail`, worse than the Fable baseline it had cited. Instruction files
+   load at session start, so the rewrite never reached the session that wrote it (and auto mode's
+   reminder was still live there). But with the rule fresh in working memory the habit held anyway,
+   because nearly every violation was one shape the rule offered no substitute for:
+   `gate > log
+   2>&1; echo $?; sed … log | rg … | head` — the permitted capture form with a filter
+   bolted on to keep a long log out of context — plus a reflexive `; echo "EXIT=$?"` the Bash tool
+   makes redundant. Both got a named substitute in the rule (Grep/Read on the log as a second call)
+   and their own audit patterns (`redirect-then-filter`, `echo-exit`, both expected at zero).
+
 ## The `git -C` ask-rule bypass
 
 The user's report was "ask rules like `git commit`/`git push` seem ignored inside long chains."

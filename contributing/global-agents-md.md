@@ -214,6 +214,17 @@ clause states that fact rather than just forbidding the pipe, because the previo
 command's result" rule (exit codes) and "Generalizing from a sample to a set" rule (search
 truncation) both existed and neither connected to the reflex.
 
+The redirect-then-filter clause, added the same day from the session that wrote the rule above:
+audited an hour later, it had 124 Bash calls at 65% chained and 36% `head`/`tail` — worse than the
+Fable baseline it was citing. Two causes. The rewritten file never reached that session (instruction
+files load at session start; the auto-mode reminder was still live), which is the documented
+mechanism and needs no fix. And with the rule fresh in working memory the habit held anyway, because
+nearly every violation was one shape the rule gave no substitute for:
+`gate > log 2>&1; echo $?; sed … log | rg … | head` — the permitted capture form with a filter
+tacked on to keep a 5,000-line log out of context. The clause names the substitute (Grep/Read on the
+log, as a second call) and the reflexive `; echo "EXIT=$?"` that the tool makes redundant. The
+`session-bash-audit` script measures the shape as `redirect-then-filter`.
+
 ## Running a command against a different repo than the session's project
 
 The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are now rendered as allow rules by

@@ -1,9 +1,10 @@
 # Global agent instructions
 
 Before changing this file: it is deployed from `config/global-AGENTS.md` in
-`~/projects/github.com-personal/power-user-linux-setup` (redeploy: `inv tools.install`) — edit
-there, never here, and first read that repo's `contributing/global-agents-md.md`: it holds each
-rule's evidence and the admission criteria a new rule must pass.
+`~/projects/github.com-personal/power-user-linux-setup` (redeploy:
+`inv deploy.all --name claude-global-md`) — edit there, never here, and first read that repo's
+`contributing/global-agents-md.md`: it holds each rule's evidence and the admission criteria a new
+rule must pass.
 
 Built-in `Plan`/`Explore` subagents never load this file — Claude Code deliberately skips
 `CLAUDE.md`/`AGENTS.md` (every level) for those agent types. Every rule below reaches only the main
@@ -164,9 +165,11 @@ Grep/Glob over `grep`/`find`, Edit/Write over `sed -i`/heredocs — dedicated to
 permission gate and keep the whole result. Never pipe tool output through `| head`/`| tail` to save
 context: the harness already truncates large output and saves the full text to a file, so
 pre-truncating only loses data and forces a second run; if size is the worry, count first (`rg -c`,
-`wc -l`). When shelling out to search anyway, use `rg` over `grep -r` and `fd` over `find` (faster,
-`.gitignore`-aware); plain `grep`/`find` stay fine for non-recursive lookups,
-`find -exec`/`-delete`, or portability.
+`wc -l`). That includes output you just redirected to a file: `cmd > log 2>&1; echo $?` is one call,
+then Grep/Read _on the log_ — never `; rg … log | head` tacked onto the same call. And don't append
+`; echo "EXIT=$?"` to a plain command — the tool already reports a non-zero exit. When shelling out
+to search anyway, use `rg` over `grep -r` and `fd` over `find` (faster, `.gitignore`-aware); plain
+`grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`, or portability.
 
 ### Running a command against a different repo than the session's project
 
