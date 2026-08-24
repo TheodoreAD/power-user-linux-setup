@@ -1,5 +1,5 @@
 ---
-status: planned
+status: in-progress
 updated: 2026-08-24
 ---
 
@@ -385,9 +385,38 @@ deploy.all` repairs).
 - `inv verify.all` passes on this machine with no new failures (§8's backfill is what makes this
   true).
 
+## Progress — steps 1 and 2 landed 2026-08-24
+
+`tasks/deploy.py` exists with the registry, the five-state classifier, the state manifest at
+`~/.local/state/power-user-linux-setup/deployed.json`, the writer, and `inv deploy.status`.
+`tests/test_deploy.py` covers it. `d7cbcbd` (module + tests, wired to nothing), `5a9ff15`
+(`deploy.status`), plus wording/naming corrections in `48eb699` and `d70877a`.
+
+What a session picking up step 3 should know:
+
+- **`deploy()` is written and tested but has no caller.** Step 3 is a task wrapping it; step 4 is
+  converting the three existing writers to call it. Nothing in `tools.py`/`apt.py`/`ai.py` has
+  changed behavior yet — `_install_wrapper_script` still overwrites unconditionally.
+- **`inv deploy.all`, not `deploy.sync`** — renamed by
+  `plans/2026-08-24-invoke-task-naming-convention.md` before step 3 was written. `deploy.status`
+  keeps its name under that convention's community-convention clause.
+- **The backfill works in practice, not just in tests.** On this machine, 13 of 14 managed paths
+  classified `CLEAN` with no manifest at all. The single outlier is `~/.config/terminator/config` —
+  `SEEDED`, rewritten by terminator itself, recorded as known-and-expected in `73e3a81`. Expect
+  `inv deploy.status` to show exactly that one line.
+- **`ai.py` already shares this module's `SKILL_MARKER`/`dir_digest`**, so step 4's conversion of
+  `_install_local_skill` starts from shared primitives rather than a second copy.
+
+[PITFALL: the mechanism has now been exercised twice for real, and both times its value was telling
+a human _which_ files to look at before overwriting: after the task renames it flagged exactly the
+five deployed sources that had gone stale, and before redeploying `~/AGENTS.md` it showed the diff
+was purely repo-side with nothing existing only at the destination. Keep that property in step 3 —
+`deploy.all` should show the diff before it asks, never just prompt.]
+
 ## Sequencing
 
-Five steps, each independently committable and independently useful:
+Five steps, each independently committable and independently useful. Steps 1–2 are done (see
+Progress above); step 3 is next:
 
 1. **`tasks/deploy.py` + manifest + tests**, wired to nothing. Pure addition, no behavior change.
 2. **`inv deploy.status`** — read-only. Immediately answers "what's drifted on this machine right
