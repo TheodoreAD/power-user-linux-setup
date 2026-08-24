@@ -413,10 +413,23 @@ five deployed sources that had gone stale, and before redeploying `~/AGENTS.md` 
 was purely repo-side with nothing existing only at the destination. Keep that property in step 3 —
 `deploy.all` should show the diff before it asks, never just prompt.]
 
+## Progress — step 3 landed 2026-08-24
+
+`inv deploy.all [--name <pkg>] [--yes]` wraps `deploy()` over `_scoped(name)` and prints an action
+summary; `system.configs` and its tests are gone, and every doc that named it (`AGENTS.md`'s
+redeploy table, `docs/configuration.md`, `docs/terminal.md`, `docs/claude-code.md`, the `setup.toml`
+header, `apt.py`'s docstring) now names `deploy.all`. Trigger, same day: `~/AGENTS.md` was
+redeployed by calling `tools._install_wrapper_script` from `python -c` to avoid `inv tools.install`
+re-running every installer — rejected as an ad-hoc write nobody can re-run, and recorded as the
+second live confirmation in `AGENTS.md`. Exercised for real: `deploy.status` clean except the known
+terminator line; `deploy.all --name claude-global-md` reports the file already matches. Step 4
+(converting the writers) is still open — `inv tools.install`'s wrapper-script writer still
+overwrites unconditionally.
+
 ## Sequencing
 
-Five steps, each independently committable and independently useful. Steps 1–2 are done (see
-Progress above); step 3 is next:
+Five steps, each independently committable and independently useful. Steps 1–3 are done (see
+Progress above); step 4 is next:
 
 1. **`tasks/deploy.py` + manifest + tests**, wired to nothing. Pure addition, no behavior change.
 2. **`inv deploy.status`** — read-only. Immediately answers "what's drifted on this machine right
