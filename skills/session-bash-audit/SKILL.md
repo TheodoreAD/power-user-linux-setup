@@ -12,11 +12,23 @@ _where_ a fix belongs. The first run (2026-08-24, 3,956 calls over four days) is
 sections before interpreting a new run; most of the reasoning transfers and doesn't need
 re-deriving.
 
-## Run it
+## Three procedures — the skill runs them, the user only reads results
+
+Which one applies:
+
+| Ask                                                        | Procedure                      |
+| ---------------------------------------------------------- | ------------------------------ |
+| "how are sessions using Bash", a new pattern to measure    | **Measure** (below)            |
+| "did the change work", "re-check", a week after a change   | **Compare** against baseline   |
+| "does the permission setup behave", after a mode/rule edit | **Probe** the live permissions |
+
+All three use `scripts/audit.py`; `S=~/.agents/skills/session-bash-audit` below.
+
+**Measure**
 
 ```shell
-python3 ~/.agents/skills/session-bash-audit/scripts/audit.py --days 4 --samples 5
-python3 ~/.agents/skills/session-bash-audit/scripts/audit.py --days 7 --project repo-tasks --json "$CLAUDE_JOB_DIR/tmp/calls.json"
+python3 $S/scripts/audit.py --days 4 --samples 5
+python3 $S/scripts/audit.py --days 7 --project repo-tasks --json "$CLAUDE_JOB_DIR/tmp/calls.json"
 ```
 
 Read-only, stdlib only, ~10 s for a week of transcripts. `--samples 0` for just the tables. The
@@ -24,7 +36,36 @@ Read-only, stdlib only, ~10 s for a week of transcripts. `--samples 0` for just 
 the data is a one-off snapshot, not repo code). Put the dump in the job/session scratch dir, not
 `/tmp` directly.
 
-Reading the output, in order:
+**Compare** — the "did it work" check, no manual table-reading:
+
+```shell
+python3 $S/scripts/audit.py --days 7 --samples 0 --compare $S/references/baselines/2026-08-24-auto-mode.json
+```
+
+Prints each model's current rates next to the baseline as percentage-point deltas, with `OK`/`MISS`
+per expectation (`EXPECTATIONS` in the script: chaining, head/tail, sed -n, cat, heredoc and
+git-in-chain should be _down_; own-repo `cd` and `git -C` mutations at zero). Models with fewer than
+50 calls in either run are shown as `?`, not judged. Report the verdict line and the misses to the
+user; then route each miss with the table in "Decide where the fix goes". After a rule or mode
+change, save a new baseline for the next comparison —
+`--save-baseline $S/references/baselines/<date>-<what-changed>.json --note "<mode in force>"` — and
+keep the old file; the deltas are the point.
+
+**Probe** — live permission behaviour, which no transcript can show:
+
+```shell
+python3 $S/scripts/audit.py --probe
+```
+
+Prints six commands with the outcome each should have (prompt / no prompt) under `acceptEdits` with
+this machine's rules. Run each as its **own Bash tool call** — running them from a script would
+bypass the harness's permission check, which is the thing being tested — with `<scratch>` =
+`$CLAUDE_JOB_DIR/tmp` or the session scratchpad. The agent cannot observe prompts: after the run,
+list which steps were expected to prompt and ask the user whether that matched what they saw. A
+mismatch is a real finding (a rule shadowing a mode grant, a prefix rule not matching) — record it
+in `references/research.md` "Harness facts" with the date, and route the fix.
+
+Reading the **Measure** output, in order:
 
 1. **per model** — the baseline. Compare against the table in `references/research.md` ("Baseline
    2026-08-24"). Chaining and head/tail rates are the headline; `cd-own-repo`,

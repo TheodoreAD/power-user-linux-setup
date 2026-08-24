@@ -230,16 +230,127 @@ def load_calls(days: float, project_filter: str | None) -> list[Call]:
     return calls
 
 
-def _rate_row(label: str, calls: list[Call], columns: list[str]) -> str:
+RATE_COLUMNS = ["head/tail", "exit-masked", "sed-n", "cat-view", "heredoc", "cd-own-repo", "git-mutating-in-chain"]
+
+# What a re-measurement after the 2026-08-24 changes (acceptEdits default, rewritten ~/AGENTS.md
+# Bash cluster) should show, per model, relative to the stored baseline. "down": lower share;
+# "zero": at or near 0%. Anything else is reported but not judged.
+EXPECTATIONS: dict[str, str] = {
+    "chain": "down",
+    "head/tail": "down",
+    "sed-n": "down",
+    "cat-view": "down",
+    "heredoc": "down",
+    "cd-own-repo": "zero",
+    "git-mutating-in-chain": "down",
+    "git-C-mutating": "zero",
+}
+
+
+def rates(calls: list[Call]) -> dict[str, float]:
+    """Share of `calls` carrying each tag, plus the aggregate chain rate."""
     n = len(calls)
     counts = Counter(t for c in calls for t in c.tags)
-    chain = sum(counts[f"chain{i}"] for i in range(2, 6))
-    cells = [f"chain={chain / n:.0%}", f"chain5={counts['chain5'] / n:.0%}"]
-    cells += [f"{col}={counts[col] / n:.0%}" for col in columns]
-    return f"{label:44} n={n:5}  " + "  ".join(cells)
+    out = {"chain": sum(counts[f"chain{i}"] for i in range(2, 6)) / n, "chain5": counts["chain5"] / n}
+    for col in [*RATE_COLUMNS, "git-C-mutating"]:
+        out[col] = counts[col] / n
+    return out
 
 
-RATE_COLUMNS = ["head/tail", "exit-masked", "sed-n", "cat-view", "heredoc", "cd-own-repo", "git-mutating-in-chain"]
+def rates_by_model(calls: list[Call]) -> dict[str, dict[str, float | int]]:
+    groups = _group(calls, lambda c: f"{c.model}{' [sub]' if c.subagent else ''}")
+    return {label: {"n": len(rs), **rates(rs)} for label, rs in groups.items()}
+
+
+def _rate_row(label: str, calls: list[Call], columns: list[str]) -> str:
+    r = rates(calls)
+    cells = [f"chain={r['chain']:.0%}", f"chain5={r['chain5']:.0%}"]
+    cells += [f"{col}={r[col]:.0%}" for col in columns]
+    return f"{label:44} n={len(calls):5}  " + "  ".join(cells)
+
+
+def save_baseline(calls: list[Call], path: Path, days: float, note: str) -> None:
+    payload = {
+        "saved": time.strftime("%Y-%m-%d", time.gmtime()),
+        "days": days,
+        "note": note,
+        "models": rates_by_model(calls),
+    }
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(json.dumps(payload, indent=1) + "\n")
+    print(f"\nbaseline written to {path}")
+
+
+def compare(calls: list[Call], baseline_path: Path) -> None:
+    """Per model present in both runs: delta in percentage points against the baseline, with a
+    verdict for every tag EXPECTATIONS names. A model with under 50 calls in either run is shown
+    but not judged — the rates are too noisy to call."""
+    baseline = json.loads(baseline_path.read_text())
+    print(f"\n== vs baseline {baseline_path.name} ({baseline.get('saved')}, {baseline.get('note', '')}) ==")
+    now = rates_by_model(calls)
+    verdicts: list[bool] = []
+    for label, cur in sorted(now.items(), key=lambda kv: -int(kv[1]["n"])):
+        old = baseline["models"].get(label)
+        if old is None:
+            print(f"{label:44} n={cur['n']:5}  (not in baseline)")
+            continue
+        judge = min(int(cur["n"]), int(old["n"])) >= 50
+        cells = []
+        for tag, want in EXPECTATIONS.items():
+            before, after = float(old.get(tag, 0.0)), float(cur.get(tag, 0.0))
+            delta = (after - before) * 100
+            ok = after <= 0.02 if want == "zero" else after < before
+            mark = ("OK" if ok else "MISS") if judge else "?"
+            if judge:
+                verdicts.append(ok)
+            cells.append(f"{tag}={after:.0%}({delta:+.0f}pp,{mark})")
+        print(f"{label:44} n={cur['n']:5}  " + "  ".join(cells))
+    if verdicts:
+        print(f"\n{sum(verdicts)}/{len(verdicts)} expectations met (models with >=50 calls in both runs)")
+    else:
+        print("\nno model has >=50 calls in both runs — nothing judged yet; re-run with a wider --days")
+
+
+PROBES = [
+    (
+        "mkdir -p <scratch>/probe-fs",
+        "no prompt — <scratch> is in permissions.additionalDirectories and mkdir is a mode-granted fs command",
+    ),
+    (
+        "mkdir -p ./.probe-fs && rmdir ./.probe-fs",
+        "no prompt — inside the working directory; also proves the old Bash(mkdir:*) ask rule is gone",
+    ),
+    (
+        "git -C <another personal repo> status",
+        "no prompt — the Bash(git -C * status:*) allow rule from global_option_prefixes",
+    ),
+    (
+        "git init -q --bare <scratch>/probe-remote.git",
+        "PROMPT — not read-only, matches no rule; approve it (throwaway path)",
+    ),
+    (
+        "git -C <scratch>/probe-remote.git push -q <scratch>/probe-remote.git HEAD:probe",
+        "PROMPT — a mutating verb behind -C matches no ask rule and must fall through to the mode's prompt; "
+        "under auto mode this is the call that ran unprompted. Fails harmlessly after approval "
+        "(bare repo has no HEAD); the prompt is the data point",
+    ),
+    (
+        "rm -rf <scratch>/probe-fs <scratch>/probe-remote.git",
+        "no prompt — in-scope rm is mode-granted; the harness still hard-blocks rm on critical paths",
+    ),
+]
+
+
+def print_probes() -> None:
+    print(__doc__.split("\n\n")[0])
+    print(
+        "\nLive permission probes. Run each as its OWN Bash tool call (a subprocess would bypass the\n"
+        "harness's permission check), in an acceptEdits session, with <scratch> = $CLAUDE_JOB_DIR/tmp\n"
+        "or the session scratchpad. The agent cannot see prompts: after running them, tell the user\n"
+        "which steps were expected to prompt and ask whether that is what they saw.\n"
+    )
+    for i, (cmd, expect) in enumerate(PROBES, 1):
+        print(f"{i}. {cmd}\n   expect: {expect}")
 
 
 def _print_rates(title: str, groups: dict[str, list[Call]], limit: int | None = None) -> None:
@@ -327,13 +438,25 @@ def main() -> None:
     ap.add_argument("--project", help="only projects whose slug contains this substring")
     ap.add_argument("--samples", type=int, default=8, help="samples to print per pattern (0 = none)")
     ap.add_argument("--json", type=Path, help="also dump every call with its tags to this JSON file")
+    ap.add_argument("--compare", type=Path, help="baseline JSON to diff the per-model rates against, with verdicts")
+    ap.add_argument("--save-baseline", type=Path, help="write this run's per-model rates as a new baseline JSON")
+    ap.add_argument("--note", default="", help="free-text label stored in the baseline (mode in force, why)")
+    ap.add_argument("--probe", action="store_true", help="print the live permission probes and exit")
     args = ap.parse_args()
+
+    if args.probe:
+        print_probes()
+        return
 
     calls = load_calls(args.days, args.project)
     if not calls:
         print("no Bash calls found — check --days / --project")
         return
     report(calls, args.samples)
+    if args.compare:
+        compare(calls, args.compare)
+    if args.save_baseline:
+        save_baseline(calls, args.save_baseline, args.days, args.note)
     if args.json:
         args.json.write_text(json.dumps([{**c.__dict__, "tags": sorted(c.tags)} for c in calls], indent=1, default=str))
         print(f"\nwrote {args.json}")

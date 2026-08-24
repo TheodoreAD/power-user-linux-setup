@@ -203,14 +203,26 @@ pasting the Bash-discipline paragraph into those subagents' prompts instead.
 
 ## Open / to re-measure
 
-- After a week of `acceptEdits` dogfooding: re-run the baseline. Expect `sed-n`/`cat-view`/`heredoc`
-  to fall (no reminder), chaining to fall somewhat (rationale rewritten) but not vanish
-  (disposition), `cd-own-repo` and `git-C-mutating` near zero. If chaining doesn't move, the next
-  lever is the model choice for long implementation sessions, not more wording.
-- Prompt rate under `acceptEdits`: the denial list won't show prompts that were approved; count them
-  by hand for a session or two and feed unmatched-but-safe shapes to `inv allowlist.review`.
-- Verify live that an explicit `ask` rule really does beat `acceptEdits`' in-scope grant (documented
-  for the read-only set; extrapolated for the fs set). Test: temporarily add `Bash(mkdir:*)` to
-  `ask`, run `mkdir x` inside a repo in an `acceptEdits` session, see whether it prompts.
-- Whether `git -C x status` is recognized as built-in read-only `git` (in which case the
-  `global_option_prefixes` allow rules are redundant, harmless). Not tested.
+Both checks are procedures in `SKILL.md`, not chores for a human:
+
+- **Compare** (a week of `acceptEdits` sessions):
+  `audit.py --days 7 --compare
+  references/baselines/2026-08-24-auto-mode.json`. The script's
+  `EXPECTATIONS` encode what should move: `sed-n`/`cat-view`/`heredoc` down (no reminder), chaining
+  down somewhat (rationale rewritten) but not to zero (disposition), `cd-own-repo` and
+  `git-C-mutating` at zero. If chaining doesn't move, the next lever is model choice for long
+  implementation sessions, not more wording. The stored baseline is the auto-mode window (2026-08-21
+  → 24, saved from a `--days 4` run on 2026-08-24; that day's Fable calls are included, so its Fable
+  row is a little noisier than the table above).
+- **Probe** (`audit.py --probe`): six live commands with expected prompt/no-prompt outcomes — an
+  in-scope `mkdir` (proves the fs `ask` rules are gone and the mode grant holds),
+  `git -C <other>
+  status` (the `global_option_prefixes` allow rule), a bare `git init` and a
+  `git -C … push` to a throwaway bare repo (must prompt), and cleanup. Answers, once a human has
+  watched a run: whether an explicit `ask` rule beats the in-scope grant (documented for the
+  read-only set, extrapolated for the fs set), and whether `git -C x status` was already built-in
+  read-only (in which case the allow rule is redundant, harmless). Record the observed outcomes here
+  with the date.
+- Prompt rate under `acceptEdits`: approved prompts leave no trace in transcripts, so the denial
+  list understates friction. Feed any unmatched-but-safe shape a probe or a session surfaces to
+  `inv allowlist.review`.

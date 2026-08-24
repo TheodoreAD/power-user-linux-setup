@@ -1,0 +1,72 @@
+{
+  "saved": "2026-08-24",
+  "days": 4.0,
+  "note": "auto mode default; pre-rewrite ~/AGENTS.md Bash cluster; 2026-08-21..24",
+  "models": {
+    "claude-fable-5": {
+      "n": 549,
+      "chain": 0.5154826958105647,
+      "chain5": 0.151183970856102,
+      "head/tail": 0.3114754098360656,
+      "exit-masked": 0.10382513661202186,
+      "sed-n": 0.04371584699453552,
+      "cat-view": 0.007285974499089253,
+      "heredoc": 0.056466302367941715,
+      "cd-own-repo": 0.03825136612021858,
+      "git-mutating-in-chain": 0.03460837887067395,
+      "git-C-mutating": 0.0018214936247723133
+    },
+    "claude-opus-5": {
+      "n": 1676,
+      "chain": 0.662291169451074,
+      "chain5": 0.17541766109785203,
+      "head/tail": 0.3054892601431981,
+      "exit-masked": 0.11455847255369929,
+      "sed-n": 0.07995226730310262,
+      "cat-view": 0.017899761336515514,
+      "heredoc": 0.16050119331742244,
+      "cd-own-repo": 0.034606205250596656,
+      "git-mutating-in-chain": 0.08353221957040573,
+      "git-C-mutating": 0.023269689737470168
+    },
+    "claude-sonnet-5": {
+      "n": 1828,
+      "chain": 0.6400437636761488,
+      "chain5": 0.13074398249452954,
+      "head/tail": 0.2899343544857768,
+      "exit-masked": 0.22975929978118162,
+      "sed-n": 0.028446389496717725,
+      "cat-view": 0.022975929978118162,
+      "heredoc": 0.07330415754923414,
+      "cd-own-repo": 0.02954048140043764,
+      "git-mutating-in-chain": 0.08479212253829321,
+      "git-C-mutating": 0.022428884026258207
+    },
+    "claude-sonnet-5 [sub]": {
+      "n": 75,
+      "chain": 0.52,
+      "chain5": 0.2,
+      "head/tail": 0.29333333333333333,
+      "exit-masked": 0.0,
+      "sed-n": 0.32,
+      "cat-view": 0.0,
+      "heredoc": 0.0,
+      "cd-own-repo": 0.0,
+      "git-mutating-in-chain": 0.0,
+      "git-C-mutating": 0.0
+    },
+    "claude-haiku-4-5-20251001 [sub]": {
+      "n": 23,
+      "chain": 0.391304347826087,
+      "chain5": 0.0,
+      "head/tail": 0.2608695652173913,
+      "exit-masked": 0.043478260869565216,
+      "sed-n": 0.0,
+      "cat-view": 0.043478260869565216,
+      "heredoc": 0.0,
+      "cd-own-repo": 0.0,
+      "git-mutating-in-chain": 0.0,
+      "git-C-mutating": 0.0
+    }
+  }
+}
