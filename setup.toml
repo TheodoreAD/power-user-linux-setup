@@ -922,8 +922,9 @@ content_file = "config/global-AGENTS.md"
 
 [packages.repo-tasks]
 description = """
-Cross-repo Claude Code permission grant for `repo-tasks`' `quality.*` task namespace (lint/format/
-type-check/shell-check/test plus the fix/check/precommit composite) — identical across every
+Cross-repo Claude Code permission grant for `repo-tasks`' `quality.*` and `test.*` task namespaces
+(lint/format/type-check/shell-check plus the fix/check/precommit composite, and one target per test
+tier) — identical across every
 consumer repo by design (see repo-tasks' own README "Design": no per-repo allowances), local-only,
 and reversible (git-tracked file edits, no network/publish/push side effects), unlike the rest of
 `inv`'s surface (dist.publish, docker.push/release, gitflow.*, version.bump, ...) which run
@@ -936,6 +937,11 @@ ask-by-default) for why this can't just be a blanket `inv` allow rule.
 tags = ["ai"]
 claude_permissions_allow = [
   "Bash(inv quality.*)",
+  # repo-tasks moved its test tasks out of `quality.*` into their own `test.*` namespace on
+  # 2026-08-24 (inv test.unit/integration/smoke/regression/all). Without this second rule every
+  # test invocation in every consumer repo starts prompting again. Same reasoning as the rule
+  # above: read-only-to-local-state, no network/publish/push side effects.
+  "Bash(inv test.*)",
 ]
 
 [packages.claude-statusline]
