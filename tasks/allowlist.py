@@ -1218,21 +1218,34 @@ def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
 
 
 @task
-def review(c, apply_all=False, only=None):  # noqa: C901
+def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
     """Show tools with unreviewed classifications (new or changed since the last reviewed
     snapshot) and, on confirmation, mark them reviewed. Nothing in `render` trusts an unreviewed
     entry, so this is the human gate before anything downstream sees a tool's rules. Per-tool, not
     per-node: there's no mechanism to individually override one node's classification without
     reclassifying, which is why needs_review entries stay excluded even after their tool is
-    marked reviewed.
+    marked reviewed (tools.toml's `allow_overrides`/`ask_overrides` shape what `render` emits for
+    a verb, but never the verdict on disk).
 
     --only=dangerous,needs_review narrows the per-node list to just those classification tiers
     (comma-separated) — useful for triaging a large tree (docker/gh run 150+ nodes) without
     reading past every read_only entry first. Omit for the full list. `invalid` entries and the
-    approval prompt are unaffected by the filter either way."""
+    approval prompt are unaffected by the filter either way.
+
+    --tool=git reviews just that one tool, same flag as extract/classify. Needed whenever another
+    tool is *deliberately* pending (`sed`, `inv` — see contributing/cli-allowlist.md): `--apply-all`
+    without it would mark those reviewed too, and from a non-TTY (an agent's Bash tool) the
+    per-tool confirm can't be answered at all, so `--tool=<x> --apply-all` is the only way to
+    approve one tool from there without approving everything."""
     rules = _load_all_rules()
     pending = {name: entry for name, entry in rules.items() if not entry.get("reviewed")}
     only_set = {t.strip() for t in only.split(",") if t.strip()} if only else None
+
+    if tool:
+        if tool not in pending:
+            print(f"[allowlist] {tool}: nothing pending review")
+            return
+        pending = {tool: pending[tool]}
 
     if not pending:
         print("[allowlist] nothing pending review")
@@ -1337,42 +1350,70 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
       subcommand prompts anyway in every mode that prompts), and a mid-pattern `*` spans any
       number of arguments, so the allow side is an accepted, documented hole (`git -C x commit -m
       status` also matches) taken in exchange for friction-free cross-repo reads.
+    - `allow_overrides` / `ask_overrides` — hand-picked rule bodies (the tool name is implied:
+      `"add"` renders `Bash(git add:*)`) emitted regardless of any node's verdict. An
+      `allow_overrides` entry that names a node path replaces that node's own generated rule; any
+      other entry (`"restore --staged"`, `"reset * --hard"`) is simply added. Allow entries also
+      get the `global_option_prefixes` variants. This is the per-verb escape hatch `review`'s
+      docstring says the classification side doesn't have: `git add` *is* a write, and stays one
+      on disk, but a write that only touches the index and can't lose code is not worth a prompt
+      per commit — while a flag that can (`reset --hard`) gets its own ask rule, which wins by the
+      same ask > allow precedence. `ask_overrides` is where the flag-shaped carve-outs the per-flag
+      ratings can't express go, as literal prefix patterns.
     """
     registry = _load_registry()
     allow, ask = [], []
     for name, entry in sorted(rules.items()):
         if not entry.get("reviewed"):
             continue
-        cfg = registry.get(name, {})
-        mode_covered = bool(cfg.get("mode_covered"))
-        global_prefixes: list[str] = cfg.get("global_option_prefixes", [])
-        # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
-        # top-level service-group command, classified on what *that* does with no args (usually
-        # "shows help/lists things"), never on what its real subcommands do. That's the wrong
-        # signal to allow on: confirmed for real, not hypothetical — `gcloud storage`/`sql`/
-        # `secrets`/`run` all classified read_only (bare invocation just lists), but `gcloud
-        # storage rm -r`/`sql instances delete`/`secrets versions destroy`/`run services delete`
-        # are genuinely destructive, and there's no narrower rule to correct for it the way a
-        # recursed tool's `network rm` corrects for `network`'s own allow. So: never emit an
-        # allow rule for a cloud_cli tool, full stop — every node renders as ask at most,
-        # regardless of its own classification. This is the one place a node's classification is
-        # capped rather than trusted outright.
-        is_cloud_cli = bool(cfg.get("cloud_cli"))
-        cache_nodes = (_load_cache(name) or {}).get("nodes", {})
-        for path, v in sorted(entry.get("nodes", {}).items()):
-            classification = v["classification"]
-            if cache_nodes.get(path, {}).get("children"):
-                continue
-            pattern = f"Bash({name}:*)" if path == _NO_SUBCOMMANDS_KEY else f"Bash({name} {path}:*)"
-            if classification == Classification.READ_ONLY and not is_cloud_cli:
-                allow.append(pattern)
-                if path != _NO_SUBCOMMANDS_KEY:
-                    allow.extend(f"Bash({name} {prefix} {path}:*)" for prefix in global_prefixes)
-            elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
-                classification == Classification.READ_ONLY and is_cloud_cli
-            ):
-                if not mode_covered:
-                    ask.append(pattern)
+        tool_allow, tool_ask = _tool_claude_rules(name, entry, registry.get(name, {}))
+        allow.extend(tool_allow)
+        ask.extend(tool_ask)
+    return allow, ask
+
+
+def _tool_claude_rules(name: str, entry: dict, cfg: dict) -> tuple[list[str], list[str]]:
+    """One reviewed tool's (allow, ask) patterns — the per-tool body of _compute_claude_rules,
+    which documents every knob applied here."""
+    allow: list[str] = []
+    ask: list[str] = []
+    mode_covered = bool(cfg.get("mode_covered"))
+    global_prefixes: list[str] = cfg.get("global_option_prefixes", [])
+    allow_overrides: list[str] = cfg.get("allow_overrides", [])
+    ask_overrides: list[str] = cfg.get("ask_overrides", [])
+    # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
+    # top-level service-group command, classified on what *that* does with no args (usually
+    # "shows help/lists things"), never on what its real subcommands do. That's the wrong
+    # signal to allow on: confirmed for real, not hypothetical — `gcloud storage`/`sql`/
+    # `secrets`/`run` all classified read_only (bare invocation just lists), but `gcloud
+    # storage rm -r`/`sql instances delete`/`secrets versions destroy`/`run services delete`
+    # are genuinely destructive, and there's no narrower rule to correct for it the way a
+    # recursed tool's `network rm` corrects for `network`'s own allow. So: never emit an
+    # allow rule for a cloud_cli tool, full stop — every node renders as ask at most,
+    # regardless of its own classification. This is the one place a node's classification is
+    # capped rather than trusted outright.
+    is_cloud_cli = bool(cfg.get("cloud_cli"))
+    cache_nodes = (_load_cache(name) or {}).get("nodes", {})
+    for path, v in sorted(entry.get("nodes", {}).items()):
+        classification = v["classification"]
+        if cache_nodes.get(path, {}).get("children"):
+            continue
+        if path in allow_overrides:
+            continue  # rendered from the override list below, whatever the verdict says
+        pattern = f"Bash({name}:*)" if path == _NO_SUBCOMMANDS_KEY else f"Bash({name} {path}:*)"
+        if classification == Classification.READ_ONLY and not is_cloud_cli:
+            allow.append(pattern)
+            if path != _NO_SUBCOMMANDS_KEY:
+                allow.extend(f"Bash({name} {prefix} {path}:*)" for prefix in global_prefixes)
+        elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
+            classification == Classification.READ_ONLY and is_cloud_cli
+        ):
+            if not mode_covered:
+                ask.append(pattern)
+    for body in allow_overrides:
+        allow.append(f"Bash({name} {body}:*)")
+        allow.extend(f"Bash({name} {prefix} {body}:*)" for prefix in global_prefixes)
+    ask.extend(f"Bash({name} {body}:*)" for body in ask_overrides)
     return allow, ask
 
 

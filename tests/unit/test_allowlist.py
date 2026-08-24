@@ -364,6 +364,45 @@ def test_compute_claude_rules_global_option_prefixes_ignored_for_no_subcommands_
     assert allowlist._compute_claude_rules(rules) == (["Bash(flat:*)"], [])
 
 
+def test_compute_claude_rules_allow_override_replaces_node_ask_and_gets_prefix_variants(monkeypatch):
+    # `git add` is honestly `write` on disk; the override only changes what render emits — an
+    # allow instead of the ask, with the same -C/-c variants a read_only node would get.
+    _stub_registry(monkeypatch, {"git": {"global_option_prefixes": ["-C *"], "allow_overrides": ["add"]}})
+    rules: dict[str, Any] = {
+        "git": {"reviewed": True, "nodes": {"add": _rule_node("write"), "push": _rule_node("dangerous")}}
+    }
+    allow, ask = allowlist._compute_claude_rules(rules)
+    assert allow == ["Bash(git add:*)", "Bash(git -C * add:*)"]
+    assert ask == ["Bash(git push:*)"]
+    assert rules["git"]["nodes"]["add"]["classification"] == "write"
+
+
+def test_compute_claude_rules_ask_overrides_render_verbatim_alongside_allow_override(monkeypatch):
+    # An allow for the verb plus ask rules for its code-losing flag shapes: ask > allow with no
+    # specificity tiebreak means `git reset --hard` prompts while `git reset -q` doesn't. The
+    # `* --hard` form is what closes the flag-order hole (`git reset -q --hard`).
+    cfg = {"allow_overrides": ["reset", "restore --staged"], "ask_overrides": ["reset --hard", "reset * --hard"]}
+    _stub_registry(monkeypatch, {"git": cfg})
+    rules = {"git": {"reviewed": True, "nodes": {"reset": _rule_node("write"), "restore": _rule_node("write")}}}
+    allow, ask = allowlist._compute_claude_rules(rules)
+    assert allow == ["Bash(git reset:*)", "Bash(git restore --staged:*)"]
+    # `restore` itself (bare form discards worktree changes) keeps its generated ask.
+    assert ask == ["Bash(git restore:*)", "Bash(git reset --hard:*)", "Bash(git reset * --hard:*)"]
+
+
+def test_compute_claude_rules_allow_override_on_read_only_node_does_not_duplicate(monkeypatch):
+    _stub_registry(monkeypatch, {"git": {"allow_overrides": ["fetch"]}})
+    rules = {"git": {"reviewed": True, "nodes": {"fetch": _rule_node("read_only")}}}
+    assert allowlist._compute_claude_rules(rules) == (["Bash(git fetch:*)"], [])
+
+
+def test_compute_claude_rules_overrides_ignored_for_unreviewed_tool(monkeypatch):
+    # The review gate stays the gate: overrides shape a reviewed tool's output, they don't bypass it.
+    _stub_registry(monkeypatch, {"git": {"allow_overrides": ["add"]}})
+    rules = {"git": {"reviewed": False, "nodes": {"add": _rule_node("write")}}}
+    assert allowlist._compute_claude_rules(rules) == ([], [])
+
+
 def test_coverage_gaps_none_when_every_child_has_own_rule():
     rules = {
         "gh": {
