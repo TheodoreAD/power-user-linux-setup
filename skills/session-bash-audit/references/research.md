@@ -11,6 +11,7 @@ Dated findings behind `SKILL.md`. Append; don't rewrite history — the value is
 - [Harness facts (checked 2026-08-24)](#harness-facts-checked-2026-08-24)
 - [Decisions taken 2026-08-24](#decisions-taken-2026-08-24)
 - [Rejected: a PreToolUse nudge hook](#rejected-a-pretooluse-nudge-hook)
+- [Prompt audit 2026-08-25: the first day of acceptEdits](#prompt-audit-2026-08-25-the-first-day-of-acceptedits)
 - [Open / to re-measure](#open--to-re-measure)
 
 ## Baseline 2026-08-24
@@ -213,6 +214,58 @@ and it contradicts the standing rule that agents get the same treatment as devel
 to run, not corrected behind their back. The `Plan`/`Explore` blind spot it also cited is handled by
 pasting the Bash-discipline paragraph into those subagents' prompts instead.
 
+## Prompt audit 2026-08-25: the first day of acceptEdits
+
+The user's report after one day on `acceptEdits` across the three repos: "a whole lot of manual
+confirmations we should've taken care of with all that AGENTS.md work." Transcripts can't show an
+approved prompt, so `scripts/prompts.py` was written to replay the harness's matching over every
+call since the switch (2026-08-24 22:13 local) against the live `settings.json`. 373 main-session
+calls, six sessions, all Fable:
+
+- **40% of calls would have prompted.** Per session 8–75%; the two worst were sessions working
+  across repos.
+- **67% of those prompts were the git commit flow**: `git add` 35, `git commit` 26,
+  `git -C ../other add|commit|fetch` 18, `git push` 10, `git rm`/`restore --staged`/`reset -q` 10.
+  The rest: `inv deploy.all` 9 (its own `--yes` confirm plus a Bash prompt), the documented
+  cross-repo `cd X && PATH=… inv …` form 12, read-only `inv --list`/`deploy.status`/`configs.diff`
+  8, a handful of `python3 script.py`, `gh api`, `curl`, `bash script.sh`.
+- Cause: two correct things interacting. `~/AGENTS.md` (rewritten 2026-08-24) mandates many small
+  single-concern commits, staged right before each and `git fetch`ed before every push; the
+  allowlist's honest `write` verdict for `add` rendered as `ask`, and
+  `fetch`/`rm`/`restore`/`switch`/ `mv` weren't registered in `tools.toml` at all. Two to four
+  prompts per commit, times the commit count the instructions drove up. Not a wording problem — no
+  sentence in `~/AGENTS.md` could have moved it.
+- Behaviour side (`--compare` against the auto-mode baseline): 11/30 expectations met. Opus/Sonnet
+  unchanged, but every one of their sessions in the window predates the rewrite — nothing to
+  conclude yet. Fable: chaining −6pp, head/tail −9pp, `echo EXIT=$?` +10pp (a habit that costs
+  nothing under `acceptEdits` except a line). Chaining now has a direct price: one unmatched piece
+  prompts the whole call.
+
+Decisions (user, 2026-08-25): `commit` and `stash` stay `ask` — commit is the checkpoint, stash
+hides work; everything that only touches the index and cannot lose code goes `allow`; every flag
+shape that can lose code gets its own `ask`. Landed in `power-user-linux-setup`:
+
+- `tools.toml` `[git]`: `allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]`,
+  `ask_overrides` for `reset --hard/--merge/--keep`, `restore --staged --worktree/-W`,
+  `rm -f/--force/-rf/-fr` — each as `verb --flag` and `verb * --flag`, since the mid-pattern `*`
+  spans any number of arguments and closes the flag-order hole. New render knob in
+  `tasks/allowlist.py` (`contributing/cli-allowlist.md` "allow_overrides / ask_overrides");
+  `fetch rm restore switch mv` registered; `inv allowlist.review --tool=<x>` added so one tool can
+  be approved from a non-TTY without marking `sed`/`inv` reviewed.
+- `setup.toml` `[packages.repo-tasks]` `claude_permissions_allow`: `inv --list`, `inv -l`,
+  `inv deploy.status`, `inv allowlist.status`, `inv configs.diff`.
+- Re-run against the new rules (507 calls by then): 40% → 30%, and 58 of the remaining 152 are
+  `commit`/`push` — the two the user kept. What's left is disposition and one-offs: the cross-repo
+  form (`cd` + env prefix, 13), `inv deploy.all`/`configs.*`/`allowlist.*` (mutating, correct to
+  prompt), `python3 <script>`, `bash <script>`, `shfmt`/`basedpyright`/`bump-my-version --version`
+  (tools not registered in `tools.toml` — candidates for `inv allowlist.extract` if they keep
+  appearing outside `inv quality.*`).
+
+Harness fact learned the hard way: `inv allowlist.review` from an agent's Bash tool can't answer its
+confirm (`util.confirm` returns the default off a non-TTY), and `--apply-all` marks every pending
+tool — which would have re-reviewed `sed` and `inv`, the exact near-miss
+`contributing/cli-allowlist.md` records. Hence `--tool`.
+
 ## Open / to re-measure
 
 Both checks are procedures in `SKILL.md`, not chores for a human:
@@ -236,5 +289,8 @@ Both checks are procedures in `SKILL.md`, not chores for a human:
   read-only (in which case the allow rule is redundant, harmless). Record the observed outcomes here
   with the date.
 - Prompt rate under `acceptEdits`: approved prompts leave no trace in transcripts, so the denial
-  list understates friction. Feed any unmatched-but-safe shape a probe or a session surfaces to
-  `inv allowlist.review`.
+  list understates friction — `scripts/prompts.py` (the **Prompts** procedure) estimates it by
+  replaying the rules instead. Two of its approximations are worth a probe: whether a redirect to a
+  `"$CLAUDE_JOB_DIR/tmp/x.log"` target (variable, not literal) prompts — the script assumes it does,
+  and it is the exact form `~/AGENTS.md` recommends for capturing a gate's exit code — and whether
+  `git -C <other> fetch` now matches `Bash(git -C * fetch:*)` without a prompt.

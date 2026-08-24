@@ -12,7 +12,7 @@ _where_ a fix belongs. The first run (2026-08-24, 3,956 calls over four days) is
 sections before interpreting a new run; most of the reasoning transfers and doesn't need
 re-deriving.
 
-## Three procedures — the skill runs them, the user only reads results
+## Four procedures — the skill runs them, the user only reads results
 
 Which one applies:
 
@@ -21,8 +21,10 @@ Which one applies:
 | "how are sessions using Bash", a new pattern to measure    | **Measure** (below)            |
 | "did the change work", "re-check", a week after a change   | **Compare** against baseline   |
 | "does the permission setup behave", after a mode/rule edit | **Probe** the live permissions |
+| "why so many prompts", "what's still prompting"            | **Prompts** — replay the rules |
 
-All three use `scripts/audit.py`; `S=~/.agents/skills/session-bash-audit` below.
+The first three use `scripts/audit.py`, the fourth `scripts/prompts.py`;
+`S=~/.agents/skills/session-bash-audit` below.
 
 **Measure**
 
@@ -65,6 +67,22 @@ list which steps were expected to prompt and ask the user whether that matched w
 mismatch is a real finding (a rule shadowing a mode grant, a prefix rule not matching) — record it
 in `references/research.md` "Harness facts" with the date, and route the fix.
 
+**Prompts** — which calls prompted, and why, when the user reports "too many confirmations":
+
+```shell
+python3 $S/scripts/prompts.py --days 2
+python3 $S/scripts/prompts.py --since 2026-08-24T19:13:00Z --project repo-tasks
+```
+
+An approved prompt leaves no trace in a transcript, so this replays the harness's matching (split on
+the separators, `ask` beats `allow`, built-in read-only set, `acceptEdits`' in-scope grant) against
+the _current_ `~/.claude/settings.json` and prints the estimated prompting share per session and the
+first prompting reason per call, ranked with samples. Run it before and after a rule change: the
+"after" run is the check that the change actually removed the shape, not just a shape. Route each
+reason with the table below — most land in `tools.toml` (`allow_overrides`/`ask_overrides`,
+`global_option_prefixes`) or `setup.toml`'s `claude_permissions_allow`, not in prose. The 2026-08-25
+run that introduced it is in `references/research.md` ("Prompt audit").
+
 Reading the **Measure** output, in order:
 
 1. **per model** — the baseline. Compare against the table in `references/research.md` ("Baseline
@@ -91,6 +109,8 @@ The audit exists to prevent the reflex of "add a sentence to `~/AGENTS.md`". Rou
 | -------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A rule's stated _reason_ no longer holds (e.g. "prompt friction" under a mode that doesn't prompt) | Rewrite the reason in `config/global-AGENTS.md`, evidence in `contributing/global-agents-md.md`. Wording alone won't move a rate when the rationale is what's wrong. |
 | A command shape prompts but is read-only and common                                                | `inv allowlist.review`/`tools.toml` (`global_option_prefixes` for `git -C`-style shapes) — see `contributing/cli-allowlist.md`                                       |
+| A verb is honestly `write` but can't lose code, and the instructions make it frequent              | `allow_overrides` on the tool in `tools.toml`, with `ask_overrides` for its code-losing flag shapes (`git add`/`reset --hard`, 2026-08-25)                           |
+| A read-only `inv` task prompts                                                                     | `claude_permissions_allow` on `[packages.repo-tasks]` in `setup.toml` — `inv` is deliberately unreviewed, so only listed tasks are allowed                           |
 | A command shape is gated by the mode more precisely than a prefix rule                             | `mode_covered` in `cli-allowlist/tools.toml`, never a hand edit of `settings.json`                                                                                   |
 | Writes to a harness scratch dir prompt                                                             | `claude_additional_directories` on `[packages.claude-code]` in `setup.toml`                                                                                          |
 | The harness itself instructs the opposite (auto mode's "prefer Bash" reminder)                     | The mode, not the wording: `claude_default_mode` in `setup.toml`. Don't write rules that fight a live system reminder                                                |
