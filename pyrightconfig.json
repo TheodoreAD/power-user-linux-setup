@@ -12,8 +12,12 @@
   // Same fixed list for every consumer's `pyrightconfig.json`, not parameterized per repo:
   // `src`/`tests` (library layout) + `tasks`/`tasks.py` (a flat-layout repo like
   // `power-user-linux-setup`, and every consumer's own `tasks.py` entry point) together —
-  // basedpyright silently no-ops on whichever entries don't exist in a given repo, so one shared
-  // list works everywhere with nothing to adjust per consumer.
+  // A *literal* include path that doesn't exist is a hard config error (exit 3), not a silent
+  // no-op — measured, and contrary to what this comment used to claim — which is why configs.pull
+  // filters this list down to the entries that actually exist in each consumer before writing it.
+  // A directory entry is recursive below itself but anchored at the top level: `src` means ./src,
+  // never any directory named src, so this list can never wander into a .venv and consequently
+  // needs no `exclude` at all. See plans/2026-08-19-gitignore-tool-alignment.md.
   "include": ["tests", "tasks"],
   "failOnWarnings": false,
 
