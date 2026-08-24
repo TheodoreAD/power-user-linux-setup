@@ -1,7 +1,23 @@
 ---
-status: idea
-updated: 2026-08-22
+status: landed
+updated: 2026-08-25
 ---
+
+[DECISION: landed 2026-08-25 after reading the sources directly, not the paraphrase. Answers to the
+open questions, in order: (1) Khorikov's article takes no position on parametrize — it never
+mentions data-driven tests; its misapplied-DRY example is shared mutable state and an arrange step
+hidden in a setup method. (2) The "echoed by Brian Okken" claim did not hold: Test & Code ep. 160
+(2021, transcript in `okken/testandcode_transcripts`) never cites Khorikov, calls the DAMP-for-tests
+argument something he's "on the fence" about, states one readability standard for production and
+test code, and names "parameterization, fixtures, and helper functions" as the right tools to clean
+up duplication "only if you can still read the test quickly." His book's dedicated parametrization
+chapters exist to replace near-identical repeated test functions. (3) Yes, and it's now stated in
+`SKILL.md`: a new case that adds a _value_ is a parametrize row; one that changes the test's _logic_
+is a new test (Simply The Test, 2019). (4) No concrete failure case was on record; the framing is
+softened to "mostly confirms," with the narrow override being branch-on-parameters mega-tests and
+assertion-owning `check_*` helpers. Durable content: `SKILL.md` Testing conventions bullet,
+`references/rationale.md` §7 (with the citation-check note), and the `testing.py` snippet, which now
+shows both sides of the line.]
 
 ## Context
 
