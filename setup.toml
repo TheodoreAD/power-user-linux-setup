@@ -971,6 +971,15 @@ claude_permissions_allow = [
   # test invocation in every consumer repo starts prompting again. Same reasoning as the rule
   # above: read-only-to-local-state, no network/publish/push side effects.
   "Bash(inv test.*)",
+  # Read-only `inv` surface an agent hits constantly (2026-08-25 prompt audit: `inv --list`,
+  # `deploy.status`, `configs.diff` were the only non-quality/test inv calls besides `deploy.all`,
+  # which keeps its prompt — it mutates ~ and has its own --yes confirm). `--list` is invoke's own
+  # flag, the others are this repo's / repo-tasks' explicitly read-only status/diff tasks.
+  "Bash(inv --list:*)",
+  "Bash(inv -l:*)",
+  "Bash(inv deploy.status:*)",
+  "Bash(inv allowlist.status:*)",
+  "Bash(inv configs.diff:*)",
 ]
 
 [packages.claude-statusline]
