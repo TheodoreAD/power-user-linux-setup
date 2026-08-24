@@ -1,9 +1,12 @@
 """Fixture scope: construct expensive/shared objects at module or session
 scope, but reset their *mutable* state via a function-scoped fixture — cheap
 construction stays shared, isolation stays per-test. Setup mechanics (the
-"how") are DRY; the scenario each test verifies (the "what") stays visible in
-that test. parametrize a pure value matrix; write a new test when a new case
-would change the test's logic. See ../rationale.md §7.
+"how") are DRY, and their default form is a pytest fixture — never an
+arrange block hand-rolled at the top of each test, which is how a suite ends
+up doing the same thing three different ways with nothing to show it. The
+scenario each test verifies (the "what") stays visible in that test.
+parametrize a pure value matrix; write a new test when a new case would
+change the test's logic. See ../rationale.md §7.
 """
 
 from dataclasses import dataclass, field

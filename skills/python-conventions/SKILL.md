@@ -138,6 +138,16 @@ just confirm what you'd already do, weight the ones that don't.
 ## Testing conventions
 
 - Snippet: [`references/snippets/testing.py`](references/snippets/testing.py)
+- Fixtures first, always. Any setup a test needs — a tmp tree, a fake `HOME`, a stubbed `c.run`, a
+  constructed object, a monkeypatched env — is a `pytest` fixture (in `conftest.py` once two files
+  want it), not lines hand-rolled at the top of each test body. Two reasons, and the second is the
+  bigger one: it removes the mechanical duplication, and it **surfaces when the suite is doing the
+  same thing three different ways** — three hand-rolled versions of "make a fake repo" hide in three
+  test bodies indefinitely; three fixtures named `fake_repo`, `tmp_repo`, and `repo_dir` sit next to
+  each other in `conftest.py` and get merged. Reach for the built-ins (`tmp_path`, `monkeypatch`,
+  `capsys`, `caplog`) before writing a helper that reimplements one. A helper _function_ is the
+  fallback only for setup that needs per-call arguments a fixture can't take — and even then, a
+  fixture returning a factory (`make_repo(name)`) usually fits.
 - Fixture scope: narrowest that stays correct. For the module-singleton pattern above — construct
   the expensive object at module/session scope, but reset its _mutable_ state via a function-scoped
   fixture. A `monkeypatch` inside a broad-scoped fixture stays live for the whole scope, not just
@@ -152,10 +162,12 @@ just confirm what you'd already do, weight the ones that don't.
   test.** What's actually warned against is collapsing genuinely different scenarios into one
   branching mega-test, or hiding the scenario inside a helper whose name doesn't say what it
   asserts.
-- Model default: **mostly confirms.** A model parametrizes value matrices unprompted, and that's
-  right. The override is narrow: the modularity section's abstraction instinct can leak into folding
-  scenarios that differ in _logic_ into one parametrized-with-branches test, or into a `check_*`
-  helper that owns the assertion — that is the specific failure this entry blocks.
+- Model default: **mostly confirms, overrides in one direction.** A model parametrizes value
+  matrices unprompted, and that's right. What it does _not_ reliably do is promote setup to fixtures
+  — left alone it inlines the same three-line arrange block into every test it writes, which is the
+  "same thing three ways" failure above. The other narrow override: the modularity section's
+  abstraction instinct can leak into folding scenarios that differ in _logic_ into one
+  parametrized-with-branches test, or into a `check_*` helper that owns the assertion.
 - Never run a code-mutating command as part of a test's exercised behavior unless the test's actual
   subject is that mutation. A fix/format/autocorrect command run before the assertion silently masks
   the exact defect a check-only equivalent would have caught. Confirmed live 2026-08-23 in

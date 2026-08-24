@@ -544,7 +544,19 @@ skill now states comes from the pytest-community formulation (Simply The Test, "
 staying DAMP? When to parametrize tests", 2019): _"If a value needs to be changed to add a new case,
 parametrize. If logic needs to be changed to add a new case, create a new test."_ The thing actually
 warned against is a parametrized test that branches on its parameters, or a `check_*` helper that
-owns the assertion — those hide the scenario; a data table doesn't.
+owns the assertion — those hide the scenario; a data table doesn't. The three sources are mirrored
+in `$RESEARCH_HOME/pages/testing-dry-vs-damp/` (see the `research-library` skill).
+
+**Fixtures wherever possible — a stated preference of this repo family's owner (2026-08-25), not
+just a sourced default.** The "how" side of the split above is not merely _allowed_ to be DRY; it
+should be, via `pytest` fixtures specifically. Beyond removing duplication, the argument that made
+it a rule is discoverability: setup hand-rolled inside test bodies has no name and no shared
+location, so a suite can accumulate three different ways of doing the same thing (three fake-repo
+builders, three env-patching idioms) with nothing that ever puts them side by side. Fixtures give
+each piece of setup a name and a home (`conftest.py`), which is exactly what makes the duplication
+visible and mergeable. This is consistent with every source above — Okken's own list of duplication
+cleanups is "parameterization, fixtures, and helper functions" — and with Khorikov's DRY-the-how; it
+just makes the fixture the default form of the "how" rather than one option among helpers.
 
 ## 8. Type hygiene
 
