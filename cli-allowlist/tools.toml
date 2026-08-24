@@ -54,6 +54,18 @@
 #                     directory-scoped read doesn't prompt just because the verb isn't the second
 #                     word. Allow-only by design; the mid-pattern `*` spans any number of
 #                     arguments, an accepted hole documented in contributing/cli-allowlist.md.
+#   allow_overrides / ask_overrides
+#                    hand-picked rule bodies rendered regardless of the classified verdict (tool
+#                     name implied: "add" -> `Bash(git add:*)`). An allow entry naming a node path
+#                     replaces that node's own generated rule and also gets the
+#                     global_option_prefixes variants; any other entry is added as-is. The verdict
+#                     on disk is untouched, still reviewed, still reported by `status`. For verbs
+#                     whose honest `write` verdict isn't worth a prompt (index-only git ops that
+#                     can't lose code) and for the flag shapes that *can* (`reset --hard`), which
+#                     the per-flag ratings can't render but a literal ask pattern can — ask > allow
+#                     with no specificity tiebreak, so the narrower ask wins. `* --flag` forms close
+#                     the flag-order hole (`git reset -q --hard`); the mid-pattern `*` spans any
+#                     number of arguments. See contributing/cli-allowlist.md "allow_overrides".
 #
 # Tree discovery can surface a node that isn't actually a real command — a discovery regex
 # matching a sample-output table row, a deprecated/plugin subcommand whose --help silently echoes
@@ -107,6 +119,36 @@ max_nodes = 100
 # cross-repo reads from an agent session (`git -C <other repo> status`) were the single most common
 # unmatched git shape in a 4-day transcript audit (2026-08-24); `-c` covers the same for one-off config
 global_option_prefixes = ["-C *", "-c *"]
+# 2026-08-25 prompt audit (session-bash-audit skill, references/research.md): under acceptEdits,
+# 67% of all permission prompts were the commit flow — `git add` alone 35 of 148, plus rm/restore/
+# reset/fetch that weren't registered at all. ~/AGENTS.md mandates many small commits, staging
+# right before each and fetching before every push, so the allowlist charged 2–4 prompts per
+# commit. Index-only verbs that cannot lose code render allow; `commit`/`push`/`stash` stay ask
+# (user decision 2026-08-25: commit and stash need a human), and every flag shape below that CAN
+# discard uncommitted work gets its own ask rule. Residual holes, accepted: single-letter clusters
+# (`git rm -qf`), `-S` for `--staged`, `-W` before `--staged` — all fall through to a prompt
+# (unmatched), never to an allow.
+allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]
+ask_overrides = [
+  "reset --hard",
+  "reset * --hard",
+  "reset --merge",
+  "reset * --merge",
+  "reset --keep",
+  "reset * --keep",
+  "restore --staged --worktree",
+  "restore --staged * --worktree",
+  "restore --staged -W",
+  "restore --staged * -W",
+  "rm -f",
+  "rm * -f",
+  "rm --force",
+  "rm * --force",
+  "rm -rf",
+  "rm * -rf",
+  "rm -fr",
+  "rm * -fr",
+]
 subcommands = [
   "status",
   "log",
@@ -136,6 +178,13 @@ subcommands = [
   "pull",
   "clean",
   "reset",
+  # unregistered until 2026-08-25 — every call prompted as "unmatched", fetch included, the one
+  # verb ~/AGENTS.md tells sessions to run before each push
+  "fetch",
+  "rm",
+  "restore",
+  "switch",
+  "mv",
 ]
 
 [gh]

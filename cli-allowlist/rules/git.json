@@ -1,6 +1,6 @@
 {
-  "classified_at": "2026-08-10T15:37:00Z",
-  "extracted_at": "2026-08-10T13:10:29Z",
+  "classified_at": "2026-08-24T23:21:12Z",
+  "extracted_at": "2026-08-24T23:19:49Z",
   "nodes": {
     "add": {
       "classification": "write",
@@ -68,10 +68,10 @@
     },
     "bisect start": {
       "classification": "write",
-      "content_hash": "4e73af3f2da1c84f",
+      "content_hash": "afcbbdf12dacfbd8",
       "flags": {},
       "model": "haiku",
-      "rationale": "Creates local bisect state to track a binary search; fully reversible via git bisect reset.",
+      "rationale": "Initiates binary search mode marking commits as good/bad; modifies local bisect state.",
       "source": "llm"
     },
     "bisect terms": {
@@ -146,6 +146,14 @@
       "rationale": "Shows differences between commits or files without modifying state.",
       "source": "llm"
     },
+    "fetch": {
+      "classification": "write",
+      "content_hash": "627b62eca8cfcda8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Downloads commits and refs from remote, updates local tracking branches.",
+      "source": "llm"
+    },
     "fsck": {
       "classification": "read_only",
       "content_hash": "ea258c7fcadab1e8",
@@ -192,6 +200,14 @@
       "flags": {},
       "model": "haiku",
       "rationale": "Merges branches but merge conflicts and history can be reverted.",
+      "source": "llm"
+    },
+    "mv": {
+      "classification": "write",
+      "content_hash": "24c7e87b3b4a6fcf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Moves or renames files in working tree and index; reversible operation.",
       "source": "llm"
     },
     "notes": {
@@ -419,12 +435,28 @@
       "rationale": "Default --mixed mode moves HEAD and resets index while preserving changes.",
       "source": "llm"
     },
+    "restore": {
+      "classification": "write",
+      "content_hash": "86c40ac99cfb2c52",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Overwrites working tree or index files from a source, discarding local changes.",
+      "source": "llm"
+    },
     "rev-parse": {
       "classification": "read_only",
       "content_hash": "8f751fed22ff2a95",
       "flags": {},
       "model": "haiku",
       "rationale": "Parses git revisions and references without modifying state.",
+      "source": "llm"
+    },
+    "rm": {
+      "classification": "write",
+      "content_hash": "016010f140b81251",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes files from working tree and index; reversible via git restore.",
       "source": "llm"
     },
     "show": {
@@ -469,10 +501,10 @@
     },
     "stash create": {
       "classification": "write",
-      "content_hash": "4b2f0143d307d0f4",
+      "content_hash": "83538f0a957498ca",
       "flags": {},
       "model": "haiku",
-      "rationale": "Creates a stash entry without modifying the working tree; reversible and bounded to local storage.",
+      "rationale": "Creates a stash entry saving working tree changes; local and reversible.",
       "source": "llm"
     },
     "stash drop": {
@@ -627,6 +659,14 @@
       "rationale": "Updates submodules to specified commits, a normal bounded working tree modification.",
       "source": "llm"
     },
+    "switch": {
+      "classification": "write",
+      "content_hash": "36e055f225e9be6f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes the current branch and updates working tree; standard branch navigation.",
+      "source": "llm"
+    },
     "tag": {
       "classification": "write",
       "content_hash": "a660f40feca94730",
@@ -709,7 +749,7 @@
     }
   },
   "reviewed": true,
-  "reviewed_at": "2026-08-10T15:53:07Z",
+  "reviewed_at": "2026-08-24T23:21:49Z",
   "truncated": false,
   "version": "git version 2.43.0"
 }
