@@ -204,6 +204,21 @@ one chained command, chaining was "banned") and reported it as a limitation inst
 approval prompt — abandoning real work to dodge friction, strictly worse than any number of prompts
 (`plans/2026-08-23-cross-directory-command-execution.md`, retired).
 
+The redirect shape (`<cmd> > <file> 2>&1; echo $?`) was dropped from the permitted list on
+2026-08-25. It had been admitted the day before as the safe substitute for `2>&1 | tail`, and the
+user then reported "a LOT of invoke tool output redirects, exit codes, redirected output reading
+later instead of default agent tools" across three repos. The rule was self-contradictory: this
+section sanctioned the form, "Viewing, searching, or editing files" said not to append
+`; echo "EXIT=$?"`, and "Reading a command's result" recommended `command; echo $?` — so models
+followed the sanctioned form for every gate (the audit's `echo-exit` pattern rose from 0 to 10–11%
+of Fable/Opus calls in the day it was in force). Verified live 2026-08-25 before rewriting: a plain
+`inv quality.precommit` run reports nothing on exit 0 and an explicit `Exit code N` otherwise, and a
+1 MB output was saved to a file by the harness with the path in the result — every property the
+redirect form was reaching for, in one call instead of two and with no `$VAR`-target prompt. The
+second driver was the 1 MB itself: 4,145 basedpyright warnings on a green run, which any model will
+try to keep out of context; that is a gate-output problem and has its own plan in `repo-tasks`
+(`plans/2026-08-25-type-check-warning-noise.md`), not a wording fix.
+
 ## Viewing, searching, or editing files
 
 The `| head`/`| tail` clause, added 2026-08-24: 1,128 of 3,956 audited calls (29–32% for
@@ -365,6 +380,12 @@ that half-repeats the disambiguating word reads as awkward rather than clean.
 `"0 errors, N warnings, 0 notes"` summary line — a real regression across three repos went unnoticed
 for a stretch of a session because every check was read via `... | tail -N`, and `tail`/`grep` in a
 pipeline return their own exit code, not the upstream command's.
+
+Rewritten 2026-08-25 to drop its own `command; echo $?` / redirect-and-check advice: the Bash tool
+reports a non-zero exit itself, so the advice produced a chain on every gate run for information
+already in the tool result (see "Composing a Bash call" above for the measurement). The rule's point
+— a pipe masks the exit code — survives; the prescribed remedy is now "don't pipe", not "add
+`echo $?`".
 
 ## Generalizing from a sample to a set
 

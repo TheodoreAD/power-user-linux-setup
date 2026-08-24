@@ -168,11 +168,15 @@ One command per call. The costs of a chain are harness-side, not just prompts: o
 whole output and one real exit code, while a chain's `$?` is its last command's and its output is
 one blob; and independent calls issued as separate tool-call blocks in one response already run in
 parallel, so gluing with `;`/`&&` gains nothing. `echo "=== label ==="` between steps is the tell
-that a chain should have been several calls. Exactly two chain shapes are fine:
-`cd <other repo> &&
-<one command>` for a cross-repo step, and `<cmd> > <file> 2>&1; echo $?` to
-capture a gate's real exit code. Never `cd` into the session's own repo — cwd already is it, and the
-harness resets cwd after every call anyway.
+that a chain should have been several calls. Exactly one chain shape is fine:
+`cd <other repo> && <one command>` for a cross-repo step. Never `cd` into the session's own repo —
+cwd already is it, and the harness resets cwd after every call anyway.
+
+Run a gate or test plain — `inv quality.precommit`, `pytest` — not `> log 2>&1; echo $?` with a Read
+of the log afterwards. The Bash tool already reports a non-zero exit code on its own, keeps the
+whole output, and when output is oversized saves the full text to a file and tells you where. The
+redirect form turns one call into two (plus a prompt when the target is a `$VAR` path) and buys
+nothing. Redirect only when the log is genuinely needed later, then Grep/Read it as a second call.
 
 ### Viewing, searching, or editing files
 
@@ -181,11 +185,12 @@ Grep/Glob over `grep`/`find`, Edit/Write over `sed -i`/heredocs — dedicated to
 permission gate and keep the whole result. Never pipe tool output through `| head`/`| tail` to save
 context: the harness already truncates large output and saves the full text to a file, so
 pre-truncating only loses data and forces a second run; if size is the worry, count first (`rg -c`,
-`wc -l`). That includes output you just redirected to a file: `cmd > log 2>&1; echo $?` is one call,
-then Grep/Read _on the log_ — never `; rg … log | head` tacked onto the same call. And don't append
-`; echo "EXIT=$?"` to a plain command — the tool already reports a non-zero exit. When shelling out
-to search anyway, use `rg` over `grep -r` and `fd` over `find` (faster, `.gitignore`-aware); plain
-`grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`, or portability.
+`wc -l`). That includes a log you did redirect to: Grep/Read _on the log_ as a second call — never
+`; rg … log | head` tacked onto the same one. And never append `; echo "EXIT=$?"` to a command — the
+tool already reports a non-zero exit, and a bare `$?` after `;` is the previous command's anyway
+only because nothing else ran, so it adds a chain for information you already have. When shelling
+out to search anyway, use `rg` over `grep -r` and `fd` over `find` (faster, `.gitignore`-aware);
+plain `grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`, or portability.
 
 ### Running a command against a different repo than the session's project
 
@@ -288,10 +293,12 @@ var prefix).
 
 ### Reading a command's result
 
-Clean-looking stdout is not proof of success — check the real exit code (`command; echo $?`, or
-redirect to a file and check `$?` in a separate unpiped step). A piped `tail`/`grep` returns _its
-own_ exit code, so `$?` after a pipeline never reflects the upstream failure. Assume a CLI's clean
-summary text and its exit code can disagree until verified otherwise.
+Clean-looking stdout is not proof of success — the exit code is. The Bash tool reports it whenever
+it is non-zero, so a plain unpiped command already gives you the real answer; `echo $?` and
+redirect-to-a-log add nothing. What loses it is a pipe: `tail`/`grep` return _their own_ exit code,
+so `$?` after a pipeline never reflects the upstream failure, and the tool's exit report is the
+filter's too. Assume a CLI's clean summary text and its exit code can disagree until verified
+otherwise.
 
 ### Generalizing from a sample to a set
 
