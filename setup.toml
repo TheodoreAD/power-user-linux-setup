@@ -977,9 +977,23 @@ claude_permissions_allow = [
   # flag, the others are this repo's / repo-tasks' explicitly read-only status/diff tasks.
   "Bash(inv --list:*)",
   "Bash(inv -l:*)",
-  "Bash(inv deploy.status:*)",
-  "Bash(inv allowlist.status:*)",
-  "Bash(inv configs.diff:*)",
+  # Read-only by naming convention (user decision 2026-08-25, replacing per-task entries): any
+  # `<ns>.status/check/diff/list/show`, `<ns>.print-*`, `<ns>.check-*`, `<ns>.list-*`, and
+  # `<ns>.*-check` (quality.lint-check, ...). The `invoke-task-conventions` skill's rule 2 makes
+  # these names mean "inspect, never mutate", and this is where that convention becomes
+  # load-bearing — a mutating task named `x.check` would run unprompted. Known hole, accepted:
+  # the mid-pattern `*` spans arguments, so `inv deploy.all --name x.status` also matches; task
+  # arguments ending in one of these words are rare enough not to be worth a prompt on every
+  # genuine status call.
+  "Bash(inv *.status:*)",
+  "Bash(inv *.check:*)",
+  "Bash(inv *.diff:*)",
+  "Bash(inv *.list:*)",
+  "Bash(inv *.show:*)",
+  "Bash(inv *.print-*)",
+  "Bash(inv *.check-*)",
+  "Bash(inv *.list-*)",
+  "Bash(inv *-check:*)",
 ]
 
 [packages.claude-statusline]
