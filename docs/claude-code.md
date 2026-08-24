@@ -273,6 +273,32 @@ confirmed, documented Copilot setting for path-scoped _file-read_ auto-approval 
 isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse than
 an honest "nothing applied, here's why." Revisit if a scoped-read key is ever confirmed.
 
+## Declaring the permission mode and scratch directories — `claude_default_mode`, `claude_additional_directories`
+
+Two more `settings.json` keys `inv ai.install-skills` syncs, both declared on
+`[packages.claude-code]` (the mode is a single scalar read directly, like `claude_statusline`; the
+directories are an any-section list merged through their own manifest,
+`~/.local/state/power-user-linux-setup/claude-additional-directories-applied.json`, like
+`claude_permissions_allow`):
+
+- `claude_default_mode = "acceptEdits"` → `permissions.defaultMode`. Absent → set; matches → no-op;
+  a different explicit value → ask before replacing (declines by default). This machine's permission
+  setup is built for `acceptEdits`, where the allow/ask rules decide and anything unmatched that
+  isn't read-only prompts; `auto` mode replaces that with a classifier and, on top, instructs the
+  agent to prefer `cat`/`sed`/heredocs over the Read/Edit tools — the opposite of `~/AGENTS.md`. The
+  audit that settled this (3,956 Bash calls over four days, per-model chaining and truncation rates,
+  the `git -C` ask-rule bypass) and the mode comparison are in the `session-bash-audit` skill's
+  `references/research.md`; re-run the skill to re-measure.
+- `claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]` →
+  `permissions.additionalDirectories`, `~` expanded. The harness's own scratch locations — the
+  per-session scratchpad and background-job tmp — are outside every repo, so under `acceptEdits`
+  every write there would prompt. Entries from a settings file grant file access only; nothing
+  (`CLAUDE.md`, skills, hooks) loads from them, unlike `--add-dir`.
+
+Read `cli-allowlist.md`'s `mode_covered` section for the matching change on the rules side: the
+filesystem commands `acceptEdits` gates by path (`mkdir`, `cp`, `rm`, ...) no longer render as `ask`
+rules, because an explicit `ask` rule would beat the mode's in-scope grant.
+
 ## Declaring the statusline — the `claude_statusline` field
 
 `[packages.claude-statusline]` deploys the custom Claude Code statusline script

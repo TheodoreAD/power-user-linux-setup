@@ -15,6 +15,9 @@ _REPO_ROOT = Path(__file__).parent.parent
 # rule strings we previously wrote are ever removed), different manifest, so the two mechanisms
 # can never step on each other's rules even though they touch the same settings.json file.
 _STATIC_PERMS_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-applied.json"
+# Same shape again for `claude_additional_directories` (permissions.additionalDirectories): its own
+# manifest, so a directory the user added by hand is never removed by this mechanism.
+_STATIC_DIRS_MANIFEST = util.PULSE_STATE_DIR / "claude-additional-directories-applied.json"
 # Both live in tasks/deploy.py: the skill installer and deploy.py's own registry need the same
 # marker name and the same directory hash, and two copies of a content comparison are exactly the
 # kind of drift this repo's single-deploy-path work exists to remove.
@@ -293,6 +296,94 @@ def _apply_static_claude_permissions() -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
 
 
+def _apply_additional_directories() -> None:
+    """Merge every setup.toml-declared `claude_additional_directories` entry (any package, any
+    method — same any-section pattern as `claude_permissions_allow`) into ~/.claude/settings.json's
+    `permissions.additionalDirectories`, `~` expanded. Same manifest-tracked safe merge as
+    `_apply_static_claude_permissions`, through its own manifest (`_STATIC_DIRS_MANIFEST`).
+
+    Why it exists: under `acceptEdits` mode, file edits and the filesystem commands it
+    auto-approves are only unprompted *inside* the working directory or these directories. The
+    harness's own scratch locations (`/tmp/claude-1000/<project>/<session>/scratchpad`,
+    `~/.claude/jobs/<id>/tmp`) are outside every repo, so without this every scratch write prompts.
+    Directories listed here grant file access only — no CLAUDE.md/skills/hooks load from them
+    (documented harness behavior for the settings-file form, unlike `--add-dir`).
+    """
+    declared = sorted(
+        {
+            str(Path(d).expanduser())
+            for cfg in util.load_config()["packages"].values()
+            if cfg.get("enabled", True)
+            for d in cfg.get("claude_additional_directories", [])
+        }
+    )
+
+    settings = util.load_claude_settings()
+    existing = settings.get("permissions", {}).get("additionalDirectories", [])
+
+    if util.DRY_RUN:
+        missing = [d for d in declared if d not in existing]
+        print(f"[ai.install-skills] additionalDirectories: {'ok' if not missing else f'MISSING {len(missing)}'}")
+        return
+
+    previous: set[str] = (
+        set(cast(list[str], json.loads(_STATIC_DIRS_MANIFEST.read_text()))) if _STATIC_DIRS_MANIFEST.exists() else set()
+    )
+    kept = [d for d in existing if d not in previous]
+    merged = kept + [d for d in declared if d not in kept]
+
+    if set(merged) == set(existing):
+        print(f"[ai.install-skills] additionalDirectories: already up to date ({len(declared)} dir(s))")
+        return
+
+    settings.setdefault("permissions", {})["additionalDirectories"] = merged
+    util.write_claude_settings(settings)
+
+    _STATIC_DIRS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    _STATIC_DIRS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n")
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: additionalDirectories updated ({len(declared)} dir(s))")
+
+
+def _apply_declared_default_mode() -> None:
+    """Sync `[packages.claude-code]`'s `claude_default_mode` into ~/.claude/settings.json's
+    `permissions.defaultMode`. Same three-outcome shape as `_apply_declared_statusline` — one
+    scalar with one desired value, so no manifest: absent -> set; matches -> no-op; set to
+    something else -> ask before overwriting (declines by default).
+
+    The mode is declared here rather than flipped per session because the rest of this machine's
+    Claude Code setup — the `cli-allowlist` pipeline's prefix rules, `mode_covered`, the scratch
+    `claude_additional_directories` — is designed around `acceptEdits`' rules-decide model, not
+    `auto`'s classifier-decides one; a session started in the wrong mode silently gets a different
+    permission system. Rationale and the audit behind the choice: the `session-bash-audit` skill's
+    references/research.md.
+    """
+    declared = util.load_config()["packages"].get("claude-code", {}).get("claude_default_mode")
+    if not declared:
+        return
+
+    settings = util.load_claude_settings()
+    current = settings.get("permissions", {}).get("defaultMode")
+
+    if util.DRY_RUN:
+        print(f"[ai.install-skills] permissions.defaultMode: {util.ok_label(current == declared)}")
+        return
+
+    if current == declared:
+        print("[ai.install-skills] permissions.defaultMode: already up to date")
+        return
+
+    if current is not None and not ui.ask(
+        f"~/.claude/settings.json already sets permissions.defaultMode={current!r} — replace it with {declared!r}?",
+        default=False,
+    ):
+        print("[ai.install-skills] permissions.defaultMode: left existing value in place")
+        return
+
+    settings.setdefault("permissions", {})["defaultMode"] = declared
+    util.write_claude_settings(settings)
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: permissions.defaultMode set to {declared!r}")
+
+
 def _apply_declared_statusline() -> None:
     """Point ~/.claude/settings.json's top-level `statusLine` key at the managed script, declared
     via `[packages.claude-statusline]`'s `claude_statusline` field.
@@ -395,9 +486,10 @@ def install_skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
-    On the default (global) run, also merges every declared `claude_permissions_allow` rule into
-    ~/.claude/settings.json, syncs the declared `claude_statusline` value into its `statusLine`
-    key, and checks for GitHub Copilot (see docs/claude-code.md).
+    On the default (global) run, also merges every declared `claude_permissions_allow` rule and
+    `claude_additional_directories` entry into ~/.claude/settings.json, syncs the declared
+    `claude_default_mode` and `claude_statusline` values into `permissions.defaultMode` /
+    `statusLine`, and checks for GitHub Copilot (see docs/claude-code.md).
 
     Before actually installing or updating a skill, shows its own description and asks — same
     `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
@@ -426,5 +518,7 @@ def install_skills(c, dir=None, yes=False, skill=None):  # noqa: A002
     _install_declared_skills(c, base, yes=yes, selected=selected)
     if dir is None and selected is None:
         _apply_static_claude_permissions()
+        _apply_additional_directories()
+        _apply_declared_default_mode()
         _apply_declared_statusline()
         _note_copilot_permissions()

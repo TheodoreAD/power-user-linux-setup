@@ -6,6 +6,7 @@ util.load_config rather than any real system call, same shape as tests/test_phas
 tests/README.md.
 """
 
+import json
 import shutil
 from pathlib import Path
 
@@ -496,6 +497,8 @@ def _stub_skills_task_helpers(monkeypatch, calls):
         lambda c, base, *, yes, selected=None: calls.append(("install", base, yes, selected)),
     )
     monkeypatch.setattr(ai, "_apply_static_claude_permissions", lambda: calls.append(("perms",)))
+    monkeypatch.setattr(ai, "_apply_additional_directories", lambda: calls.append(("dirs",)))
+    monkeypatch.setattr(ai, "_apply_declared_default_mode", lambda: calls.append(("mode",)))
     monkeypatch.setattr(ai, "_apply_declared_statusline", lambda: calls.append(("statusline",)))
     monkeypatch.setattr(ai, "_note_copilot_permissions", lambda: calls.append(("copilot",)))
 
@@ -510,6 +513,8 @@ def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch
     ai.install_skills.body(None, yes=True)  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
 
     assert ("perms",) in calls
+    assert ("dirs",) in calls
+    assert ("mode",) in calls
     assert ("statusline",) in calls
     assert ("copilot",) in calls
     assert ("install", Path.home(), True, None) in calls
@@ -524,6 +529,8 @@ def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_pat
     )
 
     assert ("perms",) not in calls
+    assert ("dirs",) not in calls
+    assert ("mode",) not in calls
     assert ("statusline",) not in calls
     assert ("copilot",) not in calls
     assert ("install", tmp_path, False, None) in calls
@@ -628,3 +635,136 @@ def test_apply_declared_statusline_noop_when_nothing_declared(monkeypatch):
     monkeypatch.setattr(ui, "ask", _fail_if_asked("nothing declared, must never prompt"))
 
     ai._apply_declared_statusline()
+
+
+# ---------------------------------------------------------------------------
+# _apply_additional_directories — manifest-tracked merge, same shape as static permissions
+# ---------------------------------------------------------------------------
+
+
+def _stub_declared_dirs(monkeypatch, tmp_path, dirs):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {"packages": {"claude-code": {"enabled": True, "claude_additional_directories": dirs}}},
+    )
+    monkeypatch.setattr(ai, "_STATIC_DIRS_MANIFEST", tmp_path / "dirs-manifest.json")
+
+
+def test_apply_additional_directories_writes_expanded_paths_and_manifest(monkeypatch, tmp_path, capsys):
+    _stub_declared_dirs(monkeypatch, tmp_path, ["/tmp/claude-1000", "~/.claude/jobs"])
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"allow": ["Bash(ls:*)"]}})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+
+    ai._apply_additional_directories()
+
+    expected = sorted(["/tmp/claude-1000", str(Path.home() / ".claude" / "jobs")])
+    assert written == [{"permissions": {"allow": ["Bash(ls:*)"], "additionalDirectories": expected}}]
+    assert json.loads((tmp_path / "dirs-manifest.json").read_text()) == expected
+    assert "additionalDirectories updated" in capsys.readouterr().out
+
+
+def test_apply_additional_directories_keeps_hand_added_dir_and_removes_only_ours(monkeypatch, tmp_path):
+    _stub_declared_dirs(monkeypatch, tmp_path, ["/tmp/claude-1000"])
+    (tmp_path / "dirs-manifest.json").write_text(json.dumps(["/old/ours"]))
+    monkeypatch.setattr(
+        util,
+        "load_claude_settings",
+        lambda: {"permissions": {"additionalDirectories": ["/old/ours", "/theirs"]}},
+    )
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+
+    ai._apply_additional_directories()
+
+    assert written[0]["permissions"]["additionalDirectories"] == ["/theirs", "/tmp/claude-1000"]
+
+
+def test_apply_additional_directories_noop_when_up_to_date(monkeypatch, tmp_path, capsys):
+    _stub_declared_dirs(monkeypatch, tmp_path, ["/tmp/claude-1000"])
+    existing = {"permissions": {"additionalDirectories": ["/tmp/claude-1000"]}}
+    monkeypatch.setattr(util, "load_claude_settings", lambda: existing)
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("up to date, must never write"))
+
+    ai._apply_additional_directories()
+
+    assert "already up to date" in capsys.readouterr().out
+
+
+def test_apply_additional_directories_dry_run_never_writes(monkeypatch, tmp_path, capsys):
+    _stub_declared_dirs(monkeypatch, tmp_path, ["/tmp/claude-1000"])
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("dry run must never write"))
+    util.DRY_RUN = True
+
+    ai._apply_additional_directories()
+
+    assert "MISSING 1" in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# _apply_declared_default_mode — scalar, statusline-shaped: absent/matches/conflicts
+# ---------------------------------------------------------------------------
+
+
+def _stub_declared_mode(monkeypatch, value="acceptEdits"):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {"packages": {"claude-code": {"enabled": True, "claude_default_mode": value}}},
+    )
+
+
+def test_apply_declared_default_mode_sets_when_absent(monkeypatch, capsys):
+    _stub_declared_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"allow": []}})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("no existing value, must never prompt"))
+
+    ai._apply_declared_default_mode()
+
+    assert written == [{"permissions": {"allow": [], "defaultMode": "acceptEdits"}}]
+    assert "defaultMode set to 'acceptEdits'" in capsys.readouterr().out
+
+
+def test_apply_declared_default_mode_noop_when_already_correct(monkeypatch, capsys):
+    _stub_declared_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"defaultMode": "acceptEdits"}})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("already correct, must never write"))
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("already correct, must never prompt"))
+
+    ai._apply_declared_default_mode()
+
+    assert "already up to date" in capsys.readouterr().out
+
+
+def test_apply_declared_default_mode_declined_overwrite_leaves_existing(monkeypatch, capsys):
+    _stub_declared_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"defaultMode": "auto"}})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("declined, must never write"))
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
+
+    ai._apply_declared_default_mode()
+
+    assert "left existing value in place" in capsys.readouterr().out
+
+
+def test_apply_declared_default_mode_confirmed_overwrite_writes(monkeypatch):
+    _stub_declared_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"defaultMode": "auto"}, "theme": "dark"})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._apply_declared_default_mode()
+
+    assert written == [{"permissions": {"defaultMode": "acceptEdits"}, "theme": "dark"}]
+
+
+def test_apply_declared_default_mode_noop_when_nothing_declared(monkeypatch):
+    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"claude-code": {"enabled": True}}})
+    monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
+
+    ai._apply_declared_default_mode()

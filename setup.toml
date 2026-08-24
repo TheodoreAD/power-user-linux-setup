@@ -928,6 +928,18 @@ script_url = "https://claude.ai/install.sh"
 # Ubuntu/Debian) fails on it with a syntax error. bash is always present (essential package).
 shell = "bash"
 check_cmd = "claude"
+# Permission mode every session starts in. `acceptEdits` (rules decide; unmatched non-read-only
+# Bash prompts; in-scope file edits and mkdir/cp/rm/mv/touch/sed don't) is the model the
+# cli-allowlist pipeline, `mode_covered`, and the scratch directories below are designed around.
+# `auto` (a classifier decides, and the harness tells the agent to prefer cat/sed/heredocs over
+# Read/Edit) was dropped 2026-08-24 after a 4-day transcript audit — see the session-bash-audit
+# skill's references/research.md. Synced by `inv ai.install-skills` (asks before replacing a
+# different explicit value).
+claude_default_mode = "acceptEdits"
+# Where the harness itself puts per-session scratch (`/tmp/claude-1000/<project>/<session>/
+# scratchpad`) and background-job tmp (`~/.claude/jobs/<id>/tmp`). Outside every repo, so without
+# this every scratch write prompts under acceptEdits. File access only — nothing loads from here.
+claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]
 
 [packages.claude-global-md]
 description = "Global ~/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/.claude/CLAUDE.md symlinks to it"
@@ -1666,6 +1678,19 @@ skills/python-conventions/references/rationale.md.
 method = "skill"
 tags = ["dev"]
 skills = [{ source = "local", path = "skills/python-conventions" }]
+
+[packages.session-bash-audit]
+description = """
+On-demand skill: measures how Claude Code sessions actually use the Bash tool (chaining, cd into
+the own repo, head/tail truncation, sed -n/cat/heredoc instead of Read/Edit, git verbs behind -C or
+inside chains) from ~/.claude/projects transcripts, and routes each finding to the mechanism that
+owns it — a ~/AGENTS.md rule's rationale, an allowlist rule, tools.toml's mode_covered, the
+permission mode, or a subagent's spawn prompt. Carries the dated research behind the 2026-08-24
+move from auto mode to acceptEdits. No package attached; exists purely to declare the skill.
+"""
+method = "skill"
+tags = ["ai"]
+skills = [{ source = "local", path = "skills/session-bash-audit" }]
 
 [packages.session-harvest]
 description = """
