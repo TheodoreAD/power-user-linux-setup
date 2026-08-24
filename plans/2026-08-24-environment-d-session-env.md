@@ -70,7 +70,49 @@ higher-priority directory masks the lower one entirely. Variables land in the us
 environment, so everything under `user@1000.service` inherits them, `app.slice` scopes included.
 Applied at next login.
 
+### Portability, and why the zsh blocks cannot simply be dropped
+
+`environment.d` is upstream systemd (v233, 2017), not a distro feature — every systemd distro has it
+identically, and the only per-distro variation is which files ship preloaded under the system-level
+directories. There is no counterpart at all on the no-systemd targets this repo supports (containers
+and WSL-without-systemd, where `util.has_systemd()` already gates whole phases; likewise
+Alpine/OpenRC, Void/runit). That is a second, independent reason the `zshenv` blocks stay — not only
+"they are what interactive shells read," but "on those targets nothing else exists."
+
+### Why this repo never adopted it
+
+Worth recording so the omission does not read as a considered rejection that someone later has to
+re-litigate. `environment.d` is low-profile on Ubuntu rather than discouraged — there is no
+community consensus against it. Three reasons it stayed invisible:
+
+- The older advice kept working. A decade of Ask Ubuntu answers point at `~/.profile`,
+  `/etc/environment`, and `~/.pam_environment`, and those still mostly function.
+- It only became load-bearing when GNOME's session moved to systemd user units. Under X11, session
+  environment came from `/etc/X11/Xsession.d/` and `~/.profile`, which _did_ reach GUI applications
+  — the gap measured above did not exist in the same form, so nobody had a reason to go looking for
+  a replacement mechanism.
+- Ubuntu ships files under the system-level directories but no installer, GUI, or doc points a user
+  at the `~/.config/` counterpart.
+
+**A third writer is still wired up on this machine (verified 2026-08-24).** `~/.pam_environment` was
+deprecated in pam 1.5.0 and removed in 1.6.0, but this machine runs pam 1.5.3 and still carries
+`user_readenv=1` in `/etc/pam.d/gdm-password` and `/etc/pam.d/sshd` — so the file would still be
+read if it existed. It does not exist here, but nothing asserts that.
+
 ## Open questions
+
+[NEEDS CLARIFICATION: should `inv verify.all` assert the _absence_ of `~/.pam_environment`? It is a
+fourth possible origin for a variable, on a removal timer set by whenever pam 1.6 reaches an Ubuntu
+release this repo targets — at which point anything relying on it fails silently rather than
+loudly.]
+
+[NEEDS CLARIFICATION: `environment.d` does not cover every entry point either, which sharpens the
+replacement-vs-addition question below into "neither surface is complete." It reaches whatever
+`systemd --user` spawns. [UNVERIFIED: a non-interactive `ssh host cmd` and a bare tty login are
+believed not to pick it up, neither environment coming from the user manager — not tested.] For the
+askpass trio the practical impact is near zero, since a GUI prompt is useless over a non-interactive
+ssh anyway, but it means moving a variable to `environment.d` can never be a clean migration for one
+that an ssh-invoked command also needs.]
 
 [NEEDS CLARIFICATION: Is this a **replacement** for the `zshenv` blocks or an **addition** beside
 them? Replacement is cleaner but impossible as stated — `environment.d` requires systemd, and this
