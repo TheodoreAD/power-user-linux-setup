@@ -6,7 +6,9 @@ _use_ it (see the [docs site](https://theodoread.github.io/power-user-linux-setu
 ## Dev environment & tests
 
 See [tests/README.md](tests/README.md): `inv dev-env.setup` once after cloning (`uv sync` +
-`direnv allow`), then plain `pytest tests/` — no `uv run` prefix, no manual activation.
+`direnv allow`), then plain `pytest` (or `inv test.unit`) — no `uv run` prefix, no manual
+activation. Tests live in `tests/unit/`; there is deliberately no integration tier (see
+`tests/README.md`).
 
 ## Code quality
 

@@ -43,7 +43,7 @@ docs/claude-code.md). Then just `cd` into the repo and run tests the plain way, 
 Python project — no `uv run` prefix, no manual activation:
 
 ```shell
-pytest tests/
+pytest            # or: inv test.unit — what quality.check/precommit run
 ```
 
 This also works unmodified from a Claude Code (or other agent) session in this repo, once
@@ -52,3 +52,20 @@ session and replays it for every Bash-tool command instead of re-sourcing dotfil
 _new_ session's snapshot already has `.venv/bin` on `PATH` — no explicit activation needed. A
 session whose snapshot predates `.envrc`/`direnv allow` existing won't see it retroactively (the
 snapshot doesn't refresh mid-session); start a new session if that happens.
+
+## Layout: `tests/unit/` only, no integration tier — on purpose
+
+The suite lives in `tests/unit/`, matching the two-tier layout `repo-tasks` ships to every consumer
+(`pytest.ini`'s `testpaths = tests/unit`, the `inv test.{unit,integration,smoke,regression,all}`
+namespace — rationale in `repo-tasks/contributing/test-tiers.md`). This repo has **no**
+`tests/integration/` and that is deliberate, not an omission: every test here is hermetic (the
+collaborators that would shell out are monkeypatched, nothing needs a network, a Docker daemon, or
+anything outside `tmp_path`) and the whole suite runs in well under a second — there is nothing to
+put in a slower tier. `inv test.integration`/`smoke`/`regression` no-op cleanly on the missing
+directory. Add the directory only when a test genuinely needs a real external service; a test that
+merely stubs its collaborators belongs in `tests/unit/`.
+
+The directory matters even with the tier empty: the shared `pytest.ini` names `tests/unit`, and when
+`testpaths` misses, pytest falls back to searching the whole working tree — broader than `tests/`,
+and not `.gitignore`-aware — so any non-test directory at the repo root would join the default run
+(see `plans/2026-08-24-adopt-test-tier-structure.md` for the incident that motivated this).

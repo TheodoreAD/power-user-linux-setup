@@ -1,8 +1,18 @@
 ---
-status: idea
+status: landed
 updated: 2026-08-24
 depends_on: [repo-tasks]
 ---
+
+[DECISION: landed 2026-08-24 as the third option — `tests/unit/` with no integration tier. The
+second open question was measured, not guessed: all 282 tests run in 0.33s and every `subprocess`/
+`c.run`/network hit in the suite is a monkeypatched collaborator, so nothing qualifies for a tier
+whose contract is "needs a real external service". The 16 files moved (`git mv`, history intact),
+`inv configs.pull` then brought in the shared `pytest.ini` (`testpaths = tests/unit`, the `smoke`
+marker) with the directory already in place, and `tasks/__init__.py` now publishes `repo_tasks`'
+`testing` module as `inv test.*`. The "why the tier is empty" record lives in `tests/README.md`,
+which is where the next reader looks; CI stays on `inv quality.check` alone — an
+`inv test.integration` step would only no-op here.]
 
 # Adopt `repo-tasks`' unit/integration test structure
 
