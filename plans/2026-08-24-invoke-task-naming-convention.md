@@ -1,5 +1,5 @@
 ---
-status: blocked on the repo-tasks follow-up
+status: blocked on repo-tasks' own naming audit
 updated: 2026-08-24
 depends_on: [repo-tasks]
 ---
@@ -45,9 +45,20 @@ exists.]
    imperative command: "apt: install base", "zsh: fix history".
 2. A task name leads with a verb — unless a community CLI convention already owns that name
    (`status`, `list`, `version`, `check`, `diff`), in which case the convention wins.
-3. A handful of namespaces are themselves the action (`setup`, `verify`, `cleanup`, `deploy`). There
-   the leaf names the scope or object being acted on — `verify.all`, `clean.caches` — and the whole
-   still reads as one imperative.
+3. A handful of namespaces are themselves the action (`setup`, `verify`, `cleanup`, `deploy`,
+   `test`). There the leaf names the scope or object being acted on — `verify.all`, `clean.caches`,
+   `test.unit` — and the whole still reads as one imperative.
+
+[DECISION: `test` joins rule 3's action-namespaces. `repo-tasks` introduced
+`inv test.unit`/`test.integration`/`test.smoke`/`test.regression`/`test.all` on 2026-08-24, and a
+reviewer reading rule 1 without rule 3 flagged them as inverted. They are not — `test.all` is the
+same shape as `verify.all`. Rule 3 and `CONTRIBUTING.md`'s copy both name `test` explicitly now, so
+the misreading does not recur.]
+
+[DECISION: the follow-up this plan was blocked on exists —
+`repo-tasks/plans/2026-08-24-verb-first-task-naming.md`, opened 2026-08-24. What remains before this
+plan can land is that plan's `inv --list` audit of the shared namespaces, not its existence, so the
+status line now names the audit instead.]
 
 ### Audit
 

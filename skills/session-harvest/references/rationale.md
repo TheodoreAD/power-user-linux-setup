@@ -135,3 +135,15 @@ this genuinely reusable across sessions and projects rather than a one-shot scri
 step of finding and editing the _source_ repo (not the installed copy) matters because
 `inv ai.install-skills`-installed copies are plain file copies, not symlinks — editing one silently
 doesn't propagate anywhere and gets overwritten on the next install run.
+
+## Why the canonical source must be read before drafting (2026-08-24)
+
+The skill already said never to edit the deployed `~/AGENTS.md`, which handles the _write_ side. The
+missing half was the _read_ side: a session's context carries whatever `~/AGENTS.md` looked like
+when the session started, and that file is regenerated from `config/global-AGENTS.md` by
+`inv tools.install`. After the leanness pass restructured the source from 30 flat sections to 6
+clusters, a running session still held the old shape — so "extend the existing rule's section", the
+admission criterion this skill routes candidates through, would have been applied against section
+names that no longer existed. The failure would have been silent: an edit landing in a plausible but
+wrong place, or a new heading created for a rule that already had a home. One `grep -n '^## '`
+against the source avoids it.

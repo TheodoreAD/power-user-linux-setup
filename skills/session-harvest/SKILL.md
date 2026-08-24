@@ -50,25 +50,30 @@ considered and rejected).
    - **Cross-repo/personal preference (not tied to one project) → `~/AGENTS.md`, never memory
      either.** Same logic as the repo-specific split above, one level up — version-controlled via
      its real source (`power-user-linux-setup/config/global-AGENTS.md`; never edit the deployed
-     `~/AGENTS.md` directly, it's silently overwritten by the next `inv tools.install`) and loaded
-     into every session regardless of repo, so it's the actual bloat-avoidance-and-reviewability
-     lever for content that isn't tied to one project, the same way a repo's own `AGENTS.md` is for
-     that repo. Confirmed as a real gap 2026-08-22: a session found ~30 `feedback`-type memories
-     accumulated across multiple projects' memory folders — each project's memory is invisible to
-     every other project's sessions, so a genuinely cross-repo preference saved there never actually
-     reaches a session in a different repo. Most had simply never been promoted because nothing
-     routed them anywhere else. **A candidate that's a _variant_ of a rule already in `~/AGENTS.md`
-     extends that rule's existing section — it doesn't get a new one.** "Already covered → skip"
-     (below) is for an exact duplicate; this is the near-miss case, where the principle is written
-     down but this particular shape of it isn't. Default to appending a short paragraph to the
-     section that already frames it, because that file is loaded into every session in every repo,
-     so a new heading costs context everywhere and a reader who sees three instances under one
-     principle generalizes better than one holding three unrelated rules. Reach for a new section
-     only when the trigger and the detection signal are both genuinely different from anything
-     already there. Resolved 2026-08-23: "don't characterize a multi-file diff from one sampled
-     file" was folded into "Verify what actually happened, not what output looks like" — which
-     already covered clean-stdout-vs-exit-code and test-suite-vs-throwaway-script, both the same
-     "the convenient surface signal isn't the real signal" shape.
+     `~/AGENTS.md` directly, it's silently overwritten by the next `inv tools.install`). **Read the
+     canonical source before drafting an addition — the deployed copy loaded into a session's
+     context can be structurally stale against it.** Confirmed 2026-08-24: a session held a ~20
+     flat-section `~/AGENTS.md` while the source had been restructured to 7 clustered ones, so an
+     addition drafted against the section names in context would have targeted headings that no
+     longer existed. `grep -n '^## ' <source>` first. Loaded into every session regardless of repo,
+     so it's the actual bloat-avoidance-and-reviewability lever for content that isn't tied to one
+     project, the same way a repo's own `AGENTS.md` is for that repo. Confirmed as a real gap
+     2026-08-22: a session found ~30 `feedback`-type memories accumulated across multiple projects'
+     memory folders — each project's memory is invisible to every other project's sessions, so a
+     genuinely cross-repo preference saved there never actually reaches a session in a different
+     repo. Most had simply never been promoted because nothing routed them anywhere else. **A
+     candidate that's a _variant_ of a rule already in `~/AGENTS.md` extends that rule's existing
+     section — it doesn't get a new one.** "Already covered → skip" (below) is for an exact
+     duplicate; this is the near-miss case, where the principle is written down but this particular
+     shape of it isn't. Default to appending a short paragraph to the section that already frames
+     it, because that file is loaded into every session in every repo, so a new heading costs
+     context everywhere and a reader who sees three instances under one principle generalizes better
+     than one holding three unrelated rules. Reach for a new section only when the trigger and the
+     detection signal are both genuinely different from anything already there. Resolved 2026-08-23:
+     "don't characterize a multi-file diff from one sampled file" was folded into "Verify what
+     actually happened, not what output looks like" — which already covered
+     clean-stdout-vs-exit-code and test-suite-vs-throwaway-script, both the same "the convenient
+     surface signal isn't the real signal" shape.
    - **Destination mid-restructure → the plan reshaping it, not the file.** When a candidate's
      correct home is currently the subject of an open `plans/*.md` that is reshaping it — especially
      one that defines its own criteria for what may be added — record the candidate _in that plan_,

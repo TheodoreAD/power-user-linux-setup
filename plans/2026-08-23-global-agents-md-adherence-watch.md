@@ -63,8 +63,15 @@ surface them.
    across these repos. So: not a rule-wording gap, a rule-adherence gap — the strongest signal in
    this batch, because the rule is already as explicit as it can be.
 
-[NEEDS CLARIFICATION: which of these justify re-expanding wording? (1) has a genuinely missing
-concrete tell and looks worth adding to `### Generalizing from a sample to a set`. (2) is a real
-addition to the same cluster. (3) may be out of scope for a personal rules file. (4) argues for
-something other than wording — the rule is already explicit and was still missed, which is what
-`plans/2026-08-23-git-hooks-for-quality-gate.md` exists to make structural.]
+[DECISION: two of the four got re-expanded wording, 2026-08-24. (1) extended
+`### Generalizing from a sample to a set` — the same failure applied to a sample you created
+yourself by truncating your own search. (2) extended
+`### Verifying behavior in a repo with test
+coverage` — a green suite is only evidence about the
+code that was actually imported. Both are one-sentence additions to sections that already framed the
+principle, per "a variant extends the existing rule's section". Evidence in
+`contributing/global-agents-md.md` under matching headings.
+
+(3) was left out as plain git literacy rather than a personal-rules concern. (4) was left out
+deliberately for the opposite reason: the rule is already as explicit as it can be and was still
+missed, so more wording is the wrong lever — `plans/2026-08-23-git-hooks-for-quality-gate.md` is.]

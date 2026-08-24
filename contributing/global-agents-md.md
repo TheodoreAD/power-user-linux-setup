@@ -303,6 +303,19 @@ churn" after reading one of them (`vim.json`) in full; five carried real upstrea
 changed lines against `vim.json`'s 6. Harmless that time only because the conclusion was "leave it
 alone" — the identical reasoning behind a discard would have thrown away real data.
 
+Extended 2026-08-24 (`repo-tasks`): the same failure with a self-inflicted sample. A
+`rg ... | head -20` run to find every reference to a directory being moved was treated as the
+complete list; a file it cut off kept a stale path and failed a test one step later. Repeated in the
+same session — the truncation, not the reading, was the constant.
+
+## Verifying behavior in a repo with test coverage
+
+Confirmed 2026-08-24 (`repo-tasks`): three commits were checked out in a worktree and their tests
+run, to verify each stood alone. Every run tested the _working tree_ instead — the venv's editable
+install resolves the package there, not to the checkout — producing one false pass and one false
+fail before the contradiction was noticed. `PYTHONPATH=<worktree>/src` fixed it. A passing suite had
+felt like proof; it was proof about the wrong code.
+
 ## Formatting a date or decimal in a shell script
 
 Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-command.sh`):

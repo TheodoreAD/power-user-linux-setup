@@ -235,7 +235,9 @@ summary text and its exit code can disagree until verified otherwise.
 
 A clean-looking sample is not evidence about its siblings, and "they're all the same kind of file"
 is not evidence either. `--stat`'s per-file line counts are the cheap tell: when they disagree, read
-the outliers, not the representative-looking one.
+the outliers, not the representative-looking one. This includes samples you created yourself: piping
+a search through `| head` when the point of the search was completeness turns the set into a sample
+without saying so. Count first (`rg -c`, `| wc -l`) or don't truncate.
 
 ### Verifying behavior in a repo with test coverage
 
@@ -244,7 +246,10 @@ check whether an existing test, or a trivial addition to one, already covers it.
 the network" is not a reason to fall back to a throwaway script: write a real, clearly-labeled test
 instead (marked/skipped from the fast default suite per that repo's convention). Genuinely
 exploratory prototyping with no natural home in the suite yet stays legitimate, done deliberately
-outside the real repo.
+outside the real repo. A green run is only evidence about the code that was actually imported — with
+an editable install the package resolves to the working tree, not to whatever you checked out, so
+confirm the import path (`python -c "import pkg; print(pkg.__file__)"`) before trusting a per-commit
+or per-worktree result.
 
 ### Formatting a date or decimal in a shell script
 
