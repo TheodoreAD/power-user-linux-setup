@@ -39,15 +39,15 @@ def _import_repo_tasks_modules(simulate_missing=False):
     directly and testably instead, with no need to fake an import failure via sys.modules
     patching."""
     if simulate_missing:
-        return None, None, None, None, None
+        return None, None, None, None, None, None
     try:
-        from repo_tasks import agents, configs, dev_env, docs, quality  # noqa: PLC0415
+        from repo_tasks import agents, configs, dev_env, docs, quality, testing  # noqa: PLC0415
     except ImportError:
-        return None, None, None, None, None
-    return agents, configs, dev_env, docs, quality
+        return None, None, None, None, None, None
+    return agents, configs, dev_env, docs, quality, testing
 
 
-agents, configs, dev_env, docs, quality = _import_repo_tasks_modules()
+agents, configs, dev_env, docs, quality, testing = _import_repo_tasks_modules()
 
 namespace = Collection(
     setup.setup,
@@ -77,6 +77,11 @@ namespace = Collection(
 )
 if quality is not None:
     namespace.add_collection(Collection.from_module(quality))
+if testing is not None:
+    # repo_tasks keeps the module named `testing` (a `test.py` inside an installed package would
+    # sit next to CPython's own stdlib `test`) and publishes it as `test` on the CLI — same name
+    # every consumer in the family uses (`inv test.unit`, `inv test.integration`, ...).
+    namespace.add_collection(Collection.from_module(testing), name="test")
 if dev_env is not None:
     namespace.add_collection(Collection.from_module(dev_env), name="dev-env")
 if agents is not None:
