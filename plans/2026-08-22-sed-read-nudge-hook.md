@@ -1,5 +1,5 @@
 ---
-status: idea
+status: abandoned
 updated: 2026-08-24
 ---
 
@@ -144,3 +144,25 @@ Neither track replaces the other: this one doesn't reduce how often the model re
 over `Read` (the nudge hook's whole point), and the nudge hook won't help the cases where `sed -n`
 is the genuinely right call (a real pipe step, or a subagent Read can't reach via `AGENTS.md`). Both
 should still land.
+
+## Abandoned 2026-08-24 — the mode was the lever, not a hook
+
+Both root causes above were resolved without a hook. A four-day transcript audit (3,956 Bash calls)
+confirmed the auto-mode reminder was the dominant cause in main sessions, and that no wording or
+hook could out-rank a live system-prompt directive; the machine default moved to `acceptEdits`
+(`claude_default_mode` in `setup.toml`), which has no such reminder. The `Plan`/`Explore` blind spot
+is handled by a copy-ready paragraph in `config/global-AGENTS.md`'s subagent note, pasted into those
+subagents' prompts — teaching, per the "Proposing an enforcement mechanism for agent behavior" rule
+this plan had to justify itself against. The `sed` allowlist track landed earlier and stays; its
+`-i` ask rules were later removed for `acceptEdits` (see `contributing/cli-allowlist.md`'s `sed`
+section).
+
+## Migrated to
+
+- The hook design, why it was rejected, and the auto-mode reminder text: the `session-bash-audit`
+  skill, `skills/session-bash-audit/references/research.md` ("Rejected: a PreToolUse nudge hook",
+  "Root causes").
+- The `sed` allowlist decision: already in `contributing/cli-allowlist.md` (unchanged).
+- Deliberately not migrated: the `PreToolUse` `additionalContext` mechanics ("Confirmed hook
+  mechanics") — verified against the docs at the time, but no consumer exists; re-verify from the
+  docs if a hook is ever wanted.
