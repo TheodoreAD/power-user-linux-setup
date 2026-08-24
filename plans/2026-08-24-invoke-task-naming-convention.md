@@ -249,3 +249,21 @@ Renames are mechanical but wide, so the split is by blast radius, not by namespa
 (verb-second) and `dev-env.claude-hook` (noun) — plus whatever `scaffoldapy` templates and the
 `*-polite-mcp` repos cite. Sequenced after this repo lands, but mandatory, not optional: see §1's
 `[DECISION:]`. This plan cannot reach `landed` while it is outstanding.]
+
+## Migrated to
+
+- **`skills/invoke-task-conventions/`** — the three rules, the verb vocabulary, the rename
+  blast-radius checklist and the `Collection.from_module` trap. Deployed to `~/.agents/skills/` by
+  `inv ai.install-skills`, so it reaches every repo in the family including ones generated later,
+  which is what this plan's own cross-repo `[DECISION:]` was reaching for.
+- **`skills/invoke-task-conventions/references/rationale.md`** — the prior-art pass (clig.dev, Azure
+  CLI's command guidelines, fnproject's opposing verb-noun proposal), the two places this family
+  knowingly diverges from Azure, and every pitfall this plan recorded from executing the rename.
+- **`CONTRIBUTING.md`**, "Naming a task" — a short summary pointing at the skill.
+
+Not migrated, deliberately: the per-task rename table (§1). It documents a completed one-time
+migration and `git log` answers "what was this called before" better than a table would.
+
+Ready to delete once `plans/2026-08-22-deployed-config-drift-guard.md`'s reference to it is
+rewritten — that plan cites this one for the `deploy.sync` → `deploy.all` decision, which is now
+just a fact about the task's name.
