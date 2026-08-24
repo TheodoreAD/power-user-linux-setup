@@ -43,20 +43,24 @@ the user asked "would this actually be installed?", not because anything failed 
 `~/AGENTS.md` specifically is `[packages.claude-global-md]`, generated from
 `config/global-AGENTS.md`.
 
-**Re-deploy by running a task, not by hand-replicating its write logic.** Each mechanism has one:
+**Re-deploy by running a task, not by hand-replicating its write logic — and not by calling a task's
+private writer from `python -c` either.** One command covers every mechanism:
 
-| Deployed via                      | Redeploy with                               |
-| --------------------------------- | ------------------------------------------- |
-| `content_file` (`wrapper-script`) | `inv tools.install`                         |
-| `config_files` (`src`/`dst`)      | `inv system.configs [--name <pkg>] [--yes]` |
+```shell
+inv deploy.status                       # what's drifted, read-only
+inv deploy.all --name <pkg> [--yes]     # redeploy one package's paths (content_file, config_files, skills)
+inv deploy.all                          # everything this repo deploys under ~
+```
 
-If running the full install task would have broader side effects than intended, that is a reason to
-**add or extend a task that redeploys just that one package** — not a licence to `cp` the file into
-place yourself. Confirmed live 2026-08-23: `config/wezterm.lua` had no redeploy path at all (the
-install-time writer skips any destination that already exists), and a one-off `cp` was rejected with
-"there should be a pulse invoke task that deploys the wezterm config." The whole point of the repo
-is that every change this machine has is reproducible from a declared, re-runnable command; a manual
-copy is a change nobody can re-run. `inv system.configs` exists because of that correction.
+`inv deploy.all` shows the diff before it asks, never overwrites content it can't prove it wrote,
+and records what it deployed so the next `deploy.status` can tell drift from a repo-side change.
+Confirmed live twice: 2026-08-23, `config/wezterm.lua` had no redeploy path at all (the install-time
+writer skips any destination that already exists) and a one-off `cp` was rejected with "there should
+be a pulse invoke task that deploys the wezterm config"; 2026-08-24, redeploying `~/AGENTS.md` by
+calling `tools._install_wrapper_script` from `python -c` — to avoid `inv tools.install` re-running
+every installer — was rejected the same way, and `deploy.all` is the result. The whole point of the
+repo is that every change this machine has is reproducible from a declared, re-runnable command; a
+manual copy or an ad-hoc Python call is a change nobody can re-run.
 
 ## PULSE tag/method architecture
 

@@ -1,8 +1,7 @@
-import difflib
 import re
 from pathlib import Path
 
-from invoke import Exit, task
+from invoke import task
 
 from . import util
 
@@ -21,81 +20,6 @@ _IPV6_KEYS = [
     "net.ipv6.conf.default.disable_ipv6",
     "net.ipv6.conf.lo.disable_ipv6",
 ]
-
-
-def _config_diff(current: bytes, desired: bytes, dst: Path, src: str) -> str:
-    """Indented unified diff of a deployed config against its repo-side source."""
-    try:
-        before = current.decode().splitlines(keepends=True)
-        after = desired.decode().splitlines(keepends=True)
-    except UnicodeDecodeError:
-        return "  (binary file — diff not shown)\n"
-    diff = difflib.unified_diff(before, after, fromfile=str(dst), tofile=src)
-    return "".join(f"  {line}" if line.endswith("\n") else f"  {line}\n" for line in diff)
-
-
-def _deploy_config_file(pkg: str, mapping: dict, *, assume_yes: bool) -> None:
-    src = mapping["src"]
-    dst = Path(mapping["dst"]).expanduser()
-    # Resolved against the repo root, not the cwd, so the task works from any directory.
-    desired = (_REPO_ROOT / src).read_bytes()
-    current = dst.read_bytes() if dst.exists() else None
-
-    if current == desired:
-        print(f"[configs] {pkg}: {dst} already matches {src}")
-        return
-
-    if current is None:
-        if util.DRY_RUN:
-            print(f"[configs] {pkg}: would create {dst}")
-            return
-        dst.parent.mkdir(parents=True, exist_ok=True)
-        dst.write_bytes(desired)
-        print(f"[configs] {pkg}: created {dst}")
-        return
-
-    print(f"\n[configs] {pkg}: {dst} differs from {src}\n")
-    print(_config_diff(current, desired, dst, src))
-    if util.DRY_RUN:
-        print(f"[configs] {pkg}: would overwrite {dst}")
-        return
-    # confirm() returns its default unmodified when stdin isn't a terminal, so a piped/CI run
-    # without --yes skips the overwrite rather than silently clobbering a hand-edited file.
-    if not assume_yes and not util.confirm(f"Overwrite {dst}?", default=False):
-        print(f"[configs] {pkg}: left alone")
-        return
-    dst.write_bytes(desired)
-    print(f"[configs] {pkg}: overwrote {dst}")
-
-
-@task(
-    help={
-        "name": "Only deploy the config files declared by this [packages.*] section, e.g. wezterm.",
-        "yes": "Overwrite drifted destinations without prompting.",
-    }
-)
-def configs(c, name=None, yes=False):
-    """Deploy every setup.toml `config_files` mapping, overwriting destinations that have drifted.
-
-    The install tasks that also apply `config_files` (apt.install_base, apt.install_debs) only ever write a
-    destination that doesn't exist yet, so editing a repo-side `config/*` source never reaches an
-    already-deployed file. This is the deliberate redeploy path: it diffs each mapping and prompts
-    before overwriting, so a hand-edited destination is never clobbered unasked.
-    """
-    packages = util.enabled_packages()
-    if name is not None:
-        if name not in packages:
-            raise Exit(f"[configs] no enabled [packages.{name}] section in setup.toml")
-        packages = {name: packages[name]}
-
-    mappings = [(pkg, m) for pkg, cfg in packages.items() for m in cfg.get("config_files", [])]
-    if not mappings:
-        scope = f" for {name}" if name else ""
-        print(f"[configs] no config_files declared{scope}")
-        return
-
-    for pkg, mapping in mappings:
-        _deploy_config_file(pkg, mapping, assume_yes=yes)
 
 
 @task

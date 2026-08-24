@@ -119,7 +119,7 @@ write it **only if it doesn't already exist** — editing the repo copy does not
 one. Push a change out with:
 
 ```shell
-inv system.configs --name wezterm
+inv deploy.all --name wezterm
 ```
 
 It shows a diff and asks before overwriting. Full details, including the

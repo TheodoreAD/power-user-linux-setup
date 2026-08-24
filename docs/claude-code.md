@@ -125,10 +125,11 @@ every agent CLI on this machine can read) from `setup.toml`, and symlinks
 exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
 `CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
 agent-readable form, so every session on this machine picks it up automatically without needing to
-rediscover it. Edit `config/global-AGENTS.md` in this repo, then `inv tools.install`, rather than
-hand-editing `~/AGENTS.md` directly — a manual edit gets silently overwritten on the next
-`inv tools.install` run since the file is treated as fully PULSE-owned (same as any
-`wrapper-script`-method entry). `~/.claude/CLAUDE.md` itself is never touched once it's a correct
+rediscover it. Edit `config/global-AGENTS.md` in this repo, then
+`inv deploy.all --name claude-global-md`, rather than hand-editing `~/AGENTS.md` directly — the file
+is fully PULSE-owned (same as any `wrapper-script`-method entry), and while `deploy.all` shows the
+diff and asks before overwriting an edit it didn't make, the install-time writer in
+`inv tools.install` still doesn't. `~/.claude/CLAUDE.md` itself is never touched once it's a correct
 symlink; if something other than that symlink already lives there, `inv tools.install` warns and
 leaves it alone rather than overwriting it.
 

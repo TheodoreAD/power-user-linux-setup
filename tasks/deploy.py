@@ -478,6 +478,33 @@ def status(c, name=None, path=None):
         )
 
 
+@task(
+    name="all",
+    help={
+        "name": "Only deploy paths declared by this [packages.*] section, e.g. claude-global-md.",
+        "yes": "Overwrite a destination that was edited here without asking (the diff is still shown).",
+    },
+)
+def all_(c, name=None, yes=False):
+    """Deploy every path this repo declares under ~ — or one package's with --name — never
+    destroying content PULSE can't prove it wrote.
+
+    This is the repair path `inv deploy.status` points at, and the one command to reach for after
+    editing any repo-side source (`config/global-AGENTS.md`, a `config_files` `src`, a skill under
+    `skills/`): the install tasks only ever create a destination that doesn't exist yet, so a
+    changed source never reaches an already-deployed file on its own. Per path: absent → created;
+    unchanged since PULSE last wrote it → updated silently; edited at the destination → the full
+    diff is printed first, then a prompt that defaults to *no* (so a piped/CI run without --yes
+    leaves it alone); a `config_files` destination you customized is yours and is left alone
+    unless --yes. `PULSE_DRY_RUN=1` reports without writing.
+    """
+    manifest = load_manifest()
+    actions = [deploy(m, assume_yes=yes, manifest=manifest) for m in _scoped(name)]
+    counts = {a: actions.count(a) for a in Action if actions.count(a)}
+    summary = ", ".join(f"{n} {a}" for a, n in counts.items())
+    print(f"[deploy] {len(actions)} path(s): {summary}")
+
+
 def _has_pulse_block(target: Path) -> bool:
     """Whether a file the registry doesn't own nonetheless carries a PULSE-written block.
 

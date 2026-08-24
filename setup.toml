@@ -11,7 +11,7 @@
 #   config_files  list of { src, dst } mappings — a repo-relative source file copied to a path in
 #                 the user's home on install. The install tasks only ever write a dst that doesn't
 #                 exist yet (never clobber a hand-edited config); after changing a src, run
-#                 `inv system.configs [--name <pkg>] [--yes]` to diff and redeploy it.
+#                 `inv deploy.all [--name <pkg>] [--yes]` to diff and redeploy it.
 #
 # Tag-based exclusion:
 #   Set PULSE_EXCLUDE_TAGS=<tag> or PULSE_EXCLUDE_TAGS=<tag1>,<tag2> to skip packages with matching tags.

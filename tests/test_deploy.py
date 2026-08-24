@@ -561,3 +561,66 @@ def test_status_path_reports_a_managed_file_with_its_source(wrapper_pkg, capsys)
     out = capsys.readouterr().out
     assert "config/app.conf" in out
     assert "managed" in out
+
+
+# ---------------------------------------------------------------------------
+# inv deploy.all
+# ---------------------------------------------------------------------------
+
+_all = deploy.all_.body  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+
+
+def test_all_creates_a_missing_destination_and_records_it(wrapper_pkg, src, monkeypatch, capsys):
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("create must not prompt"))
+
+    _all(None)
+
+    assert wrapper_pkg.read_text() == src.read_text().strip() + "\n"
+    assert deploy.classify(_entry(wrapper_pkg)) == deploy.State.CLEAN
+    assert "1 path(s): 1 created" in capsys.readouterr().out
+
+
+def test_all_shows_the_diff_and_keeps_a_dirty_destination_when_declined(wrapper_pkg, monkeypatch, capsys):
+    _all(None)
+    wrapper_pkg.write_text("hand-edited\n")
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: False)
+
+    _all(None)
+
+    out = capsys.readouterr().out
+    assert wrapper_pkg.read_text() == "hand-edited\n"
+    assert "-hand-edited" in out
+    assert "1 left alone" in out
+
+
+def test_all_yes_overwrites_a_dirty_destination_without_prompting(wrapper_pkg, src, monkeypatch):
+    _all(None)
+    wrapper_pkg.write_text("hand-edited\n")
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("--yes must not prompt"))
+
+    _all(None, yes=True)
+
+    assert wrapper_pkg.read_text() == src.read_text().strip() + "\n"
+
+
+def test_all_name_scopes_to_one_package(tmp_path, src, monkeypatch):
+    a = tmp_path / "home" / "a.conf"
+    b = tmp_path / "home" / "b.conf"
+    _stub_config(
+        monkeypatch,
+        {
+            "a": {"method": "wrapper-script", "dest": str(a), "content_file": "config/app.conf"},
+            "b": {"method": "wrapper-script", "dest": str(b), "content_file": "config/app.conf"},
+        },
+    )
+
+    _all(None, name="a")
+
+    assert a.exists()
+    assert not b.exists()
+
+
+def test_all_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeypatch):
+    _stub_config(monkeypatch, {"nothing": {"method": "apt"}})
+    with pytest.raises(Exit):
+        _all(None, name="nothing")

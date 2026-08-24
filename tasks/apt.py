@@ -189,7 +189,7 @@ def _apply_config_files(name: str, cfg: dict) -> None:
     """Copy config_files entries to their destinations, skipping any that already exist.
 
     Deliberately never overwrites: a destination that exists may have been hand-edited since
-    install. `inv system.configs` is the redeploy path for a repo-side source that has since
+    install. `inv deploy.all` is the redeploy path for a repo-side source that has since
     changed — it diffs and prompts first.
     """
     for mapping in cfg.get("config_files", []):
