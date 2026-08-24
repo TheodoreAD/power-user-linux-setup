@@ -457,7 +457,7 @@ wheels = [
 [[package]]
 name = "repo-tasks"
 version = "0.1.0"
-source = { git = "https://github.com/TheodoreAD/repo-tasks#83153ad25892f0a13d5cc767d346e08ca2052de6" }
+source = { git = "https://github.com/TheodoreAD/repo-tasks#6ef19dc6e2435a6f77ce927dc8fb14a147d5ae17" }
 dependencies = [
     { name = "bump-my-version" },
     { name = "invoke" },

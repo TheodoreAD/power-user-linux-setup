@@ -41,7 +41,8 @@ def test_namespace_has_setup_as_bare_top_level_task():
 
 
 def test_import_repo_tasks_modules_returns_real_modules_when_available():
-    configs, dev_env, docs, quality = tasks._import_repo_tasks_modules()  # pyright: ignore[reportPrivateUsage]
+    agents, configs, dev_env, docs, quality = tasks._import_repo_tasks_modules()  # pyright: ignore[reportPrivateUsage]
+    assert agents is not None
     assert configs is not None
     assert dev_env is not None
     assert docs is not None
@@ -50,4 +51,4 @@ def test_import_repo_tasks_modules_returns_real_modules_when_available():
 
 def test_import_repo_tasks_modules_degrades_to_all_none_when_missing():
     result = tasks._import_repo_tasks_modules(simulate_missing=True)  # pyright: ignore[reportPrivateUsage]
-    assert result == (None, None, None, None)
+    assert result == (None, None, None, None, None)

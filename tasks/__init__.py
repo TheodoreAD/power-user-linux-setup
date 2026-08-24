@@ -32,22 +32,22 @@ def _import_repo_tasks_modules(simulate_missing=False):
     """repo_tasks (github.com/TheodoreAD/repo-tasks) is a dev-only dependency, resolved through
     this project's own venv. bootstrap.sh's zero-install path (a bare `uv tool install invoke`,
     no `uv sync` — see docker/Dockerfile, which never installs this project's own dependencies
-    either) has nothing for it to resolve against, so this returns four Nones rather than taking
+    either) has nothing for it to resolve against, so this returns all-Nones rather than taking
     down every other `inv` command with an import error. The real `from repo_tasks import ...`
     statement stays a literal import (so pyright keeps real module types instead of `Any`, unlike
     an `importlib.import_module` indirection); `simulate_missing` exercises the degraded branch
     directly and testably instead, with no need to fake an import failure via sys.modules
     patching."""
     if simulate_missing:
-        return None, None, None, None
+        return None, None, None, None, None
     try:
-        from repo_tasks import configs, dev_env, docs, quality  # noqa: PLC0415
+        from repo_tasks import agents, configs, dev_env, docs, quality  # noqa: PLC0415
     except ImportError:
-        return None, None, None, None
-    return configs, dev_env, docs, quality
+        return None, None, None, None, None
+    return agents, configs, dev_env, docs, quality
 
 
-configs, dev_env, docs, quality = _import_repo_tasks_modules()
+agents, configs, dev_env, docs, quality = _import_repo_tasks_modules()
 
 namespace = Collection(
     setup.setup,
@@ -79,6 +79,13 @@ if quality is not None:
     namespace.add_collection(Collection.from_module(quality))
 if dev_env is not None:
     namespace.add_collection(Collection.from_module(dev_env), name="dev-env")
+if agents is not None:
+    # `inv agents.wire-claude-hook` used to reach this repo as `inv dev-env.claude-hook`, which
+    # existed only because repo_tasks' dev_env.py imports it for a pre= chain and
+    # Collection.from_module republished it. That leak is fixed upstream, so the namespace it
+    # really lives in has to be wired explicitly or the command disappears from this repo — and
+    # docs/claude-code.md documents it.
+    namespace.add_collection(Collection.from_module(agents))
 if docs is not None:
     namespace.add_collection(Collection.from_module(docs))
 if configs is not None:
