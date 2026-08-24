@@ -547,6 +547,43 @@ Under `auto` mode the picture differs: the classifier, not the prompt, catches a
 `git -C x push`, and it approved all 81 of those calls in the audit window — one of the reasons the
 mode was dropped. `plans/2026-08-22-compound-command-permission-audit.md` has the forensics.
 
+### `allow_overrides` / `ask_overrides` — per-verb render overrides (2026-08-25)
+
+The first day of `acceptEdits` answered the open question from the mode switch — what actually
+prompts — and the answer was not the shapes anyone had guessed. A simulation of the harness's
+matching over every Bash call since the switch (373 calls; the script and the numbers are in the
+`session-bash-audit` skill's `references/research.md`) put **40% of calls at a prompt, and 67% of
+those prompts on the git commit flow**: `git add` (35), `git commit` (26),
+`git -C <other> add/commit` (18), `git push` (10), `git rm`/`restore --staged`/`reset -q` (10). The
+cause was the interaction of two things each correct on its own: `~/AGENTS.md` mandates many small
+single-concern commits, each staged right before it and `git fetch`ed before every push; and the
+pipeline's honest `write` verdict on `add` ("reversible with reset") rendered as `ask`. Two to four
+prompts per commit, multiplied by the commit count the instructions themselves drove up. `fetch`,
+`rm`, `restore`, `switch`, `mv` weren't even registered in `tools.toml`'s `[git]` list, so they
+prompted as unmatched.
+
+`mode_covered` can't express this (per tool, not per verb) and reclassifying can't either — `add`
+_is_ a write. The per-node knob the `review` docstring said didn't exist now does, on the render
+side only: `allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]` renders those as
+`allow` (with the `global_option_prefixes` variants, so `git -C ../other add` stops prompting too),
+suppressing the node's own generated `ask`; the verdict on disk is untouched. The line is "can this
+lose uncommitted code": `commit` and `stash` stay `ask` (user decision, 2026-08-25 — commit is the
+checkpoint, stash hides work), and every flag shape that can discard work gets a literal `ask` entry
+in `ask_overrides` — `reset --hard/--merge/--keep`, `restore --staged --worktree`/`-W`, `rm -f`/
+`--force`/`-rf` — each in two forms, `verb --flag` and `verb * --flag`, because the mid-pattern `*`
+spans any number of arguments and so closes the flag-order hole (`git reset -q --hard` matches
+`Bash(git reset * --hard:*)`). This is the first real consumer of "the per-flag data can't be
+rendered as prefix rules": it still can't in general, but a hand-picked list of code-losing flags
+per verb can, because `ask` beats `allow` with no specificity tiebreak. Residual, accepted:
+single-letter clusters (`git rm -qf`), `-S` for `--staged`, `-W` written before `--staged` — every
+one falls through to a prompt, never to an allow, so the hole is friction, not exposure.
+
+`review` gained `--tool=<name>` at the same time. Re-registering verbs re-pends the whole `git`
+tree, and `--apply-all` without a tool filter would have marked `sed` and `inv` reviewed too — the
+exact near-miss the `sed` section below records — while from an agent's non-TTY Bash tool
+`util.confirm` can only return its default, so there was no way to approve one tool and not the
+others.
+
 ### End-to-end confirmed live
 
 This isn't just tested in isolation — after `apply`, the actual rules were exercised in a live
