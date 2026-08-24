@@ -487,6 +487,13 @@ restating, which is the signal it was being treated as a per-task preference rat
 one. The conflation to avoid: needing permission to commit at all (the harness's own default) is
 separate from how to split once committing is authorized.
 
+The stage-right-before-committing clause was added 2026-08-25 from a `repo-tasks` session: two plan
+files were `git rm`'d while the tree was being tidied, then the code change was staged by path and
+committed — and the plan deletions landed in that commit, because `git rm` had already put them in
+the index. Nothing was pushed, so it cost a `git reset --soft origin/main` and three re-staged
+commits; the same slip after a push would have been a rewrite of public history or a permanently
+mis-attributed deletion.
+
 ## Invoking a venv tool in the session's own project
 
 Confirmed live 2026-08-23 in `repo-tasks`: used `.venv/bin/python -m pytest tests/integration/` out

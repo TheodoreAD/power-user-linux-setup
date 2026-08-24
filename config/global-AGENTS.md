@@ -114,6 +114,10 @@ rediscover. Revert an incidental change only when the repo's CI would not enforc
 content edit, not a formatting fix); that distinction is the line, not "did I mean to touch this
 file."
 
+Stage each commit's paths immediately before that commit, never ahead of time. `git commit` ships
+the whole index, so anything staged earlier — a `git rm` run while tidying, a `git add` from a
+previous step — rides along under the next message, and the split has to be rewritten.
+
 ### Regenerating a file from a canonical source
 
 Commit the regenerated output, and run regeneration as its own deliberate standalone command — never
