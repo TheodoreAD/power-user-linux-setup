@@ -49,7 +49,7 @@ The askpass script itself shows the caller's actual prompt (`$1` — sudo passes
 `[sudo] password for user:`, ssh passes `Enter passphrase for key '...':`) instead of a hardcoded
 string, so the dialog text is accurate regardless of which one triggered it.
 
-## direnv auto-activation in the Bash tool — `inv dev-env.claude-hook`
+## direnv auto-activation in the Bash tool — `inv agents.wire-claude-hook`
 
 A second consequence of the Bash tool's execution model (see "The core problem: no TTY" above),
 separate from the askpass issue: direnv (`[packages.direnv]`, e.g. a project's `.envrc` activating
@@ -74,7 +74,7 @@ tool calls) paired with a `PreToolUse` hook on the Bash tool that keeps that fil
 `direnv export zsh` before every single call, so `cd`/`.envrc` changes are picked up too, not just
 whatever was true at session start.
 
-`inv dev-env.claude-hook [--dir PATH]` (from the
+`inv agents.wire-claude-hook [--dir PATH]` (from the
 [`repo-tasks`](https://github.com/TheodoreAD/repo-tasks) dev dependency — see `pyproject.toml`)
 writes this into `<dir>/.claude/settings.json`:
 
@@ -99,7 +99,8 @@ repos sharing a basename never collide. No-ops if `<dir>/.envrc` doesn't exist (
 activate), and merges into an existing `settings.json` (appending to a `Bash` `PreToolUse` group if
 one already exists, adding one if not) rather than overwriting, so hand-written hooks survive a
 re-run. `dev-env.setup` calls it for this repo's own `.venv` automatically; run it directly against
-any other project — `inv dev-env.claude-hook --dir ~/projects/foo` — to set the same thing up there.
+any other project — `inv agents.wire-claude-hook --dir ~/projects/foo` — to set the same thing up
+there.
 
 Caveat: `env` values in `settings.json` are only read at Claude Code process launch, unlike hooks,
 which are read fresh per call — so this needs a session restart (or VS Code window reload) to take

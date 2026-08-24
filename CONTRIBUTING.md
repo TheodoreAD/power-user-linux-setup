@@ -17,7 +17,7 @@ all committed, but no longer hand-maintained here — they're pulled from
 [`repo-tasks`](https://github.com/TheodoreAD/repo-tasks)'s canonical copies (`inv configs.pull`),
 same as every other repo in the family. `inv configs.diff` checks for drift without writing
 anything; a genuine local tuning here gets promoted back into `repo-tasks`' shipped baseline via
-that repo's own `inv configs-promote` (see `plans/2026-08-14-python-repo-scaffolding.md` §D and
+that repo's own `inv configs.promote` (see `plans/2026-08-14-python-repo-scaffolding.md` §D and
 [`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md)).
 `dprint.json` still lists its plugins in `[packages.dprint]` in `setup.toml` too — keep the two in
 sync by hand, since `setup.toml` drives what actually gets installed on this machine independent of

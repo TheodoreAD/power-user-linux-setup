@@ -1,5 +1,5 @@
 ---
-status: blocked on repo-tasks' own naming audit
+status: landed
 updated: 2026-08-24
 depends_on: [repo-tasks]
 ---
@@ -185,7 +185,30 @@ a problem.]
 - After landing: `inv tools.install` and `inv ai.install-skills` to redeploy the two edited deployed
   sources, then `inv deploy.status` reports everything clean again.
 
-## Landed 2026-08-24 — steps 1–4 of 5
+## Landed 2026-08-24 — all five steps
+
+[DECISION: step 5 is done. `repo-tasks/plans/2026-08-24-verb-first-task-naming.md` audited its 67
+tasks and landed three renames — `agents.claude-hook` → `agents.wire-claude-hook`, `dist.versions` →
+`dist.list-versions`, `configs-promote` → `configs.promote` — plus a defect the audit exposed: four
+tasks (`quality.unit`, `dev-env.allow`, `dev-env.create`, `dev-env.claude-hook`) were being
+published as second names for tasks owned elsewhere, because `Collection.from_module` adds every
+`Task` object it finds in a module, including ones imported for a `pre=` chain. The family no longer
+splits, so this plan is `landed`.]
+
+[PITFALL: this repo documented `inv dev-env.claude-hook` in `docs/claude-code.md` (a heading) and
+`tests/README.md` — a command whose entire existence was an accident of an import statement in
+`repo-tasks`' `dev_env.py`. Nothing declared it, no test asserted it, and it read like a deliberate
+convenience alias. When citing another repo's task by name, the check is that repo's own module
+source, not that the command happens to run.]
+
+[DEFERRED: this repo's `uv.lock` pins `repo-tasks` at git SHA `83153ad`, which predates both the
+`test.*` namespace and today's renames — so `inv agents.wire-claude-hook` does not work here yet,
+and `inv dev-env.claude-hook` still does. The prose above describes the family's current state
+deliberately; closing the gap needs `repo-tasks` pushed and this repo's pin bumped, which is a
+deliberate standalone act (see `~/AGENTS.md`, "Regenerating a file from a canonical source"), not a
+side effect of a naming pass.]
+
+## Steps 1–4
 
 All 24 renames plus the `cleanup`→`clean` namespace are in, across code, tests, `setup.toml`, the
 Dockerfile, CI, 27 prose files, and the deployed sources (redeployed; `inv deploy.status` reports
