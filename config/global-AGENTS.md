@@ -134,6 +134,10 @@ your last `git status` and your commit, and a blanket stage silently ships it un
 message. `git status --short` immediately before committing is not protection: it reports the staged
 set, not what changed while you were reading it.
 
+The same holds one step later: before pushing, `git log origin/<branch>..HEAD` — a commit there you
+didn't make belongs to another live session, which may still mean to amend or reorder it. Say so and
+ask before your push publishes it.
+
 ## Bash & the CLI allowlist
 
 Sessions on this machine run in `acceptEdits` mode: the allow/ask rules in `~/.claude/settings.json`

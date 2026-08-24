@@ -427,6 +427,14 @@ The recovery was cheap only because nothing had been pushed: `git reset --soft H
 index, and commit the two groups separately. Had the commit been pushed first, splitting it would
 have meant a force-push against a branch another session may have been building on.
 
+The push clause, added the same day from the push-side version of that near miss: a `repo-tasks`
+session pushed `main` after its own commits, and the push also carried `d18f3b0` — a parallel
+session's "record where the naming audit's content went", committed but deliberately not yet pushed,
+the first half of a two-commit plan retirement. The rule above had covered fetching before a commit
+and staging by path; `git push` publishes every unpushed commit on the branch regardless of author,
+so the same "is this mine?" question applies to `git log origin/<branch>..HEAD` right before it.
+Harmless that time; a force-push to undo it would not have been.
+
 ## Regenerating a file from a canonical source
 
 The ordering clause was added 2026-08-24, from `scaffoldapy` adopting `repo-tasks`' two-tier test
