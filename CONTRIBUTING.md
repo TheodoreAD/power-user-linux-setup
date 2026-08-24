@@ -66,27 +66,19 @@ Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_
 
 `inv <namespace>.<task>` should read as an imperative command — the namespace is the subject, the
 task is the action. `inv apt.install-base` is "apt: install base"; `inv zsh.fix-history` is "zsh:
-fix history". This is the same shape modern CLIs use for subcommands (`gh pr create`,
-`docker image prune`, `kubectl config set-context`).
+fix history".
 
-Three rules:
+The full convention lives in the **`invoke-task-conventions` skill**
+(`skills/invoke-task-conventions/SKILL.md`, deployed to `~/.agents/skills/` by
+`inv ai.install-skills` so it reaches every repo in the family, not just this one). Read it before
+adding or renaming a task. In short: task names lead with a verb; community conventions (`status`,
+`list`, `version`, `check`, `diff`) beat the rule; and a namespace that is itself the action
+(`setup`, `verify`, `clean`, `deploy`, `test`) takes a scope leaf instead — `verify.all`,
+`deploy.all`, `test.unit`.
 
-1. **Task names lead with a verb.** Not the thing being produced — `apt.install-base`, not
-   `apt.base`; `ai.install-skills`, not `ai.skills`. Multi-word names put the verb first
-   (`zsh.configure-omz`, `ide.configure-pycharm`), unless an object-first pair reads as a family in
-   `inv --list` and that adjacency is the point (`format-check`/`format-apply`).
-2. **Community conventions beat the rule.** Where a CLI convention already owns a name — `status`,
-   `list`, `version`, `check`, `diff` — keep it. `inv gnome.status` is what a reader's instinct
-   reaches for; `gnome.show-status` would be consistent and worse.
-3. **Some namespaces are themselves the action** (`setup`, `verify`, `clean`, `deploy`, `test`).
-   There the leaf names the scope or object instead: `verify.all`, `clean.caches`, `deploy.all`,
-   `test.unit`. This is the stated exception to "the namespace is the subject" above, not a
-   violation of it — read a summary of rule 1 without this rule and `test.unit` looks inverted.
-
-The Python function name is the CLI name with underscores (invoke derives one from the other), and
-`tasks/setup.py`/`tasks/wsl.py` reference task functions directly in their phase lists — so renaming
-one is a code change, not just a string change. Full rationale and the audit that produced the
-current names: `plans/2026-08-24-invoke-task-naming-convention.md`.
+Renaming a task is a code change, not a string change: the Python function name changes with the CLI
+name, and `tasks/setup.py`/`tasks/wsl.py` reference task functions directly in their phase lists.
+The skill's rename checklist covers the rest of the blast radius.
 
 ## Design notes
 

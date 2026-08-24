@@ -1595,6 +1595,18 @@ method = "skill"
 tags = ["dev"]
 skills = [{ source = "local", path = "skills/polite-mcp-conventions" }]
 
+[packages.invoke-task-conventions]
+description = """
+Naming and wiring conventions for invoke tasks — what to call `inv <namespace>.<task>`, the three
+rules (verb-first leaf, community conventions win, action namespaces take a scope leaf), the verb
+vocabulary, what a rename actually costs across docs/CI/other repos, and the Collection.from_module
+trap that publishes tasks nobody declared. No package attached; exists purely to declare the skill.
+See skills/invoke-task-conventions/references/rationale.md for the prior art and evidence.
+"""
+method = "skill"
+tags = ["dev"]
+skills = [{ source = "local", path = "skills/invoke-task-conventions" }]
+
 [packages.plan-docs]
 description = """
 Convention and workflow skill for plans/YYYY-MM-DD-topic.md files — one file per idea/design,
