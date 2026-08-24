@@ -2,7 +2,7 @@
 (_parse_frontmatter_description, _local_skill_plan, _remote_skill_label, _remote_skill_prompt),
 plus the confirm/-y behavior of _install_local_skill/_install_remote_skill/_install_declared_skills
 and the skills task itself — exercised with tmp_path fixtures and monkeypatched ui.ask/c.run/
-util.load_config rather than any real system call, same shape as tests/test_phases.py. See
+util.load_config rather than any real system call, same shape as tests/unit/test_phases.py. See
 tests/README.md.
 """
 
@@ -508,7 +508,7 @@ def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
 
 
 # ---------------------------------------------------------------------------
-# skills task — thin orchestration, same shape as tests/test_phases.py
+# skills task — thin orchestration, same shape as tests/unit/test_phases.py
 # ---------------------------------------------------------------------------
 
 

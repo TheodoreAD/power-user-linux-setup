@@ -51,7 +51,7 @@ WantedBy=default.target
 
 
 # ---------------------------------------------------------------------------
-# Pure helpers — unit-tested in tests/test_proxy.py, see tests/README.md for why these and not
+# Pure helpers — unit-tested in tests/unit/test_proxy.py, see tests/README.md for why these and not
 # the rest of this module (everything else shells out or touches the filesystem/keyring).
 
 

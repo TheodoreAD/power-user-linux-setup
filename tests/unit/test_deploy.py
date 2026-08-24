@@ -431,7 +431,7 @@ def test_a_managed_path_is_absolute_even_when_setup_toml_uses_a_tilde(tmp_path, 
 # ---------------------------------------------------------------------------
 
 # deploy.status is @task-wrapped and invoke's Task.__call__ insists its first arg be a real
-# Context — .body is the plain underlying function, same pattern as tests/test_ai.py.
+# Context — .body is the plain underlying function, same pattern as tests/unit/test_ai.py.
 _status = deploy.status.body  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
 
 

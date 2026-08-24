@@ -12,7 +12,8 @@ from typing import Any, cast
 
 from tasks import allowlist
 
-_RULES_DIR = Path(__file__).parent.parent / "cli-allowlist" / "rules"
+_REPO_ROOT = Path(__file__).parents[2]  # tests/unit/<this file> → repo root
+_RULES_DIR = _REPO_ROOT / "cli-allowlist" / "rules"
 
 
 def test_classification_values_match_rules_json_on_disk():
