@@ -994,6 +994,11 @@ claude_permissions_allow = [
   "Bash(inv *.check-*)",
   "Bash(inv *.list-*)",
   "Bash(inv *-check:*)",
+  # Read/Grep/Glob outside the session's working directory prompt under acceptEdits; ~/projects
+  # holds only git repos (nothing downloaded — that lives in ~/research, which has the same grant),
+  # and every cross-repo convergence task in this family reads sibling repos. Read-only: writes
+  # there still prompt. User decision 2026-08-25.
+  "Read(//home/tdumitrescu/projects/**)",
 ]
 
 [packages.claude-statusline]
