@@ -294,6 +294,13 @@ an editable install the package resolves to the working tree, not to whatever yo
 confirm the import path (`python -c "import pkg; print(pkg.__file__)"`) before trusting a per-commit
 or per-worktree result.
 
+`tmp_path` sandboxes the working tree, not the user: a test that runs `direnv allow`, `uv tool`,
+`inv configure`, or any code path through `Path.home()` writes into the real `$HOME` (direnv's allow
+database, `~/.cache/claude-code`, ...) and leaves one stale entry per run. Give such tests a
+fake-`HOME` fixture — patch `os.environ` _and_ any library holding its own environment snapshot
+(copier runs `_tasks` from plumbum's `local.env`, copied at import; `monkeypatch.setenv` never
+reaches it) — and pin `UV_CACHE_DIR` back to the real cache so the run stays warm.
+
 ### Formatting a date or decimal in a shell script
 
 This machine's `LC_TIME`/`LC_NUMERIC` default to `ro_RO.UTF-8` (mixed locale — `LANG`/`LC_MESSAGES`

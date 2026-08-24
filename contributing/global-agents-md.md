@@ -374,6 +374,18 @@ install resolves the package there, not to the checkout — producing one false 
 fail before the contradiction was noticed. `PYTHONPATH=<worktree>/src` fixed it. A passing suite had
 felt like proof; it was proof about the wrong code.
 
+The fake-`HOME` clause, added 2026-08-24, on two independent instances found in one session.
+`scaffoldapy`'s e2e tier renders a repo into `tmp_path` and runs the generated `inv configure` for
+real; every run had left a `~/.local/share/direnv/allow/*` entry and a `~/.cache/claude-code/*` file
+pointing at a since-deleted `pytest-of-*` directory — 292 of each on the machine, never noticed
+because nothing failed. `repo-tasks`' `tests/unit/test_agents.py` — a _unit_ test, "nothing outside
+tmp_path" by that tier's own contract — had left ~366 more, because `agents.py` derives its cache
+dir from `Path.home()`. The first fix attempt patched `os.environ` only and both leaks survived:
+copier executes `_tasks` with `subprocess.run(..., env=dict(local.env))`, plumbum's import-time copy
+of the environment. Extends this section rather than opening a new one (criterion 2): the trigger is
+still "verifying via the test suite", and what is being sharpened is what the suite's sandbox does
+and does not cover.
+
 ## Formatting a date or decimal in a shell script
 
 Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-command.sh`):
