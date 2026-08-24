@@ -1,5 +1,5 @@
 ---
-status: blocked on the user's adopt/don't decision — revisit trigger fired, see Observation
+status: idea — hooks still unadopted; `~/AGENTS.md` "About to commit" rule deployed 2026-08-25 as the next step, re-measure after it has run a while
 updated: 2026-08-25
 depends_on: [repo-tasks, scaffoldapy]
 ---
@@ -94,6 +94,11 @@ before committing") would have wider reach than a skill-level one; it is the che
 stays inside the no-imposed-hooks philosophy, and the one to try before reopening the hook design.
 The `actionlint` 127 is a separate one-off of the "missing quality tool in CI" kind already fixed
 once on 2026-08-23 — worth its own look in `scaffoldapy`'s CI bootstrap, not here.
+
+[DECISION: 2026-08-25, user chose the global rule over reopening the hook design. "About to commit"
+added to `config/global-AGENTS.md` (Git & commits), evidence in `contributing/global-agents-md.md`
+under the same heading. Next re-measure: repeat the `gh run list` sweep above after the rule has
+been live for a while; recurrence at a real rate reopens this plan at "Researched hook design".]
 
 ## Open questions
 
