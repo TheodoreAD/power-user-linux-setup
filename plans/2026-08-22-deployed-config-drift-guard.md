@@ -226,6 +226,42 @@ excluding `config_files` from the check or reporting it separately, because with
 on every customized config. The manifest removes that constraint: `SEEDED` + `DIRTY` is precisely
 "the user customized what we seeded," and is now sayable.]
 
+### 3a. The one `SEEDED`/`DIRTY` instance standing today
+
+Recorded so sessions stop rediscovering it and reporting it as a new problem. It was re-flagged as a
+finding on 2026-08-24 by a session that had no way to tell it was known and expected — which is
+itself the argument for §3's messaging split.
+
+`deploy.status` reports:
+
+```
+[deploy] terminator: ~/.config/terminator/config — differs from its source — either edited here, or the source moved on
+[deploy] wezterm:    ~/.config/wezterm/wezterm.lua — ok
+```
+
+Terminator's actual divergence, measured 2026-08-24 — the deployed file is _older_ (2026-06-09) than
+`config/terminator.conf` (2026-08-08), so this is not a recent hand-edit:
+
+- font differs: source `CaskaydiaCove Nerd Font Mono 12`, deployed `JetBrainsMono Nerd Font 13`
+- deployed has four sections the source lacks: `[global_config]`, `[keybindings]` (a `hide_window`
+  binding), `[layouts]`, `[plugins]`
+
+Most of that is terminator writing its own config back — it rewrites the file on preference and
+layout changes, so a deployed terminator config will _always_ diverge from a seed. That is the
+purest possible example of `SEEDED`: the app itself is a second writer, on top of the user.
+
+[DECISION: nothing to fix here, and specifically **not** a reason to redeploy. `config_files` is
+skip-if-exists precisely so the user (and the app) own the file after first install, so overwriting
+it would destroy real customization to make a status line quieter. The correct outcome is §3's
+messaging change, which turns this line from "differs — either edited here, or the source moved on"
+into an informational "your copy differs from `config/terminator.conf`". Until that lands, this
+entry is the answer to "is the terminator drift a problem?" — no.]
+
+[NEEDS CLARIFICATION: separately from the messaging, does the source seed want updating? It carries
+a font this machine no longer uses, so a fresh install would seed something immediately overwritten
+by hand. That is a content question about `config/terminator.conf`, independent of the writer design
+this plan owns, and possibly worth its own small change rather than being bundled here.]
+
 ### 4. Converting the call sites
 
 - `tools.py:_install_wrapper_script` → resolves its `Managed` entry and calls `deploy.deploy()`.
