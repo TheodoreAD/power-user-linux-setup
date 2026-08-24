@@ -75,3 +75,22 @@ principle, per "a variant extends the existing rule's section". Evidence in
 (3) was left out as plain git literacy rather than a personal-rules concern. (4) was left out
 deliberately for the opposite reason: the rule is already as explicit as it can be and was still
 missed, so more wording is the wrong lever — `plans/2026-08-23-git-hooks-for-quality-gate.md` is.]
+
+### Session 2 — cross-repo transcript audit, 2026-08-24
+
+Not a single session's misses but a measurement over every session since the leanness pass
+(2026-08-21 → 24, 3,956 Bash calls, three repos; method in the `session-bash-audit` skill). The Bash
+cluster was the one that did not fire: 64–71% of Sonnet/Opus calls were chained, 29–32% piped
+through `head`/`tail`, 114 `cd`s into the session's own repo, and 81 `git -C … commit/push` calls
+that no ask rule matched. The cause was not the compressed wording — every session ran in auto mode,
+whose system reminder instructs the opposite of "Viewing, searching, or editing files" and whose
+classifier never prompted, so "Composing a Bash call"'s stated reason (prompt friction) had no
+referent. Fable 5 obeyed the same wording at half the chaining rate of Opus, which separates
+disposition from wording.
+
+[DECISION: the Bash cluster was re-cut 2026-08-24 around `acceptEdits` mode and the harness-side
+costs of a chain (one output and one exit code per call), with a closed list of permitted chain
+shapes, the head/tail fact, and the own-repo `cd` tell; the machine default mode moved to
+`acceptEdits`. Evidence under the matching headings in `contributing/global-agents-md.md`. Verify by
+re-running the audit after a week of `acceptEdits` sessions — the "Open / to re-measure" list in the
+skill's `references/research.md` says what to expect.]
