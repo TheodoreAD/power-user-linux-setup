@@ -530,6 +530,23 @@ package = "shfmt-py"
 check_cmd = "shfmt"
 tags = ["dev", "linting"]
 
+[packages.actionlint]
+description = "Static checker for GitHub Actions workflow files — same shellcheck-py pattern, wrapping the real actionlint binary"
+method = "uv-tool"
+package = "actionlint-py"
+check_cmd = "actionlint"
+tags = ["dev", "linting"]
+
+[packages.act]
+description = "Runs GitHub Actions workflows locally in Docker containers (nektos/act) — act-bin wraps the real binary"
+method = "uv-tool"
+package = "act-bin"
+check_cmd = "act"
+tags = ["dev", "workstation"]
+# Without this file act's first run is an interactive image-size prompt — fatal EOF under an invoke
+# task or an agent's shell. See the file's own header.
+config_files = [{ src = "config/actrc", dst = "~/.config/act/actrc" }]
+
 [packages.copier]
 description = "Project scaffolding tool with in-place template updates — drives the scaffoldapy repo template"
 method = "uv-tool"

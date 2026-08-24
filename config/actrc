@@ -1,0 +1,10 @@
+# act's runner-image map, deployed to ~/.config/act/actrc by [packages.act] in setup.toml.
+#
+# With no actrc, act's first run stops on an interactive "choose the default image" prompt — and
+# with no TTY (an invoke task, an agent's shell) that prompt is `level=fatal msg=EOF` instead. This
+# file is what act itself would write after picking "Medium": catthehacker's ~500MB images, enough
+# for actions/checkout, setup-uv and plain `run:` steps. The "Large" choice is a 17GB runner
+# snapshot; nothing in the personal repos needs it.
+-P ubuntu-latest=catthehacker/ubuntu:act-latest
+-P ubuntu-24.04=catthehacker/ubuntu:act-24.04
+-P ubuntu-22.04=catthehacker/ubuntu:act-22.04
