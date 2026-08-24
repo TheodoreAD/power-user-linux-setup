@@ -143,12 +143,19 @@ just confirm what you'd already do, weight the ones that don't.
   fixture. A `monkeypatch` inside a broad-scoped fixture stays live for the whole scope, not just
   one test — a real, silent cross-test leak source.
 - DAMP vs. DRY — a different axis from the production-code DRY decision above, not a re-derivation
-  of it: setup mechanics (fixtures/helpers) stay DRY, but test bodies/assertions stay explicit and
-  duplicated per test, even when near-identical — collapsing them into a shared mega-test trades
-  away "read one test top-to-bottom, understand the scenario."
-- Model default: **overrides.** The modularity section above already pushes a model toward
-  abstracting — without this entry, that instinct leaks into test bodies too, which is the specific
-  failure this section exists to block.
+  of it: setup mechanics (fixtures/helpers, the _how_) stay DRY; the scenario a test verifies (the
+  _what_) stays explicit and readable top-to-bottom in that test. `parametrize` is the sanctioned
+  everyday tool for a real input→expected matrix, and is _more_ explicit than N copy-pasted bodies,
+  because the varying values are isolated from the fixed logic — attach `ids` once values stop being
+  self-explanatory. The line: **if adding a case means adding a value, parametrize; if it means
+  changing the test's logic (a branch, a different setup, a different assertion), write a new
+  test.** What's actually warned against is collapsing genuinely different scenarios into one
+  branching mega-test, or hiding the scenario inside a helper whose name doesn't say what it
+  asserts.
+- Model default: **mostly confirms.** A model parametrizes value matrices unprompted, and that's
+  right. The override is narrow: the modularity section's abstraction instinct can leak into folding
+  scenarios that differ in _logic_ into one parametrized-with-branches test, or into a `check_*`
+  helper that owns the assertion — that is the specific failure this entry blocks.
 - Never run a code-mutating command as part of a test's exercised behavior unless the test's actual
   subject is that mutation. A fix/format/autocorrect command run before the assertion silently masks
   the exact defect a check-only equivalent would have caught. Confirmed live 2026-08-23 in

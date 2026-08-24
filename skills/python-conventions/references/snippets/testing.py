@@ -1,8 +1,9 @@
 """Fixture scope: construct expensive/shared objects at module or session
 scope, but reset their *mutable* state via a function-scoped fixture — cheap
-construction stays shared, isolation stays per-test. Test bodies stay DAMP
-(duplicated, explicit) even when near-identical; only setup mechanics are
-DRY. See ../rationale.md §7.
+construction stays shared, isolation stays per-test. Setup mechanics (the
+"how") are DRY; the scenario each test verifies (the "what") stays visible in
+that test. parametrize a pure value matrix; write a new test when a new case
+would change the test's logic. See ../rationale.md §7.
 """
 
 from dataclasses import dataclass, field
@@ -19,6 +20,8 @@ class Cart:
     items: list[str] = field(default_factory=list)
 
     def add(self, item: str) -> None:
+        if not item:
+            raise ValueError("item name must not be empty")
         self.items.append(item)
 
 
@@ -41,22 +44,39 @@ def cart(shared_cart: Cart) -> Cart:
     return shared_cart
 
 
-def test_add_single_item(cart: Cart) -> None:
-    # DAMP, not DRY: this scenario is spelled out explicitly rather than
-    # merged with test_add_duplicate_item_keeps_both below, even though the
-    # bodies look similar — each test should read top-to-bottom on its own.
-    cart.add("widget")
-    assert cart.items == ["widget"]
+@pytest.mark.parametrize(
+    ("added", "expected"),
+    [
+        (["widget"], ["widget"]),
+        (["widget", "widget"], ["widget", "widget"]),
+        (["a", "b"], ["a", "b"]),
+    ],
+    ids=["single", "duplicate-kept", "order-kept"],
+)
+def test_add_keeps_every_item_in_order(cart: Cart, added: list[str], expected: list[str]) -> None:
+    # A pure value matrix: every case runs the same logic against different
+    # inputs, so a new case is a new row, not a new function. The table keeps
+    # the "what" more visible than three copy-pasted bodies would — the
+    # varying values sit apart from the fixed logic. `ids` name the cases
+    # once the raw values stop being self-explanatory in a failure report.
+    for item in added:
+        cart.add(item)
+    assert cart.items == expected
 
 
-def test_add_duplicate_item_keeps_both(cart: Cart) -> None:
-    cart.add("widget")
-    cart.add("widget")
-    assert cart.items == ["widget", "widget"]
+def test_add_rejects_empty_name(cart: Cart) -> None:
+    # Not a fourth row above: this case has different logic (a raised error,
+    # nothing added) — folding it into the table would put a branch on the
+    # parameters inside the test body, which hides the scenario. A case that
+    # changes the *logic* is its own test; a case that changes a *value* is
+    # a row.
+    with pytest.raises(ValueError, match="empty"):
+        cart.add("")
+    assert cart.items == []
 
 
 def test_cart_state_does_not_leak_between_tests(cart: Cart) -> None:
     # Proves the function-scoped reset fixture above actually isolates
     # state — if it didn't, this test would see items left over from the
-    # two tests above.
+    # tests above.
     assert cart.items == []

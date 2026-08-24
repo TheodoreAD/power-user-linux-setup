@@ -513,17 +513,38 @@ of tests needs fixtures the rest shouldn't see. `parametrize`: attach `ids` once
 self-explanatory.
 
 **DAMP vs. DRY in tests — a real, sourced debate that does _not_ simply inherit §4's "lean toward
-duplication" production-code stance.** Vladimir Khorikov's reframing (Enterprise Craftsmanship, and
-echoed by Brian Okken) resolves the popular "DAMP not DRY" framing as a false dichotomy: DRY was
-never about _code_ duplication, it's about not duplicating _domain knowledge_. The actionable split:
-**setup mechanics (the "how") stay DRY** — pytest fixtures/helpers are exactly the right tool, use
-them freely, no tension with anything else in this file — **but test bodies/assertions (the "what" —
-the scenario being verified) should stay explicit and duplicated per test**, even when tests look
-near-identical, because collapsing them into a shared abstracted mega-test trades away the "read one
-test top-to-bottom, understand the scenario" property that's the actual point of a test suite. This
-is a genuinely different axis from §4's production-code DRY decision, not a re-derivation of it —
-worth stating explicitly so a reader doesn't assume "this project avoids DRY everywhere" and
-over-apply it to test bodies.
+duplication" production-code stance.** Vladimir Khorikov's reframing ("DRY vs DAMP in Unit Tests",
+Enterprise Craftsmanship) resolves the popular "DAMP not DRY" framing as a false dichotomy: "the DRY
+principle should be applied to the how-to's, whereas the DAMP principle should be applied to the
+what-to's." The actionable split: **setup mechanics (the "how") stay DRY** — pytest fixtures/helpers
+are exactly the right tool, use them freely, no tension with anything else in this file — **but the
+scenario a test verifies (the "what") stays explicit in that test**, because collapsing genuinely
+different scenarios into a shared abstracted mega-test trades away the "read one test top-to-bottom,
+understand the scenario" property that's the actual point of a test suite. This is a genuinely
+different axis from §4's production-code DRY decision, not a re-derivation of it — worth stating
+explicitly so a reader doesn't assume "this project avoids DRY everywhere" and over-apply it to test
+bodies.
+
+_Citation check, 2026-08-25 (`plans/2026-08-22-damp-vs-dry-testing-convention-revisit.md`)._ An
+earlier wording here said Khorikov's split was "echoed by Brian Okken" and that test bodies "stay
+duplicated per test, even when tests look near-identical" — both over-extrapolated, read against the
+sources. Khorikov's article never mentions parametrized/data-driven tests at all; its example of
+misapplied DRY is shared mutable state (class fields) and an arrange step hidden in a setup method,
+not a data table. Okken (Test & Code ep. 160, "DRY, WET, DAMP, AHA", 2021 — transcript in
+`okken/testandcode_transcripts`) does not cite Khorikov and is explicitly "on the fence" about the
+DAMP-for-tests framing; his own stated rule is readability-first with one standard for production
+and test code, and he names parametrization as a sanctioned tool: "if there is duplication,
+parameterization, fixtures, and helper functions are great to clean that duplication up, but only if
+you can still read the test quickly and understand it." His book's parametrization chapters exist
+precisely to replace near-identical repeated test functions. So the sourced position is _not_
+"duplicate bodies even when near-identical" — it's "keep the _what_ visible." `parametrize` over a
+pure input→expected matrix keeps the _what_ more visible than N copy-pasted bodies (the varying
+values are isolated from the fixed logic), so it's expected, not tolerated. The dividing line the
+skill now states comes from the pytest-community formulation (Simply The Test, "Keeping DRY or
+staying DAMP? When to parametrize tests", 2019): _"If a value needs to be changed to add a new case,
+parametrize. If logic needs to be changed to add a new case, create a new test."_ The thing actually
+warned against is a parametrized test that branches on its parameters, or a `check_*` helper that
+owns the assertion — those hide the scenario; a data table doesn't.
 
 ## 8. Type hygiene
 
