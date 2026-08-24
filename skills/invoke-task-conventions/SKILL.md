@@ -31,6 +31,13 @@ second rule.
 for; `gnome.show-status` would be more consistent and worse. Same for a task that wraps a named
 subcommand: `deps.tree` wraps `uv tree` and keeps its name.
 
+These names are load-bearing, not just readable: since 2026-08-25 the machine's Claude Code
+allowlist (`[packages.repo-tasks]` `claude_permissions_allow` in `power-user-linux-setup`'s
+`setup.toml`) auto-approves `inv <ns>.status|check|diff|list|show`, `<ns>.print-*`, `<ns>.check-*`,
+`<ns>.list-*` and `<ns>.*-check` in every repo, on the strength of the convention alone. A task with
+one of these names must inspect and never mutate — a `deploy.check` that also fixes what it finds
+would run unprompted. Give a mutating task a mutating name (`fix`, `apply`, `sync`, `configure`).
+
 **3. Some namespaces are themselves the action.** `setup`, `verify`, `clean`, `deploy`, `test`.
 There the leaf names the scope or object instead: `verify.all`, `clean.caches`, `deploy.all`,
 `test.unit`. This is the stated exception to rule 1, not a violation of it — a reader who sees rule
