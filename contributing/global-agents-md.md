@@ -112,7 +112,9 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 
 ## Contents
 
+- [Bash & the CLI allowlist (cluster intro)](#bash--the-cli-allowlist-cluster-intro)
 - [Composing a Bash call](#composing-a-bash-call)
+- [Viewing, searching, or editing files](#viewing-searching-or-editing-files)
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
 - [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
 - [Saving to cross-session memory](#saving-to-cross-session-memory)
@@ -150,7 +152,31 @@ verbatim; the full migration story is `plans/2026-08-22-memory-to-agents-md-migr
 underlying reason `AGENTS.md` beats memory (reviewable, one source of truth instead of N per-project
 copies) applies across repos exactly as it does within one.
 
+## Bash & the CLI allowlist (cluster intro)
+
+Rewritten 2026-08-24 around `acceptEdits` mode, after a four-day transcript audit (3,956 Bash calls;
+method and numbers in the `session-bash-audit` skill's `references/research.md`). The previous intro
+described prefix matching correctly but never said which permission mode the machine runs, and the
+mode turned out to be the variable that mattered: every session in the audit window ran in `auto`
+mode, where a classifier decides unmatched calls and the harness injects a system reminder telling
+the agent to prefer `cat`/`sed -n`/heredocs over Read/Edit — the inverse of the rule below it. No
+wording in this file can out-rank a live system-prompt directive, so the fix was the mode
+(`claude_default_mode` in `setup.toml`), and the intro now states the mode so the rules read as a
+description of the system in force rather than as preferences. The "global option before the verb"
+clause records the one real ask-rule bypass found: `Bash(git push:*)` does not match
+`git -C /path push` (81 such calls in the window, all run unprompted under auto mode's classifier).
+
 ## Composing a Bash call
+
+Rewritten 2026-08-24 from "prefer several simple calls" to "one command per call" with a closed list
+of two permitted chain shapes, after the audit measured 64–71% of Sonnet/Opus calls chained (13–24%
+five or more parts) with the previous wording in force. The earlier rationale was prompt friction
+only; under a mode that never prompted, the model read "friction cost, never a prohibition" as "no
+cost" and chained freely. The new text names the costs that hold in every mode — one output and one
+exit code per call, parallelism already free, `echo "=== ==="` as the tell — because a rule whose
+reason has evaporated is a rule that gets ignored, however strongly worded. The own-repo `cd`
+clause: 114 `cd <session's own repo> && …` calls in the window, cargo-culted from the documented
+cross-repo form.
 
 The rule's earlier form claimed a chained command can never match an allow rule
 ("`cd some/dir &&
@@ -176,7 +202,24 @@ one chained command, chaining was "banned") and reported it as a limitation inst
 approval prompt — abandoning real work to dodge friction, strictly worse than any number of prompts
 (`plans/2026-08-23-cross-directory-command-execution.md`, retired).
 
+## Viewing, searching, or editing files
+
+The `| head`/`| tail` clause, added 2026-08-24: 1,128 of 3,956 audited calls (29–32% for
+Sonnet/Opus) piped tool output through `head`/`tail`; 662 of those were `2>&1 | tail/head/grep`,
+which also masks the upstream exit code (364 of them wrapped a quality or test gate); 201 truncated
+a search whose purpose was completeness; and 51 times the same command was re-issued with a larger
+limit after the truncated view proved insufficient. The habit is context anxiety — the harness
+already truncates large output and persists the full text to a file, which the model isn't told. The
+clause states that fact rather than just forbidding the pipe, because the previous "Reading a
+command's result" rule (exit codes) and "Generalizing from a sample to a set" rule (search
+truncation) both existed and neither connected to the reflex.
+
 ## Running a command against a different repo than the session's project
+
+The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are now rendered as allow rules by
+`cli-allowlist`'s `global_option_prefixes`, and the mutating ones are meant to prompt — the earlier
+"expect a one-off prompt" framing read as friction to minimize, and under auto mode the prompt never
+came at all (see the cluster intro above).
 
 Confirmed directly 2026-08-22/23: running plain `inv`/`pytest` after `cd`-ing into a secondary repo
 silently exercised the primary repo's pinned dependency copy of a package under active development
