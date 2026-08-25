@@ -101,6 +101,23 @@ First real run reported the ozone flag missing from all 20 non-internal launcher
 `option A as a checker` value this plan predicted: that is the question that would have caught the
 2026-08-10 recurrence on 2026-08-10 rather than on 2026-08-24.
 
+**The flag was deliberately not applied to them** (2026-08-25, user's call). Putting it on the PWA
+launchers pushes those windows toward X11, where the `StartupWMClass` collision above costs exactly
+the per-profile pinning that had just been restored. With nothing left racing it, the autostart
+entry alone is expected to claim x11 — so the flag on each PWA launcher buys only the case where a
+PWA is started before the browser, which no longer happens at login.
+
+[DEFERRED: **Pin the browser launcher to one profile.** `config/google-chrome-x11.desktop`'s `Exec`
+lines carry no `--profile-directory`, so a launcher click — or a link handed to Chrome by another
+app — lands on whatever profile Chrome restores from `last_active_profiles`. Adding
+`--profile-directory="Profile 2"`, plus per-profile `[Desktop Action …]` entries for the others,
+would make it deterministic, and unlike the Chrome-generated PWA files this one is PULSE-owned, so
+the change survives. Offered 2026-08-25 and deferred by the user ("not yet"). The open question is
+whether hardcoding a personal profile directory into a repo config file is acceptable: the package
+is already `enabled = false` and machine-specific, turned on here through `overrides.toml`, so it is
+consistent with its sibling — but it is still a personal detail landing in the repo, and a second
+machine's "Profile 2" is a different account.]
+
 ## Status: option B is built and deployed, awaiting one login
 
 [DECISION: **Option B**, chosen by the user on 2026-08-24 with the rest kept as the fallback ladder
