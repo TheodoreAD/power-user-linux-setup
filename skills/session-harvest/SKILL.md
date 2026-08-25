@@ -74,6 +74,18 @@ considered and rejected).
      actually happened, not what output looks like" — which already covered
      clean-stdout-vs-exit-code and test-suite-vs-throwaway-script, both the same "the convenient
      surface signal isn't the real signal" shape.
+   - **A skill that already owns the topic beats a new always-loaded rule.** `~/AGENTS.md` is not
+     the default home for every cross-repo finding: `contributing/global-agents-md.md`'s "Admitting
+     a new rule" is the gate, and its tier test is the deciding question — a rule whose miss is
+     _silent and expensive_ belongs in the always-loaded file, while one with a sharp trigger whose
+     miss is _cheap and recoverable_ belongs in a skill. Check the file's current size against its
+     own reference points (`grep -c '^### '`, `wc -l`; ≤15 rules / ≤200 lines) before proposing, and
+     say the numbers out loud when asking — admission is a real cost once it is over them, and the
+     user should decide with that in view. Resolved 2026-08-25: `pgrep -f` matching the harness's
+     own `zsh -c … eval` wrapper (a false positive that reads as a real process) went to
+     `session-bash-audit` — which already invites newly noticed Bash anti-patterns and can _measure_
+     the rate — rather than becoming a 34th rule in a file already at 33 rules / 390 lines. A
+     finding that a topic-owning skill can act on is usually better there than restated globally.
    - **Destination mid-restructure → the plan reshaping it, not the file.** When a candidate's
      correct home is currently the subject of an open `plans/*.md` that is reshaping it — especially
      one that defines its own criteria for what may be added — record the candidate _in that plan_,
