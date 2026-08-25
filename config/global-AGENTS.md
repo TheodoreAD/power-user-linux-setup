@@ -169,8 +169,11 @@ whole output and one real exit code, while a chain's `$?` is its last command's 
 one blob; and independent calls issued as separate tool-call blocks in one response already run in
 parallel, so gluing with `;`/`&&` gains nothing. `echo "=== label ==="` between steps is the tell
 that a chain should have been several calls. Exactly one chain shape is fine:
-`cd <other repo> && <one command>` for a cross-repo step. Never `cd` into the session's own repo —
-cwd already is it, and the harness resets cwd after every call anyway.
+`cd <other repo> && <one command>` for a cross-repo step — and that `cd` sticks: cwd persists into
+the following calls on current builds, so a cross-repo chain ends the session's cwd elsewhere until
+something moves it back. Never `cd` into the session's own repo as a matter of course — cwd already
+is it — but after a cross-repo chain, the next call that assumes the session repo (`inv`, `pytest`,
+a bare `rg`) either takes an absolute path or is itself a `cd <session repo> && …`.
 
 Run a gate or test plain — `inv quality.precommit`, `pytest` — not `> log 2>&1; echo $?` with a Read
 of the log afterwards. The Bash tool already reports a non-zero exit code on its own, keeps the
@@ -197,8 +200,12 @@ plain `grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`,
 Avoid needing to: keep a session focused on one project — substantial work in another repo belongs
 in its own session. For the unavoidable quick cross-repo command:
 
-- cwd does not persist between Bash calls — the harness resets it to the session's primary directory
-  after every call, so a standalone `cd` accomplishes nothing.
+- Whether cwd persists between Bash calls is not reliable either way: some calls end with the
+  harness resetting it to the primary directory ("Shell cwd was reset"), others leave it where a
+  `cd` put it — both observed in one session. Assume neither — scope by flag or by a single
+  `cd … && …` chain, and after that chain treat cwd as unknown until a call re-establishes it. The
+  tell that it stuck: `inv` answering `Can't find any collection named 'tasks'`, or `rg`/`pytest`
+  reporting a path that "does not exist" which plainly does.
 - Prefer the tool's own directory-scoping option (`git -C <path>`, `ruff --config <path>`,
   `basedpyright --project <path>`, the target repo's own `.venv/bin/pytest` by absolute path —
   site-packages resolve from the interpreter, not cwd). Read-only `git -C` verbs are allowlisted; a

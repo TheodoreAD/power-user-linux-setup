@@ -271,6 +271,19 @@ the chain worked precisely because the `cd` and the command shared one call). Wh
 universal or specific to this harness version/configuration is unpinned; the current guidance holds
 either way, which is why it no longer depends on cwd persistence.
 
+Pinned the other way 2026-08-25 (Claude Code, Fable 5 session in `repo-tasks`): after one
+`cd <scratch dir> && uvx dunamai …` call, the next three bare calls ran in the scratch dir — `uvx`
+answered with the scratch repo's version, then `inv quality.precommit` failed with
+`Can't find any collection named 'tasks'` and `rg plans/…` with "No such file or directory" — until
+a `cd <session repo> && inv quality.precommit` moved it back. No "Shell cwd was reset" line appeared
+on any of those calls — yet a later `cd power-user-linux-setup && PATH=… inv quality.precommit` in
+the _same session_ ended with "Shell cwd was reset to …/repo-tasks". The Bash tool's own description
+on that build reads "Working directory persists between calls." So both behaviors are real, not even
+consistently per build, and the rule now says so instead of asserting either: the durable guidance
+(scope by flag, or one `cd && …` chain) is unchanged, and the addition is "after such a chain, cwd
+is unknown until re-established" plus the two error messages that reveal a stuck cwd — the failure
+looked like a genuinely missing file for one call.
+
 Scoping flags were validated live the same day, all against this repo from a `repo-tasks` session
 with no `cd`: `git -C <path> status`/`log`/`add`/`commit` (full commit workflow),
 `dprint fmt --config <path>`, `ruff check --config <path>`, `ruff format --config <path>`,
