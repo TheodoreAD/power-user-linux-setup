@@ -47,7 +47,7 @@ not `Super_R`.
 | `Super+a`                         | Toggle application (app grid) view                  |
 | `Super+s`                         | Toggle Quick Settings                               |
 | `Super+v`, `Super+m`              | Toggle message tray / notifications                 |
-| `Super+n`                         | Focus active notification                           |
+| `Super+n`                         | Focus active notification — wins over Space Bar     |
 | `Super+1`..`Super+9`              | Switch to application N — **taken over**, see below |
 | `Super+Ctrl+1`..`Super+Ctrl+9`    | Open new window of application N — **taken over**   |
 | `Super+Alt+Up` / `Super+Alt+Down` | Shift overview up / down                            |
@@ -106,19 +106,27 @@ dconf read /org/gnome/shell/extensions/dash-to-panel/hotkeys-overlay-combo   # '
 
 ## Space Bar (`space-bar@luchrioh`)
 
-| Binding                     | Action                                  |
-| --------------------------- | --------------------------------------- |
-| `Super+grave`               | Activate previous workspace             |
-| `Super+w`                   | Open the workspaces bar menu            |
-| `Ctrl+Alt+Super+Left/Right` | Move the current workspace left / right |
+| Binding                     | Action                                                          |
+| --------------------------- | --------------------------------------------------------------- |
+| `Super+grave`               | Activate previous workspace                                     |
+| `Super+w`                   | Open the workspaces bar menu                                    |
+| `Ctrl+Alt+Super+Left/Right` | Move the current workspace left / right                         |
+| `Super+n`                   | First empty workspace — **dead**, GNOME's notification key wins |
 
 Its `activate-1-key`..`activate-10-key` default to `Super+1`..`Super+0` (switch to workspace N) and
 are registered through `Main.wm.addKeybinding`, which takes `Super+<number>` away from Dash to
 Panel's app hotkeys. `setup.toml` disables that whole group — workspace switching stays on
-`Super+grave`, `Super+n` (first empty workspace) and the native left/right bindings above:
+`Super+grave` and the native left/right bindings above.
+
+`activate-empty-key` (`Super+n`) is registered unconditionally by the extension
+(`services/KeyBindings.js`, `_addExtensionKeyBindings`), so disabling the numbered group leaves it
+in place — but `org.gnome.shell.keybindings focus-active-notification` holds the same combo and wins
+it, verified by pressing the key on 2026-08-26: it focuses a notification, and does nothing at all
+when there is none. Clear `focus-active-notification` if the workspace action is wanted instead.
 
 ```shell
 dconf read /org/gnome/shell/extensions/space-bar/shortcuts/enable-activate-workspace-shortcuts  # false
+gsettings get org.gnome.shell.keybindings focus-active-notification                             # ['<Super>n']
 ```
 
 ## Advanced Alt-Tab Window Switcher (`advanced-alt-tab@G-dH.github.com`)
