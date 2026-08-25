@@ -121,21 +121,25 @@ All 12 confirmed active as of 2026-06-09:
 **Applied dconf configuration** (stored in `setup.toml`, applied by `inv gnome.install-extensions` /
 `inv gnome.configure`):
 
-| Extension     | Key                | Value                                                                    |
-| ------------- | ------------------ | ------------------------------------------------------------------------ |
-| dash-to-panel | `panel-size`       | `28`                                                                     |
-| tophat        | `show-disk`        | `true`                                                                   |
-| tophat        | `mount-to-monitor` | `'/'`                                                                    |
-| tophat        | `fs-hide-in-menu`  | `'/boot'`                                                                |
-| tophat        | `refresh-rate`     | `'slow'`                                                                 |
-| vitals        | `show-processor`   | `false` — Top Hat handles CPU                                            |
-| vitals        | `show-memory`      | `false`                                                                  |
-| vitals        | `show-network`     | `false`                                                                  |
-| vitals        | `show-fan`         | `false` — IT8628E ACPI-blocked on this hardware                          |
-| vitals        | `show-voltage`     | `false`                                                                  |
-| vitals        | `show-storage`     | `false`                                                                  |
-| vitals        | `show-gpu`         | `false`                                                                  |
-| vitals        | `hot-sensors`      | `['_temperature_gpu_', '_temperature_processor_0_', '_system_load_1m_']` |
+| Extension     | Key                                             | Value                                                                    |
+| ------------- | ----------------------------------------------- | ------------------------------------------------------------------------ |
+| dash-to-panel | `panel-size`                                    | `28`                                                                     |
+| dash-to-panel | `show-favorites`                                | `true`                                                                   |
+| dash-to-panel | `hot-keys`                                      | `true` — Super+1..9 activates the Nth taskbar icon                       |
+| dash-to-panel | `shortcut-previews`                             | `true` — repeat Super+N cycles that app's windows                        |
+| space-bar     | `shortcuts/enable-activate-workspace-shortcuts` | `false` — frees Super+1..0 for dash-to-panel                             |
+| tophat        | `show-disk`                                     | `true`                                                                   |
+| tophat        | `mount-to-monitor`                              | `'/'`                                                                    |
+| tophat        | `fs-hide-in-menu`                               | `'/boot'`                                                                |
+| tophat        | `refresh-rate`                                  | `'slow'`                                                                 |
+| vitals        | `show-processor`                                | `false` — Top Hat handles CPU                                            |
+| vitals        | `show-memory`                                   | `false`                                                                  |
+| vitals        | `show-network`                                  | `false`                                                                  |
+| vitals        | `show-fan`                                      | `false` — IT8628E ACPI-blocked on this hardware                          |
+| vitals        | `show-voltage`                                  | `false`                                                                  |
+| vitals        | `show-storage`                                  | `false`                                                                  |
+| vitals        | `show-gpu`                                      | `false`                                                                  |
+| vitals        | `hot-sensors`                                   | `['_temperature_gpu_', '_temperature_processor_0_', '_system_load_1m_']` |
 
 > **dash-to-panel `panel-element-positions`** (clock centering, element order) contains the monitor
 > serial ID (`SAM-0x01000e00`) — machine-specific, not stored in `setup.toml`. Set via the extension

@@ -39,15 +39,15 @@ not `Super_R`.
 
 ## GNOME defaults — `org.gnome.shell.keybindings`
 
-| Binding                           | Action                                            |
-| --------------------------------- | ------------------------------------------------- |
-| `Super+a`                         | Toggle application (app grid) view                |
-| `Super+s`                         | Toggle Quick Settings                             |
-| `Super+v`, `Super+m`              | Toggle message tray / notifications               |
-| `Super+n`                         | Focus active notification                         |
-| `Super+1`..`Super+9`              | Switch to application N (position in the taskbar) |
-| `Super+Ctrl+1`..`Super+Ctrl+9`    | Open new window of application N                  |
-| `Super+Alt+Up` / `Super+Alt+Down` | Shift overview up / down                          |
+| Binding                           | Action                                              |
+| --------------------------------- | --------------------------------------------------- |
+| `Super+a`                         | Toggle application (app grid) view                  |
+| `Super+s`                         | Toggle Quick Settings                               |
+| `Super+v`, `Super+m`              | Toggle message tray / notifications                 |
+| `Super+n`                         | Focus active notification                           |
+| `Super+1`..`Super+9`              | Switch to application N — **taken over**, see below |
+| `Super+Ctrl+1`..`Super+Ctrl+9`    | Open new window of application N — **taken over**   |
+| `Super+Alt+Up` / `Super+Alt+Down` | Shift overview up / down                            |
 
 ## GNOME defaults — `org.gnome.mutter.keybindings`
 
@@ -78,11 +78,44 @@ Shell is active. See [gnome_extensions.md](gnome_extensions.md).
 
 ## Dash to Panel (`dash-to-panel@jderose9.github.com`)
 
-Doesn't bind Super itself — it visualizes the native `Super+1..9` shortcuts above by showing number
-overlays on pinned/running app icons while Super is held:
+`hot-keys = true` (set in `setup.toml`) makes Dash to Panel own `Super+<number>` itself: on enable
+it removes GNOME's native `switch-to-application-N` / `open-application-menu-N` bindings and
+installs its own, restoring the native ones if the setting is turned back off (`overview.js`
+`_enableHotKeys`/`_disableHotKeys`).
+
+| Binding                         | Action                                                                |
+| ------------------------------- | --------------------------------------------------------------------- |
+| `Super+1`..`Super+9`, `Super+0` | Launch or focus the Nth taskbar icon (numpad numbers too)             |
+| `Super+N` again                 | Cycle that app's windows (`shortcut-previews = true`)                 |
+| `Super+Ctrl+N`                  | New window of the Nth app                                             |
+| `Super+Shift+N`                 | Shift-click action of the Nth app                                     |
+| hold `Super`                    | Number overlay on the icons (`hotkeys-overlay-combo = 'TEMPORARILY'`) |
+
+The index is the **taskbar** position (`_activateApp` walks the panel's app icons), so pinned
+favourites come first in `org.gnome.shell favorite-apps` order, then running unpinned apps. Drag an
+icon on the panel to renumber it. The number overlay only ever appears while `hot-keys` is `true` —
+with the extension's default (`false`) nothing is drawn and the native shell bindings are in charge.
 
 ```shell
+dconf read /org/gnome/shell/extensions/dash-to-panel/hot-keys                # true
 dconf read /org/gnome/shell/extensions/dash-to-panel/hotkeys-overlay-combo   # 'TEMPORARILY'
+```
+
+## Space Bar (`space-bar@luchrioh`)
+
+| Binding                     | Action                                  |
+| --------------------------- | --------------------------------------- |
+| `Super+grave`               | Activate previous workspace             |
+| `Super+w`                   | Open the workspaces bar menu            |
+| `Ctrl+Alt+Super+Left/Right` | Move the current workspace left / right |
+
+Its `activate-1-key`..`activate-10-key` default to `Super+1`..`Super+0` (switch to workspace N) and
+are registered through `Main.wm.addKeybinding`, which takes `Super+<number>` away from Dash to
+Panel's app hotkeys. `setup.toml` disables that whole group — workspace switching stays on
+`Super+grave`, `Super+n` (first empty workspace) and the native left/right bindings above:
+
+```shell
+dconf read /org/gnome/shell/extensions/space-bar/shortcuts/enable-activate-workspace-shortcuts  # false
 ```
 
 ## Advanced Alt-Tab Window Switcher (`advanced-alt-tab@G-dH.github.com`)
