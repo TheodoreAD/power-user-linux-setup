@@ -141,10 +141,12 @@ non-shell-spawning GUI program would ever want them:
   reference other CLIs, and nothing outside a shell reads them.
 - **Undecided:** `PATH`, per the question above.]
 
-[NEEDS CLARIFICATION: Writing into `~/.config/environment.d/` would be a **new home-directory
-writer**, which `plans/2026-08-22-deployed-config-drift-guard.md` is explicitly trying to reduce the
-number of. It should go through that plan's shared writer and appear in `deploy.status`, not grow
-its own deploy path in `zsh.py`. That plan should probably land first.]
+[DECISION: Writing into `~/.config/environment.d/` is a **new home-directory writer**, and the
+drift-guard work that unified those has landed (`tasks/deploy.py`, rationale in
+`contributing/deploy.md`). It goes through `deploy.deploy()` and appears in `deploy.status` — never
+its own deploy path in `zsh.py`. Whether it is a `wrapper-script`-style `MANAGED` file or a
+`config_files`-style `SEEDED` one is the only question left, and `MANAGED` is the obvious answer for
+a file whose entire content PULSE generates.]
 
 [NEEDS CLARIFICATION: Does the change need a re-login to be observable, and does that make it
 awkward to verify in `inv verify.all`? A conventional post-install check can confirm the file's

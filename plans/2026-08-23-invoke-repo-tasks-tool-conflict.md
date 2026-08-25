@@ -68,9 +68,10 @@ can recreate the split.
 
   [NEEDS CLARIFICATION: does `bootstrap.sh` implement the check itself, or does `repo-tasks` grow a
   task/flag that `bootstrap.sh` composes — the same relationship it already has with `repo-tasks`'
-  own installer, per `plans/2026-08-20-runtime-dev-venv-split.md` §2? The second keeps the "never
-  reach into repo-tasks' internals" rule intact, but the check has to run _before_ `repo-tasks`
-  exists on the machine, which is exactly when a `repo-tasks` task can't be invoked.]
+  own installer, per `contributing/repo-family-architecture.md`'s "Two installers, two scopes"? The
+  second keeps the "never reach into repo-tasks' internals" rule intact, but the check has to run
+  _before_ `repo-tasks` exists on the machine, which is exactly when a `repo-tasks` task can't be
+  invoked.]
 
 - **What the unattended default should do.** Stated preference: remove-by-default when there's no
   TTY, prompt when there is — matching apt/dnf's shape and `bootstrap.sh`'s existing `-t 0` branch.

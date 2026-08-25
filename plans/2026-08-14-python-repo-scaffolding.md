@@ -1229,9 +1229,9 @@ mechanism from `tasks/ai.py`) and `ai.install-skills`'s default (no `--dir`) mod
 `skills`-declared entry from `setup.toml` and merging `claude_permissions_allow` rules — genuinely
 global, user-level state, not project-scoped, and it's a load-bearing step of `inv setup`'s
 `PACKAGES_PHASE` (`tasks/setup.py`) — must keep working with zero project deps, per
-`plans/2026-08-20-runtime-dev-venv-split.md`. `_ensure_agents_skills` (the shared directory+symlink
-helper `ai.install-skills` depends on) stays put, untouched, for exactly that reason — it was never
-`ai.init`-exclusive to begin with.
+`contributing/repo-family-architecture.md`'s "The runtime/dev-venv split". `_ensure_agents_skills`
+(the shared directory+symlink helper `ai.install-skills` depends on) stays put, untouched, for
+exactly that reason — it was never `ai.init`-exclusive to begin with.
 
 **Mechanism, verified empirically before committing to it, not assumed:** Copier has native symlink
 support, gated by `_preserve_symlinks: true` in `copier.yml`

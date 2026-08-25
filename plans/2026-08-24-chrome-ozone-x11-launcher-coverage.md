@@ -65,7 +65,7 @@ something newer explicit-sync work has already fixed. No "just delete the workar
 [DECISION: **Option B**, chosen by the user on 2026-08-24 with the rest kept as the fallback ladder
 ("do option B, i'll check it and get back to you. if that doesn't work we'll try the rest"). It is
 the only option that writes exclusively files PULSE owns, which is the ownership rule
-`plans/2026-08-22-deployed-config-drift-guard.md` is converging on.]
+`tasks/deploy.py` enforces (`contributing/deploy.md`).]
 
 Landed:
 
@@ -109,8 +109,8 @@ The user's first suggestion.
   Chrome launchers lack the flag").
 - **Against:** must be re-run after any PWA install/update, forever, and nothing announces when that
   is needed. It edits Chrome-owned files, which is exactly the ownership model
-  `plans/2026-08-22-deployed-config-drift-guard.md` is trying to make unambiguous — PULSE would be
-  writing into files it did not create and does not control.
+  `contributing/deploy.md` makes unambiguous — PULSE would be writing into files it did not create
+  and does not control.
 
 ### B. One PULSE-owned autostart entry that starts Chrome first
 

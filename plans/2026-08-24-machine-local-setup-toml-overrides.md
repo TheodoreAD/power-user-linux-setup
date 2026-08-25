@@ -39,8 +39,8 @@ which filters on `enabled` **and** tags. So a disabled package contributes no ma
 Confirmed live: `~/.local/share/applications/google-chrome.desktop` exists on disk with the x11
 flag, is declared in `setup.toml` as `[packages.google-chrome-x11]`, and does **not** appear in
 `inv deploy.status` output. It is an orphan — a file this repo describes but does not track, so
-`deploy.status` cannot say whether it drifted, and the drift guard
-(`plans/2026-08-22-deployed-config-drift-guard.md`) will never see it.
+`deploy.status` cannot say whether it drifted, and the drift guard (`tasks/deploy.py`) will never
+see it.
 
 That is worse than a missing feature. It means "disabled" currently conflates two different things:
 
@@ -125,8 +125,8 @@ Both `google-chrome-x11` packages are enabled on this machine through it, and no
 here. The orphan case is narrower now (it needs a package that was deployed and later disabled) but
 it has not gone away: `managed_paths()` still filters through `enabled_packages()`, so such a file
 is invisible rather than reported as "declared, not managed here, but present on disk". Wants a
-distinct status word rather than silent omission. Coordinate with
-`plans/2026-08-22-deployed-config-drift-guard.md`, which owns that registry.]
+distinct status word rather than silent omission. The registry is `deploy.managed_paths()`; this
+plan owns the change now that the drift-guard plan has retired.]
 
 [DEFERRED: Whether an override may carry anything beyond `enabled` — `tags` is the only other field
 `enabled_packages()` consults. Not needed by any real use case yet; recorded so the question is not

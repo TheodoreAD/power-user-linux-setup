@@ -71,17 +71,16 @@ erroring.
 
 **Then replaced by the shared deploy classifier, and widened** (2026-08-25): the byte comparison
 above was a second copy of the transform `tasks/tools.py` applied on write, kept in sync by hand.
-Once `tasks/deploy.py` became the one writer for every path under `~`
-(`plans/2026-08-22-deployed-config-drift-guard.md`), verify's `"deploy"` check became a read-only
-call into `deploy.classify()` — the same answer `inv deploy.status` gives, including the
-stale-vs-edited distinction the old comparison couldn't express. That also extended coverage to the
-two mechanisms the old check never saw: any method's `config_files` mappings and every `skills`
-entry, both pulled from the deploy registry. The one policy wrinkle: a `config_files` destination is
-_seeded_, not owned — the user's after first install — so a customized copy is reported and passes;
-only its absence fails. Without that split, `inv setup` would fail on every config the user has ever
-touched (this machine's terminator config, rewritten by terminator itself, was the live example).
-`wrapper-script` paths still come from `_resolve`, not the registry sweep, so `verify_cmd` /
-`verify = false` keep applying to them.
+Once `tasks/deploy.py` became the one writer for every path under `~` (`contributing/deploy.md`),
+verify's `"deploy"` check became a read-only call into `deploy.classify()` — the same answer
+`inv deploy.status` gives, including the stale-vs-edited distinction the old comparison couldn't
+express. That also extended coverage to the two mechanisms the old check never saw: any method's
+`config_files` mappings and every `skills` entry, both pulled from the deploy registry. The one
+policy wrinkle: a `config_files` destination is _seeded_, not owned — the user's after first install
+— so a customized copy is reported and passes; only its absence fails. Without that split,
+`inv setup` would fail on every config the user has ever touched (this machine's terminator config,
+rewritten by terminator itself, was the live example). `wrapper-script` paths still come from
+`_resolve`, not the registry sweep, so `verify_cmd` / `verify = false` keep applying to them.
 
 ### `gnome-extension` needed a different fix entirely: always skip
 

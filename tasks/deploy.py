@@ -11,10 +11,10 @@ The rule here is that PULSE never destroys content it can't prove it wrote. `cla
 that from a state manifest recording the digest of what was last deployed; `deploy()` acts on the
 answer, and only ever overwrites unseen when the destination still matches that digest.
 
-See plans/2026-08-22-deployed-config-drift-guard.md for the full design, the rejected approaches
-(a PostToolUse hook, a pre-push git hook), and why `util.ensure_block`/`write_claude_settings`
-deliberately stay outside this module — they write into files the *user* owns, which is a
-different ownership model, not a different style.
+See contributing/deploy.md for the full design rationale, the rejected approaches (a PostToolUse
+hook, a pre-push git hook), and why `util.ensure_block`/`write_claude_settings` deliberately stay
+outside this module — they write into files the *user* owns, which is a different ownership
+model, not a different style.
 """
 
 import difflib
