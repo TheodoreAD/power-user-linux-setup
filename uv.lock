@@ -7,6 +7,27 @@ resolution-markers = [
 ]
 
 [[package]]
+name = "act-bin"
+version = "0.2.89"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/11/66/bde6b75d46c016681385265b4811c0a2bcbf7660b52a7968aa260f32138a/act_bin-0.2.89.tar.gz", hash = "sha256:c0aba08a8406edae00cfa891da26483cbc50bb466d5d5e9a7ff5b42ab214e17d", size = 18369, upload-time = "2026-06-02T02:12:11.776Z" }
+wheels = [
+    { url = "https://files.pythonhosted.org/packages/95/ec/06f4867418eb58ba84065d6e7641435794dfee1a82c66359581a14ba0e70/act_bin-0.2.89-py3-none-macosx_12_0_arm64.whl", hash = "sha256:9bad34145f90c069651887950c71f4ccd0103d366e87e43d31b3e832ef79b139", size = 7610019, upload-time = "2026-06-02T02:11:58.479Z" },
+    { url = "https://files.pythonhosted.org/packages/be/93/6c13c84b07081417dee491fe19b66d4e20a65fa089034a93d0fcdb02045f/act_bin-0.2.89-py3-none-macosx_12_0_x86_64.whl", hash = "sha256:0538c3f775a243521c9908770d1113a86c7e11bfbf81ab67e249bded84a6900c", size = 8274119, upload-time = "2026-06-02T02:12:00.564Z" },
+    { url = "https://files.pythonhosted.org/packages/20/5f/1bb9ff88545c3418253ccfe076996c27aaed976f1be7f05fce46dc939031/act_bin-0.2.89-py3-none-manylinux_2_28_aarch64.musllinux_1_2_aarch64.whl", hash = "sha256:2a66e97a5321dbfa9801898e9d737cc5e100ea79c766f768d4313f008d8bf4be", size = 7348675, upload-time = "2026-06-02T02:12:02.364Z" },
+    { url = "https://files.pythonhosted.org/packages/4f/dc/7a25d5138d907c7de4bb788b7f3907e4247f1520daa2b01cc76cafa6c09a/act_bin-0.2.89-py3-none-manylinux_2_28_riscv64.musllinux_1_2_riscv64.whl", hash = "sha256:8397113cc9143887576a5564e72ba04b476c5d9255cfc0a176c3384a5aaefb54", size = 7601557, upload-time = "2026-06-02T02:12:04.138Z" },
+    { url = "https://files.pythonhosted.org/packages/bc/ae/ca6b07017aae90db504dd39f4043ca58a0a8e97195769f698f2f9460ebcd/act_bin-0.2.89-py3-none-manylinux_2_28_x86_64.musllinux_1_2_x86_64.whl", hash = "sha256:cd0c9d1178363298a5626338b94197d1618cf28990f6a56ff34c2fc7e37f7d94", size = 8168887, upload-time = "2026-06-02T02:12:06.363Z" },
+    { url = "https://files.pythonhosted.org/packages/1d/3b/4bbcbf92b17ba0299cc6addd7686f795ec02a8a2a05dfbf8cd185b150ead/act_bin-0.2.89-py3-none-win_amd64.whl", hash = "sha256:b9598e3c64e84bbe5598de6822e2d9fe377314b2e9d84e11411e56bd3e180ba4", size = 8353490, upload-time = "2026-06-02T02:12:08.258Z" },
+    { url = "https://files.pythonhosted.org/packages/b0/f2/fdbb562ac71f921a5a92b7cb6c6793981edcb2369f4f724362bc7570119b/act_bin-0.2.89-py3-none-win_arm64.whl", hash = "sha256:d7b878124f2cef01026f04a0ef26058c8c4004fd5bd281228697b20b41be3f26", size = 7420586, upload-time = "2026-06-02T02:12:10.172Z" },
+]
+
+[[package]]
+name = "actionlint-py"
+version = "1.7.12.24"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/6f/0b/3f29683dfbe94208fb5c3806806a6ef419972892e25c3c4f95198f68c978/actionlint_py-1.7.12.24.tar.gz", hash = "sha256:7571b0724fde79b2572b98b2b53792c470249d4db29951b57fc49b9cd3eaf11e", size = 12071, upload-time = "2026-03-31T06:21:35.015Z" }
+
+[[package]]
 name = "annotated-types"
 version = "0.8.0"
 source = { registry = "https://pypi.org/simple" }
@@ -180,6 +201,11 @@ wheels = [
 ]
 
 [[package]]
+name = "invoke-stubs"
+version = "0.1.0"
+source = { git = "https://github.com/TheodoreAD/invoke-stubs#ad052ca2c5eed29775399f697cf58ed85281855c" }
+
+[[package]]
 name = "markdown-it-py"
 version = "4.2.0"
 source = { registry = "https://pypi.org/simple" }
@@ -241,9 +267,12 @@ source = { editable = "." }
 
 [package.dev-dependencies]
 dev = [
+    { name = "act-bin" },
+    { name = "actionlint-py" },
     { name = "basedpyright" },
     { name = "dprint-py" },
     { name = "invoke" },
+    { name = "invoke-stubs" },
     { name = "pytest" },
     { name = "repo-tasks" },
     { name = "ruff" },
@@ -255,9 +284,12 @@ dev = [
 
 [package.metadata.requires-dev]
 dev = [
+    { name = "act-bin" },
+    { name = "actionlint-py" },
     { name = "basedpyright", specifier = ">=1.39.10" },
     { name = "dprint-py" },
     { name = "invoke" },
+    { name = "invoke-stubs", git = "https://github.com/TheodoreAD/invoke-stubs" },
     { name = "pytest" },
     { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks" },
     { name = "ruff" },

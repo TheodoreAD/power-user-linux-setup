@@ -446,7 +446,7 @@ def test_a_managed_path_is_absolute_even_when_setup_toml_uses_a_tilde(tmp_path, 
 
 # deploy.status is @task-wrapped and invoke's Task.__call__ insists its first arg be a real
 # Context — .body is the plain underlying function, same pattern as tests/unit/test_ai.py.
-_status = deploy.status.body  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+_status = deploy.status.body
 
 
 @pytest.fixture
@@ -581,7 +581,7 @@ def test_status_path_reports_a_managed_file_with_its_source(wrapper_pkg, capsys)
 # inv deploy.all
 # ---------------------------------------------------------------------------
 
-_all = deploy.all_.body  # pyright: ignore[reportAny, reportFunctionMemberAccess] — invoke's untyped Task.body
+_all = deploy.all_.body
 
 
 def test_all_creates_a_missing_destination_and_records_it(wrapper_pkg, src, monkeypatch, capsys):

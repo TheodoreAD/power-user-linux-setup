@@ -14,6 +14,9 @@ dev = [
   "shellcheck-py",
   "shfmt-py",
   "dprint-py",
+  "invoke-stubs @ git+https://github.com/TheodoreAD/invoke-stubs",
+  "actionlint-py",
+  "act-bin",
 ]
 
 [build-system]
