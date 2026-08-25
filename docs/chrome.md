@@ -39,6 +39,25 @@ Two deliberate limits:
 Component extensions Chrome installs for itself (Chrome Web Store Payments) are hidden on purpose
 and are left exactly as found.
 
+## Which profile a launcher opens
+
+Chrome has no "default profile" setting in its UI. It picks its startup profile from
+`profile.last_active_profiles` in `~/.config/google-chrome/Local State`, and any launcher passing an
+explicit `--profile-directory` overrides that — which is what every PWA launcher does.
+
+So the way to make launches deterministic is on the launcher, not in Chrome:
+
+```ini
+Exec=/usr/bin/google-chrome-stable --profile-directory="Profile 2" %U
+```
+
+`inv chrome.status` prints the mapping between profile directories and their display names, which is
+what you need to know which `Profile N` is which account.
+
+Do **not** rename profile directories to make a different one be `Default`. The paths are referenced
+throughout `Local State`, `Preferences` and extension state; it needs Chrome fully closed, sync can
+undo it, and the payoff is cosmetic.
+
 ## This is a repair, not a fix
 
 Chrome owns these files and rewrites them whenever a PWA is installed or updated, discarding the
