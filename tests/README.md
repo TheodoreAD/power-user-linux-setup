@@ -66,6 +66,18 @@ directory. Add the directory only when a test genuinely needs a real external se
 merely stubs its collaborators belongs in `tests/unit/`.
 
 The directory matters even with the tier empty: the shared `pytest.ini` names `tests/unit`, and when
-`testpaths` misses, pytest falls back to searching the whole working tree — broader than `tests/`,
-and not `.gitignore`-aware — so any non-test directory at the repo root would join the default run
-(see `plans/2026-08-24-adopt-test-tier-structure.md` for the incident that motivated this).
+`testpaths` misses, pytest only _warns_
+(`No files were found in testpaths ... Searching recursively from the current directory instead`)
+and falls back to searching the whole working tree — broader than `tests/`, and not
+`.gitignore`-aware — so any non-test directory at the repo root would join the default run. "The
+suite keeps passing" is the benign case: in `scaffoldapy` the same config pull, made before the
+directory existed, broke collection outright (exit 2) because that repo has a second `tests/` tree
+under `template/`, and the fallback reached `template/tests/conftest.py`, which shadowed the real
+one (`ImportError: cannot import name 'BASE_ANSWERS' from 'conftest'`). Adopt the structure first,
+then pull the config (`~/AGENTS.md`, "Regenerating a file from a canonical source").
+
+If this repo ever does grow a `tests/integration/` with its own `conftest.py`: an import from
+`conftest` then resolves to a _different file per tier_ — the root one from the unit tier, the
+tier-local one from the integration tier, where it raises `ImportError`, silently and
+direction-dependently. Shared constants that feed `@pytest.mark.parametrize` cannot be fixtures, so
+they need a distinctly-named module (`tests/support.py`, as `scaffoldapy` did), never `conftest.py`.

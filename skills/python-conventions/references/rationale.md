@@ -525,12 +525,13 @@ different axis from §4's production-code DRY decision, not a re-derivation of i
 explicitly so a reader doesn't assume "this project avoids DRY everywhere" and over-apply it to test
 bodies.
 
-_Citation check, 2026-08-25 (`plans/2026-08-22-damp-vs-dry-testing-convention-revisit.md`)._ An
-earlier wording here said Khorikov's split was "echoed by Brian Okken" and that test bodies "stay
-duplicated per test, even when tests look near-identical" — both over-extrapolated, read against the
-sources. Khorikov's article never mentions parametrized/data-driven tests at all; its example of
-misapplied DRY is shared mutable state (class fields) and an arrange step hidden in a setup method,
-not a data table. Okken (Test & Code ep. 160, "DRY, WET, DAMP, AHA", 2021 — transcript in
+_Citation check, 2026-08-25 (the now-retired
+`plans/2026-08-22-damp-vs-dry-testing-convention-revisit.md`)._ An earlier wording here said
+Khorikov's split was "echoed by Brian Okken" and that test bodies "stay duplicated per test, even
+when tests look near-identical" — both over-extrapolated, read against the sources. Khorikov's
+article never mentions parametrized/data-driven tests at all; its example of misapplied DRY is
+shared mutable state (class fields) and an arrange step hidden in a setup method, not a data table.
+Okken (Test & Code ep. 160, "DRY, WET, DAMP, AHA", 2021 — transcript in
 `okken/testandcode_transcripts`) does not cite Khorikov and is explicitly "on the fence" about the
 DAMP-for-tests framing; his own stated rule is readability-first with one standard for production
 and test code, and he names parametrization as a sanctioned tool: "if there is duplication,

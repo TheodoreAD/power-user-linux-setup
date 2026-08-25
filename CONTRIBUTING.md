@@ -101,8 +101,14 @@ live in [`contributing/`](contributing/) instead, one file per topic, never publ
 - [`contributing/certs.md`](contributing/certs.md) — the corporate-CA-bundle feature's QA/fixture
   playbook (companion to [`docs/certs.md`](docs/certs.md)).
 - [`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md) — what each
-  of `power-user-linux-setup`/`repo-tasks`/`scaffoldapy` actually owns, and the decision rule for
-  where new shared work between them goes.
+  of `power-user-linux-setup`/`repo-tasks`/`scaffoldapy` actually owns, the decision rule for where
+  new shared work between them goes, and why the shared task runner is a global `uv tool` install.
+- [`contributing/deploy.md`](contributing/deploy.md) — why every path this repo writes under `~`
+  goes through `tasks/deploy.py`, the five-state classifier and its manifest, and the pitfalls hit
+  building it (companion to the "Whole-file configs" section of
+  [`docs/configuration.md`](docs/configuration.md)).
+- [`contributing/verify.md`](contributing/verify.md) — every gotcha `inv verify.all`'s first
+  implementation pass hit, and how testing (not review) caught each one.
 
 If you're about to write a "why this is built this way" section in `docs/`, it probably belongs in
 `contributing/` instead — add a new per-topic file there and list it above. Exception: if the

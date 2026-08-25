@@ -103,3 +103,19 @@ The `reference/` hazard is already resolved, so what is left is the split itself
 second open question turns up real integration tests; otherwise take the third option (a
 `tests/unit/` that simply matches the shared config) and record why the tier stayed empty, so the
 next reader does not think it was forgotten.
+
+## Migrated to
+
+- **`tests/README.md`** ("Layout: `tests/unit/` only") — the decision and its measurement, the
+  pytest `testpaths` fallback behaviour with the `scaffoldapy` exit-2 incident, and the
+  second-`conftest.py` shadowing pitfall (conditional on this repo ever growing an integration
+  tier).
+- **`~/AGENTS.md`**, "Regenerating a file from a canonical source" — the adopt-the-structure-before-
+  pulling-the-config rule, already generalized there when this plan was written.
+- **`contributing/permission-systems.md`** — where `reference/findings.md` went when the 144 MB
+  research dump was removed (the `[DECISION:]` above); `contributing/research-library.md` covers
+  `$RESEARCH_HOME`.
+
+Not migrated: the `scaffoldapy` worked precedent — its numbers and its CI choice belong to that
+repo's own `contributing/`/plans, and `repo-tasks/contributing/test-tiers.md` owns the family
+convention.

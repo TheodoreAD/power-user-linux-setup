@@ -97,3 +97,16 @@ under a direct read, the likely fix is narrower wording in `SKILL.md` itself (no
 expected" from "don't collapse genuinely different scenarios into one branching mega-test — the
 actual thing being warned against." If the citations turn out weaker than the current paraphrase
 implies, revise the guidance itself, not just its sourcing.
+
+## Migrated to
+
+- **`skills/python-conventions/SKILL.md`** — the corrected testing-conventions bullet (a new case
+  that adds a _value_ is a parametrize row; one that changes the test's _logic_ is a new test).
+- **`skills/python-conventions/references/rationale.md` §7** — the citation check itself: what
+  Khorikov's article does and doesn't say, that the Okken attribution didn't hold and what he
+  actually says, and the narrowed override (branch-on-parameters mega-tests, assertion-owning
+  `check_*` helpers).
+- **`skills/python-conventions/references/snippets/testing.py`** — shows both sides of the line.
+
+Not migrated: the four open questions and the "Recommended direction" — all answered by the
+`[DECISION:]` at the top, whose content is what §7 now carries.

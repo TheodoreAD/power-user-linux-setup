@@ -425,3 +425,25 @@ implementation time rather than guessed at here.
 - Manual: run the resolved `bootstrap.sh` both interactively (prompt appears, default yes works) and
   unattended with `setup.toml`'s `install_repo_tasks` set both `true` and `false`, confirming the
   right thing installs each time.
+
+## Migrated to
+
+- **`contributing/repo-family-architecture.md`**, new "The runtime/dev-venv split" section — the two
+  lifecycles and the `simulate_missing` rationale, the CI `runtime-guardrail` job's exact scope, the
+  two-installers scope boundary and the chicken-and-egg resolution, the global daily-driver's four
+  argued design points (stamped-script asymmetry, no pinning, CI owns zero bash, the invisibility
+  constraint), and the four rejected shapes including why `uv` workspaces were ruled out. Its
+  existing sections already carried the stdlib-only-tasks rule, the dependency-list split, and the
+  `--with-executables-from` trap (also in `~/AGENTS.md`).
+- **`repo-tasks`** — `inv repo-tasks.*`, `configs.ensure-deps`, the stamped
+  `bootstrap-repo-tasks.sh` and both CI workflows are code there; `repo-tasks/README.md` documents
+  the one-line install.
+
+Not migrated, deliberately: the two dated progress logs at the top (a changelog — `git log` in both
+repos is the record); the "Files touched"/"Verification" checklists; and the two `scaffoldapy` bugs
+flagged 2026-08-23 as out of scope — checked 2026-08-25: the `async with contextlib.suppress` misuse
+is fixed in the template (`orchestrator.py.jinja` now uses a plain `with` inside
+`async with semaphore`), and the dprint-reflow constraint on interpolated template prose is
+documented in `scaffoldapy/AGENTS.md`. The scaffoldapy consumer-repo CI redesign this plan once
+listed as its last open item landed 2026-08-23 (`copier.yml`'s `_tasks` + generated CI on the
+stamped script).

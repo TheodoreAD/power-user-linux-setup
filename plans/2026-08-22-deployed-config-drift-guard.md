@@ -516,3 +516,22 @@ blocks into that exact file. The unmanaged-path message is the whole teaching mo
 exists for, and it was confidently wrong in the most-likely-to-be-asked case. Found by running the
 command against a real home directory, not by review or by any unit test — the tests only ever asked
 about paths the fixtures had invented.]
+
+## Migrated to
+
+- **`contributing/deploy.md`** — every `[DECISION:]` and `[PITFALL:]` above: the
+  writer-not-detection reframing, why the hook and the git hook were dropped (with the verified hook
+  mechanics), one writer per ownership model, five states and the backfill rule, the manifest's
+  location and hash-not-date, the `.pulse-source` marker's separate job, the two policies and the
+  terminator example, the unattended-run regression and `PULSE_ASSUME_YES`, and the pitfalls each
+  step hit.
+- **`docs/configuration.md`** ("Whole-file configs") — the user-facing contract; `tasks/deploy.py`'s
+  docstrings and `tests/unit/test_deploy.py` — the code contract. `contributing/verify.md` — the
+  `verify.all` integration.
+- **`plans/2026-08-24-machine-local-setup-toml-overrides.md`** — both `[DEFERRED:]` items (drift
+  classification for `ensure_block`/`write_claude_settings` targets; the edit-time hook revisit
+  condition), beside the declared-but-disabled orphan that plan already owns.
+
+Not migrated, deliberately: the per-step progress log, the "Files touched" table and the
+verification checklist — completed work whose record is `git log`; the design sections themselves —
+their surviving content is the code, and the reasoning is in `contributing/deploy.md`.

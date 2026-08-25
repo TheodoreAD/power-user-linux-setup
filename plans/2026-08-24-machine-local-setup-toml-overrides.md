@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-24
+updated: 2026-08-25
 ---
 
 # Machine-local overrides for `setup.toml`
@@ -140,3 +140,23 @@ implementation rather than deliberately, so it is worth one look before it becom
 [UNVERIFIED: What `verify.all` does with an overridden package. It reads the same
 `enabled_packages()`, so it should be free, but this was reasoned rather than run — the next full
 `inv setup` on this machine is what would actually prove it.]
+
+## Inherited from the retired drift-guard plan (2026-08-25)
+
+`plans/2026-08-22-deployed-config-drift-guard.md` landed and was retired into
+`contributing/deploy.md`; the registry it built is what the orphan item above coordinates with, so
+its two open items live here now.
+
+[DEFERRED: `util.ensure_block` and `util.write_claude_settings` targets have no drift classification
+of their own — a marker-delimited block and a merged JSON key each need their own notion of "dirty"
+that the whole-file classifier doesn't model. `inv deploy.status --path` at least _detects_ a
+block-owned file (any file containing a `PULSE::` marker) and says PULSE owns only the marked
+regions; `write_claude_settings` targets remain entirely undetected. Wants a registry entry per
+ownership model so "is this path PULSE-managed?" has one answer for all three, before any
+classification is designed.]
+
+[DEFERRED: the agent that dirties a deployed file still learns nothing _at edit time_ — only whoever
+next runs a PULSE task does. Accepted deliberately (the actual harm, silent loss, is closed), with a
+condition: if deployed-file drift keeps recurring now that the writer can't destroy it, revisit a
+real-time `PostToolUse` hook _then_, with transcript evidence rather than on prediction. The hook
+mechanics are recorded in `contributing/deploy.md` so nobody re-researches them.]
