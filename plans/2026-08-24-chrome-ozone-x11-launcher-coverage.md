@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-25
+updated: 2026-08-26
 ---
 
 # Making the Chrome `--ozone-platform=x11` workaround actually stick
@@ -32,9 +32,10 @@ Confirmed by `ps`: every child of the running instance carried `--ozone-platform
 root process was the autostarted WhatsApp Web PWA. Quitting Chrome entirely and relaunching from the
 app grid fixed it immediately — verified by the user the same evening.
 
-The `~/.config/autostart/google-chrome.desktop` copy is Chrome's own "continue where you left off"
-entry, written by Chrome, not by PULSE. The two PWA entries are likewise Chrome-generated and are
-rewritten whenever the PWA is (re)installed — any hand-edit to them is temporary by construction.
+The two PWA entries are Chrome-generated and are rewritten whenever the PWA is (re)installed — any
+hand-edit to them is temporary by construction. The `~/.config/autostart/google-chrome.desktop` copy
+is _not_, despite what this plan first assumed: it is a 2020 hand-added leftover, and the difference
+turned out to matter — see "One cause, two symptoms" below.
 
 ### Levers that do NOT exist (verified 2026-08-24 — do not re-derive)
 
@@ -118,7 +119,7 @@ is already `enabled = false` and machine-specific, turned on here through `overr
 consistent with its sibling — but it is still a personal detail landing in the repo, and a second
 machine's "Profile 2" is a different account.]
 
-## Status: option B is built and deployed, awaiting one login
+## Status: working since 2026-08-26 — by option D, not option B
 
 [DECISION: **Option B**, chosen by the user on 2026-08-24 with the rest kept as the fallback ladder
 ("do option B, i'll check it and get back to you. if that doesn't work we'll try the rest"). It is
@@ -141,14 +142,24 @@ order, so `00-…` wins the race against `chrome-*` and `google-chrome.desktop`.
 login tests, and it is the only thing standing between option B and the fallback ladder. If Chrome
 comes up on Wayland anyway, ordering is not filename-based and B is dead as designed.
 
-Largely moot as of 2026-08-25 — see "The race is gone" below. Evidence against, inconclusive and now
-unrepeatable: in a session started 21:52, all 27 Chrome child processes carried
-`--ozone-platform=wayland` with `00-google-chrome-x11.desktop` in place since aug 24. But
-`~/.config/autostart/` was modified at 22:17 — after that login — and now holds neither of the two
-`chrome-*` PWA entries this plan tabulates, with Chrome's own entry renamed to
-`google-chrome.desktop.disabled`. The user made that change from Chrome's own PWA settings after
-that login, so the session had already started under the old three-entry state and says nothing
-about ordering.]
+**Resolved 2026-08-25: the filename-ordering premise is false.** An earlier revision of this note
+called the evidence "inconclusive and now unrepeatable" because `~/.config/autostart/` was modified
+at 22:17, after the login in question. That reasoning is backwards — the 21:52 login ran under the
+old three-entry state, which is exactly the state the ordering premise is about, so it is the
+decisive test rather than a spoiled one.
+
+What it showed: all four Chrome-launching entries were started by `gnome-session-binary` inside a
+3ms window (21:52:25.414–.417), and the **fork order was not filename order**. PIDs are the tell —
+`google-chrome.desktop` got 1480257 and the WhatsApp PWA 1480272, while `00-google-chrome-x11`, the
+entry that sorts first, got 1480305. Ours forked last and duly logged
+`00-google-chrome-x11.desktop[1480324]: Opening in existing browser session.` The WhatsApp PWA won
+the singleton handshake and became `app-com.google.Chrome-1480272.scope`, defining Wayland for the
+whole session.
+
+This matters beyond the history: it means **option B never worked as designed, and cannot be relied
+on as a fallback.** What works is option D — being the only starter, per "The race is gone" below.
+If the PWA autostart entries ever come back, B will not save the arrangement and the ladder goes
+straight to C.]
 
 ### The race is gone (2026-08-25)
 
@@ -166,10 +177,20 @@ The cost is the one D always carried and should not be lost sight of: **WhatsApp
 longer start at login.** If that turns out to matter, the entries come back and the ordering
 question comes back with them.
 
-[UNVERIFIED: That the next login actually comes up on x11 under this simplified arrangement. The
-mechanism is now trivial — one autostart entry, flag present — but it has not yet been through a
-login, and `inv chrome.status` reporting the flag missing from every PWA launcher means any PWA
-started before the browser would still claim Wayland first.]
+**Verified 2026-08-26.** The login at 01:02:24 came up on x11 and Netflix plays, confirmed by the
+user. Evidence:
+
+- `--ozone-platform=x11` on 26 Chrome processes, `wayland` on none.
+- Browser root process is `/opt/google/chrome/chrome --ozone-platform=x11` — no `--app-id`, so it is
+  the autostart entry's plain launch, not a PWA.
+- The journal for that login shows exactly one Chrome starter,
+  `app-gnome-00\x2dgoogle\x2dchrome\x2dx11-1615530.scope`, and no
+  `Opening in existing browser session` line — ours _was_ the session rather than joining one.
+- No process carries `--app-id`: the restored PWA windows belong to the single browser process,
+  which is what removing their autostart entries was supposed to produce.
+
+The duplicate-PWA symptom is fixed by the same change, and was in fact the same bug wearing a
+different hat — see "One cause, two symptoms" below.
 
 [DEFERRED: **B2, a cosmetic refinement to try only if B works.** The entry currently launches Chrome
 normally (`--ozone-platform=x11 %U`), so at login it does the session restore and Chrome's own
@@ -179,12 +200,62 @@ the ozone platform. It was not used first because its failure mode is silent: wi
 background apps, Chrome may simply exit, leaving the PWA entries to start a fresh Wayland instance
 and making the test look like an ordering failure. Try it only once ordering itself is proven.]
 
+### One cause, two symptoms (2026-08-26)
+
+The user reported a second, apparently unrelated annoyance: after a power loss or a logout with
+windows still open, the Gmail and WhatsApp PWAs came back **doubled**. It has the same root cause as
+the ozone bug — too many things starting Chrome at login — and the same fix resolved both.
+
+`Profile 2` has `session.restore_on_startup = 1` (restore last session). So
+`~/.config/autostart/google-chrome.desktop` started plain Chrome, which restored the PWA windows
+that were open at logout, while the two `chrome-*` entries opened the same two PWAs again. Close the
+windows before logging out and restore had nothing to reopen, which is exactly why the doubling only
+appeared after an unclean exit.
+
+[PITFALL: That `google-chrome.desktop` was **not** a Chrome-managed file, contrary to what an
+earlier revision of this plan asserted. It was dated feb 2020, mode 644, 8411 bytes — a verbatim
+copy of the system desktop file including the full i18n `GenericName` block, carrying no
+`X-GNOME-Autostart-*` keys. A six-year-old leftover, almost certainly added once through Startup
+Applications and forgotten. It was renamed to `google-chrome.desktop.disabled` on 2026-08-25; the
+autostart directory only reads `*.desktop`, so the rename is inert and trivially reversible.]
+
+### Vulkan is not the cause (2026-08-26)
+
+[PITFALL: Chrome logs
+`'--ozone-platform=wayland' is not compatible with Vulkan. Consider switching to
+'--ozone-platform=x11' or disabling Vulkan`
+on every Wayland session, and has since at least 2026-08-13 — it also fires from VS Code, which
+shares the ozone stack. It reads like the smoking gun and is **not**. Disabling Vulkan via
+`chrome://flags/#enable-vulkan` was tested on 2026-08-25: the flag applied (`Local State` recorded
+`enable-vulkan@2`, and the GPU process ran `--disable-features=EyeDropper,Vulkan` where it had
+previously carried only `EyeDropper`), Chrome stayed on Wayland so the test was not confounded, and
+Netflix was still black with sound. The same GPU process that carried the disable flag logged the
+incompatibility one second after starting. Forcing x11 remains the only lever known to work; the
+flag was set back to Default.]
+
+## Not reproducible on a fresh machine
+
+[DEFERRED: Two of the three changes that make this work are manual and PULSE cannot re-apply them.
+Only the autostart entry itself is declared (`[packages.google-chrome-x11-autostart]`, enabled here
+through `overrides.toml`). The other two — renaming `~/.config/autostart/google-chrome.desktop` to
+`.disabled`, and turning off "run on OS login" for the Gmail and WhatsApp PWAs — exist nowhere but
+on this machine. A fresh clone plus `inv setup` reproduces the entry and none of the state that
+makes it the _sole_ starter, so a rebuilt machine gets the race back, silently, and Netflix black
+again.
+
+`cleanup_paths` is not the mechanism for this: it only fires from `apt.uninstall`, on the section
+being uninstalled. What is missing is an "ensure this foreign file stays absent" declaration —
+`inv chrome.status` is the natural place to at least _report_ it, since that task already exists,
+already reads Chrome's own state, and already declines to own these files. The PWA login toggles
+live in Chrome's own preferences and are probably out of reach entirely; reporting is likely the
+honest ceiling for those.]
+
 ## Open questions
 
-[NEEDS CLARIFICATION: Which fallback if B's ordering assumption fails — C (`dpkg-divert`, the only
-option Chrome cannot silently undo) or A (patch every `.desktop`, which loses to the file generator
-over time). C is recommended below; the user's ladder says "we'll try the rest" without fixing an
-order.]
+[NEEDS CLARIFICATION: Which fallback if the PWA autostart entries ever come back — C (`dpkg-divert`,
+the only option Chrome cannot silently undo) or A (patch every `.desktop`, which loses to the file
+generator over time). B is no longer a candidate: its filename-ordering premise was disproven above.
+C is recommended below; the user's ladder said "we'll try the rest" without fixing an order.]
 
 ### A. A task that patches every Chrome-launching `.desktop`
 
