@@ -623,6 +623,14 @@ uuid = "dash-to-panel@jderose9.github.com"
 [packages.gnome-ext-dash-to-panel.dconf]
 "/org/gnome/shell/extensions/dash-to-panel/panel-size" = "28"
 "/org/gnome/shell/extensions/dash-to-panel/show-favorites" = "true"
+# hot-keys: Super+1..9 launches/focuses the Nth taskbar icon (Super+Ctrl+N opens a new window).
+# Dash to Panel removes GNOME's own switch-to-application-N bindings while this is on and restores
+# them when it's off. Requires space-bar's activate-workspace shortcuts to be off (see
+# gnome-ext-space-bar below) — space-bar grabs the same Super+N and wins otherwise.
+"/org/gnome/shell/extensions/dash-to-panel/hot-keys" = "true"
+# shortcut-previews: repeat presses of Super+N cycle that app's windows instead of only focusing
+# the most recent one
+"/org/gnome/shell/extensions/dash-to-panel/shortcut-previews" = "true"
 # panel-element-positions (clock centering, panel layout) contains the monitor serial ID
 # and is not portable — configure it via the prefs dialog on each new machine
 
@@ -792,6 +800,13 @@ method = "gnome-extension"
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "space-bar@luchrioh"
+
+[packages.gnome-ext-space-bar.dconf]
+# space-bar's activate-N-key shortcuts default to Super+1..Super+0 (workspace switching) and are
+# registered via Main.wm.addKeybinding, so they take Super+N away from anything else that wants it.
+# Super+N is reserved for Dash to Panel's app hotkeys here; workspace switching stays on
+# Super+grave (previous), Super+n (first empty) and the native left/right bindings.
+"/org/gnome/shell/extensions/space-bar/shortcuts/enable-activate-workspace-shortcuts" = "false"
 
 [packages.gnome-ext-gsconnect]
 description = "GSConnect — KDE Connect for GNOME: clipboard sync, file transfer, notification mirroring, SMS from desktop, media control; requires Android + KDE Connect app on phone"
