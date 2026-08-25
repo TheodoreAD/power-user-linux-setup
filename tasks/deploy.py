@@ -407,7 +407,7 @@ def deploy(m: Managed, *, assume_yes: bool = False, manifest: dict[str, dict] | 
 # Tasks
 # ---------------------------------------------------------------------------
 
-_SUMMARY = {
+SUMMARY = {
     State.ABSENT: "not deployed yet",
     State.CLEAN: "ok",
     State.STALE: "source has changed since it was deployed",
@@ -462,7 +462,7 @@ def status(c, name=None, path=None):
 
     for m in entries:
         state = classify(m, manifest)
-        print(f"[deploy] {m.package}: {m.path} — {_SUMMARY[state]}")
+        print(f"[deploy] {m.package}: {m.path} — {SUMMARY[state]}")
         if _needs_attention(m, state):
             attention.append(m)
             print(diff(m))
@@ -548,6 +548,6 @@ def _status_one(target: Path) -> None:
         return
 
     state = classify(m)
-    print(f"[deploy] {m.package}: {m.path} — {_SUMMARY[state]} (source: {m.source}, {m.policy})")
+    print(f"[deploy] {m.package}: {m.path} — {SUMMARY[state]} (source: {m.source}, {m.policy})")
     if state in (State.DIRTY, State.UNKNOWN, State.STALE):
         print(diff(m))

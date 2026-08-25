@@ -2,9 +2,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import util
-
-_REPO_ROOT = Path(__file__).parent.parent
+from . import deploy, util
 
 # Hard ceiling on any single check, via coreutils `timeout` — not a fallback/retry, just a bound
 # on the one attempt. Necessary in practice, not just in theory: auditing this task against a real
@@ -37,32 +35,37 @@ _PATH_ONLY = {
     util.PackageMethod.APPARMOR_PROFILE: "profile",
 }
 
-_CONTENT_SEP = "||"  # joins dest/content_file in a "content" check's target — no repo path uses it
-
-
-def _wrapper_script_expected(content_file: str) -> str:
-    """Same transform `tasks/tools.py`'s `_install_wrapper_script` applies before writing —
-    duplicated rather than imported to avoid a verify->tools import for one string transform;
-    diverging would just mean this check stops meaning anything, so keep the two in sync by hand
-    if `_install_wrapper_script` ever changes it."""
-    return (_REPO_ROOT / content_file).read_text().strip() + "\n"
-
-
-def _wrapper_script_up_to_date(dest: str, content_file: str) -> bool:
-    dest_path = Path(dest).expanduser()
-    return dest_path.exists() and dest_path.read_text() == _wrapper_script_expected(content_file)
-
 
 def _resolve_wrapper_script(cfg: dict) -> tuple[str, str]:
     """Existence alone doesn't catch a deploy that landed stale/partial/hand-edited content —
     confirmed as a real gap, not theoretical: this session needed a manual diff twice to confirm
     ~/AGENTS.md actually matched config/global-AGENTS.md after a redeploy, exactly what this check
-    exists to make unnecessary. Every wrapper-script package currently declares content_file (no
-    inline-`content` variant is actually in use), but fall back to existence-only for a
-    hypothetical future one that doesn't, rather than erroring."""
-    if content_file := cfg.get("content_file"):
-        return "content", f"{cfg['dest']}{_CONTENT_SEP}{content_file}"
+    exists to make unnecessary. A "deploy" check asks tasks/deploy.py's classifier — the same
+    answer `inv deploy.status` gives — rather than re-implementing the content comparison here.
+    Every wrapper-script package currently declares content_file (no inline-`content` variant is
+    actually in use), but fall back to existence-only for a hypothetical future one that doesn't,
+    rather than erroring."""
+    if cfg.get("content_file"):
+        return "deploy", cfg["dest"]
     return "path", cfg["dest"]
+
+
+def _deploy_check(m: deploy.Managed, state: deploy.State) -> tuple[bool, str]:
+    """(passed, message) for one deployed path, from the shared classification.
+
+    MANAGED content (wrapper-script, skills) must be exactly what a fresh deploy would write —
+    anything else is a stale, partial, or hand-edited destination, and fails. SEEDED content
+    (config_files) is the user's after first install, so only its absence fails; a customized or
+    out-of-date copy is reported and passes, since flagging it would fail `inv setup` on every
+    config the user has ever touched.
+    """
+    if state == deploy.State.CLEAN:
+        return True, "ok"
+    if state == deploy.State.ABSENT:
+        return False, f"{m.path} not found — not deployed"
+    if m.policy == deploy.Policy.SEEDED:
+        return True, f"ok (your copy differs from {m.source} — yours to own)"
+    return False, f"{m.path} {deploy.SUMMARY[state]} — see `inv deploy.status --name {m.package}`"
 
 
 def _resolve(name: str, cfg: dict, method: util.PackageMethod) -> tuple[str, str]:
@@ -124,19 +127,38 @@ def _all_checks() -> list[tuple[str, str, str]]:
         for name, cfg in util.load_config()["packages"].items()
         if cfg.get("method") == "zsh" and cfg.get("enabled", True)
     ]
+    # Deployed paths that aren't a package's primary artifact: any method's `config_files`
+    # mappings and every `skills` entry. The registry is the one place that knows them all;
+    # wrapper-script destinations are already covered above (via _resolve, so verify_cmd /
+    # verify = false still apply to them) and are excluded here so nothing is checked twice.
+    checks += [
+        (m.package, "deploy", str(m.path))
+        for m in deploy.managed_paths().values()
+        if m.mechanism != deploy.Mechanism.WRAPPER_SCRIPT
+    ]
     return checks
+
+
+def _classify_deploy(target: str) -> tuple[deploy.Managed, deploy.State]:
+    m = deploy.lookup(target)
+    if m is None:
+        raise RuntimeError(f"[verify] {target} is a deploy check target but isn't in the deploy registry")
+    return m, deploy.classify(m)
 
 
 @task
 def all(c):  # noqa: A001, C901
     """Prove every package this run installed actually works, not just that it's present.
     Convention-based: default check is `<check_cmd or name> --version` for invocable methods,
-    existence for methods with no command by nature (git-clone/apparmor-profile), and a byte-exact
-    content comparison against `content_file` for wrapper-script — existence alone doesn't catch a
-    deploy that landed stale/partial/hand-edited content, only that something is there.
-    gnome-extension always skips (inv setup never installs extensions — see tasks/gnome.py).
-    Override per package in setup.toml with `verify_cmd` (different invocation) or
-    `verify = false` (no functional check is possible at all). No fallback chain — first failure
+    existence for methods with no command by nature (git-clone/apparmor-profile), and the deploy
+    classifier's verdict (tasks/deploy.py, the same one `inv deploy.status` reports) for every
+    path this repo deploys under ~ — wrapper-script `content_file`s, `config_files`, skills —
+    since existence alone doesn't catch a deploy that landed stale/partial/hand-edited content,
+    only that something is there. A customized `config_files` copy passes (it's yours after the
+    first install); anything else that differs fails. gnome-extension always skips (inv setup
+    never installs extensions — see tasks/gnome.py). Override per package in setup.toml with
+    `verify_cmd` (different invocation) or `verify = false` (no functional check is possible at
+    all). No fallback chain — first failure
     aborts immediately (plain c.run(), no warn=True), the deliberate opposite of apt.py's
     warn=True-and-continue pattern: this task exists to catch exactly what that pattern lets
     through silently. Every invocation is bounded by _TIMEOUT_SECS — a hang counts as a failure,
@@ -150,9 +172,8 @@ def all(c):  # noqa: A001, C901
                 print(f"[verify] {name}: skipped")
             elif kind == "path":
                 print(f"[verify] {name}: {util.ok_label(Path(target).expanduser().exists())}")
-            elif kind == "content":
-                dest, content_file = target.split(_CONTENT_SEP, 1)
-                print(f"[verify] {name}: {util.ok_label(_wrapper_script_up_to_date(dest, content_file))}")
+            elif kind == "deploy":
+                print(f"[verify] {name}: {util.ok_label(_deploy_check(*_classify_deploy(target))[0])}")
             elif kind == "cmd":
                 print(f"[verify] {name}: {util.ok_label(util.command_exists(target.split()[0]))}")
             else:
@@ -166,11 +187,11 @@ def all(c):  # noqa: A001, C901
             if not Path(target).expanduser().exists():
                 raise RuntimeError(f"[verify] {name}: {target} not found")
             print(f"[verify] {name}: ok")
-        elif kind == "content":
-            dest, content_file = target.split(_CONTENT_SEP, 1)
-            if not _wrapper_script_up_to_date(dest, content_file):
-                raise RuntimeError(f"[verify] {name}: {dest} doesn't match {content_file} — redeploy needed")
-            print(f"[verify] {name}: ok")
+        elif kind == "deploy":
+            passed, message = _deploy_check(*_classify_deploy(target))
+            if not passed:
+                raise RuntimeError(f"[verify] {name}: {message} — redeploy needed (`inv deploy.all`)")
+            print(f"[verify] {name}: {message}")
         elif kind == "cmd":
             c.run(f"timeout {_TIMEOUT_SECS}s {target}", hide=True)
             print(f"[verify] {name}: ok")
