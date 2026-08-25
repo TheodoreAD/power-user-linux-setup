@@ -1,0 +1,353 @@
+"""Normalize the `.desktop` launchers Google Chrome generates for its installed PWAs.
+
+Chrome writes one `~/.local/share/applications/chrome-<app-id>-<Profile>.desktop` per (app,
+profile) pair, and those files are unhelpful in three specific ways once more than one Chrome
+profile is signed in:
+
+1. **Every copy carries the same `Name`.** Gmail installed in three profiles produces three tiles
+   all called "Gmail", indistinguishable in the app grid.
+2. **Some copies carry `NoDisplay=true`**, which hides them from the grid entirely — so the apps
+   belonging to the profile actually in use can be impossible to find or pin, while other
+   profiles' copies are the ones on offer.
+3. **None of them carry `--ozone-platform=x11`**, which `[packages.google-chrome-x11]` needs on
+   every Chrome launch path to work (see plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md).
+
+These files belong to Chrome, not to this repo, so this module is deliberately **not** part of the
+`deploy.*` family: `tasks/deploy.py` only ever writes paths PULSE created and can prove it wrote
+(contributing/deploy.md), and that ownership model must not be blurred by a task that edits another
+program's generated files. Chrome rewrites them whenever a PWA is installed or updated, so
+`inv chrome.fix-launchers` is a re-runnable repair, never a permanent fix — which is also why it is
+wired into no phase and no hook, and only ever runs when asked.
+
+The desired state is derived rather than configured. Profile display names come from Chrome's own
+`Local State`, and the profile whose apps should be visible defaults to the one Chrome itself
+records as `last_used`.
+"""
+
+import re
+from pathlib import Path
+from typing import NamedTuple, cast
+
+from invoke import Context, task
+
+from . import util
+
+_APPLICATIONS_DIR = Path.home() / ".local" / "share" / "applications"
+_LOCAL_STATE = Path.home() / ".config" / "google-chrome" / "Local State"
+_LAUNCHER_GLOB = "chrome-*.desktop"
+
+# Separator between an app's own name and its profile label: "Gmail — Main". An em dash rather than
+# a hyphen so it cannot be confused with a hyphen inside an app's real name.
+_LABEL_SEP = " — "
+
+_OZONE_FLAG = "--ozone-platform=x11"
+_OZONE_PACKAGE = "google-chrome-x11"
+
+# Component extensions Chrome installs for its own use and writes launchers for. They are hidden on
+# purpose and are not apps anyone launches, so they are left exactly as found.
+_INTERNAL_APP_IDS = frozenset(
+    {
+        "nmmhkkegccagdldgiimedpiccmgmieda",  # Chrome Web Store Payments
+    }
+)
+
+_ENTRY_SECTION = "[Desktop Entry]"
+
+
+class Launcher(NamedTuple):
+    """One `chrome-<app-id>-<Profile>.desktop` file, split into the parts encoded in its name."""
+
+    path: Path
+    app_id: str
+    profile_dir: str
+
+
+class Profiles(NamedTuple):
+    """What Chrome's `Local State` says about the profiles on this machine."""
+
+    labels: dict[str, str]  # profile directory ("Profile 2") -> display name ("Main")
+    primary: str | None  # profile directory Chrome last used, if it records one
+
+
+class Change(NamedTuple):
+    """One edit `fix_launchers` made (or would make) to one file."""
+
+    field: str
+    detail: str
+
+
+def parse_launcher(path: Path) -> Launcher | None:
+    """Split `chrome-<app-id>-<Profile_2>.desktop` into its app-id and profile directory.
+
+    Returns None for any filename that isn't one of Chrome's PWA launchers. Chrome's extension ids
+    are 32 lowercase letters and never contain a hyphen, so the first hyphen after the `chrome-`
+    prefix is unambiguously the app-id/profile boundary even though profile names contain
+    underscores.
+    """
+    stem = path.stem
+    if not stem.startswith("chrome-"):
+        return None
+    app_id, _, profile = stem[len("chrome-") :].partition("-")
+    if not app_id or not profile:
+        return None
+    # Chrome writes the profile *directory* with spaces replaced by underscores.
+    return Launcher(path=path, app_id=app_id, profile_dir=profile.replace("_", " "))
+
+
+def _json_object(value: object) -> dict[str, object] | None:
+    """`value` as a JSON object, or None when it isn't one.
+
+    Chrome's `Local State` is a third-party file this repo neither writes nor validates, so every
+    level is checked rather than assumed — a shape change upstream should skip a launcher, not
+    raise out of the whole task.
+    """
+    return cast("dict[str, object]", value) if isinstance(value, dict) else None
+
+
+def read_profiles(local_state: Path = _LOCAL_STATE) -> Profiles:
+    """Read profile display names and the last-used profile out of Chrome's `Local State`.
+
+    Returns empty/None rather than raising when Chrome isn't installed or the file has a shape this
+    doesn't recognize — a launcher whose profile has no display name is reported and skipped, which
+    is more useful than aborting the whole pass.
+    """
+    if not local_state.exists():
+        return Profiles(labels={}, primary=None)
+
+    state = _json_object(util.load_json(local_state))
+    section = _json_object(state.get("profile")) if state is not None else None
+    if section is None:
+        return Profiles(labels={}, primary=None)
+
+    labels: dict[str, str] = {}
+    for directory, info in (_json_object(section.get("info_cache")) or {}).items():
+        entry = _json_object(info)
+        name = entry.get("name") if entry is not None else None
+        if isinstance(name, str) and name:
+            labels[directory] = name
+
+    last_used = section.get("last_used")
+    primary = last_used if isinstance(last_used, str) and last_used else None
+    return Profiles(labels=labels, primary=primary)
+
+
+def strip_label(name: str, known_labels: frozenset[str]) -> str:
+    """Remove a previously-applied `— <profile>` suffix, so a renamed profile relabels cleanly."""
+    base, sep, suffix = name.rpartition(_LABEL_SEP)
+    return base if sep and suffix in known_labels else name
+
+
+def add_ozone_flag(exec_value: str) -> str:
+    """Insert `--ozone-platform=x11` directly after the executable in an `Exec=` value."""
+    if _OZONE_FLAG in exec_value:
+        return exec_value
+    binary, sep, rest = exec_value.partition(" ")
+    return f"{binary} {_OZONE_FLAG}{sep}{rest}"
+
+
+def rewrite(
+    text: str, *, label: str, known_labels: frozenset[str], unhide: bool, ozone: bool
+) -> tuple[str, list[Change]]:
+    """Apply the three normalizations to one launcher's text. Pure; returns the new text + changes.
+
+    Only the `[Desktop Entry]` section's `Name` is relabelled. A PWA's file also carries
+    `[Desktop Action ...]` sections whose own `Name=` lines are the right-click shortcut labels
+    ("Search", "Shorts", "Subscriptions" on YouTube) — relabelling those would corrupt the menu.
+    `Exec=` lines, in contrast, need the ozone flag in *every* section, since each action is its own
+    launch path.
+    """
+    lines = text.splitlines(keepends=True)
+    out: list[str] = []
+    changes: list[Change] = []
+    in_entry = False
+    named = False
+
+    for line in lines:
+        stripped = line.strip()
+
+        if stripped.startswith("["):
+            in_entry = stripped == _ENTRY_SECTION
+
+        if in_entry and not named and stripped.startswith("Name="):
+            named = True
+            current = stripped[len("Name=") :]
+            wanted = f"{strip_label(current, known_labels)}{_LABEL_SEP}{label}"
+            if current != wanted:
+                changes.append(Change("Name", f"{current!r} -> {wanted!r}"))
+                out.append(f"Name={wanted}\n")
+                continue
+
+        if in_entry and unhide and stripped == "NoDisplay=true":
+            changes.append(Change("NoDisplay", "removed (hidden from the app grid)"))
+            continue
+
+        if ozone and stripped.startswith("Exec="):
+            current = stripped[len("Exec=") :]
+            wanted = add_ozone_flag(current)
+            if current != wanted:
+                changes.append(Change("Exec", f"added {_OZONE_FLAG}"))
+                out.append(f"Exec={wanted}\n")
+                continue
+
+        out.append(line)
+
+    return "".join(out), changes
+
+
+def _launchers() -> list[Launcher]:
+    found = (parse_launcher(path) for path in sorted(_APPLICATIONS_DIR.glob(_LAUNCHER_GLOB)))
+    return [launcher for launcher in found if launcher is not None]
+
+
+def _is_hidden(text: str) -> bool:
+    return re.search(r"^NoDisplay=true$", text, re.MULTILINE) is not None
+
+
+def _entry_name(text: str) -> str:
+    match = re.search(r"^Name=(.*)$", text, re.MULTILINE)
+    return match.group(1) if match else "?"
+
+
+def _summarize(changes: list[Change]) -> str:
+    """One status word per launcher: "ok", or each drifted field once with a count if repeated.
+
+    A single file can need the same fix several times — a PWA with right-click shortcuts has one
+    `Exec=` per action — and listing "Exec drift" four times says nothing "Exec drift x4" doesn't.
+    """
+    if not changes:
+        return "ok"
+    counts: dict[str, int] = {}
+    for change in changes:
+        counts[change.field] = counts.get(change.field, 0) + 1
+    return ", ".join(f"{field} drift{f' x{n}' if n > 1 else ''}" for field, n in counts.items())
+
+
+def _ozone_wanted() -> bool:
+    """True when [packages.google-chrome-x11] is enabled — the flag is only correct when it is."""
+    return _OZONE_PACKAGE in util.enabled_packages()
+
+
+def _plan(
+    launchers: list[Launcher], profiles: Profiles, *, primary: str | None, ozone: bool
+) -> list[tuple[Launcher, str, list[Change]]]:
+    """Work out every launcher's new text without writing anything. Skips internal and unknown ones."""
+    known_labels = frozenset(profiles.labels.values())
+    planned: list[tuple[Launcher, str, list[Change]]] = []
+    for launcher in launchers:
+        if launcher.app_id in _INTERNAL_APP_IDS:
+            continue
+        label = profiles.labels.get(launcher.profile_dir)
+        if label is None:
+            print(f"[chrome] skipping {launcher.path.name} — no display name for {launcher.profile_dir!r}")
+            continue
+        new_text, changes = rewrite(
+            launcher.path.read_text(encoding="utf-8"),
+            label=label,
+            known_labels=known_labels,
+            unhide=launcher.profile_dir == primary,
+            ozone=ozone,
+        )
+        if changes:
+            planned.append((launcher, new_text, changes))
+    return planned
+
+
+@task
+def status(c: Context):
+    """Report every Chrome PWA launcher: its profile, whether it's visible, labelled, and flagged.
+
+    Strictly read-only — `inv chrome.fix-launchers` is the repair path. Chrome regenerates these
+    files whenever a PWA is installed or updated, so drift reported here is expected over time
+    rather than a sign anything is broken.
+    """
+    profiles = read_profiles()
+    launchers = _launchers()
+    if not launchers:
+        print(f"[chrome] no PWA launchers found in {_APPLICATIONS_DIR}")
+        return
+
+    ozone = _ozone_wanted()
+    primary = profiles.primary
+    print(f"[chrome] {len(launchers)} launcher(s) in {_APPLICATIONS_DIR}")
+    print(f"[chrome] primary profile: {primary or 'unknown'} ({profiles.labels.get(primary or '', '?')})")
+    print(f"[chrome] {_OZONE_FLAG}: {'required' if ozone else 'not required'} ([packages.{_OZONE_PACKAGE}])")
+
+    known_labels = frozenset(profiles.labels.values())
+    drifted = 0
+    for launcher in launchers:
+        label = profiles.labels.get(launcher.profile_dir)
+        text = launcher.path.read_text(encoding="utf-8")
+        name = _entry_name(text)
+        if launcher.app_id in _INTERNAL_APP_IDS:
+            print(f"[chrome]   {name:<32} internal (left alone)")
+            continue
+        if label is None:
+            print(f"[chrome]   {name:<32} UNKNOWN PROFILE {launcher.profile_dir!r}")
+            continue
+        _, changes = rewrite(
+            text,
+            label=label,
+            known_labels=known_labels,
+            unhide=launcher.profile_dir == primary,
+            ozone=ozone,
+        )
+        if changes:
+            drifted += 1
+        hidden = " [hidden]" if _is_hidden(text) else ""
+        print(f"[chrome]   {name:<32} {launcher.profile_dir:<12} {_summarize(changes)}{hidden}")
+
+    print(f"[chrome] {drifted} launcher(s) need fixing — inv chrome.fix-launchers" if drifted else "[chrome] all ok")
+
+
+@task(
+    help={
+        "yes": "Skip the confirmation prompt.",
+        "profile": "Treat this profile directory as primary instead of Chrome's last_used, e.g. 'Profile 2'.",
+    }
+)
+def fix_launchers(c: Context, yes: bool = False, profile: str | None = None):
+    """Label every Chrome PWA launcher by profile, unhide the primary profile's, add the ozone flag.
+
+    Filenames are never changed: `org.gnome.shell favorite-apps` pins launchers by filename, so a
+    rename would silently drop every pinned PWA from the dash.
+
+    Chrome owns these files and rewrites them on PWA install/update, so this is a repair to re-run,
+    not a fix that sticks. Run `inv chrome.status` first to see what would change.
+    """
+    profiles = read_profiles()
+    launchers = _launchers()
+    if not launchers:
+        print(f"[chrome] no PWA launchers found in {_APPLICATIONS_DIR}")
+        return
+
+    primary = profile or profiles.primary
+    if primary is not None and primary not in profiles.labels:
+        print(f"[chrome] unknown profile {primary!r} — known: {', '.join(sorted(profiles.labels)) or 'none'}")
+        return
+
+    planned = _plan(launchers, profiles, primary=primary, ozone=_ozone_wanted())
+
+    if not planned:
+        print("[chrome] every launcher already normalized — nothing to do")
+        return
+
+    for launcher, _, changes in planned:
+        print(f"[chrome] {launcher.path.name}")
+        for change in changes:
+            print(f"[chrome]     {change.field}: {change.detail}")
+
+    if util.DRY_RUN:
+        print(f"[chrome] would rewrite {len(planned)} launcher(s)")
+        return
+
+    if not (yes or util.ASSUME_YES or util.confirm(f"[chrome] rewrite {len(planned)} launcher(s)?")):
+        print("[chrome] aborted")
+        return
+
+    for launcher, new_text, _ in planned:
+        launcher.path.write_text(new_text, encoding="utf-8")
+    print(f"[chrome] rewrote {len(planned)} launcher(s)")
+
+    if util.command_exists("update-desktop-database"):
+        c.run(f"update-desktop-database {_APPLICATIONS_DIR}", warn=True, hide=True)
+    print("[chrome] note: Chrome rewrites these files on PWA install/update — re-run then")
