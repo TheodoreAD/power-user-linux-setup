@@ -71,4 +71,9 @@ if [ -z "${EXCLUDE_TAGS}" ]; then
 fi
 
 echo "PULSE_EXCLUDE_TAGS=${EXCLUDE_TAGS}"
-PULSE_EXCLUDE_TAGS="${EXCLUDE_TAGS}" inv setup
+# PULSE_ASSUME_YES: the deploy writer (tasks/deploy.py) asks before overwriting a destination it
+# can't prove it wrote, and that prompt defaults to *no* with no terminal attached — so without
+# this, a base image that ships its own copy of a file PULSE deploys would silently keep it, and
+# the image would build "fine" while missing a dotfile. This is unattended provisioning: overwrite,
+# and say so in the build log.
+PULSE_ASSUME_YES=1 PULSE_EXCLUDE_TAGS="${EXCLUDE_TAGS}" inv setup

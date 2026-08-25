@@ -4,9 +4,26 @@ filesystem/env touched outside a tmp_path fixture. See tests/README.md.
 """
 
 import json
+import re
+from pathlib import Path
 from typing import Any, cast
 
 from tasks.devcontainer import MountCandidate, _discover_candidates, _render_mounts_json
+
+_REPO_ROOT = Path(__file__).parent.parent.parent
+
+
+def test_bootstrap_devcontainer_runs_setup_with_pulse_assume_yes():
+    # The one behavior change in the deploy-writer conversion that can break something that works:
+    # tasks/deploy.py leaves a pre-existing destination alone when stdin isn't a terminal and
+    # nothing said yes, so an unattended `inv setup` that doesn't set PULSE_ASSUME_YES would build
+    # an image that looks fine and is silently missing a dotfile. docker/Dockerfile and the
+    # devcontainer.json postCreateCommand both reach `inv setup` only through this script.
+    script = (_REPO_ROOT / "bootstrap-devcontainer.sh").read_text()
+
+    setup_lines = [line for line in script.splitlines() if re.search(r"\binv setup\b", line)]
+    assert setup_lines, "bootstrap-devcontainer.sh no longer runs `inv setup`?"
+    assert all("PULSE_ASSUME_YES=1" in line for line in setup_lines), setup_lines
 
 
 def _ids(home, identity_toml=None, ssh_auth_sock=None, *, is_wsl=False):
