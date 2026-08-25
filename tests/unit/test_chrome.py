@@ -8,7 +8,18 @@ from pathlib import Path
 
 import pytest
 
-from tasks.chrome import Profiles, add_ozone_flag, parse_launcher, read_profiles, rewrite, strip_label
+from tasks.chrome import (
+    Profiles,
+    add_ozone_flag,
+    autostart_disabled,
+    chrome_starters,
+    entry_exec,
+    launches_chrome,
+    parse_launcher,
+    read_profiles,
+    rewrite,
+    strip_label,
+)
 
 LABELS = frozenset({"Main", "Work", "DoHu"})
 
@@ -174,3 +185,119 @@ def test_rewrite_flags_every_exec_including_desktop_actions():
 def test_rewrite_reports_no_changes_when_ozone_is_not_wanted():
     _, changes = rewrite(YOUTUBE_WITH_ACTIONS, label="Main", known_labels=LABELS, unhide=False, ozone=False)
     assert [c.field for c in changes] == ["Name"]
+
+
+# ---------------------------------------------------------------------------
+# autostart drift — which entries can start Chrome, and whether they carry the flag
+# ---------------------------------------------------------------------------
+
+FLAGGED_STARTER = """\
+[Desktop Entry]
+Type=Application
+Name=Google Chrome (XWayland pre-start)
+Exec=/usr/bin/google-chrome-stable --ozone-platform=x11 %U
+"""
+
+PWA_STARTER = """\
+[Desktop Entry]
+Type=Application
+Name=WhatsApp Web
+Exec=/opt/google/chrome/google-chrome "--profile-directory=Profile 2" --app-id=hnpfjng
+"""
+
+NOT_CHROME = """\
+[Desktop Entry]
+Type=Application
+Name=Spotify
+Exec=/snap/bin/spotify %U
+"""
+
+
+def _autostart(tmp_path: Path, name: str, text: str) -> Path:
+    tmp_path.mkdir(parents=True, exist_ok=True)
+    path = tmp_path / name
+    path.write_text(text, encoding="utf-8")
+    return path
+
+
+def test_entry_exec_ignores_desktop_action_exec_lines():
+    """Only the [Desktop Entry] Exec is what autostart runs — an action's Exec is a right-click item."""
+    assert entry_exec(YOUTUBE_WITH_ACTIONS) == (
+        '/opt/google/chrome/google-chrome "--profile-directory=Profile 2" --app-id=agimnki'
+    )
+
+
+def test_entry_exec_returns_none_when_there_is_no_exec():
+    assert entry_exec("[Desktop Entry]\nName=Broken\n") is None
+
+
+@pytest.mark.parametrize(
+    "exec_value, expected",
+    [
+        ("/usr/bin/google-chrome-stable --ozone-platform=x11 %U", True),
+        ("/opt/google/chrome/google-chrome --app-id=hnpfjng", True),
+        ("env BAMF_DESKTOP_FILE_HINT=/x /usr/bin/google-chrome-stable", True),
+        ("/snap/bin/spotify %U", False),
+        ("", False),
+    ],
+)
+def test_launches_chrome(exec_value: str, expected: bool):
+    assert launches_chrome(exec_value) is expected
+
+
+@pytest.mark.parametrize(
+    "line",
+    ["Hidden=true", "X-GNOME-Autostart-enabled=false"],
+)
+def test_autostart_disabled_recognizes_both_mechanisms(line: str):
+    assert autostart_disabled(f"[Desktop Entry]\nExec=/usr/bin/google-chrome-stable\n{line}\n")
+
+
+def test_autostart_disabled_is_false_for_a_live_entry():
+    assert not autostart_disabled(FLAGGED_STARTER)
+
+
+def test_chrome_starters_finds_only_chrome_entries(tmp_path: Path):
+    _autostart(tmp_path, "00-google-chrome-x11.desktop", FLAGGED_STARTER)
+    _autostart(tmp_path, "spotify.desktop", NOT_CHROME)
+
+    starters = chrome_starters((tmp_path,))
+
+    assert [s.path.name for s in starters] == ["00-google-chrome-x11.desktop"]
+    assert starters[0].has_flag
+
+
+def test_chrome_starters_flags_an_unflagged_pwa_entry(tmp_path: Path):
+    """The drift case: a PWA set to run at login can beat the flagged entry and claim Wayland."""
+    _autostart(tmp_path, "00-google-chrome-x11.desktop", FLAGGED_STARTER)
+    _autostart(tmp_path, "chrome-hnpfjng-Profile_2.desktop", PWA_STARTER)
+
+    starters = chrome_starters((tmp_path,))
+
+    assert {s.path.name: s.has_flag for s in starters} == {
+        "00-google-chrome-x11.desktop": True,
+        "chrome-hnpfjng-Profile_2.desktop": False,
+    }
+
+
+def test_chrome_starters_skips_a_disabled_entry(tmp_path: Path):
+    hidden = PWA_STARTER.replace("[Desktop Entry]\n", "[Desktop Entry]\nHidden=true\n")
+    _autostart(tmp_path, "google-chrome.desktop", hidden)
+
+    assert chrome_starters((tmp_path,)) == []
+
+
+def test_chrome_starters_lets_a_user_entry_mask_the_system_one(tmp_path: Path):
+    """XDG masking is by filename: a user entry replaces the system one rather than adding to it."""
+    user, system = tmp_path / "user", tmp_path / "system"
+    _autostart(user, "google-chrome.desktop", FLAGGED_STARTER)
+    _autostart(system, "google-chrome.desktop", PWA_STARTER)
+
+    starters = chrome_starters((user, system))
+
+    assert len(starters) == 1
+    assert starters[0].has_flag
+
+
+def test_chrome_starters_tolerates_a_missing_directory(tmp_path: Path):
+    assert chrome_starters((tmp_path / "does-not-exist",)) == []

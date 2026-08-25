@@ -22,6 +22,13 @@ wired into no phase and no hook, and only ever runs when asked.
 The desired state is derived rather than configured. Profile display names come from Chrome's own
 `Local State`, and the profile whose apps should be visible defaults to the one Chrome itself
 records as `last_used`.
+
+`inv chrome.status` additionally reports which autostart entries can start Chrome and whether each
+carries the ozone flag. That is a separate question from the launchers above and the one that
+actually decides the outcome: the ozone platform is fixed by the *first* Chrome process of the
+session, so an unflagged autostart entry silently discards the flag on every launcher. It is
+reported and never repaired — the arrangement that makes it come out right (being the only starter)
+is partly manual, and PULSE has no way to re-apply it.
 """
 
 import re
@@ -53,6 +60,17 @@ _INTERNAL_APP_IDS = frozenset(
 
 _ENTRY_SECTION = "[Desktop Entry]"
 
+# Where a Chrome launch can be triggered at login. User entries mask system ones of the same
+# filename, per the XDG autostart spec, so the order here is priority order.
+_AUTOSTART_DIRS: tuple[Path, ...] = (
+    Path.home() / ".config" / "autostart",
+    Path("/etc/xdg/autostart"),
+)
+
+# The two names an autostart entry uses to launch Chrome itself: the /usr/bin symlink and the
+# /opt wrapper it points at. Chrome's PWA entries use the latter.
+_CHROME_BINARIES = frozenset({"google-chrome", "google-chrome-stable"})
+
 
 class Launcher(NamedTuple):
     """One `chrome-<app-id>-<Profile>.desktop` file, split into the parts encoded in its name."""
@@ -74,6 +92,14 @@ class Change(NamedTuple):
 
     field: str
     detail: str
+
+
+class Starter(NamedTuple):
+    """One enabled autostart entry that launches Chrome itself."""
+
+    path: Path
+    exec_value: str
+    has_flag: bool
 
 
 def parse_launcher(path: Path) -> Launcher | None:
@@ -194,6 +220,107 @@ def rewrite(
     return "".join(out), changes
 
 
+def entry_exec(text: str) -> str | None:
+    """The `[Desktop Entry]` section's `Exec=` value — the one autostart actually runs.
+
+    A PWA's file also carries `[Desktop Action ...]` sections with their own `Exec=` lines, which
+    autostart never runs, so taking the first `Exec=` anywhere in the file would report a
+    right-click shortcut as if it were a startup launch.
+    """
+    in_entry = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("["):
+            in_entry = stripped == _ENTRY_SECTION
+            continue
+        if in_entry and stripped.startswith("Exec="):
+            return stripped[len("Exec=") :]
+    return None
+
+
+def autostart_disabled(text: str) -> bool:
+    """True when an autostart entry is present on disk but switched off.
+
+    Two independent mechanisms, either of which is enough: `Hidden=true` is the XDG spec's
+    "treat this as deleted", and `X-GNOME-Autostart-enabled=false` is what GNOME's Startup
+    Applications writes when you untick an entry.
+    """
+    in_entry = False
+    for line in text.splitlines():
+        stripped = line.strip()
+        if stripped.startswith("["):
+            in_entry = stripped == _ENTRY_SECTION
+            continue
+        if in_entry and stripped in ("Hidden=true", "X-GNOME-Autostart-enabled=false"):
+            return True
+    return False
+
+
+def launches_chrome(exec_value: str) -> bool:
+    """True when an `Exec=` value starts the Chrome browser itself.
+
+    Matches on any token's basename rather than just the first, so an `env VAR=x /usr/bin/…`
+    form is still recognized. A PWA entry counts too: `--app-id` still starts the browser
+    process, and it is the browser process that fixes the ozone platform for the whole session.
+    """
+    return any(Path(token).name in _CHROME_BINARIES for token in exec_value.split())
+
+
+def chrome_starters(dirs: tuple[Path, ...] = _AUTOSTART_DIRS) -> list[Starter]:
+    """Every enabled autostart entry that launches Chrome, nearest directory winning.
+
+    Filename masking is part of the XDG autostart spec: a `~/.config/autostart/foo.desktop`
+    replaces `/etc/xdg/autostart/foo.desktop` outright rather than adding to it, so a file that
+    has been masked must not be counted as a second starter.
+    """
+    starters: list[Starter] = []
+    seen: set[str] = set()
+    for directory in dirs:
+        if not directory.is_dir():
+            continue
+        for path in sorted(directory.glob("*.desktop")):
+            if path.name in seen:
+                continue
+            seen.add(path.name)
+            try:
+                text = path.read_text(encoding="utf-8")
+            except OSError:
+                continue
+            exec_value = entry_exec(text)
+            if exec_value is None or not launches_chrome(exec_value) or autostart_disabled(text):
+                continue
+            starters.append(Starter(path, exec_value, _OZONE_FLAG in exec_value))
+    return starters
+
+
+def _report_starters(ozone: bool) -> int:
+    """Print the autostart picture and return how many entries would claim the wrong platform.
+
+    Whichever Chrome process starts first fixes the ozone platform for every window that follows,
+    so what matters is not that *a* flagged entry exists but that no unflagged one can beat it.
+    See plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md — a filename chosen to sort first
+    was measured losing this race, because gnome-session starts autostart entries in parallel.
+    """
+    starters = chrome_starters()
+    print(f"[chrome] autostart entries launching Chrome: {len(starters)}")
+    for starter in starters:
+        print(f"[chrome]   {starter.path.name:<40} {'flag ok' if starter.has_flag else 'NO FLAG'}")
+
+    if not ozone:
+        return 0
+    if not starters:
+        print("[chrome] nothing autostarts Chrome — the flag then depends on which launcher you click")
+        return 0
+
+    unflagged = [s for s in starters if not s.has_flag]
+    if unflagged:
+        print(f"[chrome] DRIFT: {len(unflagged)} of {len(starters)} can start Chrome without {_OZONE_FLAG}")
+        print("[chrome] whichever starts first fixes the platform for the whole session — see docs/chrome.md")
+    else:
+        print("[chrome] ok — every Chrome autostart entry carries the flag")
+    return len(unflagged)
+
+
 def _launchers() -> list[Launcher]:
     found = (parse_launcher(path) for path in sorted(_APPLICATIONS_DIR.glob(_LAUNCHER_GLOB)))
     return [launcher for launcher in found if launcher is not None]
@@ -254,23 +381,27 @@ def _plan(
 
 @task
 def status(c: Context):
-    """Report every Chrome PWA launcher: its profile, whether it's visible, labelled, and flagged.
+    """Report who starts Chrome at login, then every PWA launcher's profile, visibility and flag.
 
-    Strictly read-only — `inv chrome.fix-launchers` is the repair path. Chrome regenerates these
-    files whenever a PWA is installed or updated, so drift reported here is expected over time
-    rather than a sign anything is broken.
+    Strictly read-only — `inv chrome.fix-launchers` is the repair path for the launchers. Chrome
+    regenerates those whenever a PWA is installed or updated, so drift reported there is expected
+    over time rather than a sign anything is broken. The autostart section has no repair path at
+    all and is reported only.
     """
     profiles = read_profiles()
     launchers = _launchers()
+    ozone = _ozone_wanted()
+
+    print(f"[chrome] {_OZONE_FLAG}: {'required' if ozone else 'not required'} ([packages.{_OZONE_PACKAGE}])")
+    _report_starters(ozone)
+
     if not launchers:
         print(f"[chrome] no PWA launchers found in {_APPLICATIONS_DIR}")
         return
 
-    ozone = _ozone_wanted()
     primary = profiles.primary
     print(f"[chrome] {len(launchers)} launcher(s) in {_APPLICATIONS_DIR}")
     print(f"[chrome] primary profile: {primary or 'unknown'} ({profiles.labels.get(primary or '', '?')})")
-    print(f"[chrome] {_OZONE_FLAG}: {'required' if ozone else 'not required'} ([packages.{_OZONE_PACKAGE}])")
 
     known_labels = frozenset(profiles.labels.values())
     drifted = 0
