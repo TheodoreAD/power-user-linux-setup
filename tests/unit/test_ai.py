@@ -25,8 +25,11 @@ def _reset_dry_run():
 
 @pytest.fixture(autouse=True)
 def _isolated_deploy_manifest(tmp_path, monkeypatch):
-    """_install_local_skill records into the deploy manifest — never the real one under ~/.local/state."""
+    """_install_local_skill writes through tasks/deploy.py, which records into the deploy manifest
+    — never the real one under ~/.local/state, and never with PULSE_ASSUME_YES leaking in from
+    the environment the suite runs under."""
     monkeypatch.setattr(deploy, "_MANIFEST", tmp_path / "state" / "deployed.json")
+    monkeypatch.setattr(util, "ASSUME_YES", False)
 
 
 def _fail_if_asked(message):
@@ -96,17 +99,19 @@ def test_skill_frontmatter_description_missing_file(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "present,ours,up_to_date,expected",
+    "present,ours,state,expected",
     [
-        (False, False, False, "install"),
-        (True, False, False, "foreign"),
-        (True, False, True, "foreign"),  # foreign wins even if a digest happened to match
-        (True, True, False, "update"),
-        (True, True, True, "up_to_date"),
+        (False, False, deploy.State.ABSENT, "install"),
+        (True, False, deploy.State.UNKNOWN, "foreign"),
+        (True, False, deploy.State.CLEAN, "foreign"),  # foreign wins even if a digest happened to match
+        (True, True, deploy.State.STALE, "update"),
+        (True, True, deploy.State.UNKNOWN, "update"),  # ours by marker, no manifest entry yet
+        (True, True, deploy.State.DIRTY, "overwrite"),
+        (True, True, deploy.State.CLEAN, "up_to_date"),
     ],
 )
-def test_local_skill_plan(present, ours, up_to_date, expected):
-    assert ai._local_skill_plan(present=present, ours=ours, up_to_date=up_to_date) == expected
+def test_local_skill_plan(present, ours, state, expected):
+    assert ai._local_skill_plan(present=present, ours=ours, state=state) == expected
 
 
 # ---------------------------------------------------------------------------
@@ -145,7 +150,7 @@ def _make_src_skill(repo_root: Path, rel_path: str, *, description: str = "desc"
 def test_install_local_skill_asks_before_first_install(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo", description="Do the thing.")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
 
     asked = {}
@@ -166,7 +171,7 @@ def test_install_local_skill_asks_before_first_install(tmp_path, monkeypatch):
 def test_install_local_skill_declining_prompt_skips_install(tmp_path, monkeypatch, capsys):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
     monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
 
@@ -183,7 +188,7 @@ def test_install_local_skill_raises_when_copy_doesnt_match_source(tmp_path, monk
     # exercised for real.
     repo_root = tmp_path / "repo"
     src = _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
     base = tmp_path / "home"
 
@@ -207,7 +212,7 @@ def test_install_local_skill_records_the_copy_in_the_deploy_manifest(tmp_path, m
     # PULSE" — the marker said whose it was, but nothing said what PULSE had written.
     repo_root = tmp_path / "repo"
     src = _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
 
     ai._install_local_skill(base, "skills/foo", label="pkg", yes=True)
@@ -222,7 +227,7 @@ def test_install_local_skill_records_the_copy_in_the_deploy_manifest(tmp_path, m
 def test_install_local_skill_yes_skips_prompt(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
     monkeypatch.setattr(ui, "ask", _fail_if_asked("yes=True must never prompt"))
 
@@ -234,7 +239,7 @@ def test_install_local_skill_yes_skips_prompt(tmp_path, monkeypatch):
 def test_install_local_skill_update_uses_update_verb(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
     monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
 
@@ -257,7 +262,7 @@ def test_install_local_skill_update_uses_update_verb(tmp_path, monkeypatch):
 def test_install_local_skill_already_up_to_date_never_prompts(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
     monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
     ai._install_local_skill(base, "skills/foo", label="test", yes=True)  # first install
@@ -266,10 +271,51 @@ def test_install_local_skill_already_up_to_date_never_prompts(tmp_path, monkeypa
     ai._install_local_skill(base, "skills/foo", label="test", yes=False)
 
 
+def test_install_local_skill_edited_copy_asks_before_overwriting_and_defaults_to_no(tmp_path, monkeypatch):
+    # A skill PULSE installed, then edited under ~/.agents/skills/ — the content exists only there.
+    # The prompt has to say so and default to keeping it; declining leaves the edit in place.
+    repo_root = tmp_path / "repo"
+    _make_src_skill(repo_root, "skills/foo")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
+    base = tmp_path / "home"
+    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
+    deployed_md = base / ".agents" / "skills" / "foo" / "SKILL.md"
+    deployed_md.write_text("edited at the destination\n")
+
+    asked = {}
+
+    def fake_ask(question, default=True):
+        asked["question"], asked["default"] = question, default
+        return default
+
+    monkeypatch.setattr(ui, "ask", fake_ask)
+    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
+
+    assert asked["question"].startswith("Overwrite skill 'foo'?")
+    assert asked["default"] is False
+    assert deployed_md.read_text() == "edited at the destination\n"
+
+
+def test_install_local_skill_yes_overwrites_an_edited_copy_without_a_second_prompt(tmp_path, monkeypatch):
+    repo_root = tmp_path / "repo"
+    _make_src_skill(repo_root, "skills/foo")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
+    base = tmp_path / "home"
+    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
+    deployed_md = base / ".agents" / "skills" / "foo" / "SKILL.md"
+    deployed_md.write_text("edited at the destination\n")
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("yes=True must never prompt"))
+    monkeypatch.setattr(util, "confirm", _fail_if_asked("deploy() must not ask again after this task's own prompt"))
+
+    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
+
+    assert "edited at the destination" not in deployed_md.read_text()
+
+
 def test_install_local_skill_foreign_content_never_prompts_and_is_untouched(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
     dest = base / ".agents" / "skills" / "foo"
     dest.mkdir(parents=True)
@@ -284,7 +330,7 @@ def test_install_local_skill_foreign_content_never_prompts_and_is_untouched(tmp_
 def test_install_local_skill_dry_run_never_prompts_or_writes(tmp_path, monkeypatch):
     repo_root = tmp_path / "repo"
     _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(ai, "_REPO_ROOT", repo_root)
+    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
     base = tmp_path / "home"
     monkeypatch.setattr(ui, "ask", _fail_if_asked("dry run must never prompt"))
     util.DRY_RUN = True

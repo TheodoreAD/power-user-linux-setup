@@ -3,9 +3,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import ui, util
-
-_REPO_ROOT = Path(__file__).parent.parent
+from . import deploy, ui, util
 
 
 def _expand(value: str) -> str:
@@ -77,34 +75,30 @@ def _install_git_clone(c, name: str, cfg: dict) -> None:
 
 
 def _install_wrapper_script(c, name: str, cfg: dict) -> None:
-    dest = Path(cfg["dest"]).expanduser()
     # content_file, not an inline `content` string: the deployed file lives as a real file under
     # config/ in this repo (readable, diffable, editable with normal tooling) and setup.toml just
     # points at it, the same way [packages.p10k]/zsh.py's p10k_configure already reads
-    # config/p10k.zsh rather than embedding it.
-    content = (_REPO_ROOT / cfg["content_file"]).read_text().strip() + "\n"
+    # config/p10k.zsh rather than embedding it. The content write itself goes through
+    # tasks/deploy.py — the one writer for every path under ~ — so an edit made at the destination
+    # is shown as a diff and asked about, never silently overwritten (which this function used to
+    # do, and which ate hand-edits to ~/AGENTS.md twice in one day). Only the symlink handling
+    # stays here: creating/validating a symlink isn't a content write.
+    managed = deploy.Managed(
+        path=Path(cfg["dest"]).expanduser(),
+        package=name,
+        source=cfg["content_file"],
+        mechanism=deploy.Mechanism.WRAPPER_SCRIPT,
+    )
+    dest = managed.path
     link = Path(cfg["symlink_dest"]).expanduser() if cfg.get("symlink_dest") else None
     link_ok = link is None or (link.is_symlink() and link.resolve() == dest.resolve())
 
     if util.DRY_RUN:
-        ok = dest.exists() and dest.read_text() == content and link_ok
+        ok = deploy.classify(managed) == deploy.State.CLEAN and link_ok
         print(f"[{name}] {util.ok_label(ok)}")
         return
 
-    if dest.exists() and dest.read_text() == content:
-        print(f"[{name}] content already installed")
-    else:
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        dest.write_text(content)
-        dest.chmod(0o755)
-        # Re-read rather than trust the write call succeeded — a full disk, a permission race, or
-        # anything else that leaves dest not actually matching `content` should fail loudly right
-        # here, not silently surface later as a stale-looking file someone has to go diff by hand
-        # (see tasks/verify.py's own wrapper-script content check for the same problem caught
-        # after the fact, on any later run — this is the same guarantee, immediately).
-        if dest.read_text() != content:
-            raise RuntimeError(f"[{name}] wrote {dest} but its content doesn't match {cfg['content_file']}")
-        print(f"[{name}] installed")
+    deploy.deploy(managed)
 
     if link is None or link_ok:
         return

@@ -1,6 +1,5 @@
 import json
 import shlex
-import shutil
 from pathlib import Path
 from typing import cast
 
@@ -8,7 +7,6 @@ from invoke import task
 
 from . import deploy, ui, util
 
-_REPO_ROOT = Path(__file__).parent.parent
 # Deliberately separate from tasks/allowlist.py's _APPLIED_MANIFEST — that one tracks
 # CLI-classification-derived Bash rules specifically; this tracks static, hand-declared rules
 # from any setup.toml package's claude_permissions_allow field. Same safe-merge pattern (only
@@ -18,11 +16,6 @@ _STATIC_PERMS_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-appli
 # Same shape again for `claude_additional_directories` (permissions.additionalDirectories): its own
 # manifest, so a directory the user added by hand is never removed by this mechanism.
 _STATIC_DIRS_MANIFEST = util.PULSE_STATE_DIR / "claude-additional-directories-applied.json"
-# Both live in tasks/deploy.py: the skill installer and deploy.py's own registry need the same
-# marker name and the same directory hash, and two copies of a content comparison are exactly the
-# kind of drift this repo's single-deploy-path work exists to remove.
-_SKILL_MARKER = deploy.SKILL_MARKER
-_dir_digest = deploy.dir_digest
 
 
 def _parse_frontmatter_description(text: str) -> str | None:
@@ -48,19 +41,23 @@ def _skill_frontmatter_description(skill_md: Path) -> str | None:
     return _parse_frontmatter_description(skill_md.read_text())
 
 
-def _local_skill_plan(*, present: bool, ours: bool, up_to_date: bool) -> str:
+def _local_skill_plan(*, present: bool, ours: bool, state: deploy.State) -> str:
     """Pure decision of what _install_local_skill should do next, given the on-disk state it
-    already gathered (present/ours/up_to_date all come from real filesystem checks, but the
-    decision itself has no I/O of its own — unit-testable without touching a filesystem at all).
+    already gathered (present/ours come from the marker file, `state` from deploy.classify — real
+    filesystem checks, but the decision itself has no I/O of its own).
 
     One of: "foreign" (something else already lives at dest, leave it alone), "up_to_date"
-    (ours, nothing to do), "install" (nothing there yet), "update" (ours, but stale).
+    (ours, nothing to do), "install" (nothing there yet), "update" (ours, source moved on), or
+    "overwrite" (ours, but edited at the destination since PULSE wrote it — the one case where
+    the prompt must say what it's about to discard).
     """
     if present and not ours:
         return "foreign"
-    if up_to_date:
+    if state == deploy.State.CLEAN:
         return "up_to_date"
-    return "update" if present else "install"
+    if state == deploy.State.ABSENT:
+        return "install"
+    return "overwrite" if state == deploy.State.DIRTY else "update"
 
 
 def _selected_skill_names(skill: str | None) -> set[str] | None:
@@ -128,15 +125,24 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
     `yes` is set — same `-y`/`--yes` convention as the `skills` CLI's own `--yes` flag used below.
     Never asks for a skill that's already up to date, so a re-run of an unchanged setup stays
     quiet either way.
+
+    The copy itself, its post-copy verification, the marker and the deploy-manifest record all
+    happen in deploy.deploy() — the one writer for every path under ~. What stays here is the
+    foreign check (a marker-less directory at dest is someone else's, whatever its content) and
+    this task's own install/update prompt, which deploy() then never repeats.
     """
-    src = (_REPO_ROOT / repo_path).resolve()
-    name = src.name
-    dest = base / ".agents" / "skills" / name
+    name = Path(repo_path).name
+    managed = deploy.Managed(
+        path=base / ".agents" / "skills" / name,
+        package=label,
+        source=repo_path,
+        mechanism=deploy.Mechanism.SKILL,
+    )
+    src, dest = managed.src, managed.path
     present = dest.exists() or dest.is_symlink()
-    marker = dest / _SKILL_MARKER
+    marker = dest / deploy.SKILL_MARKER
     ours = marker.is_file() and marker.read_text().strip() == repo_path
-    up_to_date = ours and _dir_digest(dest) == _dir_digest(src)
-    plan = _local_skill_plan(present=present, ours=ours, up_to_date=up_to_date)
+    plan = _local_skill_plan(present=present, ours=ours, state=deploy.classify(managed))
 
     if util.DRY_RUN:
         print(f"[{label}] {name}: {util.ok_label(plan == 'up_to_date')}")
@@ -155,29 +161,21 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
 
     if not yes:
         desc = _skill_frontmatter_description(src / "SKILL.md") or "(no description found)"
-        verb = "Update" if plan == "update" else "Install"
-        if not ui.ask(f"{verb} skill '{name}'?\n{desc}"):
+        if plan == "overwrite":
+            # Content that exists only at the destination is what's about to be discarded — say
+            # so, and default to keeping it, the same way deploy() itself does for a DIRTY file.
+            question = f"Overwrite skill '{name}'? It was edited under {dest} since PULSE deployed it.\n{desc}"
+            default = False
+        else:
+            verb = "Update" if plan == "update" else "Install"
+            question = f"{verb} skill '{name}'?\n{desc}"
+            default = True
+        if not ui.ask(question, default=default):
             print(f"[{label}] {name}: skipped (declined)")
             return
 
-    if present:
-        dest.unlink() if dest.is_symlink() else shutil.rmtree(dest)
-    dest.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copytree(src, dest)
-    # Re-hash rather than trust copytree succeeded — a partial copy (disk full mid-tree, a file
-    # permission race) should fail loudly right here, not silently look "installed" until some
-    # later up_to_date check (or a human) notices the content doesn't actually match. Raised
-    # before the marker is written, so a failed copy is never recorded as "ours, up to date".
-    if _dir_digest(dest) != _dir_digest(src):
-        raise RuntimeError(f"[{label}] copied {name} from {repo_path} but its content doesn't match the source")
-    marker.write_text(repo_path + "\n")
-    # Record it in the deploy manifest too, so `inv deploy.status`/`deploy.all` classify this copy
-    # as ours (CLEAN/STALE) instead of "not deployed by PULSE". The marker answers *whose* it is;
-    # the manifest answers *what we wrote* — both are needed until this writer is folded into
-    # deploy.deploy() (drift-guard plan, step 4).
-    managed = deploy.Managed(path=dest, package=label, source=repo_path, mechanism=deploy.Mechanism.SKILL)
-    deploy.record(managed, _dir_digest(dest))  # already verified equal to the source's digest above
-    print(f"[{label}] {name} copied from {repo_path}")
+    # The prompt above already covered the DIRTY case, so deploy() must not ask a second time.
+    deploy.deploy(managed, assume_yes=True)
 
 
 def _install_remote_skill(c, entry: dict, *, label: str, yes: bool) -> None:

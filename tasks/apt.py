@@ -2,9 +2,7 @@ from pathlib import Path
 
 from invoke import task
 
-from . import util
-
-_REPO_ROOT = Path(__file__).parent.parent
+from . import deploy, util
 
 # Ubuntu system keys that legitimately live in trusted.gpg.d — everything else is old-style.
 _SYSTEM_TRUSTED_D = frozenset(
@@ -186,20 +184,22 @@ def install_repos(c):
 
 
 def _apply_config_files(name: str, cfg: dict) -> None:
-    """Copy config_files entries to their destinations, skipping any that already exist.
+    """Seed each config_files entry at its destination, through tasks/deploy.py's writer.
 
-    Deliberately never overwrites: a destination that exists may have been hand-edited since
-    install. `inv deploy.all` is the redeploy path for a repo-side source that has since
-    changed — it diffs and prompts first.
+    A `config_files` destination is the user's after first install (deploy.Policy.SEEDED), so one
+    that has been customized is left alone and said so — not silently skipped, as this used to,
+    and never overwritten. A destination still holding exactly what PULSE last wrote is refreshed
+    when its source changes; `inv deploy.all --yes` is the only path that overwrites a customized
+    one.
     """
     for mapping in cfg.get("config_files", []):
-        # Resolved against the repo root, not the cwd, so installs work from any directory.
-        src = _REPO_ROOT / mapping["src"]
-        dst = Path(mapping["dst"]).expanduser()
-        if not dst.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            dst.write_bytes(src.read_bytes())
-            print(f"[{name}] config: {dst}")
+        managed = deploy.Managed(
+            path=Path(mapping["dst"]).expanduser(),
+            package=name,
+            source=mapping["src"],
+            mechanism=deploy.Mechanism.CONFIG_FILE,
+        )
+        deploy.deploy(managed)
 
 
 # ---------------------------------------------------------------------------
