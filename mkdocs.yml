@@ -107,6 +107,7 @@ nav:
       - shortcuts.md
       - input_devices.md
       - screen_capture.md
+      - chrome.md
       - gnome_extensions.md
       - fonts.md
       - ide.md
