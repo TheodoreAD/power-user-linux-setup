@@ -216,8 +216,9 @@ of Fable/Opus calls in the day it was in force). Verified live 2026-08-25 before
 1 MB output was saved to a file by the harness with the path in the result — every property the
 redirect form was reaching for, in one call instead of two and with no `$VAR`-target prompt. The
 second driver was the 1 MB itself: 4,145 basedpyright warnings on a green run, which any model will
-try to keep out of context; that is a gate-output problem and has its own plan in `repo-tasks`
-(`plans/2026-08-25-type-check-warning-noise.md`), not a wording fix.
+try to keep out of context. That was a gate-output problem rather than a wording fix, and it was
+fixed at the source — this repo is at zero warnings with `failOnWarnings: true`, so the gate's
+output fits one tool result again. See `repo-tasks`' `contributing/type-checking.md` for how.
 
 ## Viewing, searching, or editing files
 

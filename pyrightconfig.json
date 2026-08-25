@@ -25,7 +25,7 @@
   // thousands of warnings the count was output nobody read; at zero, this is what keeps it there.
   // A warning that is structural rather than a defect is suppressed at its one site with a
   // `# pyright: ignore[rule]` (or a file-level `# pyright: rule=false`) and a comment saying why —
-  // never by lowering the rule here for everyone. See plans/2026-08-25-type-check-warning-noise.md.
+  // never by lowering the rule here for everyone. See repo-tasks' contributing/type-checking.md.
   "failOnWarnings": true,
 
   "reportAny": "error",
@@ -54,7 +54,7 @@
   // on most lines of every task is ceremony with no bug class behind it; the case the rule exists
   // for (a bare `s.strip()` whose value was meant to be used) is ruff's B018. pyright's own `strict`
   // profile leaves this rule off too — only basedpyright's `recommended` turns it on. See
-  // plans/2026-08-25-type-check-warning-noise.md.
+  // repo-tasks' contributing/type-checking.md.
   "reportUnusedCallResult": "none",
 
   // pyright's own `strict` level for this rule (`recommended` raises it to a warning). invoke's task
@@ -80,7 +80,7 @@
   // relaxation is spelled rule by rule). Every rule that finds a bug in a test stays on (`reportAny`,
   // `reportUnreachable`, unused import/variable, `reportUnnecessary*`, ...); off are the ones that
   // only measure annotation discipline or police API conventions tests violate on purpose.
-  // See plans/2026-08-25-type-check-warning-noise.md.
+  // See repo-tasks' contributing/type-checking.md.
   "executionEnvironments": [
     {
       "root": "tests",

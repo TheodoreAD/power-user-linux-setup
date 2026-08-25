@@ -3,7 +3,7 @@
 # do `from . import <sibling>` — a cycle only in the checker's graph (Python resolves it at
 # runtime), and the exact pattern the shared pyrightconfig.json documents. Suppressed here, in the
 # one file that structurally trips it, so `failOnWarnings` can stay on and the rule stays live for
-# every other file. See repo-tasks' plans/2026-08-25-type-check-warning-noise.md.
+# every other file. See repo-tasks' contributing/type-checking.md.
 
 from invoke import Collection
 
