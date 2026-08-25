@@ -75,8 +75,65 @@ tier_color() {
 input=$(cat)
 cwd=$(echo "$input" | jq -r '.workspace.current_dir')
 
-# dir: collapse $HOME to ~, prefixed with p10k's home/home-sub/folder icon
+# dir: collapse $HOME to ~, prefixed with p10k's home/home-sub/folder icon, and — when the
+# result is longer than $dir_max_length — collapse middle segments away to a single `..`
+# (the classic zsh `%(5~|%-1~/…/%3~|%4~)` prompt idiom; oh-my-posh calls it agnoster_left).
+# Deliberately NOT p10k's own truncate_to_unique (`~/p/github.com-p/repo`): lossless and
+# tab-completable, but noisy to read at a glance, which is all this line is for.
+#
+# Three rules, two of them p10k's:
+#   - the first and last segments are never collapsed (p10k's SHORTEN_DIR_LENGTH=1);
+#   - neither is a directory holding one of p10k's own anchor_files (.git, go.mod, ...), so
+#     the enclosing repo's name survives however deep the cwd is;
+#   - collapsing runs left to right and stops as soon as the path fits, so only what has to
+#     go, goes. Adjacent collapsed segments merge into one `..`.
+# dir_max_length is deliberately far below p10k's own 80: this statusline shares one line
+# with the git, rate-limit, context and model segments, and the model name sits at the end.
+dir_max_length=40
+collapse_marker='..'
+anchor_files=(.bzr .citc .git .hg .node-version .python-version .ruby-version
+  .shorten_folder_marker .svn .terraform CVS Cargo.toml composer.json go.mod package.json)
+
+is_anchor() {
+  local d=$1 f
+  for f in "${anchor_files[@]}"; do
+    [ -e "$d/$f" ] && return 0
+  done
+  return 1
+}
+
+# joins $segs back into a path, merging runs of $collapse_marker into a single one
+join_segs() {
+  local out=${segs[0]} prev=${segs[0]} i
+  for ((i = 1; i < ${#segs[@]}; i++)); do
+    [ "${segs[i]}" = "$collapse_marker" ] && [ "$prev" = "$collapse_marker" ] && continue
+    out="$out/${segs[i]}"
+    prev=${segs[i]}
+  done
+  printf '%s' "$out"
+}
+
 dir=${cwd/#$HOME/\~}
+if [ ${#dir} -gt "$dir_max_length" ]; then
+  IFS='/' read -r -a segs <<< "$dir"
+  # absolute path rebuilt segment by segment, since is_anchor hits the real filesystem.
+  # For a $HOME path segs[0] is the `~` itself, so collapsing may start at 1; for an
+  # absolute one segs[0] is the empty string before the leading `/` and the first real
+  # segment is segs[1] (`/usr/...`), which p10k treats as the never-shortened first anchor.
+  if [ "${segs[0]}" = '~' ]; then
+    abs=$HOME first_middle=1
+  else
+    abs="/${segs[1]}" first_middle=2
+  fi
+  for ((i = first_middle; i < ${#segs[@]} - 1; i++)); do
+    abs="$abs/${segs[i]}"
+    is_anchor "$abs" && continue
+    segs[i]=$collapse_marker
+    dir=$(join_segs)
+    [ ${#dir} -le "$dir_max_length" ] && break
+  done
+fi
+
 if [ "$cwd" = "$HOME" ]; then
   dir_icon=$home_icon
 elif [ "${cwd#"$HOME"/}" != "$cwd" ]; then
