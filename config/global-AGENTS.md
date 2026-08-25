@@ -307,6 +307,15 @@ so `$?` after a pipeline never reflects the upstream failure, and the tool's exi
 filter's too. Assume a CLI's clean summary text and its exit code can disagree until verified
 otherwise.
 
+Backgrounding from the shell can leave you reading state from a command that **never ran**. Measured
+2026-08-26: `nohup script.sh & disown` and `setsid script.sh &` both returned non-zero while the
+script's first statement, a file write, never happened — yet a plain `cmd &` plus `sleep` in the
+same call did run. Intermittent is the danger: the next call inspects processes or files as though
+the work happened, so the failure yields false evidence rather than an error, and a background write
+or delete that silently didn't happen looks exactly like one that did. Use the Bash tool's own
+`run_in_background` (it survives across turns and re-invokes you on exit); if something must be
+backgrounded anyway, have it write a marker the next call checks before trusting any result.
+
 ### Generalizing from a sample to a set
 
 A clean-looking sample is not evidence about its siblings, and "they're all the same kind of file"
