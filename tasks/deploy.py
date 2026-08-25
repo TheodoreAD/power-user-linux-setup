@@ -362,7 +362,11 @@ def deploy(m: Managed, *, assume_yes: bool = False, manifest: dict[str, dict] | 
     piped or CI run without `assume_yes` leaves the file alone rather than clobbering it); for a
     SEEDED path they leave it alone and say so, because a user-customized config is the expected
     state there, not a problem.
+
+    `assume_yes` is the `--yes` flag; `PULSE_ASSUME_YES=1` (util.ASSUME_YES) is the same thing for
+    the install tasks, which reach this writer from `inv setup` with no flag of their own.
     """
+    assume_yes = assume_yes or util.ASSUME_YES
     state = classify(m, manifest)
 
     if state == State.CLEAN:

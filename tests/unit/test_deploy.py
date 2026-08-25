@@ -20,6 +20,7 @@ def _isolated_state(tmp_path, monkeypatch):
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(deploy, "_MANIFEST", tmp_path / "state" / "deployed.json")
     monkeypatch.setattr(util, "DRY_RUN", False)
+    monkeypatch.setattr(util, "ASSUME_YES", False)
 
 
 @pytest.fixture
@@ -204,6 +205,19 @@ def test_assume_yes_overwrites_a_dirty_destination_without_prompting(tmp_path, s
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("--yes must not prompt"))
 
     assert deploy.deploy(m, assume_yes=True) == deploy.Action.UPDATED
+    assert m.path.read_text() == "new content\n"
+
+
+def test_pulse_assume_yes_overwrites_a_dirty_destination_without_prompting(tmp_path, src, monkeypatch):
+    # The env-var form of --yes, for `inv setup` and the other composite entry points that have no
+    # flag to pass through — what bootstrap-devcontainer.sh sets.
+    m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
+    deploy.deploy(m)
+    m.path.write_text("hand-edited\n")
+    monkeypatch.setattr(util, "ASSUME_YES", True)
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("PULSE_ASSUME_YES must not prompt"))
+
+    assert deploy.deploy(m) == deploy.Action.UPDATED
     assert m.path.read_text() == "new content\n"
 
 

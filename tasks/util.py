@@ -13,6 +13,13 @@ from typing import Any, cast, overload
 
 DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "yes")
 
+# The env-var form of `--yes` for the composite entry points (`inv setup`, `inv wsl.install`) that
+# have no flag of their own. tasks/deploy.py's writer defaults to *not* overwriting a destination it
+# can't prove it wrote, and util.confirm() returns that default when stdin isn't a terminal — so an
+# unattended run (bootstrap-devcontainer.sh, a Dockerfile) that hits a pre-existing file would
+# silently skip it. Set this to get the overwrite-and-say-so behavior instead.
+ASSUME_YES: bool = os.environ.get("PULSE_ASSUME_YES", "").lower() in ("1", "true", "yes")
+
 # Use 'sudo -A' when SUDO_ASKPASS is set (non-TTY contexts like Claude Code, or a shell
 # where inv zsh.configure has run). Falls back to plain 'sudo' in a fresh terminal.
 SUDO: str = "sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo"
