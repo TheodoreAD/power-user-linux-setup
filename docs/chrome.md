@@ -13,13 +13,40 @@ profile signed in, those generated files make the app grid worse rather than bet
   launch path to take effect.
 
 ```shell
-inv chrome.status          # read-only: every launcher, its profile, and what has drifted
+inv chrome.status          # read-only: autostart entries, then every launcher and what has drifted
 inv chrome.fix-launchers   # label by profile, unhide the primary profile's, add the ozone flag
 ```
 
 `inv chrome.fix-launchers` takes `--yes` to skip the confirmation and `--profile "Profile 2"` to
 treat a profile other than Chrome's `last_used` as the primary one. `PULSE_DRY_RUN=1` prints the
 plan without writing.
+
+## Who starts Chrome at login
+
+`inv chrome.status` opens with the question that actually decides whether the ozone flag works:
+
+```
+[chrome] --ozone-platform=x11: required ([packages.google-chrome-x11])
+[chrome] autostart entries launching Chrome: 1
+[chrome]   00-google-chrome-x11.desktop             flag ok
+[chrome] ok — every Chrome autostart entry carries the flag
+```
+
+The ozone platform is chosen once, by the **first** Chrome process of the session; every window
+opened afterwards joins that process and its `--ozone-platform` is discarded. So a flagged launcher
+only works if nothing unflagged can start Chrome before it.
+
+That is not a race you can win by ordering. `gnome-session` starts autostart entries in parallel
+within a few milliseconds, and a filename picked to sort first was measured _losing_ — see
+`plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md`. The arrangement that works is being the
+only starter, which on this machine means `[packages.google-chrome-x11-autostart]`'s entry plus "run
+on OS login" switched off for every PWA.
+
+Two of those three pieces are manual and nothing re-applies them on a rebuilt machine, which is why
+this check exists: it reports drift rather than repairing it. A `NO FLAG` line means another entry
+can claim Wayland first, and Netflix goes back to playing sound over a black picture. Both ways an
+entry can be switched off are honoured — `Hidden=true` and `X-GNOME-Autostart-enabled=false` — as is
+the XDG rule that a `~/.config/autostart` file masks a `/etc/xdg/autostart` one of the same name.
 
 ## What it derives, and what it never touches
 
