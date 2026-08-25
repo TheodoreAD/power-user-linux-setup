@@ -10,15 +10,17 @@
   // shape it replaced, both here and in `power-user-linux-setup`'s own config.
   //
   // Same fixed list for every consumer's `pyrightconfig.json`, not parameterized per repo:
-  // `src`/`tests` (library layout) + `tasks`/`tasks.py` (a flat-layout repo like
-  // `power-user-linux-setup`, and every consumer's own `tasks.py` entry point) together —
-  // A *literal* include path that doesn't exist is a hard config error (exit 3), not a silent
-  // no-op — measured, and contrary to what this comment used to claim — which is why configs.pull
-  // filters this list down to the entries that actually exist in each consumer before writing it.
-  // A directory entry is recursive below itself but anchored at the top level: `src` means ./src,
-  // never any directory named src, so this list can never wander into a .venv and consequently
-  // needs no `exclude` at all. See plans/2026-08-19-gitignore-tool-alignment.md.
-  "include": ["tests", "tasks"],
+  // `src`/`tests` (library layout) + `tasks` (`tasks/` in a flat-layout repo like
+  // `power-user-linux-setup`, and every consumer's own `tasks.py` entry point) together.
+  // Spelled with a trailing `*` on purpose: a *literal* include path that doesn't exist is a hard
+  // config error (exit 3, "File or directory ... does not exist"), not a silent no-op, and neither
+  // `tests/**` nor `./tests` escapes that — only a glob in the last segment does. Measured
+  // (basedpyright 1.39.10): `tests*` exits 0 when nothing matches, stays anchored at the top level
+  // (`src*` means ./src, never any directory named src, so it can never wander into a .venv and
+  // consequently needs no `exclude` at all), and is recursive below itself once it matches. The
+  // widening is only to top-level siblings sharing the prefix, and no repo in the family has one.
+  // See plans/2026-08-19-gitignore-tool-alignment.md.
+  "include": ["src*", "tests*", "tasks*"],
   "failOnWarnings": false,
 
   "reportAny": "error",
@@ -41,6 +43,21 @@
   "reportMissingTypeArgument": "warning",
   "reportImplicitStringConcatenation": "none",
 
+  // Off, not `recommended`'s warning: once `c` is typed it fires on every `c.run(...)` whose
+  // `Result` is dropped, and dropping it is the invoke idiom — a failing command raises
+  // `UnexpectedExit`, so the return value carries nothing a caller has to consume. `_ = c.run(...)`
+  // on most lines of every task is ceremony with no bug class behind it; the case the rule exists
+  // for (a bare `s.strip()` whose value was meant to be used) is ruff's B018. pyright's own `strict`
+  // profile leaves this rule off too — only basedpyright's `recommended` turns it on. See
+  // plans/2026-08-25-type-check-warning-noise.md.
+  "reportUnusedCallResult": "none",
+
+  // pyright's own `strict` level for this rule (`recommended` raises it to a warning). invoke's task
+  // protocol hands every task a Context first, whether or not the body uses it — a composite task
+  // whose whole body is its `pre=[...]` list, a discover function keeping `c` for symmetry with
+  // its siblings — so at warning level the rule fires on the structure, not on a mistake.
+  "reportUnusedParameter": "hint",
+
   // downgrade, not silenced: a package `__init__.py` that imports every submodule to build an
   // invoke `Collection` (this file's own shape, and any consumer's `tasks/__init__.py` doing the
   // same) can trip this when a submodule also does `from . import <sibling>` — Python resolves it
@@ -51,11 +68,27 @@
   // invoke ships no type stubs — every `c: Context` task parameter is Unknown/Any without this.
   "allowedUntypedLibraries": ["invoke"],
 
-  // pytest autouse fixtures aren't referenced by name anywhere, a structural false positive.
+  // Tests are a tier of their own — the same shape as mypy's `[mypy-tests.*]
+  // disallow_untyped_defs = false` (pyright has no per-environment `typeCheckingMode`, so the
+  // relaxation is spelled rule by rule). Every rule that finds a bug in a test stays on (`reportAny`,
+  // `reportUnreachable`, unused import/variable, `reportUnnecessary*`, ...); off are the ones that
+  // only measure annotation discipline or police API conventions tests violate on purpose.
+  // See plans/2026-08-25-type-check-warning-noise.md.
   "executionEnvironments": [
     {
       "root": "tests",
-      "reportUnusedFunction": "none"
+      // pytest autouse fixtures aren't referenced by name anywhere, a structural false positive.
+      "reportUnusedFunction": "none",
+      // Annotating fixtures (`monkeypatch: pytest.MonkeyPatch`, `tmp_path: Path`) is encouraged, not
+      // required — a bare fixture parameter is not a bug.
+      "reportMissingParameterType": "none",
+      "reportUnknownParameterType": "none",
+      "reportUnknownArgumentType": "none",
+      "reportUnknownVariableType": "none",
+      "reportUnknownMemberType": "none",
+      "reportUnknownLambdaType": "none",
+      // Tests reach into the module under test's `_private` helpers by convention.
+      "reportPrivateUsage": "none"
     }
   ]
 }

@@ -47,11 +47,11 @@ def test_namespace_publishes_repo_tasks_test_namespace():
 
 
 def test_import_repo_tasks_modules_returns_real_modules_when_available():
-    modules = tasks._import_repo_tasks_modules()  # pyright: ignore[reportPrivateUsage]
+    modules = tasks._import_repo_tasks_modules()
     assert len(modules) == 6
     assert all(module is not None for module in modules)
 
 
 def test_import_repo_tasks_modules_degrades_to_all_none_when_missing():
-    result = tasks._import_repo_tasks_modules(simulate_missing=True)  # pyright: ignore[reportPrivateUsage]
+    result = tasks._import_repo_tasks_modules(simulate_missing=True)
     assert result == (None,) * 6
