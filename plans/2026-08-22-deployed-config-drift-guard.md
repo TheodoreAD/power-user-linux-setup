@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-08-25
 ---
 
@@ -453,10 +453,28 @@ before), not "overwrite" — there is no record to prove it was edited rather th
 a real manifest entry can produce `DIRTY`, so the sharper prompt only fires for copies made after
 step 1 landed.]
 
+## Progress — step 5 landed 2026-08-25
+
+`verify.py`'s bespoke `_wrapper_script_expected`/`_wrapper_script_up_to_date` comparison is gone;
+the `"content"` check kind became `"deploy"`, a read-only `deploy.classify()` call on the registry
+entry (`_classify_deploy`), with `_deploy_check` turning the state into a verdict: MANAGED must be
+CLEAN, SEEDED fails only when ABSENT. `_all_checks` sweeps `deploy.managed_paths()` for every
+non-wrapper-script entry, so `config_files` (act, terminator, wezterm) and all nine skills now
+appear in `inv verify.all`; wrapper-script paths still come through `_resolve` so `verify_cmd`/
+`verify = false` keep applying. `deploy._SUMMARY` became public `SUMMARY` for the failure message.
+`PULSE_DRY_RUN=1 inv verify.all` on this machine: terminator reports ok (seeded, customized), every
+skill ok. Evidence for the design choices is in `contributing/verify.md`.
+
+All five steps are done. What remains is the two `[DEFERRED]` items below (the declared-but-disabled
+orphan, tracked in `plans/2026-08-24-machine-local-setup-toml-overrides.md`, and drift
+classification for `ensure_block`/`write_claude_settings` targets), neither of which blocks retiring
+this plan once its durable content is confirmed to live in `docs/configuration.md`,
+`contributing/verify.md` and `tasks/deploy.py`'s docstring.
+
 ## Sequencing
 
-Five steps, each independently committable and independently useful. Steps 1–4 are done (see
-Progress above); step 5 is next:
+Five steps, each independently committable and independently useful — all landed (see Progress
+above):
 
 1. **`tasks/deploy.py` + manifest + tests**, wired to nothing. Pure addition, no behavior change.
 2. **`inv deploy.status`** — read-only. Immediately answers "what's drifted on this machine right
