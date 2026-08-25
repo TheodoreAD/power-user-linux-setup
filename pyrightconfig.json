@@ -21,7 +21,12 @@
   // widening is only to top-level siblings sharing the prefix, and no repo in the family has one.
   // See plans/2026-08-19-gitignore-tool-alignment.md.
   "include": ["src*", "tests*", "tasks*"],
-  "failOnWarnings": false,
+  // A warning fails the run. Flipped 2026-08-25 once every repo in the family was at zero: with
+  // thousands of warnings the count was output nobody read; at zero, this is what keeps it there.
+  // A warning that is structural rather than a defect is suppressed at its one site with a
+  // `# pyright: ignore[rule]` (or a file-level `# pyright: rule=false`) and a comment saying why —
+  // never by lowering the rule here for everyone. See plans/2026-08-25-type-check-warning-noise.md.
+  "failOnWarnings": true,
 
   "reportAny": "error",
   "reportUnreachable": "error",
@@ -62,7 +67,9 @@
   // invoke `Collection` (this file's own shape, and any consumer's `tasks/__init__.py` doing the
   // same) can trip this when a submodule also does `from . import <sibling>` — Python resolves it
   // fine at runtime, but it's a real, standard invoke-package pattern worth a warning, not an
-  // error. A genuine cycle elsewhere still surfaces.
+  // error. A genuine cycle elsewhere still surfaces. With `failOnWarnings` on, the one file that
+  // structurally trips it (`tasks/__init__.py` in power-user-linux-setup) carries a file-level
+  // `# pyright: reportImportCycles=false` — the rule stays live for every other file.
   "reportImportCycles": "warning",
 
   // invoke ships no type stubs — every `c: Context` task parameter is Unknown/Any without this.
