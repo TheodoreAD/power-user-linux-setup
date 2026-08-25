@@ -999,6 +999,20 @@ claude_permissions_allow = [
   # and every cross-repo convergence task in this family reads sibling repos. Read-only: writes
   # there still prompt. User decision 2026-08-25.
   "Read(//home/tdumitrescu/projects/**)",
+  # Probed 2026-08-25: an allow rule (`Bash(rg:*)`) does not exempt a read outside the working
+  # dirs — every `rg`/`ls` prompt that day was one of these paths. Transcripts and the harness's
+  # own overflow files ("Output too large … saved to ~/.claude/projects/…/tool-results/"), and
+  # the deployed copies this repo owns and constantly diffs against its sources. Deliberately NOT
+  # a blanket ~/.config/** — that tree holds gh/glab OAuth tokens, gcloud credentials, and browser
+  # profiles; only the subdirectories this repo deploys or owns are listed.
+  "Read(~/.claude/projects/**)",
+  "Read(~/.agents/**)",
+  "Read(~/AGENTS.md)",
+  "Read(~/.config/act/**)",
+  "Read(~/.config/autostart/**)",
+  "Read(~/.config/terminator/**)",
+  "Read(~/.config/wezterm/**)",
+  "Read(~/.config/power-user-linux-setup/**)",
 ]
 
 [packages.claude-statusline]
