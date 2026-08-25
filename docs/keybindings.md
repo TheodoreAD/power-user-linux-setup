@@ -2,7 +2,10 @@
 
 Reference for every binding that uses the Super (Windows) key on this setup, so it's clear what to
 expect and where a given shortcut is defined. Pulled from live `gsettings`/`dconf` state on
-2026-08-08 — re-verify with the commands shown if extensions or GNOME defaults change.
+2026-08-08 — re-verify with the commands shown if extensions or GNOME defaults change. The
+`Super+<number>` bindings (Dash to Panel, Space Bar, and the two shell defaults they take over) were
+re-checked against live state and both extensions' schemas on 2026-08-25; the rest of the tables
+still date from the original sweep.
 
 See [input_devices.md](input_devices.md) for why a bare Super _tap_ might not register at all
 (Kinesis Super_L/Super_R issue).
