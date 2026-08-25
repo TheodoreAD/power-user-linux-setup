@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-24
+updated: 2026-08-25
 ---
 
 # One way to write a file into `~`
@@ -426,10 +426,37 @@ terminator line; `deploy.all --name claude-global-md` reports the file already m
 (converting the writers) is still open — `inv tools.install`'s wrapper-script writer still
 overwrites unconditionally.
 
+## Progress — step 4 landed 2026-08-25
+
+All three install-time writers now call `deploy.deploy()`: `tools._install_wrapper_script` keeps
+only its `symlink_dest` handling, `apt._apply_config_files` is the `SEEDED` policy rather than a
+bare `if not dst.exists()`, and `ai._install_local_skill` keeps its foreign check and its own
+install/update prompt but hands the copy, verification, marker and manifest record to the shared
+writer (calling it with `assume_yes=True` so the DIRTY case isn't asked twice; its own prompt now
+says "edited since PULSE deployed it" and defaults to no for that case). The loss window this plan
+opened with is closed: `inv tools.install` against a hand-edited `~/AGENTS.md` prints the diff and
+leaves it alone.
+
+§7's unattended path: `util.ASSUME_YES` (`PULSE_ASSUME_YES=1`), honored by `deploy()`, is the
+env-var form of `--yes` for `inv setup`, which has no flag of its own; `bootstrap-devcontainer.sh`
+sets it, and `docker/Dockerfile` + `.devcontainer/devcontainer.json` both reach `inv setup` only
+through that script. CI workflows only ever run `PULSE_DRY_RUN=1`, so nothing to wire there. Tests:
+`tests/unit/test_tools.py` (rewritten — non-tty-without-yes leaves the edit and says so, assume-yes
+overwrites, dry-run still prints `MISSING` for `phases.py`'s probe, symlink handling), new
+`tests/unit/test_apt.py`, two new `_install_local_skill` cases in `test_ai.py`, and a
+`test_devcontainer.py` check that every `inv setup` line in the bootstrap script carries the flag.
+
+[PITFALL: `ai._local_skill_plan`'s old `up_to_date` input was "ours and digests match"; the shared
+classifier's backfill rule means a marker-owned directory with no manifest entry classifies
+`UNKNOWN` when it differs from source, which the plan function maps to "update" (prompted, as
+before), not "overwrite" — there is no record to prove it was edited rather than simply stale. Only
+a real manifest entry can produce `DIRTY`, so the sharper prompt only fires for copies made after
+step 1 landed.]
+
 ## Sequencing
 
-Five steps, each independently committable and independently useful. Steps 1–3 are done (see
-Progress above); step 4 is next:
+Five steps, each independently committable and independently useful. Steps 1–4 are done (see
+Progress above); step 5 is next:
 
 1. **`tasks/deploy.py` + manifest + tests**, wired to nothing. Pure addition, no behavior change.
 2. **`inv deploy.status`** — read-only. Immediately answers "what's drifted on this machine right
