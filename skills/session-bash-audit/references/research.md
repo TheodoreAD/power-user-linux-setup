@@ -13,6 +13,7 @@ Dated findings behind `SKILL.md`. Append; don't rewrite history — the value is
 - [Rejected: a PreToolUse nudge hook](#rejected-a-pretooluse-nudge-hook)
 - [Prompt audit 2026-08-25: the first day of acceptEdits](#prompt-audit-2026-08-25-the-first-day-of-acceptedits)
 - [`pgrep -f` matches the harness's own wrapper (2026-08-25)](#pgrep--f-matches-the-harnesss-own-wrapper-2026-08-25)
+- [Shell backgrounding can be killed before the command runs (2026-08-26)](#shell-backgrounding-can-be-killed-before-the-command-runs-2026-08-26)
 - [Open / to re-measure](#open--to-re-measure)
 
 ## Baseline 2026-08-24
@@ -306,6 +307,40 @@ Fix is per-call, not a rule: match the executable (`pgrep -x chrome`, `ps -C chr
 rather than the command line. Routed here rather than into `config/global-AGENTS.md` (2026-08-25,
 user's call) — the trigger is sharp and the miss is recoverable in one call, and that file is
 already at 33 rules / 390 lines against its own ≤15 / ≤200 reference points.
+
+## Shell backgrounding can be killed before the command runs (2026-08-26)
+
+Noticed live, not by audit, during the same Chrome ozone work. Three shapes were tried to launch a
+throwaway Chrome instance and inspect it in a later call:
+
+- `nohup $SP/oz-test.sh >/dev/null 2>&1 & disown` — tool reported exit 144; the script's **first**
+  statement, an `env | grep > env-seen.txt`, never produced the file.
+- `setsid $SP/oz-test.sh >/dev/null 2>&1 < /dev/null &` — same, no file.
+- `OZONE_PLATFORM=x11 <chrome> --user-data-dir=… &` followed by `sleep 8` in the same call — this
+  one **did** run.
+
+So it is intermittent, and that is what makes it dangerous rather than merely unreliable. The
+session read `/proc/<pid>/environ` and a process tree afterwards and drew a conclusion — that Chrome
+ignores `OZONE_PLATFORM` — from a script that had never executed. The conclusion happened to be
+right (confirmed independently by `strings` on the binary), but it was not evidence at the time. The
+tell was cheap and nearly missed: the marker file the script writes before doing anything else was
+absent.
+
+Mechanism not diagnosed; 144 is `128+16`, and no signal was captured. Recorded as an observation,
+not an explanation — someone re-deriving this should not assume the exit code means what it looks
+like it means.
+
+Added as the `shell-background` pattern (`nohup`, `setsid`, `disown`, or a trailing bare `&`). First
+measurement, `--days 4`: **7 calls**, all from the session above. The rate is not the argument here
+— the cost per occurrence is, since the failure produces _false evidence_ rather than an error, and
+a background write or delete that silently did not happen is indistinguishable from one that did.
+
+Fix: the Bash tool's own `run_in_background`, which survives across turns and re-invokes on exit.
+When something must be backgrounded anyway, have it leave a marker the next call checks. Unlike
+`pgrep -f` above, this one **was** also routed to `config/global-AGENTS.md` (2026-08-26, user's
+call: "we don't like things that can fool us when writing or deleting files") — it extends the
+existing "Reading a command's result" rule rather than adding a 34th, since it is the same
+surface-signal-isn't-the-real-signal shape that rule already covers.
 
 ## Open / to re-measure
 

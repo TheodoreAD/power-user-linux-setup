@@ -167,6 +167,11 @@ PATTERNS: dict[str, tuple[Predicate, str]] = {
         "full-cmdline match hits the harness's own `zsh -c … eval '<cmd>'` wrapper: a false positive "
         "that reads as a real process, plus the env blob. Match the executable (pgrep -x, ps -C)",
     ),
+    "shell-background": (
+        _rx(r"\b(nohup|setsid|disown)\b|(?<![&|>])&\s*$"),
+        "shell-level backgrounding can be killed before the command runs, and the next call then "
+        "reads state as though it had: use the Bash tool's own run_in_background",
+    ),
 }
 
 
