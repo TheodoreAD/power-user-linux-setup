@@ -184,6 +184,18 @@ of these across a Claude Code upgrade.
   action classified, full history reviewed on return; a subagent's own `permissionMode` is ignored.
 - **Auto mode's Bash-preference reminder** is not documented on either page, and no setting to
   suppress it was found. Treat it as a property of the mode.
+- **Probed live 2026-08-25** (user watching, four single-call probes, run twice): under
+  `acceptEdits`, an allow rule does **not** exempt a read outside the working directory,
+  `additionalDirectories`, or a `Read(...)` rule — `rg -c x ~/.claude/settings.json` prompted with
+  `Bash(rg:*)` in `allow`. The same check honours `Read(...)` rules for Bash read-only commands:
+  `ls ~/projects/…/repo-tasks/plans` did not prompt once `Read(//home/…/projects/**)` was in place.
+  `rg … | sort | uniq -c` did not prompt (so `sort`/`uniq` count as read-only filters even though
+  the documented list doesn't name them), and an unquoted glob (`rg … tasks/*.py`) did not prompt
+  for `rg`. Consequence: the harness's own overflow files
+  (`~/.claude/projects/<slug>/<session>/
+  tool-results/*.txt`, "Output too large … saved to") are
+  outside every grant, so reading one back with `rg`/`cat` prompts — `Read` on them does too.
+  `scripts/prompts.py` models the path check since the same day (`read-outscope`).
 - **Plan mode with auto available**: shell commands during planning go to the classifier too
   (`useAutoModeDuringPlan`, default on).
 

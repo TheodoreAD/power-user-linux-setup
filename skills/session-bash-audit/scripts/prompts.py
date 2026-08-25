@@ -15,8 +15,10 @@ the ranked list is the input to `inv allowlist.review`/`tools.toml`, not a ~/AGE
 
 Approximation, stated: `$VAR`/`~` redirect targets and `cd` + redirect are treated as prompting
 (the docs say a ~/glob target needs approval; a variable target is unverified — probe it); the
-built-in read-only git verbs are a short hand list; a `for`/`while` loop body isn't descended into.
-Stdlib only; read-only.
+built-in read-only git verbs are a short hand list; a `for`/`while` loop body isn't descended into;
+an absolute or `~` path argument to a read-only command outside the working directory,
+`additionalDirectories`, and every `Read(...)` grant counts as a prompt (probed 2026-08-25 — an
+allow rule doesn't exempt it). Stdlib only; read-only.
 """
 
 from __future__ import annotations
@@ -24,6 +26,7 @@ from __future__ import annotations
 import argparse
 import json
 import re
+import shlex
 from collections import Counter, defaultdict
 from pathlib import Path
 
@@ -58,11 +61,26 @@ def _rule_regexes(rules: list[str]) -> list[tuple[str, re.Pattern[str]]]:
 Rules = tuple[list[tuple[str, re.Pattern[str]]], list[tuple[str, re.Pattern[str]]], list[str]]
 
 
+def _read_roots(rules: list[str]) -> list[str]:
+    """Directory roots granted by `Read(//abs/**)` / `Read(~/rel/**)` rules — a read-only Bash
+    command whose path argument sits under one of these doesn't prompt (probed 2026-08-25)."""
+    roots = []
+    for rule in rules:
+        m = re.fullmatch(r"Read\((.*)\)", rule)
+        if not m:
+            continue
+        path = m.group(1)
+        path = path[1:] if path.startswith("//") else str(Path(path).expanduser()) if path.startswith("~") else path
+        roots.append(re.sub(r"/\*\*?$", "", path))
+    return roots
+
+
 def load_rules() -> Rules:
     perms = json.loads(SETTINGS.read_text()).get("permissions", {})
     allow = _rule_regexes(perms.get("allow", []))
     ask = _rule_regexes(perms.get("ask", []))
-    return allow, ask, perms.get("additionalDirectories", [])
+    scope = perms.get("additionalDirectories", []) + _read_roots(perms.get("allow", []))
+    return allow, ask, scope
 
 
 def strip_wrappers(piece: str) -> tuple[str, bool]:
@@ -80,13 +98,45 @@ def strip_wrappers(piece: str) -> tuple[str, bool]:
 
 
 def in_scope(path: str, project: str, extra_dirs: list[str]) -> bool:
-    if path.startswith(("~", "$")) or "*" in path:
+    if path.startswith("$") or "*" in path:
         return False
+    if path.startswith("~"):
+        path = str(Path.home()) + path[1:]
     if not path.startswith("/"):
         return True
     # Claude Code names a project directory by its absolute path with / and . turned into -.
     encoded = path.replace("/", "-").replace(".", "-")
     return encoded.startswith(project) or any(path.startswith(d) for d in extra_dirs)
+
+
+# sed/awk deliberately absent: their first argument is a script (`'/^## X/,$p'`) that tokenizes
+# like a path; sed's in-scope grant is handled by the FS_MODE branch.
+READ_COMMANDS = BUILTIN_RO | {"rg", "fd", "bat", "eza", "tree", "jq", "sort", "uniq", "file", "realpath"}
+
+
+def _path_args(piece: str) -> list[str]:
+    """Absolute or home-relative arguments, tokenized shell-style so a quoted pattern containing
+    `/` (`'^## Open / to re-measure'`) isn't mistaken for a path. Relative tokens always pass
+    `in_scope`, so only these can flag a read."""
+    try:
+        words = shlex.split(piece)
+    except ValueError:
+        words = piece.split()
+    # an unquoted glob is fine for a read-only command (probed 2026-08-25); judge its directory
+    return [re.sub(r"/[^/]*\*[^/]*$", "", a) for a in words[1:] if a.startswith(("/", "~"))]
+
+
+def _read_outscope(piece: str, call: Call, extra_dirs: list[str]) -> str | None:
+    """A read-only command (allowlisted or built-in) still prompts when a path argument lies
+    outside the working directory, additionalDirectories, and every Read(...) grant — probed live
+    2026-08-25 (`rg -c x ~/.claude/settings.json` prompted with `Bash(rg:*)` allowed). Only read
+    commands were probed, so only they are checked; an allowlisted non-read command with an
+    out-of-scope path argument (`inv deploy.status --path ~/.zshrc`) is not assumed to prompt."""
+    verb = piece.split(maxsplit=1)[0]
+    if verb not in READ_COMMANDS:
+        return None
+    bad = [p for p in _path_args(piece) if not in_scope(p, call.project, extra_dirs)]
+    return f"read-outscope:{verb} {bad[0]}" if bad else None
 
 
 def _rule_match(piece: str, rules: list[tuple[str, re.Pattern[str]]]) -> str | None:
@@ -101,7 +151,7 @@ def _builtin_or_mode(piece: str, call: Call, has_cd: bool, has_git: bool, extra_
     if verb == "cd":
         return "cd+git" if has_git else None
     if verb in BUILTIN_RO:
-        return None
+        return _read_outscope(piece, call, extra_dirs)
     if verb == "git":
         sub = words[1] if len(words) > 1 else ""
         return None if sub in GIT_RO and not has_cd else f"unmatched:git {sub}"
@@ -129,7 +179,7 @@ def classify_piece(piece: str, call: Call, has_cd: bool, has_git: bool, rules: R
     if env:
         return f"env-prefix:{verb}"
     if _rule_match(piece, allow):
-        return None
+        return _read_outscope(piece, call, extra_dirs)
     m = REDIRECT_RE.search(piece)
     if m and m.group(1) != "/dev/null" and (has_cd or not in_scope(m.group(1), call.project, extra_dirs)):
         return f"redirect:{m.group(1)}"
