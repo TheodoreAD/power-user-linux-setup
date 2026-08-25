@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-24
+updated: 2026-08-25
 ---
 
 # Making the Chrome `--ozone-platform=x11` workaround actually stick
@@ -60,6 +60,42 @@ process, so "x11 only for the Netflix tab" has nowhere to live. A second instanc
 Also still true on 2026-08-24 with driver **595.84** on GNOME Wayland: the bug is live, not
 something newer explicit-sync work has already fixed. No "just delete the workaround" exit.
 
+### A second symptom on the same file class (2026-08-25)
+
+The PWA `.desktop` files this plan fights over are also broken in a way unrelated to ozone, and the
+two problems constrain each other.
+
+**Symptom.** Searching the app grid for "gmail"/"drive" returned duplicate, identically-named tiles,
+none of which belonged to the profile actually in use, and most could not be pinned to Dash to
+Panel. Only WhatsApp Web could.
+
+**Causes.** Chrome writes one `.desktop` per (app, profile) with `Name=Gmail` in every copy — no
+profile anywhere in the name — so Work and DoHu copies are indistinguishable in the grid. The copies
+for `Profile 2` (Chrome's `last_used`, display name "Main") additionally carried `NoDisplay=true`,
+which hides an entry from the grid entirely and is why nothing from the main profile could be found
+or pinned. WhatsApp Web escaped both: its app-id exists in exactly one profile, and its file had no
+`NoDisplay`.
+
+Fixed on 2026-08-25 by relabelling every entry `<App> — <Profile display name>` and dropping
+`NoDisplay=true` from Main's Gmail/Drive/Docs/Sheets/YouTube. Filenames were left untouched so the
+existing `favorite-apps` pin kept resolving. Originals backed up to
+`~/.local/share/applications-backup-20260825-224916`.
+
+[PITFALL: **Forcing Chrome onto X11 is in tension with per-profile pinning.** Every copy of an app
+carries the same `StartupWMClass=crx_<app-id>` — Chrome puts no profile in the X11 WM_CLASS. Under
+X11 the shell therefore cannot tell a Work Gmail window from a Main Gmail window, so an app
+installed in two or more profiles cannot be reliably pinned or grouped. Under Wayland, windows match
+per `.desktop` file instead and the ambiguity does not arise. WhatsApp Web is immune either way
+because its app-id is unique to one profile — which is exactly why it was the only thing that could
+be pinned, and why it is _not_ evidence that the rest will work once x11 lands. Whichever option
+this plan settles on, this cost lands with it.]
+
+[DEFERRED: The relabelling above is a hand edit to Chrome-generated files, so Chrome will revert it
+whenever one of these PWAs is reinstalled or updated — the same weakness already recorded against
+option A below, now affecting a second field. If option A's scanner gets built as a read-only check,
+it should report `Name`/`NoDisplay` drift alongside the missing ozone flag, since it is the same
+file class, the same regeneration risk, and one pass over the same directory.]
+
 ## Status: option B is built and deployed, awaiting one login
 
 [DECISION: **Option B**, chosen by the user on 2026-08-24 with the rest kept as the fallback ladder
@@ -81,7 +117,15 @@ Landed:
 [UNVERIFIED: The whole premise — that gnome-session processes `~/.config/autostart/` in filename
 order, so `00-…` wins the race against `chrome-*` and `google-chrome.desktop`. This is what the next
 login tests, and it is the only thing standing between option B and the fallback ladder. If Chrome
-comes up on Wayland anyway, ordering is not filename-based and B is dead as designed.]
+comes up on Wayland anyway, ordering is not filename-based and B is dead as designed.
+
+Evidence against, not yet conclusive (2026-08-25): in a session started 21:52, all 27 Chrome child
+processes carried `--ozone-platform=wayland` with `00-google-chrome-x11.desktop` in place since
+aug 24. But `~/.config/autostart/` was modified at 22:17 — after that login — and now holds neither
+of the two `chrome-*` PWA entries this plan tabulates, with Chrome's own entry renamed to
+`google-chrome.desktop.disabled`. Who changed it and when relative to the login is unknown, so the
+ordering question is not settled by this observation; it needs a clean login with the directory
+state recorded first.]
 
 [DEFERRED: **B2, a cosmetic refinement to try only if B works.** The entry currently launches Chrome
 normally (`--ozone-platform=x11 %U`), so at login it does the session restore and Chrome's own
