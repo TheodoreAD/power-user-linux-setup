@@ -12,6 +12,7 @@ Dated findings behind `SKILL.md`. Append; don't rewrite history — the value is
 - [Decisions taken 2026-08-24](#decisions-taken-2026-08-24)
 - [Rejected: a PreToolUse nudge hook](#rejected-a-pretooluse-nudge-hook)
 - [Prompt audit 2026-08-25: the first day of acceptEdits](#prompt-audit-2026-08-25-the-first-day-of-acceptedits)
+- [`pgrep -f` matches the harness's own wrapper (2026-08-25)](#pgrep--f-matches-the-harnesss-own-wrapper-2026-08-25)
 - [Open / to re-measure](#open--to-re-measure)
 
 ## Baseline 2026-08-24
@@ -277,6 +278,34 @@ Harness fact learned the hard way: `inv allowlist.review` from an agent's Bash t
 confirm (`util.confirm` returns the default off a non-TTY), and `--apply-all` marks every pending
 tool — which would have re-reviewed `sed` and `inv`, the exact near-miss
 `contributing/cli-allowlist.md` records. Hence `--tool`.
+
+## `pgrep -f` matches the harness's own wrapper (2026-08-25)
+
+Noticed live, not by audit: `pgrep -af 'google-chrome.*--app-id'` returned exactly one "hit" — the
+Bash tool's own invocation. Claude Code runs each call as
+`zsh -c "source <snapshot> … && eval '<command>'"`, so the literal pattern text sits on a live
+process's command line for as long as the call runs, and `-f` matches against full command lines.
+The result reads as a genuine running process and drags the whole `DIRENV_DIFF`/`PATH` env blob into
+context with it. `ps -C chrome -o args=` answered correctly (nothing running).
+
+Added as the `pgrep-f` pattern. First measurement, `--days 7`: **24 calls out of 6652** (0.36%), all
+true positives, no over-matching — one from the live session above, the rest from the 2026-08-24
+ozone A/B (`pgrep -f 'user-data-dir=./ozone-test'`, `pkill -f` on the same string).
+
+Two things make the rate understate the risk:
+
+- `$(pgrep -f … | head -1)` usually escapes by luck, not design. `pgrep` prints ascending PIDs and
+  the wrapper is the newest process, so it lands last and `head -1` takes the real one. Change it to
+  `tail -1`, or have the real process start after the call, and the variable silently holds the
+  wrapper's PID.
+- `pkill -f <pattern>` can target the wrapper itself, i.e. the Bash call issuing it. The ozone A/B
+  ran exactly this shape; it worked, but the failure mode is the call dying mid-command rather than
+  anything reporting an error.
+
+Fix is per-call, not a rule: match the executable (`pgrep -x chrome`, `ps -C chrome -o args=`)
+rather than the command line. Routed here rather than into `config/global-AGENTS.md` (2026-08-25,
+user's call) — the trigger is sharp and the miss is recoverable in one call, and that file is
+already at 33 rules / 390 lines against its own ≤15 / ≤200 reference points.
 
 ## Open / to re-measure
 

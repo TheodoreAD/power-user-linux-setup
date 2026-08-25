@@ -162,6 +162,11 @@ PATTERNS: dict[str, tuple[Predicate, str]] = {
         _rx(r"\bgit\s+(-C|-c|--git-dir\S*|--work-tree\S*)\s+\S+\s+(commit|push|add|reset|checkout|rebase|merge)\b"),
         "global option before the verb: Bash(git push:*) does not match `git -C x push`",
     ),
+    "pgrep-f": (
+        _rx(r"\b(pgrep|pkill)\s+(-\w*f\w*\s+)+"),
+        "full-cmdline match hits the harness's own `zsh -c … eval '<cmd>'` wrapper: a false positive "
+        "that reads as a real process, plus the env blob. Match the executable (pgrep -x, ps -C)",
+    ),
 }
 
 
