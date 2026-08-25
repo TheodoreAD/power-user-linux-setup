@@ -78,8 +78,7 @@ or pinned. WhatsApp Web escaped both: its app-id exists in exactly one profile, 
 
 Fixed on 2026-08-25 by relabelling every entry `<App> — <Profile display name>` and dropping
 `NoDisplay=true` from Main's Gmail/Drive/Docs/Sheets/YouTube. Filenames were left untouched so the
-existing `favorite-apps` pin kept resolving. Originals backed up to
-`~/.local/share/applications-backup-20260825-224916`.
+existing `favorite-apps` pin kept resolving.
 
 [PITFALL: **Forcing Chrome onto X11 is in tension with per-profile pinning.** Every copy of an app
 carries the same `StartupWMClass=crx_<app-id>` — Chrome puts no profile in the X11 WM_CLASS. Under
@@ -90,11 +89,17 @@ because its app-id is unique to one profile — which is exactly why it was the 
 be pinned, and why it is _not_ evidence that the rest will work once x11 lands. Whichever option
 this plan settles on, this cost lands with it.]
 
-[DEFERRED: The relabelling above is a hand edit to Chrome-generated files, so Chrome will revert it
-whenever one of these PWAs is reinstalled or updated — the same weakness already recorded against
-option A below, now affecting a second field. If option A's scanner gets built as a read-only check,
-it should report `Name`/`NoDisplay` drift alongside the missing ozone flag, since it is the same
-file class, the same regeneration risk, and one pass over the same directory.]
+**Option A's scanner is now built** (2026-08-25), covering all three fields in one pass:
+`inv chrome.status` (read-only) and `inv chrome.fix-launchers` (explicit repair), documented in
+[`docs/chrome.md`](../docs/chrome.md). It resolves option A's ownership objection by not pretending
+to own these files: it lives in its own namespace rather than under `deploy.*`, is wired into no
+phase and no hook, and only ever runs when asked. It derives its desired state — profile labels and
+the primary profile from Chrome's `Local State`, the ozone flag from whether
+`[packages.google-chrome-x11]` is enabled — so there is no second place to keep in sync.
+
+First real run reported the ozone flag missing from all 20 non-internal launchers, which is the
+`option A as a checker` value this plan predicted: that is the question that would have caught the
+2026-08-10 recurrence on 2026-08-10 rather than on 2026-08-24.
 
 ## Status: option B is built and deployed, awaiting one login
 
@@ -119,13 +124,35 @@ order, so `00-…` wins the race against `chrome-*` and `google-chrome.desktop`.
 login tests, and it is the only thing standing between option B and the fallback ladder. If Chrome
 comes up on Wayland anyway, ordering is not filename-based and B is dead as designed.
 
-Evidence against, not yet conclusive (2026-08-25): in a session started 21:52, all 27 Chrome child
-processes carried `--ozone-platform=wayland` with `00-google-chrome-x11.desktop` in place since
-aug 24. But `~/.config/autostart/` was modified at 22:17 — after that login — and now holds neither
-of the two `chrome-*` PWA entries this plan tabulates, with Chrome's own entry renamed to
-`google-chrome.desktop.disabled`. Who changed it and when relative to the login is unknown, so the
-ordering question is not settled by this observation; it needs a clean login with the directory
-state recorded first.]
+Largely moot as of 2026-08-25 — see "The race is gone" below. Evidence against, inconclusive and now
+unrepeatable: in a session started 21:52, all 27 Chrome child processes carried
+`--ozone-platform=wayland` with `00-google-chrome-x11.desktop` in place since aug 24. But
+`~/.config/autostart/` was modified at 22:17 — after that login — and now holds neither of the two
+`chrome-*` PWA entries this plan tabulates, with Chrome's own entry renamed to
+`google-chrome.desktop.disabled`. The user made that change from Chrome's own PWA settings after
+that login, so the session had already started under the old three-entry state and says nothing
+about ordering.]
+
+### The race is gone (2026-08-25)
+
+The user turned off "run on OS login" for both PWAs, and Chrome's own autostart entry is now
+`google-chrome.desktop.disabled`. `~/.config/autostart/` therefore contains exactly one Chrome
+launcher: `00-google-chrome-x11.desktop`, the PULSE-owned one with the flag.
+
+That is this plan's **option D arriving by a different route** — worth being explicit about, because
+the plan recorded D as "for completeness; neither is proposed" and the user believed they were
+following an instruction. It was not proposed, but it is not wrong either: with nothing left to race
+against, option B's filename-ordering premise stops being load-bearing entirely, and the fallback
+ladder (C's `dpkg-divert`, A as a writer) is no longer needed to guarantee the flag wins.
+
+The cost is the one D always carried and should not be lost sight of: **WhatsApp Web and Gmail no
+longer start at login.** If that turns out to matter, the entries come back and the ordering
+question comes back with them.
+
+[UNVERIFIED: That the next login actually comes up on x11 under this simplified arrangement. The
+mechanism is now trivial — one autostart entry, flag present — but it has not yet been through a
+login, and `inv chrome.status` reporting the flag missing from every PWA launcher means any PWA
+started before the browser would still claim Wayland first.]
 
 [DEFERRED: **B2, a cosmetic refinement to try only if B works.** The entry currently launches Chrome
 normally (`--ozone-platform=x11 %U`), so at login it does the session restore and Chrome's own
