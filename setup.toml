@@ -8,9 +8,10 @@
 #   enabled       set to false to skip without deleting the section (default: true)
 #   tags          list of category labels (e.g. ["terminal", "search", "modern"])
 #                 use "gui" to mark packages that require a display server (excluded on headless/SSH installs)
-#   config_files  list of { src, dst } mappings — a repo-relative source file copied to a path in
-#                 the user's home on install. The install tasks only ever write a dst that doesn't
-#                 exist yet (never clobber a hand-edited config); after changing a src, run
+#   config_files  list of { src, dst } mappings — a repo-relative source file seeded at a path in
+#                 the user's home on install, and yours afterwards: the install tasks refresh a dst
+#                 that still holds exactly what PULSE last wrote there, and leave a customized one
+#                 alone with a note (never clobber a hand-edited config). After changing a src, run
 #                 `inv deploy.all [--name <pkg>] [--yes]` to diff and redeploy it.
 #
 # Tag-based exclusion:

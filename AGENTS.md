@@ -38,9 +38,11 @@ which any method may declare). A grep for `dest` alone silently misses every `co
 
 If an entry exists, the real place to edit is its repo-side source (`content_file`, or a
 `config_files` mapping's `src` — e.g. `config/<file>`), not the deployed path. A direct edit to the
-deployed path is silently wiped on the next `inv tools.install` run — caught live once only because
-the user asked "would this actually be installed?", not because anything failed loudly.
-`~/AGENTS.md` specifically is `[packages.claude-global-md]`, generated from
+deployed path exists only on this machine: it never reaches the repo or the next machine, and every
+PULSE writer (`inv tools.install`, `inv deploy.all`, `inv ai.install-skills`) now shows it as a diff
+and asks before overwriting it — until 2026-08-25 `inv tools.install` wiped it silently, caught live
+once only because the user asked "would this actually be installed?", not because anything failed
+loudly. `~/AGENTS.md` specifically is `[packages.claude-global-md]`, generated from
 `config/global-AGENTS.md`.
 
 **Re-deploy by running a task, not by hand-replicating its write logic — and not by calling a task's

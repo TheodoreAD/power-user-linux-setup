@@ -58,10 +58,11 @@ input.
 
 ### Environment variables
 
-| Variable                           | Effect                                                                                                                                                                                                |
-| ---------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `PULSE_DRY_RUN=1`                  | Print installed/missing status for every item without making any changes. Works across all install tasks.                                                                                             |
-| `PULSE_EXCLUDE_TAGS=<tag>[,<tag>]` | Skip packages whose `tags` list contains any of the given labels — see [configuration.md](configuration.md#tags-enabled-and-which-tasks-actually-respect-either) for the full catalog and its limits. |
+| Variable                           | Effect                                                                                                                                                                                                                                                           |
+| ---------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `PULSE_DRY_RUN=1`                  | Print installed/missing status for every item without making any changes. Works across all install tasks.                                                                                                                                                        |
+| `PULSE_EXCLUDE_TAGS=<tag>[,<tag>]` | Skip packages whose `tags` list contains any of the given labels — see [configuration.md](configuration.md#tags-enabled-and-which-tasks-actually-respect-either) for the full catalog and its limits.                                                            |
+| `PULSE_ASSUME_YES=1`               | `--yes` for `inv setup` and the other composite tasks that have no flag of their own: overwrite a deployed file that was edited at its destination (the diff is still printed). Unattended runs need it — the prompt defaults to _no_ with no terminal attached. |
 
 ```shell
 # Check what's missing before running setup

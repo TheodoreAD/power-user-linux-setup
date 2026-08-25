@@ -122,6 +122,14 @@ customized one is left alone with a note, and only `-y` overwrites it. The promp
 `-y` skip the overwrite rather than clobbering unattended. `PULSE_DRY_RUN=1` shows the diffs and
 reports what it would do without touching anything.
 
+The install tasks themselves (`inv tools.install` for `content_file`s, `apt.install-base`/
+`install-debs` for `config_files`, `ai.install-skills` for skills) go through the same writer, so
+they behave identically per path — they no longer overwrite a `content_file` destination
+unconditionally, and no longer skip an existing `config_files` destination in silence. They have no
+`--yes` of their own: `PULSE_ASSUME_YES=1` is the env-var equivalent, which
+`bootstrap-devcontainer.sh` sets so an unattended container build overwrites (and says so) rather
+than silently leaving a base-image file in place.
+
 Sample run:
 
 ```console
