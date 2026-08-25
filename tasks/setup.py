@@ -1,9 +1,9 @@
-from invoke import task
+from invoke import Context, task
 
 from . import ai, apt, docker, fonts, next_steps, node, phases, python, system, tools, util, verify, wsl, zsh
 
 # Module-level so tasks/devcontainer.py's check() can dry-run the exact same phase composition
-# `inv setup` uses (via phases._probe) instead of a second, driftable copy.
+# `inv setup` uses (via phases.probe) instead of a second, driftable copy.
 PACKAGES_PHASE = [
     apt.configure,
     apt.install_repos,
@@ -27,7 +27,7 @@ SHELL_NOTE = "Oh My Zsh theme/plugins, zsh config blocks, Powerlevel10k baseline
 
 
 @task
-def setup(c):
+def setup(c: Context):
     """Run full machine setup, in phases (system, packages, shell, desktop) — delegates to
     wsl.install under WSL. Each phase is skippable (default: skip) if it already looks done.
     Skips the system/desktop phases automatically in a container or other environment with no

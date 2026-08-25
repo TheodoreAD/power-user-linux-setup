@@ -3,7 +3,7 @@ import shlex
 from pathlib import Path
 from typing import cast
 
-from invoke import task
+from invoke import Context, task
 
 from . import deploy, ui, util
 
@@ -69,7 +69,7 @@ def _selected_skill_names(skill: str | None) -> set[str] | None:
     return {s.strip() for s in skill.split(",") if s.strip()}
 
 
-def _entry_skill_names(entry: dict) -> list[str] | None:
+def _entry_skill_names(entry: util.SkillEntry) -> list[str] | None:
     """The skill names a setup.toml `skills` entry provides, or None when that can't be known
     without network access.
 
@@ -78,11 +78,13 @@ def _entry_skill_names(entry: dict) -> list[str] | None:
     only the `skills` CLI can enumerate those, so there's nothing to match against here.
     """
     if entry.get("source") == "local":
+        if "path" not in entry:
+            raise util.missing_fields("skills", 'path (source = "local")')
         return [Path(entry["path"]).name]
     return entry.get("names")
 
 
-def _select_entry(entry: dict, selected: set[str] | None) -> dict | None:
+def _select_entry(entry: util.SkillEntry, selected: set[str] | None) -> util.SkillEntry | None:
     """Filter one `skills` entry against `--skill`: the entry to install, or None to skip it.
 
     A remote entry is narrowed to just the requested names rather than installed wholesale, so
@@ -178,7 +180,7 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
     deploy.deploy(managed, assume_yes=True)
 
 
-def _install_remote_skill(c, entry: dict, *, label: str, yes: bool) -> None:
+def _install_remote_skill(c: Context, entry: util.SkillEntry, *, label: str, yes: bool) -> None:
     """Install a skill from a GitHub repo via the `skills` CLI (source = "npx").
 
     Always global (this is unattended provisioning, not a project-local, interactive `skills
@@ -193,6 +195,8 @@ def _install_remote_skill(c, entry: dict, *, label: str, yes: bool) -> None:
     a remote repo the way there is for a local copy (see _install_local_skill), so unlike that one
     this always asks, even on a re-run of an already-installed skill.
     """
+    if "repo" not in entry:
+        raise util.missing_fields(label, 'skills[].repo (source = "npx")')
     repo = entry["repo"]
     names = entry.get("names")
     agents = entry.get("agents", ["claude-code"])
@@ -214,7 +218,7 @@ def _install_remote_skill(c, entry: dict, *, label: str, yes: bool) -> None:
     print(f"[{label}] installed {desc}")
 
 
-def _install_declared_skills(c, base: Path, *, yes: bool, selected: set[str] | None = None) -> None:
+def _install_declared_skills(c: Context, base: Path, *, yes: bool, selected: set[str] | None = None) -> None:
     """Process every `skills` list found on any setup.toml package entry, regardless of that
     entry's own `method` — same any-section pattern as zshenv/zshrc/zprofile.
 
@@ -236,6 +240,8 @@ def _install_declared_skills(c, base: Path, *, yes: bool, selected: set[str] | N
             matched = True
             source = chosen.get("source")
             if source == "local":
+                if "path" not in chosen:
+                    raise util.missing_fields(name, 'skills[].path (source = "local")')
                 _install_local_skill(base, chosen["path"], label=name, yes=yes)
             elif source == "npx":
                 _install_remote_skill(c, chosen, label=name, yes=yes)
@@ -486,7 +492,7 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
 
 
 @task
-def install_skills(c, dir=None, yes=False, skill=None):  # noqa: A002
+def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill: str | None = None):  # noqa: A002
     """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
     skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).

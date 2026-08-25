@@ -3,11 +3,19 @@ import re
 import shutil
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
 _REPO_ROOT = Path(__file__).parent.parent
+
+
+def _snippets(cfg: util.PackageConfig) -> list[tuple[str, str]]:
+    """The (dotfile name, snippet) pairs a package declares — one per zshrc/zshenv/zprofile field
+    it actually sets. Spelled out per field rather than `cfg.get(target)` in a loop over the
+    names: a TypedDict lookup only keeps its field type for a literal key."""
+    declared = (("zshrc", cfg.get("zshrc")), ("zshenv", cfg.get("zshenv")), ("zprofile", cfg.get("zprofile")))
+    return [(target, content) for target, content in declared if content]
 
 
 def _current_shell() -> str:
@@ -22,7 +30,7 @@ def _shell_is_zsh(shell_path: str) -> bool:
 
 
 @task
-def configure_omz(c):  # noqa: C901
+def configure_omz(c: Context):  # noqa: C901
     """Update Oh My Zsh theme and plugins list in ~/.zshrc in-place."""
     all_cfg = util.load_config()["packages"]
     cfg = all_cfg.get("oh-my-zsh", {})
@@ -81,33 +89,31 @@ def configure_omz(c):  # noqa: C901
 
 
 @task
-def configure(c):  # noqa: C901
+def configure(c: Context):
     """Add or update zsh configuration blocks declared in setup.toml."""
     if util.DRY_RUN:
         for name, cfg in util.load_config()["packages"].items():
             if not cfg.get("enabled", True):
                 continue
-            for target in ("zshrc", "zshenv", "zprofile"):
-                if content := cfg.get(target):
-                    path = Path.home() / f".{target}"
-                    text = path.read_text() if path.exists() else ""
-                    _, status = util.ensure_block_text(text, name, content)
-                    print(f"[{name}] .{target}: {util.ok_label(status == util.BlockStatus.OK)}")
+            for target, content in _snippets(cfg):
+                path = Path.home() / f".{target}"
+                text = path.read_text() if path.exists() else ""
+                _, status = util.ensure_block_text(text, name, content)
+                print(f"[{name}] .{target}: {util.ok_label(status == util.BlockStatus.OK)}")
         return
     for name, cfg in util.load_config()["packages"].items():
         if not cfg.get("enabled", True):
             continue
-        for target in ("zshrc", "zshenv", "zprofile"):
-            if content := cfg.get(target):
-                path = Path.home() / f".{target}"
-                path.parent.mkdir(parents=True, exist_ok=True)
-                result = util.ensure_block(path, name, content)
-                if result != util.BlockStatus.OK:
-                    print(f"[{name}] .{target}: {result.value}")
+        for target, content in _snippets(cfg):
+            path = Path.home() / f".{target}"
+            path.parent.mkdir(parents=True, exist_ok=True)
+            result = util.ensure_block(path, name, content)
+            if result != util.BlockStatus.OK:
+                print(f"[{name}] .{target}: {result.value}")
 
 
 @task
-def set_default_shell(c):
+def set_default_shell(c: Context):
     """Set zsh as the login shell (usermod -s, not chsh — chsh's PAM password prompt doesn't
     work in a non-interactive/piped session the way sudo -A does). Only takes effect in a new
     login shell/terminal, not the one this runs in.
@@ -127,7 +133,7 @@ def set_default_shell(c):
 
 
 @task
-def fix_history(c):
+def fix_history(c: Context):
     """Recover a corrupt ~/.zsh_history using strings(1) to strip non-printable bytes."""
     hist = Path.home() / ".zsh_history"
     bad = Path.home() / ".zsh_history_bad"
@@ -145,7 +151,7 @@ def fix_history(c):
 
 
 @task
-def configure_p10k(c):
+def configure_p10k(c: Context):
     """Copy repo baseline config/p10k.zsh to ~/.p10k.zsh if not already present."""
     dest = Path.home() / ".p10k.zsh"
     if util.DRY_RUN:

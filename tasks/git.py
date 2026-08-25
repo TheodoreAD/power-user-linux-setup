@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -36,7 +36,7 @@ SETTINGS = {
 
 
 @task
-def apply_settings(c):
+def apply_settings(c: Context):
     """Apply global git configuration (idempotent, no identity data required)."""
     if util.DRY_RUN:
         for key, want in SETTINGS.items():
@@ -56,7 +56,7 @@ def apply_settings(c):
 
 
 @task
-def configure(c):
+def configure(c: Context):
     """Set up per-directory git identities from ~/.config/power-user-linux-setup/identity.toml."""
     identity = util.load_identity()
     profiles = identity.get("git_profiles", [])

@@ -28,7 +28,7 @@ from . import (
 )
 
 
-def _import_repo_tasks_modules(simulate_missing=False):
+def _import_repo_tasks_modules(simulate_missing: bool = False):
     """repo_tasks (github.com/TheodoreAD/repo-tasks) is a dev-only dependency, resolved through
     this project's own venv. bootstrap.sh's zero-install path (a bare `uv tool install invoke`,
     no `uv sync` — see docker/Dockerfile, which never installs this project's own dependencies

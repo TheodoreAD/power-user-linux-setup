@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -23,7 +23,7 @@ _IPV6_KEYS = [
 
 
 @task
-def install_apparmor_profiles(c):
+def install_apparmor_profiles(c: Context):
     """Install AppArmor profiles declared in setup.toml with method = 'apparmor-profile'."""
     profiles = util.packages_by_method(util.PackageMethod.APPARMOR_PROFILE)
     if not profiles:
@@ -31,6 +31,8 @@ def install_apparmor_profiles(c):
             print("[apparmor] no profiles declared")
         return
     for name, cfg in profiles.items():
+        if "profile" not in cfg or "content" not in cfg:
+            raise util.missing_fields(name, "profile", "content")
         path = Path(cfg["profile"])
         content = cfg["content"].strip() + "\n"
         existing = util.sudo_read(c, path)
@@ -46,7 +48,7 @@ def install_apparmor_profiles(c):
 
 
 @task
-def write_curlrc(c):
+def write_curlrc(c: Context):
     """Write ~/.config/curlrc: silent, show errors, follow redirects. Idempotent."""
     content = "--silent\n--show-error\n--location"
     if util.DRY_RUN:
@@ -62,7 +64,7 @@ def write_curlrc(c):
 
 
 @task
-def set_locale(c, lang="en_US.UTF-8"):
+def set_locale(c: Context, lang: str = "en_US.UTF-8"):
     """Set system locale via localectl (default: en_US.UTF-8). Idempotent."""
     util.require_systemd()
     current = c.run("localectl status", hide=True).stdout
@@ -78,7 +80,7 @@ def set_locale(c, lang="en_US.UTF-8"):
 
 
 @task
-def disable_ipv6(c):
+def disable_ipv6(c: Context):
     """Ensure IPv6 is disabled in /etc/sysctl.conf and apply immediately."""
     content = "\n".join(f"{k} = 1" for k in _IPV6_KEYS)
     text = util.sudo_read(c, _SYSCTL_CONF)
@@ -95,7 +97,7 @@ def disable_ipv6(c):
 
 
 @task
-def cap_journal_size(c, max_use="500M"):
+def cap_journal_size(c: Context, max_use: str = "500M"):
     """Cap persistent journal size (default: 500M) and restart journald if changed."""
     util.require_systemd()
     content = f"[Journal]\nSystemMaxUse={max_use}"
@@ -114,7 +116,7 @@ def cap_journal_size(c, max_use="500M"):
 
 
 @task
-def set_initramfs_compression(c, algorithm="xz"):
+def set_initramfs_compression(c: Context, algorithm: str = "xz"):
     """Set initramfs compression algorithm (default: xz) and rebuild if changed."""
     text = util.sudo_read(c, _INITRAMFS_CONF)
     pattern = re.compile(r"^([ \t]*#?[ \t]*COMPRESS[ \t]*=[ \t]*)(\S+)$", re.MULTILINE)
@@ -137,7 +139,7 @@ def set_initramfs_compression(c, algorithm="xz"):
 
 
 @task
-def configure_dns(c, primary="1.1.1.1", secondary="1.0.0.1", fallback="8.8.8.8"):
+def configure_dns(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.1", fallback: str = "8.8.8.8"):
     """Configure DNS via systemd-resolved drop-in (Cloudflare + Google fallback). Idempotent."""
     util.require_systemd()
     content = f"[Resolve]\nDNS={primary} {secondary}\nFallbackDNS={fallback}\nDNSSEC=no"

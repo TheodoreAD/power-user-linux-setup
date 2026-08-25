@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 _CONFIG_FILES = [
     ("config/pycharm/editor-font.xml", "options/editor-font.xml"),
@@ -15,7 +15,7 @@ def _pycharm_dir() -> Path | None:
 
 
 @task
-def configure_pycharm(c):
+def configure_pycharm(c: Context):
     """Copy font settings into the active PyCharm config directory."""
     pycharm = _pycharm_dir()
     if not pycharm:

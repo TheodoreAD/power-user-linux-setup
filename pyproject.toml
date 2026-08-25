@@ -17,6 +17,9 @@ dev = [
   "invoke-stubs @ git+https://github.com/TheodoreAD/invoke-stubs",
   "actionlint-py",
   "act-bin",
+  # `typing_extensions.override` for the test suite's Context subclass — `typing.override` is
+  # 3.12+ and requires-python still says 3.11.
+  "typing-extensions",
 ]
 
 [build-system]

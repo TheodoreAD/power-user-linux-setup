@@ -1,7 +1,7 @@
 import re
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -13,7 +13,7 @@ _UV_ENV_RE = re.compile(r'(UV_PYTHON=")[^"]*(")')
 
 
 @task
-def install_tools(c):
+def install_tools(c: Context):
     """Install global Python CLI tools via uv tool install."""
     if not util.command_exists("uv"):
         raise RuntimeError("uv not found — run ./bootstrap.sh first")
@@ -21,6 +21,8 @@ def install_tools(c):
     default_python = util.load_config().get("settings", {}).get("uv_python_default", "")
 
     for name, cfg in util.packages_by_method(util.PackageMethod.UV_TOOL).items():
+        if "package" not in cfg:
+            raise util.missing_fields(name, "package")
         package = cfg["package"]
         if util.DRY_RUN:
             ok = util.command_exists(cfg.get("check_cmd", name))
@@ -36,7 +38,7 @@ def install_tools(c):
 
 
 @task
-def clean_cache(c):
+def clean_cache(c: Context):
     """Prune unreachable entries from uv's build/wheel cache (~/.cache/uv) — conservative, keeps
     entries still reachable from any installed environment. Opt-in, not part of `inv setup`/
     `python.install-tools` — see `inv clean.caches`. For a full wipe instead, see
@@ -54,7 +56,7 @@ def clean_cache(c):
 
 
 @task
-def clean_cache_full(c):
+def clean_cache_full(c: Context):
     """Wipe uv's entire build/wheel cache (~/.cache/uv). Safe any time — uv re-populates it as
     needed; only affects install speed, not what's installed. Opt-in, not part of `inv setup`/
     `python.install-tools` — see `inv clean.all-full`.
@@ -71,7 +73,7 @@ def clean_cache_full(c):
 
 
 @task(help={"version": "Python version to make the new default, e.g. 3.14"})
-def set_default(c, version):
+def set_default(c: Context, version: str):
     """Change settings.uv_python_default in setup.toml and re-point the live python/python3
     shims at it (uv python install <version> --default, unless uv_python_set_default is false).
 

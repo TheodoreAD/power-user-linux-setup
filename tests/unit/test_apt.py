@@ -21,7 +21,7 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config" / "app.conf").write_text("seed\n")
 
 
-def _cfg(tmp_path) -> dict:
+def _cfg(tmp_path) -> util.PackageConfig:
     return {"config_files": [{"src": "config/app.conf", "dst": str(tmp_path / "home" / "app.conf")}]}
 
 

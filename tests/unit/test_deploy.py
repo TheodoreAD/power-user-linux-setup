@@ -8,7 +8,7 @@ import json
 from pathlib import Path
 
 import pytest
-from invoke import Exit
+from invoke import Exit, MockContext
 
 from tasks import deploy, util
 
@@ -320,7 +320,7 @@ def test_forget_drops_one_entry(tmp_path, src):
 # ---------------------------------------------------------------------------
 
 
-def _stub_config(monkeypatch, packages: dict) -> None:
+def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
     monkeypatch.setattr(util, "enabled_packages", lambda: packages)
     monkeypatch.setattr(
@@ -445,7 +445,9 @@ def test_a_managed_path_is_absolute_even_when_setup_toml_uses_a_tilde(tmp_path, 
 # ---------------------------------------------------------------------------
 
 # deploy.status is @task-wrapped and invoke's Task.__call__ insists its first arg be a real
-# Context — .body is the plain underlying function, same pattern as tests/unit/test_ai.py.
+# Context — .body is the plain underlying function, same pattern as tests/unit/test_ai.py. The
+# body declares `c: Context` too, so it gets a MockContext (never consulted: status/all never run
+# a shell command) rather than None.
 _status = deploy.status.body
 
 
@@ -471,7 +473,7 @@ def test_status_never_writes_or_prompts(wrapper_pkg, monkeypatch):
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("status must not prompt"))
     monkeypatch.setattr(deploy, "_write", lambda _: pytest.fail("status must not write"))
 
-    _status(None)
+    _status(MockContext())
 
     assert not wrapper_pkg.exists()
 
@@ -480,7 +482,7 @@ def test_status_reports_a_clean_path_without_a_diff(wrapper_pkg, capsys):
     deploy.deploy(_entry(wrapper_pkg))
     capsys.readouterr()
 
-    _status(None)
+    _status(MockContext())
 
     out = capsys.readouterr().out
     assert "ok" in out
@@ -492,7 +494,7 @@ def test_status_shows_the_diff_and_warns_for_a_dirty_managed_path(wrapper_pkg, c
     wrapper_pkg.write_text("hand-edited\n")
     capsys.readouterr()
 
-    _status(None)
+    _status(MockContext())
 
     out = capsys.readouterr().out
     assert "edited since PULSE deployed it" in out
@@ -509,7 +511,7 @@ def test_status_doesnt_warn_about_a_seeded_path_that_differs(tmp_path, src, monk
         {"app": {"method": "archive", "config_files": [{"src": "config/app.conf", "dst": str(dst)}]}},
     )
 
-    _status(None)
+    _status(MockContext())
 
     out = capsys.readouterr().out
     assert "either edited here, or the source moved on" in out
@@ -525,7 +527,7 @@ def test_status_name_scopes_to_one_package(tmp_path, src, monkeypatch, capsys):
         },
     )
 
-    _status(None, name="app")
+    _status(MockContext(), name="app")
 
     out = capsys.readouterr().out
     assert "app:" in out
@@ -536,7 +538,7 @@ def test_status_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeyp
     _stub_config(monkeypatch, {})
 
     with pytest.raises(Exit, match="no enabled"):
-        _status(None, name="nonexistent")
+        _status(MockContext(), name="nonexistent")
 
 
 def test_status_path_reports_an_unmanaged_file_as_not_deployed(tmp_path, monkeypatch, capsys):
@@ -544,7 +546,7 @@ def test_status_path_reports_an_unmanaged_file_as_not_deployed(tmp_path, monkeyp
     stray = tmp_path / "hand-written.conf"
     stray.write_text("mine\n")
 
-    _status(None, path=str(stray))
+    _status(MockContext(), path=str(stray))
 
     out = capsys.readouterr().out
     assert "not deployed by PULSE" in out
@@ -559,7 +561,7 @@ def test_status_path_distinguishes_a_block_owned_file_from_an_unmanaged_one(tmp_
     zshrc = tmp_path / ".zshrc"
     zshrc.write_text(f"export FOO=1\n{util._marker('nvm', open_=True)}\nnvm stuff\n")
 
-    _status(None, path=str(zshrc))
+    _status(MockContext(), path=str(zshrc))
 
     out = capsys.readouterr().out
     assert "PULSE-managed block" in out
@@ -570,7 +572,7 @@ def test_status_path_reports_a_managed_file_with_its_source(wrapper_pkg, capsys)
     deploy.deploy(_entry(wrapper_pkg))
     capsys.readouterr()
 
-    _status(None, path=str(wrapper_pkg))
+    _status(MockContext(), path=str(wrapper_pkg))
 
     out = capsys.readouterr().out
     assert "config/app.conf" in out
@@ -587,7 +589,7 @@ _all = deploy.all_.body
 def test_all_creates_a_missing_destination_and_records_it(wrapper_pkg, src, monkeypatch, capsys):
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("create must not prompt"))
 
-    _all(None)
+    _all(MockContext())
 
     assert wrapper_pkg.read_text() == src.read_text().strip() + "\n"
     assert deploy.classify(_entry(wrapper_pkg)) == deploy.State.CLEAN
@@ -595,11 +597,11 @@ def test_all_creates_a_missing_destination_and_records_it(wrapper_pkg, src, monk
 
 
 def test_all_shows_the_diff_and_keeps_a_dirty_destination_when_declined(wrapper_pkg, monkeypatch, capsys):
-    _all(None)
+    _all(MockContext())
     wrapper_pkg.write_text("hand-edited\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: False)
 
-    _all(None)
+    _all(MockContext())
 
     out = capsys.readouterr().out
     assert wrapper_pkg.read_text() == "hand-edited\n"
@@ -608,11 +610,11 @@ def test_all_shows_the_diff_and_keeps_a_dirty_destination_when_declined(wrapper_
 
 
 def test_all_yes_overwrites_a_dirty_destination_without_prompting(wrapper_pkg, src, monkeypatch):
-    _all(None)
+    _all(MockContext())
     wrapper_pkg.write_text("hand-edited\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("--yes must not prompt"))
 
-    _all(None, yes=True)
+    _all(MockContext(), yes=True)
 
     assert wrapper_pkg.read_text() == src.read_text().strip() + "\n"
 
@@ -628,7 +630,7 @@ def test_all_name_scopes_to_one_package(tmp_path, src, monkeypatch):
         },
     )
 
-    _all(None, name="a")
+    _all(MockContext(), name="a")
 
     assert a.exists()
     assert not b.exists()
@@ -637,4 +639,4 @@ def test_all_name_scopes_to_one_package(tmp_path, src, monkeypatch):
 def test_all_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeypatch):
     _stub_config(monkeypatch, {"nothing": {"method": "apt"}})
     with pytest.raises(Exit):
-        _all(None, name="nothing")
+        _all(MockContext(), name="nothing")

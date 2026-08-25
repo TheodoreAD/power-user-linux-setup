@@ -9,6 +9,7 @@ tools.py still works. See tests/README.md.
 from pathlib import Path
 
 import pytest
+from invoke import MockContext
 
 from tasks import deploy, tools, util
 
@@ -23,12 +24,15 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config.sh").write_text("echo hi\n")
 
 
-def _cfg(tmp_path, **extra) -> dict:
-    return {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh", **extra}
+def _cfg(tmp_path, *, symlink_dest: str | None = None) -> util.PackageConfig:
+    cfg: util.PackageConfig = {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh"}
+    if symlink_dest is not None:
+        cfg["symlink_dest"] = symlink_dest
+    return cfg
 
 
 def test_install_wrapper_script_writes_matching_content(tmp_path):
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     dest = tmp_path / "deployed.sh"
     assert dest.read_text() == "echo hi\n"
@@ -36,7 +40,7 @@ def test_install_wrapper_script_writes_matching_content(tmp_path):
 
 
 def test_install_wrapper_script_records_the_write_in_the_deploy_manifest(tmp_path):
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     entry = deploy.load_manifest()[str(tmp_path / "deployed.sh")]
     assert entry["package"] == "test-tool"
@@ -59,7 +63,7 @@ def test_install_wrapper_script_raises_when_dest_doesnt_match_after_write(tmp_pa
     monkeypatch.setattr(Path, "write_bytes", racing_write_bytes)
 
     with pytest.raises(RuntimeError, match="doesn't match"):
-        tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+        tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
     assert not deploy._MANIFEST.exists(), "a failed write must never be recorded as ours"
 
 
@@ -67,12 +71,12 @@ def test_install_wrapper_script_never_silently_overwrites_a_hand_edit(tmp_path, 
     # The regression this conversion exists to prevent: ~/AGENTS.md edited at the destination,
     # then `inv tools.install` — which used to overwrite unconditionally. Non-tty, no --yes: the
     # edit survives, and the run says so instead of looking like a successful install.
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
     dest = tmp_path / "deployed.sh"
     dest.write_text("echo edited by hand\n")
     monkeypatch.setattr("sys.stdin", type("NoTTY", (), {"isatty": staticmethod(lambda: False)})())
 
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     assert dest.read_text() == "echo edited by hand\n"
     out = capsys.readouterr().out
@@ -82,13 +86,13 @@ def test_install_wrapper_script_never_silently_overwrites_a_hand_edit(tmp_path, 
 
 def test_install_wrapper_script_overwrites_a_hand_edit_under_pulse_assume_yes(tmp_path, monkeypatch, capsys):
     # The unattended path (bootstrap-devcontainer.sh sets PULSE_ASSUME_YES=1): overwrite, and say so.
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
     dest = tmp_path / "deployed.sh"
     dest.write_text("echo edited by hand\n")
     monkeypatch.setattr(util, "ASSUME_YES", True)
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("PULSE_ASSUME_YES must not prompt"))
 
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     assert dest.read_text() == "echo hi\n"
     assert "overwrote" in capsys.readouterr().out
@@ -96,11 +100,11 @@ def test_install_wrapper_script_overwrites_a_hand_edit_under_pulse_assume_yes(tm
 
 def test_install_wrapper_script_redeploys_a_changed_source_without_prompting(tmp_path, monkeypatch):
     # The destination still holds exactly what PULSE last wrote, so nothing can be lost.
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
     (tmp_path / "config.sh").write_text("echo v2\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("a stale redeploy must not prompt"))
 
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     assert (tmp_path / "deployed.sh").read_text() == "echo v2\n"
 
@@ -110,7 +114,7 @@ def test_install_wrapper_script_dry_run_reports_ok_or_missing_without_writing(tm
     # survive the conversion, and a dry run must never write or record anything.
     monkeypatch.setattr(util, "DRY_RUN", True)
 
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     assert "MISSING" in capsys.readouterr().out
     assert not (tmp_path / "deployed.sh").exists()
@@ -120,7 +124,7 @@ def test_install_wrapper_script_dry_run_reports_ok_or_missing_without_writing(tm
 def test_install_wrapper_script_creates_the_symlink_dest(tmp_path):
     link = tmp_path / "CLAUDE.md"
 
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
 
     assert link.is_symlink()
     assert link.resolve() == (tmp_path / "deployed.sh").resolve()
@@ -130,7 +134,7 @@ def test_install_wrapper_script_leaves_a_non_symlink_at_symlink_dest_alone(tmp_p
     link = tmp_path / "CLAUDE.md"
     link.write_text("a real file, not a symlink\n")
 
-    tools._install_wrapper_script(None, "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
 
     assert not link.is_symlink()
     assert link.read_text() == "a real file, not a symlink\n"

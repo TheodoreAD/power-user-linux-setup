@@ -2,7 +2,7 @@ import shlex
 import shutil
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -21,22 +21,22 @@ CONFLICTS: dict[str, list[str]] = {
 _USER_EXT_DIR = Path.home() / ".local/share/gnome-shell/extensions"
 
 
-def _installed_uuids(c) -> set[str]:
+def _installed_uuids(c: Context) -> set[str]:
     result = c.run("gnome-extensions list", hide=True, warn=True)
     return set((result.stdout or "").splitlines())
 
 
-def _enabled_uuids(c) -> set[str]:
+def _enabled_uuids(c: Context) -> set[str]:
     result = c.run("gnome-extensions list --enabled", hide=True, warn=True)
     return set((result.stdout or "").splitlines())
 
 
-def _user_extensions_disabled(c) -> bool:
+def _user_extensions_disabled(c: Context) -> bool:
     result = c.run("gsettings get org.gnome.shell disable-user-extensions", hide=True, warn=True)
     return (result.stdout or "").strip() == "true"
 
 
-def _apply_dconf(c, name: str, cfg: dict) -> None:
+def _apply_dconf(c: Context, name: str, cfg: util.PackageConfig) -> None:
     """Write dconf keys declared in an extension's 'dconf' table. Values are GVariant strings."""
     for key, value in cfg.get("dconf", {}).items():
         result = c.run(f"dconf read {key}", hide=True, warn=True)
@@ -48,7 +48,7 @@ def _apply_dconf(c, name: str, cfg: dict) -> None:
 
 
 @task
-def install_extensions(c):  # noqa: C901
+def install_extensions(c: Context):  # noqa: C901
     """Install and enable GNOME Shell extensions declared in setup.toml via gext."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:
@@ -127,7 +127,7 @@ def install_extensions(c):  # noqa: C901
 
 
 @task
-def enable(c):  # noqa: C901
+def enable(c: Context):  # noqa: C901
     """Re-enable installed GNOME extensions from setup.toml without reinstalling missing ones."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     if not pkgs:
@@ -176,16 +176,17 @@ def enable(c):  # noqa: C901
 
 
 @task
-def configure(c):
+def configure(c: Context):
     """Apply dconf settings for all enabled extensions — re-run without reinstalling."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     any_config = False
     for name, cfg in pkgs.items():
-        if not cfg.get("dconf"):
+        dconf = cfg.get("dconf")
+        if not dconf:
             continue
         any_config = True
         if util.DRY_RUN:
-            for key, value in cfg["dconf"].items():
+            for key, value in dconf.items():
                 result = c.run(f"dconf read {key}", hide=True, warn=True)
                 current = (result.stdout or "").strip()
                 state = "ok" if current == value else f"MISSING (would set: {value})"
@@ -199,7 +200,7 @@ def configure(c):
 
 
 @task
-def status(c):
+def status(c: Context):
     """Show GNOME extension diagnostic: dconf flags, active state, and setup.toml alignment."""
     shell_ver = c.run("gnome-shell --version", hide=True, warn=True).stdout.strip()
     print(f"GNOME Shell: {shell_ver}")
@@ -243,10 +244,10 @@ def status(c):
 
 
 @task
-def clean(c):
+def clean(c: Context):
     """Remove user extensions not enabled in setup.toml (system/apt extensions are untouched)."""
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
-    keep = {cfg["uuid"] for cfg in pkgs.values() if cfg.get("uuid")}
+    keep = {uuid for cfg in pkgs.values() if (uuid := cfg.get("uuid"))}
 
     if not _USER_EXT_DIR.exists():
         print("[gnome-clean] ~/.local/share/gnome-shell/extensions not found — nothing to do")
@@ -273,7 +274,7 @@ def clean(c):
 
 
 @task
-def update(c):
+def update(c: Context):
     """Update all gext-managed GNOME Shell extensions."""
     if not util.command_exists("gext"):
         print("[gnome-update] gext not found — run 'inv python.install-tools' first")

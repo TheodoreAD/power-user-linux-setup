@@ -1,7 +1,7 @@
 import subprocess
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -27,7 +27,7 @@ def key_path(email: str, node: str) -> Path:
 
 
 @task
-def create_keys(c):
+def create_keys(c: Context):
     """Create ed25519 SSH keys for each unique email in identity.toml (skips existing)."""
     identity = util.load_identity()
     hosts = identity.get("ssh_hosts", [])
@@ -52,7 +52,7 @@ def create_keys(c):
 
 
 @task
-def configure(c):
+def configure(c: Context):
     """Write ~/.ssh/config from identity.toml (idempotent PULSE block)."""
     identity = util.load_identity()
     hosts = identity.get("ssh_hosts", [])
@@ -66,7 +66,7 @@ def configure(c):
 
     _SSH_DIR.mkdir(mode=0o700, exist_ok=True)
 
-    blocks = []
+    blocks: list[str] = []
     for h in hosts:
         key = key_path(h["email"], node)
         blocks.append(f"Host {h['alias']}\n  HostName {h['hostname']}\n  IdentityFile {key}\n  User {h['user']}")
@@ -78,7 +78,7 @@ def configure(c):
 
 
 @task
-def forward(c):
+def forward(c: Context):
     """Copy public keys to remote (non-git) server hosts from identity.toml."""
     identity = util.load_identity()
     server_hosts = [h for h in identity.get("ssh_hosts", []) if h["user"] != "git"]
@@ -97,7 +97,7 @@ def forward(c):
 
 
 @task
-def add(c):
+def add(c: Context):
     """Add all SSH keys for this node to ssh-agent."""
     node = current_node()
     pattern = str(_SSH_DIR / f"*{node}_ed25519")

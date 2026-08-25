@@ -5,7 +5,7 @@ import shutil
 from pathlib import Path
 from typing import cast
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -38,7 +38,7 @@ def _flameshot_bin() -> str:
     return shutil.which("flameshot") or "/usr/bin/flameshot"
 
 
-def _bindings() -> list[dict]:
+def _bindings() -> list[dict[str, str]]:
     """The 2 custom keybindings that take over from GNOME's show-screenshot-ui/screenshot."""
     prefix = f"QT_QPA_PLATFORM=wayland {_flameshot_bin()}" if _is_wayland() else _flameshot_bin()
     return [
@@ -91,7 +91,7 @@ def _read_ini_key(path: Path, key: str) -> str | None:
 # ---------------------------------------------------------------------------
 
 
-def _get_custom_keybindings(c) -> list[str]:
+def _get_custom_keybindings(c: Context) -> list[str]:
     result = c.run(f"gsettings get {_MEDIA_KEYS_SCHEMA} custom-keybindings", hide=True, warn=True)
     stdout = (result.stdout or "").strip()
     if not stdout or stdout in ("@as []", "[]"):
@@ -99,12 +99,12 @@ def _get_custom_keybindings(c) -> list[str]:
     return cast(list[str], ast.literal_eval(stdout))
 
 
-def _set_custom_keybindings(c, paths: list[str]) -> None:
+def _set_custom_keybindings(c: Context, paths: list[str]) -> None:
     literal = "[" + ", ".join(f"'{p}'" for p in paths) + "]" if paths else "@as []"
     c.run(f'gsettings set {_MEDIA_KEYS_SCHEMA} custom-keybindings "{literal}"', hide=True)
 
 
-def _slot_name(c, path: str) -> str:
+def _slot_name(c: Context, path: str) -> str:
     result = c.run(f"gsettings get {_CUSTOM_SCHEMA}:{path} name", hide=True, warn=True)
     return (result.stdout or "").strip().strip("'")
 
@@ -123,7 +123,7 @@ def _next_free_index(paths: list[str]) -> int:
 
 
 @task
-def enable(c):  # noqa: C901
+def enable(c: Context):  # noqa: C901
     """Bind PrtSc/Shift+PrtSc to Flameshot (save + clipboard, no dialog), disabling the matching
     GNOME defaults.
 
@@ -193,7 +193,7 @@ def enable(c):  # noqa: C901
 
 
 @task
-def disable(c):
+def disable(c: Context):
     """Remove the 2 Flameshot keybindings and restore GNOME's shipped screenshot defaults."""
     if util.DRY_RUN:
         paths = _get_custom_keybindings(c)
@@ -210,7 +210,8 @@ def disable(c):
 
     names = {b["name"] for b in _bindings()}
     paths = _get_custom_keybindings(c)
-    keep, removed = [], []
+    keep: list[str] = []
+    removed: list[str] = []
     for p in paths:
         (removed if _slot_name(c, p) in names else keep).append(p)
 
@@ -228,7 +229,7 @@ def disable(c):
 
 
 @task
-def status(c):
+def status(c: Context):
     """Show current screenshot shortcut state: GNOME defaults vs the Flameshot bindings."""
     installed = util.command_exists("flameshot")
     print(f"[screenshot] flameshot installed: {'yes' if installed else 'no'}")

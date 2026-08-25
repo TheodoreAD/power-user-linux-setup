@@ -43,7 +43,7 @@ def _wrapped(lines: tuple[str, ...], width: int) -> list[str]:
     free-flowing prose wrapped to fit, not something the caller needs to hand-wrap for a terminal
     width it can't know in advance.
     """
-    out = []
+    out: list[str] = []
     for line in lines:
         for para in line.split("\n"):
             out.extend(textwrap.wrap(para, width) if para else [""])

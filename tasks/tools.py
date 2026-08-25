@@ -1,7 +1,7 @@
 import shutil
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import deploy, ui, util
 
@@ -10,14 +10,14 @@ def _expand(value: str) -> str:
     return str(Path(value).expanduser()) if value.startswith("~") else value
 
 
-def _check_tool(name: str, cfg: dict) -> bool:
+def _check_tool(name: str, cfg: util.PackageConfig) -> bool:
     check_path = cfg.get("check_path")
     if check_path:
         return Path(check_path).expanduser().exists()
     return util.command_exists(cfg.get("check_cmd", name))
 
 
-def _install_script(c, name: str, cfg: dict) -> None:
+def _install_script(c: Context, name: str, cfg: util.PackageConfig) -> None:
     if util.DRY_RUN:
         print(f"[{name}] {util.ok_label(_check_tool(name, cfg))}")
         return
@@ -25,6 +25,8 @@ def _install_script(c, name: str, cfg: dict) -> None:
         print(f"[{name}] already installed")
         return
 
+    if "script_url" not in cfg:
+        raise util.missing_fields(name, "script_url")
     env = {k: _expand(v) for k, v in cfg.get("env", {}).items()}
     shell = cfg.get("shell", "sh")
     print(f"[{name}] installing...")
@@ -43,7 +45,7 @@ def _install_script(c, name: str, cfg: dict) -> None:
     print(f"[{name}] installed")
 
 
-def _install_binary(c, name: str, cfg: dict) -> None:
+def _install_binary(c: Context, name: str, cfg: util.PackageConfig) -> None:
     check_cmd = cfg.get("check_cmd", name)
     if util.DRY_RUN:
         print(f"[{name}] {util.ok_label(util.command_exists(check_cmd))}")
@@ -51,6 +53,8 @@ def _install_binary(c, name: str, cfg: dict) -> None:
     if util.command_exists(check_cmd):
         print(f"[{name}] already installed")
         return
+    if "url" not in cfg:
+        raise util.missing_fields(name, "url")
     dest = Path.home() / ".local" / "bin" / check_cmd
     dest.parent.mkdir(parents=True, exist_ok=True)
     print(f"[{name}] installing...")
@@ -59,7 +63,9 @@ def _install_binary(c, name: str, cfg: dict) -> None:
     print(f"[{name}] installed")
 
 
-def _install_git_clone(c, name: str, cfg: dict) -> None:
+def _install_git_clone(c: Context, name: str, cfg: util.PackageConfig) -> None:
+    if "dest" not in cfg or "repo" not in cfg:
+        raise util.missing_fields(name, "dest", "repo")
     dest = Path(cfg["dest"]).expanduser()
     if util.DRY_RUN:
         print(f"[{name}] {util.ok_label(dest.exists())}")
@@ -74,7 +80,7 @@ def _install_git_clone(c, name: str, cfg: dict) -> None:
     print(f"[{name}] installed")
 
 
-def _install_wrapper_script(c, name: str, cfg: dict) -> None:
+def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> None:
     # content_file, not an inline `content` string: the deployed file lives as a real file under
     # config/ in this repo (readable, diffable, editable with normal tooling) and setup.toml just
     # points at it, the same way [packages.p10k]/zsh.py's p10k_configure already reads
@@ -83,6 +89,8 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
     # is shown as a diff and asked about, never silently overwritten (which this function used to
     # do, and which ate hand-edits to ~/AGENTS.md twice in one day). Only the symlink handling
     # stays here: creating/validating a symlink isn't a content write.
+    if "dest" not in cfg or "content_file" not in cfg:
+        raise util.missing_fields(name, "dest", "content_file")
     managed = deploy.Managed(
         path=Path(cfg["dest"]).expanduser(),
         package=name,
@@ -90,7 +98,7 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
         mechanism=deploy.Mechanism.WRAPPER_SCRIPT,
     )
     dest = managed.path
-    link = Path(cfg["symlink_dest"]).expanduser() if cfg.get("symlink_dest") else None
+    link = Path(symlink_dest).expanduser() if (symlink_dest := cfg.get("symlink_dest")) else None
     link_ok = link is None or (link.is_symlink() and link.resolve() == dest.resolve())
 
     if util.DRY_RUN:
@@ -113,7 +121,7 @@ def _install_wrapper_script(c, name: str, cfg: dict) -> None:
     print(f"[{name}] symlinked {link} -> {dest}")
 
 
-def _install_archive(c, name: str, cfg: dict) -> None:  # noqa: C901
+def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  # noqa: C901
     if util.DRY_RUN:
         print(f"[{name}] {util.ok_label(_check_tool(name, cfg))}")
         return
@@ -121,12 +129,16 @@ def _install_archive(c, name: str, cfg: dict) -> None:  # noqa: C901
         print(f"[{name}] already installed")
         return
 
+    if "download_url" not in cfg:
+        raise util.missing_fields(name, "download_url")
     url = cfg["download_url"]
     if "{version}" in url:
         if version_cmd := cfg.get("version_cmd"):
             version = c.run(version_cmd, hide=True).stdout.strip()
+        elif version_url := cfg.get("version_url"):
+            version = c.run(f"curl -fsSL {version_url} | head -1", hide=True).stdout.strip()
         else:
-            version = c.run(f"curl -fsSL {cfg['version_url']} | head -1", hide=True).stdout.strip()
+            raise util.missing_fields(name, "version_cmd or version_url (download_url has {version})")
         url = url.format(version=version)
 
     print(f"[{name}] installing...")
@@ -144,6 +156,8 @@ def _install_archive(c, name: str, cfg: dict) -> None:  # noqa: C901
             )
         c.run(f"chmod +x {dest}")
     else:
+        if "install_dir" not in cfg or "extract_to" not in cfg:
+            raise util.missing_fields(name, "install_dir", "extract_to")
         install_dir = Path(cfg["install_dir"]).expanduser()
         if install_dir.exists():
             shutil.rmtree(install_dir)
@@ -156,15 +170,18 @@ def _install_archive(c, name: str, cfg: dict) -> None:  # noqa: C901
         else:
             c.run(f'curl -fsSL "{url}" | tar -zx --directory {extract_to}')
 
-    for lnk in cfg.get("symlinks", []):
-        if util.ensure_symlink_path(Path(cfg["install_dir"]).expanduser() / lnk["src"], lnk["dst"]):
-            print(f"[{name}] symlink: ~/.local/bin/{lnk['dst']}")
+    if symlinks := cfg.get("symlinks"):
+        if "install_dir" not in cfg:
+            raise util.missing_fields(name, "install_dir (symlinks are relative to it)")
+        for lnk in symlinks:
+            if util.ensure_symlink_path(Path(cfg["install_dir"]).expanduser() / lnk["src"], lnk["dst"]):
+                print(f"[{name}] symlink: ~/.local/bin/{lnk['dst']}")
 
     print(f"[{name}] installed")
 
 
 @task
-def install(c):
+def install(c: Context):
     """Install tools that use official installer scripts, direct binary downloads, or archives."""
     for name, cfg in util.packages_by_method(util.PackageMethod.SCRIPT).items():
         _install_script(c, name, cfg)
@@ -188,13 +205,13 @@ _CARGO_REGISTRY = Path.home() / ".local/share/cargo/registry"
 _CARGO_REGISTRY_CACHE = _CARGO_REGISTRY / "cache"
 
 
-def _du(c, path: Path) -> str:
+def _du(c: Context, path: Path) -> str:
     result = c.run(f"du -sh {path}", hide=True, warn=True)
     return result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
 
 
 @task
-def clean_cache(c):
+def clean_cache(c: Context):
     """Remove cargo's compressed crate-download cache (~/.local/share/cargo/registry/cache), if
     rust is installed — conservative, leaves the extracted sources and index alone (slower to
     rebuild than a plain re-download). Opt-in, not part of `inv setup`/`tools.install` — see
@@ -212,7 +229,7 @@ def clean_cache(c):
 
 
 @task
-def clean_cache_full(c):
+def clean_cache_full(c: Context):
     """Remove cargo's entire registry cache (~/.local/share/cargo/registry) — compressed
     downloads, extracted sources, and index — if rust is installed. Safe any time — cargo
     re-fetches and re-syncs as needed; doesn't touch the installed rustc/cargo/clippy/rustfmt

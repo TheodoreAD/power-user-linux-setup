@@ -27,9 +27,9 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
-from typing import Any, cast
+from typing import TypedDict, cast
 
-from invoke import Exit, task
+from invoke import Context, Exit, task
 
 from . import ui, util
 
@@ -47,6 +47,24 @@ _MANIFEST_VERSION = 1
 # module's registry need it. It answers a different question than the manifest does: the marker
 # says *whose is this* and survives a wiped state dir, the manifest says *what did we write, when*.
 SKILL_MARKER = ".pulse-source"
+
+
+class ManifestEntry(TypedDict):
+    """One destination's record in the state manifest — see record()."""
+
+    package: str
+    source: str
+    mechanism: str
+    digest: str
+    deployed_at: str
+
+
+Manifest = dict[str, ManifestEntry]
+
+
+class _ManifestFile(TypedDict):
+    version: int
+    entries: Manifest
 
 
 class Mechanism(StrEnum):
@@ -158,6 +176,8 @@ def _wrapper_script_entries() -> Iterator[Managed]:
         # An inline-`content` variant is allowed by the method but unused today; skip rather than
         # inventing a source path for it, so the registry never claims a path it can't compare.
         if content_file := cfg.get("content_file"):
+            if "dest" not in cfg:
+                raise util.missing_fields(name, "dest")
             yield Managed(
                 path=Path(cfg["dest"]).expanduser(),
                 package=name,
@@ -189,6 +209,8 @@ def _skill_entries(base: Path) -> Iterator[Managed]:
         for entry in cfg.get("skills", []):
             if entry.get("source") != "local":
                 continue  # npx-sourced skills are installed by the `skills` CLI, not by this repo
+            if "path" not in entry:
+                raise util.missing_fields(name, "skills[].path")
             source = entry["path"]
             yield Managed(
                 path=base / ".agents" / "skills" / Path(source).name,
@@ -228,22 +250,22 @@ def lookup(path: Path | str, base: Path | None = None) -> Managed | None:
 # ---------------------------------------------------------------------------
 
 
-def load_manifest() -> dict[str, dict]:
+def load_manifest() -> Manifest:
     """The per-destination record of what PULSE last wrote, or {} if there is none yet."""
     if not _MANIFEST.exists():
         return {}
-    data = cast(dict[str, Any], json.loads(_MANIFEST.read_text()))
+    data = cast(_ManifestFile, cast(object, json.loads(_MANIFEST.read_text())))
     if data.get("version") != _MANIFEST_VERSION:
         # A future version's format isn't readable here, and guessing would risk treating a
         # destination as ours on bad evidence. An empty manifest degrades to UNKNOWN/CLEAN by
         # content comparison, which is safe — it prompts rather than overwrites.
         return {}
-    return cast(dict[str, dict], data.get("entries", {}))
+    return data.get("entries", {})
 
 
-def _write_manifest(entries: dict[str, dict]) -> None:
+def _write_manifest(entries: Manifest) -> None:
     _MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    payload = {"version": _MANIFEST_VERSION, "entries": entries}
+    payload: _ManifestFile = {"version": _MANIFEST_VERSION, "entries": entries}
     _MANIFEST.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
 
 
@@ -278,7 +300,7 @@ def forget(path: Path) -> None:
 # ---------------------------------------------------------------------------
 
 
-def classify(m: Managed, manifest: dict[str, dict] | None = None) -> State:
+def classify(m: Managed, manifest: Manifest | None = None) -> State:
     """What state `m`'s destination is in. Pure: reads the filesystem, never writes.
 
     Pass `manifest` to classify a whole registry without re-reading the file per entry.
@@ -353,7 +375,7 @@ def _write(m: Managed) -> str:
     return landed
 
 
-def deploy(m: Managed, *, assume_yes: bool = False, manifest: dict[str, dict] | None = None) -> Action:
+def deploy(m: Managed, *, assume_yes: bool = False, manifest: Manifest | None = None) -> Action:
     """Deploy `m`, never destroying content PULSE can't prove it wrote.
 
     ABSENT creates and STALE overwrites, both silently — neither can lose anything, since a STALE
@@ -440,7 +462,7 @@ def _scoped(name: str | None, base: Path | None = None) -> list[Managed]:
         "path": "Report on one path instead of the whole registry — including whether PULSE deploys it at all.",
     }
 )
-def status(c, name=None, path=None):
+def status(c: Context, name: str | None = None, path: str | None = None):
     """Report every path this repo deploys under ~, and whether it still matches its repo source.
 
     Strictly read-only: never writes, never prompts, never fixes. `inv deploy.all` is the repair
@@ -489,7 +511,7 @@ def status(c, name=None, path=None):
         "yes": "Overwrite a destination that was edited here without asking (the diff is still shown).",
     },
 )
-def all_(c, name=None, yes=False):
+def all_(c: Context, name: str | None = None, yes: bool = False):
     """Deploy every path this repo declares under ~ — or one package's with --name — never
     destroying content PULSE can't prove it wrote.
 

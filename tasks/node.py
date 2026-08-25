@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -9,14 +9,14 @@ def _nvm_sh(nvm_dir: Path) -> str:
     return f'export NVM_DIR="{nvm_dir}" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
 
 
-def _node_cfg() -> tuple[dict, Path, str]:
+def _node_cfg() -> tuple[util.PackageConfig, Path, str]:
     cfg = util.load_config()["packages"]["node"]
     nvm_dir = Path(cfg.get("nvm_dir", "~/.local/share/nvm")).expanduser()
     return cfg, nvm_dir, _nvm_sh(nvm_dir)
 
 
 @task
-def install(c):
+def install(c: Context):
     """Install nvm, Node.js, and global npm packages from config."""
     cfg, nvm_dir, nvm_sh = _node_cfg()
     version = cfg.get("version", "lts")
@@ -58,7 +58,7 @@ def install(c):
 
 
 @task
-def clean_cache(c):
+def clean_cache(c: Context):
     """Garbage-collect npm's package cache (~/.npm), removing invalid/unneeded entries while
     verifying the rest — conservative, npm's own recommended way to reclaim cache space. Opt-in,
     not part of `inv setup`/`node.install` — see `inv clean.caches`. For a full wipe instead,
@@ -76,7 +76,7 @@ def clean_cache(c):
 
 
 @task
-def clean_cache_full(c):
+def clean_cache_full(c: Context):
     """Wipe npm's entire package cache (~/.npm). Safe any time — npm re-downloads as needed;
     only affects install speed, not what's installed. Opt-in, not part of `inv setup`/
     `node.install` — see `inv clean.all-full`.

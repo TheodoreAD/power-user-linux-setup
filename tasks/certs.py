@@ -19,7 +19,7 @@ import shlex
 import tempfile
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -30,14 +30,14 @@ _ZSHENV = Path.home() / ".zshenv"
 _CERT_RE = re.compile(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", re.DOTALL)
 
 
-def _sudo_write(c, path: Path, text: str) -> None:
+def _sudo_write(c: Context, path: Path, text: str) -> None:
     with tempfile.NamedTemporaryFile("w", suffix=".crt", delete=False) as f:
         f.write(text)
         tmp = f.name
     c.run(f"{util.SUDO} mkdir -p {path.parent} && {util.SUDO} cp {tmp} {path} && rm {tmp}")
 
 
-def _sudo_read(c, path: Path) -> str | None:
+def _sudo_read(c: Context, path: Path) -> str | None:
     result = c.run(f"{util.SUDO} cat {path}", hide=True, warn=True)
     return result.stdout if result.ok else None
 
@@ -64,7 +64,7 @@ def _resolve_paths(bundle: str | None) -> list[Path]:
 # Format detection/conversion — the extension is never trusted, only openssl's own parse result.
 
 
-def _try_convert(c, path: Path) -> str | None:
+def _try_convert(c: Context, path: Path) -> str | None:
     """Detect the bundle's actual encoding by content and return it normalized to a clean,
     concatenated PEM (any header comments or openssl "subject=" banner lines stripped — only the
     BEGIN/END blocks survive). None if none of the four modes openssl understands apply. Tried in
@@ -93,7 +93,7 @@ def _try_convert(c, path: Path) -> str | None:
     return "\n".join(certs) + "\n" if certs else None
 
 
-def _convert_bundle(c, path: Path) -> str:
+def _convert_bundle(c: Context, path: Path) -> str:
     converted = _try_convert(c, path)
     if converted is None:
         raise RuntimeError(
@@ -106,8 +106,8 @@ def _convert_bundle(c, path: Path) -> str:
     return converted
 
 
-def _desired_bundle_text(c, paths: list[Path]) -> str:
-    parts = []
+def _desired_bundle_text(c: Context, paths: list[Path]) -> str:
+    parts: list[str] = []
     for path in paths:
         if not path.exists():
             raise RuntimeError(f"{path}: configured bundle file not found")
@@ -119,7 +119,7 @@ def _desired_bundle_text(c, paths: list[Path]) -> str:
 # Java cacerts — purely conditional, never installs a JDK. See module docstring.
 
 
-def _cacerts_path(c) -> str | None:
+def _cacerts_path(c: Context) -> str | None:
     result = c.run("readlink -f $(command -v java)", hide=True, warn=True)
     if not result.ok or not result.stdout.strip():
         return None
@@ -127,7 +127,7 @@ def _cacerts_path(c) -> str | None:
     return str(java_home / "lib" / "security" / "cacerts")
 
 
-def _keytool_alias_exists(c, cacerts: str, alias: str) -> bool:
+def _keytool_alias_exists(c: Context, cacerts: str, alias: str) -> bool:
     return c.run(
         f"{util.SUDO} keytool -list -alias {alias} -keystore {shlex.quote(cacerts)} -storepass changeit",
         hide=True,
@@ -135,7 +135,7 @@ def _keytool_alias_exists(c, cacerts: str, alias: str) -> bool:
     ).ok
 
 
-def _java_status(c) -> str:
+def _java_status(c: Context) -> str:
     if not util.command_exists("keytool"):
         return "skip"
     cacerts = _cacerts_path(c)
@@ -144,7 +144,7 @@ def _java_status(c) -> str:
     return util.ok_label(_keytool_alias_exists(c, cacerts, "pulse-corporate-0"))
 
 
-def _configure_java(c, desired: str) -> None:
+def _configure_java(c: Context, desired: str) -> None:
     if not util.command_exists("keytool"):
         print(
             "[certs] java: no JDK found — skipping (this repo doesn't manage a JDK; activates "
@@ -197,7 +197,7 @@ def _zshenv_status() -> str:
     return util.ok_label(status == util.BlockStatus.OK)
 
 
-def _status(c, paths: list[Path]) -> dict[str, str]:
+def _status(c: Context, paths: list[Path]) -> dict[str, str]:
     bundle_status = "MISSING"
     try:
         desired = _desired_bundle_text(c, paths)
@@ -239,7 +239,7 @@ def _require_bundle_paths(bundle: str | None, command: str, *, raise_on_missing:
 
 
 @task
-def check(c, bundle=None):
+def check(c: Context, bundle: str | None = None):
     """Read-only diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts. Never
     mutates. --bundle=path overrides the [certs] table in ~/.config/power-user-linux-setup/identity.toml. See
     docs/certs.md.
@@ -253,7 +253,7 @@ def check(c, bundle=None):
 
 
 @task
-def install(c, bundle=None):
+def install(c: Context, bundle: str | None = None):
     """Install the corporate CA bundle into the OS trust store and export it for
     python/node/awscli. --bundle=path overrides the [certs] table in
     ~/.config/power-user-linux-setup/identity.toml. See docs/certs.md.

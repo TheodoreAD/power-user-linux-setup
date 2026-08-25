@@ -2,6 +2,7 @@
 that doesn't shell out to docker/systemctl or touch /etc/docker/daemon.json. See tests/README.md.
 """
 
+from tasks import util
 from tasks.docker import _is_subset, _merge
 
 
@@ -18,14 +19,14 @@ def test_is_subset_false_when_a_key_is_missing():
 
 
 def test_is_subset_recurses_into_nested_dicts():
-    defaults = {"log-opts": {"max-size": "50m", "max-file": "3"}}
-    existing = {"log-opts": {"max-size": "50m", "max-file": "3", "extra": "x"}}
+    defaults: util.JsonObject = {"log-opts": {"max-size": "50m", "max-file": "3"}}
+    existing: util.JsonObject = {"log-opts": {"max-size": "50m", "max-file": "3", "extra": "x"}}
     assert _is_subset(defaults, existing) is True
 
 
 def test_is_subset_false_when_nested_value_differs():
-    defaults = {"log-opts": {"max-size": "50m"}}
-    existing = {"log-opts": {"max-size": "10m"}}
+    defaults: util.JsonObject = {"log-opts": {"max-size": "50m"}}
+    existing: util.JsonObject = {"log-opts": {"max-size": "10m"}}
     assert _is_subset(defaults, existing) is False
 
 
@@ -38,14 +39,14 @@ def test_merge_overwrites_scalar_values():
 
 
 def test_merge_recursively_merges_nested_dicts():
-    base = {"log-opts": {"max-size": "50m"}}
-    updates = {"log-opts": {"max-file": "3"}}
+    base: util.JsonObject = {"log-opts": {"max-size": "50m"}}
+    updates: util.JsonObject = {"log-opts": {"max-file": "3"}}
     assert _merge(base, updates) == {"log-opts": {"max-size": "50m", "max-file": "3"}}
 
 
 def test_merge_does_not_mutate_inputs():
-    base = {"a": {"x": 1}}
-    updates = {"a": {"y": 2}}
+    base: util.JsonObject = {"a": {"x": 1}}
+    updates: util.JsonObject = {"a": {"y": 2}}
     _merge(base, updates)
     assert base == {"a": {"x": 1}}
     assert updates == {"a": {"y": 2}}

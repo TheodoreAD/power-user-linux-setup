@@ -5,12 +5,11 @@ docs/dev-container.md.
 
 import json
 import os
-import tomllib
 from dataclasses import dataclass
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import cast
 
-from invoke import task
+from invoke import Context, task
 
 from . import phases, ui, util
 from . import setup as setup_tasks
@@ -32,7 +31,7 @@ _TAG_DESCRIPTIONS = [
 
 
 @task
-def print_exclude_tags(c):
+def print_exclude_tags(c: Context):
     """Print CONTAINER_EXCLUDE_TAGS, comma-separated, no surrounding text.
 
     Machine-readable — bootstrap-devcontainer.sh calls this (after it's bootstrapped `inv` onto
@@ -77,7 +76,7 @@ def _generated_content() -> str:
 
 
 @task
-def render_docs(c):
+def render_docs(c: Context):
     """Regenerate the tag-table + example block in docs/dev-container.md from
     CONTAINER_EXCLUDE_TAGS/_TAG_DESCRIPTIONS (HTML-comment-marked — see util.MarkerStyle.HTML,
     since a '#'-prefixed marker would render as a Markdown heading). Run after changing either so
@@ -94,7 +93,7 @@ def render_docs(c):
 
 
 @task
-def check(c):
+def check(c: Context):
     """Read-only dry run for the container distribution path: reports what `inv setup`'s
     packages+shell phases would do under the recommended container tag profile, without running
     anything for real — same shape as `inv wsl.check`. Both bootstrap-devcontainer.sh and
@@ -123,8 +122,8 @@ def check(c):
     saved = os.environ.get("PULSE_EXCLUDE_TAGS")
     os.environ["PULSE_EXCLUDE_TAGS"] = tags
     try:
-        print(phases._probe(c, setup_tasks.PACKAGES_PHASE), end="")
-        print(phases._probe(c, setup_tasks.SHELL_PHASE), end="")
+        print(phases.probe(c, setup_tasks.PACKAGES_PHASE), end="")
+        print(phases.probe(c, setup_tasks.SHELL_PHASE), end="")
     finally:
         if saved is None:
             os.environ.pop("PULSE_EXCLUDE_TAGS", None)
@@ -172,14 +171,6 @@ class MountCandidate:
     caveat: str | None = None
 
 
-class _CertsSection(TypedDict, total=False):
-    bundle: str | list[str] | None
-
-
-class _IdentityToml(TypedDict, total=False):
-    certs: _CertsSection
-
-
 def _resolve_cert_bundle_paths(identity_toml: Path | None) -> list[Path]:
     """[certs] bundle from identity_toml (a single string or a list) — same resolution shape as
     tasks/certs.py's _resolve_paths(), reimplemented here (not calling util.load_certs_override(),
@@ -188,8 +179,7 @@ def _resolve_cert_bundle_paths(identity_toml: Path | None) -> list[Path]:
     """
     if not identity_toml or not identity_toml.exists():
         return []
-    with identity_toml.open("rb") as f:
-        data = cast(_IdentityToml, cast(object, tomllib.load(f)))
+    data = cast(util.Identity, util.load_toml(identity_toml))
     raw = data.get("certs", {}).get("bundle")
     if not raw:
         return []
@@ -327,7 +317,7 @@ def _render_mounts_json(selected: list[MountCandidate], container_home: str) -> 
     """Render a ready-to-paste devcontainer.json fragment ({"mounts": [...], "remoteEnv": {...}})
     for the selected candidates — printed, never written; see mounts()'s docstring for why.
     """
-    mounts_list = []
+    mounts_list: list[str] = []
     remote_env: dict[str, str] = {}
     for cand in selected:
         target = cand.target if cand.target is not None else f"{container_home}{cand.target_suffix}"
@@ -336,14 +326,14 @@ def _render_mounts_json(selected: list[MountCandidate], container_home: str) -> 
         if cand.remote_env:
             remote_env.update(cand.remote_env)
 
-    fragment: dict = {"mounts": mounts_list}
+    fragment: dict[str, object] = {"mounts": mounts_list}
     if remote_env:
         fragment["remoteEnv"] = remote_env
     return json.dumps(fragment, indent=2)
 
 
 @task
-def print_mounts(c):
+def print_mounts(c: Context):
     """Host-side interactive helper: discover credential-shaped directories/sockets on this
     machine (~/.ssh or $SSH_AUTH_SOCK, ~/.config/power-user-linux-setup, the corporate CA bundle from
     identity.toml, ~/.gitconfig, ~/.gnupg, ~/.aws, ~/.kube, ~/.config/{gcloud,gh}) and print a
@@ -369,7 +359,7 @@ def print_mounts(c):
         label="devcontainer mounts",
     )
 
-    selected = []
+    selected: list[MountCandidate] = []
     for cand in candidates:
         if cand.caveat:
             ui.note(cand.caveat)

@@ -7,12 +7,19 @@ a second detection mechanism.
 """
 
 import io
+from collections.abc import Callable, Sequence
 from contextlib import redirect_stdout
+
+from invoke import Context
 
 from . import ui, util
 
+# What a phase is made of: task objects (invoke's `Task.__call__` forwards to the body) or any
+# other callable taking the context — the return value is never used.
+Step = Callable[[Context], object]
 
-def _probe(c, funcs) -> str:
+
+def probe(c: Context, funcs: Sequence[Step]) -> str:
     """Run funcs with util.DRY_RUN forced on, capturing their status output, then restore
     DRY_RUN regardless of outcome. Never touches the real system: every func's DRY_RUN branch is
     a local, read-only check.
@@ -29,7 +36,7 @@ def _probe(c, funcs) -> str:
     return buf.getvalue()
 
 
-def run_phase(c, label, funcs, note=None):
+def run_phase(c: Context, label: str, funcs: Sequence[Step], note: str | None = None) -> None:
     """Run a named group of setup tasks as one phase, banner first for visibility. If a dry-run
     probe shows nothing missing, offers to skip (default: yes) instead of redoing possibly-slow
     work (apt update, tool/version checks) that would just no-op anyway.
@@ -41,7 +48,7 @@ def run_phase(c, label, funcs, note=None):
     ui.block(note or label, label=f"phase: {label}")
     if (
         not util.DRY_RUN
-        and "MISSING" not in _probe(c, funcs)
+        and "MISSING" not in probe(c, funcs)
         and ui.ask("Already looks complete — skip this phase?", default=True)
     ):
         print(f"[{label}] skipped")

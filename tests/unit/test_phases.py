@@ -6,6 +6,7 @@ import sys
 from dataclasses import dataclass, field
 
 import pytest
+from invoke import Context, MockContext
 
 from tasks import phases, ui, util
 
@@ -43,19 +44,19 @@ def _reset_dry_run():
 
 def test_probe_captures_output_and_restores_dry_run(capsys):
     ok = _make_task(missing=False)
-    output = phases._probe(None, [ok])
+    output = phases.probe(MockContext(), [ok])
     assert "ok" in output
     assert util.DRY_RUN is False
     assert ok.calls == [True]  # ran once, with DRY_RUN forced on during the probe
-    capsys.readouterr()  # _probe redirects stdout internally — nothing should leak to the real one
+    capsys.readouterr()  # probe redirects stdout internally — nothing should leak to the real one
 
 
 def test_probe_restores_dry_run_on_exception():
-    def boom(c):
+    def boom(c: Context) -> None:
         raise RuntimeError("boom")
 
     with pytest.raises(RuntimeError):
-        phases._probe(None, [boom])
+        phases.probe(MockContext(), [boom])
     assert util.DRY_RUN is False
 
 
@@ -63,7 +64,7 @@ def test_run_skips_when_everything_already_ok(monkeypatch, capsys):
     ok = _make_task(missing=False)
     monkeypatch.setattr(ui, "ask", lambda *a, **k: True)  # simulate accepting the skip offer
 
-    phases.run_phase(None, "shell", [ok])
+    phases.run_phase(MockContext(), "shell", [ok])
 
     assert ok.calls == [True]  # only the probe call — no real (DRY_RUN=False) call followed
     assert "[shell] skipped" in capsys.readouterr().out
@@ -81,7 +82,7 @@ def test_run_does_not_offer_skip_when_something_is_missing(monkeypatch):
 
     monkeypatch.setattr(ui, "ask", _fail_if_asked("should not ask to skip when a phase has outstanding work"))
 
-    phases.run_phase(None, "packages", [missing])
+    phases.run_phase(MockContext(), "packages", [missing])
 
     # probe call (DRY_RUN=True) + real call (DRY_RUN=False) — ran unconditionally, no prompt
     assert missing.calls == [True, False]
@@ -93,7 +94,7 @@ def test_run_bypasses_skip_logic_under_global_dry_run(monkeypatch):
     monkeypatch.setattr(ui, "ask", _fail_if_asked("PULSE_DRY_RUN=1 must never be gated behind a skip prompt"))
     util.DRY_RUN = True  # simulates PULSE_DRY_RUN=1 inv setup
 
-    phases.run_phase(None, "packages", [ok])
+    phases.run_phase(MockContext(), "packages", [ok])
 
     # falls straight through to running funcs for real, once, still under DRY_RUN — the full
     # diagnostic report documented in docs/index.md, not a silently skipped phase.
@@ -105,7 +106,7 @@ def test_run_skips_silently_when_noninteractive(monkeypatch, capsys):
     ok = _make_task(missing=False)
     monkeypatch.setattr(sys.stdin, "isatty", lambda: False)  # piped/scripted/CI
 
-    phases.run_phase(None, "shell", [ok])
+    phases.run_phase(MockContext(), "shell", [ok])
 
     out = capsys.readouterr().out
     assert ok.calls == [True]

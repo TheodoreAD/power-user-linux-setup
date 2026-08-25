@@ -32,13 +32,13 @@ import subprocess
 import sys
 import tempfile
 import textwrap
-import tomllib
+from collections.abc import Mapping
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
-from typing import Any, cast
+from typing import NotRequired, TypedDict, cast
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -64,6 +64,122 @@ class Source(StrEnum):
     HEURISTIC = "heuristic"
     LLM = "llm"
     LLM_RECONFIRMED = "llm-reconfirmed"
+
+
+# ---------------------------------------------------------------------------
+# Shapes of the three files this pipeline reads and writes — tools.toml, help-cache/<tool>.json,
+# rules/<tool>.json — plus the model's JSON answer. Required/optional split measured against the
+# tracked files (2026-08-25), not guessed: `likely_invalid` is absent from caches written before
+# it existed, `model` from the one heuristic-classified node, `note` from every non-interactive
+# rule entry.
+# ---------------------------------------------------------------------------
+
+
+class ToolConfig(TypedDict, total=False):
+    """One `[<tool>]` table in tools.toml — see its header comment for each knob."""
+
+    shell_prefix: str
+    skip_interactive: bool
+    version_flag: str
+    help_flag: str
+    help_style: str
+    max_depth: int
+    max_nodes: int
+    max_subcommands: int
+    subcommands: list[str]
+    no_subcommands: bool
+    mode_covered: bool
+    cloud_cli: bool
+    global_option_prefixes: list[str]
+    allow_overrides: list[str]
+    ask_overrides: list[str]
+
+
+Registry = dict[str, ToolConfig]
+
+
+class CacheNode(TypedDict):
+    """One node of a tool's extracted --help tree (help-cache/<tool>.json)."""
+
+    help_text: str
+    content_hash: str
+    children: list[str]
+    likely_invalid: NotRequired[bool]
+
+
+class CacheEntry(TypedDict):
+    interactive: bool
+    version: str | None
+    extracted_at: str
+    nodes: dict[str, CacheNode]
+    truncated: bool
+
+
+class FlagRating(TypedDict):
+    classification: str
+    rationale: str
+
+
+class RuleNode(TypedDict):
+    """One classified node in rules/<tool>.json."""
+
+    content_hash: str
+    classification: str
+    rationale: str
+    source: str
+    flags: dict[str, FlagRating]
+    model: NotRequired[str]
+
+
+class RuleEntry(TypedDict):
+    version: str | None
+    extracted_at: str | None
+    classified_at: str
+    reviewed: bool
+    reviewed_at: str | None
+    truncated: bool
+    nodes: dict[str, RuleNode]
+    note: NotRequired[str]
+
+
+class FlagVerdict(TypedDict, total=False):
+    classification: str
+    rationale: str
+
+
+class NodeVerdict(TypedDict, total=False):
+    """What the model returns per path — every key optional, since a malformed answer is handled
+    with `.get()` defaults rather than trusted."""
+
+    classification: str
+    rationale: str
+    flags: dict[str, FlagVerdict]
+
+
+Verdict = dict[str, NodeVerdict]
+
+
+class _StructuredOutput(TypedDict):
+    classifications: Verdict
+
+
+class _ClaudeEnvelope(TypedDict):
+    structured_output: _StructuredOutput
+
+
+class _NodeProbe(TypedDict):
+    """A CacheNode before its children are known — what _fetch_node hands _build_tree."""
+
+    help_text: str
+    content_hash: str
+    likely_invalid: bool
+
+
+class _ReconfirmCandidate(TypedDict):
+    help_text: str
+    tokens: set[str]
+    path: str
+    flag: str | None  # None for a subcommand node, the flag name for a flag-level rating
 
 
 _ROOT = Path(__file__).parent.parent / "cli-allowlist"
@@ -362,35 +478,40 @@ def _node_prefix(indent: str, label: str, classification: Classification, suffix
     return plain, colored
 
 
-def _load_registry() -> dict:
-    with _TOOLS_TOML.open("rb") as f:
-        return tomllib.load(f)
+def _load_registry() -> Registry:
+    return cast(Registry, util.load_toml(_TOOLS_TOML))
 
 
-def _load_rule(tool: str) -> dict | None:
+def _load_rule(tool: str) -> RuleEntry | None:
     path = _RULES_DIR / f"{tool}.json"
-    return json.loads(path.read_text()) if path.exists() else None
+    return cast(RuleEntry, util.load_json(path)) if path.exists() else None
 
 
-def _save_rule(tool: str, entry: dict) -> None:
+def _save_rule(tool: str, entry: RuleEntry) -> None:
     _RULES_DIR.mkdir(parents=True, exist_ok=True)
     (_RULES_DIR / f"{tool}.json").write_text(json.dumps(entry, indent=2, sort_keys=True) + "\n")
 
 
-def _load_all_rules() -> dict[str, dict]:
+def _load_all_rules() -> dict[str, RuleEntry]:
     """Every reviewed-or-not rule, keyed by tool — one file per tool under cli-allowlist/rules/
     so a single tool's re-classification only touches that tool's diff, not one monolithic file."""
     if not _RULES_DIR.exists():
         return {}
-    return {p.stem: json.loads(p.read_text()) for p in sorted(_RULES_DIR.glob("*.json"))}
+    return {p.stem: cast(RuleEntry, util.load_json(p)) for p in sorted(_RULES_DIR.glob("*.json"))}
 
 
-def _load_cache(tool: str) -> dict | None:
+def _load_cache(tool: str) -> CacheEntry | None:
     path = _HELP_CACHE_DIR / f"{tool}.json"
-    return json.loads(path.read_text()) if path.exists() else None
+    return cast(CacheEntry, util.load_json(path)) if path.exists() else None
 
 
-def _save_cache(tool: str, data: dict) -> None:
+def _help_text(cache_nodes: dict[str, CacheNode], path: str) -> str:
+    """A node's cached --help text, "" when the cache has no such node."""
+    node = cache_nodes.get(path)
+    return node["help_text"] if node else ""
+
+
+def _save_cache(tool: str, data: CacheEntry) -> None:
     _HELP_CACHE_DIR.mkdir(parents=True, exist_ok=True)
     (_HELP_CACHE_DIR / f"{tool}.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
 
@@ -408,7 +529,7 @@ def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
     return (result.stdout + result.stderr).strip()
 
 
-def _invocation(tool: str, args: list[str], cfg: dict) -> list[str]:
+def _invocation(tool: str, args: list[str], cfg: ToolConfig) -> list[str]:
     """Build the argv for `tool args...`, honoring the shell_prefix escape hatch (nvm-style tools
     that only exist as a shell function, not a binary on PATH)."""
     prefix = cfg.get("shell_prefix")
@@ -429,7 +550,7 @@ def _sub_args(path: list[str] | None, help_flag: str, help_style: str) -> list[s
     return [*flag_parts, *path] if help_style == "prefix" else [*path, *flag_parts]
 
 
-def _tool_version(tool: str, version_flag: str, cfg: dict | None = None) -> str:
+def _tool_version(tool: str, version_flag: str, cfg: ToolConfig | None = None) -> str:
     """Return a stable per-version string for cache invalidation. Not always line 1: eza's
     --version prints its tagline first and the actual "v0.18.2 [+git]" on line 2 — a tagline
     never changes across upgrades, which would silently defeat staleness detection. Preferring
@@ -592,8 +713,8 @@ def _looks_dangerous_flag(flag: str) -> bool:
 
 
 def _fetch_node(
-    name: str, cfg: dict, path: list[str], parent_hash: str, sibling_count: int, help_flag: str, help_style: str
-) -> tuple[dict, bool]:
+    name: str, cfg: ToolConfig, path: list[str], parent_hash: str, sibling_count: int, help_flag: str, help_style: str
+) -> tuple[_NodeProbe, bool]:
     """Fetch one node's --help text and compute its hash/likely-invalid metadata. Returns
     (node_entry, duplicates_parent) — node_entry has everything `_build_tree` stores except
     `children` (only known after this node's own child-discovery, which happens in the caller);
@@ -626,11 +747,13 @@ def _fetch_node(
     node_hash = _hash_text(text)
     duplicates_parent = bool(text) and node_hash == parent_hash
     likely_invalid = duplicates_parent and sibling_count == 1
-    node_entry = {"help_text": text, "content_hash": node_hash, "likely_invalid": likely_invalid}
+    node_entry: _NodeProbe = {"help_text": text, "content_hash": node_hash, "likely_invalid": likely_invalid}
     return node_entry, duplicates_parent
 
 
-def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style: str) -> tuple[dict, bool]:
+def _build_tree(
+    name: str, cfg: ToolConfig, top_help: str, help_flag: str, help_style: str
+) -> tuple[dict[str, CacheNode], bool]:
     """Breadth-first walk of the subcommand tree, up to tools.toml's max_depth/max_nodes for this
     tool (both default to today's single-level behavior — see tools.toml's header comment). Only
     the root level honors an explicit `subcommands =` override; deeper levels are always
@@ -648,7 +771,7 @@ def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style:
     explicit = cfg.get("subcommands")
     roots = explicit if explicit is not None else _discover_subcommands(top_help, breadth_cap)
 
-    nodes: dict[str, dict] = {}
+    nodes: dict[str, CacheNode] = {}
     truncated = False
     top_hash = _hash_text(top_help)
     # (path, depth, parent_hash, sibling_count) — parent_hash detects "doesn't really exist, help
@@ -677,7 +800,7 @@ def _build_tree(name: str, cfg: dict, top_help: str, help_flag: str, help_style:
     return nodes, truncated
 
 
-def _extract_one(name: str, cfg: dict | None, force: bool) -> None:
+def _extract_one(name: str, cfg: ToolConfig | None, force: bool) -> None:
     """Extract+cache one tool's --help tree, or mark it interactive-only/not-installed/unchanged
     as appropriate — the per-tool body of extract()'s loop."""
     if cfg is None:
@@ -699,8 +822,8 @@ def _extract_one(name: str, cfg: dict | None, force: bool) -> None:
     version_flag = cfg.get("version_flag", "--version")
     version = _tool_version(name, version_flag, cfg)
 
-    cached = _load_cache(name) or {}
-    if not force and version and cached.get("version") == version:
+    cached = _load_cache(name)
+    if not force and version and cached is not None and cached["version"] == version:
         print(f"[allowlist] {name}: unchanged ({version}) — skipped")
         return
 
@@ -714,6 +837,7 @@ def _extract_one(name: str, cfg: dict | None, force: bool) -> None:
         return
 
     truncated = False
+    nodes: dict[str, CacheNode]
     if cfg.get("no_subcommands"):
         nodes = {
             _NO_SUBCOMMANDS_KEY: {
@@ -755,7 +879,7 @@ def _extract_one(name: str, cfg: dict | None, force: bool) -> None:
 
 
 @task
-def extract(c, tool=None, force=False):
+def extract(c: Context, tool: str | None = None, force: bool = False):
     """Capture --help text per registered tool (tools.toml), recursing into the subcommand tree
     for any tool with max_depth > 1. Skips any tool whose --version output hasn't changed since
     the last successful extract, unless --force."""
@@ -770,7 +894,7 @@ _TOP_HELP_KEY = "_top"  # nodes dict key for the tool's own top-level --help tex
 _FLAT_KEY = "_default_"
 
 
-def _build_prompt(tool: str, nodes: dict[str, dict], top_help: str) -> str:
+def _build_prompt(tool: str, nodes: dict[str, CacheNode], top_help: str) -> str:
     if list(nodes) == [_NO_SUBCOMMANDS_KEY]:
         # No subcommand tree — first attempt asked the model to classify a heading literally
         # named "*", which it read as "find distinct things to classify" and broke a flags-heavy
@@ -801,7 +925,7 @@ def _build_prompt(tool: str, nodes: dict[str, dict], top_help: str) -> str:
     return "\n".join(parts)
 
 
-def _classify_via_claude(prompt: str, model: str, schema: str = _SCHEMA) -> dict | None:
+def _classify_via_claude(prompt: str, model: str, schema: str = _SCHEMA) -> Verdict | None:
     with tempfile.TemporaryDirectory(prefix="pulse-allowlist-") as scratch:
         try:
             result = subprocess.run(
@@ -833,13 +957,13 @@ def _classify_via_claude(prompt: str, model: str, schema: str = _SCHEMA) -> dict
     if result.returncode != 0:
         return None
     try:
-        envelope = cast(dict[str, Any], json.loads(result.stdout))
-        return cast(dict, envelope["structured_output"]["classifications"])
+        envelope = cast(_ClaudeEnvelope, util.parse_json(result.stdout))
+        return envelope["structured_output"]["classifications"]
     except (json.JSONDecodeError, KeyError, TypeError):
         return None
 
 
-def _strip_tool_prefix(verdict: dict, tool: str) -> dict:
+def _strip_tool_prefix(verdict: Verdict, tool: str) -> Verdict:
     """Defensive normalization: the model occasionally echoes the tool name back as part of a
     key ("gh run list" instead of the requested "run list") even though the rubric asks for the
     exact key strings given back unchanged — confirmed happening on a real `reconfirm` call for
@@ -850,7 +974,7 @@ def _strip_tool_prefix(verdict: dict, tool: str) -> dict:
     return {(k[len(prefix) :] if k.startswith(prefix) else k): v for k, v in verdict.items()}
 
 
-def _resolve_flat_verdict(verdict: dict) -> dict:
+def _resolve_flat_verdict(verdict: Verdict) -> Verdict:
     """Map the model's single _FLAT_KEY answer back to "*". If it ignored the instruction and
     broke the tool into multiple entries anyway (observed once, on a flags-heavy --help text),
     fall back to the most cautious of whatever it returned rather than an arbitrary one —
@@ -859,8 +983,8 @@ def _resolve_flat_verdict(verdict: dict) -> dict:
         return {_NO_SUBCOMMANDS_KEY: verdict[_FLAT_KEY]}
     if not verdict:
         return verdict
-    order = {Classification.READ_ONLY: 0, Classification.WRITE: 1, Classification.DANGEROUS: 2}
-    worst = max(verdict.values(), key=lambda v: order.get(v.get("classification"), 1))
+    order: dict[str, int] = {Classification.READ_ONLY: 0, Classification.WRITE: 1, Classification.DANGEROUS: 2}
+    worst = max(verdict.values(), key=lambda v: order.get(v.get("classification", ""), 1))
     return {
         _NO_SUBCOMMANDS_KEY: {
             "classification": worst.get("classification", Classification.WRITE),
@@ -870,7 +994,7 @@ def _resolve_flat_verdict(verdict: dict) -> dict:
     }
 
 
-def _classify_flag_result(flag: str, result: dict, base_classification: str) -> dict:
+def _classify_flag_result(flag: str, result: FlagVerdict, base_classification: str) -> FlagRating:
     classification = result.get("classification", base_classification)
     if classification == Classification.READ_ONLY and _looks_dangerous_flag(flag):
         classification = Classification.NEEDS_REVIEW
@@ -878,8 +1002,8 @@ def _classify_flag_result(flag: str, result: dict, base_classification: str) -> 
 
 
 def _diff_nodes(
-    classifiable_keys: list[str], cache_nodes: dict[str, dict], existing_nodes: dict[str, dict], force: bool
-) -> tuple[dict[str, dict], dict[str, dict], dict[str, dict]]:
+    classifiable_keys: list[str], cache_nodes: dict[str, CacheNode], existing_nodes: dict[str, RuleNode], force: bool
+) -> tuple[dict[str, CacheNode], dict[str, RuleNode], dict[str, CacheNode]]:
     """Bucket each classifiable node into (to_classify, carried, new_invalid) by comparing this
     extraction's content hash against the last classification's.
 
@@ -888,9 +1012,9 @@ def _diff_nodes(
     a model to notice the same thing. They still go through the same unchanged-since-last-run
     check as everything else, just compared against "was this already recorded as invalid with
     this exact content" instead of a normal classification."""
-    to_classify: dict[str, dict] = {}
-    carried: dict[str, dict] = {}
-    new_invalid: dict[str, dict] = {}
+    to_classify: dict[str, CacheNode] = {}
+    carried: dict[str, RuleNode] = {}
+    new_invalid: dict[str, CacheNode] = {}
     for key in classifiable_keys:
         node = cache_nodes[key]
         prior = existing_nodes.get(key)
@@ -917,14 +1041,14 @@ def _diff_nodes(
     return to_classify, carried, new_invalid
 
 
-def _run_classification(name: str, to_classify: dict[str, dict], top_help: str, model: str) -> tuple[dict, int]:
+def _run_classification(name: str, to_classify: dict[str, CacheNode], top_help: str, model: str) -> tuple[Verdict, int]:
     """Classify to_classify's nodes via chunked LLM calls. Returns (verdict, failed_chunks) —
     verdict only has entries for chunks that succeeded; failed_chunks counts how many didn't.
 
     Chunked, not one call for the whole tool: a call covering 50+ nodes (routine once recursion is
     on) risks both the timeout and --max-budget-usd ceiling — see _CLASSIFY_CHUNK_SIZE's comment
     for the measurement that drove this."""
-    verdict: dict = {}
+    verdict: Verdict = {}
     failed_chunks = 0
     items = list(to_classify.items())
     for i in range(0, len(items), _CLASSIFY_CHUNK_SIZE):
@@ -940,13 +1064,13 @@ def _run_classification(name: str, to_classify: dict[str, dict], top_help: str, 
 
 
 def _assemble_new_nodes(
-    carried: dict[str, dict],
-    new_invalid: dict[str, dict],
-    to_classify: dict[str, dict],
-    verdict: dict,
-    existing_nodes: dict[str, dict],
+    carried: dict[str, RuleNode],
+    new_invalid: dict[str, CacheNode],
+    to_classify: dict[str, CacheNode],
+    verdict: Verdict,
+    existing_nodes: dict[str, RuleNode],
     model: str,
-) -> dict[str, dict]:
+) -> dict[str, RuleNode]:
     """Merge carried-forward nodes, newly-flagged-invalid nodes, and this run's LLM verdicts into
     the final nodes dict to save."""
     new_nodes = dict(carried)
@@ -1001,7 +1125,7 @@ def _assemble_new_nodes(
 
 
 @task
-def classify(c, tool=None, force=False, model="haiku"):
+def classify(c: Context, tool: str | None = None, force: bool = False, model: str = "haiku"):
     """Classify each tool's extracted nodes (subcommands, and nested subcommands for any tool
     with max_depth > 1) as read_only/write/dangerous via a headless `claude -p` call, isolated in
     a scratch cwd outside the repo with file/exec tools disallowed. Each node also gets its
@@ -1039,12 +1163,12 @@ def classify(c, tool=None, force=False, model="haiku"):
             print(f"[allowlist] {name}: interactive-only — marked reviewed, nothing to classify")
             continue
 
-        cache_nodes = cached.get("nodes", {})
+        cache_nodes = cached["nodes"]
         classifiable_keys = [k for k in cache_nodes if k != _TOP_HELP_KEY]
-        top_help = cache_nodes.get(_TOP_HELP_KEY, {}).get("help_text", "")
+        top_help = _help_text(cache_nodes, _TOP_HELP_KEY)
 
         existing = _load_rule(name)
-        existing_nodes = (existing or {}).get("nodes", {})
+        existing_nodes = existing["nodes"] if existing else {}
 
         to_classify, carried, new_invalid = _diff_nodes(classifiable_keys, cache_nodes, existing_nodes, force)
 
@@ -1094,7 +1218,7 @@ def classify(c, tool=None, force=False, model="haiku"):
         )
 
 
-def _version_only_refresh(existing: dict | None, cached: dict) -> dict | None:
+def _version_only_refresh(existing: RuleEntry | None, cached: CacheEntry) -> RuleEntry | None:
     """The rule entry to save when a tool upgraded but its --help text didn't change, or None if
     there's nothing to record.
 
@@ -1109,12 +1233,12 @@ def _version_only_refresh(existing: dict | None, cached: dict) -> dict | None:
     purpose: the existing classification does describe this version's help (that's what identical
     text means), so resetting `reviewed` here would ask a human to re-approve a diff that doesn't
     exist — the opposite of the human gate being meaningful."""
-    if not existing or existing.get("version") == cached.get("version"):
+    if not existing or existing["version"] == cached["version"]:
         return None
-    return {**existing, "version": cached.get("version"), "extracted_at": cached.get("extracted_at")}
+    return {**existing, "version": cached["version"], "extracted_at": cached["extracted_at"]}
 
 
-def _build_reconfirm_prompt(tool: str, candidates: dict[str, dict]) -> str:
+def _build_reconfirm_prompt(tool: str, candidates: dict[str, _ReconfirmCandidate]) -> str:
     parts = [_RECONFIRM_RUBRIC, "", f"Tool: {tool}", ""]
     for key, meta in candidates.items():
         flagged = ", ".join(sorted(meta["tokens"])) or "(unknown)"
@@ -1123,7 +1247,7 @@ def _build_reconfirm_prompt(tool: str, candidates: dict[str, dict]) -> str:
 
 
 @task
-def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
+def reconfirm(c: Context, tool: str | None = None, model: str = "haiku"):  # noqa: C901
     """Second-pass LLM reclassification for everything currently sitting at `needs_review`
     (subcommands and flags alike) — items where the model said read_only but the deterministic
     verb-token backstop (_DANGEROUS_VERBS) overrode it, because a name/flag merely *containing* a
@@ -1147,26 +1271,26 @@ def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
         entry = rules.get(name)
         if entry is None:
             continue
-        nodes = entry.get("nodes", {})
-        cache_nodes = (_load_cache(name) or {}).get("nodes", {})
+        nodes = entry["nodes"]
+        cache = _load_cache(name)
+        cache_nodes = cache["nodes"] if cache else {}
 
         # Composite key "<path> <flag>" for flag-level items — unambiguous to parse back since a
         # real subcommand path segment never starts with "-", only a flag token does.
-        candidates: dict[str, dict] = {}
+        candidates: dict[str, _ReconfirmCandidate] = {}
         for path, v in nodes.items():
-            if v.get("classification") == Classification.NEEDS_REVIEW:
+            if v["classification"] == Classification.NEEDS_REVIEW:
                 candidates[path] = {
-                    "help_text": cache_nodes.get(path, {}).get("help_text", ""),
+                    "help_text": _help_text(cache_nodes, path),
                     "tokens": _dangerous_path_tokens(path),
-                    "kind": "node",
                     "path": path,
+                    "flag": None,
                 }
-            for flag, fv in v.get("flags", {}).items():
-                if fv.get("classification") == Classification.NEEDS_REVIEW:
+            for flag, fv in v["flags"].items():
+                if fv["classification"] == Classification.NEEDS_REVIEW:
                     candidates[f"{path} {flag}"] = {
-                        "help_text": cache_nodes.get(path, {}).get("help_text", ""),
+                        "help_text": _help_text(cache_nodes, path),
                         "tokens": _dangerous_flag_tokens(flag),
-                        "kind": "flag",
                         "path": path,
                         "flag": flag,
                     }
@@ -1175,7 +1299,7 @@ def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
             continue
         any_found = True
 
-        verdict: dict = {}
+        verdict: Verdict = {}
         items = list(candidates.items())
         for i in range(0, len(items), _CLASSIFY_CHUNK_SIZE):
             chunk = dict(items[i : i + _CLASSIFY_CHUNK_SIZE])
@@ -1194,15 +1318,13 @@ def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
                 continue
             classification = result.get("classification", Classification.NEEDS_REVIEW)
             rationale = result.get("rationale", "")
-            if meta["kind"] == "node":
-                nodes[meta["path"]]["classification"] = classification
-                nodes[meta["path"]]["rationale"] = rationale
-                nodes[meta["path"]]["source"] = Source.LLM_RECONFIRMED
+            node = nodes[meta["path"]]
+            if meta["flag"] is None:
+                node["classification"] = classification
+                node["rationale"] = rationale
+                node["source"] = Source.LLM_RECONFIRMED
             else:
-                nodes[meta["path"]]["flags"][meta["flag"]] = {
-                    "classification": classification,
-                    "rationale": rationale,
-                }
+                node["flags"][meta["flag"]] = {"classification": classification, "rationale": rationale}
             resolved += 1
 
         if resolved:
@@ -1218,7 +1340,7 @@ def reconfirm(c, tool=None, model="haiku"):  # noqa: C901
 
 
 @task
-def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
+def review(c: Context, apply_all: bool = False, only: str | None = None, tool: str | None = None):  # noqa: C901
     """Show tools with unreviewed classifications (new or changed since the last reviewed
     snapshot) and, on confirmation, mark them reviewed. Nothing in `render` trusts an unreviewed
     entry, so this is the human gate before anything downstream sees a tool's rules. Per-tool, not
@@ -1238,7 +1360,7 @@ def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
     per-tool confirm can't be answered at all, so `--tool=<x> --apply-all` is the only way to
     approve one tool from there without approving everything."""
     rules = _load_all_rules()
-    pending = {name: entry for name, entry in rules.items() if not entry.get("reviewed")}
+    pending = {name: entry for name, entry in rules.items() if not entry["reviewed"]}
     only_set = {t.strip() for t in only.split(",") if t.strip()} if only else None
 
     if tool:
@@ -1252,13 +1374,13 @@ def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
         return
 
     for name, entry in sorted(pending.items()):
-        nodes = entry.get("nodes", {})
-        invalid = [k for k, v in nodes.items() if v.get("classification") == Classification.INVALID]
+        nodes = entry["nodes"]
+        invalid = [k for k, v in nodes.items() if v["classification"] == Classification.INVALID]
         invalid_note = f", {len(invalid)} excluded as invalid" if invalid else ""
         print(f"\n[allowlist] {name} ({len(nodes)} node(s){invalid_note})")
-        if entry.get("note"):
-            print(f"  note: {entry['note']}")
-        if entry.get("truncated"):
+        if note := entry.get("note"):
+            print(f"  note: {note}")
+        if entry["truncated"]:
             print("  note: tree truncated at max_nodes — not the tool's full command surface")
         if invalid:
             # Not classified/rendered as a real command — a discovery false positive (see
@@ -1268,8 +1390,8 @@ def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
             # rather than "this isn't a command, ignore it."
             print(f"  {_colorize('invalid', 'gray')} (excluded from rules, not a real command):")
             for path in sorted(invalid):
-                plain = f"    {path} ({nodes[path].get('source')}) — "
-                colored = f"    {_colorize(path, 'bold')} ({nodes[path].get('source')}) — "
+                plain = f"    {path} ({nodes[path]['source']}) — "
+                colored = f"    {_colorize(path, 'bold')} ({nodes[path]['source']}) — "
                 print(_wrap(plain, nodes[path]["rationale"], colored))
         # Full paths are sorted alphabetically, which — since a path is literally "<parent>
         # <child>" — naturally clusters every node under its parent already (a child's string
@@ -1280,17 +1402,17 @@ def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
         # rm", ...), which just looked like a flat list once paths got mixed with unrelated ones.
         for path in sorted(nodes):
             v = nodes[path]
-            if v.get("classification") == Classification.INVALID:
+            if v["classification"] == Classification.INVALID:
                 continue
             if only_set and v["classification"] not in only_set:
                 continue
             indent = "    " + "  " * path.count(" ")
             label = path.rsplit(" ", 1)[-1]
-            source = f" ({v['source']})" if v.get("source") == Source.COMMUNITY else ""
-            plain, colored = _node_prefix(indent, label, v["classification"], source)
+            source = f" ({v['source']})" if v["source"] == Source.COMMUNITY else ""
+            plain, colored = _node_prefix(indent, label, Classification(v["classification"]), source)
             print(_wrap(plain, v["rationale"], colored))
-            for flag, fv in sorted(v.get("flags", {}).items()):
-                fplain, fcolored = _node_prefix(indent + "  ", flag, fv["classification"])
+            for flag, fv in sorted(v["flags"].items()):
+                fplain, fcolored = _node_prefix(indent + "  ", flag, Classification(fv["classification"]))
                 print(_wrap(fplain, fv["rationale"], fcolored))
 
         approve = apply_all or util.confirm(f"Mark {name} reviewed?", default=False)
@@ -1303,7 +1425,7 @@ def review(c, apply_all=False, only=None, tool=None):  # noqa: C901
             print(f"  -> {name} left unreviewed")
 
 
-def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
+def _compute_claude_rules(rules: dict[str, RuleEntry]) -> tuple[list[str], list[str]]:
     """Reviewed rules -> (allow patterns, ask patterns). Shared by `render` (prints it) and
     `apply` (merges it into ~/.claude/settings.json) so the two can never drift apart. Per-flag
     ratings aren't rendered into rules here: Claude's Bash permission rules are literal-prefix
@@ -1362,9 +1484,10 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
       ratings can't express go, as literal prefix patterns.
     """
     registry = _load_registry()
-    allow, ask = [], []
+    allow: list[str] = []
+    ask: list[str] = []
     for name, entry in sorted(rules.items()):
-        if not entry.get("reviewed"):
+        if not entry["reviewed"]:
             continue
         tool_allow, tool_ask = _tool_claude_rules(name, entry, registry.get(name, {}))
         allow.extend(tool_allow)
@@ -1372,7 +1495,7 @@ def _compute_claude_rules(rules: dict) -> tuple[list[str], list[str]]:
     return allow, ask
 
 
-def _tool_claude_rules(name: str, entry: dict, cfg: dict) -> tuple[list[str], list[str]]:
+def _tool_claude_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> tuple[list[str], list[str]]:
     """One reviewed tool's (allow, ask) patterns — the per-tool body of _compute_claude_rules,
     which documents every knob applied here."""
     allow: list[str] = []
@@ -1393,10 +1516,11 @@ def _tool_claude_rules(name: str, entry: dict, cfg: dict) -> tuple[list[str], li
     # regardless of its own classification. This is the one place a node's classification is
     # capped rather than trusted outright.
     is_cloud_cli = bool(cfg.get("cloud_cli"))
-    cache_nodes = (_load_cache(name) or {}).get("nodes", {})
-    for path, v in sorted(entry.get("nodes", {}).items()):
+    cache = _load_cache(name)
+    cache_nodes = cache["nodes"] if cache else {}
+    for path, v in sorted(entry["nodes"].items()):
         classification = v["classification"]
-        if cache_nodes.get(path, {}).get("children"):
+        if (cache_node := cache_nodes.get(path)) and cache_node["children"]:
             continue
         if path in allow_overrides:
             continue  # rendered from the override list below, whatever the verdict says
@@ -1417,7 +1541,9 @@ def _tool_claude_rules(name: str, entry: dict, cfg: dict) -> tuple[list[str], li
     return allow, ask
 
 
-def _coverage_gaps(rules: dict[str, dict], caches: dict[str, dict]) -> list[tuple[str, str, str, str]]:
+def _coverage_gaps(
+    rules: dict[str, RuleEntry], caches: Mapping[str, CacheEntry | None]
+) -> list[tuple[str, str, str, str]]:
     """For every *reviewed* tool, find children of a node that has children of its own — i.e. a
     node whose own rule `_compute_claude_rules` now always skips, regardless of its classification
     tier — that won't themselves render any rule at all.
@@ -1435,14 +1561,15 @@ def _coverage_gaps(rules: dict[str, dict], caches: dict[str, dict]) -> list[tupl
     every node-with-children is covered by its own read_only/write/dangerous rule. Unreviewed
     tools are skipped entirely — nothing renders for them at all yet (parent or child alike), so
     there's no partial-coverage gap to report until they're reviewed."""
-    gaps = []
+    gaps: list[tuple[str, str, str, str]] = []
     for tool, entry in sorted(rules.items()):
-        if not entry.get("reviewed"):
+        if not entry["reviewed"]:
             continue
-        nodes = entry.get("nodes", {})
-        cache_nodes = (caches.get(tool) or {}).get("nodes", {})
+        nodes = entry["nodes"]
+        cache = caches.get(tool)
+        cache_nodes = cache["nodes"] if cache else {}
         for path, cache_node in sorted(cache_nodes.items()):
-            for child in cache_node.get("children") or []:
+            for child in cache_node["children"]:
                 child_entry = nodes.get(child)
                 if child_entry is None:
                     gaps.append((tool, path, child, "missing from rules.json"))
@@ -1456,17 +1583,17 @@ def _print_coverage_gaps(gaps: list[tuple[str, str, str, str]]) -> None:
         print(f"[allowlist] COVERAGE GAP: {tool} {parent!r} has child {child!r} with no rule of its own ({reason})")
 
 
-def _render_claude(rules: dict) -> str:
+def _render_claude(rules: dict[str, RuleEntry]) -> str:
     allow, ask = _compute_claude_rules(rules)
     return json.dumps({"permissions": {"allow": allow, "ask": ask}}, indent=2)
 
 
-def _render_copilot(rules: dict) -> str:
-    auto_approve = {}
+def _render_copilot(rules: dict[str, RuleEntry]) -> str:
+    auto_approve: dict[str, bool] = {}
     for name, entry in sorted(rules.items()):
-        if not entry.get("reviewed"):
+        if not entry["reviewed"]:
             continue
-        for path, v in sorted(entry.get("nodes", {}).items()):
+        for path, v in sorted(entry["nodes"].items()):
             key = (
                 f"/^{re.escape(name)}\\b.*/"
                 if path == _NO_SUBCOMMANDS_KEY
@@ -1477,19 +1604,19 @@ def _render_copilot(rules: dict) -> str:
 
 
 @task
-def render(c, target="claude", out=None):
+def render(c: Context, target: str = "claude", out: str | None = None):
     """Print the reviewed subset of rules as Claude Bash(...) allow/ask rules or Copilot
     chat.tools.terminal.autoApprove regex rules. Output-only — never writes to any settings file
     (local or user-wide); that's a deliberate next step, not part of this task. `write` and
     `dangerous` entries always render as still-prompting (Claude `ask` / Copilot `false`), never
     as a hard deny — the point is a visible, still-approvable prompt, not a block."""
     rules = _load_all_rules()
-    unreviewed = [name for name, entry in rules.items() if not entry.get("reviewed")]
+    unreviewed = [name for name, entry in rules.items() if not entry["reviewed"]]
     if unreviewed:
         joined = ", ".join(sorted(unreviewed))
         print(f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded from output: {joined}")
 
-    gaps = _coverage_gaps(rules, {name: _load_cache(name) or {} for name in rules})
+    gaps = _coverage_gaps(rules, {name: _load_cache(name) for name in rules})
     if gaps:
         _print_coverage_gaps(gaps)
         print(f"[allowlist] note: {len(gaps)} coverage gap(s) above — see `inv allowlist.check-coverage`")
@@ -1535,7 +1662,7 @@ def _merge_rule_sets(
 
 
 @task
-def apply(c):
+def apply(c: Context):
     """Merge the reviewed Bash allow/ask rules into ~/.claude/settings.json's `permissions`
     block — the only thing this task ever touches there.
 
@@ -1551,13 +1678,13 @@ def apply(c):
     regenerated each run, nothing else is.
     """
     rules = _load_all_rules()
-    unreviewed = [name for name, entry in rules.items() if not entry.get("reviewed")]
+    unreviewed = [name for name, entry in rules.items() if not entry["reviewed"]]
     if unreviewed:
         print(
             f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded: {', '.join(sorted(unreviewed))}"
         )
 
-    gaps = _coverage_gaps(rules, {name: _load_cache(name) or {} for name in rules})
+    gaps = _coverage_gaps(rules, {name: _load_cache(name) for name in rules})
     if gaps:
         _print_coverage_gaps(gaps)
         raise RuntimeError(
@@ -1612,7 +1739,7 @@ def apply(c):
 
 
 @task
-def status(c):  # noqa: C901
+def status(c: Context):  # noqa: C901
     """Quick table: which registered tools are installed, stale (version changed since last
     classify), or still unreviewed."""
     registry = _load_registry()
@@ -1630,35 +1757,35 @@ def status(c):  # noqa: C901
             continue
 
         if cfg.get("skip_interactive"):
-            print(f"[allowlist] {name}: interactive-only, reviewed={entry.get('reviewed')}")
+            print(f"[allowlist] {name}: interactive-only, reviewed={entry['reviewed']}")
             continue
 
         version_flag = cfg.get("version_flag", "--version")
         current_version = _tool_version(name, version_flag, cfg)
-        stale = bool(current_version) and current_version != entry.get("version")
-        nodes = entry.get("nodes", {})
-        flags = []
+        stale = bool(current_version) and current_version != entry["version"]
+        nodes = entry["nodes"]
+        flags: list[str] = []
         if stale:
             flags.append("STALE")
-        if not entry.get("reviewed"):
+        if not entry["reviewed"]:
             flags.append("unreviewed")
-        if entry.get("truncated"):
+        if entry["truncated"]:
             flags.append("truncated")
         if cfg.get("cloud_cli"):
             flags.append("cloud-cli (depth capped intentionally)")
-        invalid_count = sum(1 for v in nodes.values() if v.get("classification") == Classification.INVALID)
+        invalid_count = sum(1 for v in nodes.values() if v["classification"] == Classification.INVALID)
         if invalid_count:
             flags.append(f"{invalid_count} invalid (excluded)")
-        needs_review = sum(1 for v in nodes.values() if v.get("classification") == Classification.NEEDS_REVIEW)
+        needs_review = sum(1 for v in nodes.values() if v["classification"] == Classification.NEEDS_REVIEW)
         if needs_review:
             flags.append(f"{needs_review} needs_review")
         flag_str = f" [{', '.join(flags)}]" if flags else ""
         depth = cfg.get("max_depth", 1)
-        print(f"[allowlist] {name}: {entry.get('version') or '?'} ({len(nodes)} node(s), depth={depth}){flag_str}")
+        print(f"[allowlist] {name}: {entry['version'] or '?'} ({len(nodes)} node(s), depth={depth}){flag_str}")
 
 
 @task
-def check_coverage(c):
+def check_coverage(c: Context):
     """Does every child of a node-with-children actually have its own renderable rule?
 
     `_compute_claude_rules` never renders a rule for a node that has children — deliberately, and
@@ -1673,9 +1800,9 @@ def check_coverage(c):
     recursing a new tool.
     """
     rules = _load_all_rules()
-    gaps = _coverage_gaps(rules, {name: _load_cache(name) or {} for name in rules})
+    gaps = _coverage_gaps(rules, {name: _load_cache(name) for name in rules})
     if not gaps:
-        reviewed = sum(1 for entry in rules.values() if entry.get("reviewed"))
+        reviewed = sum(1 for entry in rules.values() if entry["reviewed"])
         print(f"[allowlist] checked {reviewed} reviewed tool(s) — every parent-with-children's child is covered")
         return
     _print_coverage_gaps(gaps)
@@ -1691,7 +1818,7 @@ def check_coverage(c):
 _MAN_BINARIES = ["/usr/bin/man", "/bin/man", "/usr/bin/groff", "/usr/bin/troff"]
 
 
-def _should_check_man_deps(name: str, cfg: dict) -> bool:
+def _should_check_man_deps(name: str, cfg: ToolConfig) -> bool:
     """Skip tools explicitly opted out, and (for tools without a shell_prefix escape hatch) any
     not actually installed on this machine."""
     if cfg.get("skip_interactive"):
@@ -1699,7 +1826,7 @@ def _should_check_man_deps(name: str, cfg: dict) -> bool:
     return bool(cfg.get("shell_prefix")) or util.command_exists(name)
 
 
-def _strace_execve_log(cmd: list[str], env: dict) -> str | None:
+def _strace_execve_log(cmd: list[str], env: dict[str, str]) -> str | None:
     """Run cmd under strace tracing execve calls; return the log text, or None on timeout."""
     with tempfile.NamedTemporaryFile(prefix="strace-", suffix=".log") as log:
         try:
@@ -1723,7 +1850,7 @@ def _man_dependency(log_text: str) -> str | None:
 
 
 @task
-def check_man_deps(c):
+def check_man_deps(c: Context):
     """Does any registered tool's --help invocation secretly depend on a separately-installed
     man-page-rendering package?
 
@@ -1741,7 +1868,7 @@ def check_man_deps(c):
     """
     registry = _load_registry()
     env = {**os.environ, **_DETERMINISTIC_ENV}
-    offenders = []
+    offenders: list[str] = []
 
     for name, cfg in sorted(registry.items()):
         if not _should_check_man_deps(name, cfg):

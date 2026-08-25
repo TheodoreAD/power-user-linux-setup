@@ -11,6 +11,8 @@ import shutil
 from pathlib import Path
 
 import pytest
+from invoke import Context, MockContext, Result
+from typing_extensions import override  # typing.override is 3.12+; this repo's floor is 3.11
 
 from tasks import ai, deploy, ui, util
 
@@ -39,15 +41,20 @@ def _fail_if_asked(message):
     return fail_if_asked
 
 
-class _FakeContext:
-    """Stand-in for invoke's Context — just records the shell commands _install_remote_skill
-    would have run, never executes anything."""
+class _FakeContext(Context):
+    """A Context that records the shell commands _install_remote_skill would have run, never
+    executing anything. A real subclass (not a duck-typed stand-in) so it satisfies the
+    `c: Context` annotation the helpers declare; invoke's own MockContext would raise on any
+    command it wasn't pre-loaded with, and the commands are what these tests assert on."""
 
-    def __init__(self):
-        self.commands = []
+    def __init__(self) -> None:
+        super().__init__()
+        self.commands: list[str] = []
 
-    def run(self, cmd):
-        self.commands.append(cmd)
+    @override
+    def run(self, command: str, **kwargs: object) -> Result:
+        self.commands.append(command)
+        return Result()
 
 
 # ---------------------------------------------------------------------------
@@ -347,7 +354,7 @@ def test_install_local_skill_dry_run_never_prompts_or_writes(tmp_path, monkeypat
 
 def test_install_remote_skill_asks_before_running_skills_add(monkeypatch):
     c = _FakeContext()
-    entry = {"repo": "owner/repo", "names": ["foo"], "description": "Does foo things."}
+    entry: util.SkillEntry = {"repo": "owner/repo", "names": ["foo"], "description": "Does foo things."}
     asked = {}
 
     def fake_ask(question, default=True):
@@ -364,7 +371,7 @@ def test_install_remote_skill_asks_before_running_skills_add(monkeypatch):
 
 def test_install_remote_skill_declining_prompt_skips_command(monkeypatch, capsys):
     c = _FakeContext()
-    entry = {"repo": "owner/repo"}
+    entry: util.SkillEntry = {"repo": "owner/repo"}
     monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
 
     ai._install_remote_skill(c, entry, label="test", yes=False)
@@ -375,7 +382,7 @@ def test_install_remote_skill_declining_prompt_skips_command(monkeypatch, capsys
 
 def test_install_remote_skill_yes_skips_prompt_and_runs(monkeypatch):
     c = _FakeContext()
-    entry = {"repo": "owner/repo"}
+    entry: util.SkillEntry = {"repo": "owner/repo"}
     monkeypatch.setattr(ui, "ask", _fail_if_asked("yes=True must never prompt"))
 
     ai._install_remote_skill(c, entry, label="test", yes=True)
@@ -385,7 +392,7 @@ def test_install_remote_skill_yes_skips_prompt_and_runs(monkeypatch):
 
 def test_install_remote_skill_dry_run_never_prompts_or_runs(monkeypatch):
     c = _FakeContext()
-    entry = {"repo": "owner/repo"}
+    entry: util.SkillEntry = {"repo": "owner/repo"}
     monkeypatch.setattr(ui, "ask", _fail_if_asked("dry run must never prompt"))
     util.DRY_RUN = True
 
@@ -428,18 +435,18 @@ def test_entry_skill_names_remote_without_names_is_unknowable():
 
 
 def test_select_entry_without_selection_passes_everything_through():
-    entry = {"source": "npx", "repo": "o/r"}
+    entry: util.SkillEntry = {"source": "npx", "repo": "o/r"}
     assert ai._select_entry(entry, None) is entry
 
 
 def test_select_entry_local_match_and_miss():
-    entry = {"source": "local", "path": "skills/plan-docs"}
+    entry: util.SkillEntry = {"source": "local", "path": "skills/plan-docs"}
     assert ai._select_entry(entry, {"plan-docs"}) is entry
     assert ai._select_entry(entry, {"something-else"}) is None
 
 
 def test_select_entry_narrows_remote_names_to_the_requested_ones():
-    entry = {"source": "npx", "repo": "o/r", "names": ["a", "b"]}
+    entry: util.SkillEntry = {"source": "npx", "repo": "o/r", "names": ["a", "b"]}
 
     assert ai._select_entry(entry, {"a"}) == {"source": "npx", "repo": "o/r", "names": ["a"]}
     # the original entry is not mutated
@@ -477,7 +484,7 @@ def test_install_declared_skills_dispatches_by_source_and_threads_yes(monkeypatc
         },
     )
 
-    ai._install_declared_skills(None, Path("/base"), yes=True)
+    ai._install_declared_skills(MockContext(), Path("/base"), yes=True)
 
     assert calls == [("local", "skills/a", "pkg-a", True), ("npx", "o/r", "pkg-b", True)]
 
@@ -504,7 +511,7 @@ def test_install_declared_skills_selection_installs_only_the_named_skill(monkeyp
     calls = []
     _stub_two_skill_packages(monkeypatch, calls)
 
-    ai._install_declared_skills(None, Path("/base"), yes=True, selected={"plan-docs"})
+    ai._install_declared_skills(MockContext(), Path("/base"), yes=True, selected={"plan-docs"})
 
     assert calls == [("local", "skills/plan-docs")]
 
@@ -513,7 +520,7 @@ def test_install_declared_skills_selection_narrows_a_remote_entrys_names(monkeyp
     calls = []
     _stub_two_skill_packages(monkeypatch, calls)
 
-    ai._install_declared_skills(None, Path("/base"), yes=True, selected={"a"})
+    ai._install_declared_skills(MockContext(), Path("/base"), yes=True, selected={"a"})
 
     assert calls == [("npx", ["a"])]
 
@@ -522,7 +529,7 @@ def test_install_declared_skills_no_selection_installs_everything(monkeypatch):
     calls = []
     _stub_two_skill_packages(monkeypatch, calls)
 
-    ai._install_declared_skills(None, Path("/base"), yes=True)
+    ai._install_declared_skills(MockContext(), Path("/base"), yes=True)
 
     assert len(calls) == 3
 
@@ -533,7 +540,7 @@ def test_install_declared_skills_unmatched_selection_raises_and_lists_declared(m
     _stub_two_skill_packages(monkeypatch, calls)
 
     with pytest.raises(ValueError, match="matched no declared skill") as excinfo:
-        ai._install_declared_skills(None, Path("/base"), yes=True, selected={"plan-doc"})
+        ai._install_declared_skills(MockContext(), Path("/base"), yes=True, selected={"plan-doc"})
 
     assert "plan-docs" in str(excinfo.value)
     assert calls == []
@@ -548,7 +555,7 @@ def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
         lambda: {"packages": {"pkg": {"enabled": True, "skills": [{"source": "weird"}]}}},
     )
 
-    ai._install_declared_skills(None, Path("/base"), yes=True)
+    ai._install_declared_skills(MockContext(), Path("/base"), yes=True)
 
     assert "unknown source" in capsys.readouterr().out
 
@@ -575,11 +582,12 @@ def _stub_skills_task_helpers(monkeypatch, calls):
 def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch):
     # ai.install_skills is @task-wrapped, and invoke's Task.__call__ insists its first arg be a real
     # Context — .body is the plain underlying function, same pattern as calling any other
-    # helper directly.
+    # helper directly. MockContext() rather than None: the helpers declare `c: Context`, and a
+    # None would be a type error even though every helper here is stubbed out.
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.install_skills.body(None, yes=True)
+    ai.install_skills.body(MockContext(), yes=True)
     assert ("perms",) in calls
     assert ("dirs",) in calls
     assert ("mode",) in calls
@@ -592,7 +600,7 @@ def test_skills_task_with_dir_skips_permissions_and_copilot(monkeypatch, tmp_pat
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.install_skills.body(None, dir=str(tmp_path), yes=False)
+    ai.install_skills.body(MockContext(), dir=str(tmp_path), yes=False)
 
     assert ("perms",) not in calls
     assert ("dirs",) not in calls
@@ -607,7 +615,7 @@ def test_skills_task_with_skill_filters_and_skips_global_settings(monkeypatch):
     calls = []
     _stub_skills_task_helpers(monkeypatch, calls)
 
-    ai.install_skills.body(None, yes=True, skill="plan-docs")
+    ai.install_skills.body(MockContext(), yes=True, skill="plan-docs")
 
     assert ("perms",) not in calls
     assert ("statusline",) not in calls

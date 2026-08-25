@@ -10,13 +10,13 @@ from tasks import deploy, util, verify
 
 
 def test_resolve_wrapper_script_with_content_file_returns_deploy_kind():
-    cfg = {"dest": "~/AGENTS.md", "content_file": "config/global-AGENTS.md"}
+    cfg: util.PackageConfig = {"dest": "~/AGENTS.md", "content_file": "config/global-AGENTS.md"}
     kind, target = verify._resolve("claude-global-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
     assert (kind, target) == ("deploy", "~/AGENTS.md")
 
 
 def test_resolve_wrapper_script_without_content_file_falls_back_to_path():
-    cfg = {"dest": "~/.local/bin/some-tool"}
+    cfg: util.PackageConfig = {"dest": "~/.local/bin/some-tool"}
     kind, target = verify._resolve("some-tool", cfg, util.PackageMethod.WRAPPER_SCRIPT)
     assert (kind, target) == ("path", "~/.local/bin/some-tool")
 
@@ -81,7 +81,7 @@ def test_deploy_check_failure_message_points_at_deploy_status(tmp_path):
 # ---------------------------------------------------------------------------
 
 
-def _stub_config(monkeypatch, packages: dict) -> None:
+def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
     monkeypatch.setattr(util, "enabled_packages", lambda: packages)
     monkeypatch.setattr(

@@ -21,7 +21,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import ui, util
 
@@ -113,7 +113,7 @@ def _parse_etc_environment(text: str) -> tuple[str, int] | None:
 # Environment + address discovery (shells out — not unit-tested, see tests/README.md)
 
 
-def _wsl_host_ip(c) -> str | None:
+def _wsl_host_ip(c: Context) -> str | None:
     result = c.run("ip route show default", hide=True, warn=True)
     if not result.ok:
         return None
@@ -121,7 +121,7 @@ def _wsl_host_ip(c) -> str | None:
     return m.group(1) if m else None
 
 
-def _gsettings_proxy(c) -> tuple[str, int] | None:
+def _gsettings_proxy(c: Context) -> tuple[str, int] | None:
     mode = c.run("gsettings get org.gnome.system.proxy mode", hide=True, warn=True)
     if not mode.ok or "manual" not in mode.stdout:
         return None
@@ -136,13 +136,13 @@ def _gsettings_proxy(c) -> tuple[str, int] | None:
     return (host_val, int(port_val))
 
 
-def _discover_candidate(c) -> tuple[str, int, str] | None:  # noqa: C901
+def _discover_candidate(c: Context) -> tuple[str, int, str] | None:  # noqa: C901
     """Returns (host, port, source_description) for the best-guess upstream proxy, or None if
     nothing was found. Environment-specific priority order — see docs/corporate-proxy.md.
     """
     override = util.load_proxy_override()
-    if override.get("host") and override.get("port"):
-        return (override["host"], int(override["port"]), "~/.config/power-user-linux-setup/identity.toml [proxy]")
+    if (host := override.get("host")) and (port := override.get("port")):
+        return (host, int(port), "~/.config/power-user-linux-setup/identity.toml [proxy]")
 
     if util.is_wsl():
         host_ip = _wsl_host_ip(c)
@@ -177,7 +177,7 @@ def _discover_candidate(c) -> tuple[str, int, str] | None:  # noqa: C901
     return None
 
 
-def _probe(c, host: str, port: int) -> list[str] | None:
+def _probe(c: Context, host: str, port: int) -> list[str] | None:
     """Send an unauthenticated request through the candidate and read the schemes offered on the
     resulting 407. None means the candidate wasn't reachable at all (connection-level failure —
     curl itself still exits ok on a 407, since that's a valid HTTP response, not a curl error).
@@ -193,7 +193,7 @@ def _probe(c, host: str, port: int) -> list[str] | None:
     return _parse_proxy_authenticate(result.stderr)
 
 
-def _probe_with_retries(c, host: str, port: int, attempts: int = 5, delay: float = 1.0) -> list[str] | None:
+def _probe_with_retries(c: Context, host: str, port: int, attempts: int = 5, delay: float = 1.0) -> list[str] | None:
     """Same as _probe, but retried briefly — used only for the post-restart verification in
     install(). `systemctl --user restart`/a freshly-forked px process returning doesn't mean the
     port is bound yet (confirmed in practice: an immediate probe here saw a connection refused
@@ -214,7 +214,7 @@ def _probe_with_retries(c, host: str, port: int, attempts: int = 5, delay: float
 # Px install / config / daemon lifecycle
 
 
-def _install_px(c) -> None:
+def _install_px(c: Context) -> None:
     if util.DRY_RUN:
         print(f"[proxy] px: {util.ok_label(util.command_exists('px'))}")
         return
@@ -228,7 +228,7 @@ def _install_px(c) -> None:
 
 
 def _configure_px(
-    c, host: str, port: int, noproxy: str | None, username: str | None = None, use_kerberos: bool = False
+    c: Context, host: str, port: int, noproxy: str | None, username: str | None = None, use_kerberos: bool = False
 ) -> bool:
     """Persist the upstream address + bypass list (+ username, if a credential was just captured)
     via Px's own --save — px.ini's schema is deliberately not hand-authored here, see the plan
@@ -251,13 +251,13 @@ def _configure_px(
     return before != after
 
 
-def _user_systemd_available(c) -> bool:
+def _user_systemd_available(c: Context) -> bool:
     if not Path("/run/systemd/system").is_dir():
         return False
     return c.run("systemctl --user status", hide=True, warn=True).ok
 
 
-def _write_unit(c) -> bool:
+def _write_unit(c: Context) -> bool:
     """Write ~/.config/systemd/user/pulse-proxy.service — a genuinely new pattern in this repo,
     no existing tasks/*.py installs a systemd --user unit (only system-level units, see
     tasks/system.py). User-owned path, no sudo needed. Returns True if changed.
@@ -274,7 +274,7 @@ def _write_unit(c) -> bool:
     return changed
 
 
-def _restart_daemon(c) -> None:
+def _restart_daemon(c: Context) -> None:
     """Always called after any config/unit change — file-correct doesn't imply the running
     process picked it up, same rationale tasks/system.py's dns() task documents for
     systemd-resolved. Falls back to the devcontainer wrapper script when systemd --user isn't
@@ -319,7 +319,7 @@ def _capture_password(prompt: str) -> str | None:
     return None
 
 
-def _capture_credential(c) -> str | None:
+def _capture_credential(c: Context) -> str | None:
     """Capture a username+password once and store the password in the same keyring entry Px
     itself reads at its own startup (service "Px", account <username>). Returns the username on
     success, None on failure — the caller (install()) still needs the username to pass to
@@ -387,7 +387,7 @@ def _needs_negotiate(schemes: list[str]) -> bool:
     return any(s.lower() in ("negotiate", "kerberos") for s in schemes)
 
 
-def _has_kerberos_ticket(c) -> bool:
+def _has_kerberos_ticket(c: Context) -> bool:
     if not util.command_exists("klist"):
         return False
     return c.run("klist -s", hide=True, warn=True).ok
@@ -398,7 +398,7 @@ def _has_kerberos_ticket(c) -> bool:
 
 
 @task
-def check(c, proxy="auto"):
+def check(c: Context, proxy: str = "auto"):
     """Diagnose corporate-proxy state: environment, candidate address, auth scheme, Px/daemon
     status. Read-only — never mutates. --proxy=host:port overrides auto-discovery, e.g. to probe
     a specific address without it being live in the environment yet. See docs/corporate-proxy.md.
@@ -449,7 +449,7 @@ def check(c, proxy="auto"):
 
 
 @task
-def fix(c, proxy="auto", noproxy=None):
+def fix(c: Context, proxy: str = "auto", noproxy: str | None = None):
     """Install px if missing and (re)write its config + daemon, without touching credentials.
     Idempotent, non-interactive. Run `inv proxy.install` instead for the full flow including
     credential capture. See docs/corporate-proxy.md.
@@ -478,7 +478,7 @@ def fix(c, proxy="auto", noproxy=None):
 
 
 @task
-def install(c, proxy="auto", noproxy=None):
+def install(c: Context, proxy: str = "auto", noproxy: str | None = None):
     """Full flow: detect, capture a credential if the probe requires one, configure + start the
     daemon, then verify it actually authenticates before pointing every terminal at it. See
     docs/corporate-proxy.md.

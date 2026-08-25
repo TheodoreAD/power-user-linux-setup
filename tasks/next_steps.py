@@ -21,22 +21,22 @@ def _git_settings_applied() -> bool:
     return True
 
 
-def _git_profiles_applied(identity: dict) -> bool:
+def _git_profiles_applied(identity: util.Identity) -> bool:
     profiles = identity.get("git_profiles", [])
     return all(git.resolve_project_dir(p["directory"]).exists() for p in profiles)
 
 
-def _missing_ssh_keys(identity: dict) -> list[str]:
+def _missing_ssh_keys(identity: util.Identity) -> list[str]:
     node = ssh.current_node()
     emails = sorted({h["email"] for h in identity.get("ssh_hosts", [])})
     return [email for email in emails if not ssh.key_path(email, node).exists()]
 
 
-def _ssh_config_applied(identity: dict) -> bool:
+def _ssh_config_applied(identity: util.Identity) -> bool:
     if not ssh.SSH_CONFIG.exists():
         return False
     node = ssh.current_node()
-    blocks = []
+    blocks: list[str] = []
     for h in identity.get("ssh_hosts", []):
         key = ssh.key_path(h["email"], node)
         blocks.append(f"Host {h['alias']}\n  HostName {h['hostname']}\n  IdentityFile {key}\n  User {h['user']}")

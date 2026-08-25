@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import deploy, util
 
@@ -24,7 +24,7 @@ _APT_CONF_CONTENT = 'DPkg::Progress-Fancy "false";\n'
 
 
 @task
-def configure(c):
+def configure(c: Context):
     """Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars."""
     util.require_apt()
     if util.DRY_RUN:
@@ -45,7 +45,7 @@ def configure(c):
 # ---------------------------------------------------------------------------
 
 
-def _install_apt_package(c, name: str, cfg: dict) -> None:
+def _install_apt_package(c: Context, name: str, cfg: util.PackageConfig) -> None:
     packages = util.apt_packages(name, cfg)
     if util.DRY_RUN:
         parts = [f"{p}:{util.ok_label(util.apt_installed(p))}" for p in packages]
@@ -64,7 +64,7 @@ def _install_apt_package(c, name: str, cfg: dict) -> None:
 
 
 @task
-def install_base(c):
+def install_base(c: Context):
     """Install base apt packages from config."""
     util.require_apt()
     pkgs = util.packages_by_method(util.PackageMethod.APT)
@@ -84,8 +84,10 @@ def install_base(c):
 # ---------------------------------------------------------------------------
 
 
-def _register_repo(c, name: str, cfg: dict, codename: str) -> bool:
+def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str) -> bool:
     """Write GPG key and sources entry. Returns True if apt update is needed."""
+    if "gpg_path" not in cfg or "gpg_url" not in cfg or "sources_path" not in cfg or "sources_entry" not in cfg:
+        raise util.missing_fields(name, "gpg_path", "gpg_url", "sources_path", "sources_entry")
     gpg = Path(cfg["gpg_path"])
     sources = Path(cfg["sources_path"])
     needs_update = False
@@ -115,7 +117,7 @@ def _register_repo(c, name: str, cfg: dict, codename: str) -> bool:
     return needs_update
 
 
-def _install_repo_packages(c, name: str, cfg: dict) -> None:
+def _install_repo_packages(c: Context, name: str, cfg: util.PackageConfig) -> None:
     missing = [p for p in util.apt_packages(name, cfg) if not util.apt_installed(p)]
     if missing:
         print(f"[{name}] installing: {', '.join(missing)}")
@@ -124,11 +126,13 @@ def _install_repo_packages(c, name: str, cfg: dict) -> None:
             print(f"[{name}] WARNING: apt install failed — check repo or run manually")
     else:
         print(f"[{name}] already installed")
-    for cmd in cfg.get("post_install", []):
-        c.run(cmd, warn=True)
+    if post_install := cfg.get("post_install"):
+        c.run(post_install, warn=True)
 
 
-def _status_repo(name: str, cfg: dict) -> None:
+def _status_repo(name: str, cfg: util.PackageConfig) -> None:
+    if "gpg_path" not in cfg or "sources_path" not in cfg:
+        raise util.missing_fields(name, "gpg_path", "sources_path")
     gpg = Path(cfg["gpg_path"])
     sources = Path(cfg["sources_path"])
     repo_ok = gpg.exists() and sources.exists()
@@ -138,7 +142,7 @@ def _status_repo(name: str, cfg: dict) -> None:
 
 
 @task
-def install_repos(c):
+def install_repos(c: Context):
     """Set up external apt repos and install their packages."""
     util.require_apt()
     pkgs = util.packages_by_method(util.PackageMethod.APT_REPO)
@@ -183,7 +187,7 @@ def install_repos(c):
 # ---------------------------------------------------------------------------
 
 
-def _apply_config_files(name: str, cfg: dict) -> None:
+def _apply_config_files(name: str, cfg: util.PackageConfig) -> None:
     """Seed each config_files entry at its destination, through tasks/deploy.py's writer.
 
     A `config_files` destination is the user's after first install (deploy.Policy.SEEDED), so one
@@ -207,10 +211,12 @@ def _apply_config_files(name: str, cfg: dict) -> None:
 # ---------------------------------------------------------------------------
 
 
-def _resolve_version(c, name: str, cfg: dict) -> str | None:
+def _resolve_version(c: Context, name: str, cfg: util.PackageConfig) -> str | None:
     """Return the version/tag string for a deb-github package, or None on failure."""
     if "tag" in cfg:
         return cfg["tag"]
+    if "repo" not in cfg:
+        raise util.missing_fields(name, "repo")
     result = c.run(
         f"curl -fsSL https://api.github.com/repos/{cfg['repo']}/releases/latest"
         " | grep '\"tag_name\"'"
@@ -225,12 +231,14 @@ def _resolve_version(c, name: str, cfg: dict) -> str | None:
     return version
 
 
-def _dpkg_install(c, name: str, cfg: dict, version: str) -> bool:
+def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) -> bool:
     """Download and dpkg-install a deb-github asset. Returns True on success.
 
     Some projects (e.g. flameshot's CI artifacts) publish the .deb wrapped in a .zip rather than
     as a bare asset — unzip to a scratch dir and install whatever .deb is inside.
     """
+    if "repo" not in cfg or "asset" not in cfg:
+        raise util.missing_fields(name, "repo", "asset")
     tag_prefix = cfg.get("tag_prefix", "v")
     asset = cfg["asset"].format(version=version)
     downloaded = f"/tmp/{asset}"
@@ -260,7 +268,9 @@ def _dpkg_install(c, name: str, cfg: dict, version: str) -> bool:
     return True
 
 
-def _dpkg_install_and_report(c, name: str, cfg: dict, version: str, verb: str, past_verb: str) -> None:
+def _dpkg_install_and_report(
+    c: Context, name: str, cfg: util.PackageConfig, version: str, verb: str, past_verb: str
+) -> None:
     """Download+dpkg-install `version` and print a "<verb>..."/"<past_verb>" pair around it —
     shared by the first-install path (installing/installed) and upgrade_debs() (upgrading/upgraded)."""
     tag_prefix = cfg.get("tag_prefix", "v")
@@ -269,7 +279,7 @@ def _dpkg_install_and_report(c, name: str, cfg: dict, version: str, verb: str, p
         print(f"[{name}] {past_verb} {tag_prefix}{version}")
 
 
-def _install_github_deb(c, name: str, cfg: dict) -> None:
+def _install_github_deb(c: Context, name: str, cfg: util.PackageConfig) -> None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
         print(f"[{name}] {util.ok_label(ok)}")
@@ -286,7 +296,7 @@ def _install_github_deb(c, name: str, cfg: dict) -> None:
     _apply_config_files(name, cfg)
 
 
-def _install_deb_url(c, name: str, cfg: dict) -> None:
+def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
         print(f"[{name}] {util.ok_label(ok)}")
@@ -310,6 +320,8 @@ def _install_deb_url(c, name: str, cfg: dict) -> None:
         print(f"[{name}] installed")
         return
     if "{version}" in url:
+        if "version_cmd" not in cfg:
+            raise util.missing_fields(name, "version_cmd")
         version = c.run(cfg["version_cmd"], hide=True).stdout.strip()
         url = url.format(version=version)
     print(f"[{name}] installing...")
@@ -319,14 +331,14 @@ def _install_deb_url(c, name: str, cfg: dict) -> None:
     print(f"[{name}] installed")
 
 
-def _cache_size_report(c, label: str) -> None:
+def _cache_size_report(c: Context, label: str) -> None:
     result = c.run("du -sh /var/cache/apt/archives", hide=True, warn=True)
     size = result.stdout.split()[0] if result.ok and result.stdout.split() else "0"
     print(f"[{label}] archive cache: {size}")
 
 
 @task
-def clean_cache(c):
+def clean_cache(c: Context):
     """Remove apt's downloaded .deb cache for packages no longer available at their cached
     version (`apt-get autoclean`) — conservative, keeps .debs for currently-installed versions
     cached for reinstall. Opt-in, not part of `inv setup`/`apt.install-base` — see `inv clean.caches`.
@@ -341,7 +353,7 @@ def clean_cache(c):
 
 
 @task
-def clean_cache_full(c):
+def clean_cache_full(c: Context):
     """Remove apt's entire downloaded .deb cache (/var/cache/apt/archives), including .debs for
     currently-installed packages — apt just re-downloads them if reinstalled. Opt-in, not part of
     `inv setup`/`apt.install-base` — see `inv clean.all-full`.
@@ -355,7 +367,7 @@ def clean_cache_full(c):
 
 
 @task
-def install_debs(c):
+def install_debs(c: Context):
     """Install packages sourced from GitHub releases or direct deb URLs."""
     util.require_apt()
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
@@ -374,7 +386,7 @@ def install_debs(c):
 
 
 @task
-def uninstall(c, name):
+def uninstall(c: Context, name: str):
     """Purge the apt packages declared for a setup.toml section (any method), e.g. inv apt.uninstall citrix-workspace.
 
     Also removes any `cleanup_paths` declared on the section — leftover files/dirs that aren't
@@ -418,7 +430,7 @@ def uninstall(c, name):
 
 
 @task
-def upgrade_debs(c):
+def upgrade_debs(c: Context):
     """Upgrade all deb-github packages to their latest versions (re-downloads and reinstalls each)."""
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
         version = _resolve_version(c, name, cfg)
@@ -428,15 +440,17 @@ def upgrade_debs(c):
 
 
 @task
-def refresh_keys(c):
+def refresh_keys(c: Context):
     """Re-download GPG keys for all enabled apt-repo sources."""
     for name, cfg in util.packages_by_method(util.PackageMethod.APT_REPO).items():
+        if "gpg_path" not in cfg or "gpg_url" not in cfg:
+            raise util.missing_fields(name, "gpg_path", "gpg_url")
         gpg = Path(cfg["gpg_path"])
         c.run(f"curl -fsSL {cfg['gpg_url']} | {util.SUDO} gpg --dearmor -o {gpg}")
         print(f"[{name}] key refreshed → {gpg}")
 
 
-def _report_stale_backup(c, f: Path, label: str) -> None:
+def _report_stale_backup(c: Context, f: Path, label: str) -> None:
     if util.DRY_RUN:
         print(f"[apt/keys] {label}/{f.name}: stale backup")
     else:
@@ -444,7 +458,7 @@ def _report_stale_backup(c, f: Path, label: str) -> None:
         print(f"[apt/keys] {label}/{f.name}: removed stale backup")
 
 
-def _audit_trusted_gpg(c) -> bool:
+def _audit_trusted_gpg(c: Context) -> bool:
     """trusted.gpg must be empty; any key here implicitly trusts ALL repos (no signed-by
     scoping). Returns True if clean."""
     trusted = Path("/etc/apt/trusted.gpg")
@@ -465,7 +479,7 @@ def _audit_trusted_gpg(c) -> bool:
     return False
 
 
-def _audit_trusted_gpg_d(c) -> bool:
+def _audit_trusted_gpg_d(c: Context) -> bool:
     """Ubuntu system keys are expected; anything else is old-style (not signed-by). Returns True
     if clean."""
     trusted_d = Path("/etc/apt/trusted.gpg.d")
@@ -482,7 +496,7 @@ def _audit_trusted_gpg_d(c) -> bool:
     return clean
 
 
-def _audit_keyrings(c) -> bool:
+def _audit_keyrings(c: Context) -> bool:
     """Check for ~ backup files (safe to remove) in the modern keyrings dirs. Returns True if clean."""
     clean = True
     for keyrings_dir in _KEYRINGS_DIRS:
@@ -496,7 +510,7 @@ def _audit_keyrings(c) -> bool:
 
 
 @task
-def audit_keys(c):
+def audit_keys(c: Context):
     """Audit apt key hygiene — report legacy keys, old-style trust, stale backups.
 
     Safe fixes (clear trusted.gpg, remove ~ backups) run automatically in live mode.

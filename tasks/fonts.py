@@ -6,9 +6,9 @@ import zipfile
 from functools import cache
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import Any, cast
+from typing import cast
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
@@ -17,11 +17,11 @@ _JSONC_COMMENT_RE = re.compile(r'"(?:[^"\\]|\\.)*"|(//.*)')
 _TRAILING_COMMA_RE = re.compile(r",(\s*[}\]])")
 
 
-def _load_jsonc(text: str) -> dict[str, Any]:
+def _load_jsonc(text: str) -> util.JsonObject:
     """Parse JSON-with-comments (JSONC) as used by VS Code settings.json."""
     text = _JSONC_COMMENT_RE.sub(lambda m: "" if m.group(1) else m.group(0), text)
     text = _TRAILING_COMMA_RE.sub(r"\1", text)
-    return cast(dict[str, Any], json.loads(text))
+    return cast(util.JsonObject, util.parse_json(text))
 
 
 _FONTS_DIR = Path.home() / ".local" / "share" / "fonts"
@@ -35,7 +35,7 @@ _VSCODE_SETTINGS_PATHS = [
 ]
 
 
-def _load_vscode_settings(path: Path) -> dict:
+def _load_vscode_settings(path: Path) -> util.JsonObject:
     """Parse VS Code settings.json, which is JSONC (comments + trailing commas allowed)."""
     text = path.read_text() if path.exists() and path.stat().st_size > 0 else ""
     if not text:
@@ -43,11 +43,11 @@ def _load_vscode_settings(path: Path) -> dict:
     return _load_jsonc(text)
 
 
-def _cfg() -> dict:
+def _cfg() -> util.FontsSettings:
     return util.load_config().get("settings", {}).get("fonts", {})
 
 
-def _families() -> list[dict]:
+def _families() -> list[util.FontFamily]:
     return _cfg().get("families", [])
 
 
@@ -57,7 +57,7 @@ def _fc_list() -> str:
     return subprocess.run(["fc-list"], capture_output=True, text=True, check=False).stdout.lower()
 
 
-def _is_installed(entry: dict) -> bool:
+def _is_installed(entry: util.FontFamily) -> bool:
     """Check via fc-list (primary) or file glob (fallback if family not set).
 
     fc-list is agnostic to filename format, so it correctly detects v2 fonts
@@ -73,7 +73,7 @@ def _is_installed(entry: dict) -> bool:
     return any(_FONTS_DIR.glob(entry.get("check", "")))
 
 
-def _install_family(entry: dict) -> int:
+def _install_family(entry: util.FontFamily) -> int:
     name = entry["zip"]
     v3_glob = entry.get("check", "")
 
@@ -117,7 +117,7 @@ def _install_family(entry: dict) -> int:
 
 
 @task
-def install(c):
+def install(c: Context):
     """Download and install Nerd Font families to ~/.local/share/fonts."""
     families = _families()
     if util.DRY_RUN:
@@ -140,7 +140,7 @@ def install(c):
 
 
 @task
-def configure(c):  # noqa: C901
+def configure(c: Context):  # noqa: C901
     """Set the configured monospace font as system default, GNOME Terminal, and VS Code font."""
     cfg = _cfg()
     monospace = cfg.get("monospace", "")
@@ -208,7 +208,7 @@ def configure(c):  # noqa: C901
 
     settings_path = next((p for p in _VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
     if settings_path and vscode_settings:
-        existing = {}
+        existing: util.JsonObject = {}
         if settings_path.exists() and settings_path.stat().st_size > 0:
             existing = _load_jsonc(settings_path.read_text())
         if not all(existing.get(k) == v for k, v in vscode_settings.items()):

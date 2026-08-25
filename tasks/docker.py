@@ -1,14 +1,15 @@
 import json
 import tempfile
 from pathlib import Path
+from typing import cast
 
-from invoke import task
+from invoke import Context, task
 
 from . import util
 
 _DAEMON_JSON = Path("/etc/docker/daemon.json")
 
-_DEFAULTS = {
+_DEFAULTS: util.JsonObject = {
     "log-driver": "json-file",
     "log-opts": {
         "max-size": "50m",
@@ -18,27 +19,29 @@ _DEFAULTS = {
 }
 
 
-def _is_subset(defaults: dict, existing: dict) -> bool:
+def _is_subset(defaults: util.JsonObject, existing: util.JsonObject) -> bool:
     for key, value in defaults.items():
+        current = existing.get(key)
         if isinstance(value, dict):
-            if not isinstance(existing.get(key), dict) or not _is_subset(value, existing[key]):
+            if not isinstance(current, dict) or not _is_subset(value, current):
                 return False
-        elif existing.get(key) != value:
+        elif current != value:
             return False
     return True
 
 
-def _merge(base: dict, updates: dict) -> dict:
-    result = {**base}
+def _merge(base: util.JsonObject, updates: util.JsonObject) -> util.JsonObject:
+    result: util.JsonObject = {**base}
     for key, value in updates.items():
-        if isinstance(value, dict) and isinstance(result.get(key), dict):
-            result[key] = _merge(result[key], value)
+        current = result.get(key)
+        if isinstance(value, dict) and isinstance(current, dict):
+            result[key] = _merge(current, value)
         else:
             result[key] = value
     return result
 
 
-def _ensure_running(c) -> None:
+def _ensure_running(c: Context) -> None:
     if not util.has_systemd():
         print("[docker] no systemd — daemon.json/group updated, but nothing to restart here")
         return
@@ -48,18 +51,20 @@ def _ensure_running(c) -> None:
     c.run(f"{util.SUDO} systemctl restart docker")
 
 
-def _read_daemon_json(c) -> dict:
-    return json.loads(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout) if _DAEMON_JSON.exists() else {}
+def _read_daemon_json(c: Context) -> util.JsonObject:
+    if not _DAEMON_JSON.exists():
+        return {}
+    return cast(util.JsonObject, util.parse_json(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout))
 
 
-def _configure_group(c, user: str) -> None:
+def _configure_group(c: Context, user: str) -> None:
     groups = c.run(f"id -nG {user}", hide=True).stdout.split()
     if "docker" not in groups:
         c.run(f"{util.SUDO} usermod -aG docker {user}")
         print(f"[docker] {user} added to docker group — open a new terminal to pick it up")
 
 
-def _configure_daemon_json(c) -> None:
+def _configure_daemon_json(c: Context) -> None:
     existing = _read_daemon_json(c)
     if _is_subset(_DEFAULTS, existing):
         print("[docker] daemon.json already configured — nothing to do")
@@ -76,7 +81,7 @@ def _configure_daemon_json(c) -> None:
 
 
 @task
-def configure(c):
+def configure(c: Context):
     """Merge log limits and DNS into /etc/docker/daemon.json, add user to docker group."""
     if util.is_docker_desktop_wsl_integration():
         print(
@@ -105,7 +110,7 @@ def configure(c):
     _configure_daemon_json(c)
 
 
-def _prune(c, label: str, flags: str, desc: str) -> None:
+def _prune(c: Context, label: str, flags: str, desc: str) -> None:
     if not util.command_exists("docker"):
         print(f"[{label}] docker not installed — nothing to do")
         return
@@ -117,7 +122,7 @@ def _prune(c, label: str, flags: str, desc: str) -> None:
 
 
 @task
-def clean(c):
+def clean(c: Context):
     """Prune stopped containers, dangling images, and unused networks/build cache
     (`docker system prune -f`). Conservative on purpose: doesn't remove images that are tagged
     but unused by any container — see `docker.clean-full` for that. Neither touches volumes —
@@ -128,7 +133,7 @@ def clean(c):
 
 
 @task
-def clean_full(c):
+def clean_full(c: Context):
     """Prune everything `docker.clean` does, plus all images not currently used by a container
     — tagged or not (`docker system prune -af`). Still doesn't touch volumes — see `docker.clean`
     for why. Opt-in, not part of `inv setup` — see `inv clean.all-full`.

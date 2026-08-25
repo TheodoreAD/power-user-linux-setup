@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import deploy, util
 
@@ -25,18 +25,26 @@ _INVOKABLE = {
     util.PackageMethod.NVM,
 }
 
-# Methods with no invocable command by nature — verified by existence only (same file/dir the
-# install-time "already installed" check already looks for), never by running anything. Found
-# during the audit pass that invoking one of these to "verify" it would be actively unsafe: a
-# wrapper-script's dest may be a script meant to be sourced by SUDO_ASKPASS or to launch a
-# background proxy, not run standalone and re-entered as a health check.
-_PATH_ONLY = {
-    util.PackageMethod.GIT_CLONE: "dest",
-    util.PackageMethod.APPARMOR_PROFILE: "profile",
-}
+
+def _path_only(name: str, cfg: util.PackageConfig, method: util.PackageMethod) -> tuple[str, str] | None:
+    """Methods with no invocable command by nature — verified by existence only (same file/dir
+    the install-time "already installed" check already looks for), never by running anything.
+    Found during the audit pass that invoking one of these to "verify" it would be actively
+    unsafe: a wrapper-script's dest may be a script meant to be sourced by SUDO_ASKPASS or to
+    launch a background proxy, not run standalone and re-entered as a health check. None for
+    any other method."""
+    if method == util.PackageMethod.GIT_CLONE:
+        if "dest" not in cfg:
+            raise util.missing_fields(name, "dest")
+        return "path", cfg["dest"]
+    if method == util.PackageMethod.APPARMOR_PROFILE:
+        if "profile" not in cfg:
+            raise util.missing_fields(name, "profile")
+        return "path", cfg["profile"]
+    return None
 
 
-def _resolve_wrapper_script(cfg: dict) -> tuple[str, str]:
+def _resolve_wrapper_script(name: str, cfg: util.PackageConfig) -> tuple[str, str]:
     """Existence alone doesn't catch a deploy that landed stale/partial/hand-edited content —
     confirmed as a real gap, not theoretical: this session needed a manual diff twice to confirm
     ~/AGENTS.md actually matched config/global-AGENTS.md after a redeploy, exactly what this check
@@ -45,6 +53,8 @@ def _resolve_wrapper_script(cfg: dict) -> tuple[str, str]:
     Every wrapper-script package currently declares content_file (no inline-`content` variant is
     actually in use), but fall back to existence-only for a hypothetical future one that doesn't,
     rather than erroring."""
+    if "dest" not in cfg:
+        raise util.missing_fields(name, "dest")
     if cfg.get("content_file"):
         return "deploy", cfg["dest"]
     return "path", cfg["dest"]
@@ -68,7 +78,7 @@ def _deploy_check(m: deploy.Managed, state: deploy.State) -> tuple[bool, str]:
     return False, f"{m.path} {deploy.SUMMARY[state]} — see `inv deploy.status --name {m.package}`"
 
 
-def _resolve(name: str, cfg: dict, method: util.PackageMethod) -> tuple[str, str]:
+def _resolve(name: str, cfg: util.PackageConfig, method: util.PackageMethod) -> tuple[str, str]:
     """Return (kind, target) for one package — 'skip'/'path'/'cmd'/'error', and the reason,
     path, or shell command respectively. One deterministic outcome per package, no fallback chain.
     """
@@ -89,10 +99,10 @@ def _resolve(name: str, cfg: dict, method: util.PackageMethod) -> tuple[str, str
         return "cmd", f"{cfg.get('check_cmd', name)} --version"
 
     if method == util.PackageMethod.WRAPPER_SCRIPT:
-        return _resolve_wrapper_script(cfg)
+        return _resolve_wrapper_script(name, cfg)
 
-    if method in _PATH_ONLY:
-        return "path", cfg[_PATH_ONLY[method]]
+    if path_only := _path_only(name, cfg, method):
+        return path_only
 
     if method == util.PackageMethod.GNOME_EXTENSION:
         # Always skipped by default, not just tag-gated: no automated path — not even inv setup —
@@ -147,7 +157,7 @@ def _classify_deploy(target: str) -> tuple[deploy.Managed, deploy.State]:
 
 
 @task
-def all(c):  # noqa: A001, C901
+def all(c: Context):  # noqa: A001, C901
     """Prove every package this run installed actually works, not just that it's present.
     Convention-based: default check is `<check_cmd or name> --version` for invocable methods,
     existence for methods with no command by nature (git-clone/apparmor-profile), and the deploy

@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import ui, util
 
@@ -47,7 +47,7 @@ def _render(name: str, email: str, directory: str, hosts: list[str]) -> str:
 
 
 @task
-def init(c):
+def init(c: Context):
     """Interactive wizard for ~/.config/power-user-linux-setup/identity.toml: pick simple (one
     name/email, one projects directory — ~/projects/ by default) or advanced (hand-edit the full
     multi-directory/multi-host example).

@@ -6,7 +6,7 @@ filesystem/env touched outside a tmp_path fixture. See tests/README.md.
 import json
 import re
 from pathlib import Path
-from typing import Any, cast
+from typing import cast
 
 from tasks.devcontainer import MountCandidate, _discover_candidates, _render_mounts_json
 
@@ -227,5 +227,5 @@ def test_render_mounts_json_is_valid_json():
         readonly=True,
         default=True,
     )
-    parsed = cast(dict[str, Any], json.loads(_render_mounts_json([cand], "/home/vscode")))
+    parsed = cast(dict[str, object], json.loads(_render_mounts_json([cand], "/home/vscode")))
     assert parsed["mounts"] == ["source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"]

@@ -9,7 +9,9 @@ import tomllib
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
-from typing import Any, cast, overload
+from typing import NotRequired, Required, TypeAlias, TypedDict, cast, overload
+
+from invoke import Context
 
 DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "yes")
 
@@ -39,6 +41,247 @@ PULSE_STATE_DIR = Path.home() / ".local" / "state" / "power-user-linux-setup"
 IDENTITY_PATH = PULSE_CONFIG_DIR / "identity.toml"
 OVERRIDES_PATH = PULSE_CONFIG_DIR / "overrides.toml"
 CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
+
+
+# ---------------------------------------------------------------------------
+# Shapes of the files this repo reads — setup.toml, identity.toml, overrides.toml, and the slice
+# of ~/.claude/settings.json it writes. TypedDicts, not `dict[str, Any]`: every `cfg.get(...)`
+# below resolves to a real type, so the checker sees a misspelled field or a `str` used as a
+# `list` at the call site instead of erasing everything past the load. `total=False` throughout —
+# setup.toml's header documents which fields each method needs, and the install tasks already
+# treat every one as optional at runtime via `.get()`.
+# ---------------------------------------------------------------------------
+
+# A JSON document — recursive alias, spelled with `TypeAlias` because the 3.11 floor predates
+# PEP 695's `type` statement.
+Json: TypeAlias = "dict[str, Json] | list[Json] | str | int | float | bool | None"
+JsonObject: TypeAlias = dict[str, Json]
+
+
+class PathMapping(TypedDict):
+    """A `{ src, dst }` pair — `config_files` (repo-relative src → home dst) and `symlinks`
+    (installed binary → ~/.local/bin name) share the shape."""
+
+    src: str
+    dst: str
+
+
+class SkillEntry(TypedDict, total=False):
+    """One item of a package's `skills` list — see setup.toml's header for the two sources."""
+
+    source: str
+    path: str  # source = "local"
+    repo: str  # source = "npx"
+    names: list[str]
+    agents: list[str]
+    description: str
+
+
+class StatusLine(TypedDict):
+    """Claude Code's `statusLine` settings.json object, as declared by `claude_statusline`."""
+
+    type: str
+    command: str
+
+
+class PackageConfig(TypedDict, total=False):
+    """A `[packages.<name>]` section. Field-by-field reference: setup.toml's header comment."""
+
+    # common
+    description: str
+    method: str
+    enabled: bool
+    tags: list[str]
+    config_files: list[PathMapping]
+    verify_cmd: str
+    verify: bool
+    zshrc: str
+    zshenv: str
+    zprofile: str
+    skills: list[SkillEntry]
+    claude_permissions_allow: list[str]
+    claude_additional_directories: list[str]
+    claude_default_mode: str
+    claude_statusline: StatusLine
+    omz_plugin: str | list[str]
+    cleanup_paths: list[str]
+    check_cmd: str
+    check_path: str
+    # apt / apt-repo
+    packages: list[str]
+    symlinks: list[PathMapping]
+    gpg_url: str
+    gpg_path: str
+    sources_path: str
+    sources_entry: str
+    # deb-github / deb-url / binary / archive
+    repo: str
+    tag: str
+    tag_prefix: str
+    asset: str
+    url: str
+    version_cmd: str
+    version_url: str
+    download_page: str
+    download_url: str
+    extract_to: str
+    install_dir: str
+    strip_components: int
+    bin_pick: str
+    bin_in_root: bool
+    # uv-tool
+    package: str
+    python: str
+    extras: list[str]
+    # script
+    script_url: str
+    shell: str
+    env: dict[str, str]
+    single_binary: bool
+    symlink_from: str
+    post_install: str
+    # git-clone / wrapper-script
+    dest: str
+    depth: int
+    content_file: str
+    symlink_dest: str
+    # gnome-extension
+    uuid: str
+    ego_id: int
+    dconf: dict[str, str]
+    # apparmor-profile
+    profile: str
+    content: str
+    # nvm ([packages.node])
+    version: str
+    global_packages: list[str]
+    nvm_dir: str
+    # [packages.oh-my-zsh]
+    theme: str
+    plugins: list[str]
+
+
+class FontFamily(TypedDict, total=False):
+    """One `[[settings.fonts.families]]` entry."""
+
+    zip: Required[str]
+    family: str | list[str]
+    check: str
+    legacy: str | list[str]
+
+
+class FontsSettings(TypedDict, total=False):
+    monospace: str
+    terminal: str
+    vscode: dict[str, Json]
+    families: list[FontFamily]
+
+
+class Settings(TypedDict, total=False):
+    uv_python_default: str
+    uv_python_extra: list[str]
+    uv_python_set_default: bool
+    install_repo_tasks: bool
+    fonts: FontsSettings
+
+
+class SetupConfig(TypedDict):
+    """setup.toml's top level."""
+
+    packages: dict[str, PackageConfig]
+    settings: NotRequired[Settings]
+
+
+class GitProfile(TypedDict):
+    """A `[[git_profiles]]` entry in identity.toml — see config/identity.toml.example."""
+
+    directory: str
+    name: str
+    email: str
+
+
+class SshHost(TypedDict):
+    """A `[[ssh_hosts]]` entry in identity.toml."""
+
+    user: str
+    alias: str
+    hostname: str
+    email: str
+
+
+class ProxySection(TypedDict, total=False):
+    """identity.toml's optional `[proxy]` table — see docs/corporate-proxy.md."""
+
+    host: str
+    port: int | str
+    noproxy: str
+
+
+class CertsSection(TypedDict, total=False):
+    """identity.toml's optional `[certs]` table — see docs/certs.md."""
+
+    bundle: str | list[str]
+
+
+class Identity(TypedDict, total=False):
+    """identity.toml's top level."""
+
+    git_profiles: list[GitProfile]
+    ssh_hosts: list[SshHost]
+    proxy: ProxySection
+    certs: CertsSection
+
+
+class PackageOverride(TypedDict, total=False):
+    enabled: bool
+
+
+class Overrides(TypedDict, total=False):
+    """overrides.toml's top level — see load_overrides()."""
+
+    packages: dict[str, PackageOverride]
+
+
+class ClaudePermissions(TypedDict, total=False):
+    """The `permissions` block of ~/.claude/settings.json — only the keys this repo writes."""
+
+    allow: list[str]
+    ask: list[str]
+    additionalDirectories: list[str]
+    defaultMode: str
+
+
+class ClaudeSettings(TypedDict, total=False):
+    """~/.claude/settings.json — only the keys this repo reads or writes. Every other key in the
+    file rides along untouched; a TypedDict doesn't forbid extra keys at runtime."""
+
+    permissions: ClaudePermissions
+    statusLine: StatusLine
+
+
+def load_toml(path: Path) -> object:
+    """tomllib's `dict[str, Any]` result, surfaced as `object` so the one `cast` to the file's
+    TypedDict happens at the loader and nothing downstream inherits an `Any`."""
+    with path.open("rb") as f:
+        return cast(object, tomllib.load(f))
+
+
+def load_json(path: Path) -> object:
+    """Same shape as load_toml for json.loads' `Any`."""
+    return cast(object, json.loads(path.read_text()))
+
+
+def parse_json(text: str) -> object:
+    """json.loads for text already in hand (a subprocess's stdout, a JSONC file after comment
+    stripping) — same `object`-not-`Any` contract as load_json."""
+    return cast(object, json.loads(text))
+
+
+def missing_fields(name: str, *keys: str) -> RuntimeError:
+    """The error an install task raises when a `[packages.<name>]` section lacks a field its
+    method requires. The caller's own `if "x" not in cfg or ...: raise` guard is what narrows
+    `PackageConfig` for the checker; this just spells the message once."""
+    return RuntimeError(f"[{name}] setup.toml section is missing required field(s): {', '.join(keys)}")
 
 
 def ok_label(ok: bool) -> str:
@@ -201,7 +444,7 @@ def ensure_block(path: Path, name: str, content: str, *, style: MarkerStyle = Ma
     return status
 
 
-def sudo_write(c, path: Path, text: str) -> None:
+def sudo_write(c: Context, path: Path, text: str) -> None:
     """Write `text` to a root-owned `path` via a tempfile + `sudo cp` — direct `path.write_text()`
     can't reach root-owned locations, and `sudo tee` from Python would need the text piped through
     a subprocess shell instead of written directly."""
@@ -211,7 +454,7 @@ def sudo_write(c, path: Path, text: str) -> None:
     c.run(f"{SUDO} cp {tmp} {path} && rm {tmp}")
 
 
-def sudo_read(c, path: Path) -> str:
+def sudo_read(c: Context, path: Path) -> str:
     """Read a root-owned `path` via `sudo cat`, or "" if it doesn't exist / can't be read."""
     if not path.exists():
         return ""
@@ -220,24 +463,22 @@ def sudo_read(c, path: Path) -> str:
 
 
 @cache
-def load_config() -> dict:
-    with _CONFIG_PATH.open("rb") as f:
-        return tomllib.load(f)
+def load_config() -> SetupConfig:
+    return cast(SetupConfig, load_toml(_CONFIG_PATH))
 
 
 @cache
-def load_identity() -> dict:
+def load_identity() -> Identity:
     if not IDENTITY_PATH.exists():
         raise FileNotFoundError(
             f"Identity file not found: {IDENTITY_PATH}\n"
             "Run `inv identity.init` (interactive wizard) or copy config/identity.toml.example "
             f"to {IDENTITY_PATH} and fill in your details by hand."
         )
-    with IDENTITY_PATH.open("rb") as f:
-        return tomllib.load(f)
+    return cast(Identity, load_toml(IDENTITY_PATH))
 
 
-def load_proxy_override() -> dict:
+def load_proxy_override() -> ProxySection:
     """Optional [proxy] table from ~/.config/power-user-linux-setup/identity.toml (host/port/noproxy). Unlike
     load_identity(), tolerant of a missing file — proxy detection has to degrade gracefully on the
     common case of a personal, non-corporate machine, not require identity.toml to exist just to
@@ -247,18 +488,16 @@ def load_proxy_override() -> dict:
     """
     if not IDENTITY_PATH.exists():
         return {}
-    with IDENTITY_PATH.open("rb") as f:
-        return cast(dict[str, Any], tomllib.load(f).get("proxy", {}))
+    return cast(Identity, load_toml(IDENTITY_PATH)).get("proxy", {})
 
 
-def load_certs_override() -> dict:
+def load_certs_override() -> CertsSection:
     """Optional [certs] table from ~/.config/power-user-linux-setup/identity.toml (corporate CA bundle path(s)).
     Same tolerant-of-missing-file, not-cached rationale as load_proxy_override() — see there.
     """
     if not IDENTITY_PATH.exists():
         return {}
-    with IDENTITY_PATH.open("rb") as f:
-        return cast(dict[str, Any], tomllib.load(f).get("certs", {}))
+    return cast(Identity, load_toml(IDENTITY_PATH)).get("certs", {})
 
 
 @cache
@@ -285,10 +524,7 @@ def load_overrides() -> dict[str, bool]:
     """
     if not OVERRIDES_PATH.exists():
         return {}
-    with OVERRIDES_PATH.open("rb") as f:
-        # `object`, not `Any`, as the value type: every field here is read back through bool()
-        # below, and Any would silently disable type checking on it.
-        raw = cast(dict[str, dict[str, object]], tomllib.load(f).get("packages", {}))
+    raw = cast(Overrides, load_toml(OVERRIDES_PATH)).get("packages", {})
 
     declared = load_config()["packages"]
     overrides: dict[str, bool] = {}
@@ -304,12 +540,12 @@ def load_overrides() -> dict[str, bool]:
     return overrides
 
 
-def load_claude_settings() -> dict:
+def load_claude_settings() -> ClaudeSettings:
     """Read CLAUDE_SETTINGS (~/.claude/settings.json), or {} if it doesn't exist yet."""
-    return json.loads(CLAUDE_SETTINGS.read_text()) if CLAUDE_SETTINGS.exists() else {}
+    return cast(ClaudeSettings, load_json(CLAUDE_SETTINGS)) if CLAUDE_SETTINGS.exists() else {}
 
 
-def write_claude_settings(settings: dict) -> None:
+def write_claude_settings(settings: ClaudeSettings) -> None:
     """Backup CLAUDE_SETTINGS (if present) then overwrite it with `settings`. Shared by
     tasks/ai.py and tasks/allowlist.py, which each merge their own slice of permissions into the
     same file and must never clobber the other's — see their callers for the merge logic."""
@@ -345,7 +581,7 @@ class PackageMethod(StrEnum):
     GNOME_EXTENSION = "gnome-extension"
 
 
-def enabled_packages() -> dict:
+def enabled_packages() -> dict[str, PackageConfig]:
     """Every [packages.*] section that isn't disabled or excluded by PULSE_EXCLUDE_TAGS, whatever
     its method — the entry point for cross-method concerns like `config_files`, which any method
     may declare. Method-specific install tasks want packages_by_method() instead.
@@ -364,11 +600,11 @@ def enabled_packages() -> dict:
     }
 
 
-def packages_by_method(method: PackageMethod) -> dict:
+def packages_by_method(method: PackageMethod) -> dict[str, PackageConfig]:
     return {name: cfg for name, cfg in enabled_packages().items() if cfg.get("method") == method}
 
 
-def apt_packages(name: str, cfg: dict) -> list[str]:
+def apt_packages(name: str, cfg: PackageConfig) -> list[str]:
     """Return the apt package list for a section, defaulting to [name] if not specified."""
     return cfg.get("packages", [name])
 

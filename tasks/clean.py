@@ -1,10 +1,10 @@
-from invoke import task
+from invoke import Context, task
 
 from . import apt, docker, node, python, tools
 
 
 @task(pre=[apt.clean_cache, python.clean_cache, node.clean_cache, tools.clean_cache])
-def caches(c):
+def caches(c: Context):
     """Conservatively remove build/download caches left behind by apt, uv, npm, and cargo
     installs (each self-skips if that tool isn't installed) — keeps entries still useful for a
     future install (e.g. apt.clean-cache's `autoclean`, uv's `cache prune`), only removing what's
@@ -14,7 +14,7 @@ def caches(c):
 
 
 @task(pre=[apt.clean_cache_full, python.clean_cache_full, node.clean_cache_full, tools.clean_cache_full])
-def caches_full(c):
+def caches_full(c: Context):
     """Fully wipe apt/uv/npm/cargo caches (each self-skips if that tool isn't installed) —
     reclaims more disk space than `clean.caches`, at the cost of the next install of each being
     slower, since there's no local cache to hit at all. Opt-in, not part of `inv setup`. A
@@ -24,7 +24,7 @@ def caches_full(c):
 
 
 @task(pre=[caches, docker.clean])
-def all(c):  # noqa: A001
+def all(c: Context):  # noqa: A001
     """Everything reclaimable, conservatively: caches() plus Docker's conservative prune
     (stopped containers, dangling images — see `docker.clean`). For a full wipe of everything
     instead, see `clean.all-full`.
@@ -32,7 +32,7 @@ def all(c):  # noqa: A001
 
 
 @task(pre=[caches_full, docker.clean_full])
-def all_full(c):
+def all_full(c: Context):
     """Everything reclaimable, fully wiped: caches_full() plus Docker's full prune (also removes
     unused-but-tagged images — see `docker.clean-full`). Neither this nor any task it depends on
     touches Docker volumes — see `docker.clean`'s docstring for why.

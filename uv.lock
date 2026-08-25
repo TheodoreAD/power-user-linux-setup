@@ -278,6 +278,7 @@ dev = [
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
+    { name = "typing-extensions" },
 ]
 
 [package.metadata]
@@ -295,6 +296,7 @@ dev = [
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
+    { name = "typing-extensions" },
 ]
 
 [[package]]

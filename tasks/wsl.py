@@ -4,7 +4,7 @@ import struct
 import tempfile
 from pathlib import Path
 
-from invoke import task
+from invoke import Context, task
 
 from . import ai, apt, next_steps, node, phases, python, system, tools, ui, util, verify, zsh
 
@@ -123,7 +123,7 @@ def _resolv_conf_symlinked_to_stub() -> bool:
     return _RESOLV_CONF.is_symlink() and os.path.realpath(_RESOLV_CONF) == os.path.realpath(_STUB_RESOLV_CONF)
 
 
-def _dns_resolves(c) -> bool:
+def _dns_resolves(c: Context) -> bool:
     """Actually test resolution, rather than trust that a correct config + a restarted service
     means it works. Seen in the wild under WSL2: systemd-resolved freshly configured and
     restarted, `resolvectl status` even showing the right DNS servers, and the stub at
@@ -175,7 +175,7 @@ def _public_dns_reachable() -> bool:
     return any(_query_dns_server(server) for server in ("1.1.1.1", "8.8.8.8"))
 
 
-def _write_static_resolv_conf(c, primary="1.1.1.1", secondary="1.0.0.1") -> None:
+def _write_static_resolv_conf(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.1") -> None:
     """Bypass systemd-resolved's stub entirely: replace /etc/resolv.conf with a plain file
     pointing straight at public DNS servers. Fallback for when the stub isn't resolving anything
     even after system.configure_dns() has configured and restarted systemd-resolved — see _dns_resolves.
@@ -204,7 +204,7 @@ def _os_release_id() -> str:
 
 
 @task
-def check(c):  # noqa: C901
+def check(c: Context):  # noqa: C901
     """Diagnose WSL-specific risks before running PULSE tasks: systemd, DNS, Docker, WSLg.
 
     Read-only — reports findings and remediation, changes nothing. See docs/wsl.md.
@@ -335,7 +335,7 @@ def check(c):  # noqa: C901
 
 
 @task
-def fix(c, dns=False):
+def fix(c: Context, dns: bool = False):
     """Fix common /etc/wsl.conf misconfigurations: systemd=true, generateResolvConf left at its
     safe default (true — WSL manages /etc/resolv.conf itself, mirroring whatever DNS server
     Windows itself uses).
@@ -398,7 +398,7 @@ def fix(c, dns=False):
 
 
 @task
-def install(c, wslg="auto", docker=False, dns="auto"):  # noqa: C901
+def install(c: Context, wslg: str = "auto", docker: bool = False, dns: str = "auto"):  # noqa: C901
     """Run the docs/wsl.md recommended install sequence in one shot, as named phases: wsl config,
     system config (locale/DNS, only if systemd/DNS are actually live yet), packages, then shell —
     with WSL-appropriate tags excluded.
