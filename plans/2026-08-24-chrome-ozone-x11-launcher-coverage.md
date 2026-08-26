@@ -1,7 +1,38 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-08-26
 ---
+
+## Migrated to
+
+Retired 2026-08-26. Chrome comes up on X11, Netflix plays, and the duplicate-PWA symptom went with
+it — verified at the 01:02:24 login the same day.
+
+- **`contributing/chrome-ozone.md`** (new) — the first-process-wins mechanism, every measured dead
+  end (`OZONE_PLATFORM`, `#ozone-platform-hint`, per-window platform, autostart filename ordering,
+  Vulkan), what the working arrangement is and what it cost, the six-year-old
+  `google-chrome.desktop` leftover, the doubled-PWA symptom sharing the same root cause, and why the
+  flag is deliberately absent from PWA launchers.
+- **`docs/chrome.md`** — already carried the user-facing half; gained the `--ozone` opt-in and lost
+  its claim that every launch path needs the flag.
+- **`plans/2026-08-26-chrome-launcher-open-items.md`** — the three items still open: the C-vs-A
+  fallback choice, whether the PULSE-owned launcher should pin a profile, and whether a rebuilt
+  machine ever learns to run `inv chrome.status`.
+- **Code** — `[packages.google-chrome-x11-autostart]` and
+  `config/google-chrome-x11-autostart.desktop` are option B's deliverable, still in use under option
+  D. `tasks/chrome.py`'s `chrome_starters`/ `_report_starters` are the reporting ceiling the "not
+  reproducible on a fresh machine" item asked for; commit `ba9dc9d` made the launcher ozone flag
+  opt-in, which is where the 2026-08-25 decision not to flag the PWA launchers now lives.
+
+Deliberately not migrated: **B2**, the `--no-startup-window` refinement. It was explicitly "a
+cosmetic refinement to try only if B works", and option B is dead — its filename-ordering premise
+was disproven. Under option D the entry is the session's only Chrome starter and must open windows,
+so starting it windowless would break the arrangement rather than refine it.
+
+The option A–E comparison itself is not migrated in full: A and C survive as the fallback ladder in
+the new plan, D is what actually happened and is described as such in
+`contributing/chrome-ozone.md`, E (document the manual recovery) is obsolete now that the bug does
+not recur, and B is disproven.
 
 # Making the Chrome `--ozone-platform=x11` workaround actually stick
 
