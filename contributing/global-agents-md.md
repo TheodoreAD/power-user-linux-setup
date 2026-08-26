@@ -1,8 +1,11 @@
-# config/global-AGENTS.md — rationale and evidence
+# `~/AGENTS.md` — rationale and evidence
 
-Companion to [`config/global-AGENTS.md`](../config/global-AGENTS.md), the source of `~/AGENTS.md`
-(and its `~/.claude/CLAUDE.md` symlink) on this machine — `[packages.claude-global-md]` in
-`setup.toml`, redeployed by `inv tools.install`. The deployed file is never edited directly.
+Companion to the [`config/agents-md/`](../config/agents-md/README.md) fragments, which are assembled
+into `~/AGENTS.md` (and its `~/.claude/CLAUDE.md` symlink) on this machine —
+`[packages.claude-global-md]` in `setup.toml`, redeployed by
+`inv deploy.all --name claude-global-md` or `inv tools.install`. The deployed file is never edited
+directly, and neither is any one fragment without checking that directory's `README.md` for which
+one owns the rule.
 
 That file is loaded whole into every session in every repo, so each rule there holds only what earns
 always-loaded space: trigger + rule + one clause of why. Everything else about a rule — dated
@@ -17,7 +20,7 @@ Design and research behind the split: the "Why the deployed file is shaped this 
 
 ## Admitting a new rule
 
-A new rule enters `config/global-AGENTS.md` only if it:
+A new rule enters `~/AGENTS.md` — i.e. one of the `config/agents-md/` fragments — only if it:
 
 1. **States its trigger** — the situation that fires it, named in its heading. A heading is a
    retrieval cue, not navigation; "Project conventions" is a topic, "sudo" is a trigger.
@@ -84,14 +87,20 @@ structural choice:
 
 The two commands behind every measurement in the leanness pass, so a later review compares like with
 like. Landed shape 2026-08-23: ~2,500 body words, 6 clusters, 30 rules, 294 lines, provenance share
-0%.
+0%. Re-cut 2026-08-26 into three fragments and eight clusters; measure the **assembled** result, not
+one fragment, since that is what a session actually loads. Measured straight after that re-cut:
+4,326 body words, 8 clusters, 37 rules, 446 lines — **well past the ≤200-line / ≤15-rule reference
+points, and grown by ~1,800 words since the leanness pass** without a review in between. The split
+did not cause that (it moved rules, it did not add any); it made it visible. A leanness pass on
+`portable.md` specifically is the obvious next one.
 
 ```shell
 # per-section word count, largest first
 python3 -c "
 import re
-from pathlib import Path
-secs = re.split(r'^## ', Path('config/global-AGENTS.md').read_text(), flags=re.M)[1:]
+from tasks import deploy
+m = deploy.lookup('~/AGENTS.md')
+secs = re.split(r'^## ', deploy.expected_bytes(m).decode(), flags=re.M)[1:]
 rows = [(len(s.split(chr(10), 1)[1].split()), s.split(chr(10), 1)[0]) for s in secs]
 for w, h in sorted(rows, reverse=True): print(f'{w:5d}  {h[:70]}')
 print(f'--- {sum(w for w, _ in rows)} words in {len(rows)} sections')
@@ -100,8 +109,9 @@ print(f'--- {sum(w for w, _ in rows)} words in {len(rows)} sections')
 # share of words in provenance-bearing sentences (sentence-granularity: treat as a floor)
 python3 -c "
 import re
-from pathlib import Path
-body = re.sub(r'\`\`\`.*?\`\`\`', '', Path('config/global-AGENTS.md').read_text(), flags=re.S)
+from tasks import deploy
+m = deploy.lookup('~/AGENTS.md')
+body = re.sub(r'\`\`\`.*?\`\`\`', '', deploy.expected_bytes(m).decode(), flags=re.S)
 sents = re.split(r'(?<=[.!?])\s+', body.replace(chr(10), ' '))
 prov = re.compile(r'2026-\d\d-\d\d|Confirmed|Reaffirmed|Validated|Observed as a real|Caught live|Concrete instance|Example:')
 tw = sum(len(s.split()) for s in sents)
@@ -460,12 +470,12 @@ output through `xxd`/`cat -A` and reading the literal bytes; a rendered terminal
 ## Unexplained git/file state in a working tree
 
 The `git add -A` clause, added 2026-08-24 after doing exactly what it forbids. Working in
-`power-user-linux-setup` while a parallel session edited `config/global-AGENTS.md` and
-`contributing/global-agents-md.md` in the same tree, a
-`git add -A && git status --short && git
-commit` chain swept both files into a commit whose message
-was about invoke task naming and said nothing about them. The tree had been clean at session start
-and the edits landed mid-session.
+`power-user-linux-setup` while a parallel session edited `config/global-AGENTS.md` (this file's
+source before the 2026-08-26 split into `config/agents-md/`) and `contributing/global-agents-md.md`
+in the same tree, a `git add -A && git status --short && git
+commit` chain swept both files into a
+commit whose message was about invoke task naming and said nothing about them. The tree had been
+clean at session start and the edits landed mid-session.
 
 Two things this teaches beyond "be careful". First, the existing rule above covers _noticing_
 unexplained state; it said nothing about how to stage, so the safe-reading habit and the unsafe
@@ -512,7 +522,7 @@ identical, and only the "tested" half of the existing sentence is being sharpene
 
 Admitted 2026-08-25, from `plans/2026-08-23-git-hooks-for-quality-gate.md`'s measurement. A
 2026-08-23 CI-failure sweep across `power-user-linux-setup`/`repo-tasks`/`scaffoldapy` found every
-recurring failure was one shape: markdown-only commits (`plans/*.md`, skill files,
+recurring failure was one shape: markdown-only commits (`plans/*.md`, skill files, the then-single
 `config/global-AGENTS.md`) pushed without the gate, failing `dprint check` (exit 20) on line-wrap
 reflows `dprint fmt` would have fixed — 11 red runs in one day. The first fix was skill-level:
 `plan-docs` and `session-harvest` gained "run the gate before committing" (`c84cbe4`, 17:46Z that

@@ -125,18 +125,29 @@ every agent CLI on this machine can read) from `setup.toml`, and symlinks
 exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
 `CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
 agent-readable form, so every session on this machine picks it up automatically without needing to
-rediscover it. Edit `config/global-AGENTS.md` in this repo, then
-`inv deploy.all --name claude-global-md`, rather than hand-editing `~/AGENTS.md` directly — the file
-is fully PULSE-owned (same as any `wrapper-script`-method entry). Both `deploy.all` and the
-install-time writer in `inv tools.install` go through the same deploy writer, so an edit made to
-`~/AGENTS.md` directly is shown as a diff and asked about (default: keep it) rather than silently
-overwritten — but it still only lives on this machine until it's ported into
-`config/global-AGENTS.md`. `~/.claude/CLAUDE.md` itself is never touched once it's a correct
-symlink; if something other than that symlink already lives there, `inv tools.install` warns and
-leaves it alone rather than overwriting it.
+rediscover it.
+
+**The file is assembled, not copied.** `[packages.claude-global-md]` sets
+`assembled_from = "agents_md"`, and every package declaring an `agents_md` fragment contributes
+whole `##` sections to the result, ordered by a sparse `order` — the same any-section pattern as
+`zshrc`/`zshenv`, for a file where section order carries meaning. Today three fragments split the
+content by audience: `config/agents-md/this-setup.md` (facts true only of this machine and this
+user's repos), `claude-code.md` (one harness's own behavior), and `portable.md` (conventions that
+hold anywhere). Which one owns what, and why the split exists, is `config/agents-md/README.md`.
+
+Edit the fragment that owns the rule, then `inv deploy.all --name claude-global-md`, rather than
+hand-editing `~/AGENTS.md` directly — the file is fully PULSE-owned (same as any
+`wrapper-script`-method entry) and regenerated end to end, so the `<!-- PULSE::agents-md/… -->`
+markers in it are provenance, not an ownership boundary: nothing outside a block survives either.
+Both `deploy.all` and the install-time writer in `inv tools.install` go through the same deploy
+writer, so an edit made to `~/AGENTS.md` directly is shown as a diff and asked about (default: keep
+it) rather than silently overwritten — but it still only lives on this machine until it's ported
+into a fragment. `~/.claude/CLAUDE.md` itself is never touched once it's a correct symlink; if
+something other than that symlink already lives there, `inv tools.install` warns and leaves it alone
+rather than overwriting it.
 
 Several conventions live there too, deliberately global rather than repeated per-repo — see
-`config/global-AGENTS.md` for the exact wording:
+`config/agents-md/portable.md` for the exact wording:
 
 - **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
   `AGENTS.md` (the cross-tool standard 30+ agent CLIs read) and, if `CLAUDE.md` exists at all, it's
@@ -242,10 +253,10 @@ of the `skills` task.
 The `npx` source was validated end-to-end against a real package
 ([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
 before being trusted for `research-library`'s own `local` source — but caveman itself ended up
-living in `~/AGENTS.md` instead (see "Caveman-style terse output" in `config/global-AGENTS.md`), not
-as an installed skill: a skill only reaches Claude Code, and the simpler, always-on AGENTS.md
-version covers every agent tool on this machine for less overall complexity than keeping both.
-`contributing/research-library.md` has the fuller review notes.
+living in `~/AGENTS.md` instead (see "Caveman-style terse output" in
+`config/agents-md/portable.md`), not as an installed skill: a skill only reaches Claude Code, and
+the simpler, always-on AGENTS.md version covers every agent tool on this machine for less overall
+complexity than keeping both. `contributing/research-library.md` has the fuller review notes.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 

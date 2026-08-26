@@ -47,15 +47,15 @@ def _path_only(name: str, cfg: util.PackageConfig, method: util.PackageMethod) -
 def _resolve_wrapper_script(name: str, cfg: util.PackageConfig) -> tuple[str, str]:
     """Existence alone doesn't catch a deploy that landed stale/partial/hand-edited content —
     confirmed as a real gap, not theoretical: this session needed a manual diff twice to confirm
-    ~/AGENTS.md actually matched config/global-AGENTS.md after a redeploy, exactly what this check
+    ~/AGENTS.md actually matched its repo-side source after a redeploy, exactly what this check
     exists to make unnecessary. A "deploy" check asks tasks/deploy.py's classifier — the same
     answer `inv deploy.status` gives — rather than re-implementing the content comparison here.
-    Every wrapper-script package currently declares content_file (no inline-`content` variant is
-    actually in use), but fall back to existence-only for a hypothetical future one that doesn't,
-    rather than erroring."""
+    Every wrapper-script package currently declares content_file or assembled_from (no
+    inline-`content` variant is actually in use), but fall back to existence-only for a
+    hypothetical future one that doesn't, rather than erroring."""
     if "dest" not in cfg:
         raise util.missing_fields(name, "dest")
-    if cfg.get("content_file"):
+    if cfg.get("content_file") or cfg.get("assembled_from"):
         return "deploy", cfg["dest"]
     return "path", cfg["dest"]
 

@@ -337,7 +337,7 @@ def test_the_registry_covers_all_three_mechanisms(tmp_path, monkeypatch):
             "claude-global-md": {
                 "method": "wrapper-script",
                 "dest": str(tmp_path / "AGENTS.md"),
-                "content_file": "config/global-AGENTS.md",
+                "content_file": "config/statusline-command.sh",
             },
             "wezterm": {
                 "method": "archive",
@@ -400,7 +400,7 @@ def test_lookup_matches_a_symlink_to_a_managed_destination(tmp_path, monkeypatch
             "claude-global-md": {
                 "method": "wrapper-script",
                 "dest": str(dest),
-                "content_file": "config/global-AGENTS.md",
+                "content_file": "config/statusline-command.sh",
                 "symlink_dest": str(link),
             }
         },

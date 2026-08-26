@@ -602,7 +602,7 @@ def all_(c: Context, name: str | None = None, yes: bool = False):
     destroying content PULSE can't prove it wrote.
 
     This is the repair path `inv deploy.status` points at, and the one command to reach for after
-    editing any repo-side source (`config/global-AGENTS.md`, a `config_files` `src`, a skill under
+    editing any repo-side source (a `config/agents-md/` fragment, a `config_files` `src`, a skill under
     `skills/`): the install tasks only ever create a destination that doesn't exist yet, so a
     changed source never reaches an already-deployed file on its own. Per path: absent → created;
     unchanged since PULSE last wrote it → updated silently; edited at the destination → the full

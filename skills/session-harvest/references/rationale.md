@@ -140,7 +140,7 @@ doesn't propagate anywhere and gets overwritten on the next install run.
 
 The skill already said never to edit the deployed `~/AGENTS.md`, which handles the _write_ side. The
 missing half was the _read_ side: a session's context carries whatever `~/AGENTS.md` looked like
-when the session started, and that file is regenerated from `config/global-AGENTS.md` by
+when the session started, and that file is regenerated from the `config/agents-md/` fragments by
 `inv tools.install`. After the leanness pass restructured the source from 30 flat sections to 6
 clusters, a running session still held the old shape — so "extend the existing rule's section", the
 admission criterion this skill routes candidates through, would have been applied against section

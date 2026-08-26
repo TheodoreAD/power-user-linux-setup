@@ -42,8 +42,9 @@ deployed path exists only on this machine: it never reaches the repo or the next
 PULSE writer (`inv tools.install`, `inv deploy.all`, `inv ai.install-skills`) now shows it as a diff
 and asks before overwriting it — until 2026-08-25 `inv tools.install` wiped it silently, caught live
 once only because the user asked "would this actually be installed?", not because anything failed
-loudly. `~/AGENTS.md` specifically is `[packages.claude-global-md]`, generated from
-`config/global-AGENTS.md`.
+loudly. `~/AGENTS.md` specifically is `[packages.claude-global-md]`, **assembled** from the
+fragments in `config/agents-md/` rather than copied from one file — edit the fragment that owns the
+rule (see that directory's `README.md`), never the deployed file.
 
 **Re-deploy by running a task, not by hand-replicating its write logic — and not by calling a task's
 private writer from `python -c` either.** One command covers every mechanism:

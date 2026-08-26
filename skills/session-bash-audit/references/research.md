@@ -304,9 +304,9 @@ Two things make the rate understate the risk:
   anything reporting an error.
 
 Fix is per-call, not a rule: match the executable (`pgrep -x chrome`, `ps -C chrome -o args=`)
-rather than the command line. Routed here rather than into `config/global-AGENTS.md` (2026-08-25,
-user's call) — the trigger is sharp and the miss is recoverable in one call, and that file is
-already at 33 rules / 390 lines against its own ≤15 / ≤200 reference points.
+rather than the command line. Routed here rather than into `~/AGENTS.md` (2026-08-25, user's call) —
+the trigger is sharp and the miss is recoverable in one call, and that file is already at 33 rules /
+390 lines against its own ≤15 / ≤200 reference points.
 
 ## Shell backgrounding can be killed before the command runs (2026-08-26)
 
@@ -337,9 +337,9 @@ a background write or delete that silently did not happen is indistinguishable f
 
 Fix: the Bash tool's own `run_in_background`, which survives across turns and re-invokes on exit.
 When something must be backgrounded anyway, have it leave a marker the next call checks. Unlike
-`pgrep -f` above, this one **was** also routed to `config/global-AGENTS.md` (2026-08-26, user's
-call: "we don't like things that can fool us when writing or deleting files") — it extends the
-existing "Reading a command's result" rule rather than adding a 34th, since it is the same
+`pgrep -f` above, this one **was** also routed to `~/AGENTS.md` (2026-08-26, user's call: "we don't
+like things that can fool us when writing or deleting files") — it extends the existing "Reading a
+command's result" rule rather than adding a 34th, since it is the same
 surface-signal-isn't-the-real-signal shape that rule already covers.
 
 ## Open / to re-measure
