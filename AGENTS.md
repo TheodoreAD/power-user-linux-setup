@@ -9,8 +9,8 @@ required (see `~/AGENTS.md`'s "Project conventions" for the full rationale).
 ## Global conventions live in `~/AGENTS.md`
 
 Anyone working in this repo already has `~/AGENTS.md` installed — this repo is literally what
-deploys it (`[packages.claude-global-md]` in `setup.toml`, symlinked from `~/.claude/CLAUDE.md` the
-same way this file symlinks from its own `CLAUDE.md`). It covers sudo/ssh askpass, the
+deploys it (`[packages.agents-md]` in `setup.toml`, symlinked from `~/.claude/CLAUDE.md` the same
+way this file symlinks from its own `CLAUDE.md`). It covers sudo/ssh askpass, the
 `AGENTS.md`-over-`CLAUDE.md` convention itself, cross-session memory policy, and Bash/allowlist
 discipline (don't `cd` out of a project, prefer several simple commands over one chained one).
 Nothing universal is repeated below — only what's specific to this repo.
@@ -25,7 +25,7 @@ overwrites hand-written content. Project-scoped scaffolding (a new Python projec
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps that at generation time
 instead (`contributing/repo-family-architecture.md`). The cross-session-memory policy (don't use
 Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead) is documented once,
-globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated per-repo — see
+globally, in `[packages.agents-md]` in `setup.toml` rather than repeated per-repo — see
 `docs/claude-code.md`.
 
 ## Deployed dotfiles are generated — never edit `~/<file>` directly
@@ -42,9 +42,9 @@ deployed path exists only on this machine: it never reaches the repo or the next
 PULSE writer (`inv tools.install`, `inv deploy.all`, `inv ai.install-skills`) now shows it as a diff
 and asks before overwriting it — until 2026-08-25 `inv tools.install` wiped it silently, caught live
 once only because the user asked "would this actually be installed?", not because anything failed
-loudly. `~/AGENTS.md` specifically is `[packages.claude-global-md]`, **assembled** from the
-fragments in `config/agents-md/` rather than copied from one file — edit the fragment that owns the
-rule (see that directory's `README.md`), never the deployed file.
+loudly. `~/AGENTS.md` specifically is `[packages.agents-md]`, **assembled** from the fragments in
+`config/agents-md/` rather than copied from one file — edit the fragment that owns the rule (see
+that directory's `README.md`), never the deployed file.
 
 **Re-deploy by running a task, not by hand-replicating its write logic — and not by calling a task's
 private writer from `python -c` either.** One command covers every mechanism:

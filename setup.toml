@@ -133,12 +133,12 @@
 #                 a whole file's content belongs in a real, diffable, editable file, e.g.
 #                 config/research-update.sh, not a TOML string. symlink_dest (optional, a string or
 #                 a list of them) gets symlinked to dest if not already correct, same as
-#                 [packages.claude-global-md]'s ~/.claude/CLAUDE.md -> ~/AGENTS.md. A link whose
+#                 [packages.agents-md]'s ~/.claude/CLAUDE.md -> ~/AGENTS.md. A link whose
 #                 parent directory doesn't exist is reported and skipped, never created: that
 #                 directory's absence is how an uninstalled agent is detected.
 #   assembled_from  alternative to content_file: names an any-section list field whose fragments
 #                 are composed into dest instead of copying one source file. Only `agents_md` uses
-#                 it today ([packages.claude-global-md] -> ~/AGENTS.md). Each fragment lands in its
+#                 it today ([packages.agents-md] -> ~/AGENTS.md). Each fragment lands in its
 #                 own `<!-- PULSE::<dir>/<stem> -->` block, which is provenance (which repo file a
 #                 section came from), not partial ownership — dest is regenerated whole, same as
 #                 for content_file, and hand-edits are caught by the deploy manifest, not the
@@ -976,7 +976,7 @@ claude_default_mode = "acceptEdits"
 # this every scratch write prompts under acceptEdits. File access only — nothing loads from here.
 claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]
 
-[packages.claude-global-md]
+[packages.agents-md]
 description = "Global ~/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/.claude/CLAUDE.md symlinks to it"
 method = "wrapper-script"
 tags = ["shell", "ai"]

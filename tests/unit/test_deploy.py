@@ -334,7 +334,7 @@ def test_the_registry_covers_all_three_mechanisms(tmp_path, monkeypatch):
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(tmp_path / "AGENTS.md"),
                 "content_file": "config/statusline-command.sh",
@@ -397,7 +397,7 @@ def test_lookup_matches_a_symlink_to_a_managed_destination(tmp_path, monkeypatch
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/statusline-command.sh",
@@ -712,7 +712,7 @@ def test_the_registry_builds_an_assembled_entry_from_declared_fragments(tmp_path
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "assembled_from": "agents_md",
@@ -737,7 +737,7 @@ def test_an_assembled_destination_deploys_and_then_classifies_clean(tmp_path, ag
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "assembled_from": "agents_md",
@@ -763,7 +763,7 @@ def test_editing_a_fragment_makes_the_deployed_file_stale(tmp_path, agents_md_fr
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "assembled_from": "agents_md",
@@ -789,7 +789,7 @@ def test_a_hand_edited_assembled_file_is_not_overwritten_unasked(tmp_path, agent
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "assembled_from": "agents_md",
@@ -814,7 +814,7 @@ def test_assembled_from_naming_a_field_no_package_fills_raises(tmp_path, monkeyp
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(tmp_path / "AGENTS.md"),
                 "assembled_from": "agents_md",

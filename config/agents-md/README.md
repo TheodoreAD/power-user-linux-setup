@@ -20,8 +20,8 @@ Each rule's evidence and the admission criteria for a new one stay in
 
 ## Editing
 
-Edit a fragment, then `inv deploy.all --name claude-global-md`. Never edit `~/AGENTS.md` directly:
-it is regenerated in full from these fragments, so nothing at the destination is a source of truth.
+Edit a fragment, then `inv deploy.all --name agents-md`. Never edit `~/AGENTS.md` directly: it is
+regenerated in full from these fragments, so nothing at the destination is a source of truth.
 
 A hand-edit there is caught rather than clobbered — `deploy.classify` compares the file against what
 PULSE last wrote, and `deploy.deploy` prints the diff and asks, defaulting to keeping your version —

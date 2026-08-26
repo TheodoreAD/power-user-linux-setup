@@ -11,7 +11,7 @@ from tasks import deploy, util, verify
 
 def test_resolve_wrapper_script_with_content_file_returns_deploy_kind():
     cfg: util.PackageConfig = {"dest": "~/AGENTS.md", "content_file": "config/statusline-command.sh"}
-    kind, target = verify._resolve("claude-global-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
+    kind, target = verify._resolve("agents-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
     assert (kind, target) == ("deploy", "~/AGENTS.md")
 
 
@@ -19,7 +19,7 @@ def test_resolve_wrapper_script_with_assembled_from_returns_deploy_kind():
     """An assembled destination has no `content_file`, and resolving it to an existence-only check
     would silently drop ~/AGENTS.md's content verification — the one this function exists for."""
     cfg: util.PackageConfig = {"dest": "~/AGENTS.md", "assembled_from": "agents_md"}
-    kind, target = verify._resolve("claude-global-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
+    kind, target = verify._resolve("agents-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
     assert (kind, target) == ("deploy", "~/AGENTS.md")
 
 
@@ -103,7 +103,7 @@ def test_all_checks_covers_config_files_and_skills_without_duplicating_wrapper_s
     _stub_config(
         monkeypatch,
         {
-            "claude-global-md": {
+            "agents-md": {
                 "method": "wrapper-script",
                 "dest": str(tmp_path / "AGENTS.md"),
                 "content_file": "config/statusline-command.sh",
@@ -121,7 +121,7 @@ def test_all_checks_covers_config_files_and_skills_without_duplicating_wrapper_s
 
     deploy_checks = [(name, target) for name, kind, target in verify._all_checks() if kind == "deploy"]
 
-    assert deploy_checks.count(("claude-global-md", str(tmp_path / "AGENTS.md"))) == 1
+    assert deploy_checks.count(("agents-md", str(tmp_path / "AGENTS.md"))) == 1
     assert ("wezterm", str(tmp_path / "wezterm.lua")) in deploy_checks
     skill_targets = [target for name, target in deploy_checks if name == "research-library"]
     assert skill_targets and skill_targets[0].endswith("skills/research-library")
@@ -184,7 +184,7 @@ def test_symlink_check_passes_for_a_link_to_a_deployed_path(tmp_path, monkeypatc
         deploy,
         "lookup",
         lambda p, base=None: deploy.Managed(
-            path=dest, package="claude-global-md", source="config/agents-md", mechanism=deploy.Mechanism.ASSEMBLED
+            path=dest, package="agents-md", source="config/agents-md", mechanism=deploy.Mechanism.ASSEMBLED
         ),
     )
 
@@ -231,7 +231,7 @@ def test_symlink_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch)
     present = tmp_path / "installed"
     present.mkdir()
     packages = {
-        "claude-global-md": {
+        "agents-md": {
             "symlink_dest": [str(present / "CLAUDE.md"), str(tmp_path / "absent" / "AGENTS.md")],
         }
     }

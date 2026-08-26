@@ -544,7 +544,7 @@ def _scoped(name: str | None, base: Path | None = None) -> list[Managed]:
 
 @task(
     help={
-        "name": "Only report paths declared by this [packages.*] section, e.g. claude-global-md.",
+        "name": "Only report paths declared by this [packages.*] section, e.g. agents-md.",
         "path": "Report on one path instead of the whole registry — including whether PULSE deploys it at all.",
     }
 )
@@ -593,7 +593,7 @@ def status(c: Context, name: str | None = None, path: str | None = None):
 @task(
     name="all",
     help={
-        "name": "Only deploy paths declared by this [packages.*] section, e.g. claude-global-md.",
+        "name": "Only deploy paths declared by this [packages.*] section, e.g. agents-md.",
         "yes": "Overwrite a destination that was edited here without asking (the diff is still shown).",
     },
 )

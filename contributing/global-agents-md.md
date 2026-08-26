@@ -1,11 +1,10 @@
 # `~/AGENTS.md` — rationale and evidence
 
 Companion to the [`config/agents-md/`](../config/agents-md/README.md) fragments, which are assembled
-into `~/AGENTS.md` (and its `~/.claude/CLAUDE.md` symlink) on this machine —
-`[packages.claude-global-md]` in `setup.toml`, redeployed by
-`inv deploy.all --name claude-global-md` or `inv tools.install`. The deployed file is never edited
-directly, and neither is any one fragment without checking that directory's `README.md` for which
-one owns the rule.
+into `~/AGENTS.md` (and its `~/.claude/CLAUDE.md` symlink) on this machine — `[packages.agents-md]`
+in `setup.toml`, redeployed by `inv deploy.all --name agents-md` or `inv tools.install`. The
+deployed file is never edited directly, and neither is any one fragment without checking that
+directory's `README.md` for which one owns the rule.
 
 That file is loaded whole into every session in every repo, so each rule there holds only what earns
 always-loaded space: trigger + rule + one clause of why. Everything else about a rule — dated

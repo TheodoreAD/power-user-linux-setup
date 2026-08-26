@@ -119,23 +119,23 @@ Code itself.
 
 ## `~/AGENTS.md` — global instructions, declaratively managed
 
-`[packages.claude-global-md]` writes `~/AGENTS.md` (the cross-tool, cross-project instructions file
-every agent CLI on this machine can read) from `setup.toml`, and symlinks
+`[packages.agents-md]` writes `~/AGENTS.md` (the cross-tool, cross-project instructions file every
+agent CLI on this machine can read) from `setup.toml`, and symlinks
 `~/.claude/CLAUDE.md -> ~/AGENTS.md` via the `wrapper-script` method's `symlink_dest` field — the
 exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
 `CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
 agent-readable form, so every session on this machine picks it up automatically without needing to
 rediscover it.
 
-**The file is assembled, not copied.** `[packages.claude-global-md]` sets
-`assembled_from = "agents_md"`, and every package declaring an `agents_md` fragment contributes
-whole `##` sections to the result, ordered by a sparse `order` — the same any-section pattern as
-`zshrc`/`zshenv`, for a file where section order carries meaning. Today three fragments split the
-content by audience: `config/agents-md/this-setup.md` (facts true only of this machine and this
-user's repos), `claude-code.md` (one harness's own behavior), and `portable.md` (conventions that
-hold anywhere). Which one owns what, and why the split exists, is `config/agents-md/README.md`.
+**The file is assembled, not copied.** `[packages.agents-md]` sets `assembled_from = "agents_md"`,
+and every package declaring an `agents_md` fragment contributes whole `##` sections to the result,
+ordered by a sparse `order` — the same any-section pattern as `zshrc`/`zshenv`, for a file where
+section order carries meaning. Today three fragments split the content by audience:
+`config/agents-md/this-setup.md` (facts true only of this machine and this user's repos),
+`claude-code.md` (one harness's own behavior), and `portable.md` (conventions that hold anywhere).
+Which one owns what, and why the split exists, is `config/agents-md/README.md`.
 
-Edit the fragment that owns the rule, then `inv deploy.all --name claude-global-md`, rather than
+Edit the fragment that owns the rule, then `inv deploy.all --name agents-md`, rather than
 hand-editing `~/AGENTS.md` directly — the file is fully PULSE-owned (same as any
 `wrapper-script`-method entry) and regenerated end to end, so the `<!-- PULSE::agents-md/… -->`
 markers in it are provenance, not an ownership boundary: nothing outside a block survives either.
@@ -317,7 +317,7 @@ rules, because an explicit `ask` rule would beat the mode's in-scope grant.
 
 `[packages.claude-statusline]` deploys the custom Claude Code statusline script
 (`config/statusline-command.sh` → `~/.claude/statusline-command.sh`, a `wrapper-script`-method
-entry, chmod 0o755 — same mechanism as `claude-global-md`/`pulse-proxy-start`) and declares
+entry, chmod 0o755 — same mechanism as `agents-md`/`pulse-proxy-start`) and declares
 `claude_statusline = { type = "command", command = "bash ~/.claude/statusline-command.sh" }` on that
 same package entry. `inv ai.install-skills` reads that value directly (not a scanned any-package
 field like `claude_permissions_allow` above — there's only ever one statusline, so no merge/manifest
