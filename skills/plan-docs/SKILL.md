@@ -129,6 +129,14 @@ Code contracts and verification logs are usually the bulk of the deletable volum
    future value unless it's already written down elsewhere in the repo. Often it already is — check
    `docs/*.md` before assuming new `contributing/*.md` content is needed; a plan whose design
    rationale is already fully covered in prose there needs no new file at all.
+   - In a repo family, check the **sibling repo that owns the concern**, not just this one. A plan
+     that designed something later extracted elsewhere is describing a decision that repo now owns
+     and keeps current, and migrating it here ships a second, diverging copy that reads as
+     authoritative. Confirmed 2026-08-26 retiring a scaffolding plan: its tuned basedpyright profile
+     had moved to `repo-tasks/contributing/type-checking.md`, which had since **reversed two of the
+     plan's conclusions** on better evidence — migrating the plan's version verbatim would have
+     restated both as current. Point at the owning repo's page instead, and migrate only what it
+     genuinely doesn't cover.
 2. **A plan carrying live unfinished work is not deletable.** Run the deletion gate —
    `rg '^\s*[-*]?\s*\[DEFERRED:|^\s*[-*]?\s*\[UNVERIFIED:' plans/<file>.md` — and move everything it
    finds into a plan that stays before going further. This is the "Don't stash future work in prose
