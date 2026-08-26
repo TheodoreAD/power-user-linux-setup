@@ -2,7 +2,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import deploy, util
+from . import deploy, tools, util
 
 # Hard ceiling on any single check, via coreutils `timeout` — not a fallback/retry, just a bound
 # on the one attempt. Necessary in practice, not just in theory: auditing this task against a real
@@ -144,9 +144,44 @@ def _all_checks() -> list[tuple[str, str, str]]:
     checks += [
         (m.package, "deploy", str(m.path))
         for m in deploy.managed_paths().values()
-        if m.mechanism != deploy.Mechanism.WRAPPER_SCRIPT
+        if m.mechanism not in (deploy.Mechanism.WRAPPER_SCRIPT, deploy.Mechanism.ASSEMBLED)
     ]
+    checks += _symlink_checks()
     return checks
+
+
+def _symlink_checks() -> list[tuple[str, str, str]]:
+    """One check per `symlink_dest` whose agent is actually installed here.
+
+    A deploy check proves `~/AGENTS.md` holds the right bytes; it says nothing about whether each
+    agent can *see* it, and a missing or misdirected link is silent — the agent simply runs without
+    the rules. Links whose parent directory doesn't exist are skipped for the same reason the
+    installer skips creating them: that agent isn't installed, so its missing link is correct.
+    """
+    return [
+        (name, "symlink", str(link))
+        for name, cfg in util.enabled_packages().items()
+        for link in tools.symlink_dests(cfg)
+        if link.parent.is_dir()
+    ]
+
+
+def _symlink_check(target: str) -> tuple[bool, str]:
+    """(passed, message) for one declared symlink.
+
+    Correctness is "resolves to a path this repo deploys", not merely "is a symlink": a link
+    pointing at a stale or hand-made copy of the file would satisfy the weaker test while leaving
+    that agent reading something PULSE doesn't manage. deploy.lookup already resolves a symlink to
+    its target's registry entry, which is exactly the question being asked.
+    """
+    link = Path(target).expanduser()
+    if not link.is_symlink():
+        kind = "a regular file" if link.exists() else "missing"
+        return False, f"{target} is {kind}, not a symlink — that agent isn't reading the deployed file"
+    m = deploy.lookup(link)
+    if m is None or m.path != link.resolve():
+        return False, f"{target} points at {link.resolve()}, which this repo doesn't deploy"
+    return True, f"{target} -> {m.path}"
 
 
 def _classify_deploy(target: str) -> tuple[deploy.Managed, deploy.State]:
@@ -184,6 +219,8 @@ def all(c: Context):  # noqa: A001, C901
                 print(f"[verify] {name}: {util.ok_label(Path(target).expanduser().exists())}")
             elif kind == "deploy":
                 print(f"[verify] {name}: {util.ok_label(_deploy_check(*_classify_deploy(target))[0])}")
+            elif kind == "symlink":
+                print(f"[verify] {name}: {util.ok_label(_symlink_check(target)[0])}")
             elif kind == "cmd":
                 print(f"[verify] {name}: {util.ok_label(util.command_exists(target.split()[0]))}")
             else:
@@ -201,6 +238,11 @@ def all(c: Context):  # noqa: A001, C901
             passed, message = _deploy_check(*_classify_deploy(target))
             if not passed:
                 raise RuntimeError(f"[verify] {name}: {message} — redeploy needed (`inv deploy.all`)")
+            print(f"[verify] {name}: {message}")
+        elif kind == "symlink":
+            passed, message = _symlink_check(target)
+            if not passed:
+                raise RuntimeError(f"[verify] {name}: {message} — re-run `inv tools.install`")
             print(f"[verify] {name}: {message}")
         elif kind == "cmd":
             c.run(f"timeout {_TIMEOUT_SECS}s {target}", hide=True)

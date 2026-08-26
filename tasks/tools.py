@@ -108,7 +108,7 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
         )
     else:
         raise util.missing_fields(name, "content_file (or assembled_from)")
-    links = _symlink_dests(cfg)
+    links = symlink_dests(cfg)
 
     if util.DRY_RUN:
         ok = deploy.classify(managed) == deploy.State.CLEAN and all(_link_ok(link, dest) for link in links)
@@ -120,7 +120,7 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
         _ensure_symlink(name, link, dest)
 
 
-def _symlink_dests(cfg: util.PackageConfig) -> list[Path]:
+def symlink_dests(cfg: util.PackageConfig) -> list[Path]:
     """`symlink_dest`, as a list of absolute paths.
 
     Accepts a bare string as well as a list: one destination is still the common case (a single

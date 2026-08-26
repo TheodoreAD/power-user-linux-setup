@@ -457,6 +457,29 @@ committing the fetched file — the shape `repo-tasks`' `configs.pull` uses, alr
 `~/AGENTS.md`'s "regenerating a file from a canonical source" rule. The pull task is the better
 long-term fit; it just isn't on the critical path.]
 
+[DEFERRED: **`inv deploy.all` cannot repair a symlink**, which the new `verify.all` symlink check
+made visible the moment it went red: `symlink_dest` handling lives in `tools.py`'s installer, so the
+only way to create a missing link is `inv tools.install` — a much broader command than the one
+`deploy.status` tells you to reach for, and than a single missing link warrants. It was harmless
+here (every other installer short-circuits on "already installed"), but the repair path being wider
+than the fault is the wart. The fix is probably a `links` field on `deploy.Managed`, so `deploy()`
+ensures them after a successful write and symlink handling joins content in the one writer —
+`lookup()` already resolves symlinks into the registry, so the module half-knows about them
+already.]
+
+[DEFERRED: **Gemini's `context.fileName` is not implemented.** The design (D6) prefers pointing
+Gemini at `AGENTS.md` via its own settings over a `~/.gemini/GEMINI.md` symlink. Gemini CLI is not
+installed on this machine, so writing a settings file for it would be unverifiable and speculative —
+the symlink is declared instead and skips itself until `~/.gemini` exists. Revisit when Gemini is
+actually installed, and verify then whether `context.fileName` governs the user-level lookup at
+all.]
+
+[DEFERRED: **The `skills ls --json` per-agent check from D7 is not built.** The symlink check that
+landed covers the instruction file; the skills half would verify that every declared skill is
+visible to every declared agent, which is what catches the CLI's announced-but-absent Claude Code
+link. Premature until skills actually move to the `npx` source — today PULSE installs them itself
+and the registry already deploy-checks each one.]
+
 [DEFERRED: move `config/agents-md/portable.md` into `agent-skills` behind a pull task, once that
 repo exists.]
 

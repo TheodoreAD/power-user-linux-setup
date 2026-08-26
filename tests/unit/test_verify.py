@@ -173,3 +173,70 @@ def test_classify_deploy_raises_for_a_path_outside_the_registry(tmp_path, monkey
 
     with pytest.raises(RuntimeError, match="isn't in the deploy registry"):
         verify._classify_deploy(str(tmp_path / "nope"))
+
+
+def test_symlink_check_passes_for_a_link_to_a_deployed_path(tmp_path, monkeypatch):
+    dest = tmp_path / "AGENTS.md"
+    dest.write_text("rules\n")
+    link = tmp_path / "CLAUDE.md"
+    link.symlink_to(dest)
+    monkeypatch.setattr(
+        deploy,
+        "lookup",
+        lambda p, base=None: deploy.Managed(
+            path=dest, package="claude-global-md", source="config/agents-md", mechanism=deploy.Mechanism.ASSEMBLED
+        ),
+    )
+
+    passed, _ = verify._symlink_check(str(link))
+
+    assert passed
+
+
+def test_symlink_check_fails_for_a_missing_link(tmp_path):
+    passed, message = verify._symlink_check(str(tmp_path / "CLAUDE.md"))
+
+    assert not passed
+    assert "missing" in message
+
+
+def test_symlink_check_fails_for_a_real_file_at_the_link_path(tmp_path):
+    """The failure that matters: an agent reading a stale hand-made copy instead of the deployed
+    file looks completely normal until someone diffs the two."""
+    link = tmp_path / "CLAUDE.md"
+    link.write_text("a stale copy\n")
+
+    passed, message = verify._symlink_check(str(link))
+
+    assert not passed
+    assert "not a symlink" in message
+
+
+def test_symlink_check_fails_when_the_link_points_outside_the_registry(tmp_path, monkeypatch):
+    other = tmp_path / "somewhere-else.md"
+    other.write_text("not ours\n")
+    link = tmp_path / "CLAUDE.md"
+    link.symlink_to(other)
+    monkeypatch.setattr(deploy, "lookup", lambda p, base=None: None)
+
+    passed, message = verify._symlink_check(str(link))
+
+    assert not passed
+    assert "doesn't deploy" in message
+
+
+def test_symlink_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch):
+    """A link into a directory that doesn't exist is correct, not a failure — that agent simply
+    isn't on this machine, and the installer skips creating it for the same reason."""
+    present = tmp_path / "installed"
+    present.mkdir()
+    packages = {
+        "claude-global-md": {
+            "symlink_dest": [str(present / "CLAUDE.md"), str(tmp_path / "absent" / "AGENTS.md")],
+        }
+    }
+    monkeypatch.setattr(util, "enabled_packages", lambda: packages)
+
+    checks = verify._symlink_checks()
+
+    assert [t for _, _, t in checks] == [str(present / "CLAUDE.md")]
