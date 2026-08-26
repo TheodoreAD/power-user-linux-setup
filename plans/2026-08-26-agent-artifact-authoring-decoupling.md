@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-26
+updated: 2026-08-27
 ---
 
 ## What has landed, and what hasn't
@@ -12,10 +12,17 @@ detection, the `verify.all` symlink check, and `[packages.agents-md]`'s rename. 
 assembled and linked into Claude Code and Copilot; Codex and Gemini are declared and skip themselves
 until those agents exist here.
 
-The **skills half has not started.** No `agent-skills` repo exists; this repo's skills are still
-`source = "local"` and reachable by nobody else — the failure modes in Context below are still live
-for them. That is what keeps this plan open. Its remaining `[NEEDS CLARIFICATION:]` and
-`[DEFERRED:]` tags are all on that half, plus three follow-ups the implementation left behind.
+The **skills half has passed its pilot** (2026-08-27, step 4 of "Recommended direction").
+[`TheodoreAD/agent-skills`](https://github.com/TheodoreAD/agent-skills) exists, is public, and holds
+`plan-docs` alone; PULSE's `[packages.plan-docs]` is now a `source = "npx"` entry against it, and
+`skills/plan-docs/` is gone from this repo. Verified end to end — see "The pilot, measured
+(2026-08-27)" below. The other **eight skills are still `source = "local"`**, deliberately: the
+pilot proved the replacement, but each remaining skill still has to be moved, and two of them
+(`session-bash-audit`, `research-library`) carry machine assumptions that need auditing against the
+new repo's "must work for someone who has only this repo" bar first.
+
+That is what keeps this plan open, along with the `[NEEDS CLARIFICATION:]` and `[DEFERRED:]` tags
+below — the pilot answered some of them and added one.
 
 ## Context
 
@@ -181,6 +188,48 @@ scope only — nothing global was mutated. Several things the write-ups claim di
   `claude-code_2-1-245_agent Agent detected — installing non-interactively`, i.e. it skips its own
   prompts inside a Claude Code session. That interacts directly with the `--yes` trap below — the
   confirmation gate is bypassed by the CLI itself, not only by PULSE's wrapper.
+
+### The pilot, measured (2026-08-27)
+
+`agent-skills` created, `plan-docs` moved into it alone, published public, and installed back onto
+this machine through PULSE. What the run actually established, beyond "it works":
+
+- **The published repo needs no manifest, exactly as researched.**
+  `skills add
+  TheodoreAD/agent-skills --list` against the bare GitHub repo found `plan-docs` under
+  `skills/<name>/` and printed its full description. Nothing was registered anywhere.
+- [PITFALL: **The announced-but-absent Claude Code symlink reproduces against the published repo,
+  and `_ensure_agents_skills` is now confirmed load-bearing rather than merely suspected.** Run in a
+  clean scratch directory at project scope with `--agent claude-code --agent github-copilot`, the
+  CLI's "Installation Summary" box listed `symlink → Claude Code`, and the final "Installed 1 skill"
+  box silently dropped that line; `find` afterwards showed `.agents/skills/plan-docs` and
+  `skills-lock.json` and **no `.claude/` directory at all**. The global install on this machine
+  reports both agents only because PULSE's `~/.claude/skills → ~/.agents/skills` symlink predates
+  it. Deleting `_ensure_agents_skills` would take Claude Code's access to every skill with it.]
+- **At global scope, `github-copilot` resolves to the `~/.agents/skills` hub, not to the
+  `globalSkillsDir` its own registry entry names.** Reading the CLI bundle's agent table
+  (`dist/cli.mjs`) suggests Copilot's global directory is `~/.copilot/skills`; the actual install
+  wrote one real copy to `~/.agents/skills/plan-docs`, labelled it `universal: GitHub Copilot`, and
+  never created `~/.copilot/skills`. So the one-canonical-copy model PULSE already assumes survives
+  the move — the CLI does not fan out per-agent copies here. Do not re-derive this from the registry
+  table; it disagrees with the behaviour.
+- **The agents that genuinely map to `~/.agents/skills` at global scope are a short list**, from the
+  same table: `cline`, `dexto`, `kimi-code-cli`, `loaf`, `warp`, `zed`. Note that the agent whose id
+  is literally `universal` maps to `~/.config/agents/skills`, **not** `~/.agents/skills` — the two
+  are easy to conflate and are different directories. Only `claude-code` (`~/.claude`) and
+  `github-copilot` (`~/.copilot`) are detected as installed on this machine; `~/.codex`,
+  `~/.cursor`, `~/.gemini` do not exist.
+- **The installed copy is now indistinguishable from the eight local ones in `skills ls -g --json`**
+  — all nine report `["Claude Code", "GitHub Copilot"]`. Useful for D7's check, but note what that
+  means: the listing cannot tell a working install from one whose Claude Code link happens to be
+  supplied by PULSE. A D7 check that only reads this listing would have passed on a machine where
+  the defect above had actually bitten.
+- **The dev loop got worse, not better, and that was foreseen but is worth stating plainly.** Before
+  the move: edit `skills/<name>/SKILL.md`, run `inv ai.install-skills --skill=<name>`. After: edit
+  in `agent-skills`, commit, **push**, then run the same task — the `skills` CLI clones from GitHub
+  every time, so an unpushed edit is invisible. The local-path source (`skills add ../agent-skills`)
+  is the escape hatch for iterating, but it is not what `setup.toml` declares. This sharpens the
+  open question below about whether a dev loop is worth building.
 
 ### Where each agent actually looks
 
@@ -492,11 +541,24 @@ the symlink is declared instead and skips itself until `~/.gemini` exists. Revis
 actually installed, and verify then whether `context.fileName` governs the user-level lookup at
 all.]
 
-[DEFERRED: **The `skills ls --json` per-agent check from D7 is not built.** The symlink check that
-landed covers the instruction file; the skills half would verify that every declared skill is
-visible to every declared agent, which is what catches the CLI's announced-but-absent Claude Code
-link. Premature until skills actually move to the `npx` source — today PULSE installs them itself
-and the registry already deploy-checks each one.]
+[DEFERRED: **Migrating a skill from `local` to `npx` orphans its deploy-manifest entry, and nothing
+prunes it.** Confirmed 2026-08-27 on `plan-docs`: once the `source = "local"` entry is gone the path
+leaves `deploy.managed_paths()`, so `inv deploy.status` stops reporting it entirely — while
+`~/.local/state/power-user-linux-setup/deployed.json` still records
+`/home/tdumitrescu/.agents/skills/plan-docs` as deployed from `skills/plan-docs`, a source that no
+longer exists. `deploy.forget()` is written and unit-tested for exactly this and **has no production
+caller**. Removing the installed directory before re-installing is likewise a bare `rm -rf` with no
+task behind it. Harmless for one skill; it happens eight more times when the rest move, so decide
+the mechanism (a `deploy` prune step, or a task calling `forget`) before that batch, not during it.]
+
+[DEFERRED: **The `skills ls --json` per-agent check from D7 is not built**, and the pilot showed it
+needs a stronger predicate than first designed. The symlink check that landed covers the instruction
+file; the skills half would verify that every declared skill is visible to every declared agent. But
+`skills ls -g --json` reports `["Claude Code", "GitHub Copilot"]` for a skill whose Claude Code
+access comes entirely from PULSE's own symlink, so the listing alone cannot distinguish a working
+install from the defect it is supposed to catch — the check has to assert the symlink's existence
+and target directly, not just read the CLI's own report. Now unblocked: `plan-docs` is the first
+skill actually on the `npx` source, so there is something to check.]
 
 [DEFERRED: move `config/agents-md/portable.md` into `agent-skills` behind a pull task, once that
 repo exists.]
@@ -539,19 +601,32 @@ edits, so the loop is edit → one command → refreshed, identical in shape to 
 `inv ai.install-skills --skill=<name>`. That is good enough that a bespoke symlink-to-checkout
 mechanism may not be worth its own maintenance — but it does mean no agent's live-reload ever fires
 on an edit, which is the property that made the move look attractive in the first place. Decide
-explicitly rather than inheriting the limitation by accident.]
+explicitly rather than inheriting the limitation by accident. Sharpened by the pilot: the declared
+`npx` source clones from GitHub, so the real post-move loop is edit → commit → **push** → re-run the
+task. Iterating on a skill against an unpushed working tree needs the local-path source, which
+`setup.toml` does not declare — so "no dev loop" now costs a push per iteration, not just a
+command.]
 
 [NEEDS CLARIFICATION: **`--yes` and the non-interactive trap.** `docs/claude-code.md` records that
 `_install_remote_skill`'s confirmation defaults to _proceed_ under a non-interactive shell, so an
 agent running the task installs every declared remote skill with no approval gate. Moving this
 repo's own skills to the `npx` source makes that path the primary one rather than the exception, so
-the default needs revisiting before the migration, not after.]
+the default needs revisiting before the migration, not after. Now live for one skill, and there is a
+second gate that also isn't one: the `skills` CLI detects it is running inside a Claude Code session
+and prints `Agent detected — installing non-interactively`, skipping its own prompts regardless of
+what PULSE passes. So an agent running `inv ai.install-skills` fetches and installs code from GitHub
+with no human in the loop at either layer. Decide before the eight-skill batch.]
 
 [NEEDS CLARIFICATION: **What marks a skill "opinionated/niche"?** The `skills` CLI already has
 `metadata: { internal: true }` + `INSTALL_INTERNAL_SKILLS=1`, but that means "work in progress", not
 "personal to this author". Options: a `metadata` key of our own, a convention in the `description`,
 or a `README` table in the repo. The `description` is the field agents actually match on, so putting
-audience-signalling text there costs trigger quality — probably `metadata`.]
+audience-signalling text there costs trigger quality — probably `metadata`. The pilot shipped the
+`README` table form (a **Scope** column: _general_ / _opinionated but general_ / _personal_) as the
+interim answer, because it is the one that needed no format decision to publish. It is not the
+answer to this question: a README column is invisible to `skills find` and to anyone installing
+without reading the repo. Decide the `metadata` key before the eight-skill batch, since that is when
+several genuinely-personal skills arrive at once.]
 
 ## Recommended direction
 
@@ -562,13 +637,27 @@ Rough, and contingent on the questions above.
 1. **`agent-skills`** — plain `skills/<name>/{SKILL.md,references/,scripts/}` at the root, no
    manifest, no vendor directory. Discoverable by `npx skills add TheodoreAD/agent-skills` for
    anyone, on any of 75+ agents. Its README documents the one-liner and nothing else is required to
-   consume it.
+   consume it. **Done 2026-08-27**, public, holding `plan-docs`. It runs the family's standard
+   quality composite unmodified (`inv quality.precommit` via `repo-tasks`, configs from
+   `inv configure`) rather than a markdown-only shortcut — skills carry real Python in `scripts/`
+   and `references/snippets/`, so ruff/basedpyright/pytest all have work once the rest arrive. Its
+   own gate is `tests/unit/test_skill_layout.py`: frontmatter present, `name` matching the
+   directory, `description` non-empty and under the 1024-char cap, no unexpected directory entries,
+   and every skill linked from the README. That catches the one failure nothing else in the pipeline
+   notices — a skill that installs cleanly and then never triggers.
 2. **PULSE installs it with one declaration** — a single `[packages.agent-skills]` entry with
    `skills = [{ source = "npx", repo = "TheodoreAD/agent-skills", agents = [...] }]`, replacing nine
    `method = "skill"` blocks, `_install_local_skill` and the `.pulse-source` marker logic.
    `_ensure_agents_skills` **is not part of that deletion** — the verification above found the CLI
-   does not reliably create the Claude Code link. That is a real deletion of working, tested code,
-   and it should happen only after the pilot below proves the replacement.
+   does not reliably create the Claude Code link, now confirmed against the published repo. That is
+   a real deletion of working, tested code, and it should happen only after the pilot below proves
+   the replacement.
+
+   The pilot deliberately stopped short of that consolidation: `[packages.plan-docs]` keeps its name
+   and carries `names = ["plan-docs"]`, so the eight local entries are untouched and
+   `_install_local_skill` still has work. Rename to `[packages.agent-skills]` and drop the `names`
+   filter in the same commit as the last skill's move, not before — a half-migrated
+   `[packages.agent-skills]` entry that installs one skill would misname itself.
 3. **`~/AGENTS.md` becomes an assembled, multi-agent file** — fully designed in "Design — the
    assembled `~/AGENTS.md`" above: an `agents_md` any-section field, `util.ensure_block` with HTML
    markers, ordered whole-`##`-section fragments, `symlink_dest` as a list, Gemini handled by
@@ -584,11 +673,20 @@ Rough, and contingent on the questions above.
    documentation of one machine's mechanisms, actively misleading to anyone without PULSE, and
    keeping them here means the rule and the mechanism it describes change in the same commit. A
    non-PULSE user gets only the portable half, which is the correct outcome.
-4. **Pilot on one skill first.** `plan-docs` is the best candidate: self-contained, no machine
-   specifics, already has `references/`. Publish it alone, install it with `skills add`, confirm it
-   lands for Claude Code _and_ one universal agent — the verification above says that combination is
-   exactly where the CLI drops one — and only then move the rest. `~/AGENTS.md`'s "pilot on one real
-   repo before writing the shareable version" rule is exactly this case.
+4. **Pilot on one skill first — done 2026-08-27.** `plan-docs` was the candidate: self-contained, no
+   machine specifics, already had `references/`. Published alone, installed with `skills add`, and
+   confirmed to land for Claude Code _and_ one universal agent (`github-copilot`). Findings in "The
+   pilot, measured (2026-08-27)" above; the headline one is that the CLI's dropped Claude Code
+   symlink reproduces against the published repo, so `_ensure_agents_skills` stays.
+
+   **Moving the remaining eight is the next step, and is not a mechanical repeat.** Each has to pass
+   `agent-skills`' own bar — "every skill has to work for someone who has only this repo". At least
+   two do not, as written: `session-bash-audit` reads `~/.claude/projects/*.jsonl` and carries this
+   machine's permission-mode research, and `research-library` assumes `$RESEARCH_HOME` and ships a
+   `claude_permissions_allow` rule naming an absolute path under this user's home. Decide per skill
+   whether the machine assumption is declarable (say so in the skill, as the constraints allow) or
+   whether the skill stays PULSE-local — the `local` source deliberately survives for exactly that
+   case.
 5. **Per-repo API skills live in the repo they describe, not in `agent-skills`.** A skill about
    `repo-tasks`' interface belongs in `repo-tasks`, committed, versioned with the code it documents
    — the same reason `AGENTS.md` is per-repo. Layout is the standard one:
