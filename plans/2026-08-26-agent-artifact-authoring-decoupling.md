@@ -246,7 +246,132 @@ by `skills add --global` tomorrow — is terminal-only. Consistent with "i live 
 it costs nothing, but it is the reason the global-install route is a deliberate choice rather than a
 free one.
 
-## Open questions
+## Design — the assembled `~/AGENTS.md`
+
+Settled 2026-08-26. This is one subsystem of the plan; the rest stays `idea`, which is why the
+file's status has not moved.
+
+### D1. `agents_md` — a path-valued any-section field
+
+Same scan as `zshrc`/`zshenv`/`zprofile` (`tasks/zsh.py`'s `_declared_dotfile_snippets`): any
+`[packages.*]` entry may declare one, read regardless of that entry's own `method`. It differs from
+the zsh fields in one way — **the value is a path, not an inline string.** A multi-line Markdown
+section inside a TOML string would be unreadable and undiffable; the fragment is a real `.md` file
+in the repo, edited with a Markdown editor, formatted by `dprint` with everything else:
+
+```toml
+agents_md = { src = "config/agents-md/machine.md", order = 10 }
+```
+
+`src` resolves the same way `config_files`' `src` does. This also means a fragment can be reviewed
+on its own in a PR diff, which an inline TOML blob cannot.
+
+[DECISION: **Fragment content is authored as whole `##` sections, never fragments of one.** A
+fragment file contributes one or more complete top-level sections with their `###` rules inside.
+Assembly is then ordered concatenation with no rule-level merging machinery. See D2 for the content
+change this forces.]
+
+### D2. Re-cut the clusters so no cluster straddles the portable/machine line
+
+D1's "whole `##` sections" rule has a real cost, and it is worth paying explicitly rather than
+discovering later. The current six clusters do **not** align with the portable/machine split:
+`Bash & the CLI allowlist` mixes portable call-composition rules with the PULSE-generated allowlist,
+and `Verification` holds one machine fact (the `ro_RO` `LC_TIME`/`LC_NUMERIC` locale rule) among
+otherwise portable ones.
+
+Two ways out: rule-level assembly (PULSE emits the `##` headings from a fixed list, each fragment
+declares which cluster each `###` rule joins) or re-clustering so every rule sits in a cluster that
+is wholly portable or wholly machine-specific. **Take the re-clustering.** Rule-level assembly is
+real machinery for a handful of outliers, and `contributing/global-agents-md.md`'s own research says
+clustering matters for adherence but **position does not** — so moving a rule between clusters is
+cheap, and moving the locale rule next to `sudo -A` is arguably more honest anyway: both are facts
+about this machine, not conventions. `~/AGENTS.md`'s existing top cluster is already literally
+`## This machine & the harness`; the re-cut mostly grows it.
+
+### D3. Ordering is an explicit integer, spaced
+
+`order` on each `agents_md` entry, sparse (10, 20, 30 …) so a fragment can be inserted without
+renumbering. Alphabetical-by-package is rejected: it is arbitrary and a package rename silently
+reorders a document. Ties break on package name, deterministically, so two fragments at the same
+order never produce a diff that depends on `setup.toml` key iteration.
+
+### D4. Markers, and why a hand-edit is already safe
+
+[DECISION: **`util.ensure_block(..., style=MarkerStyle.HTML)`, one block per fragment.** Already
+built, already used for `docs/dev-container.md`. Two comment lines per fragment; on ~6 fragments
+that is a dozen lines, visible to any agent that doesn't strip HTML comments (Claude Code documents
+stripping them; nothing else does). Accepted as harmless — it is the same shape `~/.zshrc` already
+carries, and a dozen comment lines in a 300-line document does not plausibly change behavior.]
+
+The clobber risk raised while deciding this is **already covered twice over, without needing git**:
+
+- **Inside vs. outside a block.** `ensure_block` only ever rewrites the text between one block's own
+  markers. Anything a human adds outside every block survives by construction — the exact property
+  that makes the zshrc mechanism safe to re-run.
+- **The whole-file case.** `deploy.classify()` compares the deployed file against the manifest
+  record of what PULSE last wrote and returns `CLEAN`/`DIRTY`/`ABSENT`; `deploy.deploy()` shows the
+  diff and asks before overwriting a `DIRTY` file, defaulting to keeping it. `inv deploy.status`
+  reports the same read-only. Routing the assembled `~/AGENTS.md` through `deploy.deploy()` — as
+  every other path under `~` already is — inherits both behaviors with no new code.
+
+A git-based comparison would be strictly worse: the deployed file is not in a repo, so there is no
+history to compare against, and the manifest already records exactly the thing git would be
+consulted for.
+
+### D5. The symlink farm — `symlink_dest` becomes a list
+
+One real file (`~/AGENTS.md`), symlinks into each agent's own path. **Create a link only when the
+agent's own directory already exists**, mirroring the `skills` CLI's auto-detection — `~/.codex/`
+does not exist on this machine today, and creating it would be litter that makes Codex look
+installed. Targets, in confirmation order: `~/.claude/CLAUDE.md` (exists today),
+`~/.codex/AGENTS.md`, `~/.copilot/copilot-instructions.md`. Codex's `AGENTS.override.md` is
+deliberately never touched — it is the documented per-user escape hatch and must stay hand-owned.
+
+Rename the package: `claude-global-md` → something agent-neutral, since it stops being Claude's.
+
+### D6. Gemini is a settings tweak, not a symlink
+
+Gemini CLI's `context.fileName` accepts a list, so `["AGENTS.md", "GEMINI.md"]` makes it read the
+real thing directly. That is harness plumbing — explicitly admissible — and strictly better than a
+`~/.gemini/GEMINI.md` symlink. Same category as `claude_default_mode`: a declared scalar synced into
+a vendor settings file. [UNVERIFIED: whether `context.fileName` governs the user-level `~/.gemini/`
+lookup or only the project-tree walk — if only the latter, fall back to the symlink for Gemini.]
+
+### D7. PULSE owns a verifier for what the `skills` CLI misses
+
+The division of labour: **use the `skills` CLI for everything it does, and have PULSE check the
+result rather than reimplement it.** The verification run above found a real gap worth checking for
+— the announced-but-absent Claude Code symlink — and `skills ls --json` makes the check cheap.
+
+Fits `inv verify.all`'s existing contract ("every package a run installed also actually works"),
+which is where it belongs rather than in a new namespace:
+
+- every declared skill appears in `skills ls -g --json`, and its `agents` list contains every agent
+  the entry declared — this is precisely the dropped-symlink case;
+- `~/AGENTS.md` exists and is non-empty, and every `symlink_dest` target resolves to it;
+- every declared fragment's block is present in the assembled file.
+
+`inv deploy.status` covers the drift side read-only, unchanged.
+
+### D8. Files touched
+
+- `setup.toml` — the `agents_md` field's documentation in the header comment;
+  `[packages.claude-global-md]` renamed, `symlink_dest` becomes a list; one `agents_md` entry per
+  fragment.
+- `config/agents-md/*.md` — the fragment files; `config/global-AGENTS.md` splits into these.
+- `tasks/ai.py` or a new module — the assembly, going through `deploy.deploy()`.
+- `tasks/verify.py` — D7's checks.
+- `contributing/global-agents-md.md` — the re-clustering rationale, and D2's trade-off.
+
+### Open within this design
+
+[NEEDS CLARIFICATION: **Does the portable fragment live in `agent-skills` or stay in PULSE?** If it
+lives in `agent-skills`, PULSE needs the file on disk to assemble from — either a `git-clone`-method
+package (a second mechanism for a repo the skills CLI is already installing from) or a deliberate
+pull task committing the fetched fragment, the shape `repo-tasks`' `configs.pull` already uses and
+that `~/AGENTS.md`'s "regenerating a file from a canonical source" rule already governs. The
+pull-task shape is the better fit for this family, but it is a real extra step; keeping the portable
+fragment in PULSE for now and moving it later is the cheaper sequencing.]
 
 [NEEDS CLARIFICATION: **Where does `contributing/global-agents-md.md` go?** It holds the evidence
 for every `~/AGENTS.md` rule plus the admission criteria, and "rationale lives in each skill's
@@ -256,23 +381,9 @@ fragment, mirroring the skill convention. But the file also carries evidence for
 rules, which stay here. Likely splits the same way the rules do; needs confirming before either half
 moves.]
 
-[NEEDS CLARIFICATION: **Fragment ordering and the "must not look machine-generated" bar.** Shell
-fragments can append in any order; a document cannot. Options: an explicit `order` key per fragment,
-alphabetical by package name (arbitrary and unstable), or a fixed list of section slots in PULSE
-naming which contributor fills each. The current file's structure — six trigger-clustered sections,
-researched in `contributing/global-agents-md.md` — is the thing being preserved, so the slots
-probably _are_ those clusters, and a fragment declares which cluster it extends.]
-
-[NEEDS CLARIFICATION: **Do the HTML markers survive every agent, not just Claude Code?** Claude Code
-documents stripping block-level HTML comments from instruction files before injecting them, so
-`util.MarkerStyle.HTML` markers cost nothing there. Checked 2026-08-26: **no other vendor documents
-any such stripping**, so the working assumption must be that Codex, Copilot and Gemini feed them to
-the model verbatim. Two markers per fragment across ~6 fragments is a dozen visible comment lines —
-survivable, but it is exactly the "looks machine-generated" cost the decision above rules out.
-Marker-free alternative to weigh: manifest-tracked assembly, the shape
-`_apply_static_claude_permissions` already uses (remember what we wrote, rewrite only that, never
-touch anything else) — no in-file markers at all, at the cost of the file no longer being
-self-describing.]
+Fragment ordering, the marker mechanism, and the hand-edit/clobber question are settled in "Design —
+the assembled `~/AGENTS.md`" above (D3, D4). One question inside that design is still open; it is
+stated at the end of that section rather than repeated here.
 
 [NEEDS CLARIFICATION: **Where does `contributing/repo-family-architecture.md`'s settling test put
 `agent-skills`?** It has no bucket for "artifacts an agent consumes on any machine, authored once,
@@ -329,24 +440,15 @@ Rough, and contingent on the questions above.
    `method = "skill"` blocks, `_install_local_skill` and the `.pulse-source` marker logic.
    `_ensure_agents_skills` **is not part of that deletion** — the verification above found the CLI
    does not reliably create the Claude Code link. That is a real deletion of working, tested code,
-   and it should happen only after step 5 proves the replacement.
-3. **`~/AGENTS.md` becomes an assembled file with an `agents_md` any-section field** — the direct
-   analogue of `zshrc`/`zshenv`/`zprofile`. Each contributing package declares a fragment; PULSE
-   writes each into one named block via the existing
-   `util.ensure_block(..., style=MarkerStyle.HTML)` (already used for `docs/dev-container.md`'s tag
-   table, and HTML markers specifically because a `#`-prefixed marker renders as a heading in
-   Markdown). Two known contributors at the start: `agent-skills`' portable conventions, and PULSE's
-   own machine rules. Idempotent, diffable, re-runnable — and it goes through `deploy.deploy()` like
-   every other path under `~`, so a hand-edit is shown as a diff and asked about rather than
-   clobbered.
-4. **Deployment becomes multi-agent** — generalize `[packages.claude-global-md]`'s `symlink_dest`
-   from one path to a list, so the assembled file is linked into `~/.claude/CLAUDE.md`,
-   `~/.codex/AGENTS.md`, `~/.gemini/GEMINI.md`, `~/.copilot/copilot-instructions.md` and whatever
-   else is confirmed. Rename the package — `claude-global-md` is the wrong name for a cross-agent
-   artifact.
+   and it should happen only after the pilot below proves the replacement.
+3. **`~/AGENTS.md` becomes an assembled, multi-agent file** — fully designed in "Design — the
+   assembled `~/AGENTS.md`" above: an `agents_md` any-section field, `util.ensure_block` with HTML
+   markers, ordered whole-`##`-section fragments, `symlink_dest` as a list, Gemini handled by
+   `context.fileName` instead of a symlink, and a `verify.all` check for what the `skills` CLI
+   drops.
 
-   The content split behind this: portable conventions (commit granularity, research depth, reading
-   a command's result, the caveman style) ship from `agent-skills`, because they are genuinely one
+   The content split behind it: portable conventions (commit granularity, research depth, reading a
+   command's result, the caveman style) ship from `agent-skills`, because they are genuinely one
    design with the skills — the tier-1/tier-2/tier-3 model in `contributing/global-agents-md.md`
    spans both, and rules there point at skills and vice versa. PULSE-mechanism rules (`sudo -A`
    because of `askpass-zenity`, "installing a tool goes through `setup.toml`", "never hand-edit a
@@ -354,12 +456,12 @@ Rough, and contingent on the questions above.
    documentation of one machine's mechanisms, actively misleading to anyone without PULSE, and
    keeping them here means the rule and the mechanism it describes change in the same commit. A
    non-PULSE user gets only the portable half, which is the correct outcome.
-5. **Pilot on one skill first.** `plan-docs` is the best candidate: self-contained, no machine
-   specifics, already has `references/`. Publish it alone, install it with `skills add`, confirm the
-   symlink lands for Claude Code _and_ one other agent, confirm live-reload, and only then move the
-   rest. `~/AGENTS.md`'s "pilot on one real repo before writing the shareable version" rule is
-   exactly this case.
-6. **Per-repo API skills live in the repo they describe, not in `agent-skills`.** A skill about
+4. **Pilot on one skill first.** `plan-docs` is the best candidate: self-contained, no machine
+   specifics, already has `references/`. Publish it alone, install it with `skills add`, confirm it
+   lands for Claude Code _and_ one universal agent — the verification above says that combination is
+   exactly where the CLI drops one — and only then move the rest. `~/AGENTS.md`'s "pilot on one real
+   repo before writing the shareable version" rule is exactly this case.
+5. **Per-repo API skills live in the repo they describe, not in `agent-skills`.** A skill about
    `repo-tasks`' interface belongs in `repo-tasks`, committed, versioned with the code it documents
    — the same reason `AGENTS.md` is per-repo. Layout is the standard one:
    `.agents/skills/<name>/SKILL.md` at the repo root, with per-agent symlinks (`.claude/skills`,
@@ -370,7 +472,7 @@ Rough, and contingent on the questions above.
    diverges per repo" bucket in `contributing/repo-family-architecture.md`. The content bar: what an
    _outside_ caller needs (task names, flags, entry points, contracts) — not how to develop the
    repo, which is what its `AGENTS.md` already covers.
-7. **MCP stays as `contributing/mcp-skill-shipping.md` already has it** — `uv tool install git+…`,
+6. **MCP stays as `contributing/mcp-skill-shipping.md` already has it** — `uv tool install git+…`,
    stable binary name, `claude mcp add --scope user`. Its deferred `mcp_servers` field in
    `tasks/ai.py` is now the _right_ thing to build eventually, because the alternative (a plugin's
    `.mcp.json`) is vendor-locked. It should be designed cross-agent from the start, since MCP
