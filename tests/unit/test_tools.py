@@ -80,7 +80,8 @@ def test_install_wrapper_script_never_silently_overwrites_a_hand_edit(tmp_path, 
 
     assert dest.read_text() == "echo edited by hand\n"
     out = capsys.readouterr().out
-    assert "-echo edited by hand" in out and "+echo hi" in out
+    assert "-echo edited by hand" in out
+    assert "+echo hi" in out
     assert "left alone" in out
 
 

@@ -106,7 +106,7 @@ def test_skill_frontmatter_description_missing_file(tmp_path):
 
 
 @pytest.mark.parametrize(
-    "present,ours,state,expected",
+    ("present", "ours", "state", "expected"),
     [
         (False, False, deploy.State.ABSENT, "install"),
         (True, False, deploy.State.UNKNOWN, "foreign"),

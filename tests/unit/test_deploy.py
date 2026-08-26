@@ -185,7 +185,8 @@ def test_a_dirty_managed_destination_is_kept_when_declined(tmp_path, src, monkey
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
     assert m.path.read_text() == "hand-edited\n"
     out = capsys.readouterr().out
-    assert "-hand-edited" in out and "+new content" in out
+    assert "-hand-edited" in out
+    assert "+new content" in out
 
 
 def test_a_dirty_managed_destination_is_overwritten_when_confirmed(tmp_path, src, monkeypatch):

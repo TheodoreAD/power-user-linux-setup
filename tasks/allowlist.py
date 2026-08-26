@@ -971,7 +971,7 @@ def _strip_tool_prefix(verdict: Verdict, tool: str) -> Verdict:
     by the original (unprefixed) key came back empty. Stripping a leading "<tool> " prefix when
     present costs nothing when the model behaved, and recovers the result when it didn't."""
     prefix = f"{tool} "
-    return {(k[len(prefix) :] if k.startswith(prefix) else k): v for k, v in verdict.items()}
+    return {(k.removeprefix(prefix)): v for k, v in verdict.items()}
 
 
 def _resolve_flat_verdict(verdict: Verdict) -> Verdict:

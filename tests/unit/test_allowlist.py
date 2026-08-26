@@ -214,7 +214,8 @@ def test_diff_nodes_likely_invalid_new_goes_to_new_invalid():
     cache_nodes = {"bogus": _cache_node("abc", likely_invalid=True)}
     to_classify, carried, new_invalid = allowlist._diff_nodes(["bogus"], cache_nodes, {}, force=False)
     assert new_invalid == {"bogus": cache_nodes["bogus"]}
-    assert to_classify == {} and carried == {}
+    assert to_classify == {}
+    assert carried == {}
 
 
 def test_diff_nodes_likely_invalid_unchanged_and_already_invalid_is_carried():
@@ -222,7 +223,8 @@ def test_diff_nodes_likely_invalid_unchanged_and_already_invalid_is_carried():
     existing_nodes = {"bogus": _rule_node("invalid", content_hash="abc", source="heuristic")}
     to_classify, carried, new_invalid = allowlist._diff_nodes(["bogus"], cache_nodes, existing_nodes, force=False)
     assert carried == {"bogus": existing_nodes["bogus"]}
-    assert new_invalid == {} and to_classify == {}
+    assert new_invalid == {}
+    assert to_classify == {}
 
 
 def test_diff_nodes_likely_invalid_unchanged_but_previously_classified_normally_goes_to_new_invalid():
@@ -233,7 +235,8 @@ def test_diff_nodes_likely_invalid_unchanged_but_previously_classified_normally_
     existing_nodes = {"bogus": _rule_node("write", content_hash="abc")}
     to_classify, carried, new_invalid = allowlist._diff_nodes(["bogus"], cache_nodes, existing_nodes, force=False)
     assert new_invalid == {"bogus": cache_nodes["bogus"]}
-    assert carried == {} and to_classify == {}
+    assert carried == {}
+    assert to_classify == {}
 
 
 def test_assemble_new_nodes_keeps_carried_nodes_verbatim():
@@ -294,7 +297,10 @@ def test_merge_rule_sets_no_change_when_rules_match_existing():
     )
     assert merged_allow == ["Bash(git status:*)"]
     assert merged_ask == ["Bash(git push:*)"]
-    assert not added_allow and not removed_allow and not added_ask and not removed_ask
+    assert not added_allow
+    assert not removed_allow
+    assert not added_ask
+    assert not removed_ask
 
 
 def test_merge_rule_sets_adds_new_rule():
@@ -304,7 +310,9 @@ def test_merge_rule_sets_adds_new_rule():
     assert merged_allow == ["Bash(git status:*)"]
     assert merged_ask == []
     assert added_allow == {"Bash(git status:*)"}
-    assert not removed_allow and not added_ask and not removed_ask
+    assert not removed_allow
+    assert not added_ask
+    assert not removed_ask
 
 
 def test_merge_rule_sets_removes_stale_rule_we_previously_wrote():
@@ -316,7 +324,9 @@ def test_merge_rule_sets_removes_stale_rule_we_previously_wrote():
     assert merged_allow == []
     assert merged_ask == []
     assert removed_allow == {"Bash(git status:*)"}
-    assert not added_allow and not added_ask and not removed_ask
+    assert not added_allow
+    assert not added_ask
+    assert not removed_ask
 
 
 def test_merge_rule_sets_preserves_rule_user_added_by_hand():
@@ -327,7 +337,10 @@ def test_merge_rule_sets_preserves_rule_user_added_by_hand():
     )
     assert merged_allow == ["Bash(custom-tool:*)"]
     assert merged_ask == []
-    assert not added_allow and not removed_allow and not added_ask and not removed_ask
+    assert not added_allow
+    assert not removed_allow
+    assert not added_ask
+    assert not removed_ask
 
 
 def test_merge_rule_sets_detects_rule_moving_from_allow_to_ask():

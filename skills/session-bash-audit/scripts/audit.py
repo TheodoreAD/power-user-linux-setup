@@ -452,7 +452,7 @@ def _truncation_reruns(calls: list[Call]) -> list[str]:
     seen: dict[str, int] = {}
     reruns: list[str] = []
     for c in sorted(calls, key=lambda c: c.timestamp):
-        m = re.match(r"(.*?)\|\s*(?:head|tail)\s+-(\d+)\s*$", c.cmd.strip(), re.S)
+        m = re.match(r"(.*?)\|\s*(?:head|tail)\s+-(\d+)\s*$", c.cmd.strip(), re.DOTALL)
         base = m.group(1).strip() if m else c.cmd.strip()
         limit = int(m.group(2)) if m else 10**9
         if base in seen and seen[base] < limit:

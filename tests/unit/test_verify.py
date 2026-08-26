@@ -45,7 +45,7 @@ def _managed(tmp_path, mechanism) -> deploy.Managed:
 
 
 @pytest.mark.parametrize(
-    "state,passed",
+    ("state", "passed"),
     [
         (deploy.State.CLEAN, True),
         (deploy.State.ABSENT, False),
@@ -62,7 +62,7 @@ def test_deploy_check_managed_content_must_be_clean(tmp_path, state, passed):
 
 
 @pytest.mark.parametrize(
-    "state,passed",
+    ("state", "passed"),
     [
         (deploy.State.CLEAN, True),
         (deploy.State.ABSENT, False),
@@ -124,7 +124,8 @@ def test_all_checks_covers_config_files_and_skills_without_duplicating_wrapper_s
     assert deploy_checks.count(("agents-md", str(tmp_path / "AGENTS.md"))) == 1
     assert ("wezterm", str(tmp_path / "wezterm.lua")) in deploy_checks
     skill_targets = [target for name, target in deploy_checks if name == "research-library"]
-    assert skill_targets and skill_targets[0].endswith("skills/research-library")
+    assert skill_targets
+    assert skill_targets[0].endswith("skills/research-library")
 
 
 def test_all_checks_wrapper_script_verify_false_still_skips(tmp_path, monkeypatch):

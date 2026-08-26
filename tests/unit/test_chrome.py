@@ -140,7 +140,7 @@ def test_add_ozone_flag_handles_a_bare_binary():
 
 
 @pytest.mark.parametrize(
-    "opt_in, required, expected",
+    ("opt_in", "required", "expected"),
     [
         (False, True, False),  # the default: x11 is wanted, but not at the cost of per-profile pinning
         (True, True, True),  # explicit --ozone
@@ -252,7 +252,7 @@ def test_entry_exec_returns_none_when_there_is_no_exec():
 
 
 @pytest.mark.parametrize(
-    "exec_value, expected",
+    ("exec_value", "expected"),
     [
         ("/usr/bin/google-chrome-stable --ozone-platform=x11 %U", True),
         ("/opt/google/chrome/google-chrome --app-id=hnpfjng", True),

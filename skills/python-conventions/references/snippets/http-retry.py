@@ -8,6 +8,7 @@ like 404. See ../rationale.md §13.
 """
 
 import httpx
+import pytest
 from tenacity import retry, retry_if_exception, stop_after_attempt, wait_random_exponential
 
 REQUEST_TIMEOUT_SECONDS = 15.0
@@ -73,9 +74,6 @@ def test_retries_on_transient_5xx_then_succeeds() -> None:
 def test_does_not_retry_a_real_404() -> None:
     fetcher = PoliteFetcher("https://example.com")
     fetcher._client = httpx.Client(base_url="https://example.com", transport=_transport_for([404, 200]))
-    try:
+    with pytest.raises(httpx.HTTPStatusError) as exc_info:
         fetcher.get("/listing/missing")
-    except httpx.HTTPStatusError as e:
-        assert e.response.status_code == 404
-    else:
-        raise AssertionError("expected a 404 to propagate, not retry")
+    assert exc_info.value.response.status_code == 404

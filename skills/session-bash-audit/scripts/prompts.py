@@ -54,7 +54,7 @@ def _rule_regexes(rules: list[str]) -> list[tuple[str, re.Pattern[str]]]:
             rx = "^" + re.escape(body[:-2]).replace(r"\*", ".*") + r"(\s.*)?$"
         else:
             rx = "^" + re.escape(body).replace(r"\*", ".*") + "$"
-        out.append((rule, re.compile(rx, re.S)))
+        out.append((rule, re.compile(rx, re.DOTALL)))
     return out
 
 
