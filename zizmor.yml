@@ -1,0 +1,18 @@
+# zizmor's workflow-security audit, run from `inv quality.workflow-check` alongside actionlint.
+#
+# One setting, and it exists to encode a decision this family already made deliberately. Since
+# zizmor v1.20.0 the default `unpinned-uses` policy is a blanket hash-pin: every `uses:` clause must
+# name a full commit SHA, `actions/*` included. This family pins by hand in exactly one file —
+# `publish.yml`, the one holding `id-token: write` against PyPI Trusted Publishing — because pinning
+# everywhere without dependabot means pins that silently rot, and dependabot means a standing PR
+# stream on repos that are pushed to directly. `ref-pin` is the policy that matches: a symbolic ref
+# (tag or branch) is acceptable, a completely floating `uses:` is not, and the hash pins that already
+# exist satisfy it too.
+#
+# Revisit this line, not the workflows, if the family ever adopts dependabot — at that point
+# hash-pinning everywhere becomes maintainable and the default policy is the right one.
+rules:
+  unpinned-uses:
+    config:
+      policies:
+        "*": ref-pin

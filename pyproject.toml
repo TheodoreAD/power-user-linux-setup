@@ -20,6 +20,9 @@ dev = [
   # `typing_extensions.override` for the test suite's Context subclass — `typing.override` is
   # 3.12+ and requires-python still says 3.11.
   "typing-extensions",
+  "pytest-cov",
+  "zizmor",
+  "hadolint-py",
 ]
 
 [build-system]

@@ -34,6 +34,12 @@ select = [
   # magic-value-comparison) dropped below; every real-world config checked during research (Home
   # Assistant, Litestar) carves it out the same way
   "TRY", # tryceratops — exception-handling anti-patterns; TRY003 dropped below
+  "PT", # flake8-pytest-style — fixture/parametrize/raises misuse; the family that fits a repo whose
+  # test suite is this fixture-dense. Some of its rules are contested upstream (astral-sh/ruff#8796)
+  # — ignore individual codes here on real hits, never the family
+  "FURB", # refurb — modernization past UP's syntax-only scope, low false-positive rate
+  "PGH", # blanket-suppression hygiene (a bare `# noqa`, a `# type: ignore` with no rule) — the ruff
+  # half of what pyright's reportIgnoreCommentWithoutRule does for its own comments
 ]
 ignore = [
   "PLR", # see PL comment above — refactor-suggestion noise, not bug-catching
