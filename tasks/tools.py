@@ -89,15 +89,25 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
     # is shown as a diff and asked about, never silently overwritten (which this function used to
     # do, and which ate hand-edits to ~/AGENTS.md twice in one day). Only the symlink handling
     # stays here: creating/validating a symlink isn't a content write.
-    if "dest" not in cfg or "content_file" not in cfg:
-        raise util.missing_fields(name, "dest", "content_file")
-    managed = deploy.Managed(
-        path=Path(cfg["dest"]).expanduser(),
-        package=name,
-        source=cfg["content_file"],
-        mechanism=deploy.Mechanism.WRAPPER_SCRIPT,
-    )
-    dest = managed.path
+    if "dest" not in cfg:
+        raise util.missing_fields(name, "dest")
+    dest = Path(cfg["dest"]).expanduser()
+    # `assembled_from` composes the destination from every fragment declared under the named
+    # any-section field instead of copying one `content_file` — see deploy.assemble(). Built here
+    # from the cfg passed in rather than looked up in deploy's registry: this installer is called
+    # with one section's config, and reaching back into the global one would make it depend on
+    # state its caller never supplied.
+    if field := cfg.get("assembled_from"):
+        managed = deploy.assembled_entry(name, dest, field)
+    elif content_file := cfg.get("content_file"):
+        managed = deploy.Managed(
+            path=dest,
+            package=name,
+            source=content_file,
+            mechanism=deploy.Mechanism.WRAPPER_SCRIPT,
+        )
+    else:
+        raise util.missing_fields(name, "content_file (or assembled_from)")
     link = Path(symlink_dest).expanduser() if (symlink_dest := cfg.get("symlink_dest")) else None
     link_ok = link is None or (link.is_symlink() and link.resolve() == dest.resolve())
 

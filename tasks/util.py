@@ -84,6 +84,21 @@ class StatusLine(TypedDict):
     command: str
 
 
+class AgentsMdFragment(TypedDict, total=False):
+    """One item of a package's `agents_md` list — a whole-`##`-section Markdown fragment of the
+    assembled `~/AGENTS.md`, plus where it sits in the document.
+
+    `order` is sparse by convention (10, 20, 30 …) so a fragment can be inserted between two
+    existing ones without renumbering; it defaults to 50 so an undeclared order lands after the
+    curated ones rather than silently at the top. Ties break on the declaring package's name, so
+    two fragments at the same order still assemble deterministically rather than in whatever
+    sequence `setup.toml`'s keys happen to iterate.
+    """
+
+    src: str
+    order: int
+
+
 class PackageConfig(TypedDict, total=False):
     """A `[packages.<name>]` section. Field-by-field reference: setup.toml's header comment."""
 
@@ -99,6 +114,7 @@ class PackageConfig(TypedDict, total=False):
     zshenv: str
     zprofile: str
     skills: list[SkillEntry]
+    agents_md: list[AgentsMdFragment]
     claude_permissions_allow: list[str]
     claude_additional_directories: list[str]
     claude_default_mode: str
@@ -144,6 +160,7 @@ class PackageConfig(TypedDict, total=False):
     dest: str
     depth: int
     content_file: str
+    assembled_from: str
     symlink_dest: str
     # gnome-extension
     uuid: str

@@ -75,6 +75,11 @@ class Mechanism(StrEnum):
     WRAPPER_SCRIPT = "wrapper-script"
     CONFIG_FILE = "config-file"
     SKILL = "skill"
+    # One destination composed from several repo-side fragments rather than copied from a single
+    # source file — `~/AGENTS.md`, assembled from every `agents_md` fragment declared anywhere in
+    # setup.toml. Everything else about it is a normal MANAGED file: same digest comparison, same
+    # diff, same never-overwrite-what-we-can't-prove-we-wrote rule.
+    ASSEMBLED = "assembled"
 
 
 class Policy(StrEnum):
@@ -114,8 +119,11 @@ class Managed:
 
     path: Path  # absolute destination
     package: str  # the [packages.*] section that declares it
-    source: str  # repo-relative source path
+    source: str  # repo-relative source path — the fragment directory, for an ASSEMBLED destination
     mechanism: Mechanism
+    # ASSEMBLED only: the repo-relative fragment paths, already in assembly order. Empty for every
+    # other mechanism, whose content comes from `source` alone.
+    parts: tuple[str, ...] = ()
 
     @property
     def policy(self) -> Policy:
@@ -143,10 +151,44 @@ def dir_digest(path: Path) -> str:
     return h.hexdigest()
 
 
+def block_name(part: str) -> str:
+    """The `PULSE::<name>` block a fragment is written into — its filename stem, namespaced by the
+    directory it lives in so a marker is traceable back to one repo file by eye."""
+    p = Path(part)
+    return f"{p.parent.name}/{p.stem}"
+
+
+def assemble(parts: tuple[str, ...]) -> str:
+    """Compose an ASSEMBLED destination's text from its fragments, in the order given.
+
+    Each fragment lands in its own `util.ensure_block` region so the deployed file says which repo
+    file every section came from. That is *provenance only* — unlike `~/.zshrc`, where ensure_block
+    writes one region into a file the user owns, the destination here is regenerated end to end and
+    nothing outside a block survives. Hand-edit protection comes from the deploy manifest
+    (`classify` -> DIRTY -> diff and prompt), not from the markers. HTML markers rather than
+    `#`-prefixed ones because the target is Markdown, where a `#` line renders as a heading.
+
+    Building up from an empty string rather than editing a file in place is what keeps this a pure
+    function of the repo's fragments — and that purity is load-bearing: `expected_digest` compares
+    it against what is actually deployed, which it could not do if the result depended on what was
+    already at the destination.
+    """
+    text = ""
+    for part in parts:
+        content = (_REPO_ROOT / part).read_text().strip()
+        text, _ = util.ensure_block_text(text, block_name(part), content, style=util.MarkerStyle.HTML)
+    # ensure_block_text separates blocks with a blank line, which leaves two leading newlines on
+    # the very first one appended to an empty string.
+    return text.lstrip("\n")
+
+
 def expected_bytes(m: Managed) -> bytes:
     """The exact bytes a file-kind destination should hold. `wrapper-script` deploys its
-    `content_file` stripped and newline-terminated (tools.py has always done this); `config_files`
-    copies its source verbatim, binary included."""
+    `content_file` stripped and newline-terminated (tools.py has always done this); `assembled`
+    composes its fragments the same way; `config_files` copies its source verbatim, binary
+    included."""
+    if m.mechanism == Mechanism.ASSEMBLED:
+        return (assemble(m.parts).strip() + "\n").encode()
     if m.mechanism == Mechanism.WRAPPER_SCRIPT:
         return (m.src.read_text().strip() + "\n").encode()
     return m.src.read_bytes()
@@ -171,19 +213,63 @@ def deployed_digest(m: Managed) -> str | None:
 # ---------------------------------------------------------------------------
 
 
+def fragments(field: str) -> tuple[str, ...]:
+    """Every repo-relative fragment path declared under `field` on any enabled package, in
+    assembly order.
+
+    Any-section, like `zshrc`/`zshenv`/`zprofile` and `claude_permissions_allow`: the destination
+    is declared once (by the package naming the field in `assembled_from`), while the content can
+    come from any number of packages, each contributing whole `##` sections. Sorted on
+    `(order, package, src)` so the assembled document is byte-identical across runs regardless of
+    how setup.toml's keys iterate — a document's section order is part of its meaning, unlike a
+    shell rc file's.
+    """
+    declared: list[tuple[int, str, str]] = []
+    for name, cfg in util.enabled_packages().items():
+        # `field` comes from setup.toml (`assembled_from`), so it can't index the TypedDict
+        # statically — widening to a plain dict is what makes the dynamic key legal.
+        entries = cast(list[util.AgentsMdFragment], dict(cfg).get(field, []))
+        for frag in entries:
+            if "src" not in frag:
+                raise util.missing_fields(name, f"{field}[].src")
+            declared.append((frag.get("order", 50), name, frag["src"]))
+    return tuple(src for _, _, src in sorted(declared))
+
+
+def assembled_entry(name: str, dest: Path, field: str) -> Managed:
+    """The registry entry for a destination composed from `field`'s fragments.
+
+    The one place this shape is built, so `tools.py`'s installer and the registry below can never
+    disagree about what a package deploys. `source` is the fragments' shared directory rather than
+    any one file: it is what every human-facing message and the manifest record show, and no single
+    fragment is the source.
+    """
+    parts = fragments(field)
+    if not parts:
+        # An assembled destination with no fragments would deploy an empty file — for ~/AGENTS.md
+        # that is every rule on the machine, silently gone. Fail instead.
+        raise util.missing_fields(name, f"at least one {field} fragment on some package")
+    return Managed(
+        path=dest,
+        package=name,
+        source=str(Path(parts[0]).parent),
+        mechanism=Mechanism.ASSEMBLED,
+        parts=parts,
+    )
+
+
 def _wrapper_script_entries() -> Iterator[Managed]:
     for name, cfg in util.packages_by_method(util.PackageMethod.WRAPPER_SCRIPT).items():
-        # An inline-`content` variant is allowed by the method but unused today; skip rather than
-        # inventing a source path for it, so the registry never claims a path it can't compare.
-        if content_file := cfg.get("content_file"):
-            if "dest" not in cfg:
-                raise util.missing_fields(name, "dest")
-            yield Managed(
-                path=Path(cfg["dest"]).expanduser(),
-                package=name,
-                source=content_file,
-                mechanism=Mechanism.WRAPPER_SCRIPT,
-            )
+        if "dest" not in cfg:
+            # A wrapper-script entry with neither a source nor a destination declares nothing to
+            # deploy; an inline-`content` variant is allowed by the method but unused today. Skip
+            # rather than inventing a path, so the registry never claims one it can't compare.
+            continue
+        dest = Path(cfg["dest"]).expanduser()
+        if field := cfg.get("assembled_from"):
+            yield assembled_entry(name, dest, field)
+        elif content_file := cfg.get("content_file"):
+            yield Managed(path=dest, package=name, source=content_file, mechanism=Mechanism.WRAPPER_SCRIPT)
 
 
 def _config_file_entries() -> Iterator[Managed]:

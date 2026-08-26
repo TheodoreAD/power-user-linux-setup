@@ -303,20 +303,28 @@ that is a dozen lines, visible to any agent that doesn't strip HTML comments (Cl
 stripping them; nothing else does). Accepted as harmless — it is the same shape `~/.zshrc` already
 carries, and a dozen comment lines in a 300-line document does not plausibly change behavior.]
 
-The clobber risk raised while deciding this is **already covered twice over, without needing git**:
-
-- **Inside vs. outside a block.** `ensure_block` only ever rewrites the text between one block's own
-  markers. Anything a human adds outside every block survives by construction — the exact property
-  that makes the zshrc mechanism safe to re-run.
-- **The whole-file case.** `deploy.classify()` compares the deployed file against the manifest
-  record of what PULSE last wrote and returns `CLEAN`/`DIRTY`/`ABSENT`; `deploy.deploy()` shows the
-  diff and asks before overwriting a `DIRTY` file, defaulting to keeping it. `inv deploy.status`
-  reports the same read-only. Routing the assembled `~/AGENTS.md` through `deploy.deploy()` — as
-  every other path under `~` already is — inherits both behaviors with no new code.
+The clobber risk raised while deciding this is **already covered, without needing git**:
+`deploy.classify()` compares the deployed file against the manifest record of what PULSE last wrote
+and returns `CLEAN`/`DIRTY`/`ABSENT`; `deploy.deploy()` prints the diff and asks before overwriting
+a `DIRTY` file, defaulting to keeping it; `inv deploy.status` reports the same read-only. Routing
+the assembled `~/AGENTS.md` through `deploy.deploy()` — as every other path under `~` already is —
+inherits all of that with no new code.
 
 A git-based comparison would be strictly worse: the deployed file is not in a repo, so there is no
 history to compare against, and the manifest already records exactly the thing git would be
 consulted for.
+
+[PITFALL: **The markers do not give partial ownership here, and an earlier draft of this design
+claimed they did.** The reasoning was that `ensure_block` only rewrites between its own markers, so
+anything a human adds outside every block survives — true of `~/.zshrc`, and false of this file.
+`deploy._write()` writes `expected_bytes(m)` over the whole destination, and `expected_digest` has
+to be a pure function of the repo's fragments for `classify`/`diff` to mean anything at all; a
+destination whose expected content depended on what was already there could not be compared. So
+`~/AGENTS.md` is regenerated end to end, exactly as it was when it had a single `content_file`. The
+markers earn their place as **provenance** — they name the fragment to go edit for a given section —
+not as an ownership boundary, and the hand-edit protection is entirely the manifest's. Caught while
+writing the tests for the mechanism, after the claim had already been written into the design, the
+`config/agents-md/README.md`, and the assembled file's own header.]
 
 ### D5. The symlink farm — `symlink_dest` becomes a list
 

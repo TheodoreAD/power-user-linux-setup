@@ -640,3 +640,186 @@ def test_all_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeypatc
     _stub_config(monkeypatch, {"nothing": {"method": "apt"}})
     with pytest.raises(Exit):
         _all(MockContext(), name="nothing")
+
+
+# ---------------------------------------------------------------------------
+# Assembled destinations (~/AGENTS.md)
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def agents_md_fragments(tmp_path):
+    """Two repo-side fragments, as `config/agents-md/*.md`."""
+    d = tmp_path / "config" / "agents-md"
+    d.mkdir(parents=True)
+    (d / "this-setup.md").write_text("# Title\n\n## This setup\n\nMachine facts.\n")
+    (d / "portable.md").write_text("## Conventions\n\nPortable rules.\n")
+    return d
+
+
+def test_fragments_sort_by_order_then_package(monkeypatch):
+    _stub_config(
+        monkeypatch,
+        {
+            "zeta": {"method": "apt", "agents_md": [{"src": "c.md", "order": 10}]},
+            "alpha": {"method": "apt", "agents_md": [{"src": "b.md", "order": 20}]},
+            # Same order as alpha's — the package name is what breaks the tie, so the assembled
+            # document is byte-identical across runs however setup.toml's keys iterate.
+            "beta": {"method": "apt", "agents_md": [{"src": "d.md", "order": 20}]},
+        },
+    )
+
+    assert deploy.fragments("agents_md") == ("c.md", "b.md", "d.md")
+
+
+def test_a_fragment_with_no_order_lands_after_the_curated_ones(monkeypatch):
+    _stub_config(
+        monkeypatch,
+        {
+            "curated": {"method": "apt", "agents_md": [{"src": "a.md", "order": 30}]},
+            "undeclared": {"method": "apt", "agents_md": [{"src": "z.md"}]},
+        },
+    )
+
+    assert deploy.fragments("agents_md") == ("a.md", "z.md")
+
+
+def test_a_fragment_missing_src_raises(monkeypatch):
+    _stub_config(monkeypatch, {"broken": {"method": "apt", "agents_md": [{"order": 10}]}})
+    with pytest.raises(RuntimeError, match="agents_md"):
+        deploy.fragments("agents_md")
+
+
+def test_assemble_wraps_each_fragment_in_its_own_block(agents_md_fragments):
+    text = deploy.assemble(("config/agents-md/this-setup.md", "config/agents-md/portable.md"))
+
+    assert text.startswith("<!-- PULSE::agents-md/this-setup -->")
+    assert text.count("<!-- PULSE::") == 2
+    assert "<!-- /PULSE::agents-md/portable -->" in text
+    # Order is the argument's, and the fragments' own content survives verbatim.
+    assert text.index("Machine facts.") < text.index("Portable rules.")
+
+
+def test_assemble_is_a_pure_function_of_the_fragments(agents_md_fragments):
+    """The digest comparison in classify() depends on this: assembling twice must give the same
+    bytes, and nothing outside the repo may influence the result."""
+    parts = ("config/agents-md/this-setup.md", "config/agents-md/portable.md")
+    assert deploy.assemble(parts) == deploy.assemble(parts)
+
+
+def test_the_registry_builds_an_assembled_entry_from_declared_fragments(tmp_path, agents_md_fragments, monkeypatch):
+    dest = tmp_path / "home" / "AGENTS.md"
+    _stub_config(
+        monkeypatch,
+        {
+            "claude-global-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "assembled_from": "agents_md",
+                "agents_md": [{"src": "config/agents-md/this-setup.md", "order": 10}],
+            },
+            # A second package contributing a fragment to the same destination — the any-section
+            # half of the mechanism, and the reason `parts` isn't read off one package's list.
+            "other": {"method": "apt", "agents_md": [{"src": "config/agents-md/portable.md", "order": 20}]},
+        },
+    )
+
+    m = deploy.lookup(dest)
+
+    assert m is not None
+    assert m.mechanism == deploy.Mechanism.ASSEMBLED
+    assert m.parts == ("config/agents-md/this-setup.md", "config/agents-md/portable.md")
+    assert m.policy == deploy.Policy.MANAGED
+
+
+def test_an_assembled_destination_deploys_and_then_classifies_clean(tmp_path, agents_md_fragments, monkeypatch):
+    dest = tmp_path / "home" / "AGENTS.md"
+    _stub_config(
+        monkeypatch,
+        {
+            "claude-global-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "assembled_from": "agents_md",
+                "agents_md": [
+                    {"src": "config/agents-md/this-setup.md", "order": 10},
+                    {"src": "config/agents-md/portable.md", "order": 20},
+                ],
+            }
+        },
+    )
+    m = deploy.lookup(dest)
+    assert m is not None
+
+    assert deploy.deploy(m) == deploy.Action.CREATED
+    assert dest.read_text().endswith("<!-- /PULSE::agents-md/portable -->\n")
+    assert deploy.classify(m) == deploy.State.CLEAN
+
+
+def test_editing_a_fragment_makes_the_deployed_file_stale(tmp_path, agents_md_fragments, monkeypatch):
+    """STALE, not DIRTY: the destination still holds exactly what PULSE wrote, so the redeploy is
+    safe and silent — the change came from the repo side."""
+    dest = tmp_path / "home" / "AGENTS.md"
+    _stub_config(
+        monkeypatch,
+        {
+            "claude-global-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "assembled_from": "agents_md",
+                "agents_md": [{"src": "config/agents-md/portable.md", "order": 10}],
+            }
+        },
+    )
+    m = deploy.lookup(dest)
+    assert m is not None
+    deploy.deploy(m)
+
+    (agents_md_fragments / "portable.md").write_text("## Conventions\n\nRewritten.\n")
+
+    assert deploy.classify(m) == deploy.State.STALE
+    assert deploy.deploy(m) == deploy.Action.UPDATED
+    assert "Rewritten." in dest.read_text()
+
+
+def test_a_hand_edited_assembled_file_is_not_overwritten_unasked(tmp_path, agents_md_fragments, monkeypatch):
+    """The markers give no partial ownership here — the file is regenerated whole — so this
+    manifest-backed check is the only thing standing between a hand-edit and its loss."""
+    dest = tmp_path / "home" / "AGENTS.md"
+    _stub_config(
+        monkeypatch,
+        {
+            "claude-global-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "assembled_from": "agents_md",
+                "agents_md": [{"src": "config/agents-md/portable.md", "order": 10}],
+            }
+        },
+    )
+    m = deploy.lookup(dest)
+    assert m is not None
+    deploy.deploy(m)
+
+    dest.write_text(dest.read_text() + "\nHand-written note.\n")
+
+    assert deploy.classify(m) == deploy.State.DIRTY
+    assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
+    assert "Hand-written note." in dest.read_text()
+
+
+def test_assembled_from_naming_a_field_no_package_fills_raises(tmp_path, monkeypatch):
+    """A destination declared with no fragments anywhere would deploy an empty ~/AGENTS.md —
+    louder to fail than to silently wipe every rule on the machine."""
+    _stub_config(
+        monkeypatch,
+        {
+            "claude-global-md": {
+                "method": "wrapper-script",
+                "dest": str(tmp_path / "AGENTS.md"),
+                "assembled_from": "agents_md",
+            }
+        },
+    )
+    with pytest.raises(RuntimeError, match="agents_md"):
+        deploy.managed_paths()

@@ -18,20 +18,18 @@ Design, rationale, and the rule-by-rule triage behind the split:
 Each rule's evidence and the admission criteria for a new one stay in
 `contributing/global-agents-md.md`.
 
-## Interim state — read this before editing
+## Editing
 
-**`config/global-AGENTS.md` is still the deployed source.** The assembly mechanism (the `agents_md`
-`setup.toml` field) does not exist yet, so these fragments are not wired to anything: they are the
-content split, landed ahead of the mechanism so the two changes stay reviewable apart.
+Edit a fragment, then `inv deploy.all --name claude-global-md`. Never edit `~/AGENTS.md` directly:
+it is regenerated in full from these fragments, so nothing at the destination is a source of truth.
 
-That means the content is duplicated right now. Until the mechanism lands:
-
-- **A rule change goes in `config/global-AGENTS.md`** — that is what `inv deploy.all` actually
-  deploys — **and then into the matching fragment here.** Editing only one side silently drops the
-  change or resurrects an old one when the mechanism lands.
-- Nothing here is deployed, so a mistake in a fragment cannot affect a live session yet.
-
-Delete this section when the fragments become the source and `config/global-AGENTS.md` goes away.
+A hand-edit there is caught rather than clobbered — `deploy.classify` compares the file against what
+PULSE last wrote, and `deploy.deploy` prints the diff and asks, defaulting to keeping your version —
+but the edit still only exists on that one machine until it is ported back into a fragment here.
+That protection is the deploy manifest's, not the markers': unlike `~/.zshrc`, where
+`util.ensure_block` writes one region into a file the user owns, this whole file is PULSE-owned and
+rewritten end to end. The `<!-- PULSE::agents-md/<stem> -->` markers are provenance — they say which
+fragment to go edit for a given section — not an ownership boundary.
 
 ## Still to do on the content itself
 

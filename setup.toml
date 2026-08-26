@@ -134,6 +134,13 @@
 #                 config/research-update.sh, not a TOML string. symlink_dest (optional) gets
 #                 symlinked to dest if not already correct, same as [packages.claude-global-md]'s
 #                 ~/.claude/CLAUDE.md -> ~/AGENTS.md.
+#   assembled_from  alternative to content_file: names an any-section list field whose fragments
+#                 are composed into dest instead of copying one source file. Only `agents_md` uses
+#                 it today ([packages.claude-global-md] -> ~/AGENTS.md). Each fragment lands in its
+#                 own `<!-- PULSE::<dir>/<stem> -->` block, which is provenance (which repo file a
+#                 section came from), not partial ownership — dest is regenerated whole, same as
+#                 for content_file, and hand-edits are caught by the deploy manifest, not the
+#                 markers.
 #   Rewritten in place whenever the source file's content changes — treat dest as fully
 #   PULSE-owned, not user-editable; edit config/<file> and re-run instead.
 #
@@ -175,6 +182,16 @@
 #                 existence check (same path the install-time check already uses) and
 #                 gnome-extension defaults to a `gnome-extensions list` membership check — none of
 #                 those four need verify_cmd/verify=false unless the default doesn't apply.
+#
+#   agents_md     list of `{ src, order }` fragments composed into the assembled ~/AGENTS.md (the
+#                 destination is declared once, by whichever section sets `assembled_from` — see
+#                 wrapper-script above). Any section may contribute one, the same way zshrc/zshenv
+#                 work. `src` is a repo-relative Markdown file holding whole `##` sections, never a
+#                 fragment of one — the assembler never merges at the rule level, so a cluster is
+#                 owned end-to-end by a single file. `order` is sparse by convention (10, 20, 30 …)
+#                 so a new fragment slots in without renumbering; it defaults to 50, and ties break
+#                 on the section name so the document is byte-identical across runs. Which fragment
+#                 owns what: config/agents-md/README.md.
 #
 #   zshrc         shell snippet appended to ~/.zshrc   (interactive shells — hooks, completions)
 #   zshenv        shell snippet appended to ~/.zshenv  (all shells — environment variables)
@@ -963,7 +980,15 @@ method = "wrapper-script"
 tags = ["shell", "ai"]
 dest = "~/AGENTS.md"
 symlink_dest = "~/.claude/CLAUDE.md"
-content_file = "config/global-AGENTS.md"
+# Assembled from fragments rather than copied from one file — see config/agents-md/README.md for
+# which fragment owns what, and plans/2026-08-26-agent-artifact-authoring-decoupling.md for why.
+# Any package may add an `agents_md` fragment; this entry only declares where the result lands.
+assembled_from = "agents_md"
+agents_md = [
+  { src = "config/agents-md/this-setup.md", order = 10 },
+  { src = "config/agents-md/claude-code.md", order = 20 },
+  { src = "config/agents-md/portable.md", order = 30 },
+]
 
 [packages.repo-tasks]
 description = """
