@@ -1,7 +1,7 @@
 ---
 name: python-conventions
 description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, type-ignore hygiene, `src/`-layout package structure, async/concurrency, and HTTP client/retry
-  conventions — plus MCP-server-specific conventions (stdio logging discipline, tool-boundary error handling, LLM-facing tool docstrings) for the *-polite-mcp family. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Each topic notes whether it overrides a model's own default instinct or just documents an already-sound one, so the skill steers rather than fights normal agent behavior. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see plans/2026-08-14-python-repo-scaffolding.md instead."
+  conventions — plus MCP-server-specific conventions (stdio logging discipline, tool-boundary error handling, LLM-facing tool docstrings) for the *-polite-mcp family. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Each topic notes whether it overrides a model's own default instinct or just documents an already-sound one, so the skill steers rather than fights normal agent behavior. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see power-user-linux-setup's contributing/quality-tooling.md instead."
 ---
 
 # Python design and style defaults
@@ -13,9 +13,10 @@ matches one of the named escalation paths — the point is to stop a fresh sessi
 picking something different for no reason, not to forbid judgment calls.
 
 **This is design guidance, not tool config.** Nothing here tells you which type checker or linter to
-install or how to configure it — that's `plans/2026-08-14-python-repo-scaffolding.md` (basedpyright,
-ruff, shellcheck/shfmt, dprint, pytest config mechanics). This skill is what to reference _while
-writing code_; that plan is what a repo's tooling enforces _once, at setup_.
+install or how to configure it — that's `power-user-linux-setup`'s `contributing/quality-tooling.md`
+(basedpyright, ruff, shellcheck/shfmt, dprint, pytest config mechanics), with `repo-tasks`'
+`contributing/type-checking.md` for the tuned basedpyright profile. This skill is what to reference
+_while writing code_; those are what a repo's tooling enforces _once, at setup_.
 
 **Each topic below states whether it's overriding your own default instinct or just confirming
 one.** A capable model already gets a lot of this right without being told — early returns, EAFP for

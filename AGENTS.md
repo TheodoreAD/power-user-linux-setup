@@ -23,9 +23,9 @@ skill declared via a `skills` field anywhere in `setup.toml` — home-directory-
 overwrites hand-written content. Project-scoped scaffolding (a new Python project's own
 `AGENTS.md`/`CLAUDE.md`/`.agents/skills` setup) isn't this repo's job anymore — see
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps that at generation time
-instead (`plans/2026-08-14-python-repo-scaffolding.md` §F). The cross-session-memory policy (don't
-use Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead) is documented
-once, globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated per-repo — see
+instead (`contributing/repo-family-architecture.md`). The cross-session-memory policy (don't use
+Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead) is documented once,
+globally, in `[packages.claude-global-md]` in `setup.toml` rather than repeated per-repo — see
 `docs/claude-code.md`.
 
 ## Deployed dotfiles are generated — never edit `~/<file>` directly
@@ -90,9 +90,9 @@ the shape) and run the corresponding install task (`inv python.install-tools` fo
 package, `inv apt.install-base` for `apt`, etc.) instead. This is not a style preference — running
 the install by hand outside `setup.toml` defeats the entire point of the repo, which is that every
 install this machine has is declared in one reproducible, re-runnable place. Caught live during the
-`python-conventions` pilot (`plans/2026-08-14-python-repo-scaffolding.md` §C4): `shellcheck`/`shfmt`
-were first installed via a direct `uv tool install`, then corrected on the spot to go through
-`setup.toml` and `inv python.install-tools` instead.
+`python-conventions` pilot (`contributing/quality-tooling.md`): `shellcheck`/`shfmt` were first
+installed via a direct `uv tool install`, then corrected on the spot to go through `setup.toml` and
+`inv python.install-tools` instead.
 
 ## Post-install verification (`inv verify.all`)
 

@@ -42,9 +42,10 @@ the remaining memories?"), both got resolved too, surfacing two more destination
 below): `project_screenshot_shortcuts.md` was a pure duplicate of `docs/screen_capture.md` (every
 fact — the 2 real bugs found, the Wayland fix, verified-working status — already lived there in more
 detail) and was deleted with zero migration needed. `project_polite_mcp_repo_family.md` was ~90% a
-staler duplicate of this repo's own `plans/2026-08-14-python-repo-scaffolding.md` (confirmed by
-grep, not assumed — checked specifically for the memory's "still genuinely open" items and found
-them already tracked there, more currently); the memory's own "family roster" portion was explicitly
+staler duplicate of this repo's own scaffolding plan, since retired into
+`contributing/repo-family-architecture.md` and `contributing/quality-tooling.md` (confirmed by grep,
+not assumed — checked specifically for the memory's "still genuinely open" items and found them
+already tracked there, more currently); the memory's own "family roster" portion was explicitly
 self-distrusting (its text admits being caught incomplete twice, advises always re-listing the
 directory rather than trusting a cached list) so preserving a static copy would have reproduced the
 same staleness risk it already warned about. One genuinely unique, still-open nugget survived

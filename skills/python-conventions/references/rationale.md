@@ -8,9 +8,9 @@ Originally written up in `plans/2026-08-15-python-conventions.md`; migrated here
 promoted from `idea` to this built skill.
 
 For type-checker/linter/formatter/shell-check _tool configuration_ (a different concern — applied
-once at repo setup, not referenced while writing code), see
-`plans/2026-08-14-python-repo-scaffolding.md` instead, particularly its "Quality-tooling
-conventions" section.
+once at repo setup, not referenced while writing code), see `power-user-linux-setup`'s
+`contributing/quality-tooling.md` instead, and `repo-tasks`' `contributing/type-checking.md` for the
+tuned basedpyright profile specifically.
 
 ## 1. Data modeling — Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec
 
