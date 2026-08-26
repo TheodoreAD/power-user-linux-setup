@@ -107,6 +107,29 @@ skills = [{ source = "npx", repo = "TheodoreAD/product-research-pipeline" }]
 
 then `inv ai.install-skills` makes it available globally, same as every other declared skill.
 
+## Cut a skill by responsibility, with triggers that don't contend
+
+Before writing a new skill, settle two things — they are the same decision seen from the authoring
+side and the retrieval side:
+
+- **One clear responsibility.** Not a theme, not a bundle of things that happen to be needed
+  together. A skill covering two responsibilities has to describe both in one `description`, which
+  is the field selection actually matches on, so the dilution is paid on every prompt.
+- **Trigger conditions that don't contend with any other installed skill's.** Non-contention is a
+  requirement, not a nice-to-have (user, 2026-08-26). A description that wins against a prompt meant
+  for a sibling skill is a defect even when its own cases pass — the failure is invisible, because
+  the wrong skill loading looks exactly like the right one loading.
+
+Write the `description` from the **request side**: the words someone would actually type, not the
+topic's own vocabulary. A description built from internal jargon is a structural under-trigger, not
+bad luck — `plans/2026-08-22-skill-trigger-quality-review.md` in `power-user-linux-setup` has the
+measured case and the eval methodology, including why scoring one description in isolation can't
+catch contention.
+
+Corollary when a finding needs a home: prefer extending the skill that already owns the topic over
+adding a new one. Skill count is itself a context tax and each added description is one more thing
+for selection to confuse.
+
 ## Convention skills should self-update on friction
 
 A skill that encodes a convention (not a one-shot task) should build in a way to improve itself from
