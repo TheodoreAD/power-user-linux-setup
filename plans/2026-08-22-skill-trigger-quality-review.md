@@ -113,9 +113,18 @@ vs. attempting to actually get `claude plugin eval`/`skill-creator` access via `
 Anthropic's own gated tool once available.]
 
 [NEEDS CLARIFICATION: where do the 3 positive/negative/edge prompts per skill live — inline
-frontmatter, a sibling eval file per skill, or one shared corpus file — and does the "cold" check
-need to see the _other_ skills' descriptions too (to catch cross-skill false positives — the wrong
-skill winning instead of the right one), not just a binary yes/no on the one skill in isolation?]
+frontmatter, a sibling eval file per skill, or one shared corpus file?]
+
+**Resolved 2026-08-26 (user), the cross-skill half of that question: yes, non-contention is a
+requirement, not a nice-to-have.** Stated while scoping `agent-skills`
+(`plans/2026-08-26-agent-artifact-authoring-decoupling.md`): "skills must be built, as a rule of
+thumb, around a clear responsibility and effective trigger conditions that don't contend with
+triggers from other skills." That makes the isolated binary check insufficient by design — a skill
+whose description wins against a prompt meant for a sibling is a failure even when its own positive
+case passes, so any eval harness has to score selection _among_ the installed set, not one
+description at a time. It also makes the constraint an authoring rule and not only a testing one,
+which is why it now leads `skills/mcp-skill-shipping/SKILL.md`'s "Cut a skill by responsibility"
+section rather than living only here.
 
 [NEEDS CLARIFICATION: confirm hands-on whether `claude plugin init` can actually convert an existing
 bare `.agents/skills/<name>/` directory into something `claude plugin eval`/`skill-creator` can
