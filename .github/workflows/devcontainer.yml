@@ -16,11 +16,16 @@ on:
   # via `gh workflow run devcontainer.yml` and is trusted to run unattended. See
   # plans/2026-08-08-devcontainer-pipeline.md.
 
+permissions:
+  contents: read
+
 jobs:
   smoke-test:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: devcontainers/ci@v0.3
         with:
           imageName: ghcr.io/theodoread/power-user-linux-setup-devcontainer
@@ -38,7 +43,10 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      # The one place the checkout's own credentials are the point: the next step force-pushes the
+      # `stable` tag with them. zizmor's artipacked is declined here rather than "fixed" — setting
+      # persist-credentials: false would break the job it is flagging.
+      - uses: actions/checkout@v4 # zizmor: ignore[artipacked]
         with:
           fetch-depth: 0
       - run: |
@@ -52,7 +60,9 @@ jobs:
     permissions:
       contents: write
     steps:
-      - uses: actions/checkout@v4
+      # Same as publish-stable: git-auto-commit-action below commits and pushes with the
+      # credentials this checkout leaves behind, so declining artipacked is the correct call.
+      - uses: actions/checkout@v4 # zizmor: ignore[artipacked]
       - uses: astral-sh/setup-uv@v9.0.0
       - run: uv run inv devcontainer.render-docs
       - uses: stefanzweifel/git-auto-commit-action@v7

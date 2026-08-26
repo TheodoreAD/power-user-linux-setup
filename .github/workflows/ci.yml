@@ -5,11 +5,19 @@ on:
     branches: [master]
   pull_request:
 
+# Least privilege: nothing here writes anything back to the repo, and the default token grant is
+# broader than that. persist-credentials: false on each checkout for the same reason — neither job
+# pushes, and the default leaves the token in .git/config for every later step to read.
+permissions:
+  contents: read
+
 jobs:
   quality:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v9.0.0
       - run: ./.github/ci-bootstrap.sh
       - run: inv quality.check
@@ -26,6 +34,8 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: astral-sh/setup-uv@v9.0.0
       - run: uv tool install --force invoke
       - run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"

@@ -8,11 +8,22 @@ on:
       - master
       - main
 
+permissions:
+  contents: read
+
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    # Scoped to the one job that needs it: actions-gh-pages pushes the built site to gh-pages.
+    permissions:
+      contents: write
     steps:
+      # persist-credentials: false is safe even though this job publishes — actions-gh-pages pushes
+      # with the token handed to it below, never with the credentials the checkout would leave in
+      # .git/config.
       - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
       - uses: actions/setup-python@v5
         with:
           python-version: "3.12"
