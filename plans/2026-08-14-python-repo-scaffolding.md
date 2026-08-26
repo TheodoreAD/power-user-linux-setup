@@ -1,7 +1,45 @@
 ---
-status: in-progress
-updated: 2026-08-21
+status: landed
+updated: 2026-08-26
 ---
+
+## Migrated to
+
+Retired 2026-08-26. §A–§F all landed and have been exercised for real: `repo-tasks` and
+`scaffoldapy` exist and are in daily use, `repo_tasks.configs` distributes the canonical tool
+config, and this repo consumes all of it like any other family member.
+
+- **`contributing/repo-family-architecture.md`** — already distilled §A/§B/§D/§F when it was
+  written; gained §D's `configs.local.toml` shape spec (the one piece its own text still pointed
+  back into this plan for) and the self-hosting rule that `repo-tasks`' root config files are
+  hand-developed, not generated output.
+- **`contributing/quality-tooling.md`** (new) — §C0–§C4: why basedpyright over the other three
+  checkers, why `recommended` beats `strict`, the ruff rule-selection evidence and its two silent
+  traps, dprint's `textWrap` direction, and the shellcheck/shfmt pairing with the Rust/Go precedent
+  behind its `uv-tool` install.
+- **`plans/2026-08-26-polite-mcp-repo-retrofit.md`** — the retrofit pass on
+  `olx`/`temu`/`freshful-polite-mcp`, plus the still-open question of whether `core/`'s politeness
+  primitives ever belong in `repo-tasks`.
+- **Code** — every §A/§B/§D/§E/§F deliverable is real and running: `repo-tasks`'
+  `quality`/`dev_env`/ `docs`/`configs` modules, `scaffoldapy`'s composable-axis template, this
+  repo's own dedicated `ruff.toml`/`pyrightconfig.json`/`pytest.ini`, and `setup.toml`'s `uv-tool`
+  entries for `shellcheck-py`/`shfmt-py`.
+
+Deliberately not migrated:
+
+- **§C1's tuned basedpyright profile.** `repo-tasks`' own `contributing/type-checking.md` owns it
+  now and is materially more current — two of this plan's conclusions were since reversed there on
+  better evidence (`failOnWarnings` back to `true`; `allowedUntypedLibraries` shown to be moot
+  rather than the fix). Restating a stale copy here would have been worse than not migrating it.
+  Verified against the config actually in the tree before deciding, not assumed.
+- **The `[tool.basedpyright]` TOML snippet and the TOML table-scoping trap.** Both are artifacts of
+  config living in `pyproject.toml`, which §C0 moved away from.
+- **The verification log** — dry-run transcripts, "ran it, it worked" notes, and the running
+  strikethrough list of follow-ups as each landed. All of it is in git history and in the code.
+- **§C0's "copy those files by hand" framing**, already superseded by §D's `configs.pull` and
+  described that way in `repo-family-architecture.md`.
+- **`repo-tasks/plans/2026-08-19-gitignore-tool-alignment.md`** — cited here, but owned by that repo
+  and unaffected by this retirement.
 
 # Standardizing scaffolding for personal Python agent-tool repos
 
