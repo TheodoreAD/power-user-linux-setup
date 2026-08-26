@@ -83,14 +83,14 @@ specifically for any small, still-open, genuinely-not-covered-elsewhere nugget b
 that's what makes it (6) instead of a clean (5).
 
 A second real finding from that same sweep, orthogonal to the memory backlog itself: `~/AGENTS.md`
-is a **deployed artifact** (`[packages.claude-global-md]`, generated from
-`config/global-AGENTS.md`), but had drifted from its own source — both from a fix made directly to
-the deployed file earlier that same session (repeating a mistake
-`feedback_deployed_vs_source_config.md` had already documented once before) and from an _older_,
-unrelated drift already sitting there before this session even started (a "prefer a dedicated
-harness tool" paragraph, live in the deployed file, never ported back to source). Neither drift was
-caught by anything automated — only by a diff run by hand, prompted by unrelated memory-migration
-work, not a dedicated check.
+is a **deployed artifact** (`[packages.agents-md]`, assembled from the `config/agents-md/` fragments
+— at the time, `[packages.claude-global-md]` generating from a single `config/global-AGENTS.md`),
+but had drifted from its own source — both from a fix made directly to the deployed file earlier
+that same session (repeating a mistake `feedback_deployed_vs_source_config.md` had already
+documented once before) and from an _older_, unrelated drift already sitting there before this
+session even started (a "prefer a dedicated harness tool" paragraph, live in the deployed file,
+never ported back to source). Neither drift was caught by anything automated — only by a diff run by
+hand, prompted by unrelated memory-migration work, not a dedicated check.
 
 ## Open questions
 
@@ -114,11 +114,12 @@ mechanism `plans/2026-08-22-skill-trigger-quality-review.md` ends up building (a
 against a corpus) could serve double duty here.]
 
 [NEEDS CLARIFICATION: should the deployed-vs-source `~/AGENTS.md` drift get a dedicated guard (e.g.
-a task that diffs `config/global-AGENTS.md` against the live `~/AGENTS.md` and fails/warns on
-mismatch, possibly wired into `inv verify.all` or a pre-push hook) rather than relying on a
-human/agent remembering to check? This is a narrower, more mechanical problem than the memory-sweep
-question above — a straight diff, no LLM judgment needed — and may be worth building independently
-of whether the broader memory-sweep idea goes anywhere.]
+a task that diffs the repo-side source against the live `~/AGENTS.md` and fails/warns on mismatch,
+possibly wired into `inv verify.all` or a pre-push hook — **largely answered since: `deploy.status`
+reports the drift and `verify.all` fails on it**) rather than relying on a human/agent remembering
+to check? This is a narrower, more mechanical problem than the memory-sweep question above — a
+straight diff, no LLM judgment needed — and may be worth building independently of whether the
+broader memory-sweep idea goes anywhere.]
 
 [NEEDS CLARIFICATION: is a fixed cadence (weekly? monthly? "whenever `session-harvest` fires and
 happens to notice drift"?) the right trigger, or should this be explicitly user-invoked only (like

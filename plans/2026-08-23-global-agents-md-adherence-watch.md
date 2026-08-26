@@ -21,10 +21,10 @@ and the caveman register.]
 
 - Watch passively across normal sessions in at least two repos — routine work exercises most rules;
   no dedicated drill needed.
-- On an observed miss: re-expand the affected rule's wording in `config/global-AGENTS.md`
-  (strengthen language, add the concrete tell — per the "strengthen, don't lengthen" finding in
-  `contributing/global-agents-md.md`'s design-rationale section), record the miss here, redeploy.
-  Never revert the cluster structure for a single rule's miss.
+- On an observed miss: re-expand the affected rule's wording in the `config/agents-md/` fragment
+  that owns it (strengthen language, add the concrete tell — per the "strengthen, don't lengthen"
+  finding in `contributing/global-agents-md.md`'s design-rationale section), record the miss here,
+  redeploy. Never revert the cluster structure for a single rule's miss.
 - Close as `landed` once a handful of sessions pass with no rule regressions; a clean watch leaves
   nothing to migrate.
 

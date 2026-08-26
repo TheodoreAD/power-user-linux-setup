@@ -6,9 +6,9 @@ updated: 2026-08-23
 ## Context
 
 This repo is the source of truth for everything user-wide that agents read: `skills/*` (deployed by
-`inv ai.install-skills`) and `config/global-AGENTS.md` (deployed as `~/AGENTS.md`
-/`~/.claude/CLAUDE.md`). Design work on those belongs here — `plans/` here, `setup.toml` here,
-`inv quality.precommit` here.
+`inv ai.install-skills`) and the `config/agents-md/` fragments (assembled into `~/AGENTS.md`, and
+symlinked from each installed agent's own instruction path). Design work on those belongs here —
+`plans/` here, `setup.toml` here, `inv quality.precommit` here.
 
 But the _need_ for a change almost never surfaces here. It surfaces mid-task in `repo-tasks`,
 `scaffoldapy`, an `*-polite-mcp` repo: a skill fails to trigger on the request it exists for, a
@@ -116,10 +116,10 @@ capture carries a pointer to the real evidence rather than a paraphrase of it._
 The rule has to fire in a repo that has nothing to do with this one, on a session that may never
 load any skill. `plans/2026-08-22-skill-trigger-quality-review.md` already establishes that skill
 `description` matching is the weak link in this family — so the trigger cannot be a skill
-description. A short new section in `config/global-AGENTS.md` (always loaded, everywhere) states:
-skills and `~/AGENTS.md` are owned by `power-user-linux-setup`; when you hit a problem with one from
-another repo, don't fix it in place — follow the capture procedure, invoked **by name** so it never
-depends on description matching.
+description. A short new section in the `config/agents-md/` fragments (always loaded, everywhere)
+states: skills and `~/AGENTS.md` are owned by `power-user-linux-setup`; when you hit a problem with
+one from another repo, don't fix it in place — follow the capture procedure, invoked **by name** so
+it never depends on description matching.
 
 ### 2. Three lanes, decided at the moment of friction
 
