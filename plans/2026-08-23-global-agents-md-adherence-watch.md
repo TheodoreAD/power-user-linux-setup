@@ -94,3 +94,50 @@ shapes, the head/tail fact, and the own-repo `cd` tell; the machine default mode
 `acceptEdits`. Evidence under the matching headings in `contributing/global-agents-md.md`. Verify by
 re-running the audit after a week of `acceptEdits` sessions — the "Open / to re-measure" list in the
 skill's `references/research.md` says what to expect.]
+
+### Session 3 — `scaffoldapy`, 2026-08-26/27 (generating a new repo from the template)
+
+The first post-re-cut observation of the Bash cluster, and it went the other way from session 2. The
+session's primary directory was `scaffoldapy`; substantially all the work was in a newly generated
+sibling, `ingesta`. Session 2 measured 114 `cd`s **into** the session's own repo; this session's
+failure was the inverse — omitting the `cd` when the target genuinely was a different repo. Both
+misses are the same underlying thing: cwd was treated as known when it was not.
+
+1. **Dropped the `cd` on three consecutive cross-repo staged commits.** The user challenged it
+   twice, I stated both times that every subsequent git call would carry an explicit `cd`, and then
+   emitted the identical command without it — three times. The user's own diagnosis was right and is
+   worth recording as the mechanism: **the permitted chain shape is
+   `cd <other repo> && <one
+   command>`, singular, but a staged commit is two commands (`git add`,
+   then `git commit`), so `cd && add && commit` matches no permitted shape at all.** With no
+   compliant form available, the `cd` is what got dropped. The adjacent "Never `cd` into the
+   session's own repo as a matter of course" is stated forcefully and misfires once a session has
+   been working in the sibling long enough that the sibling reads as "the session's own repo".
+   Resolved in-session by abandoning cwd entirely: `git -C <abs path>` on separate calls, which the
+   rule already names as preferred and which has no chain problem.
+
+2. **cwd persistence produced a false-green gate run**, and this is the expensive one.
+   `inv
+   quality.precommit` was invoked for `scaffoldapy` with no `cd`, but cwd had persisted from
+   an earlier `cd` into `ingesta`, so it ran `ingesta`'s gate and reported everything green. The
+   green said nothing about the file just written; the tell was `rootdir:` in the pytest header,
+   which had to be read deliberately.
+   `### Running a command against a different repo than the session's
+   project` already documents
+   both the persistence hazard and the `inv` exception, and names
+   `cd <repo> && PATH="<repo>/.venv/bin:$PATH" inv <task>` as the working form. That form worked
+   immediately once used. The miss was reaching for the bare `inv` at all.
+
+   This one is not "cheap and recoverable": it is a verification failure that manufactures
+   confirming evidence, the class `### Reading a command's result` exists to prevent. A gate that
+   reports green for the wrong repo is indistinguishable from one that reports green for the right
+   one unless the header is read.
+
+[NEEDS CLARIFICATION: which lever, given both misses are adherence rather than wording — the rules
+involved already say the right thing, and (2)'s correct form is spelled out verbatim in the file.
+More wording is the lever the design rationale warns against here. Three candidates: name
+`git -C <path>` as _the_ form for mutating git in another repo so the two-command case has a
+compliant shape at all; add "the gate reported green for the wrong repo" as the concrete tell under
+the `inv` exception; or treat both as evidence for `plans/2026-08-26-agents-md-leanness-pass.md`'s
+open question about demoting the Bash cluster to `session-bash-audit`, which can measure the rate
+rather than restate the rule.]
