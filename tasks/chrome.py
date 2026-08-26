@@ -9,8 +9,8 @@ profile is signed in:
 2. **Some copies carry `NoDisplay=true`**, which hides them from the grid entirely — so the apps
    belonging to the profile actually in use can be impossible to find or pin, while other
    profiles' copies are the ones on offer.
-3. **None of them carry `--ozone-platform=x11`**, which `[packages.google-chrome-x11]` needs on
-   every Chrome launch path to work (see plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md).
+3. **None of them carry `--ozone-platform=x11`**, which matters only in the narrow case where a
+   PWA tile starts the session's first Chrome process (see contributing/chrome-ozone.md).
 
 These files belong to Chrome, not to this repo, so this module is deliberately **not** part of the
 `deploy.*` family: `tasks/deploy.py` only ever writes paths PULSE created and can prove it wrote
@@ -29,6 +29,12 @@ actually decides the outcome: the ozone platform is fixed by the *first* Chrome 
 session, so an unflagged autostart entry silently discards the flag on every launcher. It is
 reported and never repaired — the arrangement that makes it come out right (being the only starter)
 is partly manual, and PULSE has no way to re-apply it.
+
+Flagging the *launchers* is therefore a separate, opt-in question (`--ozone`), not something
+`[packages.google-chrome-x11]` being enabled implies. It buys only the case where a PWA tile starts
+the session's first Chrome process, and it costs per-profile pinning, because every copy of an app
+carries the same `StartupWMClass` and X11 has no other way to tell two profiles' windows apart.
+contributing/chrome-ozone.md has the measurements behind both halves.
 """
 
 import re
@@ -298,8 +304,8 @@ def _report_starters(ozone: bool) -> int:
 
     Whichever Chrome process starts first fixes the ozone platform for every window that follows,
     so what matters is not that *a* flagged entry exists but that no unflagged one can beat it.
-    See plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md — a filename chosen to sort first
-    was measured losing this race, because gnome-session starts autostart entries in parallel.
+    See contributing/chrome-ozone.md — a filename chosen to sort first was measured losing this
+    race, because gnome-session starts autostart entries in parallel.
     """
     starters = chrome_starters()
     print(f"[chrome] autostart entries launching Chrome: {len(starters)}")
@@ -349,9 +355,24 @@ def _summarize(changes: list[Change]) -> str:
     return ", ".join(f"{field} drift{f' x{n}' if n > 1 else ''}" for field, n in counts.items())
 
 
-def _ozone_wanted() -> bool:
-    """True when [packages.google-chrome-x11] is enabled — the flag is only correct when it is."""
+def _ozone_required() -> bool:
+    """True when [packages.google-chrome-x11] is enabled — Chrome is meant to run on X11 here."""
     return _OZONE_PACKAGE in util.enabled_packages()
+
+
+def _ozone_for_launchers(opt_in: bool) -> bool:
+    """Whether to treat a launcher's missing ozone flag as drift. Opt-in, and only when required.
+
+    Asking for the flag on a machine that doesn't want X11 at all would write a flag that is simply
+    wrong, so the package still gates it — but the reverse does not hold, and that asymmetry is the
+    whole point: see this module's docstring for why the launchers are left unflagged by default.
+    """
+    if not opt_in:
+        return False
+    if not _ozone_required():
+        print(f"[chrome] --ozone ignored: [packages.{_OZONE_PACKAGE}] is not enabled, so x11 isn't wanted here")
+        return False
+    return True
 
 
 def _plan(
@@ -379,8 +400,8 @@ def _plan(
     return planned
 
 
-@task
-def status(c: Context):
+@task(help={"ozone": f"Also treat a launcher missing {_OZONE_FLAG} as drift (off by default)."})
+def status(c: Context, ozone: bool = False):
     """Report who starts Chrome at login, then every PWA launcher's profile, visibility and flag.
 
     Strictly read-only — `inv chrome.fix-launchers` is the repair path for the launchers. Chrome
@@ -390,10 +411,11 @@ def status(c: Context):
     """
     profiles = read_profiles()
     launchers = _launchers()
-    ozone = _ozone_wanted()
+    required = _ozone_required()
+    ozone = _ozone_for_launchers(ozone)
 
-    print(f"[chrome] {_OZONE_FLAG}: {'required' if ozone else 'not required'} ([packages.{_OZONE_PACKAGE}])")
-    _report_starters(ozone)
+    print(f"[chrome] {_OZONE_FLAG}: {'required' if required else 'not required'} ([packages.{_OZONE_PACKAGE}])")
+    _report_starters(required)
 
     if not launchers:
         print(f"[chrome] no PWA launchers found in {_APPLICATIONS_DIR}")
@@ -428,16 +450,20 @@ def status(c: Context):
         print(f"[chrome]   {name:<32} {launcher.profile_dir:<12} {_summarize(changes)}{hidden}")
 
     print(f"[chrome] {drifted} launcher(s) need fixing — inv chrome.fix-launchers" if drifted else "[chrome] all ok")
+    if required and not ozone:
+        print(f"[chrome] launchers are not checked for {_OZONE_FLAG} — it costs per-profile pinning.")
+        print("[chrome] pass --ozone to include it; see contributing/chrome-ozone.md")
 
 
 @task(
     help={
         "yes": "Skip the confirmation prompt.",
         "profile": "Treat this profile directory as primary instead of Chrome's last_used, e.g. 'Profile 2'.",
+        "ozone": f"Also add {_OZONE_FLAG} to every Exec (off by default — it costs per-profile pinning).",
     }
 )
-def fix_launchers(c: Context, yes: bool = False, profile: str | None = None):
-    """Label every Chrome PWA launcher by profile, unhide the primary profile's, add the ozone flag.
+def fix_launchers(c: Context, yes: bool = False, profile: str | None = None, ozone: bool = False):
+    """Label every Chrome PWA launcher by profile and unhide the primary profile's.
 
     Filenames are never changed: `org.gnome.shell favorite-apps` pins launchers by filename, so a
     rename would silently drop every pinned PWA from the dash.
@@ -456,7 +482,7 @@ def fix_launchers(c: Context, yes: bool = False, profile: str | None = None):
         print(f"[chrome] unknown profile {primary!r} — known: {', '.join(sorted(profiles.labels)) or 'none'}")
         return
 
-    planned = _plan(launchers, profiles, primary=primary, ozone=_ozone_wanted())
+    planned = _plan(launchers, profiles, primary=primary, ozone=_ozone_for_launchers(ozone))
 
     if not planned:
         print("[chrome] every launcher already normalized — nothing to do")

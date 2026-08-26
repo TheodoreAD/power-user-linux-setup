@@ -8,6 +8,7 @@ from pathlib import Path
 
 import pytest
 
+from tasks import chrome
 from tasks.chrome import (
     Profiles,
     add_ozone_flag,
@@ -131,6 +132,25 @@ def test_add_ozone_flag_is_idempotent():
 
 def test_add_ozone_flag_handles_a_bare_binary():
     assert add_ozone_flag("/usr/bin/google-chrome-stable") == "/usr/bin/google-chrome-stable --ozone-platform=x11"
+
+
+# ---------------------------------------------------------------------------
+# _ozone_for_launchers — the opt-in gate
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.parametrize(
+    "opt_in, required, expected",
+    [
+        (False, True, False),  # the default: x11 is wanted, but not at the cost of per-profile pinning
+        (True, True, True),  # explicit --ozone
+        (True, False, False),  # asked for on a machine that doesn't want x11 at all
+        (False, False, False),
+    ],
+)
+def test_ozone_for_launchers_needs_both_the_opt_in_and_the_package(monkeypatch, opt_in, required, expected):
+    monkeypatch.setattr(chrome, "_ozone_required", lambda: required)
+    assert chrome._ozone_for_launchers(opt_in) is expected
 
 
 # ---------------------------------------------------------------------------
