@@ -23,6 +23,19 @@ considered and rejected).
    dropped (optionally noted in the report as "considered, not worth persisting"), not proposed.
    This is the actual noise filter — apply it upstream of routing, not after.
 
+   **Then, for anything shaped like a convention — "always do X", "never do Y" — check it is
+   actually true before proposing it.** Every filter below assumes the candidate is correct and only
+   decides where it goes. A convention inferred from what this session happened to do, or from a
+   sample of one or two sibling repos, is a hypothesis: check it against the tool's own
+   documentation and real community practice first, and say which you checked. Losing a candidate
+   costs one rediscovery; writing a wrong one into a shared doc costs every future reader, and the
+   shared doc is exactly where nobody re-derives it. Confirmed 2026-08-27: a harvest proposed
+   recording "don't make `tests/` a package" from two sibling repos that happen not to — pytest's
+   own docs say the opposite for the default `prepend` import mode ("highly recommended to arrange
+   your test modules as packages"), and the session had actually backed out of `__init__.py` to
+   satisfy a shared type-checker config. The true finding was a different claim with a different
+   destination, and only the user pushing back surfaced it.
+
 2. **Routing filters**, for what survives the significance test:
    - **Plan-specific content → `plans/*.md`, never memory.** If the session touched or produced work
      that the `plan-docs` skill would track — a design, an idea, in-progress implementation — it
