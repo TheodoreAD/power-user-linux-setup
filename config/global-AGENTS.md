@@ -118,6 +118,12 @@ Stage each commit's paths immediately before that commit, never ahead of time. `
 the whole index, so anything staged earlier — a `git rm` run while tidying, a `git add` from a
 previous step — rides along under the next message, and the split has to be rewritten.
 
+When two concerns land in the _same file_, staging by path can't separate them and `git add -p`/`-i`
+is unavailable here — but that is not a reason to give up and ship one fat commit. Copy the finished
+file to the scratchpad, edit it back down to just the first concern, verify that state passes the
+gate (it has to: each commit should stand on its own), commit, then restore the copy and commit the
+rest. Cheap, and the intermediate gate run is what catches a split that doesn't actually decompose.
+
 ### Regenerating a file from a canonical source
 
 Commit the regenerated output, and run regeneration as its own deliberate standalone command — never
@@ -193,7 +199,10 @@ pre-truncating only loses data and forces a second run; if size is the worry, co
 tool already reports a non-zero exit, and a bare `$?` after `;` is the previous command's anyway
 only because nothing else ran, so it adds a chain for information you already have. When shelling
 out to search anyway, use `rg` over `grep -r` and `fd` over `find` (faster, `.gitignore`-aware);
-plain `grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`, or portability.
+plain `grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`, or portability. Do
+not carry `grep -r`'s flag across with the habit: `rg` is recursive by default and its `-r` is
+`--replace`, so `rg -r <pat> <path>` silently prints matches with the matched text _rewritten_ —
+plausible-looking output that is not what the file says.
 
 ### Running a command against a different repo than the session's project
 

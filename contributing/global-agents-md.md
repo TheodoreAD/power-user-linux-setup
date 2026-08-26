@@ -243,6 +243,20 @@ tacked on to keep a 5,000-line log out of context. The clause names the substitu
 log, as a second call) and the reflexive `; echo "EXIT=$?"` that the tool makes redundant. The
 `session-bash-audit` script measures the shape as `redirect-then-filter`.
 
+The `rg -r` clause, added 2026-08-26 from a live occurrence. Retiring a plan file meant grepping
+every repo for inbound references; the call was written `rg -rn <pattern> <dir>`, reaching for
+`grep -r`'s recursive flag. `rg` is recursive by default and `-r` is `--replace`, so every hit
+printed with the matched text substituted — real paths came back as `plans/2026-08-25-n.md`. This is
+the failure mode the sibling "Reading a command's result" rule is about, one level worse: exit code
+0, seventeen hits, output that reads like a normal grep result. It was caught only because the
+mangled filename looked wrong; the same slip during a reference sweep that returned _zero_ hits
+would have read as "nothing to fix" and left dangling references behind. Placed as a clause on the
+existing `rg`-over-`grep -r` sentence rather than a new rule, because that sentence is what invites
+the flag to be carried across — criterion 2, a variant extends its rule. Considered and rejected: a
+`session-bash-audit` PATTERNS row instead. That skill can measure the rate, but the fix here is one
+clause at the exact point of confusion, and a single occurrence is not yet evidence of a rate worth
+a row ("rows with no stated cost teach nothing"). Worth adding there if it recurs.
+
 ## Running a command against a different repo than the session's project
 
 The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are now rendered as allow rules by
@@ -528,6 +542,20 @@ committed — and the plan deletions landed in that commit, because `git rm` had
 the index. Nothing was pushed, so it cost a `git reset --soft origin/main` and three re-staged
 commits; the same slip after a push would have been a rewrite of public history or a permanently
 mis-attributed deletion.
+
+The same-file clause was added 2026-08-26 from a `repo-tasks` session that implemented two separable
+features — a gate-step binary preflight and dev-group drift reporting — both of which landed in
+`configs.py` and `test_configs.py`. Staging by path could not separate them, and the rule above
+mandates the split while the environment's own note ("interactive flags are not supported") removes
+`git add -p`/`-i`, the standard answer. The gap was doing real damage in the moment: the session
+weighed abandoning the split and shipping one combined commit, on the grounds that reconstructing an
+intermediate file state by hand was too much churn. The clause names the mechanism that makes it
+cheap — copy the finished file aside, edit back to the first concern, gate, commit, restore — and
+the reason the intermediate gate run is not optional: it ran green at 289 tests before the second
+commit took it to 294, which is what proved the first commit stood on its own rather than merely
+compiling. A rule that mandates an outcome the environment makes awkward, and is silent on how, is
+the shape most likely to be abandoned under time pressure; this is the second clause on this rule
+added for that same reason.
 
 ## Invoking a venv tool in the session's own project
 
