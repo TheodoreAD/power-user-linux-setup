@@ -8,10 +8,9 @@ updated: 2026-08-24
 ## Context
 
 **Origin.** `~/.config/environment.d/` came up on 2026-08-24 as a candidate fix for the Chrome
-Wayland/DRM problem. It turned out not to work for that
-(`plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md` — Chrome reads no `OZONE_PLATFORM` env
-var), but investigating it surfaced a real, unrelated gap in how this repo sets environment
-variables. This plan is about that gap, not about Chrome.
+Wayland/DRM problem. It turned out not to work for that (`contributing/chrome-ozone.md` — Chrome
+reads no `OZONE_PLATFORM` env var), but investigating it surfaced a real, unrelated gap in how this
+repo sets environment variables. This plan is about that gap, not about Chrome.
 
 **Current mechanism.** `setup.toml` packages declare `zshenv` / `zprofile` / `zshrc` snippets, and
 `inv zsh.configure` writes them as marker-delimited blocks into the matching dotfile. `~/.zshenv` on

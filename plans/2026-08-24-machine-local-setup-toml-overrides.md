@@ -8,8 +8,8 @@ updated: 2026-08-25
 ## Context
 
 **Origin.** A live NVIDIA+Wayland DRM bug on 2026-08-24 (Netflix plays audio, renders black — see
-`plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md`). The workaround already exists in the repo
-as `[packages.google-chrome-x11]`, deliberately shipped `enabled = false` because it is specific to
+`contributing/chrome-ozone.md`). The workaround already exists in the repo as
+`[packages.google-chrome-x11]`, deliberately shipped `enabled = false` because it is specific to
 this machine's GPU and session type, not something every consumer of this repo should get. The
 user's framing: _"this is just for my machine, probably not a problem on everyone's machine, so the
 default is off, but probably on in the toml in the home config dir."_
@@ -97,10 +97,9 @@ the same `enabled_packages()`), but it should be checked rather than assumed.]
 
 ## What landed (2026-08-24)
 
-The minimal version, built as a prerequisite for deploying
-`plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md`'s option B on this machine — there was no
-way to deploy a package `setup.toml` ships disabled, and hand-copying the file is exactly what this
-repo forbids.
+The minimal version, built as a prerequisite for deploying `[packages.google-chrome-x11-autostart]`
+on this machine (`contributing/chrome-ozone.md`) — there was no way to deploy a package `setup.toml`
+ships disabled, and hand-copying the file is exactly what this repo forbids.
 
 - `util.OVERRIDES_PATH` = `~/.config/power-user-linux-setup/overrides.toml`, beside `identity.toml`
   in the existing machine-local namespace.

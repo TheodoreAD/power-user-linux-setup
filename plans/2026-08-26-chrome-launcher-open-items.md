@@ -7,11 +7,12 @@ updated: 2026-08-26
 
 ## Context
 
-`plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md` landed on 2026-08-26 — Chrome comes up on
-X11, Netflix plays, and the duplicate-PWA symptom went with it. Its design rationale and every
-measured dead end moved to [`contributing/chrome-ozone.md`](../contributing/chrome-ozone.md), and
-its user-facing half is [`docs/chrome.md`](../docs/chrome.md). Three things it carried were still
-open and had nowhere else to go, so they live here rather than being lost in the retirement.
+The now-retired `plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md` landed on 2026-08-26 —
+Chrome comes up on X11, Netflix plays, and the duplicate-PWA symptom went with it. Its design
+rationale and every measured dead end moved to
+[`contributing/chrome-ozone.md`](../contributing/chrome-ozone.md), and its user-facing half is
+[`docs/chrome.md`](../docs/chrome.md). Three things it carried were still open and had nowhere else
+to go, so they live here rather than being lost in the retirement.
 
 None is urgent. The arrangement works today; these are the ways it can stop working, plus one
 refinement the user parked.

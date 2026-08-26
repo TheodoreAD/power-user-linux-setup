@@ -1237,8 +1237,8 @@ correct while Netflix still renders black.
 This entry is a PULSE-owned autostart file named to sort ahead of both `chrome-*` and
 `google-chrome*`, so it wins the race and every later entry attaches to an XWayland instance. No
 Chrome-generated file is touched, which is the point: they cannot be kept patched.
-Enable together with [packages.google-chrome-x11] — see
-plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md for the options this was chosen over.
+Enable together with [packages.google-chrome-x11] — see contributing/chrome-ozone.md for the
+options this was chosen over.
 """
 method = "wrapper-script"
 enabled = false

@@ -15,7 +15,7 @@
 # Turn on a workaround that ships off for everyone else. This pair forces Chrome onto XWayland,
 # working around an NVIDIA-driver + native-Wayland bug where protected/DRM video (Netflix) renders
 # black while audio keeps playing. Enable both or neither — the autostart half is what makes the
-# launcher half take effect. See plans/2026-08-24-chrome-ozone-x11-launcher-coverage.md.
+# launcher half take effect. See contributing/chrome-ozone.md.
 # [packages.google-chrome-x11]
 # enabled = true
 #
