@@ -1,6 +1,6 @@
 ---
 name: python-conventions
-description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, type-ignore hygiene, `src/`-layout package structure, async/concurrency, and HTTP client/retry
+description: "Use when writing, reviewing, or refactoring Python code in a personal/agent-maintained project — data modeling (Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), dates/times/timezones (aware-only, UTC at the boundary, DST folds and gaps), settings/secrets management, early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY, fixture scope), exception hierarchies, type-ignore hygiene, `src/`-layout package structure, async/concurrency, and HTTP client/retry
   conventions — plus MCP-server-specific conventions (stdio logging discipline, tool-boundary error handling, LLM-facing tool docstrings) for the *-polite-mcp family. Gives the default answer per topic, researched against reputable sources and community precedent, so choices stay consistent across projects instead of drifting session to session. Each topic notes whether it overrides a model's own default instinct or just documents an already-sound one, so the skill steers rather than fights normal agent behavior. Covers design/style guidance only — for type-checker/linter/formatter/shell-check *tool configuration*, see power-user-linux-setup's contributing/quality-tooling.md instead."
 ---
 
@@ -45,6 +45,40 @@ just confirm what you'd already do, weight the ones that don't.
 - Model default: **overrides.** Left alone, a model mixes Pydantic/dataclass/TypedDict/NamedTuple
   inconsistently across a codebase depending on what it last saw — there's no strong single default
   instinct here to confirm.
+
+## Dates, times, and timezones
+
+- Default: **aware datetimes only, normalised to UTC at every boundary.** Reject a naive datetime
+  where it enters, never coerce it, and `astimezone(UTC)` everything you store or compare. Convert
+  to a local wall clock only at the point of display. `zoneinfo` for zones (stdlib since 3.9), never
+  `pytz`.
+- Why: **two aware datetimes that share a non-UTC `tzinfo` subtract and compare on their wall
+  clock**, silently ignoring any DST transition between them. A "24 hour" trailing window spans 23
+  real hours across spring-forward; a six-hour minimum interval between two doses elapses an hour
+  early. Worse, near a fold `==` and `-` disagree — an ambiguous datetime and its own UTC equivalent
+  subtract to exactly zero while comparing unequal — so any branch on instant equality is wrong.
+  Normalising on the way in is what makes every later comparison mean elapsed time. Measured live
+  2026-08-27 in `ingesta`, where both failures were real and neither was visible by reading the
+  code.
+- Resolving a local wall time: `fold` (PEP 495) is the whole API, and each case needs a stated
+  policy rather than whatever `replace(tzinfo=...)` happens to do. Detect by comparing **offsets,
+  not datetimes** — intra-zone comparison ignores `fold`, so the datetimes compare equal either way.
+  `wall.replace(tzinfo=z, fold=0).utcoffset() < ...fold=1...` means the time is _nonexistent_ (a
+  spring-forward gap); `>` means _ambiguous_ (a fall-back). Then choose deliberately: round-tripping
+  a gap time through UTC shifts it past the gap, and `fold=0` takes the first occurrence of an
+  ambiguous one.
+- Testing: DST correctness needs **known-answer tests at real transitions**, expected instants
+  worked out by hand and asserted literally. A property test restates the implementation and passes
+  straight through this bug. Normalise in the test helpers too — a property test computing
+  `anchor - duration` on zone-aware values has the bug itself and will report correct code as
+  broken, which is exactly what happened before the helpers were fixed.
+- **Don't**: `datetime.utcnow()` — it returns a _naive_ datetime and is deprecated since 3.12; use
+  `datetime.now(UTC)`. Don't store a float timestamp to sidestep the problem either: an aware UTC
+  datetime is the value, not an encoding of it. ruff's `DTZ` ruleset catches the naive-construction
+  half of this automatically and none of the same-zone-arithmetic half.
+- Model default: **overrides.** Models use `astimezone`/`ZoneInfo` correctly in isolation but do not
+  default to normalising at the boundary, and reliably write same-zone arithmetic that is wrong only
+  across a transition — invisible to review, and to every test that doesn't sit on a DST boundary.
 
 ## Settings and secrets management
 
