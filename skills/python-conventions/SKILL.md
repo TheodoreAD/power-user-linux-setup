@@ -75,8 +75,7 @@ just confirm what you'd already do, weight the ones that don't.
   validate the _caller's contract_ (argument types/ranges); EAFP handles _runtime_ operations Python
   already fails loudly on (dict/attr lookups, I/O, network).
 - Fail-fast: `assert` is for internal "can't happen" self-checks only (compiled out under
-  `python
-  -O`) — never for input validation. Anything triggerable by bad input or external state
+  `python -O`) — never for input validation. Anything triggerable by bad input or external state
   `raise`s a real exception. Never return `None`/a sentinel/`(success, result)` on failure — falsy
   values make "empty" and "failed" indistinguishable to the caller.
 - Exception hierarchy: [`references/snippets/exceptions.py`](references/snippets/exceptions.py) —
