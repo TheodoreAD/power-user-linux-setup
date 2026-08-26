@@ -131,9 +131,11 @@
 #   content_file  repo-relative path to the real file under config/ whose contents get deployed to
 #                 dest verbatim (stripped + trailing newline added). Not inlined in setup.toml —
 #                 a whole file's content belongs in a real, diffable, editable file, e.g.
-#                 config/research-update.sh, not a TOML string. symlink_dest (optional) gets
-#                 symlinked to dest if not already correct, same as [packages.claude-global-md]'s
-#                 ~/.claude/CLAUDE.md -> ~/AGENTS.md.
+#                 config/research-update.sh, not a TOML string. symlink_dest (optional, a string or
+#                 a list of them) gets symlinked to dest if not already correct, same as
+#                 [packages.claude-global-md]'s ~/.claude/CLAUDE.md -> ~/AGENTS.md. A link whose
+#                 parent directory doesn't exist is reported and skipped, never created: that
+#                 directory's absence is how an uninstalled agent is detected.
 #   assembled_from  alternative to content_file: names an any-section list field whose fragments
 #                 are composed into dest instead of copying one source file. Only `agents_md` uses
 #                 it today ([packages.claude-global-md] -> ~/AGENTS.md). Each fragment lands in its
@@ -979,7 +981,18 @@ description = "Global ~/AGENTS.md — sudo, git/ssh, allowlist-discipline, and p
 method = "wrapper-script"
 tags = ["shell", "ai"]
 dest = "~/AGENTS.md"
-symlink_dest = "~/.claude/CLAUDE.md"
+# One real file, linked into every agent's own instruction path. A link is only created when that
+# agent's config directory already exists — an absent ~/.codex means Codex isn't installed here, and
+# creating it would make it look like it is. Install the agent, re-run, and the link appears. Paths
+# confirmed against each vendor's own docs; Codex's AGENTS.override.md is deliberately not touched,
+# it's the documented per-user escape hatch. Gemini can instead be pointed at AGENTS.md directly via
+# `context.fileName` in its settings.json — not done yet, see the plan.
+symlink_dest = [
+  "~/.claude/CLAUDE.md",
+  "~/.codex/AGENTS.md",
+  "~/.copilot/copilot-instructions.md",
+  "~/.gemini/GEMINI.md",
+]
 # Assembled from fragments rather than copied from one file — see config/agents-md/README.md for
 # which fragment owns what, and plans/2026-08-26-agent-artifact-authoring-decoupling.md for why.
 # Any package may add an `agents_md` fragment; this entry only declares where the result lands.

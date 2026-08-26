@@ -108,17 +108,47 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
         )
     else:
         raise util.missing_fields(name, "content_file (or assembled_from)")
-    link = Path(symlink_dest).expanduser() if (symlink_dest := cfg.get("symlink_dest")) else None
-    link_ok = link is None or (link.is_symlink() and link.resolve() == dest.resolve())
+    links = _symlink_dests(cfg)
 
     if util.DRY_RUN:
-        ok = deploy.classify(managed) == deploy.State.CLEAN and link_ok
+        ok = deploy.classify(managed) == deploy.State.CLEAN and all(_link_ok(link, dest) for link in links)
         print(f"[{name}] {util.ok_label(ok)}")
         return
 
     deploy.deploy(managed)
+    for link in links:
+        _ensure_symlink(name, link, dest)
 
-    if link is None or link_ok:
+
+def _symlink_dests(cfg: util.PackageConfig) -> list[Path]:
+    """`symlink_dest`, as a list of absolute paths.
+
+    Accepts a bare string as well as a list: one destination is still the common case (a single
+    wrapper script aliased under another name), and a list is what a file several agents each read
+    from their own path needs — `~/AGENTS.md` is linked into every installed agent's own
+    instruction file. Same string-or-list shape as `omz_plugin`.
+    """
+    declared = cfg.get("symlink_dest")
+    if not declared:
+        return []
+    paths = [declared] if isinstance(declared, str) else declared
+    return [Path(p).expanduser() for p in paths]
+
+
+def _link_ok(link: Path, dest: Path) -> bool:
+    return link.is_symlink() and link.resolve() == dest.resolve()
+
+
+def _ensure_symlink(name: str, link: Path, dest: Path) -> None:
+    """Point `link` at `dest`, unless something else already lives there.
+
+    **Never creates the parent directory.** A missing `~/.codex/` means Codex isn't installed, and
+    creating it to hold an instruction file would leave a directory that makes an absent agent look
+    present — the same detection rule the `skills` CLI uses when it picks which agents to install
+    to. Says so rather than skipping silently, since "my rules didn't reach agent X" is otherwise a
+    very quiet failure; installing that agent and re-running picks the link up.
+    """
+    if _link_ok(link, dest):
         return
     if link.exists() or link.is_symlink():
         ui.warn(
@@ -126,7 +156,9 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
             "Leaving it alone — move its content into the file above yourself, then re-run.",
         )
         return
-    link.parent.mkdir(parents=True, exist_ok=True)
+    if not link.parent.is_dir():
+        print(f"[{name}] {link}: skipped — {link.parent} doesn't exist (that agent isn't installed here)")
+        return
     link.symlink_to(dest)
     print(f"[{name}] symlinked {link} -> {dest}")
 

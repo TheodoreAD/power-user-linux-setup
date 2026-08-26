@@ -161,7 +161,7 @@ class PackageConfig(TypedDict, total=False):
     depth: int
     content_file: str
     assembled_from: str
-    symlink_dest: str
+    symlink_dest: str | list[str]
     # gnome-extension
     uuid: str
     ego_id: int

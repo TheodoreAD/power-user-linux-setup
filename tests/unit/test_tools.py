@@ -24,7 +24,7 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config.sh").write_text("echo hi\n")
 
 
-def _cfg(tmp_path, *, symlink_dest: str | None = None) -> util.PackageConfig:
+def _cfg(tmp_path, *, symlink_dest: str | list[str] | None = None) -> util.PackageConfig:
     cfg: util.PackageConfig = {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh"}
     if symlink_dest is not None:
         cfg["symlink_dest"] = symlink_dest
@@ -139,3 +139,40 @@ def test_install_wrapper_script_leaves_a_non_symlink_at_symlink_dest_alone(tmp_p
     assert not link.is_symlink()
     assert link.read_text() == "a real file, not a symlink\n"
     assert "Leaving it alone" in capsys.readouterr().out
+
+
+def test_install_wrapper_script_creates_every_symlink_in_a_list(tmp_path):
+    """One real file, linked into several agents' own instruction paths."""
+    claude = tmp_path / "dot-claude" / "CLAUDE.md"
+    copilot = tmp_path / "dot-copilot" / "copilot-instructions.md"
+    claude.parent.mkdir()
+    copilot.parent.mkdir()
+
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[str(claude), str(copilot)]))
+
+    assert claude.is_symlink()
+    assert copilot.is_symlink()
+    assert claude.resolve() == copilot.resolve() == (tmp_path / "deployed.sh")
+
+
+def test_install_wrapper_script_skips_a_symlink_whose_parent_doesnt_exist(tmp_path, capsys):
+    """A missing ~/.codex means Codex isn't installed — creating it to hold an instruction file
+    would make an absent agent look present, so the link is reported and skipped instead."""
+    absent = tmp_path / "dot-codex" / "AGENTS.md"
+
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[str(absent)]))
+
+    assert not absent.parent.exists()
+    assert "skipped" in capsys.readouterr().out
+
+
+def test_install_wrapper_script_links_the_installed_agents_and_skips_the_rest(tmp_path):
+    """One absent agent must not stop the others from being linked."""
+    present = tmp_path / "dot-claude" / "CLAUDE.md"
+    present.parent.mkdir()
+    absent = tmp_path / "dot-codex" / "AGENTS.md"
+
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[str(absent), str(present)]))
+
+    assert present.is_symlink()
+    assert not absent.parent.exists()
