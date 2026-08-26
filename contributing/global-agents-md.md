@@ -90,8 +90,8 @@ like. Landed shape 2026-08-23: ~2,500 body words, 6 clusters, 30 rules, 294 line
 one fragment, since that is what a session actually loads. Measured straight after that re-cut:
 4,326 body words, 8 clusters, 37 rules, 446 lines — **well past the ≤200-line / ≤15-rule reference
 points, and grown by ~1,800 words since the leanness pass** without a review in between. The split
-did not cause that (it moved rules, it did not add any); it made it visible. A leanness pass on
-`portable.md` specifically is the obvious next one.
+did not cause that (it moved rules, it did not add any); it made it visible. Tracked as
+`plans/2026-08-26-agents-md-leanness-pass.md`, with the per-cluster breakdown.
 
 ```shell
 # per-section word count, largest first
