@@ -124,29 +124,79 @@ splits framework skills (in the distributed repo) from a user's own personal ski
 as precedent for the "core vs. personal" question, but it is Claude-plugin-delivered, so its
 distribution half doesn't transfer.
 
+### Verified hands-on against the installed CLI (2026-08-26)
+
+Run against `skills` 2.x from `[packages.node].global_packages`, in a scratch directory, project
+scope only — nothing global was mutated. Several things the write-ups claim did not survive contact.
+
+- **Local paths are a first-class source.** `skills add ../srcrepo --list` answers "Local path
+  validated", finds the skills, and installs them. Not GitHub-only, which the docs never say. A
+  local source is recorded in the lockfile as `"sourceType": "local"`.
+- **`skills-lock.json` is the real declarative artifact** — `{source, sourceType, computedHash}` per
+  skill, written on every `add`, restored by `skills experimental_install`. It is a direct,
+  community-maintained analogue of PULSE's `setup.toml` `skills` field, and it is per-directory
+  (project or global), not per-machine.
+- **Installs are always copies, never links to the source checkout.** Editing
+  `srcrepo/skills/demo-skill/SKILL.md` from `VERSION_MARKER_ONE` to `..._TWO` left both installed
+  copies unchanged. `skills experimental_install` re-copies and picks the edit up. So the dev loop
+  is edit → one refresh command, exactly today's `inv ai.install-skills --skill=<name>` shape —
+  moving to the CLI does not buy live-reload. (`--copy` exists as a flag, so symlinking is the
+  _default_ for the agent-directory leg — but the canonical copy itself is still a copy of the
+  source.)
+- **The layout depends on which agents are targeted.** With `--agent claude-code` alone it wrote a
+  real file to `./.claude/skills/demo-skill/SKILL.md` and created **no** `.agents/skills/` hub at
+  all. With `--agent claude-code codex cursor` it created `./.agents/skills/demo-skill/` and treated
+  Codex and Cursor as "universal" (they read `.agents/skills` directly).
+  `skills experimental_install` reported 17 universal agents on this machine — Amp, **Antigravity**,
+  **Antigravity CLI**, Cline, Codex, Cursor and 11 more — all resolving to the one `.agents/skills/`
+  path.
+- [PITFALL: **The Claude Code symlink is announced and never created.** Both multi-agent runs
+  printed `symlink → Claude Code` in the installation summary, and no `.claude/` directory existed
+  afterwards — reproduced twice, and `skills ls --json` agreed, listing the skill's agents as
+  `["GitHub
+  Copilot"]` only. So installing alongside any universal agent silently leaves Claude
+  Code with nothing. **This machine is only unaffected because PULSE's own
+  `~/.claude/skills → ~/.agents/skills` symlink already exists** — `_ensure_agents_skills` is not
+  superseded by the CLI as the research above assumed, it is actively covering a defect. Do not
+  delete it. Worth reporting upstream.]
+- **Agent auto-detection notices it is being run by an agent**: every invocation printed
+  `claude-code_2-1-245_agent Agent detected — installing non-interactively`, i.e. it skips its own
+  prompts inside a Claude Code session. That interacts directly with the `--yes` trap below — the
+  confirmation gate is bypassed by the CLI itself, not only by PULSE's wrapper.
+
 ### Where each agent actually looks
 
-Skills, user-level (what the `skills` CLI symlinks into):
+Skills, user-level. Per the hands-on run above, most agents are "universal" — they read
+`.agents/skills/` directly and need no per-agent directory at all; Claude Code is the outlier that
+does:
 
-| Agent       | User-level skills directory   |
-| ----------- | ----------------------------- |
-| Canonical   | `~/.agents/skills/`           |
-| Claude Code | `~/.claude/skills/`           |
-| Codex       | `~/.codex/skills/`            |
-| Cursor      | `~/.cursor/skills/`           |
-| Copilot     | `~/.copilot/skills/`          |
-| Windsurf    | `~/.codeium/windsurf/skills/` |
+| Agent                                              | User-level skills directory   |
+| -------------------------------------------------- | ----------------------------- |
+| Canonical — read directly by 17 agents on this box | `~/.agents/skills/`           |
+| Claude Code (needs its own path)                   | `~/.claude/skills/`           |
+| Windsurf                                           | `~/.codeium/windsurf/skills/` |
 
 Global instructions — **no canonical path exists**, and this is the genuinely unsolved half:
 
-| Agent       | User-level instruction file                   |
-| ----------- | --------------------------------------------- |
-| Claude Code | `~/.claude/CLAUDE.md`                         |
-| Codex       | `~/.codex/AGENTS.md` (+ `AGENTS.override.md`) |
-| Gemini CLI  | `~/.gemini/GEMINI.md`                         |
-| Copilot     | `~/.copilot/copilot-instructions.md`          |
-| Amp         | `~/.config/AGENTS.md`                         |
-| droid       | `~/.factory/AGENTS.md`                        |
+| Agent       | User-level instruction file                                        | Source             |
+| ----------- | ------------------------------------------------------------------ | ------------------ |
+| Claude Code | `~/.claude/CLAUDE.md`                                              | vendor docs        |
+| Codex       | `~/.codex/AGENTS.md` — or `$CODEX_HOME`; `AGENTS.override.md` wins | vendor docs        |
+| Gemini CLI  | `~/.gemini/GEMINI.md`                                              | vendor docs        |
+| Copilot     | `~/.copilot/copilot-instructions.md`                               | secondary write-up |
+| Amp         | `~/.config/AGENTS.md`                                              | secondary write-up |
+| droid       | `~/.factory/AGENTS.md`                                             | secondary write-up |
+
+Two things confirmed 2026-08-26 that change the shape of the symlink farm:
+
+- **Codex reads one file per scope, first non-empty wins** — global `AGENTS.override.md` then
+  `AGENTS.md`, then project scope from the git root down, "closer files override earlier guidance".
+  A symlink at `~/.codex/AGENTS.md` therefore just works, and `AGENTS.override.md` is a deliberate
+  escape hatch a user can keep hand-owned.
+- **Gemini CLI can be told to read `AGENTS.md` directly** — `context.fileName` in `settings.json`
+  accepts a list, e.g. `["AGENTS.md", "GEMINI.md"]`. That is a _harness tweak_, not a symlink, and
+  therefore the cleaner fix for Gemini under the constraints above. [UNVERIFIED: whether
+  `context.fileName` governs the user-level `~/.gemini/` lookup too, or only the project-tree walk.]
 
 `agentsmd/agents.md` issue #91 proposes standardizing on `~/.config/agents/AGENTS.md` (XDG). It is
 open, unassigned, with no linked PR and no tool commitment. So a global instruction file needs an
@@ -155,9 +205,10 @@ skills. **That gap is exactly PULSE-shaped work**, and it is already half-built:
 `[packages.claude-global-md]`'s `wrapper-script` + `symlink_dest` mechanism writes one real file and
 points a symlink at it. Extending `symlink_dest` from one path to a list is the whole change.
 
-[UNVERIFIED: the per-agent instruction paths above are from secondary write-ups (a compatibility
-matrix and vendor guides), not from each vendor's own docs read directly. Confirm each against the
-vendor's documentation before any of them is baked into a `setup.toml` field.]
+[UNVERIFIED: the Copilot, Amp and droid rows above are still from secondary write-ups (a
+compatibility matrix and vendor guides), not each vendor's own docs. Claude Code, Codex and Gemini
+CLI were confirmed against vendor documentation 2026-08-26. Confirm the remaining three before any
+of them is baked into a `setup.toml` field.]
 
 ### What this means for the current PULSE mechanism
 
@@ -167,9 +218,11 @@ vendor's documentation before any of them is baked into a `setup.toml` field.]
   `skills add <owner>/<repo> --global`, i.e. the `source = "npx"` path this file already implements.
   The `local` source becomes dead weight for this repo's own skills, though it stays meaningful for
   any genuinely PULSE-specific skill.
-- `_ensure_agents_skills` (the `.claude/skills → .agents/skills` symlink) is **superseded**, not
-  removed: the `skills` CLI makes the same symlink itself, per agent, for every agent it detects.
-  Keeping PULSE's version means two things creating the same link.
+- `_ensure_agents_skills` (the `.claude/skills → .agents/skills` symlink) **stays, and is now known
+  to be load-bearing.** The first draft of this plan assumed the `skills` CLI superseded it; the
+  hands-on run above disproved that — the CLI announces the Claude Code symlink and does not create
+  it whenever any universal agent is also targeted. PULSE's symlink is the only reason Claude Code
+  sees anything on this machine today.
 - The `claude_*` settings fields, the `cli-allowlist` pipeline, `askpass-zenity` and the direnv hook
   are harness plumbing and stay exactly where they are — with the open work being per-agent parity.
 
@@ -211,12 +264,15 @@ researched in `contributing/global-agents-md.md` — is the thing being preserve
 probably _are_ those clusters, and a fragment declares which cluster it extends.]
 
 [NEEDS CLARIFICATION: **Do the HTML markers survive every agent, not just Claude Code?** Claude Code
-strips block-level HTML comments from instruction files before injecting them, so
-`util.MarkerStyle.HTML` markers cost nothing there. Whether Codex/Copilot/Gemini strip them, render
-them, or feed them to the model verbatim is unknown. Worst case is a few visible comment lines,
-which is survivable but works against the "doesn't look weird" bar — check before committing to
-markers as the mechanism, and consider a manifest-tracked assembly (like
-`_apply_static_claude_permissions`' own manifest) as the marker-free alternative.]
+documents stripping block-level HTML comments from instruction files before injecting them, so
+`util.MarkerStyle.HTML` markers cost nothing there. Checked 2026-08-26: **no other vendor documents
+any such stripping**, so the working assumption must be that Codex, Copilot and Gemini feed them to
+the model verbatim. Two markers per fragment across ~6 fragments is a dozen visible comment lines —
+survivable, but it is exactly the "looks machine-generated" cost the decision above rules out.
+Marker-free alternative to weigh: manifest-tracked assembly, the shape
+`_apply_static_claude_permissions` already uses (remember what we wrote, rewrite only that, never
+touch anything else) — no in-file markers at all, at the cost of the file no longer being
+self-describing.]
 
 [NEEDS CLARIFICATION: **Where does `contributing/repo-family-architecture.md`'s settling test put
 `agent-skills`?** It has no bucket for "artifacts an agent consumes on any machine, authored once,
@@ -238,13 +294,13 @@ it means every repo carries one symlink per agent anyone might use, and `scaffol
 them. Alternative: `npx skills` run per-repo at clone time, which is a step a stranger must
 remember.]
 
-[NEEDS CLARIFICATION: **How does `skills add --global` interact with a local dev loop?** The
-`source = "npx"` path installs from a GitHub remote, which means every edit needs a commit+push
-before it can be tested. The `skills` CLI's symlink mode points agents at `~/.agents/skills/<name>`;
-whether it can be pointed at a _working checkout_ instead (so an edit is live immediately, the way
-every agent's own live-reload expects) is the single most important thing to test hands-on. If it
-can't, the dev loop needs a `--dir`-style local override, which is one of the few places a small
-PULSE task still earns its place.]
+[NEEDS CLARIFICATION: **Given that installs are always copies (verified below), is a live dev loop
+worth building at all?** `skills experimental_install` re-copies from a local source and picks up
+edits, so the loop is edit → one command → refreshed, identical in shape to today's
+`inv ai.install-skills --skill=<name>`. That is good enough that a bespoke symlink-to-checkout
+mechanism may not be worth its own maintenance — but it does mean no agent's live-reload ever fires
+on an edit, which is the property that made the move look attractive in the first place. Decide
+explicitly rather than inheriting the limitation by accident.]
 
 [NEEDS CLARIFICATION: **`--yes` and the non-interactive trap.** `docs/claude-code.md` records that
 `_install_remote_skill`'s confirmation defaults to _proceed_ under a non-interactive shell, so an
@@ -270,9 +326,10 @@ Rough, and contingent on the questions above.
    consume it.
 2. **PULSE installs it with one declaration** — a single `[packages.agent-skills]` entry with
    `skills = [{ source = "npx", repo = "TheodoreAD/agent-skills", agents = [...] }]`, replacing nine
-   `method = "skill"` blocks, `_install_local_skill`, the `.pulse-source` marker logic, and
-   `_ensure_agents_skills`. That is a real deletion of working, tested code, and it should happen
-   only after step 4 proves the replacement.
+   `method = "skill"` blocks, `_install_local_skill` and the `.pulse-source` marker logic.
+   `_ensure_agents_skills` **is not part of that deletion** — the verification above found the CLI
+   does not reliably create the Claude Code link. That is a real deletion of working, tested code,
+   and it should happen only after step 5 proves the replacement.
 3. **`~/AGENTS.md` becomes an assembled file with an `agents_md` any-section field** — the direct
    analogue of `zshrc`/`zshenv`/`zprofile`. Each contributing package declares a fragment; PULSE
    writes each into one named block via the existing
