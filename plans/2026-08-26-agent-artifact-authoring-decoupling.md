@@ -260,7 +260,7 @@ section inside a TOML string would be unreadable and undiffable; the fragment is
 in the repo, edited with a Markdown editor, formatted by `dprint` with everything else:
 
 ```toml
-agents_md = { src = "config/agents-md/machine.md", order = 10 }
+agents_md = { src = "config/agents-md/this-setup.md", order = 10 }
 ```
 
 `src` resolves the same way `config_files`' `src` does. This also means a fragment can be reviewed
@@ -363,15 +363,94 @@ which is where it belongs rather than in a new namespace:
 - `tasks/verify.py` — D7's checks.
 - `contributing/global-agents-md.md` — the re-clustering rationale, and D2's trade-off.
 
+### D9. The rule-by-rule triage, and the third category it turned up
+
+Every heading in `config/global-AGENTS.md` classified 2026-08-26. The binary portable/machine split
+assumed above **does not hold**: a handful of rules are neither. They describe Claude Code's own
+behavior — not this machine, not a convention — and they would be noise in Codex or Gemini.
+
+[DECISION: **Three fragments, not two.** `this-setup.md` (this machine, this user's repos, PULSE's
+own mechanisms), `claude-code.md` (harness behavior specific to one agent), and `portable.md` (the
+conventions, eventually shipped from `agent-skills`). The middle one is the carve-out the
+constraints already allow — "harness plumbing that makes an agent work better" — applied to
+instructions about a harness rather than to settings.]
+
+[DECISION: **The Claude-specific fragment is visible to every agent, and that is accepted.** One
+real file symlinked to N agent paths means there is no per-agent assembly; a Codex session reads the
+Claude Code cluster too. Today that is four rules — cheap enough that per-agent assembled files (N
+real files, no symlink farm, each agent getting exactly its own set) are not worth the multiplied
+deploy targets. Revisit if the per-agent volume grows past a cluster or two. Label the cluster
+plainly in prose so a non-Claude agent can skip it.]
+
+Where each rule lands, and what has to move:
+
+| Current cluster            | Rule                                                       | Fragment    | Note                                                                                  |
+| -------------------------- | ---------------------------------------------------------- | ----------- | ------------------------------------------------------------------------------------- |
+| This machine & the harness | sudo                                                       | this-setup  |                                                                                       |
+| This machine & the harness | git fetch/push needing an SSH key                          | this-setup  |                                                                                       |
+| This machine & the harness | Editing `~/.claude/settings.json` in auto mode             | claude-code |                                                                                       |
+| This machine & the harness | Setting up a repo's agent instructions and skills          | **split**   | convention → portable; `inv ai.install-skills`/`scaffoldapy` → this-setup             |
+| This machine & the harness | Saving to cross-session memory                             | **split**   | auto-memory mechanics → claude-code; "durable knowledge goes in AGENTS.md" → portable |
+| This machine & the harness | Designing a uv tool-install or shared-dependency mechanism | portable    | uv/PEP 735 facts are true anywhere; **moves clusters**                                |
+| This machine & the harness | Installing a tool on this machine                          | this-setup  |                                                                                       |
+| Git & commits              | Pushing to a personal repo's default branch                | this-setup  | names this user's own repos; **moves clusters**                                       |
+| Git & commits              | About to commit                                            | portable    | generalize `inv quality.precommit` → "the repo's quality gate"                        |
+| Git & commits              | Committing multi-part work                                 | portable    |                                                                                       |
+| Git & commits              | Regenerating a file from a canonical source                | portable    |                                                                                       |
+| Git & commits              | Unexplained git/file state in a working tree               | portable    | soften "this user runs parallel sessions"                                             |
+| Bash & the CLI allowlist   | cluster intro (`acceptEdits`, prefix matching)             | claude-code | the `cli-allowlist` half is this-setup; mostly one rewrite                            |
+| Bash & the CLI allowlist   | Composing a Bash call                                      | portable    |                                                                                       |
+| Bash & the CLI allowlist   | Viewing, searching, or editing files                       | portable    | Read/Grep/Edit are Claude tool names — generalize to "the harness's own file tools"   |
+| Bash & the CLI allowlist   | Running a command against a different repo                 | portable    |                                                                                       |
+| Bash & the CLI allowlist   | Invoking a venv tool in the session's own project          | portable    | generalize "most of this user's repos"                                                |
+| Research & design          | all 8 rules                                                | portable    | unchanged                                                                             |
+| Verification               | Reading a command's result                                 | portable    |                                                                                       |
+| Verification               | Generalizing from a sample to a set                        | portable    |                                                                                       |
+| Verification               | Verifying behavior in a repo with test coverage            | portable    |                                                                                       |
+| Verification               | Formatting a date or decimal in a shell script             | this-setup  | this machine's `ro_RO` locale; **moves clusters**                                     |
+| Collaboration & output     | all 5 rules                                                | portable    | generalize `AskUserQuestion`, "plan mode"                                             |
+| (preamble)                 | `Plan`/`Explore` subagents never load this file            | claude-code |                                                                                       |
+| (preamble)                 | "edit `config/global-AGENTS.md`, redeploy with …"          | this-setup  | rewritten: the file is assembled, edit the fragment                                   |
+
+Roughly 23 rules portable, 6 to `this-setup`, 4 to `claude-code`, 2 split across two fragments.
+
+Resulting clusters, in `order`:
+
+- `0` header — how the file is assembled, which fragment owns what (this-setup)
+- `10` `## This machine & this setup` — sudo, SSH askpass, locale, installing a tool, pushing to a
+  personal default branch, the PULSE half of the skills/instructions rule
+- `20` `## Claude Code specifics` — subagent instruction loading, `settings.json` under auto mode,
+  auto-memory mechanics, the permission-mode/allowlist intro
+- `30` `## Agent instructions & knowledge` — **new cluster**, portable: `AGENTS.md` as the real
+  file, where durable knowledge goes. This is the half of two split rules that had no home, and it
+  is the cluster `agent-skills` is most directly about.
+- `40` `## Git & commits`, `50` `## Bash & tool use` (renamed — the allowlist intro left), `60`
+  `## Research & design`, `70` `## Verification`, `80` `## Collaboration & output` — all portable,
+  all unchanged in content apart from the moves above.
+
+Eight clusters, up from six, with every one wholly owned by a single fragment — which is what D2
+required. The two additions are the setup and Claude clusters that were previously interleaved
+through the others, so nothing was actually split that was together before.
+
+Content edits this forces, worth costing separately from the mechanism: about a dozen rules name
+Claude-specific tools or this user's own repos in passing (`Read`/`Grep`/`Edit`, `AskUserQuestion`,
+"plan mode", `inv quality.precommit`, "most of this user's repos"). They generalize with one-line
+rewrites, but every one of them is a real edit to a rule whose exact wording was tuned for adherence
+— per `contributing/global-agents-md.md`, "when a rule is observed being missed, strengthen its
+language rather than lengthen its explanation." Rewrite them one at a time, not in a sweep.
+
 ### Open within this design
 
-[NEEDS CLARIFICATION: **Does the portable fragment live in `agent-skills` or stay in PULSE?** If it
-lives in `agent-skills`, PULSE needs the file on disk to assemble from — either a `git-clone`-method
-package (a second mechanism for a repo the skills CLI is already installing from) or a deliberate
-pull task committing the fetched fragment, the shape `repo-tasks`' `configs.pull` already uses and
-that `~/AGENTS.md`'s "regenerating a file from a canonical source" rule already governs. The
-pull-task shape is the better fit for this family, but it is a real extra step; keeping the portable
-fragment in PULSE for now and moving it later is the cheaper sequencing.]
+[DECISION: **`config/agents-md/portable.md` stays in PULSE for now**, moving to `agent-skills`
+later. Decided 2026-08-26 on sequencing: splitting the content is valuable on its own and needs no
+new mechanism, while moving the fragment out needs either a `git-clone`-method package (a second
+mechanism pointed at a repo the skills CLI is already installing from) or a deliberate pull task
+committing the fetched file — the shape `repo-tasks`' `configs.pull` uses, already governed by
+`~/AGENTS.md`'s "regenerating a file from a canonical source" rule. The pull task is the better
+long-term fit; it just isn't on the critical path.]
+
+[DEFERRED: move `config/agents-md/portable.md` into `agent-skills` behind a pull task, once that
+repo exists.]
 
 [NEEDS CLARIFICATION: **Where does `contributing/global-agents-md.md` go?** It holds the evidence
 for every `~/AGENTS.md` rule plus the admission criteria, and "rationale lives in each skill's
