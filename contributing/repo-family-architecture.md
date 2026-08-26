@@ -4,9 +4,9 @@ Three repos this session's own work made real, not just designed: `power-user-li
 one), [`repo-tasks`](https://github.com/TheodoreAD/repo-tasks), and
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy). Reasoning about all three at once —
 which one owns a given piece of shared work, and why — got hard enough to be worth writing down
-once, durably, instead of re-deriving it per decision. See
-`plans/2026-08-14-python-repo-scaffolding.md` §A/§B/§D/§F for the full decision history this page
-distills.
+once, durably, instead of re-deriving it per decision. Distilled from the now-retired
+`plans/2026-08-14-python-repo-scaffolding.md`; the reasoning behind the _content_ of the shared
+config files is [`quality-tooling.md`](quality-tooling.md).
 
 ## What each one actually owns
 
@@ -250,4 +250,29 @@ mechanism exists today, deliberately: every local exception found while designin
 construction (the `include`-list fix above) or simply never verified in the first place (a
 `dprint.json` exclude that turned out to change nothing when actually tested — removed outright). A
 `configs.local.toml` append-only mechanism is still designed on spec for a real future case, but
-nothing in the family needs it right now — see §D for the shape if one ever does.
+nothing in the family needs it right now.
+
+The shape, if one ever appears — deliberately dumb, no per-repo `select`/`extends`/deep-merge. A
+single tracked `configs.local.toml` at the consumer's root, present only in repos that need one.
+Additive-only, list-append per target file and key, with each entry's _why_ required inline as a
+TOML comment, since the exception cannot always carry a comment in the generated file itself
+(`dprint.json` is plain JSON with no comment syntax; `pyrightconfig.json` is JSONC and could, but
+shouldn't be the only place the reasoning lives):
+
+```toml
+# illustrative shape only — no live case exists.
+[ruff."lint".exclude]
+append = ["some/repo/specific/generated/path"]
+```
+
+`configs.pull` would read the file if present and append each entry onto the corresponding list in
+the pulled base before writing. No scalar overrides, no arbitrary deep merge. Build it when a real
+case appears, not preemptively against a hypothetical one — the two exceptions that originally
+motivated it both dissolved on inspection, one absorbed into the shared `include` list and the other
+removed outright once testing showed it changed nothing.
+
+Note that `repo-tasks`' own root config files are **not** generated output kept identical to
+`src/repo_tasks/configs/*`. It is a normal Python project whose root files govern its own dev loop,
+and they are allowed to diverge in flight; `configs.promote` is the deliberate one-directional
+action that makes the current root files the new canonical baseline once the maintainer decides that
+tuning is ready to ship.
