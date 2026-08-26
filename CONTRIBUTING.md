@@ -123,7 +123,7 @@ If you're about to write a "why this is built this way" section in `docs/`, it p
 writeup is documentation for a shipped skill (something under `skills/<name>/`), it belongs inside
 that skill's own directory instead — e.g. `skills/<name>/references/*.md` — so it travels with every
 `inv ai.install-skills` copy into every other repo. `contributing/` stays for rationale that's
-internal to this repo and never leaves it (see `skills/plan-docs/references/design-rationale.md` vs.
+internal to this repo and never leaves it (see `skills/session-harvest/references/rationale.md` vs.
 `skills/mcp-skill-shipping/`'s and `skills/research-library/`'s external `contributing/<name>.md`
 companions for both patterns side by side).
 

@@ -1734,15 +1734,22 @@ skills = [{ source = "local", path = "skills/invoke-task-conventions" }]
 
 [packages.plan-docs]
 description = """
-Convention and workflow skill for plans/YYYY-MM-DD-topic.md files — one file per idea/design,
-a small YAML frontmatter status field (idea/planned/in-progress/blocked/landed/abandoned/superseded)
-so a plan's lifecycle is visible at a glance, and a retirement procedure so plans/ stays a working
-set rather than an ever-growing archive. No package attached; exists purely to declare the skill.
-See skills/plan-docs/references/design-rationale.md for the full rationale.
+Installs the plan-docs skill from github.com/TheodoreAD/agent-skills — the first skill moved out of
+this repo, and the pilot for moving the rest (see
+plans/2026-08-26-agent-artifact-authoring-decoupling.md). The skill itself and its rationale now
+live in that repo, so this entry only declares where to fetch it from; when the other eight follow,
+this becomes a single [packages.agent-skills] entry with no `names` filter at all.
+`agents` names both agents actually installed on this machine: the `skills` CLI treats
+github-copilot as universal and writes the one real copy to ~/.agents/skills, which Claude Code
+reaches through the ~/.claude/skills symlink that `inv ai.install-skills` maintains — measured
+2026-08-27, the CLI announces that symlink and does not create it, so it is load-bearing, not
+redundant.
 """
 method = "skill"
 tags = ["dev"]
-skills = [{ source = "local", path = "skills/plan-docs" }]
+skills = [
+  { source = "npx", repo = "TheodoreAD/agent-skills", names = ["plan-docs"], agents = ["claude-code", "github-copilot"], description = "Convention and workflow skill for plans/YYYY-MM-DD-topic.md files — one file per idea/design, a YAML frontmatter status field so a plan's lifecycle is visible at a glance, and a retirement procedure so plans/ stays a working set rather than an ever-growing archive." },
+]
 
 [packages.db-defaults]
 description = """
