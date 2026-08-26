@@ -1,19 +1,37 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-26
 ---
 
+## What has landed, and what hasn't
+
+The `~/AGENTS.md` half is **done and deployed** — the "Design — the assembled `~/AGENTS.md`" section
+below (D1–D9) describes what now exists, not what is proposed: the `assembled_from`/`agents_md`
+fields, the three fragments under `config/agents-md/`, `symlink_dest` as a list gated on agent
+detection, the `verify.all` symlink check, and `[packages.agents-md]`'s rename. `~/AGENTS.md` is
+assembled and linked into Claude Code and Copilot; Codex and Gemini are declared and skip themselves
+until those agents exist here.
+
+The **skills half has not started.** No `agent-skills` repo exists; this repo's skills are still
+`source = "local"` and reachable by nobody else — the failure modes in Context below are still live
+for them. That is what keeps this plan open. Its remaining `[NEEDS CLARIFICATION:]` and
+`[DEFERRED:]` tags are all on that half, plus three follow-ups the implementation left behind.
+
 ## Context
 
-Every AI-facing artifact this machine uses is authored inside `power-user-linux-setup` and reaches
-agents through this repo's own machinery:
+Written before any of the above landed, and describing the state at that point — the "Global
+instructions" bullet in particular is now history, not current behaviour. Every AI-facing artifact
+this machine uses was authored inside `power-user-linux-setup` and reached agents through this
+repo's own machinery:
 
 - **Skills** — directories under `skills/<name>/`, declared as
   `skills = [{ source = "local", path = "skills/<name>" }]` on a `[packages.<name>]` entry with
   `method = "skill"`, **copied** to `~/.agents/skills/<name>` by `inv ai.install-skills`, reaching
   Claude Code only because `~/.claude/skills` is symlinked to `~/.agents/skills`.
 - **Global instructions** — `config/global-AGENTS.md` → `~/AGENTS.md` via
-  `[packages.claude-global-md]`, with `~/.claude/CLAUDE.md` symlinked to it.
+  `[packages.claude-global-md]`, with `~/.claude/CLAUDE.md` symlinked to it. (Both names are
+  pre-change: that file is now the `config/agents-md/` fragments, and the package is
+  `[packages.agents-md]`.)
 - **Harness settings** — `claude_permissions_allow`, `claude_additional_directories`,
   `claude_default_mode`, `claude_statusline`, the `cli-allowlist` pipeline, the direnv `PreToolUse`
   hook, `askpass-zenity`.
@@ -201,9 +219,10 @@ Two things confirmed 2026-08-26 that change the shape of the symlink farm:
 `agentsmd/agents.md` issue #91 proposes standardizing on `~/.config/agents/AGENTS.md` (XDG). It is
 open, unassigned, with no linked PR and no tool commitment. So a global instruction file needs an
 N-way symlink farm today, and the `skills` CLI does not do instruction files at all — it only does
-skills. **That gap is exactly PULSE-shaped work**, and it is already half-built:
-`[packages.claude-global-md]`'s `wrapper-script` + `symlink_dest` mechanism writes one real file and
-points a symlink at it. Extending `symlink_dest` from one path to a list is the whole change.
+skills. **That gap is exactly PULSE-shaped work**, and it is already half-built: the package's
+`wrapper-script` + `symlink_dest` mechanism writes one real file and points a symlink at it.
+Extending `symlink_dest` from one path to a list is the whole change. (Landed: it takes a list, and
+skips a link whose agent directory is absent.)
 
 [UNVERIFIED: the Copilot, Amp and droid rows above are still from secondary write-ups (a
 compatibility matrix and vendor guides), not each vendor's own docs. Claude Code, Codex and Gemini
@@ -335,7 +354,7 @@ installed. Targets, in confirmation order: `~/.claude/CLAUDE.md` (exists today),
 `~/.codex/AGENTS.md`, `~/.copilot/copilot-instructions.md`. Codex's `AGENTS.override.md` is
 deliberately never touched — it is the documented per-user escape hatch and must stay hand-owned.
 
-Rename the package: `claude-global-md` → something agent-neutral, since it stops being Claude's.
+Rename the package, since it stops being Claude's. (Landed as `[packages.agents-md]`.)
 
 ### D6. Gemini is a settings tweak, not a symlink
 
@@ -363,9 +382,8 @@ which is where it belongs rather than in a new namespace:
 
 ### D8. Files touched
 
-- `setup.toml` — the `agents_md` field's documentation in the header comment;
-  `[packages.claude-global-md]` renamed, `symlink_dest` becomes a list; one `agents_md` entry per
-  fragment.
+- `setup.toml` — the `agents_md` field's documentation in the header comment; the package renamed to
+  `[packages.agents-md]`, `symlink_dest` becomes a list; one `agents_md` entry per fragment.
 - `config/agents-md/*.md` — the fragment files; `config/global-AGENTS.md` splits into these.
 - `tasks/ai.py` or a new module — the assembly, going through `deploy.deploy()`.
 - `tasks/verify.py` — D7's checks.
