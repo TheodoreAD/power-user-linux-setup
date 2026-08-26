@@ -190,6 +190,17 @@ just confirm what you'd already do, weight the ones that don't.
 - Model default: **mostly confirms.** Scoped ignores are already close to default behavior; "type
   even throwaway snippets" is the real add — the shortcut a model takes when told "just a quick
   example."
+- **Testing a type rather than a value:** `assert_type` compares the declared type _exactly_, and a
+  function type carries its parameter names — a decorated task body is `(c: Context) -> None`, which
+  no `Callable[[Context], None]` expression can spell, so `assert_type` can never match it. Don't
+  read that as the assertion failing; it is the precision doing its job. Use an annotated assignment
+  instead (`body: Callable[[Context], None] = obj.body`), which still fails if the type degrades to
+  `Any` (via `reportAny`) or becomes some other concrete callable. Note that such assertions are
+  checked by the type checker and are no-ops at runtime, so say so in the file — a green pytest run
+  is not evidence about any of them.
+- Model default: **overrides.** Reaching for `assert_type` is the natural first move for "prove this
+  type is what I think", and its exactness is easy to misread as a broken assertion rather than a
+  precise one.
 
 ## Package layout: `src/` over flat
 
