@@ -19,11 +19,12 @@ all committed, but no longer hand-maintained here — they're pulled from
 [`repo-tasks`](https://github.com/TheodoreAD/repo-tasks)'s canonical copies (`inv configs.pull`),
 same as every other repo in the family. `inv configs.diff` checks for drift without writing
 anything; a genuine local tuning here gets promoted back into `repo-tasks`' shipped baseline via
-that repo's own `inv configs.promote` (see `plans/2026-08-14-python-repo-scaffolding.md` §D and
-[`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md)).
-`dprint.json` still lists its plugins in `[packages.dprint]` in `setup.toml` too — keep the two in
-sync by hand, since `setup.toml` drives what actually gets installed on this machine independent of
-`configs.pull`.
+that repo's own `inv configs.promote` (see
+[`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md), and
+[`contributing/quality-tooling.md`](contributing/quality-tooling.md) for why each tool is tuned the
+way it is). `dprint.json` still lists its plugins in `[packages.dprint]` in `setup.toml` too — keep
+the two in sync by hand, since `setup.toml` drives what actually gets installed on this machine
+independent of `configs.pull`.
 
 Don't call `ruff`/`dprint` directly — always go through the `inv quality.*` tasks below. They bake
 in required flags (see the note below) and keep the tools' invocation in one place instead of
@@ -60,9 +61,10 @@ Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_
 > the admonition into a plain paragraph (mkdocs-material then renders the literal `!!!
 > TYPE` text
 > instead of a callout box, and `dprint check`/`ruff`/pytest all stay green since nothing about this
-> is a lint error). `dprint.json`'s `markdown.textWrap` is `"maintain"` (dprint's own default)
-> specifically so it doesn't also collapse ordinary hand-wrapped prose — don't change it to
-> `"never"`, which means "never wrap," i.e. join every paragraph onto one line.
+> is a lint error). Unrelated to `markdown.textWrap`, which is `"always"` — hard-wrap prose at the
+> markdown `lineWidth` of 100. Don't change it to `"never"`, which does not mean "leave wrapping
+> alone" but "never insert a line break", i.e. join every paragraph onto one line. See
+> [`contributing/quality-tooling.md`](contributing/quality-tooling.md).
 
 ## Naming a task
 
@@ -109,6 +111,12 @@ live in [`contributing/`](contributing/) instead, one file per topic, never publ
   [`docs/configuration.md`](docs/configuration.md)).
 - [`contributing/verify.md`](contributing/verify.md) — every gotcha `inv verify.all`'s first
   implementation pass hit, and how testing (not review) caught each one.
+- [`contributing/quality-tooling.md`](contributing/quality-tooling.md) — why each quality tool was
+  picked and tuned the way it is (basedpyright, ruff, dprint, shellcheck/shfmt), and the traps that
+  only showed up once the config met real code.
+- [`contributing/chrome-ozone.md`](contributing/chrome-ozone.md) — every measured dead end in
+  forcing Chrome onto X11, and why `inv chrome.status` reports rather than repairs (companion to
+  [`docs/chrome.md`](docs/chrome.md)).
 
 If you're about to write a "why this is built this way" section in `docs/`, it probably belongs in
 `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
