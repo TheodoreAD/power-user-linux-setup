@@ -68,6 +68,18 @@ installed GNOME version (only found by reading `gnome-shell` source directly), a
 tool whose real mount behavior only matched its actual minified JS bundle, not its rendered docs
 page.
 
+Both of those are staleness. There is a second, worse shape: a README advertising a feature that was
+**never implemented at all**. Confirmed 2026-08-27 while surveying medication trackers for `ingesta`
+— a Home Assistant integration's README listed NIH RxNorm ingredient lookup among its features, and
+neither `rxnorm` nor `ingredient` appears anywhere in the repo outside that README. A feature-list
+comparison scores it as present; one grep settles it. When the question is "does this project do X",
+the cheap decisive check is whether X appears in the code at all, not whether the docs claim it.
+
+This is also why source beats a hands-on trial for an open-source candidate, where both are
+available: a trial exercises the path you happened to walk, source shows every path there is, and it
+answers questions no UI exposes — whether a dose amount is a number or free text, whether a
+permission is stripped from the manifest.
+
 ## No symlinks into project repos
 
 Never symlink `$RESEARCH_HOME` or any entry in it into a project's working tree. That would put this
