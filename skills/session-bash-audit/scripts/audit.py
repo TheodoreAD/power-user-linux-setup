@@ -172,6 +172,12 @@ PATTERNS: dict[str, tuple[Predicate, str]] = {
         "shell-level backgrounding can be killed before the command runs, and the next call then "
         "reads state as though it had: use the Bash tool's own run_in_background",
     ),
+    "rg-replace": (
+        _rx(r"\brg\b[^|;&\n]*?\s-[A-Za-z]*r[A-Za-z]*(?=[\s=])|\brg\b[^|;&\n]*?\s--replace\b"),
+        "rg's -r is --replace, not --recursive (rg is recursive by default): `rg -rn pat path` "
+        "prints every match with the matched text rewritten — plausible output that is not what the "
+        "file says. Deliberate --replace exists, so read the sample before counting it a defect",
+    ),
 }
 
 

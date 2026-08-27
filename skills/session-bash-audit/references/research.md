@@ -14,6 +14,7 @@ Dated findings behind `SKILL.md`. Append; don't rewrite history — the value is
 - [Prompt audit 2026-08-25: the first day of acceptEdits](#prompt-audit-2026-08-25-the-first-day-of-acceptedits)
 - [`pgrep -f` matches the harness's own wrapper (2026-08-25)](#pgrep--f-matches-the-harnesss-own-wrapper-2026-08-25)
 - [Shell backgrounding can be killed before the command runs (2026-08-26)](#shell-backgrounding-can-be-killed-before-the-command-runs-2026-08-26)
+- [`rg -r` is `--replace`, not `--recursive` (2026-08-27)](#rg--r-is---replace-not---recursive-2026-08-27)
 - [Open / to re-measure](#open--to-re-measure)
 
 ## Baseline 2026-08-24
@@ -341,6 +342,40 @@ When something must be backgrounded anyway, have it leave a marker the next call
 like things that can fool us when writing or deleting files") — it extends the existing "Reading a
 command's result" rule rather than adding a 34th, since it is the same
 surface-signal-isn't-the-real-signal shape that rule already covers.
+
+## `rg -r` is `--replace`, not `--recursive` (2026-08-27)
+
+Added the `rg-replace` pattern row. ripgrep is recursive by default and its `-r` takes a replacement
+string, so `rg -rn pat path` prints every match **with the matched text rewritten**. The output
+looks like an ordinary search result and is not what the file says — which is the whole cost: it
+fails silently and plausibly, unlike a flag error that errors.
+
+`~/AGENTS.md` has warned about exactly this since before the measurement ("don't carry `grep -r`'s
+flag across with the habit"), so this row measures adherence to an existing rule rather than
+proposing a new one. That turns out to be the interesting part.
+
+**First run, 3 days, 3875 Bash calls: 7 flagged.** Read individually rather than counted, per the
+row's own "why":
+
+- **3 genuine slips** — `rg -rn <pat> <dir>` meaning recursion, across three different projects and
+  two different sessions. So it is not one session's tic.
+- **2 deliberate and correct** — `rg -o '<pat with capture>' -r '$1' file`, the idiomatic
+  capture-group extraction. Not defects, and the row must not be read as if they were.
+- **2 false positives** — the literal text `-r` sitting inside a _quoted argument_ (a session
+  grepping for this very trap, and a script body containing the regex). Unavoidable without
+  quote-aware parsing, and shared with several other rows in the table.
+
+[PITFALL: The row also has a known **false negative**. The pre-flag span excludes `|` so the scan
+does not run past a pipe into an unrelated command, which means a quoted alternation stops it dead:
+`rg -n -i 'rxnorm|ingredient' <path> -r ''` is a real slip that this row does not catch. Widening
+the span to admit `|` would catch it and would newly false-positive on the common `rg … | xargs -r`,
+so the exclusion stays. The measured 7 is therefore a floor, not a count.]
+
+What this says about the rule rather than the tool: an always-loaded `~/AGENTS.md` rule naming this
+exact flag did not prevent three slips in three days, two of them in a session whose author had read
+the rule that morning. Worth carrying into the next mode comparison — it is one data point against
+"write the rule and the behaviour follows", and for detection over instruction where the failure is
+silent.
 
 ## Open / to re-measure
 
