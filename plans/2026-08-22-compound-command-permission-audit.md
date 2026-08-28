@@ -149,7 +149,7 @@ cross-repo work).
 Subagents were not involved; no project-local `settings.json` was involved; the shadowing rule was
 `Bash(git push:*)`'s own prefix. Resolved by moving the machine default to `acceptEdits` (an
 unmatched mutating command prompts there) and by rendering read-only `git -C` variants as allow
-rules (`global_option_prefixes` in `cli-allowlist/tools.toml`). Full writeup:
+rules (`global_option_prefixes` in `cli-allowlist/tools.toml`). Full writeup: `agent-skills`'
 `skills/session-bash-audit/references/research.md`, "The `git -C` ask-rule bypass".
 
 [DEFERRED: track 1 above, the regression suite for compound/wrapped write commands, is still

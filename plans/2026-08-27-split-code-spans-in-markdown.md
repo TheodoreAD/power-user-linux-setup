@@ -36,6 +36,11 @@ Measured with the detector below, excluding fenced blocks:
   not concentrated anywhere, which is what makes it look like an authoring habit rather than one bad
   edit.
 
+That count is as of 2026-08-27 and includes the `skills/` tree, which has since moved to
+`agent-skills` — so the repair work is now split across two repos, and the corpus to re-measure
+against is the family rather than this repo. The scale finding is unaffected: the habit is the
+author's, not any one repo's.
+
 ### It is not dprint, which was the obvious suspect
 
 [PITFALL: dprint neither creates these nor repairs them, so "just run `dprint fmt`" does nothing and

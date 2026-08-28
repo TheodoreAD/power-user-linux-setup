@@ -5,10 +5,13 @@ updated: 2026-08-23
 
 ## Context
 
-This repo is the source of truth for everything user-wide that agents read: `skills/*` (deployed by
-`inv ai.install-skills`) and the `config/agents-md/` fragments (assembled into `~/AGENTS.md`, and
-symlinked from each installed agent's own instruction path). Design work on those belongs here —
-`plans/` here, `setup.toml` here, `inv quality.precommit` here.
+This repo owns the `config/agents-md/` fragments (assembled into `~/AGENTS.md`, and symlinked from
+each installed agent's own instruction path) and the machinery that installs everything else agents
+read. Skills used to be here too; they are authored in
+[`agent-skills`](https://github.com/TheodoreAD/agent-skills) now, and PULSE only installs them. So
+the capture target is no longer one repo: an `~/AGENTS.md` problem lands here, a skill problem lands
+there. That is a change to §3 and §5 below, not to the premise — see "Where a capture lands, after
+the skills move" at the end.
 
 But the _need_ for a change almost never surfaces here. It surfaces mid-task in `repo-tasks`,
 `scaffoldapy`, an `*-polite-mcp` repo: a skill fails to trigger on the request it exists for, a
@@ -20,12 +23,13 @@ picks the topic up, that evidence is gone, and what's left is a second-hand para
 Two existing mechanisms touch this and neither closes it:
 
 - The `session-harvest` skill's "Self-update mechanics" already says: from wherever you are, locate
-  this repo, edit `skills/<name>/SKILL.md`, re-run `inv ai.install-skills`. That's the right answer
-  for a one-line additive fix and the wrong one for anything needing design, a `setup.toml` change,
-  new reference files, or the quality gate — and it drags a foreign session into a second repo,
-  which `~/AGENTS.md` "Testing a different repo's code in a multi-working-directory session"
-  explicitly warns against.
-- `skills/plan-docs` owns plan lifecycle and already has `depends_on:` for _outbound_ cross-repo
+  the repo that owns the skill, edit its `SKILL.md`, re-install. That's the right answer for a
+  one-line additive fix and the wrong one for anything needing design, a `setup.toml` change, new
+  reference files, or the quality gate — and it drags a foreign session into a second repo, which
+  `~/AGENTS.md` "Testing a different repo's code in a multi-working-directory session" explicitly
+  warns against. Since the move it also costs a push before the change is visible, because the
+  installer clones from the remote — the `skill-authoring` skill now owns that sequence.
+- The `plan-docs` skill owns plan lifecycle and already has `depends_on:` for _outbound_ cross-repo
   dependency. It has nothing for _inbound_ provenance — a plan that arrived here from elsewhere and
   whose evidence lives elsewhere.
 
@@ -128,7 +132,7 @@ invoked **by name** so it never depends on description matching.
   `session-harvest`'s "Self-update mechanics" already describes; keep it, but bound it explicitly so
   it stops being the default for things it can't carry.
 - **Capture** — everything else. Write a plan file into this repo's `plans/`, stop there, tell the
-  user. Do not design, do not edit `skills/`, do not run `inv` from the foreign session.
+  user. Do not design, do not edit any skill, do not run `inv` from the foreign session.
 - **Fallback** — source repo can't reach this repo's working tree at all:
   `gh issue create -R
   TheodoreAD/power-user-linux-setup`, same body template, converted to a plan
@@ -156,10 +160,10 @@ it should have done). The point of the frontmatter is that a triage session in t
 **re-read the original turns** with the `jq` recipe above instead of trusting the summary. That is
 the direct answer to "context from the other repo is key to debugging."
 
-`skills/plan-docs/SKILL.md` gains a short "Plans that arrive from another repo" section defining
-these fields, and the rule that a plan carrying `source_repo` isn't done until its `## Verification`
-names the original repro in that repo — the fix has to be checked against the case that produced it,
-after `inv ai.install-skills` re-deploys.
+`plan-docs`' `SKILL.md` gains a short "Plans that arrive from another repo" section defining these
+fields, and the rule that a plan carrying `source_repo` isn't done until its `## Verification` names
+the original repro in that repo — the fix has to be checked against the case that produced it, after
+the skill is re-installed.
 
 ### 4. Commit prompt, immediately
 
@@ -266,3 +270,34 @@ project") for the full exercised list.
    (`~/AGENTS.md` "Pilot before generalizing").
 4. Then `config/pulse-capture.sh` + `[packages.pulse-capture]` + a test, once the by-hand shape has
    survived a real use.
+
+## Where a capture lands, after the skills move (2026-08-28)
+
+Written when skills lived in this repo, so §2's "write a plan file into this repo's `plans/`" had
+exactly one destination. It now has two, and the split is clean because the two halves already
+answer to different repos:
+
+| what the friction is about                                  | plan lands in          |
+| ----------------------------------------------------------- | ---------------------- |
+| a skill — wrong trigger, wrong content, missing case        | `agent-skills/plans/`  |
+| an `~/AGENTS.md` rule, or any PULSE-deployed mechanism      | this repo's `plans/`   |
+| genuinely both (a rule that should have been a skill, or …) | wherever the fix lands |
+
+Consequences for the design below, none of which change its shape:
+
+- **§3's provenance fields (`source_repo`/`source_session`/`source_moment`, the `## Evidence`
+  section) are a `plan-docs` change, so they are authored in `agent-skills` now**, not in this
+  repo's `skills/plan-docs/SKILL.md` as §3 says. Same for §2's lane bound on `session-harvest`.
+- **§1's routing rule stays here** — it goes in the `config/agents-md/` fragments, which this repo
+  assembles, and it now has to name _which_ repo a capture goes to rather than "this one".
+- **§5's `pulse-capture` stays here too**, as a `wrapper-script` package. But it grows one argument:
+  it can no longer assume the destination repo, so the target is a parameter (or inferred from what
+  the friction was about) rather than hardcoded to `power-user-linux-setup`.
+- The `.pulse-source` marker cited under Prior art no longer exists for these skills — the `skills`
+  CLI's `skills-lock.json` records provenance instead, per package.
+
+[NEEDS CLARIFICATION: does the fallback lane (`gh issue create`) also need a repo choice now, or do
+all inbound reports go to one issue tracker and get routed at triage? One tracker is simpler for the
+reporter and matches "issues are an inbox, not a backlog" from
+`plans/2026-08-23-github-issues-plan-lifecycle.md`; two trackers put each report next to the code
+that will fix it. Decide alongside that plan, not before it.]

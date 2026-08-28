@@ -62,9 +62,11 @@ User position (2026-08-23), the actual gate on this plan, not a detail:
   point, and would usually want tests run before committing too — with the caveat that a small
   change may not always warrant the full battery.
 
-The skill-level handling that was adopted instead: `plan-docs` and `session-harvest` (this repo's
-`skills/`) now instruct running the repo's quality gate before committing any file they produce,
-closing the "docs are exempt" gap at the moment the failing commits actually happen.
+The skill-level handling that was adopted instead: `plan-docs` and `session-harvest` now instruct
+running the repo's quality gate before committing any file they produce, closing the "docs are
+exempt" gap at the moment the failing commits actually happen. Both skills lived in this repo's
+`skills/` when that fix landed; they are authored in `agent-skills` now, so revisiting the
+skill-level half of this plan means editing there, not here.
 
 ## Observation 2026-08-25 — the revisit trigger fired
 
