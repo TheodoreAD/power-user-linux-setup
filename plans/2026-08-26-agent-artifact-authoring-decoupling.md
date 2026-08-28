@@ -99,7 +99,7 @@ publishing as-is: requiring a directory in the user's home is unremarkable for a
 
 [DECISION: **Skills are cut by clear responsibility with non-contending trigger conditions**, not by
 theme, release cadence, or bundle convenience. Trigger contention between two skills is the failure
-to design against — see `plans/2026-08-22-skill-trigger-quality-review.md`.]
+to design against — see `agent-skills`' `plans/2026-08-22-skill-trigger-quality-review.md`.]
 
 [DECISION: **The repo is named `agent-skills`.** Plain, matches what the ecosystem calls them
 (`addyosmani/agent-skills`, `VoltAgent/awesome-agent-skills`), legible to a stranger with no
@@ -613,10 +613,11 @@ needs a paragraph either way.]
 [NEEDS CLARIFICATION: **Per-repo API skills — one skill per repo, or one per interface?**
 `repo-tasks` alone exposes `inv` namespaces, the `repo-tasks` CLI, and canonical config files. A
 single `repo-tasks` skill risks being a grab-bag with a vague trigger, which is exactly the
-description-quality failure `plans/2026-08-22-skill-trigger-quality-review.md` documents. Also
-undecided: does a per-repo skill duplicate that repo's `AGENTS.md`, or replace part of it? The
-distinction that probably settles it — `AGENTS.md` is _how to work on this repo_, the skill is _how
-to consume this repo's interface from outside it_ — but the two overlap heavily for a task runner.]
+description-quality failure `agent-skills`' `plans/2026-08-22-skill-trigger-quality-review.md`
+documents. Also undecided: does a per-repo skill duplicate that repo's `AGENTS.md`, or replace part
+of it? The distinction that probably settles it — `AGENTS.md` is _how to work on this repo_, the
+skill is _how to consume this repo's interface from outside it_ — but the two overlap heavily for a
+task runner.]
 
 [NEEDS CLARIFICATION: **Do per-repo skills need committed per-agent symlinks?** A repo committing
 `.agents/skills/<name>/SKILL.md` is invisible to Claude Code without `.claude/skills` symlinked to

@@ -29,9 +29,9 @@ Two existing mechanisms touch this and neither closes it:
   dependency. It has nothing for _inbound_ provenance — a plan that arrived here from elsewhere and
   whose evidence lives elsewhere.
 
-Symptom already on record: `plans/2026-08-22-skill-trigger-quality-review.md` opens with "Surfaced
-2026-08-22 while working in `repo-tasks`" and then re-narrates the failure in prose, because there
-was no mechanism to point at the real turns.
+Symptom already on record: `agent-skills`' `plans/2026-08-22-skill-trigger-quality-review.md` opens
+with "Surfaced 2026-08-22 while working in `repo-tasks`" and then re-narrates the failure in prose,
+because there was no mechanism to point at the real turns.
 
 ### Prior art (web pass, 2026-08-23)
 
@@ -114,12 +114,12 @@ capture carries a pointer to the real evidence rather than a paraphrase of it._
 ### 1. The routing rule goes in `~/AGENTS.md`, not in a skill description
 
 The rule has to fire in a repo that has nothing to do with this one, on a session that may never
-load any skill. `plans/2026-08-22-skill-trigger-quality-review.md` already establishes that skill
-`description` matching is the weak link in this family — so the trigger cannot be a skill
-description. A short new section in the `config/agents-md/` fragments (always loaded, everywhere)
-states: skills and `~/AGENTS.md` are owned by `power-user-linux-setup`; when you hit a problem with
-one from another repo, don't fix it in place — follow the capture procedure, invoked **by name** so
-it never depends on description matching.
+load any skill. `agent-skills`' `plans/2026-08-22-skill-trigger-quality-review.md` already
+establishes that skill `description` matching is the weak link in this family — so the trigger
+cannot be a skill description. A short new section in the `config/agents-md/` fragments (always
+loaded, everywhere) states: skills and `~/AGENTS.md` are owned by `power-user-linux-setup`; when you
+hit a problem with one from another repo, don't fix it in place — follow the capture procedure,
+invoked **by name** so it never depends on description matching.
 
 ### 2. Three lanes, decided at the moment of friction
 

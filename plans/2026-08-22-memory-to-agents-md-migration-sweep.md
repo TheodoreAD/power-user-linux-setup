@@ -109,8 +109,8 @@ applicability that was stated in the memory's own text ("applies across repos, n
 never acted on. (a) and (c) look checkable relatively mechanically (semantic-similarity search
 against existing `AGENTS.md` content; grep the memory body for "across repos"/"not just X"-style
 phrasing); (b) requires knowing what every skill covers, which changes over time — possibly the same
-mechanism `plans/2026-08-22-skill-trigger-quality-review.md` ends up building (an LLM-judge pass
-against a corpus) could serve double duty here.]
+mechanism `agent-skills`' `plans/2026-08-22-skill-trigger-quality-review.md` ends up building (an
+LLM-judge pass against a corpus) could serve double duty here.]
 
 [NEEDS CLARIFICATION: should the deployed-vs-source `~/AGENTS.md` drift get a dedicated guard (e.g.
 a task that diffs the repo-side source against the live `~/AGENTS.md` and fails/warns on mismatch,

@@ -79,8 +79,8 @@ structural choice:
   missed, **strengthen its language rather than lengthen its explanation**.
 - **Three tiers.** Tier 1, `~/AGENTS.md`: rules that can fire on any turn or whose miss is silent
   and expensive — paid every session. Tier 2, a skill: sharp statable trigger, cheap recoverable
-  miss — kept small because skill descriptions under-trigger
-  (`plans/2026-08-22-skill-trigger-quality-review.md`). Tier 3, this file: free until read.
+  miss — kept small because skill descriptions under-trigger (`agent-skills`'
+  `plans/2026-08-22-skill-trigger-quality-review.md`). Tier 3, this file: free until read.
 
 ## Re-measuring the deployed file
 
