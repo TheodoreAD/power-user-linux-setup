@@ -1,14 +1,23 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-08-28
 ---
 
 ## What has landed
 
-**Defect 1 is fixed** (`f7a714a`, docs `18b6384`). `[packages.ssh]` now declares a `zprofile`
-snippet that probes before choosing an agent — `ssh-add -l` exits 0 with keys, 1 for a live but
-empty agent, 2 when it cannot connect — falls back to the desktop sockets, and only starts keychain
-when none of them holds keys. The hand-written `~/.zprofile` block is gone, and nothing sources
+All three defects are fixed, plus the diagnostic whose absence made the first one expensive.
+
+| item                                | commit                    |
+| ----------------------------------- | ------------------------- |
+| 1. wrong agent — the zprofile guard | `f7a714a`, docs `18b6384` |
+| the `ssh.check` diagnostic          | `fc63a5c`, docs `4632f22` |
+| 2. `ssh.add` key discovery          | `fc63a5c`, docs `4632f22` |
+| 3. askpass dialog title             | `23cdd50`                 |
+
+**Defect 1** (`f7a714a`, docs `18b6384`). `[packages.ssh]` now declares a `zprofile` snippet that
+probes before choosing an agent — `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2
+when it cannot connect — falls back to the desktop sockets, and only starts keychain when none of
+them holds keys. The hand-written `~/.zprofile` block is gone, and nothing sources
 `~/.keychain/<host>-sh` any more.
 
 Verified from a real login shell three ways, each landing on the keyring socket with all three keys,
@@ -33,7 +42,38 @@ This was also the **first package to declare a `zprofile` field.** `tasks/zsh.py
 since `_snippets` was written; nothing had used it, which is why the keychain block was hand-written
 and therefore not reproducible on another machine.
 
-Defects 2 and 3 below are untouched.
+**The diagnostic** (`fc63a5c`). `inv ssh.check` reports which socket this shell is on, what each
+desktop socket holds, which declared keys are loaded, and a verdict naming the socket to export when
+a better one exists. Read-only: it never starts an agent, loads a key, or prompts. Run against this
+session's own broken shell it reproduces the original failure and prints the fix, which is the test
+that mattered.
+
+**Defect 2** (`fc63a5c`). `ssh.add` reads `IdentityFile` entries from `~/.ssh/config` — what `ssh`
+itself consults — instead of globbing `*<node>_ed25519`. The glob survives as a fallback when no
+config exists, now covering `rsa` too. It also skips keys the agent already holds, comparing
+fingerprints rather than filenames since a loaded key has no path, so re-running costs no prompts. A
+key with no `.pub` sibling can't be fingerprinted without its passphrase, so it stays pending and
+says so instead of silently prompting every run.
+
+**Defect 3** (`23cdd50`). The askpass dialog titles itself from the caller's prompt — "SSH key
+passphrase", "sudo password", or the old generic string. Verified with a stubbed `zenity` on PATH
+checking the `--title` argument for all three shapes.
+
+Twelve tests cover the pure helpers: exit-code labels, socket ordering, `IdentityFile` parsing
+(case-insensitivity, dedupe, `~` expansion, quotes, comments) and fingerprint extraction from both
+`ssh-add -l` and `ssh-keygen -lf`.
+
+## Migrated to
+
+Nothing needs a separate home. The behaviour is in `tasks/ssh.py`, `config/askpass-zenity.sh` and
+`[packages.ssh]`'s `zprofile` snippet, each carrying its reasoning in comments; the user-facing half
+is `docs/ssh.md`'s "Which agent a shell talks to", which holds the two-agent table, the symptom
+chain, the diagnosis and the dated incident.
+
+The one thing worth keeping that has no natural code home is the `--inherit` finding below — it is a
+rejected alternative, and the next person reading keychain's man page will reach the same wrong
+conclusion. Left tagged here; it belongs in a `contributing/` page only if this file is ever deleted
+rather than kept as the record of a landed change.
 
 ## Context
 
@@ -112,38 +152,35 @@ Compounding it: `ssh-add` retries a passphrase three times before exiting 1, re-
 `SSH_ASKPASS` each time. One agent-issued command means three modal dialogs at a user who may not be
 at the machine.
 
-## Open questions
+## Questions this raised, and how they were answered
 
-[NEEDS CLARIFICATION: should `ssh.add` glob both key types, or read `~/.ssh/config`? Globbing
-`*_ed25519` **and** `*_rsa` is a one-line fix. Reading `IdentityFile` lines out of `~/.ssh/config`
-is strictly more correct — that file is what `ssh` actually consults, `inv ssh.configure` writes it,
-and it picks up a key of any algorithm at any path — but it makes the task parse a file it currently
-only writes. Lean the config read, since the glob fix leaves the same class of bug waiting for the
-next algorithm. Either way it should first check whether the keys are **already loaded in some
-agent** and do nothing if so.]
+[DECISION: **`ssh.add` reads `~/.ssh/config`, with the glob as a fallback.** The glob was the
+one-line fix and would have left the same class of bug waiting for the next key algorithm;
+`IdentityFile` is what `ssh` itself consults, so it is correct by construction and picks up a key of
+any type at any path. The task now parses a file it previously only wrote, which is the cost. The
+glob remains for a machine with no `~/.ssh/config` at all, widened to cover `rsa` as well as
+`ed25519`. It also checks what the agent already holds and skips those keys, which was the other
+half of the question.]
 
-[NEEDS CLARIFICATION: should an agent session run `ssh.add` at all? Three dialogs from one command,
-at a user who may be away, is the same reasoning `AGENTS.md` already applies to GNOME
-session-mutating tasks. The alternative is that the task detects a non-interactive caller and prints
-the command for the human instead — which collides with `~/AGENTS.md`'s "never close with 'run X'"
-rule, so it needs deciding rather than defaulting.]
+[DECISION: **Fingerprints, not filenames, decide whether a key is already loaded.** An agent knows
+nothing about paths, so a name comparison would re-add a key it already holds under a different name
+— and re-adding means a passphrase prompt, which is the cost this was meant to avoid. The
+fingerprint comes from the `.pub` sibling, never the private key, which can prompt.]
+
+[DEFERRED: **`ssh.add` still does not detect a non-interactive caller.** The sharp edge is blunted —
+it is excluded from every composite task, and skipping already-loaded keys means the common re-run
+now prompts zero times — but an agent session invoking it on a machine with genuinely unloaded keys
+still fires a dialog per key, three times per key, at a user who may not be there. The alternative
+is detecting a non-interactive caller and printing the command for the human instead, which collides
+with `~/AGENTS.md`'s "never close with 'run X'" rule. Still wanted, still undecided; this is the
+item that has to move to an open plan before this file can be deleted.]
 
 ## Recommended direction
 
-Ordered by what actually cost time, not by size. Item 1 has landed; see "What has landed" above.
+All four items are done — see "What has landed" above. They were, in the order they mattered: make
+the agent choice deterministic; give it a read-only check so the guard can be confirmed rather than
+assumed; title the askpass dialog; fix `ssh.add`'s key discovery.
 
-1. ~~**Make the agent situation deterministic.**~~ Done — `f7a714a`.
-2. **Teach `verify.all` or `ssh.check` to report it.** There is no read-only task that answers "are
-   my keys loaded, and in which agent" — which is why this took a live debugging session. A check
-   that enumerates agent sockets and lists identities per socket would have shown the answer in one
-   command. This is the highest-value item after (1) and is purely additive.
-3. **Title the askpass dialog from its caller.** The script already receives a prompt beginning
-   `[sudo] password for …` or `Enter passphrase for key …`; branch `--title` on that instead of
-   hardcoding. Two lines, and it removes the misattribution entirely. Redeploy with
-   `inv deploy.all --name <pkg>`, never by editing the deployed copy.
-4. **Fix `ssh.add`'s key discovery and its error message**, per the second open question.
-
-(2) is now the one that matters most. The failure is prevented, but nothing yet answers "which agent
-am I on and does it have my keys" without a human running `ssh-add -l` against candidate sockets by
-hand — which is exactly the step that was missing when this happened. A guard that works is not the
-same as a guard you can confirm is working.
+The ordering held up. The guard prevents the failure, but the check is what makes a future variant
+of it self-diagnosing — and a guard that works is not the same as a guard you can confirm is
+working.
