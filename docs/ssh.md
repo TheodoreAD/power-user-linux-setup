@@ -33,8 +33,16 @@ Then run the tasks in order:
 inv ssh.create-keys       # create one ed25519 key per unique email (prompts for passphrase per key)
 inv ssh.configure  # write ~/.ssh/config (idempotent)
 inv ssh.forward    # ssh-copy-id to non-git server hosts (skips GitHub/GitLab)
-inv ssh.add        # add all keys for this machine to ssh-agent
+inv ssh.add        # add this machine's keys to the agent, skipping any it already holds
+inv ssh.check      # read-only: which agent this shell uses, and whether it holds those keys
 ```
+
+`ssh.add` reads the `IdentityFile` entries out of `~/.ssh/config` rather than globbing `~/.ssh` for
+a naming convention, so it works on a machine whose keys `ssh.create-keys` did not mint. It skips
+keys the agent already holds — comparing fingerprints, since a loaded key has no path — so
+re-running it costs no passphrase prompts. It is deliberately not part of any composite task:
+`ssh-add` prompts per key and retries three times per key, which is a lot of dialogs to fire at
+someone unattended.
 
 **Migrating a machine with an existing hand-written `~/.ssh/config`** (not managed by PULSE, no
 sentinel markers): `inv ssh.configure` only _appends_ a new PULSE block via `ensure_block` — it
@@ -115,13 +123,28 @@ at the passphrase, and the passphrase is never involved. Cached `~/.keychain/<ho
 it worse: they outlive a reboot, and sourcing one pins the shell to a socket that may be dead or
 belong to a fresh, empty agent. Nothing sources them any more.
 
-Diagnosing it is one command per candidate socket — `ssh-add -l` exits 0 with keys, 1 for a live but
-empty agent, 2 when it cannot connect:
+Diagnose it with:
 
 ```shell
-ssh-add -l                                          # what this shell is using
-SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keyring/ssh ssh-add -l   # what GNOME has
+inv ssh.check
 ```
+
+Read-only — it never starts an agent, loads a key, or prompts. It reports which socket this shell is
+on, what each desktop socket holds, which declared keys are loaded, and ends with a verdict:
+
+```console
+$ inv ssh.check
+[ssh] this shell: /tmp/ssh-HXUkhy0Reloe/agent.2497 — alive, no keys
+[ssh] /run/user/1000/keyring/ssh: holds keys
+[ssh] declared keys (/home/you/.ssh/config): 5
+[ssh]   NOT LOADED  you@example.com__HOST_rsa
+[ssh] verdict: this shell's agent has no keys but /run/user/1000/keyring/ssh does. A new login
+      shell picks the right one; to fix this shell only, export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh
+```
+
+By hand it is one `ssh-add -l` per candidate socket — exit 0 with keys, 1 for a live but empty
+agent, 2 when it cannot connect. Those two failing codes look alike and mean opposite things, which
+is most of why this is worth a task.
 
 **Verified on 24.04 + Wayland (2026-08-08):** the `keychain`-managed `ssh-agent` persists across the
 Wayland session — the socket survives from login through the full session, and `AddKeysToAgent yes`
