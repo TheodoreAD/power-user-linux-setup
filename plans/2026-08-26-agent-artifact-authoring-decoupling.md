@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-27
+updated: 2026-08-28
 ---
 
 ## What has landed, and what hasn't
@@ -12,14 +12,22 @@ detection, the `verify.all` symlink check, and `[packages.agents-md]`'s rename. 
 assembled and linked into Claude Code and Copilot; Codex and Gemini are declared and skip themselves
 until those agents exist here.
 
-The **skills half has passed its pilot** (2026-08-27, step 4 of "Recommended direction").
-[`TheodoreAD/agent-skills`](https://github.com/TheodoreAD/agent-skills) exists, is public, and holds
-`plan-docs` alone; PULSE's `[packages.plan-docs]` is now a `source = "npx"` entry against it, and
-`skills/plan-docs/` is gone from this repo. Verified end to end — see "The pilot, measured
-(2026-08-27)" below. The other **eight skills are still `source = "local"`**, deliberately: the
-pilot proved the replacement, but each remaining skill still has to be moved, and two of them
-(`session-bash-audit`, `research-library`) carry machine assumptions that need auditing against the
-new repo's "must work for someone who has only this repo" bar first.
+The **skills half is seven-ninths done.**
+[`TheodoreAD/agent-skills`](https://github.com/TheodoreAD/agent-skills) is public and holds
+`db-defaults`, `invoke-task-conventions`, `mcp-skill-shipping`, `plan-docs`,
+`polite-mcp-conventions`, `python-conventions` and `session-harvest`. PULSE declares them in one
+`[packages.agent-skills]` `source = "npx"` entry, their `skills/` directories are gone from here,
+and `contributing/mcp-skill-shipping.md` folded into that skill's own `references/rationale.md` per
+the rationale DECISION below. `plan-docs` went first, alone, as the pilot — see "The pilot, measured
+(2026-08-27)".
+
+**Two skills stay `source = "local"`:** `research-library` (assumes `$RESEARCH_HOME`, and ships a
+`claude_permissions_allow` rule naming an absolute path under this user's home) and
+`session-bash-audit` (reads `~/.claude/projects/*.jsonl` and carries this machine's permission-mode
+research). Both fail `agent-skills`' own bar — "every skill has to work for someone who has only
+this repo" — as written. Deciding per skill whether the assumption is declarable or whether the
+skill stays here is the remaining move work; the `local` source exists for exactly that case, so
+"never moves" is a legitimate outcome, not a failure.
 
 That is what keeps this plan open, along with the `[NEEDS CLARIFICATION:]` and `[DEFERRED:]` tags
 below — the pilot answered some of them and added one.
@@ -89,7 +97,11 @@ context.]
 already do this; `contributing/mcp-skill-shipping.md` and `contributing/research-library.md` fold
 into their skills' `references/rationale.md` and stop existing as separate pages. No `contributing/`
 tree in `agent-skills`. PULSE's own `contributing/` keeps only PULSE-mechanism pages
-(`cli-allowlist`, `deploy`, `verify`, `repo-family-architecture`, ...).]
+(`cli-allowlist`, `deploy`, `verify`, `repo-family-architecture`, ...). Applied 2026-08-28 for
+`mcp-skill-shipping` — folded, minus the `mcp_servers` deferral, which is a PULSE mechanism and is
+carried below instead. `contributing/research-library.md` stays put while that skill does; it also
+turns out to document the `$RESEARCH_HOME` machinery PULSE deploys _around_ the skill, not just the
+skill, so the fold may be a split rather than a move when its turn comes.]
 
 [DECISION: **`~/AGENTS.md` is assembled from contributed fragments, zsh-style, not owned by one
 source.** The delivery mechanism mirrors `zshrc`/`zshenv`/`zprofile`: an any-section `setup.toml`
@@ -542,14 +554,16 @@ actually installed, and verify then whether `context.fileName` governs the user-
 all.]
 
 [DEFERRED: **Migrating a skill from `local` to `npx` orphans its deploy-manifest entry, and nothing
-prunes it.** Confirmed 2026-08-27 on `plan-docs`: once the `source = "local"` entry is gone the path
-leaves `deploy.managed_paths()`, so `inv deploy.status` stops reporting it entirely — while
-`~/.local/state/power-user-linux-setup/deployed.json` still records
-`/home/tdumitrescu/.agents/skills/plan-docs` as deployed from `skills/plan-docs`, a source that no
-longer exists. `deploy.forget()` is written and unit-tested for exactly this and **has no production
-caller**. Removing the installed directory before re-installing is likewise a bare `rm -rf` with no
-task behind it. Harmless for one skill; it happens eight more times when the rest move, so decide
-the mechanism (a `deploy` prune step, or a task calling `forget`) before that batch, not during it.]
+prunes it — there are now seven.** Confirmed 2026-08-27 on `plan-docs` and repeated 2026-08-28 for
+the six that followed: once the `source = "local"` entry is gone the path leaves
+`deploy.managed_paths()`, so `inv deploy.status` stops reporting it entirely — while
+`~/.local/state/power-user-linux-setup/deployed.json` still records each
+`/home/tdumitrescu/.agents/skills/<name>` as deployed from `skills/<name>`, sources that no longer
+exist. `deploy.forget()` is written and unit-tested for exactly this and **has no production
+caller**. Removing each installed directory before re-installing was likewise a bare `rm -rf` with
+no task behind it. The batch this was meant to be decided before has happened, so the deferral is
+now a real debt rather than a precaution: pick the mechanism (a prune step in `deploy`, or a task
+calling `forget`) and clear all seven at once.]
 
 [DEFERRED: **The `skills ls --json` per-agent check from D7 is not built**, and the pilot showed it
 needs a stronger predicate than first designed. The symlink check that landed covers the instruction
@@ -653,11 +667,13 @@ Rough, and contingent on the questions above.
    a real deletion of working, tested code, and it should happen only after the pilot below proves
    the replacement.
 
-   The pilot deliberately stopped short of that consolidation: `[packages.plan-docs]` keeps its name
-   and carries `names = ["plan-docs"]`, so the eight local entries are untouched and
-   `_install_local_skill` still has work. Rename to `[packages.agent-skills]` and drop the `names`
-   filter in the same commit as the last skill's move, not before — a half-migrated
-   `[packages.agent-skills]` entry that installs one skill would misname itself.
+   **Consolidated 2026-08-28**, once seven skills had moved: one `[packages.agent-skills]` entry
+   replaced seven per-skill blocks. Waiting for the last two would have meant seven npx entries all
+   naming the same repo, and `_install_remote_skill` runs one `skills add` — one clone — per entry,
+   so that is seven clones of the same repo per run instead of one. The `names` filter stays until
+   `research-library` and `session-bash-audit` are resolved; dropping it then is what makes a new
+   upstream skill arrive without editing `setup.toml`. `_install_local_skill` and the
+   `.pulse-source` marker logic stay for as long as those two do.
 3. **`~/AGENTS.md` becomes an assembled, multi-agent file** — fully designed in "Design — the
    assembled `~/AGENTS.md`" above: an `agents_md` any-section field, `util.ensure_block` with HTML
    markers, ordered whole-`##`-section fragments, `symlink_dest` as a list, Gemini handled by
@@ -679,14 +695,15 @@ Rough, and contingent on the questions above.
    pilot, measured (2026-08-27)" above; the headline one is that the CLI's dropped Claude Code
    symlink reproduces against the published repo, so `_ensure_agents_skills` stays.
 
-   **Moving the remaining eight is the next step, and is not a mechanical repeat.** Each has to pass
-   `agent-skills`' own bar — "every skill has to work for someone who has only this repo". At least
-   two do not, as written: `session-bash-audit` reads `~/.claude/projects/*.jsonl` and carries this
-   machine's permission-mode research, and `research-library` assumes `$RESEARCH_HOME` and ships a
-   `claude_permissions_allow` rule naming an absolute path under this user's home. Decide per skill
-   whether the machine assumption is declarable (say so in the skill, as the constraints allow) or
-   whether the skill stays PULSE-local — the `local` source deliberately survives for exactly that
-   case.
+   **Six more moved 2026-08-28, and it was not a mechanical repeat.** Four of them documented their
+   own maintenance in terms of this repo — "edit the source at
+   `power-user-linux-setup/skills/<name>/`, re-run `inv ai.install-skills`" — advice that becomes
+   actively wrong on the move, naming a path the reader does not have and a command they cannot run.
+   `mcp-skill-shipping` needed more: its "how skills ship" section _was_ the old mechanism, so a
+   skill about shipping skills was documenting something only its author could run. Budget content
+   work per skill, not a `git mv`.
+
+   `research-library` and `session-bash-audit` remain, for the reasons in "What has landed" above.
 5. **Per-repo API skills live in the repo they describe, not in `agent-skills`.** A skill about
    `repo-tasks`' interface belongs in `repo-tasks`, committed, versioned with the code it documents
    — the same reason `AGENTS.md` is per-repo. Layout is the standard one:
@@ -698,11 +715,21 @@ Rough, and contingent on the questions above.
    diverges per repo" bucket in `contributing/repo-family-architecture.md`. The content bar: what an
    _outside_ caller needs (task names, flags, entry points, contracts) — not how to develop the
    repo, which is what its `AGENTS.md` already covers.
-6. **MCP stays as `contributing/mcp-skill-shipping.md` already has it** — `uv tool install git+…`,
-   stable binary name, `claude mcp add --scope user`. Its deferred `mcp_servers` field in
-   `tasks/ai.py` is now the _right_ thing to build eventually, because the alternative (a plugin's
-   `.mcp.json`) is vendor-locked. It should be designed cross-agent from the start, since MCP
-   registration paths differ per agent the same way instruction files do.
+6. **MCP stays as the `mcp-skill-shipping` skill has it** — `uv tool install git+…`, stable binary
+   name, `claude mcp add --scope user`. The reasoning moved with the skill into its
+   `references/rationale.md`; only the PULSE-mechanism half stayed behind, as the tag below.
+
+   [DEFERRED: **A declarative `mcp_servers` field in `tasks/ai.py`.** `_install_declared_skills`
+   already reads a `skills` list off any `setup.toml` package and installs it idempotently; the
+   natural extension is an `mcp_servers` list read the same way, each entry
+   `{name, repo, entry_point}`, driving `claude mcp add --scope user` (a no-op when already
+   registered with the same command). Now the _right_ thing to build eventually, since the
+   alternative — a plugin's `.mcp.json` — is vendor-locked. Not built because nothing is registered
+   yet: no `*-polite-mcp` repo has a real `server.py`, and designing the installer ahead of a real
+   consumer risks guessing at a shape that doesn't match what registering an actual server needs.
+   Design it cross-agent from the start, since MCP registration paths differ per agent the way
+   instruction files do. Carried here 2026-08-28 from the deleted
+   `contributing/mcp-skill-shipping.md`, which was folded into the skill.]
 
 **Deliberately not doing:** Claude plugins/marketplaces/`~/.claude/rules/` (constraint); MCPB
 bundles (heavier than needed for single-user servers, and orthogonal to this plan); a second private
