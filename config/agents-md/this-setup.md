@@ -63,6 +63,13 @@ project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills` scaffold comes from
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time, not from a task run
 afterwards. The convention these implement is in "Agent instructions & knowledge" below.
 
+**Every skill on this machine is authored in `agent-skills`** — published as
+`TheodoreAD/agent-skills`, checked out alongside the other personal repos — not in
+`power-user-linux-setup`, which only installs them. To change one, edit it there and follow the
+`skill-authoring` skill's sequence; the step that gets skipped is the push, because the installer
+clones from the remote, so a committed but unpushed edit reaches nothing. Never edit the copy under
+`~/.agents/skills/` — the next install overwrites it and it never leaves this machine.
+
 ### Pushing to a personal repo's default branch
 
 Direct pushes to `main`/`master` are the norm on the user's own personal repos
