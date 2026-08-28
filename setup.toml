@@ -1362,6 +1362,14 @@ tags = ["k8s", "dev", "gui", "windows-native"]
 repo = "freelensapp/freelens"
 asset = "Freelens-{version}-linux-amd64.deb"
 check_cmd = "freelens"
+# Existence check, not an invocation: /usr/bin/freelens is the packaged Electron binary, and
+# `freelens --version` doesn't answer — it opens the GUI window. Same fall-through-to-default-action
+# class as nyancat and px-proxy (contributing/verify.md), but it escaped that fix because it detaches
+# and exits 0, so the timeout never fires and verify reports "ok" while a window is on screen.
+# Observed 2026-08-28: two `inv verify.all` runs, two windows. `test` is a real binary
+# (/usr/bin/test), so it survives the `timeout 15s <cmd>` wrapper — a shell builtin like `command -v`
+# would not.
+verify_cmd = "test -x /usr/bin/freelens"
 
 [packages.docker]
 description = "Docker CE container runtime with Compose and Buildx plugins"

@@ -113,6 +113,14 @@ installed via a direct `uv tool install`, then corrected on the spot to go throu
 that it's present. No fallback chain: first failure aborts immediately, the deliberate opposite of
 `apt.py`'s `warn=True`-and-continue pattern.
 
+**It is not a read-only command — don't re-run it to re-read or filter its own output.** It invokes
+every installed package, and some of those open windows on the user's desktop: `freelens --version`
+launched the Freelens GUI and still exited 0, so the check passed silently while a window appeared
+(2026-08-28, caught by the user seeing two of them after two runs). Redirect the first run's output
+and grep that instead. To test one package's check, run that command on its own rather than the
+whole task. See `contributing/verify.md` and `plans/2026-08-28-verify-launches-gui-apps.md` for the
+unaudited rest.
+
 [`docs/dev-container.md`'s "Automated functional verification"
 section](docs/dev-container.md#automated-functional-verification-inv-verifyall) is the published
 "what it is / why it exists" page. **Full writeup, including every gotcha the first implementation

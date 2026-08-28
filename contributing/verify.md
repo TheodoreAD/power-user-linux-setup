@@ -40,6 +40,38 @@ flag they recognize), and both stayed protected by the same timeout regardless.
 error and exit. Some tools fall through to their default action instead. The timeout isn't optional
 scaffolding around this task — it's load-bearing.
 
+### `freelens --version` opened the GUI, and passed
+
+Third instance of the same class, found 2026-08-28 by the user noticing two Freelens windows appear
+after `inv verify.all` was run twice in one session. `/usr/bin/freelens` is a packaged Electron
+binary; `--version` isn't something it answers, so it falls through to its default action and shows
+the app.
+
+**What makes this one different, and worse: the timeout does not catch it.** nyancat and px-proxy
+hung, so `timeout 15s` bounded them to a visible `exit 124` failure. Freelens detaches and the
+invoked process exits **0** — so verify reports `ok`, the run completes clean, and the only evidence
+is a window on screen that nothing in the output mentions. A green `inv verify.all` is not proof
+that nothing was launched.
+
+Fixed with `verify_cmd = "test -x /usr/bin/freelens"` — an existence check, the same answer
+`_path_only` already gives for methods where invoking the artifact would be unsafe. That reasoning
+was previously scoped to `git-clone`/`apparmor-profile` by method; this is the first case where an
+_invocable_ method needed it, decided per package rather than by widening the method rule.
+
+Two follow-ons worth knowing:
+
+- **`test` is a real binary** (`/usr/bin/test`), which is why it works here. Checks run as
+  `timeout 15s <cmd>`, so `timeout` execs the command directly — a shell builtin like `command -v`
+  would not survive that wrapper.
+- **The class is not audited.** Eight enabled packages carry a GUI-ish tag on an invocable method
+  and still resolve to the default `--version`; `jetbrains-toolbox` is also an Electron app and is
+  the obvious next suspect, but confirming it means launching it, so it has not been. See
+  `plans/2026-08-28-verify-launches-gui-apps.md`.
+
+**Re-running `inv verify.all` is not free**, which is how this was found: it invokes every installed
+package, so a second run to re-read or filter the first run's output launches every GUI app again.
+Redirect or grep the output you already have.
+
 ### `git-clone`/`wrapper-script` were originally going to force a hard error, not a safe default
 
 The first design had these methods (plus `apparmor-profile`, `gnome-extension`) in a "no verify
