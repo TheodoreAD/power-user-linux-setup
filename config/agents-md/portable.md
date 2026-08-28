@@ -58,6 +58,11 @@ never one completed from a short form by eye. Measured 2026-08-29 — a lease bu
 hand-extended 40-character SHA was refused as stale info, which is the mechanism working, but the
 invented value was the author's, not git's.
 
+Before assuming another session holds its own copy of the history, check: `git worktree list` and a
+look for a second clone. Parallel sessions on this machine share one working tree, so the usual
+"they must fetch and reset after your rewrite" does not apply — nothing of theirs to reset, and the
+stale part is their context, not their repo.
+
 A remote-tracking ref answers "what did I last fetch", not "what does the remote have". A plain
 `git fetch` never prunes, so `origin/<branch>` can outlive a branch deleted upstream weeks earlier —
 and `git branch -r --contains` will happily report that ghost. Ask the host
