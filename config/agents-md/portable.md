@@ -51,6 +51,21 @@ root directory names plus one client's internal project path, and a second publi
 email addresses committed inside a listing of SSH key filenames. Both were written by agents with no
 rule telling them not to.
 
+### Force-pushing, or asking what a remote actually has
+
+`--force-with-lease` is only as good as the SHA handed to it: pass one read from `git rev-parse`,
+never one completed from a short form by eye. Measured 2026-08-29 — a lease built from a
+hand-extended 40-character SHA was refused as stale info, which is the mechanism working, but the
+invented value was the author's, not git's.
+
+A remote-tracking ref answers "what did I last fetch", not "what does the remote have". A plain
+`git fetch` never prunes, so `origin/<branch>` can outlive a branch deleted upstream weeks earlier —
+and `git branch -r --contains` will happily report that ghost. Ask the host
+(`gh api
+repos/<owner>/<repo>/branches`) or `git ls-remote`, and `git fetch --prune` before trusting
+any local answer about remote state. Confirmed the same day: a branch was folded into a history
+rewrite to protect against an exposure that had not existed for weeks.
+
 ### About to commit
 
 Run the repo's quality gate first (`inv quality.precommit` where the repo-tasks tasks exist, else
