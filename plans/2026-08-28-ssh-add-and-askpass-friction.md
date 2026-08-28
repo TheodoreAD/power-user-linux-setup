@@ -7,18 +7,20 @@ updated: 2026-08-28
 
 All three defects are fixed, plus the diagnostic whose absence made the first one expensive.
 
-| item                                | commit                    |
-| ----------------------------------- | ------------------------- |
-| 1. wrong agent — the zprofile guard | `f7a714a`, docs `18b6384` |
-| the `ssh.check` diagnostic          | `fc63a5c`, docs `4632f22` |
-| 2. `ssh.add` key discovery          | `fc63a5c`, docs `4632f22` |
-| 3. askpass dialog title             | `23cdd50`                 |
+Named by commit **subject**, not SHA: the 2026-08-28 history purge rewrote every one of these and
+the original IDs no longer resolve. A subject survives a rewrite; an ID does not.
 
-**Defect 1** (`f7a714a`, docs `18b6384`). `[packages.ssh]` now declares a `zprofile` snippet that
-probes before choosing an agent — `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2
-when it cannot connect — falls back to the desktop sockets, and only starts keychain when none of
-them holds keys. The hand-written `~/.zprofile` block is gone, and nothing sources
-`~/.keychain/<host>-sh` any more.
+| item                                | commit subject                                                     |
+| ----------------------------------- | ------------------------------------------------------------------ |
+| 1. wrong agent — the zprofile guard | `ssh: talk to the agent that has the keys…` + `docs: ssh.md told…` |
+| the `ssh.check` diagnostic          | `ssh: add ssh.check, and make ssh.add find the keys that exist`    |
+| 2. `ssh.add` key discovery          | same commit as the diagnostic, plus `docs: ssh.check, and what…`   |
+| 3. askpass dialog title             | `askpass: title the dialog by which caller asked`                  |
+
+**Defect 1.** `[packages.ssh]` now declares a `zprofile` snippet that probes before choosing an
+agent — `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2 when it cannot connect —
+falls back to the desktop sockets, and only starts keychain when none of them holds keys. The
+hand-written `~/.zprofile` block is gone, and nothing sources `~/.keychain/<host>-sh` any more.
 
 Verified from a real login shell three ways, each landing on the keyring socket with all three keys,
 with `git fetch` authenticating: starting with no agent at all, starting pinned to keychain's empty
@@ -42,22 +44,21 @@ This was also the **first package to declare a `zprofile` field.** `tasks/zsh.py
 since `_snippets` was written; nothing had used it, which is why the keychain block was hand-written
 and therefore not reproducible on another machine.
 
-**The diagnostic** (`fc63a5c`). `inv ssh.check` reports which socket this shell is on, what each
-desktop socket holds, which declared keys are loaded, and a verdict naming the socket to export when
-a better one exists. Read-only: it never starts an agent, loads a key, or prompts. Run against this
-session's own broken shell it reproduces the original failure and prints the fix, which is the test
-that mattered.
+**The diagnostic.** `inv ssh.check` reports which socket this shell is on, what each desktop socket
+holds, which declared keys are loaded, and a verdict naming the socket to export when a better one
+exists. Read-only: it never starts an agent, loads a key, or prompts. Run against this session's own
+broken shell it reproduces the original failure and prints the fix, which is the test that mattered.
 
-**Defect 2** (`fc63a5c`). `ssh.add` reads `IdentityFile` entries from `~/.ssh/config` — what `ssh`
-itself consults — instead of globbing `*<node>_ed25519`. The glob survives as a fallback when no
-config exists, now covering `rsa` too. It also skips keys the agent already holds, comparing
-fingerprints rather than filenames since a loaded key has no path, so re-running costs no prompts. A
-key with no `.pub` sibling can't be fingerprinted without its passphrase, so it stays pending and
-says so instead of silently prompting every run.
+**Defect 2.** `ssh.add` reads `IdentityFile` entries from `~/.ssh/config` — what `ssh` itself
+consults — instead of globbing `*<node>_ed25519`. The glob survives as a fallback when no config
+exists, now covering `rsa` too. It also skips keys the agent already holds, comparing fingerprints
+rather than filenames since a loaded key has no path, so re-running costs no prompts. A key with no
+`.pub` sibling can't be fingerprinted without its passphrase, so it stays pending and says so
+instead of silently prompting every run.
 
-**Defect 3** (`23cdd50`). The askpass dialog titles itself from the caller's prompt — "SSH key
-passphrase", "sudo password", or the old generic string. Verified with a stubbed `zenity` on PATH
-checking the `--title` argument for all three shapes.
+**Defect 3.** The askpass dialog titles itself from the caller's prompt — "SSH key passphrase",
+"sudo password", or the old generic string. Verified with a stubbed `zenity` on PATH checking the
+`--title` argument for all three shapes.
 
 Twelve tests cover the pure helpers: exit-code labels, socket ordering, `IdentityFile` parsing
 (case-insensitivity, dedupe, `~` expansion, quotes, comments) and fingerprint extraction from both

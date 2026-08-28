@@ -35,7 +35,9 @@ the durable plan store lives at all — per-repo `plans/`, one central location,
 down to markdown — and this file's "issue as inbox vs. issue as backlog" choice is downstream of it.
 Answering this one first risks designing an issue lifecycle around a store that then moves. It lives
 in `agent-skills` because that repo owns the `plan-docs` convention; it was drafted here, and its
-research history is in this repo up to commit `c4053e4`.
+research history is in this repo, up to the commit subject
+`plans: the aggregator belongs in the skill, and needs no venv` — named by subject because the
+2026-08-29 history purge rewrote every SHA from 2026-08-08 onward.
 
 Current state, verified 2026-08-23: `gh` is installed, issues are enabled on
 `TheodoreAD/power-user-linux-setup`, and there are **zero** issues, open or closed. So this is a

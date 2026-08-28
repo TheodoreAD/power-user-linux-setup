@@ -56,6 +56,20 @@ This machine runs parallel sessions on the same repos, and at least one other se
 here during the first pass. A rewrite changes every SHA from the earliest rewritten commit onward,
 so that session's commits come out with new IDs and unchanged content.
 
+[PITFALL: **the rewrite also dangles every SHA cited _inside_ a committed document, and nothing
+checks.** Measured 2026-08-29, after the force-push: **16 commit citations across 5 tracked files no
+longer resolve** — 5 in `plans/2026-08-28-ssh-add-and-askpass-friction.md`'s "What has landed"
+table, 7 in this plan, 3 in `contributing/global-agents-md.md`, 1 in
+`plans/2026-08-23-github-issues-plan-lifecycle.md`. `plan-docs`' retirement procedure already says
+to grep inbound references before deleting a file, and its finishing grep is about dangling _paths_;
+a purge breaks dangling _commits_ instead, en masse, and no gate catches it — `git cat-file -e` per
+citation is the check, and nothing runs it. Worst placed is this file: a plan documenting the purge
+cites seven SHAs the purge itself invalidated. Prefer commit **subjects** over SHAs in any document
+expected to outlive a rewrite; a subject survives, an ID does not. One-liner:
+`rg -o '`[0-9a-f]{7,40}`' plans/ contributing/ docs/ | tr -d '\`' | while IFS=: read -r f s; do git
+cat-file -e "$s^{commit}" 2>/dev/null || echo "$f $s"; done`— note it also matches`ed25519`, so
+eyeball the hits.]
+
 [PITFALL: **the parallel sessions share one clone, so the usual advice is wrong here.** The reflex —
 "the other session must `git fetch && git reset --hard` or its next push resurrects the old history"
 — assumes a second clone holding the old objects. Checked 2026-08-29, after telling the user exactly
