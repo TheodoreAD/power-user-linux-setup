@@ -40,6 +40,17 @@ is captured once and survives a reboot, so an agent session is the most likely t
 stale socket. `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2 for no agent — those
 last two look alike and mean opposite things.
 
+**Apply its verdict as a per-call prefix, not as an `export`.** `ssh.check` ends with
+`export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh` for a human's interactive shell; an agent's Bash
+calls each get a fresh shell, so the export evaporates and the next command fails exactly as before
+— which reads as "the fix didn't work" and sends the session back toward `ssh-add`. Prefix instead,
+on every call that talks to the remote over ssh:
+`SSH_AUTH_SOCK=/run/user/1000/keyring/ssh git push`. Confirmed 2026-08-29: a session pushed with the
+prefix, then ran a bare `git fetch` two turns later and got the same publickey error while every key
+sat unlocked in the keyring's agent. `gh` is not affected — it authenticates with its own token,
+verified in the same session — so a green `gh` command is not evidence that the shell's ssh agent is
+the right one.
+
 ### Formatting a date or decimal in a shell script
 
 This machine's `LC_TIME`/`LC_NUMERIC` default to `ro_RO.UTF-8` (mixed locale — `LANG`/`LC_MESSAGES`
