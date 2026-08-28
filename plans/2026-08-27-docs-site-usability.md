@@ -81,8 +81,11 @@ Two stale references, both in the same file, both cheap:
 
 Adjacent, outside `docs/`:
 
-- `CONTRIBUTING.md:10` states "there is deliberately no integration tier", while `inv --list`
-  publishes `test.integration`, `test.smoke`, `test.regression`, and `test.workflows`.
+- ~~`CONTRIBUTING.md:10`'s "there is deliberately no integration tier" contradicts `inv --list`~~ —
+  **checked 2026-08-28 and withdrawn.** Both are correct: the tier tasks ship from `repo-tasks` to
+  every consumer and `tests/README.md:64` states they "no-op cleanly on the missing directory". The
+  finding came from reading `inv --list` against a sentence without opening the file that explains
+  the relationship. Left here rather than deleted so the same surface reading doesn't re-raise it.
 - `docs.build`, `docs.serve`, and `docs.clean` tasks exist and are documented nowhere — not on the
   site, not in `CONTRIBUTING.md`.
 
