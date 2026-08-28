@@ -88,27 +88,47 @@ gh ssh-key add ~/.ssh/<email>__<hostname>_ed25519.pub --title "$(uname -n)"
 glab ssh-key add ~/.ssh/<email>__<hostname>_ed25519.pub --title "$(uname -n)"
 ```
 
-## Keychain (persistent agent across logins)
+## Which agent a shell talks to
 
-`keychain` wraps `ssh-agent` so keys survive across terminal sessions and survive logout/login.
+A desktop session normally runs **two** SSH agents, and picking the wrong one is the failure mode
+this section exists to prevent:
+
+| agent                   | socket                         | keys                                    |
+| ----------------------- | ------------------------------ | --------------------------------------- |
+| `gcr-ssh-agent` (GNOME) | `$XDG_RUNTIME_DIR/keyring/ssh` | unlocked at login, no passphrase prompt |
+| `ssh-agent` (keychain)  | `/tmp/ssh-*/agent.<pid>`       | empty until something loads them        |
+
+GNOME publishes its socket through the systemd user environment, so every shell inherits a working
+agent for free. `keychain` is still installed — it is what provides an agent on a TTY login or any
+session without gnome-keyring — but running it unconditionally **replaces** GNOME's agent with its
+own empty one.
+
+`[packages.ssh]`'s `zprofile` snippet (written to `~/.zprofile` by `inv zsh.configure`) picks
+whichever agent actually holds keys, and only starts keychain when neither desktop socket does. It
+supersedes the hand-written keychain block this page used to recommend; if you still have one,
+delete it — two of them means the last one wins, which is how a shell ends up on the empty agent.
+
+**Why it matters (2026-08-28):** after a reboot, a shell pinned to keychain's empty agent failed
+`git push` with `Permission denied (publickey)` while all three keys sat unlocked in GNOME's. The
+symptom chain — publickey denied, so "no key loaded", so `ssh-add`, so a passphrase prompt — points
+at the passphrase, and the passphrase is never involved. Cached `~/.keychain/<host>-sh` files make
+it worse: they outlive a reboot, and sourcing one pins the shell to a socket that may be dead or
+belong to a fresh, empty agent. Nothing sources them any more.
+
+Diagnosing it is one command per candidate socket — `ssh-add -l` exits 0 with keys, 1 for a live but
+empty agent, 2 when it cannot connect:
 
 ```shell
-sudo -A apt install -y keychain
+ssh-add -l                                          # what this shell is using
+SSH_AUTH_SOCK=$XDG_RUNTIME_DIR/keyring/ssh ssh-add -l   # what GNOME has
 ```
 
-Add to `~/.zprofile` (runs once at login, not on every shell):
-
-```shell
-eval $(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --confhost)
-[ -z "${HOSTNAME}" ] && HOSTNAME=$(uname -n)
-[ -f "${HOME}/.keychain/${HOSTNAME}-sh" ] && source "${HOME}/.keychain/${HOSTNAME}-sh"
-```
-
-**Verified on 24.04 + Wayland (2026-08-08):** the `keychain`-managed `ssh-agent` persists correctly
-across the Wayland session — the agent socket survives from login through the full session, and
-`AddKeysToAgent yes` (in the `Host *` block above) adds each key to it on first use. An empty
-`ssh-add -l` right after login is expected (keys load lazily on first connection, not eagerly at
-login), not a sign of breakage.
+**Verified on 24.04 + Wayland (2026-08-08):** the `keychain`-managed `ssh-agent` persists across the
+Wayland session — the socket survives from login through the full session, and `AddKeysToAgent yes`
+(in the `Host *` block above) adds each key to it on first use. An empty `ssh-add -l` right after
+login is expected on that path (keys load lazily on first connection, not eagerly at login) and is
+not itself a sign of breakage — but on a desktop session you should be on GNOME's agent, where the
+keys are already there.
 
 ## Troubleshooting
 
