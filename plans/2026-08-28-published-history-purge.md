@@ -52,10 +52,22 @@ to reconstruct it.]
 
 ### 2. Coordinate before rewriting
 
-This machine runs parallel sessions on the same repos, and at least one other session has been
-committing here today. A rewrite changes every SHA from the earliest rewritten commit onward, so any
-session holding an unpushed commit above that point has to reset onto the new history afterwards.
-Check for other live sessions before starting, not after.
+This machine runs parallel sessions on the same repos, and at least one other session was committing
+here during the first pass. A rewrite changes every SHA from the earliest rewritten commit onward,
+so that session's commits come out with new IDs and unchanged content.
+
+[PITFALL: **the parallel sessions share one clone, so the usual advice is wrong here.** The reflex —
+"the other session must `git fetch && git reset --hard` or its next push resurrects the old history"
+— assumes a second clone holding the old objects. Checked 2026-08-29, after telling the user exactly
+that: `git worktree list` shows a single checkout per repo and there is no second clone on the
+machine. Both sessions drive the same `.git`, so the rewrite applied to the only history that exists
+and there is nothing to reset. What is actually stale is the other session's _context_: SHAs it
+recorded for its own commits no longer resolve, because the objects were gc'd. A confusion risk when
+it refers back to its own work, not a data risk.]
+
+What coordination is still for: `filter-branch` refuses to run against a dirty tree, so a session
+mid-edit aborts the rewrite rather than losing work — which is the safe failure, but it wastes the
+run. Check that the tree is clean and no session is mid-commit before starting.
 
 ### 3. The rewrite — done 2026-08-29
 
