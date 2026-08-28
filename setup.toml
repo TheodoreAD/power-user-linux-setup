@@ -1734,6 +1734,30 @@ claude_permissions_allow = [
   "Read(//home/tdumitrescu/research/**)",
 ]
 
+[packages.plan-store]
+description = """
+The plans store at ~/plans — where the `plan-docs` skill files plans for repos that cannot hold
+their own. Most repos this user works in belong to an employer or a client, where adding a plans/
+directory is not available; those route here instead, each repo's path under ~/projects mirrored at
+whatever depth it sits. Repos under github.com-personal/ keep committing their own plans/ and are
+unaffected.
+
+Like [packages.research-library], this entry carries only the machinery the skill assumes — the
+PLANS_HOME export and the file grant below. The store itself is created by the skill's own
+installer (`python3 ~/.agents/skills/plan-docs/scripts/plans.py install`), which makes it a local
+git repository with **no remote**: one personal remote accumulating several employers' internal
+architecture is the specific outcome that design avoids. Routing lives in
+~/.config/plan-docs/config.toml, not here.
+"""
+method = "zsh"
+tags = ["dev"]
+zshenv = 'export PLANS_HOME="${HOME}/plans"'
+# The skill's script creates plan files; an agent then fills the body in with its editing tools,
+# which are what the file-permission checks actually gate. Without this, every such edit prompts
+# under acceptEdits purely for being outside the session's repo — which is the whole point of the
+# store. Read and write, unlike research-library's read-only grant: plans are written here.
+claude_additional_directories = ["~/plans"]
+
 [packages.agent-skills]
 description = """
 Installs every Agent Skill this machine uses from github.com/TheodoreAD/agent-skills, where they are
