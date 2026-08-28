@@ -251,6 +251,19 @@ or delete that silently didn't happen looks exactly like one that did. Use the B
 `run_in_background` (it survives across turns and re-invokes you on exit); if something must be
 backgrounded anyway, have it write a marker the next call checks before trusting any result.
 
+A wait is only as sound as the value its condition tests, and a filter that can return _nothing_
+never satisfies one. Measured 2026-08-28: `gh run list --commit <7-char-sha>` prints `[]` and exits
+0 — `--commit` matches only the full 40-char SHA — so `.[0].status` is `null` forever and
+`until [ "$(…)" = "completed" ]` can never become true. Four such loops from one session were still
+polling 36 hours later, every 15–20s, while the session had already told the user it would report
+when CI landed: the loop cannot fail, so it reports nothing, and "still running" and "will never
+finish" look identical. Before wrapping anything in a loop, run the inner command once and look at
+what it actually returns; bound the wait by an iteration count or deadline, and say so when it
+expires. Best is not to hand-roll the loop at all — reach for the purpose-built waiter first:
+`gh run watch <run-id> --exit-status` blocks until a run finishes and turns failure into a non-zero
+exit (verified 2026-08-28: on an already-finished run it returns at once with the conclusion), and
+the run-id comes from `gh run list --branch <branch>`, the filter that actually matches.
+
 ### Generalizing from a sample to a set
 
 A clean-looking sample is not evidence about its siblings, and "they're all the same kind of file"

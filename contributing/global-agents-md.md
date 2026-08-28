@@ -424,6 +424,45 @@ already in the tool result (see "Composing a Bash call" above for the measuremen
 — a pipe masks the exit code — survives; the prescribed remedy is now "don't pipe", not "add
 `echo $?`".
 
+Extended 2026-08-28 (`repo-tasks`) with the non-terminating-wait half, from a live incident rather
+than a hypothetical. A session ended four turns by backgrounding
+`until [ "$(gh run list --repo … --commit <sha> --limit 1 --json status --jq '.[0].status')" = "completed" ]; do sleep 20; done`
+to wait on CI. `gh run list --commit` matches only the full 40-char SHA and returns `[]` — exit 0,
+no diagnostic — for the 7-char abbreviation every one of them passed, so `.[0].status` was `null` on
+every iteration. Reproduced both directions on gh 2.97.0 while writing this: the abbreviation
+returns `[]`, the full SHA returns the run (`--branch main` also returns it, which is what made the
+empty result obviously wrong rather than plausibly "no run yet").
+
+Found 2026-08-28 by a `/session-harvest` process sweep: all four still alive, ~36 hours in, each
+with a `sleep` child seconds old, having issued on the order of 26,000 API calls between them. Two
+things make this worth a rule rather than a footnote about one CLI flag:
+
+- **The failure is unfalsifiable from inside.** A loop testing a condition that cannot be true has
+  no error path; it produces silence, and silence is what "still waiting" looks like. Contrast the
+  backgrounding failure above, which at least yields _wrong_ state to read.
+- **It made the session lie.** The turn closed with "CI is running; I'll report when it lands." That
+  was already false when written — nothing would ever land. The user's actual answer (CI green on
+  `863ede6`) was available immediately from `--branch`, and went unreported for a day and a half.
+
+The rule as written asks for two cheap things — bound the wait, and run the inner command once
+before wrapping it — because either alone would have caught this. Deliberately not a rule about
+`gh`: the shape is any poll whose predicate reads a filtered/parsed value that can come back empty.
+
+It names `gh run watch --exit-status` because the strongest form of a rule is the command that
+replaces the bad habit, not a warning about it (per the skill-authoring finding above: strengthen
+language rather than lengthen explanation). Verified 2026-08-28 against a finished run — returns
+immediately with `Run CI (33169261418) has already completed with 'success'` — so it degrades
+correctly in the case a hand-rolled `until` handles worst, the work already being done. Its help
+text was already sitting in this repo's own `cli-allowlist/help-cache/gh.json`,
+`gh run watch && notify-send` example included: the tool that would have prevented the incident was
+cached on disk the whole time and never consulted, which is why "About to author content, config, or
+a workaround from scratch" applies to a poll loop too.
+
+Swept the three repos for the pattern in committed code at the same time: none. `repo_tasks/ci.py`
+uses `gh run list --branch`, the correct filter, and no `until`/`while true` loop exists anywhere
+outside these two documentation quotes. The bug lived only in ad-hoc session shells — which is
+exactly why it belongs in an always-loaded instruction rather than a lint or a test.
+
 ## Generalizing from a sample to a set
 
 Confirmed live 2026-08-23 — nine modified `cli-allowlist` files were reported as "timestamp-only
