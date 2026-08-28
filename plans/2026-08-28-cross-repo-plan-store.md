@@ -1,0 +1,219 @@
+---
+status: idea
+updated: 2026-08-28
+---
+
+## Context
+
+`plans/*.md` (the `plan-docs` skill) is per-repo by construction: a plan lives in the repository it
+describes, is formatted by that repo's quality gate, and its drafting and retirement are recorded in
+that repo's git history next to the code it produced. That works well for single-repo work and badly
+for the growing share of work that spans the family — `power-user-linux-setup`, `repo-tasks`,
+`scaffoldapy`, the `*-polite-mcp` set. The convention already concedes this with an optional
+`depends_on: [<repo-name>, ...]` frontmatter field, which names other repos a plan can't land
+without but does nothing to make that plan visible from them.
+
+The concrete failure: there is no single place that answers "what is pending across everything."
+Answering it today means opening every repo's `plans/` directory by hand. A plan filed in
+`power-user-linux-setup` about `repo-tasks` is invisible to a session working in `repo-tasks`, and
+vice versa — the same siloing that `~/AGENTS.md` already rejects for Claude Code's per-project
+auto-memory, reproduced one level up in a mechanism this repo owns.
+
+The user's framing: something closer to `$RESEARCH_HOME` and the `research-library` skill — one
+machine-wide location, plain markdown, local, no work-tracker SaaS — while acknowledging the pull in
+the other direction, that the historical value of plans sitting in the repo's own git history is
+strong. Explicitly stated as unresolved ("I'm divided on this"). Also raised as an option: keep a
+tracker (GitHub Issues was named) as the store and continuously mirror it down to markdown.
+
+This is the general question that `plans/2026-08-23-github-issues-plan-lifecycle.md` asks a narrow
+slice of. That plan should not be settled before this one — its "issue as inbox vs. issue as
+backlog" choice is downstream of where the durable store lives at all.
+
+## Prior art survey (2026-08-28)
+
+Others have hit this. The survey below is the useful half of a broad pass; nothing found solves the
+cross-repo case well, which is itself the most important finding.
+
+### Markdown-in-the-repo task trackers
+
+| project                                                     | store                                                            | maturity (2026-08-28)                     | cross-repo                               |
+| ----------------------------------------------------------- | ---------------------------------------------------------------- | ----------------------------------------- | ---------------------------------------- |
+| [Backlog.md](https://github.com/MrLesk/Backlog.md)          | `backlog/` md files, YAML frontmatter                            | 6.5k★, MIT, TS, created 2025-06, active   | none — asked about on HN, unanswered     |
+| [Markdown Projects](https://www.markdownprojects.com/)      | `.mdp/` folder-per-issue + milestones                            | MIT, published 2026-02, very new          | none stated                              |
+| [git-issues](https://news.ycombinator.com/item?id=47973644) | `.issues/` YAML-frontmatter md, autocommit                       | Show HN, single Go binary                 | none                                     |
+| [TrackDown](https://github.com/mgoellnitz/trackdown)        | `issues.md` on a dedicated `trackdown` branch, symlinked at root | 38★, GPL-3.0, 367 commits                 | mirrors from GitHub/GitLab/Gitea/Redmine |
+| [TODO.md](https://github.com/todomd/todo.md) spec           | one `TODO.md`, GFM task lists as columns                         | 284★, 8 commits, effectively dormant      | pitched at multi-repo, no implementation |
+| [tasks.md](https://github.com/tasksmd/tasks.md)             | `TASKS.md`, P0–P3 sections, per-task metadata                    | **7★**, created 2026-03, 333 commits, MIT | **yes — see below**                      |
+
+### Non-markdown, git-native
+
+- [git-bug](https://github.com/git-bug/git-bug) — 10k★, GPL-3.0, since 2018, still active. Stores
+  bugs in git's own object database (no files in the tree at all), CLI/TUI/web, and has
+  **bidirectional bridges to GitHub, GitLab and Jira**. The most mature thing in this space by a
+  wide margin. Per-repo by design; a bug lives in the repo whose objects hold it.
+- [beads (`bd`)](https://github.com/gastownhall/beads) — 26.7k★, MIT, Go, Steve Yegge, created
+  2025-10. Explicitly "a memory upgrade for your coding agent": a dependency graph (`blocks`,
+  `parent-child`, `supersedes`, `duplicates`, `related`, `replies-to`) with a `bd ready` query for
+  unblocked work. Storage moved from SQLite+JSONL to **Dolt** at v1.0 in early 2026;
+  `.beads/issues.jsonl` is now an export, explicitly not the source of truth. Its pitch is directly
+  against this repo's convention — it exists to replace "messy markdown plans" with a queryable
+  graph. Relevant precedent for the central-store question: `bd init --contributor` routes planning
+  issues to a store **outside the repo** (e.g. `~/.beads-planning`), and `BEADS_DIR` overrides
+  git-repo discovery entirely.
+
+### Tracker → markdown mirroring (the "grab everything as markdown" option)
+
+- [gh-issue-sync](https://github.com/mitsuhiko/gh-issue-sync) — 161★, Apache-2.0, created 2025-12,
+  last pushed 2026-03. Mirrors GitHub issues into `.issues/{open,closed}/123-slug.md` with YAML
+  frontmatter, keeps pristine copies in `.issues/.sync/originals/` and does **three-way conflict
+  detection** (local vs. original vs. remote; both-changed is skipped with a warning, not merged).
+  GitHub stays authoritative. `GH_ISSUE_SYNC_DIR` explicitly supports pointing at a centralized
+  issue store. README states the code is entirely LLM-generated.
+- [imdone-cli](https://imdone.io/markdown-github-issues-sync), `gh2md`, `github-issues-export-rs`,
+  `offline-issues` — one-way export, varying liveness.
+- git-bug's bridges are the mature version of this idea, minus the markdown.
+
+### Central-store / aggregation patterns (the actual question)
+
+- **[tasks.md](https://github.com/tasksmd/tasks.md) workspace mode** is the only surveyed project
+  that solves cross-repo aggregation as designed. A "workspace" is a directory whose immediate
+  children are repos each carrying a `TASKS.md`; registered workspaces live in
+  `~/.config/tasks-md/workspaces.json`; `tasks next` aggregates across all of them and prints
+  `<workspace>::<repo>:<task-id>`, and a task can declare `Blocked by: oncall-hub::api#fix` across
+  repos. Positioning is explicitly "AGENTS.md tells agents _how_ to work, TASKS.md tells them _what_
+  to work on." Verified in source rather than from the README (`packages/parser/src/workspace.ts`,
+  `packages/cli/src/config/workspaces.ts`, `packages/cli/src/commands/workspaces.ts`, each with
+  tests) — clone at `$RESEARCH_HOME/repos/github.com--tasksmd--tasks.md`. The feature is real; the
+  project is not adopted (7 stars, five months old).
+- **[The Planning Repo Pattern](https://medium.com/@jbpoley/the-planning-repo-pattern-160ee57adcaf)**
+  (Jan 2026, author manages 20+ repos): one parent git repo whose `.gitignore` treats the nested
+  repos as opaque. Planning documents are tracked by the parent; each project keeps full git
+  independence. No submodules, no version coupling.
+- **Dendron multi-vault** — a workspace of several vaults, each its own git repo, with a single
+  unified lookup namespace across all of them and results labelled by vault. The closest existing
+  answer to "per-repo ownership, one search surface." (Dendron itself is no longer maintained; the
+  model still stands.)
+- **ADR practice** — the mainstream convention is per-repo `docs/adr/`, with a central site
+  generated on top once decisions cross many repos.
+  [log4brains](https://github.com/thomvaill/log4brains) is the reference tool and states the split
+  directly: package-specific ADRs in each package repo, global ADRs central.
+- **Obsidian symlink pattern** — one vault, external repos symlinked in. Widely used, and directly
+  prohibited by the `research-library` skill's "no symlinks into project repos" rule for the same
+  ambient-read-path reason.
+- **git submodule** for a shared `plans/` — surveyed; the recurring complaint is workflow
+  complexity, plus the hard constraint that a submodule can't have two parents.
+
+### Counter-evidence worth keeping
+
+- GitLab's changelog crisis is the standard citation for "tracked items in the repo cause merge
+  conflicts at scale," and their fix was **file-per-entry in a directory** — which is what
+  `plan-docs` already does. The conflict argument does not apply to a solo owner with one file per
+  plan; don't import it.
+- Fossil rejects storing tickets in the source tree on two grounds: check-ins are immutable, so a
+  ticket can't be added to a past one, and thousands of tickets clutter the tree. Only the second
+  half transfers here, and `plan-docs`' retirement procedure is already the answer to it.
+- The historical distributed-bug-tracker cohort — Bugs Everywhere, ditz, GitIssius — is dead.
+  git-bug is the survivor, and it survived by _not_ putting files in the working tree.
+
+## The tension, stated precisely
+
+"One location" and "history next to the code" are only in conflict if the store is what moves. They
+are separable:
+
+- **Ownership** — which repo's git history records that this plan was written, revised and retired.
+- **Discovery** — what answers "everything open across all repos" in one place.
+
+Every mature project surveyed keeps ownership per-repo and solves discovery with a query or
+aggregation layer (tasks.md workspaces, Dendron's cross-vault lookup, log4brains' central site,
+git-bug's bridges). Nothing mature moves the store. That is the strongest signal the survey
+produced, and it argues the user's stated instinct ($RESEARCH_HOME-style central store) and the
+user's stated reservation (historical value) do not actually have to be traded off against each
+other.
+
+The counter-argument that has to be weighed honestly: `$RESEARCH_HOME` works precisely _because_ it
+is central and outside every repo, and plans differ from research material in one way that matters —
+research is read-only reference with no lifecycle, while a plan is authored, reviewed, and retired.
+Whether that difference is decisive is the question below.
+
+## Open questions
+
+[NEEDS CLARIFICATION: is the requirement discovery or relocation? Everything else follows from this.
+If the real need is "one command shows every open plan across the family," an aggregator over the
+existing per-repo `plans/` directories delivers it with no migration, no lifecycle change, and no
+loss of per-repo history. If the need is genuinely one editable location — plans authored and
+revised in one directory regardless of which repo they concern — that is a different design and
+costs the coupling of a plan's history to its code's history.]
+
+[NEEDS CLARIFICATION: how much does per-repo plan history actually buy? Worth interrogating rather
+than assuming, because `plan-docs` **deletes** plans on retirement and migrates their durable
+content to `contributing/`/`docs/`. What the repo's history therefore preserves is the drafting
+process plus the retirement commit — not the plan as a living document. If the durable value is
+already in `contributing/`, the historical argument for per-repo storage is weaker than it feels,
+and the answer may change the whole decision.]
+
+[NEEDS CLARIFICATION: does adopting an existing tool make sense here at all, or only its model?
+`~/AGENTS.md` says to check for a maintained external project before authoring from scratch. The
+honest reading of the survey: the one project that solves this problem (tasks.md) is 7 stars and
+five months old, and the two mature ones (git-bug, beads) both reject markdown-in-the-tree, which is
+the property this repo's whole convention is built on. Adopting either means abandoning `plan-docs`.
+Adopting tasks.md means depending on an unadopted npm package for something the family already has a
+working convention for. Borrowing the workspace-discovery model and implementing an `inv plans.*`
+aggregator is the third option and probably the right one — but it should be an explicit decision,
+not a default.]
+
+[NEEDS CLARIFICATION: where does the aggregator's config live, and how does it find the repos? The
+tasks.md model is "a directory whose immediate children are repos", which maps exactly onto
+`~/projects/github.com-personal/`. Alternatives: an explicit list in `setup.toml`, or a scan for
+`plans/` directories under the projects root. The scan needs no registration and picks up a new repo
+for free; the explicit list is reviewable and can't surprise. This repo already deploys machine-wide
+config, so either is available.]
+
+[NEEDS CLARIFICATION: does a cross-repo plan get one file or one per repo? A plan that can't land
+without `repo-tasks` changing has real content for both repos. Options: single file in the repo that
+owns the outcome plus `depends_on` (today's shape, already specified and unused); a stub in each
+affected repo pointing at the owner; or the aggregator resolving `depends_on` into a
+"blocked-by/blocking" view so no second file is ever needed. The third preserves one-file-per-topic,
+which `plan-docs` insists on for good reason.]
+
+[NEEDS CLARIFICATION: is a tracker in the loop at all? The user raised continuously mirroring a
+tracker (GitHub Issues) down to markdown. gh-issue-sync and git-bug's bridges both prove it works,
+but both make the remote authoritative and the markdown a mirror, which inverts what `plan-docs` is.
+It also fails the offline case that `plans/2026-08-23-github-issues-plan-lifecycle.md` already
+flagged. Decide whether a tracker is (a) not involved, (b) an inbox only, or (c) the store — `(b)`
+is what the issues plan already leans toward and is compatible with everything above.]
+
+[UNVERIFIED: Backlog.md, Markdown Projects, git-issues, TrackDown, TODO.md, gh-issue-sync, imdone,
+the Planning Repo Pattern article and Dendron's multi-vault behaviour were all assessed at
+web-search/README depth only. Only tasks.md was checked against its actual source. If any of them
+moves from "surveyed" to "candidate", it needs the same treatment first — per the research-library
+skill, a README can advertise a feature that was never implemented.]
+
+## Recommended direction
+
+Rough, and contingent on the first open question.
+
+**Most likely shape: keep the store where it is, add a discovery layer.** Per-repo `plans/` stays
+exactly as `plan-docs` defines it — same lifecycle, same retirement procedure, same quality gate,
+same coupling of drafting and retirement to the repo's own history. On top of it, an `inv plans.*`
+namespace in `repo-tasks` (so every repo in the family gets it, per `~/AGENTS.md`'s cross-repo
+convergence rule) that walks the projects root, parses the frontmatter of every `plans/*.md` it
+finds, and renders one status-grouped index: what is `idea`, what is `in-progress`, what is
+`blocked on` what, and which `[DEFERRED:]`/`[NEEDS CLARIFICATION:]` tags are outstanding
+family-wide. The `depends_on` field finally does something — it becomes the edge in a
+blocked-by/blocking view instead of documentation nobody reads.
+
+That gets "one location" as a _view_ rather than a _directory_, which is what every mature project
+in this space converged on, and it costs nothing that currently works.
+
+Two things to settle before building anything, in this order: the discovery-vs-relocation question
+above, and then `plans/2026-08-23-github-issues-plan-lifecycle.md`, which becomes answerable once
+the store's location is fixed.
+
+If the answer to the first question turns out to be genuine relocation, the fallback worth designing
+properly is the **Planning Repo Pattern** — a real `plans` git repo at the projects root whose
+`.gitignore` treats the sibling project repos as opaque. It gives a single editable location and a
+single history, keeps every project repo independent, and needs no submodules. It is the only
+central-store option surveyed that doesn't require adopting a tool that rejects markdown.
+
+Do not start moving plan files before this is settled. Half-migrated is the one state worse than
+either endpoint, and the current convention is working — nothing here is urgent.
