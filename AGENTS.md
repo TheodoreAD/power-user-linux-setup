@@ -20,8 +20,19 @@ Nothing universal is repeated below — only what's specific to this repo.
 `inv ai.install-skills` ensures `.agents/skills/` exists with `.claude/skills` symlinked to it
 (Claude Code doesn't read `.agents/skills/` natively, only the symlink target) and installs every
 skill declared via a `skills` field anywhere in `setup.toml` — home-directory-scoped (`~`), never
-overwrites hand-written content. Project-scoped scaffolding (a new Python project's own
-`AGENTS.md`/`CLAUDE.md`/`.agents/skills` setup) isn't this repo's job anymore — see
+overwrites hand-written content.
+
+**Skills are not authored here.** There is no `skills/` directory; every skill lives in
+[`agent-skills`](https://github.com/TheodoreAD/agent-skills) and is installed from there by
+`[packages.agent-skills]`. To change a skill, edit it in that repo and follow its `skill-authoring`
+skill (edit → gate → commit → **push** → re-install → verify) — the installer clones from the
+remote, so an unpushed edit reaches nothing. Editing the installed copy under `~/.agents/skills/` is
+always wrong: it is overwritten by the next install and never leaves this machine. The
+`source = "local"` mechanism still exists as an escape hatch for a skill that genuinely cannot be
+published, and is deliberately unused.
+
+Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills`
+setup) isn't this repo's job anymore — see
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps that at generation time
 instead (`contributing/repo-family-architecture.md`). The cross-session-memory policy (don't use
 Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead) is documented once,

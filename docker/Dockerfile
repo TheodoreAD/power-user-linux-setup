@@ -25,7 +25,6 @@ COPY bootstrap.sh .
 COPY bootstrap-devcontainer.sh .
 COPY tasks/ tasks/
 COPY config/ config/
-COPY skills/ skills/
 
 RUN bash bootstrap-devcontainer.sh --local \
     && inv clean.all-full \

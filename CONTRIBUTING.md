@@ -122,11 +122,12 @@ it travels with the skill instead of staying behind in whichever repo happened t
 why most skills now live in [`agent-skills`](https://github.com/TheodoreAD/agent-skills) rather than
 here; `contributing/` keeps only rationale about this repo's own mechanisms, which never leaves it.
 
-Two skills are still authored here (`skills/research-library/`, `skills/session-bash-audit/`),
-because both assume things about this machine that a published skill can't. They show the split as
-it stands: `skills/session-bash-audit/references/research.md` travels with the skill, while
-`contributing/research-library.md` documents the `$RESEARCH_HOME` machinery this repo deploys around
-its skill. Anything that would travel goes in `references/`.
+**No skill is authored here any more** — there is no `skills/` directory. The last two moved
+2026-08-28, and what stayed behind is the pattern to copy when a skill and a local mechanism are
+entangled: `contributing/research-library.md` documents the `$RESEARCH_HOME` machinery this repo
+deploys (the env var, the `research-update` script, the read grant), while the conventions for
+_using_ a research library travel with the skill. Anything that would travel goes in the skill's
+`references/`; anything that only makes sense on a machine running this repo stays here.
 
 ## Git workflow
 

@@ -207,32 +207,25 @@ Any `setup.toml` package entry can carry a `skills` list, checked by `inv ai.ins
 regardless of that entry's own `method` — same any-section pattern as `zshenv`/`zshrc`/`zprofile`.
 Two sources:
 
-- **`{ source = "local", path = "skills/<name>" }`** — for skills authored _in this repo_. Real
-  skill directories (a `SKILL.md`, plus whatever else the skill needs — scripts, references, assets)
-  live under `skills/` at the repo root, tracked by git like any other repo content — not tucked
-  away as untracked research material, and not nested under this repo's own `.agents/skills/`
-  (that's the _deployed_, tool-agnostic location on a given machine; this repo is where some skills
-  happen to be authored, not where they run from). `inv ai.install-skills` **copies** the repo's
-  `skills/<name>/` to `~/.agents/skills/<name>` — a real, standalone copy, not a symlink, matching
-  how the `npx` source below behaves (it copies too). A `.pulse-source` marker file inside the copy
-  records which entry installed it, so a re-run can tell "ours, safe to refresh to match the repo"
-  apart from "something else is already here, leave it alone" — editing the repo copy needs an
-  `inv ai.install-skills` re-run to take effect, it doesn't apply instantly the way a symlink would.
-  `[packages.research-library]` is the example: its `skills` field points at
-  `skills/research-library/`, which documents `$RESEARCH_HOME` (see
-  `contributing/research-library.md`).
-- **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — for skills
-  published on GitHub. Installed via the real `skills` CLI (`[packages.node].global_packages`,
-  [skills.sh](https://skills.sh)):
-  `skills add <repo> --global --skill <names...> --agent
-  <agents...> --yes`. `names` omitted
-  installs every skill the repo has; `agents` defaults to `["claude-code"]` — this repo doesn't
-  manage other agents' skill directories, and since `.claude/skills` is already symlinked to
-  `.agents/skills`, targeting `claude-code` lands in the same shared directory the `local` source
-  uses, not a separate copy. The CLI prints its own security-risk assessment (Socket/Snyk-style) per
-  skill at install time — worth actually reading before adding an entry, since an installed skill
-  runs with full agent permissions, same trust level as any other content read into an agent
-  session.
+- **`{ source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...] }`** — the one this
+  repo uses. Skills published on GitHub, installed via the real `skills` CLI
+  (`[packages.node].global_packages`, [skills.sh](https://skills.sh)):
+  `skills add <repo> --global --skill <names...> --agent <agents...> --yes`. `names` omitted
+  installs every skill the repo has, which is what `[packages.agent-skills]` does — so a skill added
+  upstream arrives without editing `setup.toml`. `agents` defaults to `["claude-code"]`; since
+  `.claude/skills` is symlinked to `.agents/skills`, that lands in the shared hub rather than a
+  separate copy. The CLI prints its own security-risk assessment (Socket/Snyk-style) per skill at
+  install time — worth actually reading before adding an entry, since an installed skill runs with
+  full agent permissions, same trust level as any other content read into an agent session.
+- **`{ source = "local", path = "skills/<name>" }`** — for a skill authored _in this repo_. **Not
+  used by anything today**, and there is no `skills/` directory: every skill moved to
+  [`agent-skills`](https://github.com/TheodoreAD/agent-skills) by 2026-08-28
+  (`plans/2026-08-26-agent-artifact-authoring-decoupling.md`). The mechanism is kept as the escape
+  hatch for a skill that genuinely cannot be published — it copies `skills/<name>/` to
+  `~/.agents/skills/<name>` and drops a `.pulse-source` marker so a re-run can tell "ours, safe to
+  refresh" from "something else is already here, leave it alone". Before reaching for it, check the
+  bar the published repo sets: a skill that assumes something about one machine should declare that
+  assumption, not stay unpublishable because of it.
 
 Add a skill to install without attaching it to some other tool's entry by giving it its own
 `[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
@@ -250,13 +243,14 @@ security-risk-assessment paragraph above assumes a human is present to read. To 
 `tasks.ai._apply_static_claude_permissions()` (or `_apply_declared_statusline()`) directly instead
 of the `skills` task.
 
-The `npx` source was validated end-to-end against a real package
+The `npx` source was first validated end-to-end against a real package
 ([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
-before being trusted for `research-library`'s own `local` source — but caveman itself ended up
-living in `~/AGENTS.md` instead (see "Caveman-style terse output" in
-`config/agents-md/portable.md`), not as an installed skill: a skill only reaches Claude Code, and
-the simpler, always-on AGENTS.md version covers every agent tool on this machine for less overall
-complexity than keeping both. `contributing/research-library.md` has the fuller review notes.
+long before this repo's own skills used it. Caveman itself ended up living in `~/AGENTS.md` instead
+(see "Caveman-style terse output" in `config/agents-md/portable.md`), not as an installed skill: a
+skill loads conditionally on a trigger, and this behaviour had to be unconditional and reach every
+agent tool, so the always-on `AGENTS.md` version replaced it outright. That test — unconditional and
+cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a skill — is now written up in
+the `skill-authoring` skill.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 

@@ -1684,7 +1684,9 @@ tags = ["dev"]
 dest = "~/.local/bin/research-update"
 content_file = "config/research-update.sh"
 zshenv = 'export RESEARCH_HOME="${HOME}/research"'
-skills = [{ source = "local", path = "skills/research-library" }]
+# The conventions for using the library are the `research-library` skill, installed from
+# [packages.agent-skills] like every other one. This entry keeps only the machinery that skill
+# assumes: the RESEARCH_HOME export above, the research-update refresher, and the read grant below.
 # Grants read access on the whole library without a per-call prompt — this is curated,
 # read-only reference material, not arbitrary internet content, so treating it like project files
 # rather than gating every lookup is the point of building this in the first place. A single Read
@@ -1699,17 +1701,16 @@ claude_permissions_allow = [
 
 [packages.agent-skills]
 description = """
-Installs this machine's cross-project Agent Skills from github.com/TheodoreAD/agent-skills, where
-they are now authored — seven of the original nine, each obtainable by anyone with
-`npx skills add TheodoreAD/agent-skills` on any of the agents the `skills` CLI supports, rather than
-by cloning a Linux machine-setup repo and running its invoke task. Design and the move's measured
-findings: plans/2026-08-26-agent-artifact-authoring-decoupling.md.
+Installs every Agent Skill this machine uses from github.com/TheodoreAD/agent-skills, where they are
+now authored. No skill is developed in this repo any more — there is no skills/ directory — so the
+`skills` field carries no `names` filter: whatever that repo publishes is what gets installed, and a
+skill added upstream arrives without editing this file. Anyone can install the same set with
+`npx skills add TheodoreAD/agent-skills`, on any agent the `skills` CLI supports. Design and the
+move's measured findings: plans/2026-08-26-agent-artifact-authoring-decoupling.md.
 
-`names` is still explicit rather than "every skill in the repo": research-library and
-session-bash-audit remain declared below as `source = "local"`, because both assume things about
-this machine (RESEARCH_HOME, ~/.claude/projects transcripts) that the published repo's portability
-bar rejects. Drop the filter once those two are resolved, so a new skill added upstream arrives
-without editing this file.
+Trade-off of dropping `names`: `inv ai.install-skills --skill=<name>` can no longer narrow this
+entry (ai.py can't know a remote repo's skill list without fetching it), so a one-skill refresh is
+`skills add TheodoreAD/agent-skills --global --skill <name>` directly.
 
 `agents` names both agents actually installed here. The CLI treats github-copilot as universal at
 global scope and writes one real copy to ~/.agents/skills, which Claude Code reaches through the
@@ -1720,18 +1721,5 @@ redundant.
 method = "skill"
 tags = ["dev"]
 skills = [
-  { source = "npx", repo = "TheodoreAD/agent-skills", names = ["db-defaults", "invoke-task-conventions", "mcp-skill-shipping", "plan-docs", "polite-mcp-conventions", "python-conventions", "session-harvest"], agents = ["claude-code", "github-copilot"], description = "Seven cross-project convention skills: storage-tech defaults per use case (db-defaults), invoke task naming (invoke-task-conventions), MCP/skill shipping and distribution (mcp-skill-shipping), plans/ lifecycle and retirement (plan-docs), the *-polite-mcp behavioural conventions (polite-mcp-conventions), Python design defaults (python-conventions), and what to persist from a session and where (session-harvest)." },
+  { source = "npx", repo = "TheodoreAD/agent-skills", agents = ["claude-code", "github-copilot"], description = "Every cross-project convention skill this machine uses: storage-tech defaults per use case, invoke task naming, MCP server shipping, authoring and redeploying a skill, plans/ lifecycle, the *-polite-mcp conventions, Python design defaults, the shared research library, the session Bash audit, and what to persist from a session and where." },
 ]
-
-[packages.session-bash-audit]
-description = """
-On-demand skill: measures how Claude Code sessions actually use the Bash tool (chaining, cd into
-the own repo, head/tail truncation, sed -n/cat/heredoc instead of Read/Edit, git verbs behind -C or
-inside chains) from ~/.claude/projects transcripts, and routes each finding to the mechanism that
-owns it — a ~/AGENTS.md rule's rationale, an allowlist rule, tools.toml's mode_covered, the
-permission mode, or a subagent's spawn prompt. Carries the dated research behind the 2026-08-24
-move from auto mode to acceptEdits. No package attached; exists purely to declare the skill.
-"""
-method = "skill"
-tags = ["ai"]
-skills = [{ source = "local", path = "skills/session-bash-audit" }]

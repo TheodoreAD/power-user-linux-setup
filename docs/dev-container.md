@@ -239,12 +239,14 @@ bugs the convention alone wouldn't have predicted:
   here — `inv verify.all` caught that too; running `inv tools.install` once fixed it. This is the
   mechanism doing exactly its job, not a false positive.
 
-`COPY skills/ skills/` (in `docker/Dockerfile`) is easy to miss and not optional —
-`ai.install-skills` (part of the `packages` phase `inv setup` always runs) copies this repo's own
-`skills/research-library/` into the image and fails with a `FileNotFoundError` if that directory
-wasn't copied in. `PATH` needs `/root/.local/bin` up front since that's where `uv`, `invoke`, and
-most script/binary/archive-method tools land (`~/.local/bin` when running as root during a build is
-`/root/.local/bin`).
+The Dockerfile used to also need `COPY skills/ skills/`, because `ai.install-skills` (part of the
+`packages` phase `inv setup` always runs) copied this repo's own skill directories into the image
+and failed with a `FileNotFoundError` if they weren't there. Skills now install from
+[`agent-skills`](https://github.com/TheodoreAD/agent-skills) via the `skills` CLI, so there is
+nothing repo-local to copy — but note the consequence for a container build: that install reaches
+the network and needs `node`/`npx` present, where the old copy needed neither. `PATH` needs
+`/root/.local/bin` up front since that's where `uv`, `invoke`, and most script/binary/archive-method
+tools land (`~/.local/bin` when running as root during a build is `/root/.local/bin`).
 
 `inv clean.all-full` is the container-appropriate cleanup call — see
 [Cleanup](#cleanup-reclaiming-image-layer-space) below for what it does, what it actually saves

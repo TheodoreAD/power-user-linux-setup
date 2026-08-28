@@ -511,12 +511,15 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     without -y.
 
     Pass --skill=<name> (comma-separated for several) to act on just those skills instead of every
-    declared one — the fast path for refreshing a skill you just edited in this repo, since an edit
-    here doesn't reach the installed copy under ~/.agents/skills until this task re-runs.
-    `inv ai.install-skills --skill=session-bash-audit -y` is the unattended one-skill form. A --skill that matches
-    nothing raises, rather than quietly doing no work and looking like a successful refresh.
-    Permissions/statusLine/Copilot are skipped for a --skill run, same as for --dir: they're global
-    settings with nothing to do with which skill was named.
+    declared one. A --skill that matches nothing raises, rather than quietly doing no work and
+    looking like a successful refresh. Permissions/statusLine/Copilot are skipped for a --skill run,
+    same as for --dir: they're global settings with nothing to do with which skill was named.
+
+    Note that --skill can only narrow an entry whose skill names are knowable without the network —
+    a `local` entry, or a remote one that declares `names`. `[packages.agent-skills]` deliberately
+    declares no `names` (so an upstream addition needs no setup.toml edit), so it is all-or-nothing
+    here and --skill skips it; refresh one of its skills with
+    `skills add TheodoreAD/agent-skills --global --skill <name>` instead.
 
     Defaults to the home directory (the personal, cross-project skills location). Pass --dir to
     set this up for a specific project instead — permissions/statusLine/Copilot are skipped for a
