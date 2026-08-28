@@ -72,9 +72,9 @@ Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_
 task is the action. `inv apt.install-base` is "apt: install base"; `inv zsh.fix-history` is "zsh:
 fix history".
 
-The full convention lives in the **`invoke-task-conventions` skill**
-(`skills/invoke-task-conventions/SKILL.md`, deployed to `~/.agents/skills/` by
-`inv ai.install-skills` so it reaches every repo in the family, not just this one). Read it before
+The full convention lives in the **`invoke-task-conventions` skill**, authored in
+[`agent-skills`](https://github.com/TheodoreAD/agent-skills) and installed to `~/.agents/skills/` by
+`inv ai.install-skills` so it reaches every repo in the family, not just this one. Read it before
 adding or renaming a task. In short: task names lead with a verb; community conventions (`status`,
 `list`, `version`, `check`, `diff`) beat the rule; and a namespace that is itself the action
 (`setup`, `verify`, `clean`, `deploy`, `test`) takes a scope leaf instead — `verify.all`,
@@ -97,9 +97,6 @@ live in [`contributing/`](contributing/) instead, one file per topic, never publ
   documented) about how the zensical docs-site engine actually behaves; read before a version bump.
 - [`contributing/research-library.md`](contributing/research-library.md) — design rationale for the
   shared `$RESEARCH_HOME` cross-project reference store.
-- [`contributing/mcp-skill-shipping.md`](contributing/mcp-skill-shipping.md) — design rationale for
-  the personal MCP-server/skill dev + distribution workflow (companion to the deployed
-  `skills/mcp-skill-shipping/SKILL.md`).
 - [`contributing/certs.md`](contributing/certs.md) — the corporate-CA-bundle feature's QA/fixture
   playbook (companion to [`docs/certs.md`](docs/certs.md)).
 - [`contributing/repo-family-architecture.md`](contributing/repo-family-architecture.md) — what each
@@ -120,12 +117,16 @@ live in [`contributing/`](contributing/) instead, one file per topic, never publ
 
 If you're about to write a "why this is built this way" section in `docs/`, it probably belongs in
 `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
-writeup is documentation for a shipped skill (something under `skills/<name>/`), it belongs inside
-that skill's own directory instead — e.g. `skills/<name>/references/*.md` — so it travels with every
-`inv ai.install-skills` copy into every other repo. `contributing/` stays for rationale that's
-internal to this repo and never leaves it (see `skills/session-harvest/references/rationale.md` vs.
-`skills/mcp-skill-shipping/`'s and `skills/research-library/`'s external `contributing/<name>.md`
-companions for both patterns side by side).
+writeup is documentation for a skill, it belongs inside that skill's own `references/` directory, so
+it travels with the skill instead of staying behind in whichever repo happened to author it. That is
+why most skills now live in [`agent-skills`](https://github.com/TheodoreAD/agent-skills) rather than
+here; `contributing/` keeps only rationale about this repo's own mechanisms, which never leaves it.
+
+Two skills are still authored here (`skills/research-library/`, `skills/session-bash-audit/`),
+because both assume things about this machine that a published skill can't. They show the split as
+it stands: `skills/session-bash-audit/references/research.md` travels with the skill, while
+`contributing/research-library.md` documents the `$RESEARCH_HOME` machinery this repo deploys around
+its skill. Anything that would travel goes in `references/`.
 
 ## Git workflow
 

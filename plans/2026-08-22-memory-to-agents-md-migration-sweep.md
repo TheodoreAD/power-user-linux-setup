@@ -23,16 +23,15 @@ before anyone caught it: a 2026-08-22 session doing unrelated `repo-tasks` work 
 entries** accumulated across `repo-tasks`, `power-user-linux-setup`, and `freshful-polite-mcp`'s
 per-project memory folders — some duplicating content already in `~/AGENTS.md` verbatim
 (`feedback_sudo_askpass.md`, `feedback_reuse_maintained_upstream.md`), one already fully covered by
-an existing skill (`feedback_type_everything_for_agent_precedent.md` vs.
-`skills/python-conventions`'s Type hygiene section), one superseded by a skill built after it was
-written (`feedback_research_via_cloned_repos.md` vs. `skills/research-library`), and the rest
-genuine durable rules that had simply never been promoted. That entire backlog was migrated by hand
-in one session (destinations: `~/AGENTS.md` for ~20 universal ones,
-`power-user-linux-setup/AGENTS.md` for 4 repo-specific ones, a **new**
-`skills/polite-mcp-conventions` skill for 3 that apply family-wide but have no repo whose
-`AGENTS.md` every `*-polite-mcp` session would actually load, and one repo's own `AGENTS.md` for a
-single repo-specific one) — see that session's actual commits for the destination mapping, not
-reconstructed here.
+an existing skill (`feedback_type_everything_for_agent_precedent.md` vs. the `python-conventions`
+skill's Type hygiene section), one superseded by a skill built after it was written
+(`feedback_research_via_cloned_repos.md` vs. `skills/research-library`), and the rest genuine
+durable rules that had simply never been promoted. That entire backlog was migrated by hand in one
+session (destinations: `~/AGENTS.md` for ~20 universal ones, `power-user-linux-setup/AGENTS.md` for
+4 repo-specific ones, a **new** `polite-mcp-conventions` skill for 3 that apply family-wide but have
+no repo whose `AGENTS.md` every `*-polite-mcp` session would actually load, and one repo's own
+`AGENTS.md` for a single repo-specific one) — see that session's actual commits for the destination
+mapping, not reconstructed here.
 
 **Second pass, same session:** the two `project`-type memories left in `power-user-linux-setup`'s
 folder (`project_screenshot_shortcuts.md`, `project_polite_mcp_repo_family.md`) weren't in scope for

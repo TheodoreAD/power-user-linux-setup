@@ -5,7 +5,7 @@ updated: 2026-08-22
 
 ## Context
 
-Surfaced 2026-08-22 while working in `repo-tasks`: `skills/python-conventions`'s `description`
+Surfaced 2026-08-22 while working in `repo-tasks`: the `python-conventions` skill's `description`
 frontmatter under-triggers on exactly the requests it's meant to cover. Its testing-conventions
 clause reads `test structure (DAMP vs DRY, fixture scope)` — internal vocabulary the skill uses
 about itself — rather than the words a real request contains (`pytest`, `fixtures`, `parametrize`,
@@ -123,8 +123,8 @@ triggers from other skills." That makes the isolated binary check insufficient b
 whose description wins against a prompt meant for a sibling is a failure even when its own positive
 case passes, so any eval harness has to score selection _among_ the installed set, not one
 description at a time. It also makes the constraint an authoring rule and not only a testing one,
-which is why it now leads `skills/mcp-skill-shipping/SKILL.md`'s "Cut a skill by responsibility"
-section rather than living only here.
+which is why it now leads the `mcp-skill-shipping` skill's "Cut a skill by responsibility" section
+rather than living only here.
 
 [NEEDS CLARIFICATION: confirm hands-on whether `claude plugin init` can actually convert an existing
 bare `.agents/skills/<name>/` directory into something `claude plugin eval`/`skill-creator` can

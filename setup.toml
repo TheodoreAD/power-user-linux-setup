@@ -1697,90 +1697,31 @@ claude_permissions_allow = [
   "Read(//home/tdumitrescu/research/**)",
 ]
 
-[packages.mcp-skill-shipping]
+[packages.agent-skills]
 description = """
-Workflow skill for developing/distributing personal MCP servers and Agent Skills built as
-standalone repos (the *-polite-mcp family, product-research-pipeline) — dev-loop setup,
-git-as-artifact-store distribution (no PyPI), and local-vs-deployed Claude Code registration.
-No package attached; exists purely to declare the skill. See contributing/mcp-skill-shipping.md.
-"""
-method = "skill"
-tags = ["dev"]
-skills = [{ source = "local", path = "skills/mcp-skill-shipping" }]
+Installs this machine's cross-project Agent Skills from github.com/TheodoreAD/agent-skills, where
+they are now authored — seven of the original nine, each obtainable by anyone with
+`npx skills add TheodoreAD/agent-skills` on any of the agents the `skills` CLI supports, rather than
+by cloning a Linux machine-setup repo and running its invoke task. Design and the move's measured
+findings: plans/2026-08-26-agent-artifact-authoring-decoupling.md.
 
-[packages.polite-mcp-conventions]
-description = """
-Behavioral/collaboration conventions for the *-polite-mcp family (confirm before the first live
-mutating action against a real personal account, batch interactive per-item decisions via
-AskUserQuestion, write spike findings into PLAN.md before implementing) — distinct from
-mcp-skill-shipping (dev-loop/distribution mechanics for the same repos). No package attached; exists
-purely to declare the skill.
-"""
-method = "skill"
-tags = ["dev"]
-skills = [{ source = "local", path = "skills/polite-mcp-conventions" }]
+`names` is still explicit rather than "every skill in the repo": research-library and
+session-bash-audit remain declared below as `source = "local"`, because both assume things about
+this machine (RESEARCH_HOME, ~/.claude/projects transcripts) that the published repo's portability
+bar rejects. Drop the filter once those two are resolved, so a new skill added upstream arrives
+without editing this file.
 
-[packages.invoke-task-conventions]
-description = """
-Naming and wiring conventions for invoke tasks — what to call `inv <namespace>.<task>`, the three
-rules (verb-first leaf, community conventions win, action namespaces take a scope leaf), the verb
-vocabulary, what a rename actually costs across docs/CI/other repos, and the Collection.from_module
-trap that publishes tasks nobody declared. No package attached; exists purely to declare the skill.
-See skills/invoke-task-conventions/references/rationale.md for the prior art and evidence.
-"""
-method = "skill"
-tags = ["dev"]
-skills = [{ source = "local", path = "skills/invoke-task-conventions" }]
-
-[packages.plan-docs]
-description = """
-Installs the plan-docs skill from github.com/TheodoreAD/agent-skills — the first skill moved out of
-this repo, and the pilot for moving the rest (see
-plans/2026-08-26-agent-artifact-authoring-decoupling.md). The skill itself and its rationale now
-live in that repo, so this entry only declares where to fetch it from; when the other eight follow,
-this becomes a single [packages.agent-skills] entry with no `names` filter at all.
-`agents` names both agents actually installed on this machine: the `skills` CLI treats
-github-copilot as universal and writes the one real copy to ~/.agents/skills, which Claude Code
-reaches through the ~/.claude/skills symlink that `inv ai.install-skills` maintains — measured
-2026-08-27, the CLI announces that symlink and does not create it, so it is load-bearing, not
+`agents` names both agents actually installed here. The CLI treats github-copilot as universal at
+global scope and writes one real copy to ~/.agents/skills, which Claude Code reaches through the
+~/.claude/skills symlink that `inv ai.install-skills` maintains — measured 2026-08-27, the CLI
+announces that symlink and does not create it, so `_ensure_agents_skills` is load-bearing, not
 redundant.
 """
 method = "skill"
 tags = ["dev"]
 skills = [
-  { source = "npx", repo = "TheodoreAD/agent-skills", names = ["plan-docs"], agents = ["claude-code", "github-copilot"], description = "Convention and workflow skill for plans/YYYY-MM-DD-topic.md files — one file per idea/design, a YAML frontmatter status field so a plan's lifecycle is visible at a glance, and a retirement procedure so plans/ stays a working set rather than an ever-growing archive." },
+  { source = "npx", repo = "TheodoreAD/agent-skills", names = ["db-defaults", "invoke-task-conventions", "mcp-skill-shipping", "plan-docs", "polite-mcp-conventions", "python-conventions", "session-harvest"], agents = ["claude-code", "github-copilot"], description = "Seven cross-project convention skills: storage-tech defaults per use case (db-defaults), invoke task naming (invoke-task-conventions), MCP/skill shipping and distribution (mcp-skill-shipping), plans/ lifecycle and retirement (plan-docs), the *-polite-mcp behavioural conventions (polite-mcp-conventions), Python design defaults (python-conventions), and what to persist from a session and where (session-harvest)." },
 ]
-
-[packages.db-defaults]
-description = """
-Decision-table skill: default storage tech per common use case (in-process ephemeral state, TTL
-cache, simple/complex/OLTP relational, analytical/OLAP, document store, full-text search,
-vector/embedding search, background job queue, cron/scheduled tasks, pub/sub/event streaming,
-graph data, blob storage, time-series) so picks stay consistent across projects instead of drifting
-per session/model. Every pick is MIT/Apache/BSD-licensed, pytest-local testable with no
-docker/cloud, and chosen for low-boilerplate LLM-agent-friendly APIs — favoring the best-fit tool
-per concern over minimizing technology count. No package attached; exists purely to declare the
-skill. See skills/db-defaults/references/rationale.md.
-"""
-method = "skill"
-tags = ["dev"]
-skills = [{ source = "local", path = "skills/db-defaults" }]
-
-[packages.python-conventions]
-description = """
-Decision-table skill: default answer per common Python design/style question — data modeling
-(Pydantic vs dataclass vs NamedTuple vs TypedDict vs attrs vs msgspec), settings/secrets management,
-early returns/guard clauses/fail-fast/EAFP, modularity/DRY/readability/encapsulation, the
-module-singleton + lazy-property pattern, statelessness/immutability, test structure (DAMP vs DRY,
-fixture scope), exception hierarchies, and type-ignore hygiene — so choices stay consistent across
-projects instead of drifting per session/model. Design guidance only; type-checker/linter/formatter
-tool *configuration* is a separate concern (see contributing/quality-tooling.md). No
-package attached; exists purely to declare the skill. See
-skills/python-conventions/references/rationale.md.
-"""
-method = "skill"
-tags = ["dev"]
-skills = [{ source = "local", path = "skills/python-conventions" }]
 
 [packages.session-bash-audit]
 description = """
@@ -1794,17 +1735,3 @@ move from auto mode to acceptEdits. No package attached; exists purely to declar
 method = "skill"
 tags = ["ai"]
 skills = [{ source = "local", path = "skills/session-bash-audit" }]
-
-[packages.session-harvest]
-description = """
-On-demand skill: reviews a session for what's worth persisting before compacting. Routes
-candidates into the harness's own user/feedback/project/reference memory taxonomy, but first
-filters out plan-specific content (→ plans/*.md per plan-docs) and repo-specific durable knowledge
-(→ AGENTS.md/docs) so memory doesn't end up duplicating what those already own, then reports a
-safe-to-compact checklist. Escalates genuine routing ambiguity to the user instead of guessing, and
-self-updates its own SKILL.md with the resolution so the same friction doesn't recur. No package
-attached; exists purely to declare the skill. See skills/session-harvest/references/rationale.md.
-"""
-method = "skill"
-tags = ["dev"]
-skills = [{ source = "local", path = "skills/session-harvest" }]

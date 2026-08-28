@@ -238,9 +238,9 @@ root, always; `--package` only changes which subset gets synced _into that same 
 consumer into an `app` member and a `tasks` member would not isolate them, and every `inv <task>`
 and app test run would need its own `uv sync --package` first, overwriting the shared venv each
 time. Workspaces also require every member under one local root, which would mean vendoring
-`repo-tasks` into each consumer and breaking the git-as-artifact-store distribution
-(`contributing/mcp-skill-shipping.md`). They solve "one coherent environment for interdependent
-local packages" — the opposite of what was needed.
+`repo-tasks` into each consumer and breaking the git-as-artifact-store distribution (the
+`mcp-skill-shipping` skill's `references/rationale.md`, in `agent-skills`). They solve "one coherent
+environment for interdependent local packages" — the opposite of what was needed.
 
 ## `configs.local.toml`: designed, not built
 

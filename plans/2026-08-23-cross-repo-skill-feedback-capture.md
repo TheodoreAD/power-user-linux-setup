@@ -19,11 +19,11 @@ picks the topic up, that evidence is gone, and what's left is a second-hand para
 
 Two existing mechanisms touch this and neither closes it:
 
-- `skills/session-harvest/SKILL.md` "Self-update mechanics" already says: from wherever you are,
-  locate this repo, edit `skills/<name>/SKILL.md`, re-run `inv ai.install-skills`. That's the right
-  answer for a one-line additive fix and the wrong one for anything needing design, a `setup.toml`
-  change, new reference files, or the quality gate — and it drags a foreign session into a second
-  repo, which `~/AGENTS.md` "Testing a different repo's code in a multi-working-directory session"
+- The `session-harvest` skill's "Self-update mechanics" already says: from wherever you are, locate
+  this repo, edit `skills/<name>/SKILL.md`, re-run `inv ai.install-skills`. That's the right answer
+  for a one-line additive fix and the wrong one for anything needing design, a `setup.toml` change,
+  new reference files, or the quality gate — and it drags a foreign session into a second repo,
+  which `~/AGENTS.md` "Testing a different repo's code in a multi-working-directory session"
   explicitly warns against.
 - `skills/plan-docs` owns plan lifecycle and already has `depends_on:` for _outbound_ cross-repo
   dependency. It has nothing for _inbound_ provenance — a plan that arrived here from elsewhere and
@@ -48,8 +48,8 @@ this loop; the pieces exist separately.
   `.pulse-source` marker is the same idea) but documents only _pulling_ updates, never pushing
   findings back.
 - Self-improving-agent / learning-loop family
-  ([learning-loop-skill](https://github.com/melodykoh/learning-loop-skill), already surveyed in
-  `skills/session-harvest/references/rationale.md`;
+  ([learning-loop-skill](https://github.com/melodykoh/learning-loop-skill), already surveyed in the
+  `session-harvest` skill's `references/rationale.md`;
   [self-improving-agent](https://borghei.github.io/Claude-Skills/skills/engineering/self-improving-agent.html),
   [MindStudio writeups](https://www.mindstudio.ai/blog/how-to-build-learnings-loop-claude-code-skills))
   — contribute the _capture at the moment of friction_ idea and a `.learnings/` append target. All

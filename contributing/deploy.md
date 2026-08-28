@@ -140,8 +140,8 @@ a destructive question; `deploy.all` is the deliberate, human-invoked moment for
   `~/AGENTS.md` diff that was purely repo-side with nothing existing only at the destination.
 - **Rename the in-flight task before it lands, not after.** `deploy.sync` was renamed to
   `deploy.all` by the task-naming pass while still unwritten — "deploy sync" doesn't read as an
-  imperative and `deploy` is an action namespace like `verify`/`clean` (see
-  `skills/invoke-task-conventions/`).
+  imperative and `deploy` is an action namespace like `verify`/`clean` (see the
+  `invoke-task-conventions` skill).
 
 ## Deliberately not built
 

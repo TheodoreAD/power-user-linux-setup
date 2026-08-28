@@ -12,8 +12,8 @@ deliberately: it is a readability improvement, not a convention fix, and folding
 pass would have blurred what that plan was for.
 
 `ssh.add` adds this node's keys to the agent; `ssh.forward` copies public keys to the remote non-git
-hosts in `identity.toml`. Both lead with a verb and so satisfy the family's verb-first rule
-(`skills/invoke-task-conventions/`), but neither says what it acts on — `inv ssh.add` reads as "add
+hosts in `identity.toml`. Both lead with a verb and so satisfy the family's verb-first rule (the
+`invoke-task-conventions` skill), but neither says what it acts on — `inv ssh.add` reads as "add
 what?". `ssh.add-keys` / `ssh.forward-keys` would read better, and would match their sibling
 `ssh.create-keys`.
 

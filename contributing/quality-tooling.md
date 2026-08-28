@@ -17,8 +17,8 @@ pilot is where most of the value came from; every "gotcha" section below is some
 review had no way to surface.
 
 Design and style conventions — data modeling, exception hierarchies, test structure, type-ignore
-hygiene — are a different concern and live in `skills/python-conventions/`. This page is tool
-configuration only.
+hygiene — are a different concern and live in the `python-conventions` skill, authored in
+[`agent-skills`](https://github.com/TheodoreAD/agent-skills). This page is tool configuration only.
 
 ## Each tool gets its own config file, not a `pyproject.toml` block
 

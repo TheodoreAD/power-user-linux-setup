@@ -513,7 +513,7 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     Pass --skill=<name> (comma-separated for several) to act on just those skills instead of every
     declared one — the fast path for refreshing a skill you just edited in this repo, since an edit
     here doesn't reach the installed copy under ~/.agents/skills until this task re-runs.
-    `inv ai.install-skills --skill=session-harvest -y` is the unattended one-skill form. A --skill that matches
+    `inv ai.install-skills --skill=session-bash-audit -y` is the unattended one-skill form. A --skill that matches
     nothing raises, rather than quietly doing no work and looking like a successful refresh.
     Permissions/statusLine/Copilot are skipped for a --skill run, same as for --dir: they're global
     settings with nothing to do with which skill was named.

@@ -21,10 +21,10 @@ allowlist.py` implements it as
 
 Rendered, a newline inside a code span folds to a space, so a browser shows `inv allowlist.apply`
 and nothing looks wrong. **Raw text is what suffers**, and raw text is what agents read: `AGENTS.md`
-lines 151-154 are in this shape, and that file is loaded into every session in this repo.
-`skills/python-conventions/SKILL.md` had one at line 112 (`` `python -O` ``) that arrived in a live
-session's context split across two lines the moment the skill loaded. It has been repaired; the rest
-have not.
+lines 151-154 are in this shape, and that file is loaded into every session in this repo. the
+`python-conventions` skill's `SKILL.md` had one at line 112 (`` `python -O` ``) that arrived in a
+live session's context split across two lines the moment the skill loaded. It has been repaired; the
+rest have not.
 
 ### Scale
 
