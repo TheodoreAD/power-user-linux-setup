@@ -85,7 +85,20 @@ Adjacent, outside `docs/`:
   publishes `test.integration`, `test.smoke`, `test.regression`, and `test.workflows`.
 - `docs.build`, `docs.serve`, and `docs.clean` tasks exist and are documented nowhere — not on the
   site, not in `CONTRIBUTING.md`.
+
 - `mkdocs.yml` opens with five unresolved `TODO:` comments, plus one in `docs/extra/extra.css`.
+
+[PITFALL: **`inv quality.precommit` does not build the docs, so a docs edit can pass the gate and
+still break CI.** `inv docs.build` runs the same `zensical build --strict` the Pages workflow does,
+and nothing calls it. Confirmed 2026-08-28: renaming a `docs/ssh.md` heading passed the full gate
+twice and broke the Pages deploy both times, on an anchor cited from `docs/claude-code.md`. The
+failure is invisible locally and only shows up as a red run someone else has to read — exactly the
+shape `~/AGENTS.md`'s "About to commit" rule exists to prevent, except the gate genuinely does not
+cover it. Two candidate fixes with different costs: add `docs.build` to the `check` chain (slower
+gate, catches it before every commit) or leave it standalone and rely on the author remembering
+after a docs edit (which is what just failed). Note the rename also violated `plan-docs`' own "grep
+inbound references before renaming a section title" rule, so a strict build is the backstop for a
+discipline that is already written down and was still missed.]
 
 `docs/ai.md` is a separate accuracy class: it carries dated market claims ("Cursor … $2B ARR",
 Copilot "~42% market share", "top open-weight coding model as of mid-2026") about tools this repo
