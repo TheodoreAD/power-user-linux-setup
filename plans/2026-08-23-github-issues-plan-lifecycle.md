@@ -5,12 +5,18 @@ updated: 2026-08-23
 
 ## Context
 
-Split out of `plans/2026-08-23-cross-repo-skill-feedback-capture.md` on 2026-08-23. That plan needed
-a channel for reporting a skill/`~/AGENTS.md` problem found while working in a _different_ repo, and
-picked "write a plan file directly into `power-user-linux-setup/plans/`", with
+Split out of the cross-repo capture plan on 2026-08-23. That plan needed a channel for reporting a
+skill/`~/AGENTS.md` problem found while working in a _different_ repo, and picked "write a plan file
+directly into `power-user-linux-setup/plans/`", with
 `gh issue create -R
 TheodoreAD/power-user-linux-setup` as a fallback for when this repo's working
 tree isn't reachable at all (dev container, WSL, another machine, cloud session).
+
+That plan has itself since split, 2026-08-28: the convention half is `agent-skills`'
+`plans/2026-08-23-cross-repo-skill-feedback-capture.md`, the tooling half is
+`plans/2026-08-28-pulse-capture.md` here. Both are relevant — the first owns what a capture
+contains, the second owns the helper that would write it — and the capture target is now two repos
+rather than one, which is a new input to the question below.
 
 The user's read is that issues are **probably the cleaner approach overall** — not just the
 fallback. That's plausible enough to design properly rather than decide in passing, and big enough
