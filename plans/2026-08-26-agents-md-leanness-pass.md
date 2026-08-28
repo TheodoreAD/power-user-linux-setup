@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-26
+updated: 2026-08-29
 ---
 
 ## Context
@@ -129,6 +129,28 @@ is the same mistake — so rule count is unchanged and only the line count moves
 than appended because this pass owns the file's shape and its admission criteria; the measurement
 and its method are permanent in that skill's `references/research.md` either way, so nothing is lost
 by deciding it at this pass's close.]
+
+[DEFERRED: **On this machine a local commit is not a private holding state — a parallel session's
+push publishes it.** A _variant_ of the existing "Unexplained git/file state in a working tree"
+rule, whose last paragraph already covers the outward direction: a commit in your ahead-count may be
+another session's, so ask before your push publishes it. The missing half is the inverse. Your own
+commit sits on a shared branch in a shared clone, so any other session's `git push` carries it to
+the remote regardless of whether you were holding it for approval. Per the admission criteria a
+variant extends its rule's existing section, so if admitted this is a short paragraph appended
+there, not a heading — rule count unchanged.
+
+Concrete instance, 2026-08-29 in `agent-skills`: a session committed two skill edits and
+deliberately did not push, because another session's commits sat under them and publishing was the
+user's call. Minutes later the ahead-count was zero — the other session had pushed the branch and
+carried both commits with it. Nothing signalled it, and an ahead-count falling to zero reads as
+"someone pushed, fine" rather than as work published without the decision that was being waited on.
+Verified after a fresh fetch with `git branch -r --contains <sha>`, not inferred from the count.
+
+Silent by construction, and it meets the confidentiality rule at its sharpest point, since that rule
+turns entirely on a push being irreversible. The consequence for whatever gets written: "I will
+commit but not push, and ask first" is a stated intention, not a mechanism. A session that genuinely
+must withhold work has to keep it off the shared branch — or tell the user before committing that
+the commit itself is the publishing decision.]
 
 ## Recommended direction
 
