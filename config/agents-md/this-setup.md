@@ -24,10 +24,21 @@ sudo apt install -y something      # wrong — hangs or "sudo: a terminal is req
 
 ### git fetch/push needing an SSH key
 
-Run the `git` command as normal — `SSH_ASKPASS` (same Zenity helper, with
-`SSH_ASKPASS_REQUIRE=prefer`) pops a GUI passphrase dialog when no key is loaded in the
-`keychain`-managed agent, instead of failing with "Permission denied (publickey)". No HTTPS/token
-workaround needed. The dialog blocks on user input and times out if nobody is at the machine.
+Run the `git` command as normal. Keys live unlocked in the desktop keyring's agent from login, and
+`~/.zprofile` points each shell at whichever agent actually holds keys, so this normally just works
+with no prompt. `SSH_ASKPASS` (same Zenity helper, `SSH_ASKPASS_REQUIRE=prefer`) pops a GUI
+passphrase dialog for a key that genuinely needs one; it blocks on user input and times out if
+nobody is at the machine. No HTTPS/token workaround needed.
+
+**When it fails with "Permission denied (publickey)", run `inv ssh.check` before anything else** —
+do not reach for `ssh-add`, and never ask the user for a passphrase on the strength of that error.
+This machine runs two agents (the keyring's and keychain's), and a shell pinned to the empty one
+fails exactly that way while every key sits unlocked in the other. Confirmed 2026-08-28: a session
+read the failure as a missing key, ran `ssh-add`, and had the user type a passphrase into three
+dialogs for a key that was already loaded elsewhere and needed none. A session's own shell snapshot
+is captured once and survives a reboot, so an agent session is the most likely thing to be holding a
+stale socket. `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2 for no agent — those
+last two look alike and mean opposite things.
 
 ### Formatting a date or decimal in a shell script
 
