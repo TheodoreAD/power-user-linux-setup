@@ -115,6 +115,64 @@ cross-repo case well, which is itself the most important finding.
 - The historical distributed-bug-tracker cohort — Bugs Everywhere, ditz, GitIssius — is dead.
   git-bug is the survivor, and it survived by _not_ putting files in the working tree.
 
+### Second pass — read against the source, not the README (2026-08-28)
+
+Three candidates were taken past search-summary depth. Clones under `$RESEARCH_HOME/repos/`, each
+with a `SOURCE.md` recording why.
+
+**beads has the same answer this plan reaches, and ships it.** Buried under `docs/multi-agent/`, not
+in the README: every issue carries a `source_repo` field (`.`, `~/.beads-planning`, or an absolute
+path to another repo), `bd create` auto-routes by role, and **hydration** aggregates issues from the
+current repo plus the planning repo plus any configured additional repos into one unified `bd list`.
+That is ownership-per-repo with unified discovery, implemented by the most-adopted tool in the space
+— strong corroboration for the recommended direction below, arrived at independently.
+
+Its own guidance is the honest counter-evidence, and it points the other way for this machine:
+
+> ### You DON'T need multi-repo if:
+>
+> - ✅ Working solo on your own project
+> - ✅ Team with shared repository and trust model
+> - ✅ All issues belong in the project's git history
+
+All three are true here. The listed reasons you _do_ need it are OSS forks, PR hygiene, and
+multi-persona splits — none of which apply.
+
+What adopting beads would actually cost, from the docs rather than the pitch: a Dolt database as the
+store (`.beads/embeddeddolt/`, JSONL demoted to an export that is explicitly "not the source of
+truth" and not a backup), and `docs/multi-agent/federation.md` — Dolt remotes, four data-sovereignty
+tiers, a MySQL port plus a remotesapi port, and a page of lease-reclaim rules including a documented
+footgun where committing `node_id` to the git-tracked `.beads/config.yaml` leaves the guard "fully
+armed and fully inert." That is fleet machinery. It is also actively hostile to the surrounding
+architecture: the `AGENTS.md` snippet `bd init` installs says "do not create MEMORY.md files" and
+"Do not use markdown TODO lists for task tracking" — beads wants to own memory and tracking, which
+this repo already assigns to `~/AGENTS.md`, `contributing/`, and `plans/`.
+
+**Backlog.md has no cross-repo support at all** — confirmed by grep, not inference: `src/` returns
+zero hits for cross-repo, multi-repo, multiple-repositories or workspaces. So the HN question that
+went unanswered was answered by the code.
+
+Two things from it are worth keeping anyway. Its `MANIFESTO.md` is close to a statement of
+`plan-docs`' own philosophy from an independent direction — markdown as the durable substrate,
+local-first ownership, CLI canonical, MCP explicitly demoted to "a legacy, optional adapter",
+"humans and agents are both first-class users." And its store is richer than a flat directory:
+`backlog/{tasks,drafts,completed,archive,decisions,docs,milestones}`, i.e. it absorbs the ADR and
+docs roles that this repo splits into `contributing/` and `docs/`.
+
+But it takes the opposite position on the one question that matters most here. Its core loop ends
+with **"preserve the record: keep the completed task with its reasoning and outcome as durable
+project history"** — completed work moves to `completed/`, never out. `plan-docs` retires by
+_deleting_, having migrated the durable content to `contributing/`/`docs/`. Both are coherent; they
+cannot both be true. Which is right is the second open question below, and Backlog.md is evidence
+that the retention answer is at least defensible.
+
+Its per-item format is also far heavier than a plan file — frontmatter carrying `dependencies`,
+`references`, and a full `modified_files` list, plus `## Acceptance Criteria`,
+`## Definition of
+Done`, `## Implementation Plan`, `## Implementation Notes` and `## Final Summary`
+delimited by `<!-- SECTION:*:BEGIN/END -->` markers so the CLI can rewrite sections without touching
+prose. The marker technique is worth noting for any future generated section in a plan file.
+
 ## The tension, stated precisely
 
 "One location" and "history next to the code" are only in conflict if the store is what moves. They
@@ -182,11 +240,23 @@ It also fails the offline case that `plans/2026-08-23-github-issues-plan-lifecyc
 flagged. Decide whether a tracker is (a) not involved, (b) an inbox only, or (c) the store — `(b)`
 is what the issues plan already leans toward and is compatible with everything above.]
 
-[UNVERIFIED: Backlog.md, Markdown Projects, git-issues, TrackDown, TODO.md, gh-issue-sync, imdone,
-the Planning Repo Pattern article and Dendron's multi-vault behaviour were all assessed at
-web-search/README depth only. Only tasks.md was checked against its actual source. If any of them
-moves from "surveyed" to "candidate", it needs the same treatment first — per the research-library
-skill, a README can advertise a feature that was never implemented.]
+[NEEDS CLARIFICATION: does a retired plan get deleted or kept? `plan-docs` deletes after migrating
+durable content; Backlog.md's manifesto takes the opposite position and keeps every completed item
+as "durable project history". This was not previously treated as an open question at all, and it
+interacts with the history question above: if retirement stopped deleting, the argument for per-repo
+storage strengthens considerably, because the repo's history would then hold the plan itself rather
+than only its drafting.]
+
+[UNVERIFIED: Markdown Projects, git-issues, TrackDown, TODO.md, gh-issue-sync, imdone and Dendron's
+multi-vault behaviour were assessed at web-search/README depth only. tasks.md, beads and Backlog.md
+have since been read against their actual source (clones under `$RESEARCH_HOME/repos/`). If any of
+the remainder moves from "surveyed" to "candidate", it needs the same treatment first — per the
+research-library skill, a README can advertise a feature that was never implemented.]
+
+[UNVERIFIED: the Planning Repo Pattern is still known only from a search summary — medium.com
+returns 403 to WebFetch on both the `medium.com/@jbpoley` and `jbpoley.medium.com` forms, and
+freedium.cfd does not resolve. It is named as the fallback design below, so if the relocation branch
+goes live, the article needs reading by some other route first.]
 
 ## Recommended direction
 
@@ -203,7 +273,10 @@ family-wide. The `depends_on` field finally does something — it becomes the ed
 blocked-by/blocking view instead of documentation nobody reads.
 
 That gets "one location" as a _view_ rather than a _directory_, which is what every mature project
-in this space converged on, and it costs nothing that currently works.
+in this space converged on, and it costs nothing that currently works. The second pass strengthened
+this rather than complicating it: beads' `source_repo` + hydration is the same design, shipped and
+adopted at scale, and the aggregator sketched above is the small version of it — no database, no
+federation, no new store, just a parse of frontmatter this repo already writes.
 
 Two things to settle before building anything, in this order: the discovery-vs-relocation question
 above, and then `plans/2026-08-23-github-issues-plan-lifecycle.md`, which becomes answerable once
@@ -217,3 +290,10 @@ central-store option surveyed that doesn't require adopting a tool that rejects 
 
 Do not start moving plan files before this is settled. Half-migrated is the one state worse than
 either endpoint, and the current convention is working — nothing here is urgent.
+
+**Adopting a tool wholesale is now ruled out on evidence, not taste.** beads is the only mature
+option that solves the problem, and taking it means a Dolt database, federation machinery sized for
+agent fleets, and an `AGENTS.md` that tells agents to stop using markdown for tracking and memory —
+replacing three conventions that work in order to fix one that is merely inconvenient. Backlog.md
+has no cross-repo support in its source at all. tasks.md has the right model and seven stars. What
+is left worth taking from all three is the model, not the dependency.
