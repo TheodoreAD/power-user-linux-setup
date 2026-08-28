@@ -24,10 +24,12 @@ GitHub issues have their own lifecycle (open/closed, labels, milestones). Adopti
 deciding how the two relate produces the worst outcome: two half-tracked backlogs where an item can
 be open in one and dead in the other, and no single place that answers "what's actually pending".
 
-**Settle `plans/2026-08-28-cross-repo-plan-store.md` first.** That plan asks where the durable plan
-store lives at all — per-repo `plans/`, one central location, or a tracker mirrored down to markdown
-— and this file's "issue as inbox vs. issue as backlog" choice is downstream of it. Answering this
-one first risks designing an issue lifecycle around a store that then moves.
+**Settle `agent-skills`' `plans/2026-08-28-cross-repo-plan-store.md` first.** That plan asks where
+the durable plan store lives at all — per-repo `plans/`, one central location, or a tracker mirrored
+down to markdown — and this file's "issue as inbox vs. issue as backlog" choice is downstream of it.
+Answering this one first risks designing an issue lifecycle around a store that then moves. It lives
+in `agent-skills` because that repo owns the `plan-docs` convention; it was drafted here, and its
+research history is in this repo up to commit `c4053e4`.
 
 Current state, verified 2026-08-23: `gh` is installed, issues are enabled on
 `TheodoreAD/power-user-linux-setup`, and there are **zero** issues, open or closed. So this is a
