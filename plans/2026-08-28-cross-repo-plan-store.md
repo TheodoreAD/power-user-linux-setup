@@ -29,6 +29,61 @@ This is the general question that `plans/2026-08-23-github-issues-plan-lifecycle
 slice of. That plan should not be settled before this one — its "issue as inbox vs. issue as
 backlog" choice is downstream of where the durable store lives at all.
 
+**The convention moved out of this repo while this plan was being written, and the move is now
+finished.** Per `plans/2026-08-26-agent-artifact-authoring-decoupling.md`, all ten skills —
+`plan-docs` among them — are authored in
+[`TheodoreAD/agent-skills`](https://github.com/TheodoreAD/agent-skills). PULSE has no `skills/`
+directory at all, and one `[packages.agent-skills]` entry with **no `names` filter** installs
+whatever that repo publishes. The point of the move was decoupling: the skills do not depend on
+PULSE, anyone can install the same set with `npx skills add TheodoreAD/agent-skills` on any agent
+the `skills` CLI supports, and PULSE merely integrates them into its own holistic setup. Development
+and adoption both get easier; PULSE stops being a precondition for either.
+
+So the rules this plan proposes changing are owned by a repo that is not this one, and `depends_on`
+— the field the whole discovery problem hangs on — is defined there now.
+
+That has a sharp consequence for this plan's own shape, and a mildly absurd one: **this file is an
+instance of the problem it describes.** It concerns a convention owned by `agent-skills` and
+proposes tooling that would ship inside it, while being filed in `power-user-linux-setup` —
+invisible from either.
+
+[DECISION: **`agent-skills` gets its own `plans/`, like every other repo in the family.** Settled
+with the user 2026-08-28. It does not have one yet. That makes seven repos carrying plans, and it
+removes the awkward case of a repo owning a convention it does not itself practise.]
+
+## What the family actually looks like, measured (2026-08-28)
+
+Six repos under `~/projects/github.com-personal/` carry a `plans/` directory —
+`power-user-linux-setup` (23), plus `repo-tasks`, `scaffoldapy`, `ingesta`, `olx-polite-mcp` and
+`freshful-polite-mcp` (33 between them); `agent-skills` will be the seventh. **56 plan files, all
+with `status:` frontmatter, none visible from any repo but their own.** Tallying every status line
+family-wide:
+
+| status                | count |
+| --------------------- | ----- |
+| `idea`                | 44    |
+| `in-progress`         | 7     |
+| `blocked on <reason>` | 3     |
+| `landed`              | 1     |
+| `abandoned`           | 1     |
+| `done`                | 1     |
+
+Two things fall out of that tally that nothing currently reports:
+
+- **`done` is not in the vocabulary.** `plan-docs` defines `landed`, and one repo has drifted to
+  `done`. A second status line is a free-form paragraph —
+  `status: idea — hooks still unadopted;
+  ~/AGENTS.md "About to commit" rule deployed 2026-08-25 as the next step, re-measure after it has
+  run a while`
+  — which is prose where an enum belongs. Neither is caught by any repo's quality gate, because each
+  gate only ever sees its own repo.
+- **44 open ideas is the real scale of the discovery problem.** Not "a few cross-repo plans" — a
+  backlog two-thirds the size of this repo's entire plan history, spread across six working trees,
+  with no way to ask which of them are `blocked on` something that has since landed elsewhere.
+
+An aggregator would have surfaced both on its first run. That is the strongest argument in this file
+for the recommended direction, and it is evidence rather than reasoning.
+
 ## Prior art survey (2026-08-28)
 
 Others have hit this. The survey below is the useful half of a broad pass; nothing found solves the
@@ -173,6 +228,59 @@ Done`, `## Implementation Plan`, `## Implementation Notes` and `## Final Summary
 delimited by `<!-- SECTION:*:BEGIN/END -->` markers so the CLI can rewrite sections without touching
 prose. The marker technique is worth noting for any future generated section in a plan file.
 
+### How skills in the wild handle script dependencies (2026-08-28)
+
+Researched because the decision above puts a script inside a skill, and "does it need a venv?" was
+raised as an open worry. **It does not, and a venv per skill is not the convention — it is the thing
+the convention exists to avoid.**
+
+[agentskills.io's "Using scripts in skills"](https://agentskills.io/skill-creation/using-scripts) is
+the spec-level guidance, and it describes exactly two tiers, neither of which is a virtual
+environment:
+
+1. **One-off commands** — if an existing package already does the job, reference it straight from
+   `SKILL.md` via a runner that resolves dependencies at invocation (`uvx`, `pipx run`, `npx`,
+   `bunx`, `deno run`, `go run`), pinned to a version. No `scripts/` directory at all.
+2. **Self-contained scripts** — bundle in `scripts/` and let the script declare its own dependencies
+   **inline**. For Python that is PEP 723, a `# /// script` TOML block, run with
+   `uv run scripts/foo.py`. Verbatim: "no separate manifest file or install step required." Every
+   other language in the page gets the same treatment (Deno `npm:` specifiers, Bun auto-install,
+   Ruby's `bundler/inline`).
+
+Scripts are referenced by **path relative to the skill directory root**, because the agent runs
+commands from there — which is what makes a bundled script work identically for anyone who installed
+the skill, with no install step of the skill's own.
+
+Where venv-per-skill _does_ appear is
+[anthropics/skills discussion #117](https://github.com/anthropics/skills/discussions/117), and the
+problem there is not ours: **cloud skills from different vendors sharing one sandbox**, where skill
+A needs `pandas==2.1` and skill B needs `2.2`. The debated answers are venv-per-skill (pipx-style),
+container-per-skill for untrusted code, and — rejected as fragile — `sys.path` namespacing. The one
+point of consensus worth carrying over is that dependencies should be _declared_ even before
+isolation is enforced, so conflicts are detectable rather than silent. PEP 723 is that declaration.
+A single user's own skills, on their own machine, have no multi-tenant conflict to isolate.
+
+So the ordering for anything written here:
+
+1. **Standard library only.** Zero declaration, zero resolution, `python3 scripts/foo.py` works on
+   any machine with Python. `session-bash-audit/scripts/audit.py` already proves this is enough for
+   a real tool — it parses every `~/.claude/projects/*.jsonl`, tallies patterns, and samples
+   transcripts on `argparse`/`json`/`re`/`dataclasses`/`pathlib` alone. A plan-frontmatter
+   aggregator is a strictly smaller problem than that; YAML frontmatter this simple does not justify
+   PyYAML.
+2. **PEP 723 + `uv run`** if a dependency ever becomes genuinely necessary. uv is already on this
+   machine (`bootstrap.sh` installs it), and this keeps the script single-file and portable.
+3. **A venv, a `requirements.txt`, or a `pyproject.toml` inside a skill** — no. It would make the
+   skill un-runnable until someone ran an install step the `skills` CLI does not perform, which
+   defeats the decoupling the move just achieved.
+
+One further thing from the same page worth applying whatever gets written, since it is about being
+_run by an agent_ rather than about dependencies: no interactive prompts (agents run non-interactive
+shells and a TTY prompt hangs forever), a real `--help` because that is how an agent learns the
+interface, structured output on stdout with diagnostics on stderr, meaningful documented exit codes,
+and bounded output because harnesses truncate. There is also a `compatibility` frontmatter field for
+declaring runtime-level requirements.
+
 ## The tension, stated precisely
 
 "One location" and "history next to the code" are only in conflict if the store is what moves. They
@@ -240,6 +348,35 @@ It also fails the offline case that `plans/2026-08-23-github-issues-plan-lifecyc
 flagged. Decide whether a tracker is (a) not involved, (b) an inbox only, or (c) the store — `(b)`
 is what the issues plan already leans toward and is compatible with everything above.]
 
+[DECISION: **The aggregator ships inside the skill, as `skills/plan-docs/scripts/`, written against
+the standard library only.** Settled with the user 2026-08-28: no new software is being planned
+here, and any automation lives as a stdlib-only Python script in the skill that needs it. That
+resolves the three-way ownership question in favour of the skill — the rule and its enforcement stay
+in one repo, the script travels to anyone who installs the skill, and PULSE keeps doing only what it
+now does for skills, which is install them. It also means the tool is _not_ an `inv` task, unlike
+every other piece of family tooling; that is a deliberate consequence of the skills being decoupled,
+not an oversight. Precedent already exists in the same repo: `session-bash-audit/scripts/audit.py`
+is stdlib-only and invoked as `python3 $S/scripts/audit.py`.]
+
+[NEEDS CLARIFICATION: **what tells the script which directories to walk?** The script is portable;
+"where this user's repos live" is not. Options: a positional argument the `SKILL.md` shows being
+called with a path; an env var, the way `research-library` declares `$RESEARCH_HOME`; or discovery
+by scanning the parent of the current repo for siblings that have a `plans/`, which is how tasks.md
+finds a workspace. The `research-library` precedent is the strongest — that skill became publishable
+precisely by _declaring_ its one environment assumption instead of assuming PULSE had provided it,
+and the same shape applies here. Decide before the script is written, since it determines whether
+PULSE needs any config entry at all.]
+
+[NEEDS CLARIFICATION: **should the status vocabulary be validated, and by what?** The measured tally
+above found `done` where `landed` is defined, and one free-form status paragraph. A per-repo gate
+cannot catch this, because drift is only visible across repos. Options: the aggregator warns (cheap,
+no enforcement); each repo's `quality.check` validates its own frontmatter against the vocabulary
+(catches it at commit time, but needs the vocabulary shipped somewhere every repo can read — which
+is the ownership question above); or nothing, and drift is accepted as harmless. Note that whichever
+is chosen has to survive the vocabulary itself being open-ended — `blocked on
+<reason>` and
+`superseded by <path>` are prefixes, not literals.]
+
 [NEEDS CLARIFICATION: does a retired plan get deleted or kept? `plan-docs` deletes after migrating
 durable content; Backlog.md's manifesto takes the opposite position and keeps every completed item
 as "durable project history". This was not previously treated as an open question at all, and it
@@ -264,13 +401,16 @@ Rough, and contingent on the first open question.
 
 **Most likely shape: keep the store where it is, add a discovery layer.** Per-repo `plans/` stays
 exactly as `plan-docs` defines it — same lifecycle, same retirement procedure, same quality gate,
-same coupling of drafting and retirement to the repo's own history. On top of it, an `inv plans.*`
-namespace in `repo-tasks` (so every repo in the family gets it, per `~/AGENTS.md`'s cross-repo
-convergence rule) that walks the projects root, parses the frontmatter of every `plans/*.md` it
-finds, and renders one status-grouped index: what is `idea`, what is `in-progress`, what is
-`blocked on` what, and which `[DEFERRED:]`/`[NEEDS CLARIFICATION:]` tags are outstanding
-family-wide. The `depends_on` field finally does something — it becomes the edge in a
-blocked-by/blocking view instead of documentation nobody reads.
+same coupling of drafting and retirement to the repo's own history. On top of it, an aggregator that
+walks the projects root, parses the frontmatter of every `plans/*.md` it finds, and renders one
+status-grouped index: what is `idea`, what is `in-progress`, what is `blocked on` what, and which
+`[DEFERRED:]`/`[NEEDS CLARIFICATION:]` tags are outstanding family-wide. The `depends_on` field
+finally does something — it becomes the edge in a blocked-by/blocking view instead of documentation
+nobody reads. The measured tally above is what its first run should print, drift included.
+
+It ships as `skills/plan-docs/scripts/`, stdlib-only, per the decision above — not as an
+`inv plans.*` namespace in `repo-tasks`, which was the assumption before the skills were decoupled.
+What remains open about it is only how it learns which directories to walk.
 
 That gets "one location" as a _view_ rather than a _directory_, which is what every mature project
 in this space converged on, and it costs nothing that currently works. The second pass strengthened
