@@ -1,0 +1,2704 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/claude-code.html">
+      
+      
+        <link rel="prev" href="./ai.html">
+      
+      
+        <link rel="next" href="./cli-allowlist.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="./assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.44">
+    
+    
+      
+        <title>Claude Code environment - Power User Linux Setup</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="./assets/stylesheets/modern/main.fba56155.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="./assets/stylesheets/modern/palette.dfe2e883.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="./extra/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#claude-code-environment" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="./index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Claude Code environment
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="./index.html" class="md-tabs__link">
+        
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="./configuration.html" class="md-tabs__link">
+        
+  
+  How it works
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./zsh.html" class="md-tabs__link">
+          
+  
+  Shell & desktop
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./python.html" class="md-tabs__link">
+          
+  
+  Languages & tooling
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./git.html" class="md-tabs__link">
+          
+  
+  Cloud & accounts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./ai.html" class="md-tabs__link">
+          
+  
+  AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./wsl.html" class="md-tabs__link">
+          
+  
+  Environments
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./apt_packages.html" class="md-tabs__link">
+          
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="./index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    Power User Linux Setup
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Shell & desktop
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Shell & desktop
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./zsh.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Zsh
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./terminal.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./keybindings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keybindings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./shortcuts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Shortcuts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./input_devices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Input devices
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./screen_capture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Screen capture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./chrome.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Chrome PWA launchers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gnome_extensions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GNOME extensions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./fonts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fonts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ide.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  IDEs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Languages & tooling
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Languages & tooling
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./python.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./golang.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Go
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rust.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Rust
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./scala.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scala
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./js.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Node.js
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./docker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Docker
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./kubernetes.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Kubernetes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cloud & accounts
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Cloud & accounts
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./git.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Git
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./github.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub CLI (gh)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gitlab.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitLab
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gcloud.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Google Cloud CLI
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ssh.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./networking.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./corporate-proxy.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  AI
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  AI
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  AI tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Claude Code environment
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="claude-code.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Claude Code environment
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-core-problem-no-tty" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The core problem: no TTY
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#askpass-zenity-gui-dialog-instead-of-a-tty-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        askpass-zenity — GUI dialog instead of a TTY prompt
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        direnv auto-activation in the Bash tool — <code>inv agents.wire-claude-hook</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installing-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Installing the CLI
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agentsmd-global-instructions-declaratively-managed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>~/AGENTS.md</code> — global instructions, declaratively managed
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#claudesettingsjson-permissions-merged-in-by-inv-allowlistapply" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agentsskills-inv-aiinstall-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>.agents/skills/</code> — <code>inv ai.install-skills</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-skills-to-install-the-skills-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring skills to install — the <code>skills</code> field
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-static-permission-rules-the-claude_permissions_allow-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring static permission rules — the <code>claude_permissions_allow</code> field
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring the permission mode and scratch directories — <code>claude_default_mode</code>, <code>claude_additional_directories</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-the-statusline-the-claude_statusline-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring the statusline — the <code>claude_statusline</code> field
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./cli-allowlist.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  CLI permission allowlist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" >
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Environments
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Environments
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./wsl.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  WSL
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./dev-container.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dev Container
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Reference
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./apt_packages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Apt packages
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./citrix.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Citrix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./webex.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Webex
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./locale.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Locale
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#the-core-problem-no-tty" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The core problem: no TTY
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#askpass-zenity-gui-dialog-instead-of-a-tty-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        askpass-zenity — GUI dialog instead of a TTY prompt
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        direnv auto-activation in the Bash tool — <code>inv agents.wire-claude-hook</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#installing-the-cli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Installing the CLI
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agentsmd-global-instructions-declaratively-managed" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>~/AGENTS.md</code> — global instructions, declaratively managed
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#claudesettingsjson-permissions-merged-in-by-inv-allowlistapply" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#agentsskills-inv-aiinstall-skills" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>.agents/skills/</code> — <code>inv ai.install-skills</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-skills-to-install-the-skills-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring skills to install — the <code>skills</code> field
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-static-permission-rules-the-claude_permissions_allow-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring static permission rules — the <code>claude_permissions_allow</code> field
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring the permission mode and scratch directories — <code>claude_default_mode</code>, <code>claude_additional_directories</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#declaring-the-statusline-the-claude_statusline-field" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Declaring the statusline — the <code>claude_statusline</code> field
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="./index.html" class="md-path__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-path__item">
+        <a href="./ai.html" class="md-path__link">
+          
+  
+  <span class="md-ellipsis">
+    AI
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+  
+  
+
+
+<h1 id="claude-code-environment">Claude Code environment<a class="headerlink" href="#claude-code-environment" title="Permanent link">&para;</a></h1>
+<p>What this repo does specifically to make <a href="https://claude.ai/code">Claude Code</a> (the CLI agent) work
+smoothly on this machine — as opposed to <code>docs/ai.md</code>, which covers AI tools generally (install,
+model choice, other agents).</p>
+<h2 id="the-core-problem-no-tty">The core problem: no TTY<a class="headerlink" href="#the-core-problem-no-tty" title="Permanent link">&para;</a></h2>
+<p>Claude Code&rsquo;s Bash tool runs commands non-interactively — there&rsquo;s no controlling terminal, so
+anything that tries to prompt interactively (a <code>sudo</code> password, an SSH key passphrase) just fails
+outright instead of waiting for input. Two independent instances of this are solved the same way:</p>
+<h2 id="askpass-zenity-gui-dialog-instead-of-a-tty-prompt">askpass-zenity — GUI dialog instead of a TTY prompt<a class="headerlink" href="#askpass-zenity-gui-dialog-instead-of-a-tty-prompt" title="Permanent link">&para;</a></h2>
+<p><code>[packages.askpass-zenity]</code> in <code>setup.toml</code> writes <code>~/.local/bin/askpass-zenity</code>, a script that pops
+a Zenity GUI password dialog and prints whatever was entered to stdout — the standard <code>*_ASKPASS</code>
+program contract. It&rsquo;s wired up for two separate purposes:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SUDO_ASKPASS</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin/askpass-zenity"</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SSH_ASKPASS</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/bin/askpass-zenity"</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">export</span><span class="w"> </span><span class="nv">SSH_ASKPASS_REQUIRE</span><span class="o">=</span><span class="s2">"prefer"</span>
+</span></code></pre></div>
+<p><strong>sudo</strong> — use <code>sudo -A</code> (not plain <code>sudo</code>) for every sudo call from Claude Code. <code>-A</code> tells sudo to
+use <code>$SUDO_ASKPASS</code> instead of prompting on a TTY that doesn&rsquo;t exist. Plain <code>sudo</code> fails with
+<code>sudo: a terminal is required</code>.</p>
+<p><strong>git over SSH</strong> — <code>SSH_ASKPASS</code> + <code>SSH_ASKPASS_REQUIRE=prefer</code> fixes a related but separate
+failure: this machine&rsquo;s SSH keys are passphrase-protected, so a key that is not already in an agent
+needs a passphrase, and with no TTY that fails as <code>Permission denied (publickey)</code> —
+indistinguishable from an actual auth problem. <code>SSH_ASKPASS</code> makes <code>ssh</code> pop the same Zenity dialog
+instead of failing. <strong>No HTTPS/token workaround is needed — just run <code>git fetch</code>/<code>git push</code>
+normally.</strong></p>
+<p>That covers a locked key. It does <strong>not</strong> cover the other cause of the identical error, which is
+more likely in an agent session: being pointed at the wrong agent. A desktop session runs two, and a
+shell inherits its <code>SSH_AUTH_SOCK</code> from a snapshot taken once at session start — which survives a
+reboot that emptied the agent it names. <code>inv ssh.check</code> distinguishes the two in one command; see
+<a href="ssh.html#which-agent-a-shell-talks-to">ssh.md</a>. Reaching for <code>ssh-add</code> on a publickey error, without
+checking which agent is in play, prompts for a passphrase that may not be needed at all.</p>
+<p><code>SSH_ASKPASS_REQUIRE=prefer</code>, deliberately not <code>force</code>: <code>force</code> would hijack passphrase prompts in a
+normal interactive terminal too (popping a GUI dialog even when you&rsquo;re sitting at a real shell that
+could just prompt you inline) — a regression to the normal workflow. <code>prefer</code> only engages the GUI
+dialog when there&rsquo;s no usable TTY, which is exactly the Bash-tool case; an interactive terminal
+session is unaffected.</p>
+<p>The dialog blocks on user input — if nobody&rsquo;s at the machine to enter the passphrase, the git
+command times out rather than hanging forever.</p>
+<p>The askpass script itself shows the caller&rsquo;s actual prompt (<code>$1</code> — sudo passes something like
+<code>[sudo] password for user:</code>, ssh passes <code>Enter passphrase for key '...':</code>) instead of a hardcoded
+string, so the dialog text is accurate regardless of which one triggered it.</p>
+<h2 id="direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook">direnv auto-activation in the Bash tool — <code>inv agents.wire-claude-hook</code><a class="headerlink" href="#direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook" title="Permanent link">&para;</a></h2>
+<p>A second consequence of the Bash tool&rsquo;s execution model (see &ldquo;The core problem: no TTY&rdquo; above),
+separate from the askpass issue: direnv (<code>[packages.direnv]</code>, e.g. a project&rsquo;s <code>.envrc</code> activating
+its Python <code>.venv</code>) doesn&rsquo;t auto-activate for Claude Code&rsquo;s Bash tool the way it does in a real
+terminal, even after <code>direnv allow</code>. Two things stack:</p>
+<ol>
+<li>Each Bash tool call runs as <code>zsh -c 'source &lt;captured-shell-snapshot&gt; &amp;&amp; ... &amp;&amp; eval "&lt;cmd&gt;"'</code>.
+   direnv&rsquo;s normal hook (<code>eval "$(direnv hook zsh)"</code> in <code>~/.zshrc</code>, from <code>[packages.direnv]</code>) fires
+   on <code>precmd</code> — a real interactive prompt cycle — which never happens in this non-interactive,
+   one-shot <code>zsh -c</code>. Writing the export to <code>~/.zshenv</code> instead doesn&rsquo;t help either: <code>.zshenv</code> <em>is</em>
+   sourced unconditionally, but the snapshot sourced right after it carries its own hardcoded
+   <code>export PATH=...</code> (captured from whatever shell state existed when the snapshot was taken), which
+   clobbers it before the real command runs.</li>
+<li>Separately, this environment can carry stale <code>DIRENV_DIR</code>/<code>DIRENV_WATCHES</code> inherited from before
+   <code>direnv allow</code> was ever run (e.g. baked into a GUI app&rsquo;s launch environment), which makes
+   <code>direnv export</code> silently no-op even when invoked correctly — <code>unset</code>ting those first forces a
+   correct recompute.</li>
+</ol>
+<p>The fix uses <code>CLAUDE_ENV_FILE</code> (a Claude Code environment variable naming a file it sources before
+each Bash command — its documented purpose is exactly this: persisting environment changes across
+tool calls) paired with a <code>PreToolUse</code> hook on the Bash tool that keeps that file fresh from
+<code>direnv export zsh</code> before every single call, so <code>cd</code>/<code>.envrc</code> changes are picked up too, not just
+whatever was true at session start.</p>
+<p><code>inv agents.wire-claude-hook [--dir PATH]</code> (from the
+<a href="https://github.com/TheodoreAD/repo-tasks"><code>repo-tasks</code></a> dev dependency — see <code>pyproject.toml</code>)
+writes this into <code>&lt;dir&gt;/.claude/settings.json</code>:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"env"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span><span class="w"> </span><span class="nt">"CLAUDE_ENV_FILE"</span><span class="p">:</span><span class="w"> </span><span class="s2">"~/.cache/claude-code/&lt;sanitized-abs-path&gt;-direnv-env"</span><span class="w"> </span><span class="p">},</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">    </span><span class="nt">"PreToolUse"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="w">      </span><span class="nt">"matcher"</span><span class="p">:</span><span class="w"> </span><span class="s2">"Bash"</span><span class="p">,</span>
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="w">      </span><span class="nt">"hooks"</span><span class="p">:</span><span class="w"> </span><span class="p">[{</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a><span class="w">        </span><span class="nt">"type"</span><span class="p">:</span><span class="w"> </span><span class="s2">"command"</span><span class="p">,</span>
+</span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a><span class="w">        </span><span class="nt">"command"</span><span class="p">:</span><span class="w"> </span><span class="s2">"unset DIRENV_DIR DIRENV_WATCHES DIRENV_DIFF DIRENV_FILE; direnv export zsh &gt; &lt;that file&gt; 2&gt;/dev/null || true"</span>
+</span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="w">      </span><span class="p">}]</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a><span class="w">    </span><span class="p">}]</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>The env-file path is derived the same way Claude Code&rsquo;s own auto-memory directory is
+(<code>~/.claude/projects/&lt;sanitized-cwd&gt;/memory/</code>) — the repo&rsquo;s absolute path with <code>/</code> → <code>-</code> — so two
+repos sharing a basename never collide. No-ops if <code>&lt;dir&gt;/.envrc</code> doesn&rsquo;t exist (nothing to
+activate), and merges into an existing <code>settings.json</code> (appending to a <code>Bash</code> <code>PreToolUse</code> group if
+one already exists, adding one if not) rather than overwriting, so hand-written hooks survive a
+re-run. <code>dev-env.setup</code> calls it for this repo&rsquo;s own <code>.venv</code> automatically; run it directly against
+any other project — <code>inv agents.wire-claude-hook --dir ~/projects/foo</code> — to set the same thing up
+there.</p>
+<p>Caveat: <code>env</code> values in <code>settings.json</code> are only read at Claude Code process launch, unlike hooks,
+which are read fresh per call — so this needs a session restart (or VS Code window reload) to take
+effect after first being configured, even though the hook itself starts firing immediately.</p>
+<h2 id="installing-the-cli">Installing the CLI<a class="headerlink" href="#installing-the-cli" title="Permanent link">&para;</a></h2>
+<p><code>[packages.claude-code]</code> installs the <code>claude</code> binary itself via <code>inv tools.install</code>, using
+Anthropic&rsquo;s native installer (<code>curl -fsSL https://claude.ai/install.sh | bash</code>) — a <code>script</code>-method
+entry, same as Oh My Zsh. This is the officially recommended method: it needs no Node.js, ships a
+signed per-platform binary, and auto-updates itself in the background (<code>~/.local/bin/claude</code>
+symlinked into <code>~/.local/share/claude/versions/</code>). Don&rsquo;t use
+<code>npm install -g @anthropic-ai/claude-code</code> for a fresh install on this machine — it still works but
+is the legacy path; PULSE only needs to <code>curl</code>-install once and then leaves auto-update to Claude
+Code itself.</p>
+<h2 id="agentsmd-global-instructions-declaratively-managed"><code>~/AGENTS.md</code> — global instructions, declaratively managed<a class="headerlink" href="#agentsmd-global-instructions-declaratively-managed" title="Permanent link">&para;</a></h2>
+<p><code>[packages.agents-md]</code> writes <code>~/AGENTS.md</code> (the cross-tool, cross-project instructions file every
+agent CLI on this machine can read) from <code>setup.toml</code>, and symlinks
+<code>~/.claude/CLAUDE.md -&gt; ~/AGENTS.md</code> via the <code>wrapper-script</code> method&rsquo;s <code>symlink_dest</code> field — the
+exact same real-content-plus-symlink pattern this repo&rsquo;s own root uses for its <code>AGENTS.md</code>/
+<code>CLAUDE.md</code> pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
+agent-readable form, so every session on this machine picks it up automatically without needing to
+rediscover it.</p>
+<p><strong>The file is assembled, not copied.</strong> <code>[packages.agents-md]</code> sets <code>assembled_from = "agents_md"</code>,
+and every package declaring an <code>agents_md</code> fragment contributes whole <code>##</code> sections to the result,
+ordered by a sparse <code>order</code> — the same any-section pattern as <code>zshrc</code>/<code>zshenv</code>, for a file where
+section order carries meaning. Today three fragments split the content by audience:
+<code>config/agents-md/this-setup.md</code> (facts true only of this machine and this user&rsquo;s repos),
+<code>claude-code.md</code> (one harness&rsquo;s own behavior), and <code>portable.md</code> (conventions that hold anywhere).
+Which one owns what, and why the split exists, is <code>config/agents-md/README.md</code>.</p>
+<p>Edit the fragment that owns the rule, then <code>inv deploy.all --name agents-md</code>, rather than
+hand-editing <code>~/AGENTS.md</code> directly — the file is fully PULSE-owned (same as any
+<code>wrapper-script</code>-method entry) and regenerated end to end, so the <code>&lt;!-- PULSE::agents-md/… --&gt;</code>
+markers in it are provenance, not an ownership boundary: nothing outside a block survives either.
+Both <code>deploy.all</code> and the install-time writer in <code>inv tools.install</code> go through the same deploy
+writer, so an edit made to <code>~/AGENTS.md</code> directly is shown as a diff and asked about (default: keep
+it) rather than silently overwritten — but it still only lives on this machine until it&rsquo;s ported
+into a fragment. <code>~/.claude/CLAUDE.md</code> itself is never touched once it&rsquo;s a correct symlink; if
+something other than that symlink already lives there, <code>inv tools.install</code> warns and leaves it alone
+rather than overwriting it.</p>
+<p>Several conventions live there too, deliberately global rather than repeated per-repo — see
+<code>config/agents-md/portable.md</code> for the exact wording:</p>
+<ul>
+<li><strong><code>CLAUDE.md</code> is only ever a symlink.</strong> Any repo that wants agent instructions should have a real
+  <code>AGENTS.md</code> (the cross-tool standard 30+ agent CLIs read) and, if <code>CLAUDE.md</code> exists at all, it&rsquo;s
+  a plain symlink to <code>AGENTS.md</code> — not a file containing Claude Code&rsquo;s <code>@AGENTS.md</code> import
+  directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content to
+  every harness that reads a literal <code>CLAUDE.md</code>, no special-case parsing needed. Trade-off: nothing
+  can be appended below a symlink&rsquo;s target, so a genuinely Claude-specific addendum belongs in
+  <code>AGENTS.md</code> itself instead. Both this repo&rsquo;s own root (<code>AGENTS.md</code> real,
+  <code>CLAUDE.md -&gt;
+  AGENTS.md</code>) and <code>~</code> itself (<code>AGENTS.md</code> real,
+  <code>~/.claude/CLAUDE.md -&gt; ~/AGENTS.md</code>) follow it.</li>
+<li><strong>Cross-session memory policy.</strong> Durable, repo-specific knowledge belongs in that repo&rsquo;s
+  <code>AGENTS.md</code>, not Claude Code&rsquo;s auto-memory system (<code>~/.claude/projects/.../memory/</code>) — memory is
+  invisible to every other contributor, every other agent tool, and every code review; <code>AGENTS.md</code>
+  is version-controlled and visible to all three.</li>
+<li><strong>Bash tool / CLI allowlist discipline.</strong> Don&rsquo;t <code>cd</code> out of a project — the Bash tool&rsquo;s cwd is
+  already the project root, so just run plain commands, and don&rsquo;t reach for a directory-scoping flag
+  (<code>git -C</code>, <code>npm --prefix</code>, etc.) as a substitute either, since for subcommand-tree tools that
+  breaks the allow-rule match the same way <code>cd &amp;&amp;</code> does. Also prefer several simple, separate Bash
+  calls over one chained/piped/env-prefixed command. Both come from the same mechanism:
+  <code>inv allowlist.*</code> (see <a href="cli-allowlist.html"><code>cli-allowlist.md</code></a>) generates permission rules that
+  match on a literal command <em>prefix</em>, and a <code>cd x &amp;&amp; cmd</code>/<code>cmd1 &amp;&amp; cmd2</code>-style compound string
+  can&rsquo;t match a prefix rule that was written for the plain command alone — so it prompts every time
+  even when every individual piece is already allowlisted.</li>
+</ul>
+<h2 id="claudesettingsjson-permissions-merged-in-by-inv-allowlistapply"><code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code><a class="headerlink" href="#claudesettingsjson-permissions-merged-in-by-inv-allowlistapply" title="Permanent link">&para;</a></h2>
+<p>Unlike <code>~/.claude/CLAUDE.md</code> above, <code>~/.claude/settings.json</code> is <em>not</em> fully PULSE-owned — it&rsquo;s a
+partial merge. <code>inv allowlist.apply</code> (see <a href="cli-allowlist.html"><code>cli-allowlist.md</code></a> for the full
+pipeline this is the last step of) rewrites only the <code>permissions.allow</code>/<code>permissions.ask</code> arrays,
+tracking what it wrote via a local manifest so it never touches a rule you added by hand, or any
+other key in the file (<code>theme</code>, <code>effortLevel</code>, <code>cleanupPeriodDays</code>, &hellip;). <code>cleanupPeriodDays</code>
+specifically — governs how long session transcripts/tasks/shell-snapshots/backups are kept — is set
+to <code>365</code> here (default is <code>30</code>) as a deliberate preference, reviewed and confirmed while building
+the allowlist pipeline, not something PULSE enforces or will change on your behalf.</p>
+<h2 id="agentsskills-inv-aiinstall-skills"><code>.agents/skills/</code> — <code>inv ai.install-skills</code><a class="headerlink" href="#agentsskills-inv-aiinstall-skills" title="Permanent link">&para;</a></h2>
+<p><code>.agents/skills/</code> is the emerging cross-tool convention for Agent Skills, but Claude Code itself
+currently only discovers skills from <code>~/.claude/skills/</code> and <code>&lt;project&gt;/.claude/skills/</code> — not
+<code>.agents/skills/</code> directly. To get both the cross-tool convention <em>and</em> a working Claude Code setup,
+PULSE symlinks <code>.claude/skills</code> to <code>.agents/skills</code>:</p>
+<ul>
+<li><code>inv ai.install-skills [--dir PATH]</code> — ensures <code>.agents/skills/</code> exists and <code>.claude/skills</code> is
+  symlinked to it, then installs every skill declared via a <code>skills</code> field anywhere in <code>setup.toml</code>
+  (see below). Defaults to <code>~</code> (the personal, cross-project skills location); part of the standard
+  <code>inv setup</code>/<code>inv wsl.install</code> chain.</li>
+</ul>
+<p>Checks for existing files/symlinks first and skips rather than overwrites — safe to re-run, and safe
+to point at a project that already has hand-written skills content. A new Python project&rsquo;s own
+<code>AGENTS.md</code>/<code>CLAUDE.md</code>/<code>.agents/skills</code>/<code>.claude/skills</code> scaffold isn&rsquo;t this task&rsquo;s job —
+<a href="https://github.com/TheodoreAD/scaffoldapy"><code>scaffoldapy</code></a> stamps that at generation time instead.</p>
+<h2 id="declaring-skills-to-install-the-skills-field">Declaring skills to install — the <code>skills</code> field<a class="headerlink" href="#declaring-skills-to-install-the-skills-field" title="Permanent link">&para;</a></h2>
+<p>Any <code>setup.toml</code> package entry can carry a <code>skills</code> list, checked by <code>inv ai.install-skills</code>
+regardless of that entry&rsquo;s own <code>method</code> — same any-section pattern as <code>zshenv</code>/<code>zshrc</code>/<code>zprofile</code>.
+Two sources:</p>
+<ul>
+<li><strong><code>{ source = "npx", repo = "&lt;owner&gt;/&lt;repo&gt;", names = [...], agents = [...] }</code></strong> — the one this
+  repo uses. Skills published on GitHub, installed via the real <code>skills</code> CLI
+  (<code>[packages.node].global_packages</code>, <a href="https://skills.sh">skills.sh</a>):
+  <code>skills add &lt;repo&gt; --global --skill &lt;names...&gt; --agent &lt;agents...&gt; --yes</code>. <code>names</code> omitted
+  installs every skill the repo has, which is what <code>[packages.agent-skills]</code> does — so a skill added
+  upstream arrives without editing <code>setup.toml</code>. <code>agents</code> defaults to <code>["claude-code"]</code>; since
+  <code>.claude/skills</code> is symlinked to <code>.agents/skills</code>, that lands in the shared hub rather than a
+  separate copy. The CLI prints its own security-risk assessment (Socket/Snyk-style) per skill at
+  install time — worth actually reading before adding an entry, since an installed skill runs with
+  full agent permissions, same trust level as any other content read into an agent session.</li>
+<li><strong><code>{ source = "local", path = "skills/&lt;name&gt;" }</code></strong> — for a skill authored <em>in this repo</em>. <strong>Not
+  used by anything today</strong>, and there is no <code>skills/</code> directory: every skill moved to
+  <a href="https://github.com/TheodoreAD/agent-skills"><code>agent-skills</code></a> by 2026-08-28
+  (<code>plans/2026-08-26-agent-artifact-authoring-decoupling.md</code>). The mechanism is kept as the escape
+  hatch for a skill that genuinely cannot be published — it copies <code>skills/&lt;name&gt;/</code> to
+  <code>~/.agents/skills/&lt;name&gt;</code> and drops a <code>.pulse-source</code> marker so a re-run can tell &ldquo;ours, safe to
+  refresh&rdquo; from &ldquo;something else is already here, leave it alone&rdquo;. Before reaching for it, check the
+  bar the published repo sets: a skill that assumes something about one machine should declare that
+  assumption, not stay unpublishable because of it.</li>
+</ul>
+<p>Add a skill to install without attaching it to some other tool&rsquo;s entry by giving it its own
+<code>[packages.&lt;name&gt;]</code> block with <code>method = "skill"</code> and nothing else but <code>skills</code>.</p>
+<p><strong>Caveat found live (2026-08-23): don&rsquo;t run <code>inv ai.install-skills</code> from an agent session (or any
+other non-interactive context) if you only need the permissions/statusline side effects.</strong> The
+npx-source install confirmation (<code>_install_remote_skill</code>&rsquo;s <code>ui.ask(...)</code>) defaults to <strong>proceed</strong>,
+not skip, when <code>not yes</code> — unlike the statusline-overwrite prompt above, which defaults to decline.
+Per &ldquo;The core problem: no TTY&rdquo; up top, an agent&rsquo;s Bash tool is always non-interactive, so <code>ui.ask()</code>
+always returns that default with no real prompt ever shown. Running the full <code>skills</code> task from
+inside an agent session would therefore silently install every declared-but-not-yet-installed
+npx-source skill with no approval gate at all — exactly the scenario this doc&rsquo;s own
+security-risk-assessment paragraph above assumes a human is present to read. To apply just a new
+<code>claude_permissions_allow</code> rule or statusline change without touching skill installation, call
+<code>tasks.ai._apply_static_claude_permissions()</code> (or <code>_apply_declared_statusline()</code>) directly instead
+of the <code>skills</code> task.</p>
+<p>The <code>npx</code> source was first validated end-to-end against a real package
+(<a href="https://github.com/JuliusBrussee/caveman">caveman</a>, an ultra-compressed communication-style skill)
+long before this repo&rsquo;s own skills used it. Caveman itself ended up living in <code>~/AGENTS.md</code> instead
+(see &ldquo;Caveman-style terse output&rdquo; in <code>config/agents-md/portable.md</code>), not as an installed skill: a
+skill loads conditionally on a trigger, and this behaviour had to be unconditional and reach every
+agent tool, so the always-on <code>AGENTS.md</code> version replaced it outright. That test — unconditional and
+cross-tool means <code>AGENTS.md</code>, sharp trigger and cheap to miss means a skill — is now written up in
+the <code>skill-authoring</code> skill.</p>
+<h2 id="declaring-static-permission-rules-the-claude_permissions_allow-field">Declaring static permission rules — the <code>claude_permissions_allow</code> field<a class="headerlink" href="#declaring-static-permission-rules-the-claude_permissions_allow-field" title="Permanent link">&para;</a></h2>
+<p>A second any-section field, same pattern as <code>skills</code>: any package entry can carry
+<code>claude_permissions_allow</code>, a list of literal Claude Code permission-rule strings, checked
+regardless of that entry&rsquo;s <code>method</code>. <code>inv ai.install-skills</code> merges every declared rule into
+<code>~/.claude/settings.json</code>&rsquo;s <code>permissions.allow</code> — same safe-merge shape as <code>tasks/allowlist.py</code>&rsquo;s
+<code>apply</code> (every other key untouched, <code>.json.bak</code> written before any real change, only rule strings
+this mechanism wrote previously are ever removed) but through its own, separate manifest
+(<code>~/.local/state/power-user-linux-setup/claude-static-permissions-applied.json</code>) — <strong>deliberately
+not routed through the CLI-allowlist pipeline</strong> (see <a href="cli-allowlist.html"><code>cli-allowlist.md</code></a>): that
+pipeline exists specifically to classify CLI tool risk from <code>--help</code> output, and these are static,
+hand-declared rules with nothing to classify. Keeping the manifests separate means neither mechanism
+can ever remove a rule the other one owns, even though both write to the same file.</p>
+<p><code>[packages.research-library]</code> is the example: <code>Read</code>/<code>Glob</code>/<code>Grep</code> allowed, unprompted, for
+everything under <code>$RESEARCH_HOME</code> — deliberately treating that curated, read-only library like
+project files rather than gating every lookup, which is the entire point of building a shared
+library instead of fetching things ad hoc.</p>
+<p><strong>GitHub Copilot, if present, gets checked but not written to.</strong> <code>inv ai.install-skills</code> looks for a
+<code>github.copilot-*</code> VS Code extension and, if found, prints a note rather than guessing: research
+turned up <code>chat.tools.terminal.autoApprove</code> (terminal commands — already handled by
+<code>inv allowlist.render --target=copilot</code>) and <code>chat.tools.urls.autoApprove</code> (URL fetches), but no
+confirmed, documented Copilot setting for path-scoped <em>file-read</em> auto-approval the way Claude&rsquo;s
+<code>Read(pattern)</code> rules work — only a global, all-or-nothing
+<code>github.copilot.chat.agent.autoApproveFileChanges</code> boolean, which governs edits, not reads, and
+isn&rsquo;t scopable to one directory. Shipping a guessed key into a real settings.json seemed worse than
+an honest &ldquo;nothing applied, here&rsquo;s why.&rdquo; Revisit if a scoped-read key is ever confirmed.</p>
+<h2 id="declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories">Declaring the permission mode and scratch directories — <code>claude_default_mode</code>, <code>claude_additional_directories</code><a class="headerlink" href="#declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories" title="Permanent link">&para;</a></h2>
+<p>Two more <code>settings.json</code> keys <code>inv ai.install-skills</code> syncs, both declared on
+<code>[packages.claude-code]</code> (the mode is a single scalar read directly, like <code>claude_statusline</code>; the
+directories are an any-section list merged through their own manifest,
+<code>~/.local/state/power-user-linux-setup/claude-additional-directories-applied.json</code>, like
+<code>claude_permissions_allow</code>):</p>
+<ul>
+<li><code>claude_default_mode = "acceptEdits"</code> → <code>permissions.defaultMode</code>. Absent → set; matches → no-op;
+  a different explicit value → ask before replacing (declines by default). This machine&rsquo;s permission
+  setup is built for <code>acceptEdits</code>, where the allow/ask rules decide and anything unmatched that
+  isn&rsquo;t read-only prompts; <code>auto</code> mode replaces that with a classifier and, on top, instructs the
+  agent to prefer <code>cat</code>/<code>sed</code>/heredocs over the Read/Edit tools — the opposite of <code>~/AGENTS.md</code>. The
+  audit that settled this (3,956 Bash calls over four days, per-model chaining and truncation rates,
+  the <code>git -C</code> ask-rule bypass) and the mode comparison are in the <code>session-bash-audit</code> skill&rsquo;s
+  <code>references/research.md</code>; re-run the skill to re-measure.</li>
+<li><code>claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]</code> →
+  <code>permissions.additionalDirectories</code>, <code>~</code> expanded. The harness&rsquo;s own scratch locations — the
+  per-session scratchpad and background-job tmp — are outside every repo, so under <code>acceptEdits</code>
+  every write there would prompt. Entries from a settings file grant file access only; nothing
+  (<code>CLAUDE.md</code>, skills, hooks) loads from them, unlike <code>--add-dir</code>.</li>
+</ul>
+<p>Read <code>cli-allowlist.md</code>&rsquo;s <code>mode_covered</code> section for the matching change on the rules side: the
+filesystem commands <code>acceptEdits</code> gates by path (<code>mkdir</code>, <code>cp</code>, <code>rm</code>, &hellip;) no longer render as <code>ask</code>
+rules, because an explicit <code>ask</code> rule would beat the mode&rsquo;s in-scope grant.</p>
+<h2 id="declaring-the-statusline-the-claude_statusline-field">Declaring the statusline — the <code>claude_statusline</code> field<a class="headerlink" href="#declaring-the-statusline-the-claude_statusline-field" title="Permanent link">&para;</a></h2>
+<p><code>[packages.claude-statusline]</code> deploys the custom Claude Code statusline script
+(<code>config/statusline-command.sh</code> → <code>~/.claude/statusline-command.sh</code>, a <code>wrapper-script</code>-method
+entry, chmod 0o755 — same mechanism as <code>agents-md</code>/<code>pulse-proxy-start</code>) and declares
+<code>claude_statusline = { type = "command", command = "bash ~/.claude/statusline-command.sh" }</code> on that
+same package entry. <code>inv ai.install-skills</code> reads that value directly (not a scanned any-package
+field like <code>claude_permissions_allow</code> above — there&rsquo;s only ever one statusline, so no merge/manifest
+mechanism is needed) and syncs it into <code>~/.claude/settings.json</code>&rsquo;s top-level <code>statusLine</code> key:
+absent → set it; already correct → no-op; set to something else → ask before overwriting (declines
+by default, same <code>ui.ask</code> convention used elsewhere, auto-skipped non-interactively).</p>
+<p>Edit <code>config/statusline-command.sh</code> and re-run <code>inv tools.install</code> to change the script&rsquo;s behavior —
+its own header comment documents the color palette, icon sources (powerlevel10k&rsquo;s nerdfont icon
+table), and threshold rationale in full; this doc only covers how it&rsquo;s <em>deployed</em>.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./ai.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: AI tools">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                AI tools
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="./cli-allowlist.html" class="md-footer__link md-footer__link--next" aria-label="Next: CLI permission allowlist">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                CLI permission allowlist
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":".","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.tabs","navigation.top","navigation.tracking","search.highlight"],"search":"./assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="./assets/javascripts/bundle.6e5f0216.min.js"></script>
+      
+    
+  </body>
+</html>

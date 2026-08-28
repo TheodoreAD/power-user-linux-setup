@@ -1,0 +1,2870 @@
+
+<!doctype html>
+<html lang="en" class="no-js">
+  <head>
+    
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width,initial-scale=1">
+      
+      
+        <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
+      
+      
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/dev-container.html">
+      
+      
+        <link rel="prev" href="./wsl.html">
+      
+      
+        <link rel="next" href="./apt_packages.html">
+      
+      
+        
+      
+      
+      <link rel="icon" href="./assets/images/favicon.png">
+      <meta name="generator" content="zensical-0.0.44">
+    
+    
+      
+        <title>Dev Container - Power User Linux Setup</title>
+      
+    
+    
+      
+        
+      
+      <link rel="stylesheet" href="./assets/stylesheets/modern/main.fba56155.min.css">
+      
+        
+          
+        
+        <link rel="stylesheet" href="./assets/stylesheets/modern/palette.dfe2e883.min.css">
+      
+      
+
+
+    
+    
+      
+    
+    
+      
+        
+        
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link rel="stylesheet" href="https://fonts.googleapis.com/css?family=Roboto:300,300i,400,400i,500,500i,700,700i%7CRoboto+Mono:400,400i,700,700i&amp;display=fallback">
+        <style>:root{--md-text-font:"Roboto";--md-code-font:"Roboto Mono"}</style>
+      
+    
+    
+      <link rel="stylesheet" href="./extra/extra.css">
+    
+    <script>__md_scope=new URL(".",location),__md_scope.pathname.endsWith("/")||(__md_scope=new URL(__md_scope.pathname+"/",location)),__md_hash=e=>[...e].reduce(((e,t)=>(e<<5)-e+t.charCodeAt(0)),0),__md_get=(e,t=localStorage,_=__md_scope)=>JSON.parse(t.getItem(_.pathname+"."+e)),__md_set=(e,t,_=localStorage,a=__md_scope)=>{try{_.setItem(a.pathname+"."+e,JSON.stringify(t))}catch(e){}},document.documentElement.setAttribute("data-platform",navigator.platform)</script>
+    
+      
+
+    
+    
+  </head>
+  
+  
+    
+    
+      
+    
+    
+    
+    
+    <body dir="ltr" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange">
+  
+    
+    <input class="md-toggle" data-md-toggle="drawer" type="checkbox" id="__drawer" autocomplete="off">
+    <input class="md-toggle" data-md-toggle="search" type="checkbox" id="__search" autocomplete="off">
+    <label class="md-overlay" for="__drawer" aria-label="Navigation"></label>
+    <div data-md-component="skip">
+      
+        
+        <a href="#dev-container" class="md-skip">
+          Skip to content
+        </a>
+      
+    </div>
+    <div data-md-component="announce">
+      
+    </div>
+    
+    
+      
+
+<header class="md-header" data-md-component="header">
+  <nav class="md-header__inner md-grid" aria-label="Header">
+    <a href="./index.html" title="Power User Linux Setup" class="md-header__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    <label class="md-header__button md-icon" for="__drawer" aria-label="Navigation">
+      
+      <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-menu" viewBox="0 0 24 24"><path d="M4 5h16M4 12h16M4 19h16"/></svg>
+    </label>
+    <div class="md-header__title" data-md-component="header-title">
+      <div class="md-header__ellipsis">
+        <div class="md-header__topic">
+          <span class="md-ellipsis">
+            Power User Linux Setup
+          </span>
+        </div>
+        <div class="md-header__topic" data-md-component="header-topic">
+          <span class="md-ellipsis">
+            
+              Dev Container
+            
+          </span>
+        </div>
+      </div>
+    </div>
+    
+      
+        <form class="md-header__option" data-md-component="palette">
+  
+    
+    
+    
+    <input class="md-option" data-md-color-media="none" data-md-color-scheme="slate" data-md-color-primary="blue" data-md-color-accent="orange"  aria-hidden="true"  type="radio" name="__palette" id="__palette_0">
+    
+  
+</form>
+      
+    
+    
+      <script>var palette=__md_get("__palette");if(palette&&palette.color){if("(prefers-color-scheme)"===palette.color.media){var media=matchMedia("(prefers-color-scheme: light)"),input=document.querySelector(media.matches?"[data-md-color-media='(prefers-color-scheme: light)']":"[data-md-color-media='(prefers-color-scheme: dark)']");palette.color.media=input.getAttribute("data-md-color-media"),palette.color.scheme=input.getAttribute("data-md-color-scheme"),palette.color.primary=input.getAttribute("data-md-color-primary"),palette.color.accent=input.getAttribute("data-md-color-accent")}for(var[key,value]of Object.entries(palette.color))document.body.setAttribute("data-md-color-"+key,value)}</script>
+    
+    
+    
+      
+      
+        <label class="md-header__button md-icon" for="__search" aria-label="Search">
+          
+          <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-search" viewBox="0 0 24 24"><path d="m21 21-4.34-4.34"/><circle cx="11" cy="11" r="8"/></svg>
+        </label>
+        <div class="md-search" data-md-component="search" role="dialog" aria-label="Search">
+  <button type="button" class="md-search__button">
+    Search
+  </button>
+</div>
+      
+    
+    <div class="md-header__source">
+      
+        <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+      
+    </div>
+  </nav>
+  
+</header>
+    
+    <div class="md-container" data-md-component="container">
+      
+      
+        
+          
+            
+<nav class="md-tabs" aria-label="Tabs" data-md-component="tabs">
+  <div class="md-grid">
+    <ul class="md-tabs__list">
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="./index.html" class="md-tabs__link">
+        
+  
+  Home
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    <li class="md-tabs__item">
+      <a href="./configuration.html" class="md-tabs__link">
+        
+  
+  How it works
+
+      </a>
+    </li>
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./zsh.html" class="md-tabs__link">
+          
+  
+  Shell & desktop
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./python.html" class="md-tabs__link">
+          
+  
+  Languages & tooling
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./git.html" class="md-tabs__link">
+          
+  
+  Cloud & accounts
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./ai.html" class="md-tabs__link">
+          
+  
+  AI
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+    
+  
+  
+    
+      
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item md-tabs__item--active">
+        <a href="./wsl.html" class="md-tabs__link">
+          
+  
+  Environments
+
+        </a>
+      </li>
+    
+  
+
+      
+        
+  
+  
+  
+  
+    
+      
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-tabs__item">
+        <a href="./apt_packages.html" class="md-tabs__link">
+          
+  
+  Reference
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ul>
+  </div>
+</nav>
+          
+        
+      
+      <main class="md-main" data-md-component="main">
+        <div class="md-main__inner md-grid">
+          
+            
+              
+              <div class="md-sidebar md-sidebar--primary" data-md-component="sidebar" data-md-type="navigation" >
+                <div class="md-sidebar__scrollwrap">
+                  <div class="md-sidebar__inner">
+                    
+
+
+  
+
+
+<nav class="md-nav md-nav--primary md-nav--lifted" aria-label="Navigation" data-md-level="0">
+  <label class="md-nav__title" for="__drawer">
+    <a href="./index.html" title="Power User Linux Setup" class="md-nav__button md-logo" aria-label="Power User Linux Setup" data-md-component="logo">
+      
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-book-open" viewBox="0 0 24 24"><path d="M12 7v14M3 18a1 1 0 0 1-1-1V4a1 1 0 0 1 1-1h5a4 4 0 0 1 4 4 4 4 0 0 1 4-4h5a1 1 0 0 1 1 1v13a1 1 0 0 1-1 1h-6a3 3 0 0 0-3 3 3 3 0 0 0-3-3z"/></svg>
+
+    </a>
+    Power User Linux Setup
+  </label>
+  
+    <div class="md-nav__source">
+      <a href="https://github.com/TheodoreAD/power-user-linux-setup" title="Go to repository" class="md-source" data-md-component="source">
+  <div class="md-source__icon md-icon">
+    
+    <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 448 512"><!--! Font Awesome Free 7.2.0 by @fontawesome - https://fontawesome.com License - https://fontawesome.com/license/free (Icons: CC BY 4.0, Fonts: SIL OFL 1.1, Code: MIT License) Copyright 2026 Fonticons, Inc.--><path fill="currentColor" d="M439.6 236.1 244 40.5c-5.4-5.5-12.8-8.5-20.4-8.5s-15 3-20.4 8.4L162.5 81l51.5 51.5c27.1-9.1 52.7 16.8 43.4 43.7l49.7 49.7c34.2-11.8 61.2 31 35.5 56.7-26.5 26.5-70.2-2.9-56-37.3L240.3 199v121.9c25.3 12.5 22.3 41.8 9.1 55-6.4 6.4-15.2 10.1-24.3 10.1s-17.8-3.6-24.3-10.1c-17.6-17.6-11.1-46.9 11.2-56v-123c-20.8-8.5-24.6-30.7-18.6-45L142.6 101 8.5 235.1C3 240.6 0 247.9 0 255.5s3 15 8.5 20.4l195.6 195.7c5.4 5.4 12.7 8.4 20.4 8.4s15-3 20.4-8.4l194.7-194.7c5.4-5.4 8.4-12.8 8.4-20.4s-3-15-8.4-20.4"/></svg>
+  </div>
+  <div class="md-source__repository">
+    TheodoreAD/power-user-linux-setup
+  </div>
+</a>
+    </div>
+  
+  <ul class="md-nav__list" data-md-scrollfix>
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./index.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Home
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./configuration.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  How it works
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_3" >
+        
+          
+          <label class="md-nav__link" for="__nav_3" id="__nav_3_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Shell & desktop
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_3_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_3">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Shell & desktop
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./zsh.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Zsh
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./terminal.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Terminal
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./keybindings.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Keybindings
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./shortcuts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Shortcuts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./input_devices.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Input devices
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./screen_capture.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Screen capture
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./chrome.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Chrome PWA launchers
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gnome_extensions.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GNOME extensions
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./fonts.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Fonts
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ide.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  IDEs
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_4" >
+        
+          
+          <label class="md-nav__link" for="__nav_4" id="__nav_4_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Languages & tooling
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_4_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_4">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Languages & tooling
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./python.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Python
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./golang.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Go
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./rust.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Rust
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./scala.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Scala
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./js.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Node.js
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./docker.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Docker
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./kubernetes.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Kubernetes
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_5" >
+        
+          
+          <label class="md-nav__link" for="__nav_5" id="__nav_5_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Cloud & accounts
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_5_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_5">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Cloud & accounts
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./git.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Git
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./github.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitHub CLI (gh)
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gitlab.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  GitLab
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./gcloud.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Google Cloud CLI
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ssh.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  SSH
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./networking.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./corporate-proxy.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate proxy
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./certs.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Corporate CA bundle
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_6" >
+        
+          
+          <label class="md-nav__link" for="__nav_6" id="__nav_6_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  AI
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_6_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_6">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  AI
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./ai.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  AI tools
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./claude-code.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Claude Code environment
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./cli-allowlist.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  CLI permission allowlist
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+    
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+      
+        
+        
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--active md-nav__item--section md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_7" checked>
+        
+          
+          <label class="md-nav__link" for="__nav_7" id="__nav_7_label" tabindex="">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Environments
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_7_label" aria-expanded="true">
+          <label class="md-nav__title" for="__nav_7">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Environments
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./wsl.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  WSL
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+    
+  
+  
+  
+    <li class="md-nav__item md-nav__item--active">
+      
+      
+      
+      
+        
+      
+      
+        <label class="md-nav__link md-nav__link--active" for="__toc">
+          
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dev Container
+
+    
+  </span>
+  
+  
+
+          <span class="md-nav__icon md-icon"></span>
+        </label>
+      
+      <a href="dev-container.html" class="md-nav__link md-nav__link--active">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Dev Container
+
+    
+  </span>
+  
+  
+
+      </a>
+      
+        
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-devcontainerjson-postcreatecommand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Recommended: <code>devcontainer.json</code> + <code>postCreateCommand</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended: devcontainer.json + postCreateCommand">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mounting-host-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Mounting host directories
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tags-to-exclude" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tags to exclude
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternative-baking-a-custom-base-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Alternative: baking a custom base image
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alternative: baking a custom base image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automated-functional-verification-inv-verifyall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Automated functional verification (<code>inv verify.all</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#non-root-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Non-root user
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#round-tripping-through-devcontainerscli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Round-tripping through <code>@devcontainers/cli</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleanup-reclaiming-image-layer-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cleanup — reclaiming image-layer space
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Docker
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Other notes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+      
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+      
+      
+  
+  
+  
+  
+    
+    
+      
+        
+      
+        
+      
+        
+      
+        
+      
+        
+      
+    
+    
+    
+      
+      
+        
+      
+    
+    
+    <li class="md-nav__item md-nav__item--nested">
+      
+        
+        
+        <input class="md-nav__toggle md-toggle " type="checkbox" id="__nav_8" >
+        
+          
+          <label class="md-nav__link" for="__nav_8" id="__nav_8_label" tabindex="0">
+            
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Reference
+
+    
+  </span>
+  
+  
+
+            <span class="md-nav__icon md-icon"></span>
+          </label>
+        
+        <nav class="md-nav" data-md-level="1" aria-labelledby="__nav_8_label" aria-expanded="false">
+          <label class="md-nav__title" for="__nav_8">
+            <span class="md-nav__icon md-icon"></span>
+            
+  
+  Reference
+
+          </label>
+          <ul class="md-nav__list" data-md-scrollfix>
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./apt_packages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Apt packages
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./citrix.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Citrix
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./webex.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Webex
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./locale.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Locale
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./troubleshooting.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Troubleshooting
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+          </ul>
+        </nav>
+      
+    </li>
+  
+
+    
+  </ul>
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+            
+              
+              <div class="md-sidebar md-sidebar--secondary" data-md-component="sidebar" data-md-type="toc" >
+                <div class="md-sidebar__scrollwrap">
+                  
+                    
+                    
+                    
+                      
+                    
+                    
+                      <input class="md-nav__toggle md-toggle" type="checkbox" id="__toc">
+                      <div class="md-sidebar-button__wrapper">
+                        <label class="md-sidebar-button" for="__toc"></label>
+                      </div>
+                    
+                  
+                  <div class="md-sidebar__inner">
+                    
+
+
+<nav class="md-nav md-nav--secondary" aria-label="On this page">
+  
+  
+  
+    
+  
+  
+    <label class="md-nav__title" for="__toc">
+      <span class="md-nav__icon md-icon"></span>
+      On this page
+    </label>
+    <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
+      
+        <li class="md-nav__item">
+  <a href="#inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        <code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#recommended-devcontainerjson-postcreatecommand" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Recommended: <code>devcontainer.json</code> + <code>postCreateCommand</code>
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Recommended: devcontainer.json + postCreateCommand">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#mounting-host-directories" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Mounting host directories
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#tags-to-exclude" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Tags to exclude
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#alternative-baking-a-custom-base-image" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Alternative: baking a custom base image
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Alternative: baking a custom base image">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#automated-functional-verification-inv-verifyall" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Automated functional verification (<code>inv verify.all</code>)
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#non-root-user" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Non-root user
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#round-tripping-through-devcontainerscli" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Round-tripping through <code>@devcontainers/cli</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#cleanup-reclaiming-image-layer-space" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Cleanup — reclaiming image-layer space
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#docker" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Docker
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#other-notes" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Other notes
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+    </ul>
+  
+</nav>
+                  </div>
+                </div>
+              </div>
+            
+          
+          
+            <div class="md-content" data-md-component="content">
+              
+                
+
+
+
+  
+
+
+  <nav class="md-path" aria-label="Navigation" >
+    <ol class="md-path__list">
+      
+        
+  
+  
+    <li class="md-path__item">
+      <a href="./index.html" class="md-path__link">
+        
+  
+  <span class="md-ellipsis">
+    Home
+  </span>
+
+      </a>
+    </li>
+  
+
+      
+      
+        
+  
+  
+    
+    
+      
+        
+      
+        
+      
+    
+    
+    
+    
+      <li class="md-path__item">
+        <a href="./wsl.html" class="md-path__link">
+          
+  
+  <span class="md-ellipsis">
+    Environments
+  </span>
+
+        </a>
+      </li>
+    
+  
+
+      
+    </ol>
+  </nav>
+
+              
+              <article class="md-content__inner md-typeset">
+                
+                  
+  
+  
+
+
+<h1 id="dev-container">Dev Container<a class="headerlink" href="#dev-container" title="Permanent link">&para;</a></h1>
+<p>The same <code>setup.toml</code> and invoke tasks that configure a workstation can provision a dev container.
+Two distribution paths, both built on the same underlying fix (the systemd gap, described next):</p>
+<ul>
+<li><strong><a href="#recommended-devcontainerjson-postcreatecommand">Recommended: devcontainer.json + postCreateCommand</a></strong>
+  — layer PULSE&rsquo;s tooling onto <em>any</em> base image you already use, at container-create time. No custom
+  image to build or maintain; consumers aren&rsquo;t forced onto one shared base image.</li>
+<li><strong><a href="#alternative-baking-a-custom-base-image">Alternative: baking a custom base image</a></strong> — bake
+  PULSE into the image itself at build time, via <code>docker/Dockerfile</code>. Still legitimate where a
+  prebuilt image&rsquo;s startup-time win matters more than the postCreateCommand flow&rsquo;s flexibility (e.g.
+  CI runner images).</li>
+</ul>
+<h2 id="inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically"><code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically<a class="headerlink" href="#inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically" title="Permanent link">&para;</a></h2>
+<p><code>inv setup</code> runs a <code>system</code> phase first (<code>system.set-locale</code>, <code>system.configure-dns</code>) that needs
+<code>systemctl</code>/ <code>localectl</code> — meaningless, and previously fatal, in a container with no init system.
+<code>inv setup</code> now detects this itself (<code>util.has_systemd()</code>, the same check <code>require_systemd()</code> uses)
+and, when there&rsquo;s no systemd and it isn&rsquo;t WSL, skips both the <code>system</code> phase and the <code>desktop</code> phase
+(<code>fonts.install</code>/<code>fonts.configure</code> — irrelevant in a headless container, same reasoning
+<code>wsl.install</code> already applies) instead of raising. Nothing to configure for this — it Just Works the
+same way <code>inv setup</code> already auto-detects WSL and delegates to <code>wsl.install</code>. Both distribution
+paths below call <code>inv setup</code> directly (via <code>bootstrap-devcontainer.sh</code>), so this explanation is
+load-bearing for both, not incidental background.</p>
+<h2 id="recommended-devcontainerjson-postcreatecommand">Recommended: <code>devcontainer.json</code> + <code>postCreateCommand</code><a class="headerlink" href="#recommended-devcontainerjson-postcreatecommand" title="Permanent link">&para;</a></h2>
+<p>Point any Debian/Ubuntu-family <code>image</code> at <code>bootstrap-devcontainer.sh</code>, curled from a pinned ref:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-project"</span><span class="p">,</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"</span><span class="p">,</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh | bash"</span>
+</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>This repo&rsquo;s own <code>.devcontainer/devcontainer.json</code> dogfoods the same script with <code>--local</code> (skip the
+clone — it&rsquo;s already inside a checkout):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"power-user-linux-setup"</span><span class="p">,</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="w">  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"</span><span class="p">,</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bash bootstrap-devcontainer.sh --local"</span>
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><code>bootstrap-devcontainer.sh</code> clones this repo at <code>--ref</code> (default <code>stable</code>) into
+<code>~/.local/share/pulse-devcontainer-src</code>, runs <code>bootstrap.sh</code> (uv + invoke install, reused as-is),
+then <code>inv setup</code> with <code>PULSE_EXCLUDE_TAGS</code> resolved from <code>--exclude-tags</code> or, if omitted, from
+<code>inv devcontainer.print-exclude-tags</code> (see <a href="#tags-to-exclude">Tags to exclude</a> below).</p>
+<p><strong>Why <code>stable</code>, not <code>master</code>/<code>HEAD</code>:</strong> an unpinned ref would mean every consumer&rsquo;s
+<code>postCreateCommand</code> runs whatever&rsquo;s currently on <code>master</code>, including anything broken mid-commit.
+<code>stable</code> is a git tag that CI (<code>.github/workflows/devcontainer.yml</code>) only force-moves forward when a
+build/smoke-test against <code>.devcontainer/devcontainer.json</code> passes — &ldquo;up to date&rdquo; without ever
+running untested instructions. That workflow is currently <code>workflow_dispatch</code>-only while under
+active development (see the workflow file for the re-enable note); until it&rsquo;s live, pin <code>--ref</code> to a
+specific commit or branch you&rsquo;ve verified yourself, not <code>stable</code>.</p>
+<p><strong>Constraint:</strong> this only works on apt-based (Debian/Ubuntu-family) images — <code>bootstrap.sh</code>&rsquo;s
+self-heal preamble and every <code>[packages.*]</code> <code>apt</code>/<code>apt-repo</code>/<code>deb-github</code>/<code>deb-url</code> method assume
+<code>apt</code>/<code>dpkg</code>. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.</p>
+<h3 id="mounting-host-directories">Mounting host directories<a class="headerlink" href="#mounting-host-directories" title="Permanent link">&para;</a></h3>
+<p>A fresh container has none of your credentials: <code>inv identity.init</code> has to be re-run,
+<code>ssh.create-keys</code> mints a brand-new keypair (which then needs re-adding to GitHub), and a corporate
+CA bundle <code>certs.install</code> needs isn&rsquo;t present at all. <code>inv devcontainer.print-mounts</code> discovers
+what&rsquo;s actually available on <strong>this host</strong> and prints a ready-to-paste <code>devcontainer.json</code>
+<code>mounts</code>/<code>remoteEnv</code> fragment for whichever of it you select — it never writes or edits any file
+itself, including this repo&rsquo;s own <code>.devcontainer/devcontainer.json</code> (that file is shared and
+CI-smoke-tested; your personal host paths don&rsquo;t belong in it). Run it on the <strong>host</strong>, before
+<code>devcontainer up</code> or opening the folder in VS Code — devcontainer mounts are fixed at
+container-creation time, <code>postCreateCommand</code> runs too late to add any, which is also why this can&rsquo;t
+just be folded into <code>bootstrap-devcontainer.sh</code>.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>devcontainer.print-mounts
+</span></code></pre></div>
+<p>It only prompts for candidates that actually exist on this host (no <code>~/.aws</code>? no prompt for it).</p>
+<p><strong>SSH — agent forwarding first.</strong> The default candidate forwards <code>$SSH_AUTH_SOCK</code> via
+<code>${localEnv:SSH_AUTH_SOCK}</code> (a devcontainer.json substitution resolved fresh at container-creation
+time, so it survives the host socket path changing between login sessions) plus a <code>remoteEnv</code>
+override pointing the container&rsquo;s <code>SSH_AUTH_SOCK</code> at the mounted socket — private key material never
+enters the container. On WSL2 + Docker Desktop specifically, this path has multiple open, unresolved
+upstream bugs (<code>microsoft/vscode-remote-release#3902</code>/<code>#8689</code>/<code>#2925</code>);
+<code>inv
+devcontainer.print-mounts</code> prints this caveat automatically when it detects WSL. The reliable
+fix there is running <code>ssh-agent</code> natively <em>inside</em> WSL2 itself, not relying on the Windows-side
+agent — not solved or automated here, just called out. If no <code>$SSH_AUTH_SOCK</code> is found at all, the
+task falls back to offering a direct <code>~/.ssh</code> mount instead, defaulting to selected — with the
+tradeoff printed alongside it: private key bytes become visible inside the container.</p>
+<p><strong>Corporate CA bundle — same absolute path on both sides.</strong> <code>identity.toml</code>&rsquo;s <code>[certs] bundle</code> field
+is an absolute host path, read verbatim by <code>tasks/certs.py</code> at runtime; mounting it at the
+<em>identical</em> absolute path inside the container means <code>certs.py</code> keeps resolving it correctly with
+zero code changes, once <code>~/.config/power-user-linux-setup</code> (which holds <code>identity.toml</code> itself) is
+also mounted.</p>
+<p><strong>Code directories are automatic — no feature needed here.</strong> Dev containers are repo-bounded by
+convention: the current repo is already mounted as the workspace folder by the devcontainer spec
+itself. The rare case of genuinely needing a sibling repo too is a single manual <code>mounts</code> entry, not
+something to automate:</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">"mounts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"source=${localEnv:HOME}/projects/other-repo,target=/workspaces/other-repo,type=bind"</span><span class="p">]</span>
+</span></code></pre></div>
+<p><strong>Security note.</strong> Anything mounted into the container is visible to everything that runs inside it
+— any dependency, any installed tool. This is why most candidates default to <code>readonly</code>, and why the
+lower-value/higher-sensitivity ones (<code>~/.aws</code>, <code>~/.kube</code>, <code>~/.config/gcloud</code>, <code>~/.config/gh</code>,
+<code>~/.gnupg</code>) default to <strong>not offered/opt-in</strong> rather than pre-selected.</p>
+<h2 id="tags-to-exclude">Tags to exclude<a class="headerlink" href="#tags-to-exclude" title="Permanent link">&para;</a></h2>
+<!-- PULSE::devcontainer-tags -->
+
+<table>
+<thead>
+<tr>
+<th>Tag</th>
+<th>Excludes</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>gui</code></td>
+<td>Wayland/X11 apps, desktop tools, browsers</td>
+</tr>
+<tr>
+<td><code>workstation</code></td>
+<td>Hardware sensors (<code>lm-sensors</code>), local terminal multiplexer (<code>tmux</code>), <strong>Docker</strong></td>
+</tr>
+<tr>
+<td><code>corporate</code></td>
+<td>Webex, Citrix, and other work-specific tools</td>
+</tr>
+<tr>
+<td><code>ide</code></td>
+<td>Full IDEs and their support profiles (<code>vscode</code>, <code>jetbrains-toolbox</code>)</td>
+</tr>
+<tr>
+<td><code>gnome</code></td>
+<td>GNOME Shell extensions and GNOME-only <code>xdg-desktop-portal</code> backends</td>
+</tr>
+</tbody>
+</table>
+<p>Example — this is the default (equivalent to omitting <code>--exclude-tags</code>; see
+<code>bootstrap-devcontainer.sh</code>&rsquo;s own default resolution via <code>inv devcontainer.print-exclude-tags</code>):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"</span><span class="p">,</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bash bootstrap-devcontainer.sh"</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+</span></code></pre></div>
+<p>To override: <code>bash bootstrap-devcontainer.sh --exclude-tags gui,workstation,corporate,ide,gnome</code></p>
+<!-- /PULSE::devcontainer-tags -->
+
+<p>(Generated by <code>inv devcontainer.render-docs</code> from <code>CONTAINER_EXCLUDE_TAGS</code> in
+<code>tasks/devcontainer.py</code> — edit the constant, not this block, then re-run that task.)</p>
+<p><code>ide</code>/<code>gnome</code> weren&rsquo;t part of the original recipe here but earn their place the same way they do
+under WSL (see <code>docs/wsl.md</code>) — nothing in a container has a GNOME session or benefits from a second
+IDE window running inside it.</p>
+<h2 id="alternative-baking-a-custom-base-image">Alternative: baking a custom base image<a class="headerlink" href="#alternative-baking-a-custom-base-image" title="Permanent link">&para;</a></h2>
+<p><code>docker/Dockerfile</code> is the canonical, tested example of layering PULSE onto a base image at <em>build</em>
+time — the bake-time analog of the <code>postCreateCommand</code> flow above. It serves three purposes: a
+documented working example, a vehicle for testing uncommitted local changes to
+<code>tasks/*.py</code>/<code>setup.toml</code> (it <code>COPY</code>s the local working tree and runs
+<code>bootstrap-devcontainer.sh --local</code>, not a git clone), and a template to <code>FROM</code>/copy when
+hand-rolling a custom image with extra tooling layered on a strong base. Build it from the repo
+root:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>docker/Dockerfile<span class="w"> </span>-t<span class="w"> </span>pulse-devcontainer<span class="w"> </span>.
+</span></code></pre></div>
+<p>No <code>apt-get install</code> line at all — <code>bootstrap.sh</code> (called by <code>bootstrap-devcontainer.sh</code>)
+self-installs every OS-level prerequisite (<code>curl</code>, <code>gnupg</code>, <code>ca-certificates</code>, <code>sudo</code>) the base
+image doesn&rsquo;t already have, via a preamble gated behind <code>command -v apt-get</code> that no-ops entirely on
+a system that already has them (every bare-metal/WSL/VM install, per <code>README.md</code>&rsquo;s existing
+&ldquo;Requirements&rdquo; section). Only a genuinely minimal container base image exercises the install branch:</p>
+<ul>
+<li><code>python3</code>/<code>python3-pip</code> were never actually needed — <code>inv setup</code> never touches system Python at
+  all; <code>bootstrap.sh</code> provisions Python itself via <code>uv python install</code>.</li>
+<li><code>git</code>/<code>zsh</code> are ordinary <code>[packages.*]</code> apt entries (<code>setup.toml</code>&rsquo;s <code>git</code>/<code>zsh</code> sections),
+  installed by <code>apt.install-base</code> well before anything in <code>inv setup</code> needs either.</li>
+<li><code>curl</code>/<code>sudo</code>/<code>ca-certificates</code>/<code>gnupg</code> are genuine prerequisites, but <code>bootstrap.sh</code>&rsquo;s job, not
+  the Dockerfile&rsquo;s — the same self-heal preamble every other use case (bare metal, WSL, the
+  <code>postCreateCommand</code> path above) already runs unconditionally.</li>
+</ul>
+<p><code>gnupg</code> specifically matters because every <code>apt-repo</code>-method package (<code>gh</code>, <code>kubectl</code>, <code>docker</code>,
+<code>terraform</code>, &hellip;) registers its repo by piping a downloaded key through <code>gpg --dearmor</code> — without
+<code>gpg</code> present, that pipe fails (<code>curl: (23) Failure writing output to destination</code>),
+<code>apt.install-repos</code> treats the failed key fetch as &ldquo;skip this repo, print a WARNING, keep going&rdquo;
+rather than fatal, and <code>inv setup</code> used to still exit 0 while silently missing
+<code>kubectl</code>/<code>docker</code>/<code>terraform</code> entirely and getting whatever stale version of <code>gh</code> happens to
+already be in Ubuntu&rsquo;s own <code>universe</code> repo instead of the pinned upstream one. <code>tasks/apt.py</code>&rsquo;s
+<code>repos()</code> task independently self-ensures <code>gnupg</code>/<code>lsb-release</code> too (a second, narrower layer — see
+<code>tasks/apt.py</code>&rsquo;s comment on that block) so a standalone <code>inv apt.install-repos</code> run stays protected
+even outside the <code>bootstrap.sh</code> flow. This specific bug is also exactly the shape of thing
+<code>inv verify.all</code> now catches automatically and generally — see below — so <code>inv setup</code> no longer
+exits 0 while quietly missing something.</p>
+<h3 id="automated-functional-verification-inv-verifyall">Automated functional verification (<code>inv verify.all</code>)<a class="headerlink" href="#automated-functional-verification-inv-verifyall" title="Permanent link">&para;</a></h3>
+<p><code>inv setup</code>&rsquo;s <code>packages</code> phase ends with <code>inv verify.all</code> (<code>tasks/verify.py</code>) — a hard,
+convention-based check that every package this run installed also actually <em>works</em>, not just that
+it&rsquo;s present. The gnupg bug above was originally found by hand (manually checking <code>gh --version</code> and
+<code>dpkg -l</code>); this task exists so that class of bug fails the build loudly instead of needing a human
+to go looking for it.</p>
+<p>Convention, not a hand-written test per package: the default check is
+<code>&lt;check_cmd or table-key&gt;
+--version</code>, with existence checks (no invocation) for methods that install
+something with no command by nature — <code>git-clone</code>/<code>apparmor-profile</code> dest/profile paths — and the
+deploy classifier&rsquo;s verdict (<code>tasks/deploy.py</code>, the same one <code>inv deploy.status</code> reports) for every
+path this repo deploys under <code>~</code>: <code>wrapper-script</code> <code>content_file</code>s, any method&rsquo;s <code>config_files</code>, and
+skills (existence alone doesn&rsquo;t catch a deploy that landed stale or hand-edited content). A
+customized <code>config_files</code> copy passes — it&rsquo;s yours after the first install — anything else that
+differs from what a fresh deploy would write fails. <code>gnome-extension</code> always skips, since no
+automated path (not even <code>inv setup</code>) ever calls <code>inv gnome.install-extensions</code> — see
+<code>tasks/gnome.py</code>, GNOME sessions are never touched programmatically in this repo. Per-package
+<code>setup.toml</code> fields override the convention: <code>verify_cmd</code> for a different invocation,
+<code>verify = false</code> for &ldquo;no functional check is possible at all.&rdquo; No fallback chain anywhere — the
+first failure aborts <code>inv setup</code> immediately, deliberately the opposite of <code>apt.py</code>&rsquo;s
+<code>warn=True</code>-and-continue pattern.</p>
+<p>Auditing this against a real, fully-provisioned machine (not just reading the code) surfaced real
+bugs the convention alone wouldn&rsquo;t have predicted:</p>
+<ul>
+<li><strong><code>nyancat --version</code> doesn&rsquo;t exit</strong> — it ignores the unrecognized flag and runs its terminal
+  animation forever instead. Auditing this by hand actually hung the machine it ran on before a fix
+  was in place. Every invocation is now wrapped in <code>timeout 15s</code> — not a fallback, just a hard
+  ceiling on the one attempt — so a badly-behaved package fails loudly in 15 seconds instead of
+  hanging <code>inv setup</code> (or the machine) indefinitely. <code>px-proxy --version</code> had the same shape of bug
+  — it started the proxy daemon itself instead of printing a version and exiting.</li>
+<li><strong>Container-only PATH gaps</strong>: <code>go</code> and <code>node</code> both install to a location that&rsquo;s only ever put on
+  <code>PATH</code> by a <code>zshenv</code>/Oh-My-Zsh-plugin snippet, sourced by an interactive shell — never sourced
+  within the single non-interactive <code>RUN</code> layer a Dockerfile build runs in. Both work fine
+  interactively on bare metal (a later shell sources the snippet) but need an explicit <code>verify_cmd</code>
+  pointing at the real install path in <code>setup.toml</code> to be provable inside the same <code>RUN</code> that just
+  installed them.</li>
+<li><strong>Table-key-vs-real-binary mismatches</strong>: several entries&rsquo; section name isn&rsquo;t the command it
+  installs — <code>[packages.edge]</code> installs <code>microsoft-edge</code>, <code>[packages.vscode]</code> installs <code>code</code>,
+  <code>[packages.ripgrep]</code> installs <code>rg</code>, <code>[packages.kubectl]</code>/<code>[packages.helm]</code>/<code>[packages.go]</code>/<code>k9s</code>
+  don&rsquo;t support a <code>--version</code> flag at all (subcommand or short flag instead). Each got an explicit
+  <code>verify_cmd</code> once the audit found it — the convention&rsquo;s default guess is a starting point, not a
+  guarantee.</li>
+<li><strong>A genuinely stale machine</strong>: <code>[packages.pulse-proxy-start]</code> (a <code>wrapper-script</code> entry) was added
+  to <code>setup.toml</code> after this machine&rsquo;s last full <code>inv setup</code> run and had simply never been installed
+  here — <code>inv verify.all</code> caught that too; running <code>inv tools.install</code> once fixed it. This is the
+  mechanism doing exactly its job, not a false positive.</li>
+</ul>
+<p>The Dockerfile used to also need <code>COPY skills/ skills/</code>, because <code>ai.install-skills</code> (part of the
+<code>packages</code> phase <code>inv setup</code> always runs) copied this repo&rsquo;s own skill directories into the image
+and failed with a <code>FileNotFoundError</code> if they weren&rsquo;t there. Skills now install from
+<a href="https://github.com/TheodoreAD/agent-skills"><code>agent-skills</code></a> via the <code>skills</code> CLI, so there is
+nothing repo-local to copy — but note the consequence for a container build: that install reaches
+the network and needs <code>node</code>/<code>npx</code> present, where the old copy needed neither. <code>PATH</code> needs
+<code>/root/.local/bin</code> up front since that&rsquo;s where <code>uv</code>, <code>invoke</code>, and most script/binary/archive-method
+tools land (<code>~/.local/bin</code> when running as root during a build is <code>/root/.local/bin</code>).</p>
+<p><code>inv clean.all-full</code> is the container-appropriate cleanup call — see
+<a href="#cleanup-reclaiming-image-layer-space">Cleanup</a> below for what it does, what it actually saves
+(less than you&rsquo;d think), and why the container case wants the <em>full</em> variant specifically, not the
+conservative one a workstation should use.</p>
+<p>There&rsquo;s no supported way to hand-pick a subset of tasks any more — <code>inv setup</code> runs the full
+sequence and self-skips what doesn&rsquo;t apply (system/desktop phases with no systemd), the same &ldquo;just
+call <code>inv setup</code>&rdquo; story bare-metal installs already have. Both <code>bootstrap-devcontainer.sh</code> and
+<code>docker/Dockerfile</code> rely on this rather than hand-listing individual tasks, so the list can&rsquo;t drift
+out of sync with <code>tasks/setup.py</code>&rsquo;s actual phase composition.</p>
+<p>Re-running <code>inv setup</code> inside an already-provisioned container (not a fresh <code>docker build</code> — e.g.
+<code>devcontainer exec -- inv setup</code> against a container that&rsquo;s been kept running) is safe: confirmed by
+running it twice against the same live container. Everything already installed reports
+<code>already installed</code>/<code>already configured</code> and the <code>shell</code> phase offers to skip outright; nothing gets
+reinstalled or duplicated. The one thing that doesn&rsquo;t participate in that skip logic is
+<code>python.install-tools</code> (<code>uv tool install</code> for <code>keyring</code>/<code>nox</code>/<code>mkdocs-material</code>/etc.) — it
+re-resolves each package on every run rather than probing first, which is harmless (<code>uv</code> no-ops
+instantly on an already-satisfied install) but means you&rsquo;ll see it &ldquo;reinstall&rdquo; on every re-run
+regardless of whether anything changed.</p>
+<h3 id="non-root-user">Non-root user<a class="headerlink" href="#non-root-user" title="Permanent link">&para;</a></h3>
+<p>Every real devcontainer runs as a non-root user with passwordless sudo, not root.
+<code>docker/Dockerfile</code> needs no code changes for that — only a Dockerfile-side user, added before
+<code>WORKDIR</code>:</p>
+<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-m<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>dev<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"dev ALL=(ALL) NOPASSWD:ALL"</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/sudoers.d/dev<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0440</span><span class="w"> </span>/etc/sudoers.d/dev
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">USER</span><span class="w"> </span><span class="s">dev</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/home/dev/setup</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c"># ...same COPY/ENV/RUN as docker/Dockerfile, with --chown=dev:dev on each COPY</span>
+</span></code></pre></div>
+<p>Verified specifically: <code>util.current_user()</code> resolves to the non-root username (not <code>root</code>) via its
+<code>pwd.getpwuid()</code> fallback — and that fallback path turns out to be the one that&rsquo;s <em>always</em> exercised
+in a Dockerfile build, root or non-root, since plain <code>docker run</code>/<code>RUN</code> never sets <code>$USER</code> at all
+(that&rsquo;s a login-shell/profile behavior, not something Docker sets itself); every tool-installed file
+(<code>~/.local/bin</code>, <code>~/.cache/uv</code>, <code>~/.npm</code>, <code>~/.local/share/{cargo,rustup,nvm}</code>) lands under the
+non-root user&rsquo;s real home; and <code>sudo</code> (not <code>sudo -A</code> — no <code>SUDO_ASKPASS</code> is set in a container
+either way) works non-interactively against the <code>NOPASSWD</code> sudoers entry with no prompt.</p>
+<h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code><a class="headerlink" href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" title="Permanent link">&para;</a></h3>
+<p>Swapping <code>FROM ubuntu:24.04</code> for <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code> in
+<code>docker/Dockerfile</code> needs no other changes and drops the need for the <code>useradd</code>/sudoers block above
+— that image already ships a passwordless-sudo <code>vscode</code> user plus <code>curl</code>/<code>gnupg</code>/<code>ca-certificates</code>
+preinstalled, so <code>bootstrap.sh</code>&rsquo;s self-heal preamble finds nothing missing (pure no-op). No
+conflicts observed between this image&rsquo;s preinstalled packages and anything <code>setup.toml</code> installs.</p>
+<h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code><a class="headerlink" href="#round-tripping-through-devcontainerscli" title="Permanent link">&para;</a></h3>
+<p><code>docker/Dockerfile</code> is a bare <code>docker build</code>, but the actual VS Code Dev Containers /
+<code>@devcontainers/cli</code> workflow adds its own layer of environment setup before your Dockerfile even
+runs. To verify it round-trips cleanly, point a throwaway <code>devcontainer.json</code>&rsquo;s <code>build.dockerfile</code>
+at <code>docker/Dockerfile</code> (<code>context</code> set to the repo root) and run
+<code>npx @devcontainers/cli build --workspace-folder .</code>, then <code>devcontainer up</code>, then
+<code>devcontainer exec -- inv --list</code>. The primary, CI-smoke-tested artifact for this round-trip is this
+repo&rsquo;s own <code>.devcontainer/devcontainer.json</code> (the <code>postCreateCommand</code> path above), not
+<code>docker/Dockerfile</code> — see <a href="#recommended-devcontainerjson-postcreatecommand">Recommended</a>.</p>
+<h2 id="cleanup-reclaiming-image-layer-space">Cleanup — reclaiming image-layer space<a class="headerlink" href="#cleanup-reclaiming-image-layer-space" title="Permanent link">&para;</a></h2>
+<p>Every layer <code>inv setup</code> writes is permanent once committed — a later <code>RUN rm -rf</code> doesn&rsquo;t shrink an
+<em>earlier</em> layer, it only hides those files from the final filesystem view while the bytes stay in
+the image. This is why <code>docker/Dockerfile</code> puts cleanup in the <em>same</em> <code>RUN</code> as
+<code>bootstrap-devcontainer.sh</code> (chained with <code>&amp;&amp;</code>), not a separate step — a separate
+<code>RUN inv clean.all-full</code> after the fact would add a new layer on top without reclaiming anything
+from the layer where the caches were actually written. If you split the install across multiple
+<code>RUN</code> lines for better build-cache reuse, run the matching cleanup inside whichever <code>RUN</code> created
+the mess, or switch to a multi-stage build.</p>
+<p>Two families of things accumulate during install, verified by actually building an image and
+inspecting it — not assumed from reading the code:</p>
+<p><strong>Downloaded archives</strong> — confirmed clean already, no action needed. <code>apt.py</code>&rsquo;s deb-github/ deb-url
+installers remove their downloaded <code>.deb</code> after <code>dpkg -i</code> (including a fix, made alongside this doc,
+for a case where a failed <code>dpkg -i</code> used to leave the <code>.deb</code> behind); the <code>archive</code> method streams
+<code>curl | tar</code> directly with no intermediate file at all. Inspecting a built image directly (<code>find</code>
+for <code>*.zip</code>/<code>*.tar*</code>/<code>*.deb</code> under <code>~/.local/bin</code> and <code>~/</code>) turned up nothing — every method that
+downloads an archive already cleans up after itself.</p>
+<p><strong>Caches</strong> — the real target, handled by <code>inv cleanup.*</code> (task family, <code>tasks/cleanup.py</code> + per-tool
+tasks in <code>tasks/apt.py</code>/<code>tasks/python.py</code>/<code>tasks/node.py</code>/<code>tasks/tools.py</code>/ <code>tasks/docker.py</code>). Each
+cache has both a conservative and a full-wipe variant, since the two audiences for this want
+different tradeoffs:</p>
+<table>
+<thead>
+<tr>
+<th>Cache</th>
+<th>Conservative (<code>inv clean.caches</code>)</th>
+<th>Full (<code>inv clean.caches-full</code>)</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>apt <code>.deb</code> archive cache</td>
+<td><code>apt.clean-cache</code> (<code>apt-get autoclean</code>)</td>
+<td><code>apt.clean-cache-full</code> (<code>apt-get clean</code>)</td>
+</tr>
+<tr>
+<td>uv build/wheel cache (<code>~/.cache/uv</code>)</td>
+<td><code>python.clean-cache</code> (<code>uv cache prune</code>)</td>
+<td><code>python.clean-cache-full</code> (<code>uv cache clean</code>)</td>
+</tr>
+<tr>
+<td>npm package cache (<code>~/.npm</code>)</td>
+<td><code>node.clean-cache</code> (<code>npm cache verify</code>)</td>
+<td><code>node.clean-cache-full</code> (<code>npm cache clean --force</code>)</td>
+</tr>
+<tr>
+<td>cargo registry cache (rust, if installed)</td>
+<td><code>tools.clean-cache</code> (downloads only)</td>
+<td><code>tools.clean-cache-full</code> (downloads + extracted sources + index)</td>
+</tr>
+<tr>
+<td>Docker images/containers/build cache</td>
+<td><code>docker.clean</code> (<code>docker system prune -f</code>)</td>
+<td><code>docker.clean-full</code> (<code>docker system prune -af</code>)</td>
+</tr>
+</tbody>
+</table>
+<p><code>inv clean.all</code> / <code>inv clean.all-full</code> run every row above (conservative or full, respectively) plus
+Docker pruning — invoke <code>pre=[...]</code> task dependencies, same pattern as
+<a href="https://github.com/TheodoreAD/repo-tasks">repo-tasks</a>&rsquo;s <code>quality.py</code>&rsquo;s <code>check</code>/<code>fix</code>/<code>precommit</code>.
+Neither Docker variant touches volumes; those can hold irreplaceable data, a different risk class
+than a rebuildable cache.</p>
+<p><strong>Conservative on a workstation, full in a container, and why that split matters</strong>: the uv/npm/
+cargo caches directly speed up your <em>next</em> install of the same tool. On a persistent workstation
+that&rsquo;s worth keeping — <code>inv clean.caches</code>/<code>inv clean.all</code> (conservative) is the one to run by hand
+occasionally, and neither is part of <code>inv setup</code>. A container image has no &ldquo;next install&rdquo; on that
+machine to speed up, so <code>docker/Dockerfile</code> calls <code>inv clean.all-full</code> unconditionally at the end of
+its <code>RUN</code> — there&rsquo;s no downside to being aggressive there.</p>
+<p>One more cache found only by actually inspecting a built image, not by reading code: Node&rsquo;s own V8
+compile cache under <code>/tmp</code> (small, a few MB, created by any <code>node</code>/<code>npm</code> invocation during install —
+separate from npm&rsquo;s own package cache at <code>~/.npm</code>, which <code>node.clean-cache*</code> already covers). Rather
+than chasing every script-installed tool&rsquo;s own <code>/tmp</code> litter by name — fragile, breaks the moment a
+new tool is added to <code>setup.toml</code> — <code>docker/Dockerfile</code> just does a blanket <code>rm -rf /tmp/*</code> at the
+end, the standard Docker pattern for exactly this class of problem.</p>
+<p><strong>What&rsquo;s <em>not</em> a cache, confirmed by inspection</strong>: <code>~/.local/share/rustup</code> was 1.6G in the test
+build — almost entirely the actual installed toolchain (<code>toolchains/</code>), not reclaimable cache;
+rustup&rsquo;s own <code>downloads</code>/<code>tmp</code> scratch dirs were already empty (rustup cleans its own install -time
+artifacts). Only <code>~/.local/share/cargo/registry</code> (crate download/build cache, separate from
+<code>RUSTUP_HOME</code>) is genuinely reclaimable, which is exactly what <code>tools.clean-cache*</code> targets.</p>
+<p><strong>How much cleanup actually saves, measured</strong>: building the identical image with and without the
+<code>inv clean.all-full</code> step (default tag profile, otherwise byte-for-byte the same Dockerfile) —
+4.40GB without cleanup vs. 4.28GB with it, a <strong>~120MB saving, about 2.7% of image size</strong>. Worth
+knowing before reaching for it as the main size lever: it isn&rsquo;t one. <code>PULSE_EXCLUDE_TAGS</code> is —
+leaving out toolchains you don&rsquo;t need (rust, go, k8s tooling are each hundreds of MB to multiple GB)
+dwarfs anything cache cleanup can reclaim. Run cleanup because it&rsquo;s free and has no downside in a
+container, not because it meaningfully shrinks the image on its own.</p>
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
+<p><code>[packages.docker]</code> is tagged <code>workstation</code> and excluded by default, so none of this is reachable in
+the recommended tag profile — it only matters if you deliberately drop <code>workstation</code> from
+<code>PULSE_EXCLUDE_TAGS</code>, which was tested specifically to check for exactly this kind of tag-gated
+assumption. <code>docker.configure</code> (part of <code>inv setup</code>&rsquo;s <code>packages</code> phase) already detects &ldquo;docker not
+installed&rdquo; and skips cleanly when the package is excluded, so the default profile needs nothing
+extra here.</p>
+<p>If <code>workstation</code> <em>is</em> included, <code>apt-get install docker-ce ...</code>&rsquo;s own postinstall hooks don&rsquo;t fail
+in a container build — Debian/Ubuntu base images ship a <code>policy-rc.d</code> that denies service-start
+attempts by default, so <code>invoke-rc.d</code>/<code>systemctl</code> calls from the <code>.deb</code>&rsquo;s postinst are cleanly
+no-opped, not fatal. What <em>did</em> fail, found by actually testing this combination (previously
+untested since it&rsquo;s excluded by default): <code>docker.configure</code>&rsquo;s own explicit
+<code>sudo systemctl restart docker</code> call afterward, unconditionally, with no no-systemd guard — crashing
+the entire <code>inv setup</code> run (and thus the whole <code>docker build</code>) with &ldquo;System has not been booted with
+systemd as init system.&rdquo; Fixed in <code>tasks/docker.py</code>&rsquo;s <code>_ensure_running()</code>, matching the
+<code>util.has_systemd()</code> guard pattern already used for the <code>system</code>/<code>desktop</code> phases: no systemd means
+daemon.json gets written and the user gets added to the <code>docker</code> group same as before, but the
+restart is skipped with a one-line message instead of attempted.</p>
+<p>If you need Docker CLI tooling inside the container (e.g. for socket passthrough from the host),
+install just the CLI packages manually in your Dockerfile instead:</p>
+<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>docker-ce-cli<span class="w"> </span>docker-compose-plugin<span class="w"> </span>docker-buildx-plugin
+</span></code></pre></div>
+<p>The OMZ <code>docker</code> and <code>docker-compose</code> plugins will still be loaded if you do this, since they come
+from <code>[packages.docker].omz_plugin</code> — but that entry is excluded, so you&rsquo;d need to add those plugins
+via a separate mechanism or accept they won&rsquo;t load. Alternatively, mount the host socket and use the
+host Docker installation directly.</p>
+<h2 id="other-notes">Other notes<a class="headerlink" href="#other-notes" title="Permanent link">&para;</a></h2>
+<ul>
+<li>Tasks use <code>sudo</code> internally; either run as root (as <code>docker/Dockerfile</code> does) or ensure <code>sudo</code> is
+  installed and the build user is in sudoers.</li>
+<li><code>claude-code</code>&rsquo;s installer (<code>https://claude.ai/install.sh</code>) needs bash, not the <code>script</code> method&rsquo;s
+  default <code>sh</code> (dash on Ubuntu) — already declared correctly in <code>setup.toml</code>
+  (<code>[packages.claude-code]</code> sets <code>shell = "bash"</code>), nothing to do here, just don&rsquo;t remove it if
+  editing that section.</li>
+<li>The <code>deb-url</code> method for Citrix is excluded by the <code>corporate</code> tag; Webex is also excluded.</li>
+<li><code>kind</code> and <code>tilt</code> are included by default — remove <code>k8s</code> from tags or add your own exclusion if
+  you don&rsquo;t need them in the container.</li>
+</ul>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+                
+              </article>
+            </div>
+          
+          
+  <script>var tabs=__md_get("__tabs");if(Array.isArray(tabs))e:for(var set of document.querySelectorAll(".tabbed-set")){var labels=set.querySelector(".tabbed-labels");for(var tab of tabs)for(var label of labels.getElementsByTagName("label"))if(label.innerText.trim()===tab){var input=document.getElementById(label.htmlFor);input.checked=!0;continue e}}</script>
+
+<script>var target=document.getElementById(location.hash.slice(1));target&&target.name&&(target.checked=target.name.startsWith("__tabbed_"))</script>
+        </div>
+        
+          <button type="button" class="md-top md-icon" data-md-component="top" hidden>
+  
+  <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-circle-arrow-up" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="m16 12-4-4-4 4M12 16V8"/></svg>
+  Back to top
+</button>
+        
+      </main>
+      
+        <footer class="md-footer">
+  
+    
+      
+      <nav class="md-footer__inner md-grid" aria-label="Footer" >
+        
+          
+          <a href="./wsl.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: WSL">
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
+            </div>
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Previous
+              </span>
+              <div class="md-ellipsis">
+                WSL
+              </div>
+            </div>
+          </a>
+        
+        
+          
+          <a href="./apt_packages.html" class="md-footer__link md-footer__link--next" aria-label="Next: Apt packages">
+            <div class="md-footer__title">
+              <span class="md-footer__direction">
+                Next
+              </span>
+              <div class="md-ellipsis">
+                Apt packages
+              </div>
+            </div>
+            <div class="md-footer__button md-icon">
+              
+              <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-right" viewBox="0 0 24 24"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+            </div>
+          </a>
+        
+      </nav>
+    
+  
+  <div class="md-footer-meta md-typeset">
+    <div class="md-footer-meta__inner md-grid">
+      <div class="md-copyright">
+  
+  
+    Made with
+    <a href="https://zensical.org/" target="_blank" rel="noopener">
+      Zensical
+    </a>
+  
+</div>
+      
+    </div>
+  </div>
+</footer>
+      
+    </div>
+    <div class="md-dialog" data-md-component="dialog">
+      <div class="md-dialog__inner md-typeset"></div>
+    </div>
+    
+    
+    
+      
+      
+      <script id="__config" type="application/json">{"annotate":null,"base":".","features":["announce.dismiss","content.code.annotate","content.code.copy","content.code.select","content.footnote.tooltips","content.tabs.link","content.tooltips","navigation.footer","navigation.indexes","navigation.instant","navigation.instant.prefetch","navigation.path","navigation.sections","navigation.tabs","navigation.top","navigation.tracking","search.highlight"],"search":"./assets/javascripts/workers/search.e2d2d235.min.js","tags":null,"translations":{"clipboard.copied":"Copied to clipboard","clipboard.copy":"Copy to clipboard","search.result.more.one":"1 more on this page","search.result.more.other":"# more on this page","search.result.none":"No matching documents","search.result.one":"1 matching document","search.result.other":"# matching documents","search.result.placeholder":"Type to start searching","search.result.term.missing":"Missing","select.version":"Select version"},"version":null}</script>
+    
+    
+      <script src="./assets/javascripts/bundle.6e5f0216.min.js"></script>
+      
+    
+  </body>
+</html>
