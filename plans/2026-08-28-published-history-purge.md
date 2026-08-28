@@ -1,6 +1,7 @@
 ---
 status: in-progress
 updated: 2026-08-29
+scheduled: 2026-09-01 or later — paused deliberately, see "Still open"
 depends_on: [agent-skills]
 ---
 
@@ -96,16 +97,57 @@ committing to an answer.]
 `publish_on_push.yml` makes every deploy replace the branch, and this class of exposure cannot
 accumulate in generated output again.]
 
-### 4. What remains: the support request
+### 4. Still open: a 2021 string the first pass missed
+
+A pyenv virtualenv named after an employer — `<employer>-gae-test-app`, in `scripts/python.sh`, in
+the repo's **first two commits** (`a0bf1b9`, `15a7621`, March 2021). Long gone from the tip, still
+in published history, and reachable from four branches. The exact string is deliberately not written
+here (this repo is public and the scanner would flag this file); get it from
+`plans.py scan --mode history --path <this repo>`, which prints it with its line, or from
+`git show a0bf1b9:scripts/python.sh`:
+
+| ref                           | carries it                         |
+| ----------------------------- | ---------------------------------- |
+| `master`                      | yes — whole history would renumber |
+| `initial_version`             | yes                                |
+| `initial-version-ubuntu-2004` | yes                                |
+| `initial-version-ubuntu-2404` | yes                                |
+| `gh-pages`                    | no — rebuilt clean                 |
+
+[PITFALL: **the first pass missed it because the inventory was hand-written.** The survey pattern
+covered the four addresses and the one sentence already known about — narrower than the scanner's
+derived list, which carries every work root and found this in a single run. A tool was built
+precisely because reading carefully misses things, and then the survey was done by reading
+carefully. Never hand-roll the pattern: `plans.py scan --list-terms` is the list, and
+`scan --mode history` is the audit.]
+
+Ready to go, not yet run: the redaction script in that session's scratchpad already carries the
+extra replacement and was dry-run against the real 2021 blob (it rewrites the virtualenv name to
+`employer-gae-test-app` and exits 0). If the scratchpad is gone by then, rebuilding it is one
+`(old, new)` pair plus the same term in its survivor check — take `old` from the scanner output
+above rather than from this file.
+
+[NEEDS CLARIFICATION: rewrite the three `initial-version*` snapshot branches, or delete them from
+the remote? They are frozen markers, untouched for a year; deleting removes the exposure outright
+and leaves one branch to rewrite instead of four. Rewriting keeps the markers and costs three local
+branches plus three force-pushes. Decide before the next pass, not during it.]
+
+Because the reach starts at the repo's first commit, this pass renumbers **every** commit on each
+branch it touches — including the 31 that the first pass left alone.
+
+### 5. What remains after that: the support request
 
 The force-push is done; the purge is not. Measured minutes afterwards,
 `gh api repos/TheodoreAD/power-user-linux-setup/commits/3c0b606…` still returned the commit and four
 matches for the addresses in its patch. Unreachable is not deleted, and GitHub serves by SHA.
 
-The request text, the commits to name (the four on the old `master` plus thirteen old `gh-pages`
-build commits), what a support request cannot reach, and the 404 that verifies it are all in
-`agent-skills`' `plans/2026-08-29-github-support-cache-purge.md`, which covers both repos rather
-than splitting one errand across two files.
+**Send this repo's request only after the pass above lands.** A second rewrite creates a second set
+of unreachable commits, so a request sent now would be answered and then immediately be out of date.
+`agent-skills` has no such dependency — its purge is complete and its request can go whenever.
+
+The request text, the commits to name, what a support request cannot reach, and the 404 that
+verifies it are in `agent-skills`' `plans/2026-08-29-github-support-cache-purge.md`, which covers
+both repos rather than splitting one errand across two files.
 
 ### 5. Expected residue, so a future audit is not misread
 
@@ -137,6 +179,12 @@ Done 2026-08-29:
 - `gh-pages`: 1 commit, 0 hits; the published site returns 200 after Pages was re-pointed at it.
 - The file GitHub now serves for the ssh plan has zero addresses in it.
 
-[UNVERIFIED: the support request, which is the only thing that stops the old commits being served.
-Tracked in `agent-skills`' `plans/2026-08-29-github-support-cache-purge.md`; the test is that
-`gh api .../commits/3c0b606…` returns 404.]
+[UNVERIFIED: the second rewrite (the 2021 string) and the support request. Neither has run.]
+
+## Why this is paused rather than urgent
+
+Settled with the user 2026-08-29, and worth writing down because it is the judgement that sets the
+priority rather than a technical fact: the repo's 6 stars are from ex-colleagues who used an early
+version of this guide, at the very companies the leaked names belong to. Nobody is expected to clone
+it, and the people most likely to have seen it already knew. That does not make the remaining string
+acceptable — it makes it a scheduled task rather than an emergency.
