@@ -1498,7 +1498,7 @@ profile jbr_cef /home/*/.local/share/JetBrains/Toolbox/apps/*/jbr/lib/cef_server
 """
 
 [packages.webex]
-description = "Cisco Webex video conferencing and messaging"
+description = "Webex video conferencing and messaging"
 method = "deb-url"
 tags = ["gui", "corporate"]
 enabled = false

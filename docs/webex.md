@@ -1,6 +1,6 @@
 # Webex
 
-Not automated via `setup.toml`/`inv` — Cisco doesn't publish an apt repo, only a versioned `.deb`
+Not automated via `setup.toml`/`inv` — upstream doesn't publish an apt repo, only a versioned `.deb`
 download, so there's no stable URL to pin a `deb-url` package entry against. Install manually:
 
 1. Download the `.deb` from the [Webex download page](https://www.webex.com/downloads.html) (Linux
