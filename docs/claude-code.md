@@ -27,14 +27,18 @@ use `$SUDO_ASKPASS` instead of prompting on a TTY that doesn't exist. Plain `sud
 `sudo: a terminal is required`.
 
 **git over SSH** — `SSH_ASKPASS` + `SSH_ASKPASS_REQUIRE=prefer` fixes a related but separate
-failure: this machine's SSH keys are passphrase-protected and managed by `keychain` (see
-[ssh.md](ssh.md#keychain-persistent-agent-across-logins)), which loads a key into the agent
-_lazily_, the first time it's actually used each session (`AddKeysToAgent yes` in `~/.ssh/config`).
-If Claude Code runs the first `git fetch`/`git push` of the day before anything else has triggered
-that lazy load, `ssh` needs the passphrase to unlock the key — and with no TTY, that fails as
-`Permission denied (publickey)`, indistinguishable from an actual auth problem. `SSH_ASKPASS` makes
-`ssh` pop the same Zenity dialog for the passphrase instead of failing. **No HTTPS/token workaround
-is needed — just run `git fetch`/`git push` normally.**
+failure: this machine's SSH keys are passphrase-protected, so a key that is not already in an agent
+needs a passphrase, and with no TTY that fails as `Permission denied (publickey)` —
+indistinguishable from an actual auth problem. `SSH_ASKPASS` makes `ssh` pop the same Zenity dialog
+instead of failing. **No HTTPS/token workaround is needed — just run `git fetch`/`git push`
+normally.**
+
+That covers a locked key. It does **not** cover the other cause of the identical error, which is
+more likely in an agent session: being pointed at the wrong agent. A desktop session runs two, and a
+shell inherits its `SSH_AUTH_SOCK` from a snapshot taken once at session start — which survives a
+reboot that emptied the agent it names. `inv ssh.check` distinguishes the two in one command; see
+[ssh.md](ssh.md#which-agent-a-shell-talks-to). Reaching for `ssh-add` on a publickey error, without
+checking which agent is in play, prompts for a passphrase that may not be needed at all.
 
 `SSH_ASKPASS_REQUIRE=prefer`, deliberately not `force`: `force` would hijack passphrase prompts in a
 normal interactive terminal too (popping a GUI dialog even when you're sitting at a real shell that
