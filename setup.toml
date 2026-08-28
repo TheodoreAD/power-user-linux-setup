@@ -424,6 +424,33 @@ method = "apt"
 tags = ["security", "dev"]
 packages = ["openssh-client", "gnupg", "keychain"]
 verify_cmd = "ssh -V" # ssh only supports the short getopt-style flag, not --version
+# Picks the SSH agent a login shell talks to. Replaces a hand-written ~/.zprofile block that ran
+# keychain unconditionally — see docs/ssh.md "Which agent a shell talks to" for why that broke.
+zprofile = """
+# Prefer an agent that already holds keys. A desktop session's gnome-keyring/gcr agent unlocks
+# every key at login and publishes SSH_AUTH_SOCK through the systemd user environment; running
+# keychain unconditionally replaced that with an agent of its own, which starts empty. After a
+# reboot that leaves pushes failing "Permission denied (publickey)" while every key sits unlocked
+# in the agent that was just displaced — and the failure looks like a passphrase problem.
+# `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2 when it cannot connect at all.
+if ! ssh-add -l >/dev/null 2>&1; then
+  for _pulse_sock in "${XDG_RUNTIME_DIR}/keyring/ssh" "${XDG_RUNTIME_DIR}/gcr/ssh"; do
+    [ -S "${_pulse_sock}" ] || continue
+    SSH_AUTH_SOCK="${_pulse_sock}" ssh-add -l >/dev/null 2>&1 || continue
+    export SSH_AUTH_SOCK="${_pulse_sock}"
+    break
+  done
+  unset _pulse_sock
+fi
+
+# No desktop agent holding keys (a TTY login, or a session without gnome-keyring): keychain
+# provides one that survives across terminals. Its --eval output exports the variables directly,
+# so nothing sources ~/.keychain/<host>-sh — that cached file outlives a reboot and pinning a
+# shell to the socket it names is exactly how a session ends up on a dead or empty agent.
+if ! ssh-add -l >/dev/null 2>&1; then
+  eval "$(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --confhost)"
+fi
+"""
 
 [packages.openssh-server]
 description = """
