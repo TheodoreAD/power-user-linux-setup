@@ -125,11 +125,14 @@ It globbed for `~/.ssh/*TD-PORTABLE-SSD-T5_ed25519` and failed with a bare
 `No such file or directory`. Every key here is `_rsa`:
 
 ```
-<work-id-a>@<employer-a>__TD-PORTABLE-SSD-T5_rsa      <work-id-d>@<employer-d>__TD-PORTABLE-SSD-T5_rsa
+<work-id-a>@<employer-a>__TD-PORTABLE-SSD-T5_rsa  <work-id-d>@<employer-d>__TD-PORTABLE-SSD-T5_rsa
 <work-id-b>@<employer-b>__TD-PORTABLE-SSD-T5_rsa  teodor.dumitrescu@gmail.com__TD-PORTABLE-SSD-T5_rsa
-teodor.dumitrescu@aws__TD-PORTABLE-SSD-T5_rsa   <work-id-c>@<employer-c>__TD-PORTABLE-SSD-T5_rsa
+teodor.dumitrescu@aws__TD-PORTABLE-SSD-T5_rsa     <work-id-c>@<employer-c>__TD-PORTABLE-SSD-T5_rsa
 ec2-user__<EMPLOYER-D>_AWS_rsa
 ```
+
+(Employer identities redacted — this repo is public. The evidence here is the _shape_: seven keys,
+every one `_rsa`, named `<identity>__<host>_<algorithm>`, none matching the `*_ed25519` glob.)
 
 `inv ssh.create-keys` mints ed25519, so `ssh.add` assumes the keys it loads were minted by its
 sibling task. These predate that convention. `~/.ssh/config` references them by absolute path and
