@@ -16,6 +16,9 @@ growth visible, because `contributing/global-agents-md.md`'s measurement command
 **assembled** result rather than a single source file, and that was the first time the current total
 had been measured at all.
 
+Re-measured 2026-08-29: **39 rules / 530 lines**, so it has grown by a further 2 rules and 84 lines
+since this plan was opened, still with no pass in between.
+
 This plan exists because that finding currently lives as a sentence in
 `contributing/global-agents-md.md` ("A leanness pass on `portable.md` specifically is the obvious
 next one"), which is exactly the "don't stash future work in prose docs" failure the `plan-docs`
@@ -98,6 +101,21 @@ Per the admission criteria a variant extends its rule's existing section, so if 
 sentence appended there, not a heading. Concrete instance to cite: the `skills` CLI announces a
 Claude Code symlink it does not create, and PULSE's own `_ensure_agents_skills` covers the gap
 instead of PULSE reimplementing skill installation.]
+
+[DEFERRED: **"A probe you write to test a library's behaviour is a sample of one, and a passing
+probe reads as confirmation — when the suspicion is about precision, width or a limit, the input has
+to be one that can actually fail."** A _variant_ of the existing "Generalizing from a sample to a
+set" rule, which already covers samples you created yourself; the new half is that a deliberately
+constructed _probe input_ is such a sample, and that a green result is the failure mode rather than
+an error. Per the admission criteria a variant extends its rule's existing section, so if admitted
+this is a short paragraph appended there, not a heading — rule count unchanged.
+
+Concrete instance to cite, measured 2026-08-29 in `ingesta`: a `Decimal` round-trip through
+SQLAlchemy's SQLite dialect passed on ten significant digits and silently lost the value on nineteen
+(`1234567890123456789.000000001` → `…768.0000000000`, no warning). The first probe used ten, so it
+read as "`Numeric` is fine", and that conclusion was one step from being written into a shared skill
+doc where nobody re-derives it. Silent and expensive miss; no topic-owning skill covers how to
+choose a probe input.]
 
 ## Recommended direction
 
