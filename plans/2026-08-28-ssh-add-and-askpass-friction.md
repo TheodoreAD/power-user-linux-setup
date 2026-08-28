@@ -1,7 +1,39 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-28
 ---
+
+## What has landed
+
+**Defect 1 is fixed** (`f7a714a`, docs `18b6384`). `[packages.ssh]` now declares a `zprofile`
+snippet that probes before choosing an agent — `ssh-add -l` exits 0 with keys, 1 for a live but
+empty agent, 2 when it cannot connect — falls back to the desktop sockets, and only starts keychain
+when none of them holds keys. The hand-written `~/.zprofile` block is gone, and nothing sources
+`~/.keychain/<host>-sh` any more.
+
+Verified from a real login shell three ways, each landing on the keyring socket with all three keys,
+with `git fetch` authenticating: starting with no agent at all, starting pinned to keychain's empty
+agent, and starting on a dead socket path.
+
+Two findings from doing it, both worth keeping:
+
+[PITFALL: **`keychain --inherit any` does not adopt an existing agent when `--quick` is also set.**
+The documented behaviour — "inherit when a sock is set in the environment" — reads like the fix, and
+keychain 2.8.5 still returned its own agent when tested directly against `SSH_AUTH_SOCK` pointed at
+gcr. `--quick` short-circuits on keychain's own live pidfile before inheritance is considered. The
+default is `--inherit local-once`, which inherits only on a **pid**, and a socket-activated
+gcr-ssh-agent exports no `SSH_AGENT_PID` — so the default could never have inherited it either.]
+
+[DECISION: **Keychain stays installed and stays in the login path, guarded.** It is the only thing
+providing an agent on a TTY login or a session without gnome-keyring, which is a real case even
+though this machine's `openssh-server` is disabled. Removing it would have been simpler and would
+have silently removed that fallback. The guard costs up to three `ssh-add -l` calls per login.]
+
+This was also the **first package to declare a `zprofile` field.** `tasks/zsh.py` has supported it
+since `_snippets` was written; nothing had used it, which is why the keychain block was hand-written
+and therefore not reproducible on another machine.
+
+Defects 2 and 3 below are untouched.
 
 ## Context
 
@@ -82,14 +114,6 @@ at the machine.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **which agent should own the keys on this machine — and should there be two at
-all?** GNOME's keyring already unlocks every key at login with no prompt, which is strictly better
-ergonomics than keychain's. Options: drop keychain and let GNOME serve `SSH_AUTH_SOCK`; keep
-keychain and have it adopt the gcr socket rather than spawning its own; or keep both and export the
-gcr socket, treating keychain's as vestigial. The first is simplest and the one to justify against —
-keychain exists here for a reason nobody has written down, and `setup.toml` should say what it is
-before it is removed.]
-
 [NEEDS CLARIFICATION: should `ssh.add` glob both key types, or read `~/.ssh/config`? Globbing
 `*_ed25519` **and** `*_rsa` is a one-line fix. Reading `IdentityFile` lines out of `~/.ssh/config`
 is strictly more correct — that file is what `ssh` actually consults, `inv ssh.configure` writes it,
@@ -106,12 +130,9 @@ rule, so it needs deciding rather than defaulting.]
 
 ## Recommended direction
 
-Ordered by what actually cost time, not by size.
+Ordered by what actually cost time, not by size. Item 1 has landed; see "What has landed" above.
 
-1. **Make the agent situation deterministic**, per the first open question. Whatever is chosen, the
-   outcome to guarantee is that a shell — including a replayed snapshot in an agent session —
-   resolves to an agent that has the keys. A stale `~/.keychain/*` file surviving a reboot and
-   naming a coincidentally-valid socket is the specific trap to close.
+1. ~~**Make the agent situation deterministic.**~~ Done — `f7a714a`.
 2. **Teach `verify.all` or `ssh.check` to report it.** There is no read-only task that answers "are
    my keys loaded, and in which agent" — which is why this took a live debugging session. A check
    that enumerates agent sockets and lists identities per socket would have shown the answer in one
@@ -122,5 +143,7 @@ Ordered by what actually cost time, not by size.
    `inv deploy.all --name <pkg>`, never by editing the deployed copy.
 4. **Fix `ssh.add`'s key discovery and its error message**, per the second open question.
 
-(1) and (2) are the pair that matter: one prevents the failure, the other makes it self-diagnosing
-when some new variant of it appears anyway.
+(2) is now the one that matters most. The failure is prevented, but nothing yet answers "which agent
+am I on and does it have my keys" without a human running `ssh-add -l` against candidate sockets by
+hand — which is exactly the step that was missing when this happened. A guard that works is not the
+same as a guard you can confirm is working.
