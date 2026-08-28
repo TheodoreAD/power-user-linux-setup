@@ -20,6 +20,37 @@ and every code review, while an `AGENTS.md` is version-controlled and visible to
 
 ## Git & commits
 
+### Committing to a repo that is or might become public
+
+**Never name an employer, client, internal project, work repo, work email address or ticket prefix
+in a repo you publish** — in any file, a plan or a commit message included. A push cannot be taken
+back by a later edit: the content stays in the history, and a repo's history is as readable as its
+tip. Write about that work by its shape instead ("a work root with a `<project>/<repo>` hierarchy",
+"a client repo under review pressure", "work root A") — for a measurement, the counts and the
+structure are the evidence and the names never were.
+
+Check it mechanically rather than by reading carefully, because the agent writing the sentence is
+the one that does not know it is doing something wrong:
+
+```shell
+python3 ~/.agents/skills/plan-docs/scripts/plans.py scan --mode staged   # before the commit
+python3 ~/.agents/skills/plan-docs/scripts/plans.py scan --mode history  # what is already published
+```
+
+It derives the forbidden names from this machine's own project roots, so nothing has to be listed
+anywhere — a list of clients is itself the thing that must not be written down in a public repo. An
+employer with no clone here has no directory to derive from and must be added to `[private] extra`
+in `~/.config/plan-docs/config.toml` by hand, once.
+
+A hit in **pushed** history is not an edit to make quietly: redacting the working tree changes
+nothing about what is published. Report it, name the commits, and let the user decide — purging
+means rewriting history, force-pushing, and asking the host to expire the old commits.
+
+Measured 2026-08-28: an agent published, in a public repo, a plan tabulating six employer/client
+root directory names plus one client's internal project path, and a second public repo had four work
+email addresses committed inside a listing of SSH key filenames. Both were written by agents with no
+rule telling them not to.
+
 ### About to commit
 
 Run the repo's quality gate first (`inv quality.precommit` where the repo-tasks tasks exist, else
