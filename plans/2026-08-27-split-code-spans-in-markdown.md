@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-27
+updated: 2026-08-29
 ---
 
 # Split inline code spans across this repo's markdown
@@ -59,6 +59,24 @@ That points at the author hand-wrapping prose to ~100 columns and letting the br
 backticks. Given how much of this repo's markdown is agent-written, and that pre-wrapping markdown
 at ~100 columns is exactly what an LLM does, the likely author of most of them is an agent — which
 also means the rate will keep climbing unless something checks for it.
+
+### It recurred, in the worst place, three days later
+
+Confirmed 2026-08-29 in `agent-skills`: a session adding an entry to `python-conventions`' SKILL.md
+hand-wrapped at ~100 columns and split a span across the break, in prose that then went into two
+committed skill files. It noticed only by eyeballing the rendered diff, and — worth recording,
+because it is the same wrong guess this plan's pitfall already refutes — **it blamed dprint**, and
+"fixed" it by rewording the sentence so the span would fit. The reword was the right repair; the
+diagnosis was not, and a session that reached instead for a dprint config change would have found
+nothing to change.
+
+Three things this adds to the argument above. The author was an agent, as predicted. The destination
+was a `SKILL.md`, which is the highest-cost location in the family — it loads into context wherever
+the skill fires, so the raw-text damage is paid in every session that triggers it, across every
+repo. And the only thing that caught it was a human-style read of the diff, which is exactly the
+check that does not scale and does not run in CI. The detector below, run over that session's four
+changed files afterwards, reported zero — so the repair held, but nothing would have reported the
+defect had the session not happened to look.
 
 ## Recommended direction
 
