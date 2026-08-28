@@ -117,6 +117,19 @@ read as "`Numeric` is fine", and that conclusion was one step from being written
 doc where nobody re-derives it. Silent and expensive miss; no topic-owning skill covers how to
 choose a probe input.]
 
+[DEFERRED: **The existing "never `cd` into the session's own repo" rule causes the behaviour it
+bans, and needs a clause rather than a new rule.** Measured 2026-08-29 by `session-bash-audit` after
+the user corrected a session mid-task ("you don't need cd, you're in this repo"): over two days and
+2,077 calls, `cd` into the session's own repo occurred **14** times — agents comply — while
+`git -C <own repo>` occurred **89** times, up to 18% of one session's calls. The same rule that bans
+the `cd` recommends `git -C <path>` as the directory-scoping option for a cross-repo step, so agents
+reach for that flag against their own repo six times as often as they ever ran the banned form. The
+fix is one clause on the existing "Composing a Bash call" rule — `git -C` at the session's own repo
+is the same mistake — so rule count is unchanged and only the line count moves. Parked here rather
+than appended because this pass owns the file's shape and its admission criteria; the measurement
+and its method are permanent in that skill's `references/research.md` either way, so nothing is lost
+by deciding it at this pass's close.]
+
 ## Recommended direction
 
 Rough. Measure first with the two commands in `contributing/global-agents-md.md`'s "Re-measuring the
