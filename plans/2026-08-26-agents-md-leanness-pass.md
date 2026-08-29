@@ -24,6 +24,35 @@ This plan exists because that finding currently lives as a sentence in
 next one"), which is exactly the "don't stash future work in prose docs" failure the `plan-docs`
 convention names: prose future-work has no status field, so nothing ever prompts a return visit.
 
+## A hard ceiling, not just a reference point (measured 2026-08-29)
+
+The ≤200-line/≤15-rule numbers are review reference points and have never forced anything. There is
+also a **hard byte limit already being exceeded**, and it is silent.
+
+Codex CLI truncates an `AGENTS.md` at 32 KiB (`PROJECT_DOC_MAX_BYTES`, default), with no warning —
+instructions past the cut are simply dropped. The deployed file is **35,498 bytes**, 2,730 over.
+`~/.codex/AGENTS.md` is one of the four `symlink_dest` entries on `[packages.agents-md]`.
+
+Where the cut lands, byte-exact: mid-word inside the `## Collaboration & output` heading. Codex
+would therefore lose that **entire cluster** — "A narrow check grows into design work", "Invited to
+push back", "Something the user wrote looks like a typo or mental slip", "Ending a turn with a next
+step", and "Caveman-style terse output". The user-facing output style and the rule about not handing
+the user a shell command to run are both past the cut.
+
+Latent today: `~/.codex` does not exist on this machine, so the symlink is correctly skipped and no
+agent currently reads a truncated copy. It arms itself the day Codex is installed, and it arms
+silently — nothing in `verify.all` compares a destination against a reader's size limit, because
+until now no limit was known.
+
+Two consequences for this plan:
+
+- The ordering question below acquires a bound. Getting under 32,768 bytes is a smaller ask than
+  getting to 200 lines, it is objectively checkable, and it is worth doing even if the rest of the
+  pass stalls.
+- Per-reader limits belong in `contributing/global-agents-md.md` alongside the review reference
+  points, and plausibly in a `verify.all` check. Other agents may have their own caps; only Codex's
+  has been confirmed.
+
 ## Why it matters, not just "the number is over"
 
 The reference points are not arbitrary. From the research already in
@@ -152,6 +181,47 @@ commit but not push, and ask first" is a stated intention, not a mechanism. A se
 must withhold work has to keep it off the shared branch — or tell the user before committing that
 the commit itself is the publishing decision.]
 
+## Demotion is not relocation at current trigger rates (measured 2026-08-29)
+
+The tier-2 lever assumes a rule moved into a skill still fires. Measured across 415 Claude Code
+transcripts on this machine — every `Skill` invocation, all time, against 15,171 Bash calls:
+
+```
+58  plan-docs            (largely explicit /plan-docs, not model-chosen)
+ 8  session-harvest
+ 7  research-library
+ 5  update-config
+ 2  invoke-task-conventions
+ 2  python-conventions
+ 2  reorder-suggest
+ 1  session-bash-audit / skill-authoring / db-defaults
+ 0  mcp-server-shipping
+ 0  polite-mcp-conventions
+```
+
+87 invocations total. Two skills have never fired. `python-conventions` fired twice, in a repo
+family that is almost entirely Python — the under-triggering `agent-skills`'
+`plans/2026-08-22-skill-trigger-quality-review.md` predicted, now measured rather than suspected.
+
+So **demoting a rule out of this file today is closer to deleting it than to relocating it**, and
+the rules most likely to be nominated for demotion are the ones with sharp triggers — which is also
+what makes them look safe. The plan's own framing already warns that several rules in `portable.md`
+are long precisely because a shorter version was tried and missed; a demotion is a stronger version
+of that same bet.
+
+This does not kill the lever, it orders it. The trigger layer has to be fixed and shown to work
+before anything is demoted into it. That work is `agent-skills`' — its trigger-quality plan plus the
+contention scanner filed alongside it 2026-08-29 — so this plan now has an out-of-repo dependency it
+did not have when it was opened.
+
+External numbers that bear on the same judgement, worth recording so the next pass does not
+re-research them: ETH Zurich (Gloaguen et al., 2026) measured human-written agent context files at
+**+4% task success for +19% cost**, and LLM-generated ones at **−3% for +20%**. The strong exception
+was non-obvious tooling instructions — an instruction naming `uv` produced 1.6 invocations per task
+against 0.01 without it. That maps cleanly onto this file: `sudo -A`, `inv ssh.check`, `LC_TIME=C`
+are the high-return kind and should be the last things touched; the long design-heuristic rules in
+"Research & design" (669 words) are the low-return kind and should be the first.
+
 ## Recommended direction
 
 Rough. Measure first with the two commands in `contributing/global-agents-md.md`'s "Re-measuring the
@@ -160,6 +230,12 @@ a time, largest first, and for each rule ask only the tier question — is the m
 expensive, or sharp-triggered and recoverable? Merge before demoting, demote before shortening, and
 re-measure after each cluster rather than at the end, so a pass that stops early still leaves the
 file better than it found it.
+
+Revised 2026-08-29, on the two measurements above: **get under 32,768 bytes first**, by merging and
+shortening only. That is 2,730 bytes, it removes a live latent defect, and it needs no decision
+about tiers. **Hold every demotion** until the trigger layer is measurably working — otherwise the
+pass trades a bloat problem for a silent-deletion problem, and the deletions will not be the rules
+anyone chose.
 
 Do not treat the ≤200/≤15 numbers as a target to hit in one go. They are review reference points,
 and the discipline that actually keeps the file small lives upstream in the admission criteria — a
