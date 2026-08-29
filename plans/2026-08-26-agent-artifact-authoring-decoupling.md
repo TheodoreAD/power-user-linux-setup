@@ -659,6 +659,69 @@ answer to this question: a README column is invisible to `skills find` and to an
 without reading the repo. Decide the `metadata` key before the eight-skill batch, since that is when
 several genuinely-personal skills arrive at once.]
 
+### The coupling actually left, measured 2026-08-29
+
+The `[DECISION:]` above parks `portable.md` in PULSE on sequencing grounds, and
+`config/agents-md/README.md` records a content debt ("about a dozen rules still name Claude-specific
+tools or this user's own setup"). Both were written without a count. Here is one, over
+`portable.md`'s 29 rules:
+
+| coupling                                                              | hits | rules affected |
+| --------------------------------------------------------------------- | ---- | -------------- |
+| PULSE (`inv …`, `setup.toml`, this family's repo names)               | 5    | 4              |
+| this machine (`.venv`, direnv, `~/.agents`, `~/.config/…`)            | 16   | 4              |
+| Claude-only (Read/Grep/Edit, AskUserQuestion, plan mode, `~/.claude`) | 21   | 10             |
+
+The shape is not what the debt note implies. **PULSE coupling is nearly gone** — five references in
+four rules. The residue is mostly _harness_ coupling, and the machine coupling is concentrated in
+four rules rather than smeared across the file.
+
+That reframes the move. It is not blocked on rewriting a dozen rules; it is blocked on one thing in
+the code:
+
+**`deploy.fragments()` reads `frag["src"]` as a repo-relative path.** The assembler can only read a
+fragment that lives inside the PULSE checkout. Everything else on `[packages.agents-md]` — the
+destination, the four-way symlink farm, drift classification, the deploy manifest — is genuinely
+PULSE-shaped and should stay exactly where it is. The pull task the `[DEFERRED:]` above prefers is
+still the right answer; this just names precisely what it exists to work around.
+
+[NEEDS CLARIFICATION: **split three ways rather than two.** The plan currently reads as
+portable-goes-up, machine-stays. The four machine-coupled rules are better moved _down_ into
+`this-setup.md` than generalized: "Running a command against a different repo" (6 hits — direnv,
+`.venv`, `inv` task discovery), "Invoking a venv tool in the session's own project" (3), "About to
+commit" (`inv quality.precommit`), and the `plans.py`/`config.toml` command half of the
+confidentiality rule — where the _rule_ is portable but the _invocation_ is not. That leaves ~24
+genuinely portable rules to ship from `agent-skills`, and it means the generalize-one-at-a-time
+queue in `config/agents-md/README.md` is shorter than it looks, because several entries on it should
+not be generalized at all.]
+
+[NEEDS CLARIFICATION: **the fragment does not go under `agent-skills/skills/`.** It is not a skill:
+the `skills` CLI installs `skills/` only, and a non-`SKILL.md` entry there fails that repo's own
+`ALLOWED_ENTRIES` layout test. A peer top-level directory — `agent-skills/instructions/` — keeps the
+constraint that nothing vendor-shaped carries instructions, and keeps the fragment where the
+conventions it belongs with are authored. Needs confirming, since it makes `agent-skills` a repo of
+two artifact kinds rather than one, which its README and its `AGENTS.md` both currently deny.]
+
+### Ownership and loading are two axes, not one
+
+The tier model in `contributing/global-agents-md.md` (tier 1 always-loaded, tier 2 skill, tier 3
+reference) answers _how_ a rule is loaded. It does not answer _which repo owns it_, which is the
+question this plan exists for — and the two have been getting decided together, which is why
+`contributing/global-agents-md.md` still has no home (the `[NEEDS CLARIFICATION:]` above).
+
+They are independent. Two questions, six homes:
+
+|                  | fires on any turn                        | statable trigger                       |
+| ---------------- | ---------------------------------------- | -------------------------------------- |
+| **portable**     | `agent-skills` instructions fragment     | `agent-skills` skill                   |
+| **this machine** | PULSE `this-setup.md` / `claude-code.md` | PULSE-local skill (`source = "local"`) |
+| **this repo**    | that repo's `AGENTS.md`                  | that repo's `.agents/skills/`          |
+
+Two things fall out immediately. The `source = "local"` escape hatch, recorded above as surviving
+unused, has a defined purpose under this table rather than being kept on principle — it is the cell
+for a machine-specific rule with a sharp trigger. And `contributing/global-agents-md.md` splits the
+way the rules do, one part per column, which is the answer the open question above was looking for.
+
 ## Recommended direction
 
 Rough, and contingent on the questions above.
