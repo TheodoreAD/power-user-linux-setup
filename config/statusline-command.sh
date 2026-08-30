@@ -1,8 +1,10 @@
 #!/bin/bash
-# Approximates the p10k setup from ~/.p10k.zsh (left: dir, vcs; right: virtualenv/anaconda).
-# user@host (p10k "context" segment) intentionally omitted.
-# Colors mirror p10k's own FOREGROUND numbers: dir=blue(4), vcs clean=green(2)/dirty=yellow(3),
-# virtualenv/anaconda=cyan(6). Rate-limit/time-of-day text=dark gold(256-color 136).
+# Claude Code statusline, laid out to match this repo's zsh prompt: left dir and vcs, right
+# virtualenv/anaconda. user@host (p10k's "context" segment) intentionally omitted.
+# Colors are p10k's own FOREGROUND numbers, so the two lines agree without either reading the
+# other: dir=blue(4), vcs clean=green(2)/dirty=yellow(3), virtualenv/anaconda=cyan(6).
+# Rate-limit/time-of-day text=dark gold(256-color 136). The prompt this matches is the repo
+# baseline in config/p10k.zsh — edit that, not the deployed ~/.p10k.zsh.
 #
 # Model name, context-window fill, both rate-limit windows, and session cost all share
 # one muted 256-color "weight" palette (gray -> green -> orange -> red, low to high,
@@ -22,8 +24,8 @@
 #   - session cost ("$", rounded up to whole dollars): gray <$5, green $5-15, orange
 #     $15-30, red >=$30.
 # Icons pulled from powerlevel10k's own nerdfont-complete icon table
-# (~/.oh-my-zsh/custom/themes/powerlevel10k/internal/icons.zsh — matches
-# POWERLEVEL9K_MODE=nerdfont-complete set in ~/.p10k.zsh):
+# (~/.oh-my-zsh/custom/themes/powerlevel10k/internal/icons.zsh — matches the
+# POWERLEVEL9K_MODE=nerdfont-complete that config/p10k.zsh sets):
 #   HOME_ICON, HOME_SUB_ICON, FOLDER_ICON, VCS_BRANCH_ICON, PYTHON_ICON,
 #   TIME_ICON (current time), EXECUTION_TIME_ICON (hourglass, 5h window),
 #   and Font Awesome's calendar glyph (7d window). The staged/unstaged/untracked/
