@@ -14,20 +14,41 @@ glyph set, and all three degrade to boxes without it:
   glyphs, taken from powerlevel10k's own icon table so the two lines match;
 - editor ligatures in VS Code and PyCharm.
 
-So the same family is set everywhere rather than left to each application's default. Where each one
-is set, if you want to change it:
+So the same family is set everywhere rather than left to each application's default.
 
-| target                               | set in                                    |
-| ------------------------------------ | ----------------------------------------- |
-| GNOME (all GTK apps), GNOME Terminal | `[settings.fonts]` in `setup.toml`        |
-| VS Code                              | `[settings.fonts.vscode]` in `setup.toml` |
-| Terminator                           | `config/terminator.conf`                  |
-| WezTerm                              | `config/wezterm.lua`                      |
-| PyCharm (editor and terminal)        | `config/pycharm/*.xml`                    |
+## Changing the font
 
-The first two are applied by `inv fonts.configure`; the rest are deployed as whole files, so change
-the repo-side file and run `inv deploy.all` (or `inv ide.configure-pycharm`). Miss one and the
-machine looks subtly wrong in exactly one application.
+It is named in exactly one place — `[settings.fonts]` in `setup.toml`:
+
+```toml
+[settings.fonts]
+family = "CaskaydiaCove Nerd Font" # editors: icons at full width, ligatures
+family_mono = "CaskaydiaCove Nerd Font Mono" # terminals: icons forced to one cell
+size = 12
+```
+
+Two variants, because a terminal needs every glyph to occupy exactly one cell and an editor does
+not. Everything else derives from those three values, through two tasks:
+
+```shell
+inv fonts.configure       # GNOME, GNOME Terminal, VS Code — settings on the live machine
+inv fonts.render-configs  # rewrites config/terminator.conf, config/wezterm.lua, config/pycharm/*.xml
+inv deploy.all            # pushes those rewritten files to ~
+```
+
+The split is what each application will accept: GNOME and VS Code take a setting, while Terminator,
+WezTerm and PyCharm read a config file, so their copy of the font lives in this repo and has to be
+rewritten rather than set. `render-configs` is a separate deliberate command whose output is
+committed and reviewed like any other change — it is not run by `inv setup`, and a test fails if the
+committed files stop matching `[settings.fonts]`, so a font change that skips it is caught in CI
+rather than leaving one application on the old font.
+
+!!! note "Short names like `CaskaydiaCove NFM` are the same font"
+
+    Nerd Fonts v3 registers an abbreviation for every family — `NFM` for `Nerd Font Mono`, `NF` for
+    `Nerd Font`. `fc-match` and `wezterm ls-fonts` both resolve the two to the same file, and
+    WezTerm even prints the alias. This repo writes the long form everywhere so that a search for
+    the family name finds every occurrence.
 
 Which family, and why that one: [Default font](#default-font-caskaydiacove-nerd-font) below.
 
@@ -98,8 +119,11 @@ must be distributed under a different name.
 | VS Code editor                 | CaskaydiaCove Nerd Font         | Default variant; double-width icons render correctly, ligatures enabled           |
 | VS Code integrated terminal    | CaskaydiaCove Nerd Font Mono    | Mono for the terminal grid inside VS Code                                         |
 
-For JetBrains IDEs: Settings → Editor → Font → set **CaskaydiaCove Nerd Font** (or Mono for the
-embedded terminal under Tools → Terminal).
+Terminator, WezTerm and PyCharm get the same font from their own config files — see
+[Changing the font](#changing-the-font). For JetBrains IDEs that is `inv ide.configure-pycharm`,
+which writes the editor and terminal font options directly; setting them by hand under Settings →
+Editor → Font works too, but PyCharm rewrites those files itself, so the task is what puts them
+back.
 
 ## Font variants (Nerd Fonts v3)
 
