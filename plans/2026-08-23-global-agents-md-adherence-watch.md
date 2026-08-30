@@ -411,3 +411,70 @@ future sample taken under auto mode. `Grep` was **not available** — the harnes
 returned `No such tool available` — so every content search had to go through Bash regardless of
 what `~/AGENTS.md` says. A counter that reads those as adherence failures is measuring the harness.
 See the auto-mode plan, which now owns that finding.]
+
+### Session 8 — `agent-skills`, 2026-08-30: the rate halved and the named instance survived
+
+Merged in from a plan filed against this repo by that session, which could not edit this file
+directly. Counted from its own transcript, 272 Bash calls.
+
+| metric                           | session 8    | session 7 | session 6 | baseline |
+| -------------------------------- | ------------ | --------- | --------- | -------- |
+| piped through `head`/`tail`      | **31 (11%)** | 33 (20%)  | 51 (20%)  | 29–32%   |
+| chained (`&&` / `;`)             | 58 (21%)     | 65 (40%)  | 36 (14%)  | 64–71%   |
+| `cd` into the session's own repo | 0            | 3         | 0         | 114      |
+
+11% is the lowest the watch has recorded — a third of baseline, half the previous best.
+
+[PITFALL: **the headline rate improving is compatible with the specific rule failing exactly as
+before.** Of that session's 31 piped calls, 12 were the two shapes that destroy an _exit code_
+rather than merely truncate output: 10 × `inv quality.precommit 2>&1 | tail -N`, the instance this
+plan has named since session 4, and 2 × `gh run watch --exit-status 2>&1 | tail -N`, the flag whose
+entire purpose is converting a red run into a non-zero exit, discarded by the filter reading it. The
+other 19 were `rg`/`ls` truncations — the data-loss shape. So the diffuse habit receded while the
+named, argued-about instance did not move at all, and a reader tracking only the percentage would
+have recorded the wording as working.]
+
+[PITFALL: **both exit-code cases happened while that session was executing a checklist warning about
+them in the sentence above the command.** `session-harvest`'s CI bullet then read "do not pipe it"
+and named the lost exit code; it was piped twice anyway, hours apart. Caught only because the
+session counted its own Bash calls at harvest — not by noticing.]
+
+Its conclusion, which session 9 then tested: naming the instance is not sufficient, and a command
+with **no exit code to lose** is a real mitigation rather than a warning —
+`gh run view --json
+status,conclusion` cannot be broken by a pipe. `session-harvest`'s CI bullet was
+rewritten that way the same day.
+
+### Session 9 — `power-user-linux-setup`, 2026-08-30: the gate is now half the problem
+
+This session — the `~/AGENTS.md` fragment re-cut, dependency labels, `ai.check-rule-prerequisites`,
+and the locale change. 270 Bash calls, counted at harvest.
+
+| metric                             | session 9 | session 8    | session 7 | baseline |
+| ---------------------------------- | --------- | ------------ | --------- | -------- |
+| piped through `head`/`tail`        | 62 (22%)  | **31 (11%)** | 33 (20%)  | 29–32%   |
+| — of which `inv quality.precommit` | **29**    | 10           | —         | —        |
+| chained (`&&` / `;`)               | 99 (36%)  | 58 (21%)     | 65 (40%)  | 64–71%   |
+| `cd` into the session's own repo   | 2         | 0            | 3         | 114      |
+| `echo $?` / `EXIT=`                | **0**     | —            | —         | 10–11%   |
+
+[PITFALL: **the named instance is not merely surviving, it is becoming the whole of the problem.**
+`inv quality.precommit … | tail -N` was 32% of session 8's piped calls and is **47% of session 9's**
+— 29 of 62. The share is growing while the aggregate rate oscillates, which means the aggregate is
+now mostly measuring how search-heavy a session happened to be. Session 8's open question ("is 11%
+real, or a composition artefact?") is answered in the direction it feared: composition dominates,
+and the two metrics should be reported separately from here on.]
+
+The `echo $?` count is the one unambiguous win: **zero occurrences in 270 calls**, against 10–11% of
+Fable/Opus calls on the day a contradictory version of the rule was live. That rule was rewritten to
+state the tool already reports a non-zero exit, and this session merged its three scattered copies
+into one canonical home — so it is now the best-evidenced case of a rule that was fixed and stayed
+fixed.
+
+[NEEDS CLARIFICATION: the gate instance has now resisted four sessions of increasingly precise
+prose, so the next move is not more wording. Session 8 named the shape of a real fix — prefer a form
+with no exit code to lose. `inv quality.precommit` has no `--json`, so the candidate is running it
+bare and reading the harness's own non-zero report, which is exactly what the rule already says and
+is exactly what is not happening. Worth asking whether the pull is output _volume_ rather than exit
+codes: the gate prints ~40 lines on success, and every one of this session's 29 pipes was `tail -3`
+to `tail -6`. If so the fix is a quieter gate, not a better rule.]
