@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-29
+status: in-progress
+updated: 2026-08-30
 depends_on: [agent-skills]
 ---
 
@@ -156,6 +156,84 @@ writers need the same treatment — a registry entry per ownership model, which 
 would cover about ten paths out of a home directory whose interesting content is mostly blocks,
 merged JSON and dconf.
 
+## Step 1 landed, and the number it produced (2026-08-30)
+
+`inv home.list-claims` (`tasks/home.py`, read-only) is the inventory. Rationale, the full breakdown
+and what is deliberately not claimed are in `contributing/home-claims.md`; the user-facing page is
+`docs/configuration.md`. **109 claims on this machine**, against the 10 paths `deploy.status` could
+see:
+
+| writer             | claims |
+| ------------------ | -----: |
+| `install`          |     36 |
+| `block`            |     24 |
+| `imperative`       |     23 |
+| `whole-file`       |     10 |
+| `whole-file-adhoc` |      5 |
+| `symlink`          |      5 |
+| `key`              |      3 |
+| `merge`            |      2 |
+| `external`         |      1 |
+
+By tier: 69 `public`, 35 `derived`, 4 `machine`, 1 `secret`, **0 `personal`**.
+
+**The number the rest of this plan has to be sized against: a whole-file-only lifecycle reaches 15
+of the 74 non-derived claims — 20% — and only 10 of those (13%) can be classified at all.**
+`derived` is excluded from the denominator because an installed Go toolchain or an `nvm` directory
+can never be the subject of a config lifecycle; including them would flatter the number by a third.
+
+Five findings that change the plan below rather than merely confirming it:
+
+1. **Axis A needs ten values, not seven.** Three writers the table above did not name are real and
+   each has a different notion of a conflict: `whole-file-adhoc` (a whole file written by a task of
+   its own, outside `deploy.py` — five of them), `key` (regex surgery on one key of a file an
+   application owns, which can rewrite the wrong line where a JSON merge can only lose its own key),
+   and `symlink` (the claim is the link, not any bytes — five of them, invisible to
+   `deploy.lookup()`, which resolves them onto their target's entry). `human` was dropped: a path
+   nothing claims is by definition not in a registry of claims.
+2. **`deploy.py`'s unification stopped three writers short.** `zsh.configure-p10k` writes
+   `~/.p10k.zsh` skip-if-exists with **no redeploy path at all**; `ide.configure-pycharm`
+   unconditionally overwrites two files in a **glob-discovered** JetBrains directory;
+   `proxy.install` writes its systemd unit from a module constant rather than a `config/` file.
+   These are exactly the "too many ways to write into `~`" `contributing/deploy.md` set out to
+   remove. Folding them into `deploy.py` is a small, independently useful change and a prerequisite
+   for step 5 — `dotfiles.capture` for whole files cannot capture a path with no manifest entry.
+3. **Every skill on this machine is invisible to `deploy.py`.** `deploy._skill_entries` registers
+   only `source = "local"` skills and this repo deliberately declares none, so the whole of
+   `~/.agents/skills/` is declared in `setup.toml` and absent from the registry.
+4. **The machine tier already exists, at four claims**, before anything is built: the `certs` and
+   `proxy` blocks in `~/.zshenv`, the `ssh` block in `~/.ssh/config`, and `overrides.toml`. All four
+   are identity-derived or hand-written and genuinely true of this box only. That is real evidence
+   for the layering, and it also means open question 3 (does the machine tier get a remote?) is
+   about content that exists today, not a hypothetical.
+5. **`personal` is empty, which is the plan's premise measured.** Every one of the 69 `public`
+   claims is public because there is nowhere else for it to go — not because anyone judged it a good
+   default for a stranger. The tier column deliberately reports where content lives _today_ rather
+   than where it should; reclassifying is steps 2–4, and the inventory must not pre-empt it.
+
+[DECISION: the inventory is a **new `home.*` namespace**, not an extension of `deploy.*`.
+`deploy.py`'s docstring scopes it to "one way to write a file into the home directory", and that
+contract is what makes its five-state classifier trustworthy; a registry of paths it does not write
+would make the contract mean two things. `tasks/home.py` owns the claims, `deploy.py` keeps owning
+the whole-file writer, and the whole-file third of the registry is **derived** from
+`deploy.managed_paths()` with a test asserting the equality, so a second hand-maintained list of the
+same paths cannot appear. The task name `list-claims` is verb-first per `invoke-task-conventions`
+and matches the `<ns>.list-*` shape the machine's allowlist auto-approves as read-only — which binds
+this command to stay read-only forever.]
+
+[DECISION: **a registry entry does not imply a classifier**, and the inventory says so rather than
+faking one. Only the deploy manifest records what was written, so only its claims get a real
+`State`; everything else reports presence, and a claim with no filesystem location (a dconf key)
+reports `—`. Designing a notion of "dirty" for a block, a merged JSON key and a dconf value is
+separate work that this step deliberately does not start.]
+
+[DEFERRED: skill-written config (`~/.config/plan-docs/config.toml`,
+`~/.config/tasks-md/workspaces.json`, `~/.beads-planning`) is **not** claimed. This repo declares
+the skill; the skill's own config belongs to `agent-skills`, and hard-coding another repo's paths
+here would rot the first time one moves. The command's footer says so rather than leaving the gap
+looking like an oversight. Open question 4 below is where this gets decided — and it has to be
+decided in `agent-skills`, not here.]
+
 ## The layering
 
 ```
@@ -270,22 +348,32 @@ the latter. `identity.toml` is the test case — emails and a proxy host, no key
 
 Sequenced so each step is independently useful and nothing is built before the thing it depends on:
 
-1. **The inventory, first and alone.** Widen the registry so every ownership model has an entry —
-   `block`, `merge`, `imperative`, `skill`, `app` — and add a read-only command that prints the home
-   surface classified on all three axes. This is the `[DEFERRED:]` item
-   `plans/2026-08-24-machine-local-setup-toml-overrides.md` already holds, it is worth having on its
-   own merits (`deploy.status` currently cannot answer "is this path PULSE-managed?" for two-thirds
-   of the machine), and it is the only way to know how much of the real surface a whole-file-only
-   lifecycle would actually cover. **Do not size the rest of this plan before that number exists.**
+1. ~~**The inventory, first and alone.**~~ **Landed 2026-08-30** — `inv home.list-claims`, 109
+   claims, 20% whole-file coverage of the non-derived surface. See "Step 1 landed" above. It also
+   discharges the `[DEFERRED:]` item `plans/2026-08-24-machine-local-setup-toml-overrides.md` held
+   ("wants a registry entry per ownership model so 'is this path PULSE-managed?' has one answer for
+   all three") — that tag can be retired from the overrides plan, since the registry now exists;
+   what it does **not** discharge is the second half, designing drift classification for the block
+   and merge writers, which stays open there.
 2. **Answer the remote question for the machine tier** (open question 3). It decides whether this is
-   one mechanism or two, and it is a policy question that no amount of building resolves.
-3. **Layer resolution in `deploy.py`** — first-match search across configured layers, falling back
+   one mechanism or two, and it is a policy question that no amount of building resolves. The
+   inventory sharpened it: the machine tier is four real claims today, not a hypothesis.
+3. **Fold the three `whole-file-adhoc` writers into `deploy.py`** — `~/.p10k.zsh`, the two PyCharm
+   option files, the systemd unit. New, from finding 2 of the inventory. Independently useful (each
+   gains a diff, a manifest entry and a redeploy path it does not have), it raises the classifiable
+   share from 13% to 20% at no design cost, and step 6 depends on it: `capture` cannot capture a
+   path with no record of what was written there. `~/.p10k.zsh` is the sharpest case — a
+   skip-if-exists file with no redeploy path at all, and simultaneously the plan's own headline
+   example of a peculiarity that should not ship from a public repo.
+4. **Layer resolution in `deploy.py`** — first-match search across configured layers, falling back
    to `config/`. Small, and by itself it already lets personal content leave the public repo.
-4. **The de-peculiarization pass** — move what the answer to open question 1 says should move, with
+5. **The de-peculiarization pass** — move what the answer to open question 1 says should move, with
    a neutral default left behind for each.
-5. **`dotfiles.capture` for `whole-file` paths only**, stating the limit. The manifest already knows
-   what PULSE wrote, so the diff is free; the tier question is the only new judgment.
-6. **Everything else on evidence** — templating, non-whole-file capture, encryption — each revisited
+6. **`dotfiles.capture` for `whole-file` paths only**, stating the limit. The manifest already knows
+   what PULSE wrote, so the diff is free; the tier question is the only new judgment. The limit is
+   now measurable rather than hand-waved: it covers 20% of the non-derived surface, and the footer
+   of `inv home.list-claims` is where a reader sees what it misses.
+7. **Everything else on evidence** — templating, non-whole-file capture, encryption — each revisited
    only when a real duplication or a real loss makes the case. `~/AGENTS.md`'s "Pilot before
    generalizing": this machine is the pilot, and it has exactly one dirty managed path today
    (`~/.config/terminator/config`), which is a thin evidence base for a large mechanism.

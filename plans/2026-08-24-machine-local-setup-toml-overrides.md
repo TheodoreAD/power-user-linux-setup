@@ -148,11 +148,13 @@ its two open items live here now.
 
 [DEFERRED: `util.ensure_block` and `util.write_claude_settings` targets have no drift classification
 of their own — a marker-delimited block and a merged JSON key each need their own notion of "dirty"
-that the whole-file classifier doesn't model. `inv deploy.status --path` at least _detects_ a
-block-owned file (any file containing a `PULSE::` marker) and says PULSE owns only the marked
-regions; `write_claude_settings` targets remain entirely undetected. Wants a registry entry per
-ownership model so "is this path PULSE-managed?" has one answer for all three, before any
-classification is designed.]
+that the whole-file classifier doesn't model. The registry half of this item is **done**
+(2026-08-30): `inv home.list-claims` gives "is this path PULSE-managed?" one answer across all nine
+writers, and every non-whole-file claim is reported as unclassifiable rather than faked — see
+`contributing/home-claims.md` and `plans/2026-08-29-dotfiles-repo-config-lifecycle.md`. What stays
+open here is the classification itself: what "dirty" means for a block (its marked region differs
+from what the task would write) and for a merged key (a PULSE-owned key holds a value PULSE did not
+put there), and where the record of "what we wrote" would live for each.]
 
 [DEFERRED: the agent that dirties a deployed file still learns nothing _at edit time_ — only whoever
 next runs a PULSE task does. Accepted deliberately (the actual harm, silent loss, is closed), with a
