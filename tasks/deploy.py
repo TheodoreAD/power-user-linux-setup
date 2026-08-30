@@ -507,7 +507,11 @@ def deploy(m: Managed, *, assume_yes: bool = False, manifest: Manifest | None = 
         print(f"[deploy] {m.package}: {verb}d {m.path}")
         return Action.CREATED if state == State.ABSENT else Action.UPDATED
 
-    if m.policy == Policy.SEEDED:
+    # `and not assume_yes` is load-bearing: without it this returns before the overwrite path below
+    # and `--yes` silently does nothing on a SEEDED destination — while this very message, and
+    # all_()'s docstring, both promise it overwrites. Found by running the command the message
+    # tells you to run (2026-08-30, redeploying wezterm.lua after a font rename).
+    if m.policy == Policy.SEEDED and not assume_yes:
         print(
             f"[deploy] {m.package}: {m.path} differs from {m.source} — yours to own, leaving it "
             f"alone (`inv deploy.all --name {m.package} --yes` would overwrite it)"

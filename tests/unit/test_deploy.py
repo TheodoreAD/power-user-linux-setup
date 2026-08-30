@@ -928,3 +928,27 @@ def test_an_edited_managed_file_is_reported_not_accepted(tmp_path, src, monkeypa
     assert "edited since PULSE deployed it" in out
     assert "yours to own" not in out
     assert dst.read_text() == "hand-edited\n"
+
+
+def test_yes_overwrites_a_customized_seeded_destination(tmp_path, src):
+    """`--yes` is the documented way to take the repo's version back — all_()'s docstring says a
+    customized config_files destination is "left alone unless --yes", and the message the SEEDED
+    branch prints names that exact command. It returned before ever reading the flag, so the
+    command it told you to run did nothing."""
+    m = _managed(tmp_path)
+    deploy.deploy(m)
+    dest = tmp_path / "home" / "app.conf"
+    dest.write_text("customized by the user\n")
+
+    assert deploy.deploy(m, assume_yes=True) == deploy.Action.UPDATED
+    assert dest.read_text() == "new content\n"
+
+
+def test_a_customized_seeded_destination_is_still_left_alone_without_yes(tmp_path, src):
+    m = _managed(tmp_path)
+    deploy.deploy(m)
+    dest = tmp_path / "home" / "app.conf"
+    dest.write_text("customized by the user\n")
+
+    assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
+    assert dest.read_text() == "customized by the user\n"
