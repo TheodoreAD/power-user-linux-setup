@@ -274,14 +274,33 @@ by trying to declare `~/.p10k.zsh` and asking what would happen on a fresh machi
 
 ## The layering
 
+Two repositories, three resolution levels — settled 2026-08-30, see the DECISION under "Open
+questions":
+
 ```
-PULSE  config/            public   — defaults for everyone, unchanged
-  └─ dotfiles            private   — my preferences, all my machines
-       └─ dotfiles-<machine>  private   — this box only
+PULSE  config/                     public    — defaults for everyone, unchanged
+  └─ <dotfiles>/base/             private   — my preferences, every machine I own
+       └─ <dotfiles>/machines/<hostname>/   — this box only
                                     ↓ first match wins (rcm's rule)
                               deploy.py → ~
-                                    ↑ capture (review → tier → commit)
+                                    ↑ capture (review → level → commit)
 ```
+
+The shape the user asked for is helm/kustomize's: a base holding what is always the same, and a
+directory per machine holding what differs. Two differences from kustomize worth stating before
+anyone reaches for its vocabulary:
+
+- **A machine directory replaces a file, it does not patch one.** kustomize patches structured YAML;
+  here the layers hold `p10k.zsh`, `wezterm.lua`, `terminator.conf`, `.desktop` files — four formats
+  with no common merge semantics, and a per-format merger is a second config language.
+  First-match-wins on whole files is rcm's rule and is what keeps this cheap.
+- **The one thing that already merges is the declaration, not the content.** `overrides.toml`
+  patches `setup.toml` at the key level and predates this plan; it stays that way. So the split is
+  clean: declarations merge, content files replace.
+
+Directory names are a small choice, not a decision — `base/` and `machines/<hostname>/` read
+clearly, keep every hostname under one parent, and leave `base/` free of any host-shaped name. rcm's
+flat `host-<hostname>/` would work identically.
 
 Three properties make this cheap rather than a second config language:
 
@@ -296,10 +315,16 @@ Three properties make this cheap rather than a second config language:
    `config/` and the machine behaves precisely as it does today. That is the single-machine UX: the
    feature is invisible until `inv dotfiles.init` is run.
 
-Which repos exist, and where they are cloned, is **machine-local configuration**
+Which repo it is and where it is cloned is **machine-local configuration**
 (`~/.config/power-user-linux-setup/`, beside `identity.toml` and `overrides.toml`) — never
 `setup.toml`. A repo URL in the public tracked file would be the same category error as the
-peculiarities this plan is removing.
+peculiarities this plan is removing. Only the URL and the clone path need recording: the machine
+directory is found by hostname, so nothing has to name this box twice.
+
+Note the chicken-and-egg that follows, and that `dotfiles.init` has to handle: `identity.toml` and
+`overrides.toml` are themselves candidates for the machine directory, and they are also where the
+layer's own location is recorded. Whatever lands there, the pointer to the repo stays a plain local
+file that needs no repo to read.
 
 [DECISION: this does **not** reopen the 2026-08-24 decision that "git is not for data on individual
 hosts". That decision rejected _hostname-keyed sections inside PULSE's own tracked `setup.toml`_,
@@ -339,18 +364,38 @@ Leaning: PULSE keeps a deliberately plain default for each, and the personal lay
 `agents-md/` fragments are the hardest case — they are arguably this repo's most valuable public
 output, not a peculiarity.]
 
-[NEEDS CLARIFICATION: one machine repo per machine, or one repo with a `host-<hostname>/` directory
-per machine (rcm's shape)? Per-repo keeps a decommissioned machine's data out of every clone and
-matches "this box only" literally; one repo with host directories is far less GitHub bookkeeping and
-lets a new machine start by copying a sibling's directory. Leaning: rcm's shape — one private repo,
-host directories — because the number of repos is the thing that makes multi-machine setups rot.]
+[DECISION: **one private repo with a remote, laid out `base/` plus a directory per machine.**
+Settled by the user 2026-08-30, resolving both the per-repo-vs-host-directories question and the
+remote question at once:
 
-[NEEDS CLARIFICATION: does a machine layer holding a corporate proxy host, a work CA bundle path or
-work-shaped hostnames belong on a remote **at all**? The `plan-docs` store on this machine answers
-the analogous question with a hard no — its sensitive tier deliberately has no remote, and `doctor`
-reports one as a problem. The ask here is explicitly a GitHub-stored repo, so this needs a
-deliberate answer rather than an inherited one: private-with-a-remote, no-remote (local git only,
-backup is the user's), or a third sensitive tier. Note a private GitHub repo is not a secret store.]
+> all config files can go in the private repo, even if they might have network topology inside, as
+> long as there are no secrets or security risky things, or intellectual property. i want a single
+> repo that could have a base directory, for the stuff that's always the same or default, and
+> per-machine directories with overrides, sort of like a helm / kustomization / gitops structure.
+
+So the layering is **three resolution levels across two repositories**, not three repositories — see
+the diagram above, updated. rcm's leaning was right about host directories; what the earlier draft
+got wrong was assuming the personal and machine tiers needed separate repos.]
+
+[DECISION: **the admission rule for that repo is "no secrets, nothing security-risky, no
+intellectual property" — network topology is explicitly fine.** Stated by the user in the same
+message, and the earlier draft of this plan argued from a premise that does not hold. Measured
+2026-08-30: `identity.toml` contains names, email addresses, ssh host aliases with their real
+hostnames and login users, optionally a proxy host/port and `noproxy` CIDRs, and optionally a
+filesystem _path_ to a CA bundle. It contains no credential by construction — the proxy password
+goes to the OS keyring (`proxy._capture_credential` writes the entry directly, and the file's own
+comment says so), ssh private keys stay in `~/.ssh/`, and a root CA certificate is a public artifact
+referenced by path rather than inlined.
+
+The `plan-docs` store's hard no-remote rule was cited as precedent here and **does not transfer**:
+that tier holds clients' and employers' internal architecture, which is other people's confidential
+material and not the user's to place anywhere. `identity.toml` is the user's own data about the
+user's own machine, on an account with MFA and no shared access.
+
+The one part that is not purely the user's own: work email addresses, an employer's proxy hostname
+and internal `noproxy` CIDRs are that employer's network topology. Not a risk to this account, but
+whether it may sit in a personal cloud repo is a per-employer policy question rather than a
+technical one — worth a look before the first machine directory holding one is pushed.]
 
 [NEEDS CLARIFICATION: does the machine tier absorb `~/.config/plan-docs/config.toml`? That skill
 states its config is per-machine and **deliberately not version-controlled**, with a stated reason
@@ -393,9 +438,11 @@ Sequenced so each step is independently useful and nothing is built before the t
    all three") — that tag can be retired from the overrides plan, since the registry now exists;
    what it does **not** discharge is the second half, designing drift classification for the block
    and merge writers, which stays open there.
-2. **Answer the remote question for the machine tier** (open question 3). It decides whether this is
-   one mechanism or two, and it is a policy question that no amount of building resolves. The
-   inventory sharpened it: the machine tier is four real claims today, not a hypothesis.
+2. ~~**Answer the remote question for the machine tier.**~~ **Answered 2026-08-30** — one private
+   repo with a remote, `base/` plus a directory per machine, admitting any config file that carries
+   no secret, nothing security-risky and no intellectual property. That collapses what the plan
+   assumed were two layer repos into one, and it settles the per-repo-vs-host-directories question
+   with it. Both DECISIONs are under "Open questions"; the layering diagram is updated.
 3. ~~**Fold the ad-hoc whole-file writers into `deploy.py`.**~~ **Landed 2026-08-30**, same session
    as step 1. All five now go through the one writer, so classifiable went 10 → 14 of 14 whole-file
    claims — which step 6 depends on, since `capture` cannot capture a path with no record of what
