@@ -7,10 +7,13 @@ pass are in the same repo's `contributing/global-agents-md.md`. The `PULSE::` ma
 fragment each section came from — this file is regenerated whole, so an edit made here is shown as a
 diff and asked about on the next deploy, never silently kept.
 
-## This machine & this setup
+## What this setup provisions
 
-Rules that are true because of how this particular machine and this user's repos are set up. Nothing
-here is a general convention — on a different machine most of it is simply wrong.
+Rules that hold because PULSE provisioned the machine — the askpass helper and its `SUDO_ASKPASS`
+export, the ssh-agent picker in `~/.zprofile`, direnv, the tools declared in `setup.toml`, the
+installed skills. They are true on any PULSE machine and wrong on one without it, so nothing here is
+a general convention. A couple also depend on this user's own locale and repo ownership, and say so
+where they do.
 
 ### sudo
 

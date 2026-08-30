@@ -27,6 +27,7 @@ _META_SECTIONS = frozenset(
         "Re-measuring the deployed file",
         "Contents",
         "Bash & the CLI allowlist (cluster intro)",
+        "What this setup provisions (cluster intro)",
     }
 )
 

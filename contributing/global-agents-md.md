@@ -272,6 +272,33 @@ than the work. Stating the mechanism instead of the prohibition is what previous
 reason its way to an exception, so the wording leads with the ban and names the three destinations
 that replace it.
 
+## What this setup provisions (cluster intro)
+
+Renamed 2026-08-30 from "This machine & this setup". The old name and its intro ("rules that are
+true because of how this particular machine and this user's repos are set up") described the cluster
+as personal to one box, and that is not what is in it: measured against `setup.toml`, five of its
+seven rules depend on something PULSE installs — `[packages.askpass-zenity]` supplies both the
+helper and the `SUDO_ASKPASS` export, PULSE writes the `~/.zprofile` ssh-agent picker, `setup.toml`
+_is_ the tool-installation rule, `[packages.direnv]` and its zsh hook are why the bare venv command
+resolves, and `inv ai.install-skills` installs the skills. Only the locale rule (a desktop regional
+setting PULSE does not create, though PULSE's own `config/statusline-command.sh` works around it
+throughout) and the personal-repo push rule are outside that.
+
+The distinction is not cosmetic. Stated by the user 2026-08-30: _"harness settings are not just for
+this machine, they are for pulse as a holistic approach to development"_, and _"i'm not planning to
+have anything machine-specific for myself in terms of agents.md — everything i change in my
+workflows fundamental enough to require an agents.md or skill rule will be integrated in pulse to
+happen by default as a prerequisite."_ So "this machine" was never a category the file should have
+had, and calling the cluster that invited rules to be filed by where they were noticed rather than
+by what they depend on. The admission test is now the dependency: does this hold because PULSE put
+something there?
+
+Description only — no rule moved, and the file is still named `this-setup.md`, which now lags its
+own contents. Renaming the file changes the `PULSE::agents-md/<stem>` provenance markers and its
+`setup.toml` `src`, so it is deliberately a separate change. The wider re-cut, the Claude Code
+labelling, and the disabled-prerequisite warning are in
+`plans/2026-08-30-portable-fragment-names-one-harness.md`.
+
 ## Bash & the CLI allowlist (cluster intro)
 
 Rewritten 2026-08-24 around `acceptEdits` mode, after a four-day transcript audit (3,956 Bash calls;

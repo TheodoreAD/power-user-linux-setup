@@ -2,11 +2,11 @@
 
 The assembled `~/AGENTS.md` is built from the fragments in this directory, in `order`:
 
-| order | fragment         | owns                                                        |
-| ----- | ---------------- | ----------------------------------------------------------- |
-| 10    | `this-setup.md`  | this machine, this user's own repos, PULSE's own mechanisms |
-| 20    | `claude-code.md` | behavior specific to the Claude Code harness                |
-| 30    | `portable.md`    | conventions that hold on any machine, with any agent        |
+| order | fragment         | owns                                                                |
+| ----- | ---------------- | ------------------------------------------------------------------- |
+| 10    | `this-setup.md`  | what PULSE provisions — true on any PULSE machine, wrong without it |
+| 20    | `claude-code.md` | behavior specific to the Claude Code harness                        |
+| 30    | `portable.md`    | conventions that hold on any machine, with any agent                |
 
 Each fragment contributes whole `##` sections; the assembler never merges at the rule level, so no
 cluster is split across two fragments. A rule may _mention_ another fragment's subject matter — the
@@ -33,12 +33,16 @@ fragment to go edit for a given section — not an ownership boundary.
 
 ## Which fragment a rule belongs in
 
-Audience, not subject matter. A rule goes in `portable.md` only if it holds on another machine, run
-by another agent; anything true because of how this machine is set up goes in `this-setup.md`, and
-anything describing one harness's behaviour in `claude-code.md`.
+What the rule depends on, not what it is about. A rule goes in `this-setup.md` if it depends on
+something PULSE installs — direnv, the askpass helper, the `~/.zprofile` agent picker, a tool
+declared in `setup.toml`; in `claude-code.md` if it describes one harness's behaviour; in
+`portable.md` otherwise. "This machine" is not a category: nothing here is meant to be personal to
+one box, and a workflow change fundamental enough to need a rule is supposed to become a PULSE
+default rather than a local fact.
 
-The boundary is not currently clean — `portable.md` inherited wording from before the split, and
-several of its rules name Claude Code's tools or this machine's paths. That is tracked, with the
-measurement, in `plans/2026-08-30-portable-fragment-names-one-harness.md`; it is not a licence to
-sweep, because each rule's wording was tuned for adherence and some of it deliberately names the
-harness this machine actually runs.
+The boundary is not currently clean, and the file names lag the descriptions — `this-setup.md` is
+about PULSE rather than about one machine, and `portable.md` names Claude Code's tools in several
+rules. That is tracked, with the measurement, in
+`plans/2026-08-30-portable-fragment-names-one-harness.md`. It is not a licence to sweep: the Claude
+Code rules are deliberate and stay, wanting a label rather than a rewrite, and each rule's wording
+was tuned for adherence.
