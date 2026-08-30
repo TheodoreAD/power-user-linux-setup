@@ -41,6 +41,27 @@
 
 </div>
 
+## What you get, out of the box
+
+Everything below is configured by `inv setup` and works together on purpose — the font is what the
+prompt icons and the statusline glyphs are drawn from, and the statusline is laid out to match the
+prompt. None of it needs a wizard, and all of it is yours to change.
+
+- **A terminal that opens ready to work** — WezTerm starts maximized as a 2×2 pane grid with
+  `ALT+1..4` to jump between panes, `CTRL+Tab` to cycle, and `ALT+SHIFT+arrows` to resize.
+  [Startup layout and keys](terminal.md#startup-layout)
+- **A finished shell prompt** — Powerlevel10k, two-line lean style, transient prompt, instant
+  prompt, git status and the active environment where you expect them. No `p10k configure` step.
+  [The prompt](zsh.md#the-prompt)
+- **A Claude Code statusline that shows what the session costs** — model, context window, both
+  rate-limit windows and session cost, each coloured by thresholds chosen from how the pricing
+  actually works. [The statusline](claude-code.md#the-statusline)
+- **Nerd Fonts, installed and wired up** — every icon in the three items above comes from here.
+  [Fonts](fonts.md)
+- **Agent instructions that come with the machine** — `~/AGENTS.md`, assembled from reviewed
+  fragments and read by every agent tool that follows the convention.
+  [Global instructions](claude-code.md#agentsmd-global-instructions-declaratively-managed)
+
 ## Quick start
 
 ```shell
