@@ -898,6 +898,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#changing-the-font" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Changing the font
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#install" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2078,6 +2089,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#changing-the-font" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Changing the font
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#install" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2249,45 +2271,37 @@ glyph set, and all three degrade to boxes without it:</p>
   glyphs, taken from powerlevel10k&rsquo;s own icon table so the two lines match;</li>
 <li>editor ligatures in VS Code and PyCharm.</li>
 </ul>
-<p>So the same family is set everywhere rather than left to each application&rsquo;s default. Where each one
-is set, if you want to change it:</p>
-<table>
-<thead>
-<tr>
-<th>target</th>
-<th>set in</th>
-</tr>
-</thead>
-<tbody>
-<tr>
-<td>GNOME (all GTK apps), GNOME Terminal</td>
-<td><code>[settings.fonts]</code> in <code>setup.toml</code></td>
-</tr>
-<tr>
-<td>VS Code</td>
-<td><code>[settings.fonts.vscode]</code> in <code>setup.toml</code></td>
-</tr>
-<tr>
-<td>Terminator</td>
-<td><code>config/terminator.conf</code></td>
-</tr>
-<tr>
-<td>WezTerm</td>
-<td><code>config/wezterm.lua</code></td>
-</tr>
-<tr>
-<td>PyCharm (editor and terminal)</td>
-<td><code>config/pycharm/*.xml</code></td>
-</tr>
-</tbody>
-</table>
-<p>The first two are applied by <code>inv fonts.configure</code>; the rest are deployed as whole files, so change
-the repo-side file and run <code>inv deploy.all</code> (or <code>inv ide.configure-pycharm</code>). Miss one and the
-machine looks subtly wrong in exactly one application.</p>
+<p>So the same family is set everywhere rather than left to each application&rsquo;s default.</p>
+<h2 id="changing-the-font">Changing the font</h2>
+<p>It is named in exactly one place — <code>[settings.fonts]</code> in <code>setup.toml</code>:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="k">[settings.fonts]</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="n">family</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"CaskaydiaCove Nerd Font"</span><span class="w"> </span><span class="c1"># editors: icons at full width, ligatures</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="n">family_mono</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"CaskaydiaCove Nerd Font Mono"</span><span class="w"> </span><span class="c1"># terminals: icons forced to one cell</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="n">size</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="mi">12</span>
+</span></code></pre></div>
+<p>Two variants, because a terminal needs every glyph to occupy exactly one cell and an editor does
+not. Everything else derives from those three values, through two tasks:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>inv<span class="w"> </span>fonts.configure<span class="w">       </span><span class="c1"># GNOME, GNOME Terminal, VS Code — settings on the live machine</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>fonts.render-configs<span class="w">  </span><span class="c1"># rewrites config/terminator.conf, config/wezterm.lua, config/pycharm/*.xml</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>deploy.all<span class="w">            </span><span class="c1"># pushes those rewritten files to ~</span>
+</span></code></pre></div>
+<p>The split is what each application will accept: GNOME and VS Code take a setting, while Terminator,
+WezTerm and PyCharm read a config file, so their copy of the font lives in this repo and has to be
+rewritten rather than set. <code>render-configs</code> is a separate deliberate command whose output is
+committed and reviewed like any other change — it is not run by <code>inv setup</code>, and a test fails if the
+committed files stop matching <code>[settings.fonts]</code>, so a font change that skips it is caught in CI
+rather than leaving one application on the old font.</p>
+<div class="admonition note">
+<p class="admonition-title">Short names like <code>CaskaydiaCove NFM</code> are the same font</p>
+<p>Nerd Fonts v3 registers an abbreviation for every family — <code>NFM</code> for <code>Nerd Font Mono</code>, <code>NF</code> for
+<code>Nerd Font</code>. <code>fc-match</code> and <code>wezterm ls-fonts</code> both resolve the two to the same file, and
+WezTerm even prints the alias. This repo writes the long form everywhere so that a search for
+the family name finds every occurrence.</p>
+</div>
 <p>Which family, and why that one: <a href="#default-font-caskaydiacove-nerd-font">Default font</a> below.</p>
 <h2 id="install">Install</h2>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>fonts.install<span class="w">    </span><span class="c1"># downloads all families to ~/.local/share/fonts, rebuilds font cache</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>fonts.configure<span class="w">  </span><span class="c1"># sets CaskaydiaCove Nerd Font Mono as system monospace, GNOME Terminal, and VS Code</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>fonts.install<span class="w">    </span><span class="c1"># downloads all families to ~/.local/share/fonts, rebuilds font cache</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>fonts.configure<span class="w">  </span><span class="c1"># sets CaskaydiaCove Nerd Font Mono as system monospace, GNOME Terminal, and VS Code</span>
 </span></code></pre></div>
 <p>Both run as part of <code>inv setup</code>. Re-running is safe:</p>
 <ul>
@@ -2305,19 +2319,19 @@ machine looks subtly wrong in exactly one application.</p>
 </div>
 <h2 id="dry-run">Dry run</h2>
 <p>Check which families are already installed without downloading anything:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>fonts.install
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>fonts.install
 </span></code></pre></div>
 <p>Check current font configuration versus what <code>inv fonts.configure</code> would set:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>fonts.configure
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>fonts.configure
 </span></code></pre></div>
 <p>Sample output:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>[fonts] CascadiaCode: ok
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>[fonts] JetBrainsMono: ok (v2 — will upgrade)
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>[fonts] SourceCodePro: MISSING
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>...
-</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>[fonts] system monospace: ok
-</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>[fonts] GNOME Terminal: MISSING  (current: 'Monospace 12')
-</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>[fonts] VS Code: ok
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>[fonts] CascadiaCode: ok
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>[fonts] JetBrainsMono: ok (v2 — will upgrade)
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>[fonts] SourceCodePro: MISSING
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>...
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>[fonts] system monospace: ok
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>[fonts] GNOME Terminal: MISSING  (current: 'Monospace 12')
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a>[fonts] VS Code: ok
 </span></code></pre></div>
 <p><code>ok (v2 — will upgrade)</code> means the family is installed but as v2 — the next live run will remove the
 old files and install v3.</p>
@@ -2358,8 +2372,11 @@ must be distributed under a different name.</p>
 </tr>
 </tbody>
 </table>
-<p>For JetBrains IDEs: Settings → Editor → Font → set <strong>CaskaydiaCove Nerd Font</strong> (or Mono for the
-embedded terminal under Tools → Terminal).</p>
+<p>Terminator, WezTerm and PyCharm get the same font from their own config files — see
+<a href="#changing-the-font">Changing the font</a>. For JetBrains IDEs that is <code>inv ide.configure-pycharm</code>,
+which writes the editor and terminal font options directly; setting them by hand under Settings →
+Editor → Font works too, but PyCharm rewrites those files itself, so the task is what puts them
+back.</p>
 <h2 id="font-variants-nerd-fonts-v3">Font variants (Nerd Fonts v3)</h2>
 <p>Each family ships three variants per weight:</p>
 <table>
