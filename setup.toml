@@ -93,8 +93,8 @@
 #
 # archive sections:
 #   download_url  URL to a tar archive — gzip, xz or bzip2, detected from the downloaded bytes
-#                 rather than declared, so an upstream "latest" endpoint whose URL carries no file
-#                 extension at all works; supports {version} +
+#                 rather than declared, so an upstream "latest" endpoint with no file extension
+#                 in its URL (see [packages.telegram-desktop]) works; supports {version} +
 #                 version_cmd exactly like deb-url above (see [packages.atuin]), or
 #                 {version} + version_url (fetch latest version string via `curl | head -1`
 #                 instead of a custom command)
@@ -1279,6 +1279,37 @@ gpg_url = "https://pkg.claude-desktop-debian.dev/KEY.gpg"
 gpg_path = "/usr/share/keyrings/claude-desktop.gpg"
 sources_path = "/etc/apt/sources.list.d/claude-desktop.list"
 sources_entry = "deb [arch=amd64,arm64 signed-by={gpg_path}] https://pkg.claude-desktop-debian.dev stable main"
+
+[packages.telegram-desktop]
+description = """
+Telegram Desktop, official static build from telegram.org (upstream's own "latest" endpoint —
+302s to the current tsetup.<version>.tar.xz). Not an apt entry: Ubuntu 24.04 ships no
+telegram-desktop package in any component, and the alternatives are a third-party PPA, a Flatpak
+or a Snap, none of which this repo has a method for.
+The reason it is declared at all rather than installed by hand: it is the only client on Linux
+that can reach Telegram's dedicated test environment — Settings > Shift+Alt+Right click
+'Add Account' > Test Server — which is how a bot gets exercised without a phone, a SIM, or a
+production account. web.telegram.org has no test-server switch, and driving the test DC from
+Telethon/Pyrogram tests the library rather than the surface.
+Off by default: a Telegram client is this machine's business, not every consumer's. Enable it in
+~/.config/power-user-linux-setup/overrides.toml.
+"""
+method = "archive"
+enabled = false
+tags = ["messaging", "desktop", "gui"]
+download_url = "https://telegram.org/dl/desktop/linux"
+extract_to = "~/.local/share/telegram-desktop"
+install_dir = "~/.local/share/telegram-desktop"
+strip_components = 1
+check_path = "~/.local/share/telegram-desktop/Telegram"
+symlinks = [{ src = "Telegram", dst = "telegram-desktop" }]
+# Not the archive method's default `telegram-desktop --version`: this binary has no CLI at all.
+# Measured 2026-08-30 with the display stripped so nothing could surface a window — both
+# `--version` and the `-version` tdesktop documents ignore the flag and start the app, hitting
+# verify's 15s timeout (rc=124). That is the same trap [packages.freelens] is still in; see
+# plans/2026-08-28-verify-launches-gui-apps.md. Resolving every shared library instead proves the
+# same thing a launch would — the build runs here — without launching it.
+verify_cmd = "sh -c '! ldd ~/.local/share/telegram-desktop/Telegram | grep -q \"not found\"'"
 
 [packages.google-chrome]
 description = "Google Chrome stable — install via deb; Chrome then self-manages its apt sources (google-chrome.sources)"
