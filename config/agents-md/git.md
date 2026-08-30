@@ -80,11 +80,10 @@ stale part is their context, not their repo.
 
 A remote-tracking ref answers "what did I last fetch", not "what does the remote have". A plain
 `git fetch` never prunes, so `origin/<branch>` can outlive a branch deleted upstream weeks earlier —
-and `git branch -r --contains` will happily report that ghost. Ask the host
-(`gh api
-repos/<owner>/<repo>/branches`) or `git ls-remote`, and `git fetch --prune` before trusting
-any local answer about remote state. A branch was once folded into a history rewrite to protect
-against an exposure that had not existed for weeks.
+and `git branch -r --contains` will happily report that ghost. Before trusting any local answer
+about remote state, ask the host — `gh api repos/<owner>/<repo>/branches` or `git ls-remote` — and
+`git fetch --prune`. A branch was once folded into a history rewrite to protect against an exposure
+that had not existed for weeks.
 
 ### About to commit
 
