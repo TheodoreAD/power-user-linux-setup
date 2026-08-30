@@ -27,7 +27,8 @@ _META_SECTIONS = frozenset(
         "Re-measuring the deployed file",
         "Contents",
         "Bash & the CLI allowlist (cluster intro)",
-        "What this setup provisions (cluster intro)",
+        "What this setup provisions (cluster intro, retired 2026-08-30)",
+        "Fragments are subjects, dependency is a label",
     }
 )
 

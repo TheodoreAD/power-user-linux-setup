@@ -140,6 +140,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Reading a command's result](#reading-a-commands-result)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
 - [Force-pushing, or asking what a remote actually has](#force-pushing-or-asking-what-a-remote-actually-has)
+- [Fragments are subjects, dependency is a label](#fragments-are-subjects-dependency-is-a-label)
 - [Committing to a repo that is or might become public](#committing-to-a-repo-that-is-or-might-become-public)
 - [The permission model in force](#the-permission-model-in-force)
 - [Where durable knowledge goes](#where-durable-knowledge-goes)
@@ -272,7 +273,39 @@ than the work. Stating the mechanism instead of the prohibition is what previous
 reason its way to an exception, so the wording leads with the ban and names the three destinations
 that replace it.
 
-## What this setup provisions (cluster intro)
+## Fragments are subjects, dependency is a label
+
+Landed 2026-08-30. `config/agents-md/` went from three fragments split by dependency to seven split
+by subject — `preamble.md`, `agent-knowledge.md`, `git.md`, `bash.md`, `research.md`,
+`verification.md`, `collaboration.md` — each owning the single `##` cluster named after it. What a
+rule _assumes_ moved onto its heading as a label: `[Claude Code]` on nine rules, `[needs <thing>]`
+on six, nothing on the rest.
+
+**Why a dependency partition was rejected.** All 38 rules were classified by what they depend on,
+and about ten turned out to be a portable principle wearing a local instantiation — "About to
+commit" is universal and names `inv quality.precommit`; "Committing to a repo that is or might
+become public" is universal and names `plans.py scan`. A rule may not live half in one fragment and
+half in another, so any dependency partition forces each of those to a side, and filing a universal
+rule under PULSE because it names an `inv` task misdescribes when it fires. A label is the only form
+a rule can carry without moving.
+
+**The whole-`##`-section constraint stopped binding rather than being dropped.** With fragment and
+cluster both keyed to subject, each fragment contributes exactly one cluster, so the rule is
+satisfied by construction. It never needed relaxing; it needed the two axes to stop disagreeing.
+
+**The vocabulary is closed at two shapes**, enforced by `tests/unit/test_agents_md.py`. An open one
+is how a label set stops meaning anything: nothing tells a reader whether `[Claude]` and
+`[Claude Code]` are the same claim, and no grep can either. A coarse `[PULSE]` was rejected for the
+same reason a checkable claim is worth more — `[needs direnv]` can be verified against
+`[packages.direnv]`, and a future "someone disabled direnv" warning has something to read. That test
+earned itself immediately: `[needs plan-docs]` was written first, looked like a package name, and is
+a skill arriving through `[packages.agent-skills]`; a label whose form implies a check it does not
+pass is worse than no label.
+
+Design, the reframing behind it, and what remains open:
+`plans/2026-08-30-portable-fragment-names-one-harness.md`.
+
+## What this setup provisions (cluster intro, retired 2026-08-30)
 
 Renamed 2026-08-30 from "This machine & this setup". The old name and its intro ("rules that are
 true because of how this particular machine and this user's repos are set up") described the cluster
@@ -293,11 +326,12 @@ had, and calling the cluster that invited rules to be filed by where they were n
 by what they depend on. The admission test is now the dependency: does this hold because PULSE put
 something there?
 
-Description only — no rule moved, and the file is still named `this-setup.md`, which now lags its
-own contents. Renaming the file changes the `PULSE::agents-md/<stem>` provenance markers and its
-`setup.toml` `src`, so it is deliberately a separate change. The wider re-cut, the Claude Code
-labelling, and the disabled-prerequisite warning are in
-`plans/2026-08-30-portable-fragment-names-one-harness.md`.
+Superseded the same day, and worth keeping only as the step that made the next one visible. Stating
+the admission test as a dependency question exposed that the fragments were the dependency axis
+while the clusters were the subject axis, and that a fragment contributing whole `##` sections
+stopped the two from varying independently. The resolution was to key both to subject: the cluster
+no longer exists, its rules were redistributed by what they are about, and what a rule depends on
+became a label on its heading — see "Fragments are subjects, dependency is a label" below.
 
 ## Bash & the CLI allowlist (cluster intro)
 
@@ -883,16 +917,17 @@ under a heading a session splitting commits has no reason to consult.
 
 ## Invoking a venv tool in the session's own project
 
-Moved 2026-08-30 from `portable.md` to `this-setup.md`, cluster "Bash & tool use" to "This machine &
-this setup", with no change to its wording. The rule is not a portable convention that happens to
-mention this setup — its content is entirely "most of this user's repos put `.venv/bin` on `PATH`
-via direnv", which is false on a machine without direnv and meaningless on one without these repos.
-The fragments divide by audience, and the assembler contributes whole `##` sections, so a rule
-crossing fragments necessarily crosses clusters; that is the mechanism working rather than a side
-effect to absorb. Done first among the fixes in
-`plans/2026-08-30-portable-fragment-names-one-harness.md` deliberately: a move with no rewording
-tests whether the fragment boundary is worth enforcing before any rule's wording — tuned for
-adherence, some of it after being measured as missed — is touched for it.
+Moved twice on 2026-08-30, and it is now labelled `[needs direnv]` in `bash.md` — first out of
+`portable.md` into the then-existing `this-setup.md`, then back into "Bash & tool use" when the
+fragments were re-cut by subject. The reason for the first move stands and became the label: the
+rule is not a portable convention that happens to mention this setup — its content is entirely "most
+of this user's repos put `.venv/bin` on `PATH` via direnv", which is false on a machine without
+direnv and meaningless on one without these repos. Doing it first, as a move with no rewording, was
+deliberate: it tested whether a fragment boundary was worth enforcing before any rule's wording —
+tuned for adherence, some of it after being measured as missed — was touched for it. What it
+actually demonstrated was the opposite of a green light. A wholly-misplaced rule is the easy case,
+the move cost nothing, and the round-trip it took two hours later is the evidence that filing rules
+by dependency was the wrong scheme rather than one this rule happened to violate.
 
 Confirmed live 2026-08-23 in `repo-tasks`: used `.venv/bin/python -m pytest tests/integration/` out
 of habit while direnv was already active and plain `pytest tests/integration/` would have resolved
