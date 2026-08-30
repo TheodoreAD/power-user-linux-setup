@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-28
+updated: 2026-08-30
 ---
 
 # `inv verify.all` can launch GUI applications and still report ok
@@ -50,6 +50,31 @@ only honest way to clear a package is to watch the screen while its check runs.]
 check should not be initializing hardware video acceleration. Worth a look even though it isn't
 opening a window.
 
+## A second confirmed instance, and a better check than `test -x` (2026-08-30)
+
+`[packages.telegram-desktop]` was added and hit this immediately — it is the `hang` shape rather
+than Freelens' `detach-and-exit-0`, so `timeout 15s` did catch it, but only because someone thought
+to look. Both `--version` and the `-version` tdesktop's own docs mention are ignored and start the
+app (rc=124). Two things worth carrying back here:
+
+[DECISION: **Probe a suspect package with the display stripped.**
+`env -u DISPLAY -u WAYLAND_DISPLAY
+timeout 15s <check>` answers "does this flag exit?" without
+risking a window on the user's desktop — a Qt/Electron app that tries to open one dies on the
+missing display instead. It does not fully replace step 1's human-in-the-loop audit, since a clean
+exit under no display is only strong evidence and a _failure_ there is ambiguous (it may be the
+missing display, not the flag). But it turns the audit's dangerous half into something an agent can
+run, and it is how the telegram case was settled without opening anything.]
+
+[DECISION: **Resolving the binary's shared libraries is a middle option between `test -x` and
+launching.** `telegram-desktop`'s check is
+`sh -c '! ldd ~/.local/share/telegram-desktop/Telegram | grep -q "not found"'`. That is materially
+more than `test -x`: it proves every dynamic dependency on this machine resolves, which is the most
+common way a downloaded static build is present-but-broken, and it is exactly the class of failure a
+launch would have surfaced. It bears directly on the open question below — the answer for at least
+some packages is not "narrow the contract", it is "there is a real check available that isn't a
+launch".]
+
 ## Recommended direction
 
 Rough; the sequencing matters more than the mechanism.
@@ -80,4 +105,8 @@ and `wezterm`. Decide after step 1, when the real ratio is known.]
 `verify.all` promises? Its contract is "every package a run installed also actually _works_", and
 `test -x` only proves a file is there and executable. For an app whose only interface is a GUI there
 may be nothing better available without launching it — in which case the honest move might be
-narrowing the contract's wording rather than pretending the check is equivalent.]
+narrowing the contract's wording rather than pretending the check is equivalent. Partly answered
+2026-08-30: the `ldd` check above is a real functional test that isn't a launch, so the choice is
+not the binary one this question assumed. What is still open is whether `freelens` and the rest
+should be moved onto it — that depends on how each is packaged, and an Electron `.deb`'s libraries
+resolving says less than a downloaded static build's do.]

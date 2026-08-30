@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-30
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
@@ -27,20 +27,47 @@ server switch, and driving the test DC from Telethon or Pyrogram tests the libra
 surface — the point of the exercise is a human tapping a real inline keyboard and finding out which
 parts are awkward at 3am, which needs a real client.]
 
-## Open questions
+## What landed (2026-08-30)
 
-[NEEDS CLARIFICATION: Which install method. Telegram Desktop ships as an official static tarball, a
-Flatpak on Flathub, a Snap, and a distro package that lags. The repo's own rule is to look for a
-maintained PyPI wrapper first, which does not exist for a Qt desktop application, so this falls to
-the next mechanism — and which one that is depends on what `setup.toml` already uses for GUI
-applications generally rather than on anything specific to this program.]
+`[packages.telegram-desktop]`, `method = "archive"`, `enabled = false`, enabled on this machine
+through `~/.config/power-user-linux-setup/overrides.toml`. Installed to
+`~/.local/share/telegram-desktop/` with `Telegram` symlinked into `~/.local/bin/telegram-desktop`,
+per the XDG rule for multi-file installs.
 
-[NEEDS CLARIFICATION: Whether a GUI application used only for testing another project belongs in the
-machine's setup at all, or whether that is scope creep into a per-project tool. The argument for
-including it is the repo's own rule that a one-off manual install is how the machine silently
-diverges from its own declaration; the argument against is that the next machine has no reason to
-want a Telegram client. Leaning toward including it, since the rule is written without an exception
-for "only needed occasionally".]
+[DECISION: The official static tarball, not apt, a PPA, a Flatpak or a Snap. Both open questions
+about the method turned out to be settled by one measurement rather than by preference: **Ubuntu
+24.04 ships no `telegram-desktop` in any component** — `apt-cache search --names-only telegram` on
+this machine returns `telegram-cli` and `telegram-send` and nothing else, with universe and
+multiverse both enabled. That removes the "distro package that lags" option entirely, and the repo
+has no Flatpak or Snap method (and declined to grow one in
+`plans/2026-08-25-undeclared-snap-packages.md`, on the grounds that it would serve zero packages
+that actually need it). `archive` against upstream's own `telegram.org/dl/desktop/linux` endpoint is
+what is left, and it is also the best of them: upstream, always current, no third-party repackager.]
+
+[DECISION: Declared but shipped off, enabled per-machine. This is the shape the second open question
+was reaching for — the repo's rule against one-off manual installs and the objection that the next
+machine has no reason to want a Telegram client are both satisfiable at once, because
+`overrides.toml` exists (`plans/2026-08-24-machine-local-setup-toml-overrides.md`). Nothing had to
+be exempted from the rule.]
+
+[PITFALL: The `archive` method was gzip-only — `tar -zx` hardcoded at all four call sites — and
+Telegram ships `.tar.xz`, so this package could not have been installed by it as written. The fix
+had to be download-then-extract rather than a wider set of tar flags: GNU tar auto-detects
+compression only when it can **seek**, so `curl | tar -x` fails with "Archive is compressed. Use -J
+option" no matter what, and sniffing the URL suffix is no good either because upstream's "latest"
+endpoint carries no extension and only reveals the format through its redirect. Now fetched to a
+temp file and read with `tar -xf`, which handles gzip, xz and bzip2 alike; three parametrised tests
+over real tarballs guard it, and they were confirmed to fail against the old flag.]
+
+[PITFALL: Telegram Desktop has no CLI whatsoever. Measured 2026-08-30 with `DISPLAY` and
+`WAYLAND_DISPLAY` stripped so nothing could surface a window: both `--version` and the `-version`
+that tdesktop's own docs mention are ignored, the app starts, and `verify.all`'s 15s timeout fires
+(rc=124). It therefore carries a `verify_cmd` that resolves the binary's shared libraries instead —
+same evidence a launch would give, without the launch. This is the same trap `[packages.freelens]`
+is still in; see `plans/2026-08-28-verify-launches-gui-apps.md`, which now has a second confirmed
+instance and a worked example of what the replacement check looks like.]
+
+## Remaining
 
 [UNVERIFIED: That a **fresh** account can be registered on the test server from Desktop using a
 reserved test number. The number format `99966X YYYY` (X being the data-centre id) and the login
@@ -48,16 +75,12 @@ code of that id repeated five or six times are documented for the test DCs by bo
 [Pyrogram](https://docs.pyrogram.org/topics/test-servers) and
 [Telethon](https://docs.telethon.dev/en/stable/developing/test-servers.html), and Desktop's Test
 Server option targets those same DCs — but that is inference from two documented facts rather than
-something anyone has done here. It is the first thing to try, and the whole route depends on it.]
-
-## Recommended direction
-
-Add Telegram Desktop as a `[packages.*]` entry in `setup.toml` with whatever method the file already
-uses for GUI applications, then verify the test-server route end to end in one sitting: register a
-test account, create a bot with the test environment's BotFather, and confirm the token answers on
+something anyone has done here. The whole route depends on it, and the client is now installed, so
+it is one sitting away: ☰ Settings > Shift + Alt + Right click 'Add Account' > Test Server,
+register, create a bot with the test environment's BotFather, and confirm the token answers on
 `https://api.telegram.org/bot<token>/test/getMe` — the `/test/` segment being what distinguishes the
 environment.
 
 Record the outcome, particularly if the reserved-number signup does not work from Desktop, because
 the fallback is materially worse: it means a production account and a second BotFather bot on the
-real network, which is exactly the exposure the test environment exists to avoid.
+real network, which is exactly the exposure the test environment exists to avoid.]
