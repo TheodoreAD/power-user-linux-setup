@@ -3,29 +3,86 @@ status: in-progress
 updated: 2026-08-30
 ---
 
-# `portable.md` names one harness and one machine
+# The fragment axis is wrong: PULSE vs machine, harness vs portable
+
+Opened as "`portable.md` names one harness and one machine" — a leak-hunting plan against the
+existing three fragments. The user's response on 2026-08-30 reframed it: the leaks are real but the
+axis they leak across is the wrong one, so the plan is now about the axis. Filename kept, since
+plan-docs promotes in place rather than forking a second file for one topic.
 
 ## Context
 
-`config/agents-md/`'s three fragments divide by audience: `this-setup.md` for this machine and this
-user's repos, `claude-code.md` for one harness's behaviour, and `portable.md` for "conventions that
-hold on any machine, with any agent". The 2026-08-26 split moved rules between clusters but
-deliberately did not rewrite their wording, so `portable.md` inherited rules written when there was
-one flat file and no such distinction to violate.
+`config/agents-md/` deploys three fragments, in `order`: `this-setup.md` (10) "this machine, this
+user's own repos, PULSE's own mechanisms", `claude-code.md` (20) "behavior specific to the Claude
+Code harness", `portable.md` (30) "conventions that hold on any machine, with any agent".
 
-This was recorded as a "Still to do on the content itself" section in
-[`config/agents-md/README.md`](../config/agents-md/README.md) — prose future-work in a doc that
-otherwise describes current state, which is the failure the `plan-docs` convention names: no status
-field, so nothing ever prompts a return visit. Moved here 2026-08-30 and the README trimmed to what
-is true now.
+Two findings, from opposite ends, say those descriptions do not carve the content:
 
-## What is actually in there (measured 2026-08-30)
+- `portable.md` names Claude Code's tools and this machine's paths throughout (measured below).
+- `this-setup.md` is mostly not about _this machine_ at all.
 
-The README said "about a dozen rules". Across `portable.md`'s 29 rules the aggregate is close, but
-the composition is not what that sentence implies, and the two halves want different fixes.
+## The reframing (from the user, 2026-08-30)
 
-**Seven rules name Claude Code tools as tools**, which is the half that genuinely does not survive a
-different agent:
+Recorded close to verbatim, because it changes what every other decision in this plan is for.
+
+[DECISION: **`this-setup.md`'s subject is PULSE, not one machine.** _"harness settings are not just
+for this machine. they are for pulse as a holistic approach to development."_ Nothing in `AGENTS.md`
+is meant to be personal to one box: _"i'm not planning to have anything machine-specific for myself
+in terms of agents.md — everything i change in my workflows fundamental enough to require an
+agents.md or skill rule will be integrated in pulse to happen by default as a prerequisite."_ So a
+rule earns its place by being true of a PULSE-provisioned machine, and the fragment's name and
+description should say that.]
+
+[DECISION: **the Claude Code rules stay, and get labelled rather than generalised.** _"the Claude
+rules are here to stay… what we may want to do is preface them with Claude Code so we know they are
+specific, and revisit that when we try to onboard another harness."_ The anticipated future is
+_adding_ a second harness's instructions, not Claude rules drifting between machines. This closes
+the plan's original question — a Claude tool name is not a defect, and genericising it was the wrong
+instinct. What is missing is only the label that makes the scope legible.]
+
+[DECISION: **the setup is opinionated and will not be made generic.** _"this is an opinioniated
+setup, after all, we can't make it extremely generic."_ So "does this hold for any agent on any
+machine" is the wrong admission test for a fragment; "is this true of a PULSE machine, and is it
+labelled with the harness it assumes" is the right one.]
+
+[DEFERRED: **a warning for a disabled prerequisite.** _"on the off chance someone disables that, we
+might want a warning, e.g. if someone disables direnv the Claude setup will suffer and it's a bad
+idea."_ A rule that assumes a PULSE-installed prerequisite is only true while that prerequisite is
+installed, and today nothing notices when one is switched off. Shape unclear — a `verify.all` check,
+a line in the rule itself, or a `doctor`-style report — and it is a separate piece of work from
+re-cutting the fragments.]
+
+## `this-setup.md` is mostly PULSE (measured 2026-08-30)
+
+Its 7 rules, against what `setup.toml` actually installs:
+
+| rule                                          | PULSE installs the fact                                      |
+| --------------------------------------------- | ------------------------------------------------------------ |
+| `sudo`                                        | `[packages.askpass-zenity]` — the helper and the export both |
+| git fetch/push needing an SSH key             | the `~/.zprofile` agent-picker block, and `SSH_ASKPASS`      |
+| Installing a tool on this machine             | it _is_ `setup.toml`                                         |
+| Invoking a venv tool in the session's project | `[packages.direnv]` plus the zsh hook                        |
+| Installing agent instructions and skills      | `inv ai.install-skills`                                      |
+| Formatting a date or decimal                  | **no** — a desktop regional setting                          |
+| Pushing to a personal repo's default branch   | **no** — repo ownership                                      |
+
+Five of seven are PULSE-provisioned, which is what makes the user's point about direnv general
+rather than a one-off. The two that are not are also not alike: the locale one is an environment
+fact PULSE does not create but already works around in its own code (`config/statusline-command.sh`
+uses `LC_TIME=C`/`LC_NUMERIC=C` throughout, and `tasks/system.py` manages `LANG` but not `LC_TIME`),
+while the branch-protection one is about which repos the user owns.
+
+[PITFALL: **the earlier move in this plan landed the right rule in a wrongly-named fragment.**
+"Invoking a venv tool in the session's own project" was moved out of `portable.md` because its
+content is entirely about direnv — correct — into `this-setup.md`, described as "this machine". But
+direnv is on the machine _because PULSE put it there_, so the rule was never machine-specific
+either. The move stands; the destination's name is what is wrong, and the same is true of four of
+its neighbours.]
+
+## `portable.md` names Claude Code (measured 2026-08-30)
+
+Across its 29 rules, seven name Claude Code tools as tools. Under the reframing these are no longer
+defects to fix but rules to **label**:
 
 | rule                                    | what it names                                      |
 | --------------------------------------- | -------------------------------------------------- |
@@ -37,67 +94,54 @@ different agent:
 | A narrow check grows into design work   | "plan mode"                                        |
 | Committing multi-part work              | "the scratchpad"                                   |
 
-**Nine name this machine** — the absolute `python3 ~/.agents/skills/plan-docs/scripts/plans.py`
-path, `inv quality.precommit`, direnv and `.venv/bin`, the `plan-docs` convention by name, and
-`power-user-linux-setup`/`pulse-setup` as the worked example in "Naming around a collision".
+They differ in how load-bearing the name is, which matters for how a label should read:
 
-Three apparent hits are false positives and should not be "fixed" — the ordinary verbs in "Write
-about that work by its shape", "Read the SHA", and the hyphenated adjective in "Read-only `git -C`
-verbs". A mechanical sweep over capitalised tool names flags all three, which is the argument
-against doing this as a sweep.
+- **Incidental** — the name swaps out for free: "a `Read` of the log", "copy to the scratchpad".
+- **Mechanism-named** — the action is portable, the tool is not: both `AskUserQuestion` rules.
+- **Harness-factual** — the claim is about one harness and genericising makes it false or vague:
+  "the Bash tool reports it whenever it is non-zero", the whole of "Viewing, searching, or editing
+  files", "don't reach for plan mode".
 
-[PITFALL: **`Invoking a venv tool in the session's own project` was misfiled, not merely
-un-generalised** — fixed below, but the finding generalises. Its whole content is "most of this
-user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`)", a fact about this machine, sitting in
-the fragment whose stated remit is conventions that hold on any machine. The README's framing
-("rules that name this user's setup in passing") could not describe it, so the audit that framing
-invited would not have caught it: a category worded as "X mentioned in passing" is blind to the case
-where X is the whole rule.]
+Three apparent hits are ordinary English and must not be "fixed" — "Write about that work by its
+shape", "Read the SHA", "Read-only `git -C` verbs". A mechanical sweep over capitalised tool names
+flags all three, which is the standing argument against doing any of this as a sweep.
 
-## Done — the misfiled rule moved (2026-08-30)
-
-[DECISION: **`Invoking a venv tool in the session's own project` moved to `this-setup.md`**, no
-wording changed. The rule is not a portable convention mentioning this setup in passing — it is
-entirely "most of this user's repos put `.venv/bin` on `PATH` via direnv", false on a machine
-without direnv and meaningless on one without these repos. Verified in the assembled output: it now
-renders under `## This machine & this setup`, and the rule count is unchanged at 38.]
-
-[PITFALL: **a rule cannot change fragment without changing cluster.** The assembler contributes
-whole `##` sections and never merges at the rule level, so "which fragment owns this" and "which
-cluster does a reader find it under" are one question, not two. Benign here — the destination
-cluster's own intro ("rules that are true because of how this particular machine and this user's
-repos are set up") describes the rule exactly — but any future move has to check the destination
-cluster is a home the rule belongs in, not merely the right fragment.]
-
-Its neighbour "Running a command against a different repo" still has the same problem in one bullet
-rather than throughout, and stays in `portable.md` pending the questions below.
+[PITFALL: **a rule may not live half in one fragment and half in another** — `config/agents-md/`'s
+own README, and the assembler contributes whole `##` sections. So the tidy-looking fix of putting a
+rule's portable principle in one fragment and its Claude instantiation in another is not available
+without changing that convention first. It is why labelling, not splitting, is the cheap move.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: is a Claude-specific tool name actually a defect here? The fragment's remit
-says any agent, but the file is deployed on a machine where the harness in use is Claude Code, and
-`~/AGENTS.md`'s whole "Viewing, searching, or editing files" rule was worded the way it is _because_
-that wording was measured against real transcripts. Generalising "Read over `cat`" to "your
-harness's file-reading tool over `cat`" is strictly vaguer, and the design rationale warns that a
-rule observed being missed wants stronger language, not softer. The alternative reading is that
-these rules belong in `claude-code.md` and `portable.md` should carry the principle without the tool
-names.]
+[NEEDS CLARIFICATION: what are the categories, and how many? The user proposed "pulse-specific
+agents.md things and skills-specific things, at least" and asked what the third was — the current
+third is `portable.md`. A skills category is real and currently scattered: "Setting up a repo's
+agent instructions and skills", "Installing agent instructions and skills on this machine", "Where
+durable knowledge goes", and the `plan-docs` references inside several other rules. Candidate cut:
+**PULSE** (what a provisioned machine gives you), **agent knowledge & skills**
+(AGENTS.md/skills/plans conventions), **Claude Code** (one harness), **portable** (the rest).
+Whether that last one survives as its own fragment, or portable rules simply live unlabelled in the
+others, is the open half.]
 
-[NEEDS CLARIFICATION: does the machine-specific half want generalising at all, or a pointer? An
-absolute path like `python3 ~/.agents/skills/plan-docs/scripts/plans.py scan` is unusable on another
-machine but is exactly what makes the rule actionable on this one, and the rule's value is that the
-command can be run without thinking. "Run your plans store's scan command" is portable and useless.]
+[NEEDS CLARIFICATION: what does the Claude Code label look like? Options: a per-rule prefix in the
+heading (`Claude Code — viewing, searching, or editing files`), which is loud and hurts the
+heading's job as a retrieval cue; a marker line inside the rule; or keeping the label at cluster
+granularity by moving labelled rules under a Claude Code cluster in whichever fragment they end up.
+Only the last avoids touching wording that was tuned for adherence, and it interacts with the
+whole-`##`-sections constraint above.]
+
+[NEEDS CLARIFICATION: does the locale rule survive the recut? It is the one rule that is neither
+PULSE-provisioned nor portable — an environment fact PULSE works around in its own code but does not
+create. Either PULSE should set it (making the rule PULSE-specific like the rest) or the rule is the
+prerequisite-warning case in the DEFERRED tag above.]
 
 ## Recommended direction
 
-Move first, reword second, and do not sweep. The move is done and cost nothing, which is one data
-point that the fragment boundary is enforceable — but a rule that is _wholly_ misplaced is the easy
-case, and it says little about the rules that are merely worded for one harness. What remains is to
-decide whether a tool name in a rule is a defect or a deliberate concession to the harness this
-machine actually runs, and if a defect, whether the fix is generalising the wording or relocating
-the rule to `claude-code.md`.
+Rename before re-cutting. `this-setup.md`'s description is wrong today and that is a one-line fix
+with no content movement — and getting the axis stated correctly is what makes the next question
+("does this rule belong here?") answerable at all. Then decide the category set, then label the
+Claude rules, and re-cut last.
 
-Per `contributing/global-agents-md.md`, rewrite these one at a time rather than in a sweep: each
-rule's exact wording was tuned for adherence, several of them after being measured as missed, and
-the three false positives above show what a mechanical pass would do to the ones that are already
-correct.
+Do not sweep, and do not genericise: the reframing above settles that Claude tool names stay, and
+several of these rules are worded the way they are because a shorter or vaguer version was measured
+being missed.
