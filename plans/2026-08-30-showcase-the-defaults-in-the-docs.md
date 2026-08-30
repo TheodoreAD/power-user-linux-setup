@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-30
 ---
 
@@ -68,11 +68,13 @@ say what the baseline gives you.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: does this want a "what you get" page in `docs/`, or edits spread across the
-existing per-topic pages? A single page reads like a feature tour and is what an evaluator wants;
-per-topic edits keep each fact next to its mechanism and avoid a second place to keep current.
-Leaning: per-topic edits plus a short linked list on `docs/index.md`, because a feature tour is the
-kind of page that rots first — nothing fails when it goes stale.]
+[DECISION: **per-topic edits plus a short linked list on `docs/index.md`**, not a feature-tour page.
+A tour page reads well for an evaluator and is the kind of page that rots first, because nothing
+fails when it goes stale — whereas a fact kept next to its own mechanism is re-read by whoever
+changes that mechanism. Confirmed by what the writing turned up: three of the four items needed
+their _mechanism_ page corrected (a wrong instruction on `zsh.md`, a stale size on `fonts.md`, no
+description at all on `claude-code.md`), which a separate tour page would have left untouched while
+looking complete.]
 
 [NEEDS CLARIFICATION: how much belongs in `README.md` rather than the docs site? The README is what
 a stranger reads first and currently sells the repo on breadth (what it installs). The statusline in
@@ -84,23 +86,51 @@ Both are visual, and describing colour semantics in prose is exactly where a pic
 an image in a docs site is a maintenance burden that goes stale silently, and this repo has none
 today — adopting the first one is a decision beyond this plan.]
 
-## Recommended direction
+## What landed (2026-08-30)
 
-Fix the wrong thing first, then surface, then write:
+All four, in the order the plan proposed:
 
-1. **`docs/zsh.md`'s "first run only"** is an inaccuracy, not a gap — it tells users to overwrite a
-   good default. One paragraph, no new page.
-2. **Point at what already exists.** `docs/index.md` gains a short "what you get" list linking to
-   the terminal layout, the fonts page and the prompt. Cheap, and it fixes the wezterm case
-   outright.
-3. **Write the statusline up**, in `docs/claude-code.md` or its own page — it is the only one of the
-   four with no feature-level documentation anywhere, and the only one whose audience is not
-   Linux-specific.
-4. **The font's dependency chain** — Nerd Font → prompt icons, statusline glyphs, editor ligatures —
-   stated once on `docs/fonts.md`, and linked from the others rather than repeated.
+1. **`docs/zsh.md`'s "first run only"** — replaced with a `## The prompt` section describing the
+   baseline, verified against `config/p10k.zsh`'s own wizard-options header rather than paraphrased,
+   plus how to change it and how to get back.
+2. **`docs/index.md` gained a "What you get, out of the box" section** — five entries, one line and
+   a link each. Deliberately not a feature tour page, per the leaning in the open question below.
+3. **`docs/claude-code.md` gained `## The statusline`** — every segment, and why the thresholds are
+   what they are.
+4. **`docs/fonts.md` gained "Why this is load-bearing"** — the dependency chain, plus a table of
+   where each application learns the font, stated as it is rather than as it should be.
 
-Do this alongside `plans/2026-08-30-font-as-one-config-value.md` where they touch the same page.
+Two things found while writing, both fixed in place: `docs/fonts.md`'s existing table gave the font
+size as 13 where `setup.toml` says 12, and said "three places" over four rows.
+
+[PITFALL: the first draft of the fonts section wrote "swap `[settings.fonts]` for any other
+installed family", which is **not true today** — that setting reaches GNOME and VS Code only, while
+Terminator, WezTerm and PyCharm each carry the font in their own file. Caught by re-reading against
+`plans/2026-08-30-font-as-one-config-value.md`'s own measurement before committing. Documenting the
+consolidated behaviour a sibling plan is proposing is the exact failure mode this plan's own closing
+PITFALL warns about, and it nearly happened in the same session that wrote the warning.]
+
+[PITFALL: the same draft duplicated the CaskaydiaCove/OFL rationale that `docs/fonts.md` already
+carried further down under "Default font". Found by reading the whole page rather than the section
+being edited. A second copy of a rationale is worse than none — both go stale, and neither is
+obviously the authority.]
+
+[UNVERIFIED: the anchors were checked with a throwaway reimplementation of
+`markdown.extensions.toc`'s slugify, matched against an existing link in the repo
+(`configuration.md#whole-file-configs-config_files`) to confirm the algorithm. Every cross-page and
+in-page anchor in `docs/` resolves. The docs site has no link checker in the quality gate, so
+nothing catches the next one — see the DEFERRED below.]
 
 [PITFALL: this is documentation of _current behaviour_, and `~/AGENTS.md`'s "Don't stash future work
 in prose docs" applies with full force — no "planned", no "coming soon", no dated status lines. If a
 feature is not there yet it belongs in a plan, not on the site.]
+
+[DEFERRED: no link checker runs on the docs. `lychee` was assessed for this repo before (its
+`lychee-bin` PyPI wrapper is a 78 MB wheel with one release ever, which is why it was not adopted),
+but an internal-anchor check needs no network and no such dependency — the throwaway script used
+above is about fifteen lines. Worth adding to the gate the next time a dangling anchor is found,
+rather than on the strength of this one.]
+
+[DEFERRED: the two remaining open questions stay open — whether any of this belongs in `README.md`,
+and whether the statusline and prompt deserve a screenshot. Neither blocked the writing, and both
+are better answered by someone looking at the rendered site.]
