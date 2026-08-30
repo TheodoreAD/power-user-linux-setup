@@ -7,6 +7,7 @@ than borrow one. See tests/README.md.
 """
 
 import json
+from pathlib import Path
 from typing import cast
 
 import pytest
@@ -198,8 +199,11 @@ def test_an_installed_tree_is_derived_not_public(fake_home, monkeypatch):
 # ---------------------------------------------------------------------------
 
 
-def test_only_whole_file_claims_are_classifiable():
-    assert {c.writer for c in home.claims() if c.classifiable} == {home.Writer.WHOLE_FILE}
+def test_only_the_deploy_writer_produces_classifiable_claims():
+    assert {c.writer for c in home.claims() if c.classifiable} == {
+        home.Writer.WHOLE_FILE,
+        home.Writer.WHOLE_FILE_UNDECLARED,
+    }
 
 
 def test_a_claim_with_no_path_reports_no_state():
@@ -230,18 +234,37 @@ def test_an_unclassifiable_claim_reports_presence_only(tmp_path):
     assert home.state_of(claim, {}) == "present"
 
 
-def test_a_deploy_backed_claim_reports_its_real_state(tmp_path):
-    path = tmp_path / "AGENTS.md"
+def test_a_deploy_backed_claim_reports_its_real_state(tmp_path, monkeypatch):
+    """The claim carries the writer's own Managed, so the state comes from deploy.classify() on the
+    same object the writer acts on rather than from a path lookup that could go stale."""
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    (tmp_path / "config").mkdir()
+    (tmp_path / "config" / "app.conf").write_text("source\n")
+    path = tmp_path / "app.conf"
+    path.write_text("edited here\n")
+    managed = deploy.Managed(
+        path=path, package="app", source="config/app.conf", mechanism=deploy.Mechanism.MANAGED_FILE
+    )
     claim = home.Claim(
-        target="~/AGENTS.md",
-        writer=home.Writer.WHOLE_FILE,
+        target="~/app.conf",
+        writer=home.Writer.WHOLE_FILE_UNDECLARED,
         authority=home.Authority.PULSE,
         tier=home.Tier.PUBLIC,
-        owner="agents-md",
+        owner="app",
         path=path,
+        managed=managed,
     )
 
-    assert home.state_of(claim, {path: deploy.State.DIRTY}) == "dirty"
+    manifest: deploy.Manifest = {
+        str(path): {
+            "package": "app",
+            "source": "config/app.conf",
+            "mechanism": "managed-file",
+            "digest": "not-what-is-there",
+            "deployed_at": "2026-08-30T00:00:00+00:00",
+        }
+    }
+    assert home.state_of(claim, manifest) == "dirty"
 
 
 # ---------------------------------------------------------------------------
@@ -273,6 +296,12 @@ def two_claims(monkeypatch):
             authority=home.Authority.PULSE,
             tier=home.Tier.PUBLIC,
             owner="agents-md",
+            managed=deploy.Managed(
+                path=Path("/nonexistent/AGENTS.md"),
+                package="agents-md",
+                source="config/agents-md",
+                mechanism=deploy.Mechanism.WRAPPER_SCRIPT,
+            ),
         ),
         home.Claim(
             target="dconf /org/gnome/x",
@@ -283,7 +312,7 @@ def two_claims(monkeypatch):
         ),
     ]
     monkeypatch.setattr(home, "claims", lambda: listed)
-    monkeypatch.setattr(deploy, "scan", lambda base=None: [])
+    monkeypatch.setattr(deploy, "load_manifest", dict)
     return listed
 
 

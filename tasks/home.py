@@ -6,7 +6,10 @@ written by `util.ensure_block` marker regions, structured merges into co-owned J
 surgery in a file an application owns, `gsettings`/`dconf` calls with no file at a known path at
 all, and installers that put a whole tree under `~`. None of those had a registry entry, so
 `inv deploy.status --path` could only say "not deployed by PULSE" about most of the machine — true
-of `deploy.py` and misleading about the repo.
+of `deploy.py` and misleading about the repo. It is also narrower than `deploy.py` itself: a
+destination decided at run time (the corporate systemd unit, the glob-discovered PyCharm options
+directory) goes through the same writer but is deliberately not declared, so no registry-driven
+command sees it.
 
 This module is that missing registry: one entry per claim, classified on three independent axes
 (`Writer`, `Authority`, `Tier`). It is deliberately **read-only and unopinionated** — it enumerates
@@ -38,7 +41,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import certs, chrome, deploy, fonts, gnome, proxy, screenshot, ssh, system, util
+from . import certs, chrome, deploy, fonts, gnome, ide, proxy, screenshot, ssh, system, util
 
 _HOME = Path.home()
 
@@ -46,13 +49,20 @@ _HOME = Path.home()
 class Writer(StrEnum):
     """How the bytes get there — and therefore what "drift" could even mean for this claim."""
 
-    # deploy.py: wrapper-script content_file, assembled ~/AGENTS.md, config_files. The only writer
-    # with a state manifest, so the only one that can classify drift today.
+    # deploy.py, from a setup.toml declaration: wrapper-script content_file, assembled
+    # ~/AGENTS.md, config_files. In the registry, so `inv deploy.status` and `inv deploy.all`
+    # see it and `inv verify.all` requires it to exist.
     WHOLE_FILE = "whole-file"
-    # A whole file written by a task of its own rather than through deploy.py. Same ownership
-    # model, no manifest, no diff-before-overwrite — these are the writers deploy.py was built to
-    # absorb and hasn't yet.
-    WHOLE_FILE_ADHOC = "whole-file-adhoc"
+    # deploy.py, but with a destination decided at run time rather than declared — the systemd
+    # unit only a corporate machine writes, the PyCharm options directory found by glob. Same
+    # writer and the same never-clobber guarantee, so these classify exactly like the declared
+    # ones; what they lack is a registry entry, which is deliberate, because every declared
+    # destination is one `inv verify.all` demands after the packages phase.
+    WHOLE_FILE_UNDECLARED = "whole-file-undeclared"
+    # Composed by a task rather than copied from a repo source — identity.toml, written by a
+    # wizard from answers. There is nothing to diff it against, so it can never be classified or
+    # redeployed, and that is correct rather than a gap.
+    GENERATED = "generated"
     # util.ensure_block marker regions inside a file the user owns.
     BLOCK = "block"
     # Structured merge into co-owned JSON — PULSE owns some keys, the user and other tools own the
@@ -119,15 +129,18 @@ class Claim:
     source: str = ""  # repo-side origin, where there is one
     note: str = ""
     path: Path | None = None
+    # The deploy.py entry, for a claim that goes through that writer — carried rather than
+    # re-derived so a state comes from the same object the writer acts on.
+    managed: deploy.Managed | None = None
 
     @property
     def classifiable(self) -> bool:
         """Whether any writer can currently tell "we wrote this" from "someone edited it".
 
-        Only the whole-file writer records what it wrote, so only its claims can. Everything else
-        reports presence, and says so, rather than guessing.
+        Only deploy.py records what it wrote, so only claims it writes can. Everything else reports
+        presence, and says so, rather than guessing.
         """
-        return self.writer == Writer.WHOLE_FILE
+        return self.managed is not None
 
 
 # Paths whose content an application rewrites underneath PULSE, so `user` authority would overstate
@@ -194,6 +207,7 @@ def _whole_file_claims() -> Iterator[Claim]:
             source=m.source,
             note=str(m.mechanism),
             path=m.path,
+            managed=m,
         )
 
 
@@ -224,67 +238,47 @@ def _symlink_claims() -> Iterator[Claim]:
             )
 
 
-# Whole files written by a task of their own rather than through deploy.py. Each is a real
-# ownership claim with no manifest entry, no diff before overwriting, and no way to tell a hand
-# edit from a stale copy — which is exactly what deploy.py was built to fix for the paths it does
-# cover. Spelled out here rather than derived because nothing declares them: the destination is a
-# literal inside the task that writes it.
-_ADHOC_WHOLE_FILES: tuple[tuple[Path, str, str, Authority, str], ...] = (
-    (
-        _HOME / ".p10k.zsh",
-        "inv zsh.configure-p10k",
-        "config/p10k.zsh",
-        Authority.USER,
-        "skip-if-exists; no redeploy path",
-    ),
-    (
-        _HOME / ".config" / "JetBrains" / "PyCharm*" / "options" / "editor-font.xml",
-        "inv ide.configure-pycharm",
-        "config/pycharm/editor-font.xml",
-        Authority.PULSE,
-        "glob-discovered destination; unconditional overwrite",
-    ),
-    (
-        _HOME / ".config" / "JetBrains" / "PyCharm*" / "options" / "terminal-font.xml",
-        "inv ide.configure-pycharm",
-        "config/pycharm/terminal-font.xml",
-        Authority.PULSE,
-        "glob-discovered destination; unconditional overwrite",
-    ),
-    (
-        proxy.UNIT_PATH,
-        "inv proxy.install",
-        "tasks/proxy.py (_UNIT_CONTENT)",
-        Authority.PULSE,
-        "content is a module constant, not a config/ file",
-    ),
-    (
-        util.IDENTITY_PATH,
-        "inv identity.init",
-        "config/identity.toml.example",
-        Authority.USER,
-        "",
-    ),
-)
+def _undeclared_whole_file_claims() -> Iterator[Claim]:
+    """Whole files deployed through deploy.py whose destination isn't in setup.toml.
 
+    Not a lesser class of claim: they carry a real `Managed`, so they get the manifest entry, the
+    diff and the never-clobber rule, and they classify exactly like a declared one. What they lack
+    is a registry entry, and that is deliberate — every declared destination is one
+    `inv verify.all` requires to exist at the end of the packages phase, while these are written
+    only when something on this machine calls for them.
 
-def _adhoc_whole_file_claims() -> Iterator[Claim]:
-    for path, owner, source, authority, note in _ADHOC_WHOLE_FILES:
-        # identity.toml holds this machine's emails and corporate proxy host — the one claim on the
-        # surface that must never reach any repo, encrypted or not.
-        tier = Tier.SECRET if path == util.IDENTITY_PATH else Tier.PUBLIC
+    Read from the writing module's own objects (`proxy.UNIT`, `ide.managed_files()`) rather than
+    restated here, so the inventory and the writer cannot disagree about the destination. That
+    matters most for PyCharm, whose destination is a glob resolved against what is installed:
+    with no PyCharm here there are no claims, which is the right answer rather than two rows
+    reporting a file absent that was never going to exist.
+    """
+    for m in (proxy.UNIT, *ide.managed_files()):
         yield Claim(
-            target=_rel(path),
-            writer=Writer.WHOLE_FILE_ADHOC,
-            authority=authority,
-            tier=tier,
-            owner=owner,
-            source=source,
-            note=note,
-            # A glob is not a location: presence can't be answered for a path with a `*` in it, and
-            # pretending otherwise would report every PyCharm option file absent.
-            path=None if "*" in str(path) else path,
+            target=_rel(m.path),
+            writer=Writer.WHOLE_FILE_UNDECLARED,
+            authority=Authority.PULSE,
+            tier=Tier.PUBLIC,
+            owner=m.package,
+            source=m.source,
+            note="destination decided at run time, not declared in setup.toml",
+            path=m.path,
+            managed=m,
         )
+
+    # identity.toml holds this machine's emails and corporate proxy host — the one claim on the
+    # surface that must never reach any repo, encrypted or not. Composed by a wizard from answers
+    # rather than copied from a source, so there is nothing to diff it against and it stays outside
+    # deploy.py on purpose.
+    yield Claim(
+        target=_rel(util.IDENTITY_PATH),
+        writer=Writer.GENERATED,
+        authority=Authority.USER,
+        tier=Tier.SECRET,
+        owner="inv identity.init",
+        source="config/identity.toml.example (a template, not a source to compare against)",
+        path=util.IDENTITY_PATH,
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -614,7 +608,7 @@ def claims() -> list[Claim]:
     """
     return [
         *_whole_file_claims(),
-        *_adhoc_whole_file_claims(),
+        *_undeclared_whole_file_claims(),
         *_symlink_claims(),
         *_block_claims(),
         *_merge_claims(),
@@ -625,14 +619,17 @@ def claims() -> list[Claim]:
     ]
 
 
-def state_of(claim: Claim, states: dict[Path, deploy.State]) -> str:
+def state_of(claim: Claim, manifest: deploy.Manifest) -> str:
     """One word for what is at this claim's target now.
 
     A real `deploy.State` where a writer can prove what it wrote; otherwise presence, which is all
     that is knowable — and `—` where even presence isn't, because the claim has no path.
+
+    `manifest` is threaded through so a whole listing reads the state file once rather than once
+    per claim.
     """
-    if claim.classifiable and claim.path is not None and claim.path in states:
-        return str(states[claim.path])
+    if claim.managed is not None:
+        return str(deploy.classify(claim.managed, manifest))
     if claim.path is None:
         return "—"
     return "present" if claim.path.exists() else "absent"
@@ -644,8 +641,8 @@ def state_of(claim: Claim, states: dict[Path, deploy.State]) -> str:
 
 
 def _rows(selected: list[Claim]) -> list[tuple[str, str, str, str, str, str]]:
-    states = {m.path: s for m, s in deploy.scan()}
-    return [(str(c.writer), str(c.authority), str(c.tier), state_of(c, states), c.target, c.owner) for c in selected]
+    manifest = deploy.load_manifest()
+    return [(str(c.writer), str(c.authority), str(c.tier), state_of(c, manifest), c.target, c.owner) for c in selected]
 
 
 def _print_table(rows: list[tuple[str, str, str, str, str, str]]) -> None:
@@ -669,8 +666,10 @@ def _print_summary(selected: list[Claim], everything: list[Claim]) -> None:
     # Installed trees and generated state can never be the subject of a config lifecycle: their
     # content is upstream's or regenerable, so counting them would flatter any coverage number.
     lifecycle = [c for c in everything if c.tier != Tier.DERIVED]
-    whole_file = [c for c in lifecycle if c.writer in (Writer.WHOLE_FILE, Writer.WHOLE_FILE_ADHOC)]
-    managed = [c for c in lifecycle if c.writer == Writer.WHOLE_FILE]
+    # `generated` is not reachable and never will be: identity.toml has no repo-side source to sync
+    # against, and its content is the one thing on the surface that must reach no repo at all.
+    whole_file = [c for c in lifecycle if c.writer in (Writer.WHOLE_FILE, Writer.WHOLE_FILE_UNDECLARED)]
+    declared = [c for c in whole_file if c.writer == Writer.WHOLE_FILE]
 
     print(f"\n[home] {len(selected)} claim(s)" + (f" of {len(everything)}" if len(selected) != len(everything) else ""))
     for writer, count in by_writer.most_common():
@@ -682,8 +681,9 @@ def _print_summary(selected: list[Claim], everything: list[Claim]) -> None:
     if lifecycle:
         print(
             f"\n[home] a whole-file-only lifecycle would reach {len(whole_file)}/{len(lifecycle)} "
-            f"({len(whole_file) * 100 // len(lifecycle)}%) of the non-derived surface; "
-            f"{len(managed)} of those are in the deploy manifest and can be classified at all."
+            f"({len(whole_file) * 100 // len(lifecycle)}%) of the non-derived surface. All of them go "
+            f"through deploy.py and can be classified; {len(declared)} are declared in setup.toml, so "
+            "the rest are invisible to `inv deploy.status`."
         )
     print(f"[home] {len(SYSTEM_TARGETS)} further target(s) outside ~ are written by this repo and out of scope here.")
     print("[home] skill-written config (~/.config/plan-docs, ~/.config/tasks-md) is deliberately not claimed:")
