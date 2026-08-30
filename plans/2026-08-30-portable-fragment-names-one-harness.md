@@ -163,6 +163,46 @@ cluster cannot span fragments, so gathering them puts either that rule outside t
 dependency belongs to, or the other four inside a fragment whose remit they do not meet. This is the
 entanglement above showing up on the first concrete case, not a special difficulty of this cluster.]
 
+## The design: fragment is subject, label is dependency (2026-08-30)
+
+[DECISION: **fragments stop being the dependency axis.** A fragment owns one subject cluster, and
+each rule carries a label naming what it assumes — the harness, or a PULSE-installed prerequisite —
+with no label meaning it holds anywhere. Chosen by the user over a four-way dependency partition,
+over consolidating only the skills cluster, and over dropping the whole-cluster constraint. It is
+the only option under which the ~10 mixed rules do not have to pick a side, and it is what the
+user's own "preface them with Claude Code" instinct already described.]
+
+**The whole-`##`-section constraint stops binding.** With fragment and cluster both keyed to
+subject, each fragment contributes exactly one cluster, so "a fragment contributes whole `##`
+sections" is satisfied trivially rather than fought. The constraint does not need dropping — it
+needed the two axes to stop disagreeing.
+
+Six fragments, one cluster each, 38 rules preserved:
+
+| fragment             | cluster                        | rules |
+| -------------------- | ------------------------------ | ----- |
+| `agent-knowledge.md` | Agent instructions & knowledge | 6     |
+| `git.md`             | Git & commits                  | 8     |
+| `bash.md`            | Bash & tool use                | 8     |
+| `research.md`        | Research & design              | 8     |
+| `verification.md`    | Verification                   | 3     |
+| `collaboration.md`   | Collaboration & output         | 5     |
+
+The two dependency-clusters dissolve, and their rules redistribute by what they are _about_:
+
+- `What this setup provisions` → `sudo`, the venv/direnv rule and the locale rule to **Bash & tool
+  use**; the ssh-key rule and the personal-repo push rule to **Git & commits**; "Installing a tool
+  on this machine" to **Research & design**; "Installing agent instructions and skills" to **Agent
+  instructions & knowledge**.
+- `Claude Code specifics` → "Which sessions load this file" to **Agent instructions & knowledge**;
+  "The permission model in force" and the auto-mode settings.json rule to **Bash & tool use**.
+
+[PITFALL: **this is the change that finally makes the file names honest, so it should not be done in
+the same commit as the content.** Six new fragment files means six new `src` entries in
+`setup.toml`'s `agents_md` list and six new `PULSE::agents-md/<stem>` provenance markers in the
+deployed output. The rules themselves are moving unchanged; the deployment plumbing is a separate
+concern and a separate failure mode, and `deploy.status` compares against what PULSE last wrote.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: what are the categories, and how many? The user proposed "pulse-specific
