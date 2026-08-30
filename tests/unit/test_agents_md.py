@@ -4,9 +4,9 @@
 `contributing/global-agents-md.md` holds each rule's evidence "under a heading matching the rule's
 own, so rule and evidence stay findable from each other by name" (that file's own words). Nothing
 enforced that correspondence, so it drifted both ways: a rule was renamed and its evidence section
-kept the old trigger, and two rules had no section at all while carrying dated provenance inline —
-the arrangement the fragment/evidence split exists to prevent. Found by hand 2026-08-30 during the
-leanness pass (`plans/2026-08-26-agents-md-leanness-pass.md`); these tests are what keeps it found.
+kept the old trigger, and six rules carried dated provenance inline — the arrangement the
+fragment/evidence split exists to prevent. Found by hand 2026-08-30 during the leanness pass
+(`plans/2026-08-26-agents-md-leanness-pass.md`); these tests are what keeps it found.
 
 These read the real repo files rather than fixtures: the invariant is about this repo's actual
 content, not about any function's behaviour. See tests/README.md.
@@ -85,32 +85,53 @@ def test_declared_evidence_free_rules_still_exist():
     assert not stale, f"_EVIDENCE_FREE names rules that no longer exist: {stale}"
 
 
-def test_no_new_rule_carries_dated_provenance_inline():
-    """A `Measured <date>` / `Confirmed <date>` sentence in a fragment belongs in the evidence file.
+def test_no_rule_carries_a_dated_confirmation_inline():
+    """A `Measured <date>` / `Confirmed <date>` attribution belongs in the evidence file, not a rule.
 
-    Instructions compete for attention with inline narrative, which is why that file exists at all.
-    The four grandfathered below are a different shape from the standalone incident paragraphs moved
-    out on 2026-08-30: each is woven into the sentence that carries the instruction, and in at least
-    the ssh case the incident is doing the deterring. Whether they move is a content decision, open
-    on `plans/2026-08-26-agents-md-leanness-pass.md`; this test's job meanwhile is that the list
-    does not grow.
+    Criterion 3's subject is the *date*, not the story. A rule may still narrate the failure it
+    prevents — "a session read the failure as a missing key, and had the user type a passphrase into
+    three dialogs" earns its place, because it names the wrong move the reader is about to make and
+    nobody takes a reference hop before making it. What does not earn its place is the dated
+    attribution, which is provenance: it settles who confirmed what and when, a question no session
+    is asking mid-task, and instructions compete for attention with inline narrative.
     """
-    grandfathered = {
-        ("portable.md", "Measured 2026-08-28"),  # Reading a command's result — the gh poll loop
-        ("this-setup.md", "Confirmed 2026-08-28"),  # git fetch/push — the three passphrase dialogs
-        ("this-setup.md", "Confirmed 2026-08-29"),  # git fetch/push — export vs per-call prefix
-        ("this-setup.md", "Measured 2026-08-26"),  # Installing a tool — the two PyPI wrappers
-    }
-    dated = re.compile(r"(?:Measured|Confirmed|Reaffirmed|Validated|Verified|Observed) 2026-\d\d-\d\d")
-    found = {
-        (path.name, m.group(0))
+    # `\s+`, not a literal space: dprint reflows prose to 100 columns and will happily put the verb
+    # at the end of one line and the date at the start of the next. A single-space pattern passed
+    # clean on a fragment that had exactly that shape (2026-08-30) — the formatter, not the author,
+    # decides where the line break falls, so any pattern spanning two words has to allow one.
+    dated = re.compile(r"(?:Measured|Confirmed|Reaffirmed|Validated|Verified|Observed)\s+2026-\d\d-\d\d")
+    offenders = [
+        f"{path.name}: {' '.join(m.group(0).split())}"
         for path in sorted(_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
         for m in dated.finditer(path.read_text())
-    }
-    assert not found - grandfathered, (
-        f"new dated provenance inline in a fragment, move it to {_EVIDENCE.name}: {sorted(found - grandfathered)}"
+    ]
+    assert not offenders, (
+        f"dated confirmation inline in a fragment: {offenders}. Move the date and the fuller account "
+        f"to {_EVIDENCE.name}; the narrative itself may stay if it names the failure being prevented."
     )
-    assert not grandfathered - found, (
-        f"grandfathered provenance no longer present — drop it from the list: {sorted(grandfathered - found)}"
+
+
+def test_no_rule_dates_itself_relative_to_another_rule():
+    """ "Confirmed the same day" is only as good as the absolute date next to it.
+
+    Which is precisely what the test above removes. One such phrase dangled the instant its
+    paragraph's date moved to the evidence file (2026-08-30) — it had pointed two paragraphs up,
+    survived the edit, and read as though it still meant something. A relative date in a fragment
+    has nothing left to be relative to, so it belongs in the evidence file with the dates.
+    """
+    # Anchored to a provenance verb, because "the same session" has two meanings in these files and
+    # only one of them is a date. "`Read`, `Edit` and `Write` all stay available in the same session"
+    # is the claim itself — the scope over which the behaviour holds — and must not be flagged;
+    # "verified in the same session" is provenance that outlived the date it pointed at.
+    relative = re.compile(
+        r"(?:[Cc]onfirmed|[Mm]easured|[Vv]erified|[Oo]bserved|[Rr]eproduced)[^.]{0,40}?"
+        r"the (?:same (?:day|session|week)|day before)"
     )
+    offenders = [
+        f"{path.name}: {m.group(0)}"
+        for path in sorted(_FRAGMENTS.glob("*.md"))
+        if path.name != "README.md"
+        for m in relative.finditer(path.read_text())
+    ]
+    assert not offenders, f"relative date in a fragment with no absolute date to anchor it: {offenders}"
