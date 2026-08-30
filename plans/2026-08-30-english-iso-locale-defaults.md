@@ -100,8 +100,25 @@ the first user actually wants this."_ So the first implementation pins the value
 machine, and the `[packages.*]`-style knob waits for a real second user. Recorded so that when one
 appears, nobody re-derives the requirement.]
 
-[UNVERIFIED: what actually re-reads `/etc/locale.conf`, and when. `localectl set-locale` writes the
-file; existing shells, the running desktop session and long-lived applications keep the old
-environment until they restart. Whether a GNOME session picks it up on logout alone, and whether the
-GNOME clock follows `LC_TIME` at all or uses its own `gsettings`, has not been checked — and the
-clock is the most visible surface of this change.]
+## What the desktop actually does with this (verified 2026-08-30)
+
+Read-only checks, before touching anything — the panel clock was the scariest surface and it turns
+out not to be a surface at all.
+
+- **The GNOME clock does not follow `LC_TIME` for 12h vs 24h.** It reads
+  `org.gnome.desktop.interface clock-format`, already `'24h'` on this machine. So the clock is
+  already right, independent of the locale, and changing `LC_TIME` cannot break it. What the locale
+  _does_ drive in the panel and calendar is weekday and month **names** — which is exactly the part
+  currently rendering in Romanian.
+- **A logout is enough; a reboot is not needed.** `systemctl --user show-environment` carries the
+  full `LANG`/`LC_*` set, so the systemd user session is what propagates `/etc/locale.conf` — it is
+  re-read at login. Shells and applications already running keep the old values until restarted,
+  which is the usual caveat rather than a special one here.
+
+[PITFALL: **`en_US` for `LC_TIME` would silently flip the calendar's week start.**
+`locale
+first_weekday` is 2 (Monday) under both `ro_RO` and `en_DK`, and 1 (Sunday) under `en_US`.
+So the naive "just make it English" choice changes something nobody asked about, in the GNOME
+calendar, where it is easy to notice and hard to attribute. `en_DK` preserves Monday-first — one
+more reason it is the right target, and a reason not to reach for `en_US` as the "obvious" English
+locale.]
