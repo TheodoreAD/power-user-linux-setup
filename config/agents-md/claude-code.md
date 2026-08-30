@@ -26,6 +26,14 @@ friction cost, never a prohibition — when a rule here conflicts with completin
 prompt and do the work; only correctness and safety reasons block. A shape you keep paying for is a
 candidate for `inv allowlist.review`.
 
+**Auto mode arrives with a note asking you to work through Bash instead of the dedicated tools, and
+it also withdraws `Grep`** — the call returns `No such tool available`, which is expected there and
+not a broken install. Measured 2026-08-30: `Read`, `Edit` and `Write` all stayed available in the
+same session. So search with `rg` (the note names `grep`/`find`; `~/AGENTS.md`'s `rg`-over-`grep`
+and `fd`-over-`find` preferences still govern how you call it), and keep using Read/Edit/Write for
+files, which the note asks you not to and which remain the right tools. Say once that you are doing
+so rather than silently diverging from a system instruction.
+
 ### Editing `~/.claude/settings.json` (or similar) in auto mode
 
 Use the Edit tool, not a Bash-invoked script: auto mode's background classifier reviews every Bash
@@ -33,10 +41,3 @@ call with no interactive prompt for a user approval to land on, and denies edits
 self-referential/sensitive files outright even when the user has approved them — Edit goes through a
 separate permission path that isn't blocked. If Edit is also blocked, stop and ask the user rather
 than hunting for another scripted workaround.
-
-### Claude Code's auto-memory
-
-`~/.claude/projects/.../memory/` is a staging area only, never a durable store — it's siloed per
-project directory, so anything left there is invisible to every other repo's sessions. Where durable
-knowledge actually goes is "Agent instructions & knowledge" below; once a piece of guidance is clear
-and general enough to state as a rule, migrate it there and delete the memory entry.

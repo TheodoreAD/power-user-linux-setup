@@ -126,6 +126,10 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Viewing, searching, or editing files](#viewing-searching-or-editing-files)
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
 - [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
+- [git fetch/push needing an SSH key](#git-fetchpush-needing-an-ssh-key)
+- [Auto mode withdraws Grep](#auto-mode-withdraws-grep)
+- [A narrow check grows into design work](#a-narrow-check-grows-into-design-work)
+- [Data flowing outward to a vendor](#data-flowing-outward-to-a-vendor)
 - [Saving to cross-session memory](#saving-to-cross-session-memory)
 - [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
 - [Installing a tool on this machine](#installing-a-tool-on-this-machine)
@@ -153,6 +157,71 @@ classifier both before and after the user said "I will approve it" — auto mode
 interactive step for that approval to land on. The Edit tool, which goes through a separate
 permission path, was not blocked for the identical change.
 
+## Data flowing outward to a vendor
+
+Added 2026-08-30, from the user 2026-08-29: _"as a general rule, we dislike data flowing out to
+vendors."_ Stated while reviewing `claude plugin eval`'s HTML report, which publishes to claude.ai
+by default and needs `--no-publish` to opt out. It extends the public-repo section rather than
+opening a rule of its own, because it is the same principle that section already frames — what
+leaves this machine, and what cannot be taken back — applied to a vendor feature instead of to repo
+content. Its miss is silent the same way: a default-on upload succeeds quietly and is never
+discovered by observing normal behaviour.
+
+## git fetch/push needing an SSH key
+
+Rewritten 2026-08-30 to bound the prefix. The section had opened with "Run the `git` command as
+normal" and then, two paragraphs down, an emphatic unconditional-sounding imperative: "Prefix
+instead, on every call that talks to the remote over ssh." The conditional that governs it — that
+`ssh.check` has diagnosed a shell pinned to the empty agent — was stated once, in a heading
+sentence, and the emphatic paragraph below outweighed it. Sessions read the prefix as the house
+style for pushing and applied it without ever having seen a `Permission denied (publickey)`.
+
+The fix keeps the emphasis where it was earned. The export-vs-prefix distinction stays emphatic,
+because the failure it prevents is expensive — a session that exported instead of prefixing saw the
+next command fail identically, read it as "the fix didn't work", and went back toward `ssh-add`.
+What changed is scope: the default is stated first and more emphatically ("run the plain `git`
+command — no prefix and no wrapper"), an explicit line says everything below fires only after a
+command has actually failed, and the prefix paragraph now says it applies for the rest of that
+diagnosis rather than to every ssh call forever.
+
+**The authoring hazard this is an instance of**, worth checking for whenever this file is open: a
+conditional stated once in a heading sentence, followed by an emphatic imperative that reads as
+standing advice when quoted or skimmed alone. Rules in this file are retrieved by scanning, so the
+most emphatic sentence in a section is the one that fires — if that sentence is the exceptional
+branch, the exception becomes the default.
+
+## Auto mode withdraws Grep
+
+Measured 2026-08-30. Auto mode's system note asks the session to work through Bash rather than the
+dedicated tools, which inverts "Viewing, searching, or editing files". Four sessions had been
+measured for their Bash rates without settling which instruction wins. A fifth found the reason the
+question could not be answered as one question: `Grep` is **not available** under the note —
+
+```
+Error: No such tool available: Grep. Grep is not available in this session —
+search file contents with `grep` via the Bash tool instead.
+```
+
+— while `Read`, `Edit` and `Write` stayed and were used 17, 35 and 2 times against 164 Bash calls in
+the same session. So the search half is not a conflict at all: the rule has no referent, every
+`grep`/`rg` call is forced, and counting those as adherence failures measures the harness rather
+than the agent. The read/edit half is a real choice and is where a rule can direct behaviour. The
+note's own wording hides the distinction by saying to fall back to a dedicated tool "only when Bash
+genuinely cannot do the job", which reads as a preference among available tools rather than as one
+of them being gone. Full sample history is in
+`plans/2026-08-28-auto-mode-contradicts-bash-rules.md`.
+
+## A narrow check grows into design work
+
+Corrected 2026-08-30 — the rule's mechanism contradicted the user. It said to "suggest or move into
+plan mode"; the user, 2026-08-29: _"you can write a plan in md, i don't like plan mode because it
+creates files in other places than the ones we typically use."_ The intent is right and kept: scope
+growing unnoticed is a real failure and the rule should keep warning about it. Only the response
+changed, to writing a `plans/*.md` file via the `plan-docs` convention, which puts the design in the
+repo it belongs to and under version control. The trailing sentence about "exiting plan mode" was
+reworded to match, since there is no longer a mode to exit; the approval signal it describes
+("Implement and document …") is unchanged and still correct.
+
 ## Saving to cross-session memory
 
 Confirmed 2026-08-22: auto-memory is a separate `memory/` folder per project directory —
@@ -162,6 +231,16 @@ The same session found ~30 accumulated entries, several duplicating `~/AGENTS.md
 verbatim; the full migration story is `plans/2026-08-22-memory-to-agents-md-migration-sweep.md`. The
 underlying reason `AGENTS.md` beats memory (reviewable, one source of truth instead of N per-project
 copies) applies across repos exactly as it does within one.
+
+Ruled absolute 2026-08-29, by the user: no memories, for any harness, for any project, for any
+reason — project data and user-wide practices must not be vendor-locked. The rule was rewritten
+2026-08-30 to say that flatly, and moved out of the "Claude Code specifics" cluster into "Where
+durable knowledge goes", because sitting under a vendor heading made it read as a note about one
+product's feature rather than a general routing rule. The carve-out stated in the same breath is
+harness **configuration** (`settings.json`, hooks, keybindings), which describes the tool rather
+than the work. Stating the mechanism instead of the prohibition is what previously let a session
+reason its way to an exception, so the wording leads with the ban and names the three destinations
+that replace it.
 
 ## Bash & the CLI allowlist (cluster intro)
 
@@ -481,6 +560,19 @@ uses `gh run list --branch`, the correct filter, and no `until`/`while true` loo
 outside these two documentation quotes. The bug lived only in ad-hoc session shells — which is
 exactly why it belongs in an always-loaded instruction rather than a lint or a test.
 
+Extended 2026-08-30 with the absence-probe case, the same "convenient surface signal is not the
+signal" shape the section already carries. A `repo-tasks` session asked whether an ini key belonging
+to an uninstalled pytest plugin was harmless, and probed with
+`uv run --no-project --with pytest==9.1.1 pytest` from a shell with the repo's venv active. It
+reported `plugins: anyio-4.14.2, socket-0.8.1, cov-7.1.0` and passed — the hoped-for answer, and
+wrong: `--with` builds an ephemeral overlay **on top of** the active environment, so `sys.prefix`
+was the repo's own `.venv` and the probe measured a machine that had the package all along. The
+isolating form (`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python 3.11 --with …`) gave
+the opposite conclusion immediately — a hard error, exit 4. Two properties make it silent rather
+than merely wrong: the contaminated run passes, and AnyIO ships a `pytest11` entry point, so mere
+presence on the path registers it with nothing in the project naming it. The wrong answer had
+already been written into a plan before the user questioned the stated cause.
+
 ## Generalizing from a sample to a set
 
 Confirmed live 2026-08-23 — nine modified `cli-allowlist` files were reported as "timestamp-only
@@ -552,6 +644,21 @@ and staging by path; `git push` publishes every unpushed commit on the branch re
 so the same "is this mine?" question applies to `git log origin/<branch>..HEAD` right before it.
 Harmless that time; a force-push to undo it would not have been.
 
+Extended 2026-08-30 with the remedy the section had been missing and one near-loss. It already said
+`git status --short` before committing is not protection; it never named what is. Committing by
+pathspec (`git commit -m "…" -- <path>`) takes the named paths whatever else sits in the shared
+index, so a parallel session's staged file can neither ride along nor be disturbed — established
+after a store commit staged by explicit path still shipped a third file another session had staged
+in the seconds between.
+
+The sharper half is the undo. `git reset --soft HEAD~1`, used to unwind that contaminated commit,
+removed a **different** commit: the other session had committed on top in the interval, so `HEAD~1`
+resolved to this session's commit and the reset discarded theirs. Recovered from the reflog, nothing
+lost, nothing pushed. There is no error because both readings are valid git, which is the same
+silent-by-construction shape as the rest of this cluster — and the file already required a
+force-push lease SHA to come from `git rev-parse` rather than the eye, so this is that principle one
+step earlier and it was simply unstated.
+
 ## Regenerating a file from a canonical source
 
 The ordering clause was added 2026-08-24, from `scaffoldapy` adopting `repo-tasks`' two-tier test
@@ -622,6 +729,12 @@ commit took it to 294, which is what proved the first commit stood on its own ra
 compiling. A rule that mandates an outcome the environment makes awkward, and is silent on how, is
 the shape most likely to be abandoned under time pressure; this is the second clause on this rule
 added for that same reason.
+
+Extended 2026-08-30 to name `git mv`. The rule's examples were `git rm` and `git add`; a rename run
+while editing rode into the next commit, which was about an unrelated plan — a second occurrence
+under an explicit rule, having previously been classified as "arguably plain git literacy". The
+wording observation that survives: `rm` and `add` both read as _staging_ verbs, whereas `git mv`
+reads as an _edit_, so a reader checking "did I stage anything ahead of time?" does not think of it.
 
 ## Invoking a venv tool in the session's own project
 

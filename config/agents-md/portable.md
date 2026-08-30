@@ -14,9 +14,16 @@ natively.
 ### Where durable knowledge goes
 
 Durable repo-specific knowledge → that repo's own `AGENTS.md` (or a `docs/*.md` it points to);
-durable cross-repo or personal preference → `~/AGENTS.md`. Not a harness's own per-session or
-per-project memory store: those are invisible to every other contributor, every other agent tool,
-and every code review, while an `AGENTS.md` is version-controlled and visible to all three.
+durable cross-repo or personal preference → `~/AGENTS.md`; anything plan-shaped → `plans/`, per the
+`plan-docs` convention.
+
+**Never a harness's own memory store — not for durable content, not for perishable content, not as a
+staging area.** They are invisible to every other contributor, every other agent tool, every code
+review, and usually to every other repo's sessions on the same machine, and they vendor-lock the
+work. The sorting rule: **configuration describes the harness** (`settings.json`, hooks,
+keybindings) and belongs to it; **anything describing the work is a plain file any agent can open.**
+An existing memory entry is migrated to one of the three destinations above and deleted, not kept in
+sync.
 
 ## Git & commits
 
@@ -50,6 +57,12 @@ Measured 2026-08-28: an agent published, in a public repo, a plan tabulating six
 root directory names plus one client's internal project path, and a second public repo had four work
 email addresses committed inside a listing of SSH key filenames. Both were written by agents with no
 rule telling them not to.
+
+The same principle applies to data leaving the machine at all: **a feature that uploads, publishes
+or phones home by default is a decision, not a default.** Pin the flag off deliberately and say why,
+rather than accepting the behaviour because it shipped that way — report publishing, telemetry, any
+"share with the vendor" toggle. Local costs nothing and cannot be taken back later, which is the
+same reasoning that keeps the plans store's sensitive tier without a remote.
 
 ### Force-pushing, or asking what a remote actually has
 
@@ -94,8 +107,10 @@ content edit, not a formatting fix); that distinction is the line, not "did I me
 file."
 
 Stage each commit's paths immediately before that commit, never ahead of time. `git commit` ships
-the whole index, so anything staged earlier — a `git rm` run while tidying, a `git add` from a
-previous step — rides along under the next message, and the split has to be rewritten.
+the whole index, so anything staged earlier — a `git rm` run while tidying, a `git mv` run while
+editing, a `git add` from a previous step — rides along under the next message, and the split has to
+be rewritten. `git mv` is the one that gets missed: `rm` and `add` read as staging, a rename reads
+as an edit.
 
 When two concerns land in the _same file_, staging by path can't separate them and `git add -p`/`-i`
 is unavailable here — but that is not a reason to give up and ship one fat commit. Copy the finished
@@ -129,7 +144,14 @@ remote moved.
 Stage by path there, never `git add -A`/`git add .` — a parallel session's edit can land between
 your last `git status` and your commit, and a blanket stage silently ships it under your commit
 message. `git status --short` immediately before committing is not protection: it reports the staged
-set, not what changed while you were reading it.
+set, not what changed while you were reading it. What _is_ protection is committing by pathspec —
+`git commit -m "…" -- <path> <path>` takes those paths whatever else sits in the index, so a
+parallel session's staged file can neither ride along nor be disturbed.
+
+**Undo by SHA, never by a relative ref.** `git reset --soft HEAD~1` silently retargets when another
+session commits in the interval — `HEAD~1` then resolves to _your_ commit and the reset discards
+_theirs_, with no error, because both readings are valid git. Read the SHA (`git rev-parse`, or the
+reflog) and reset to it. Same principle as a force-push lease SHA, one step earlier.
 
 The same holds one step later: before pushing, `git log origin/<branch>..HEAD` — a commit there you
 didn't make belongs to another live session, which may still mean to amend or reorder it. Say so and
@@ -306,6 +328,14 @@ so `$?` after a pipeline never reflects the upstream failure, and the tool's exi
 filter's too. Assume a CLI's clean summary text and its exit code can disagree until verified
 otherwise.
 
+Same shape when probing whether a dependency is **absent**: `uv run --with …` layers an ephemeral
+overlay _over_ the active environment, so from a directory with a venv active the probe measures a
+machine that has the package — and it passes, which is the answer you were hoping for. Strip the
+environment (`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python <ver> --with <pkg> …`)
+and check `sys.prefix` if in doubt. A package registering a plugin through an entry point (pytest's
+`pytest11`) needs nothing in the project to name it, so absence probes are exactly where
+contamination hides.
+
 Backgrounding from the shell can leave you reading state from a command that **never ran**. Measured
 2026-08-26: `nohup script.sh & disown` and `setsid script.sh &` both returned non-zero while the
 script's first statement, a file write, never happened — yet a plain `cmd &` plus `sleep` in the
@@ -360,11 +390,12 @@ reaches it) — and pin `UV_CACHE_DIR` back to the real cache so the run stays w
 ### A narrow check grows into design work
 
 When a "just check/confirm X" request starts revealing design decisions with real trade-offs,
-proactively suggest or move into plan mode rather than continuing to edit inline — scope grows one
-incremental step at a time and is easy to miss; don't wait for the user to notice. "Implement and
-document ..." is clear approval to exit plan mode and execute for real, state-changing commands
-included — the caution is editing ahead of an agreed plan, not avoiding real changes once one is
-approved.
+proactively write the design into a `plans/*.md` file (the `plan-docs` convention) rather than
+continuing to edit inline — scope grows one incremental step at a time and is easy to miss; don't
+wait for the user to notice. **Don't reach for plan mode**: it stores the plan outside the
+directories this machine's work actually uses, which is the stated objection to it. "Implement and
+document ..." is clear approval to execute for real, state-changing commands included — the caution
+is editing ahead of an agreed plan, not avoiding real changes once one is approved.
 
 ### Invited to push back
 
