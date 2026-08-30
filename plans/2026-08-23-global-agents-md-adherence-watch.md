@@ -214,3 +214,54 @@ clause above lands. The number to beat is 28%.]
 truncation, which is the distinction this measurement turns on — the 21-of-67 split was computed ad
 hoc. Teaching `session-bash-audit` to report it belongs in `agent-skills` and would make the
 after-measurement answer the right question. Not blocking: the headline rate is already measurable.]
+
+### Session 5 — `power-user-linux-setup`, 2026-08-30: the session that wrote session 4 scored worse
+
+Measured over this session's own transcript, by the same method, immediately after it had authored
+session 4's `[DECISION:]` about `head`/`tail` piping and committed it:
+
+| metric                               | session 5 (this one) | session 4    | baseline (2026-08-21→24) |
+| ------------------------------------ | -------------------- | ------------ | ------------------------ |
+| Bash calls                           | 254                  | 232          | 3,956                    |
+| piped through `head`/`tail`          | **86 (33%)**         | 67 (28%)     | 29–32%                   |
+| ...of which carried a real exit code | 51                   | 21           | not measured             |
+| chained (`&&` / `;`)                 | 103 (40%)            | not measured | 64–71%                   |
+| `cd` into the session's own repo     | **0**                | not measured | 114 across three repos   |
+
+**The rule was held in context, written about, committed, and then broken at a higher rate than the
+session it was written about.** `inv quality.precommit … | tail -3` — the canonical instance the
+DECISION names — was the single most repeated shape. That is not a wording gap: no wording is more
+present to a session than the sentence it just authored.
+
+[PITFALL: the piped gate runs all passed, so nothing surfaced it — exactly as in session 4. The gate
+failures this session _did_ catch were all on bare, unpiped calls, which is the mechanism working.
+So the sample is self-selecting in the worst way: a piped gate that fails looks identical to a piped
+gate that passes, and the only reason this session never shipped a false green is that its failures
+happened to land on the calls it had not piped.]
+
+Two more misses in the same session, both of rules that are already explicit:
+
+1. **`rg -rn <pattern> <paths>` — `-r` is `--replace`.** `~/AGENTS.md` states this verbatim,
+   including "plausible-looking output that is not what the file says". The call printed a rewritten
+   anchor string, which was then reasoned about as though it were the file's content. Caught only
+   because the result looked odd enough to re-run with `grep`.
+2. **`git stash` to check whether a commit stood alone.**
+   `plans/2026-08-30-git-history-rewriting-to-tidy-a-commit.md` — **absorbed into this repo by this
+   same session, hours earlier** — says `git stash` is unsafe here because parallel sessions share
+   one working tree. Used twice. The first use also proved nothing: it stashed the new tests along
+   with the fix, so the suite passed against neither, and the "verification" was empty. The second
+   attempt used the scratchpad copy-and-revert technique `~/AGENTS.md` actually names, and worked.
+
+[DECISION: all three are **adherence, not wording** — the shape session 3 already identified, now
+with the strongest possible evidence for it: an agent authoring a rule is not thereby more likely to
+follow it. More wording is the wrong lever. What this batch adds is a measurement method that costs
+one script and needs no separate audit — a session can count its own transcript. That is the thing
+worth generalizing: `session-bash-audit` measures across sessions after the fact, and nothing
+measures a session against itself while it can still act on the answer.]
+
+[DEFERRED: teach `session-bash-audit` to run against a single live session's own transcript and
+print this table, so any session can self-measure in one call rather than reimplementing the counter
+(as this one did). That skill lives in `agent-skills` and already invites newly noticed patterns;
+the exit-code-bearing split it does not yet compute is
+`plans/2026-08-30-head-tail-piping-survived-the-bash-recut.md`'s open item, now merged into session
+4 above. Filed there rather than acted on here.]
