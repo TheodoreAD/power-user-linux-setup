@@ -63,20 +63,71 @@ def write_curlrc(c: Context):
         print("[curlrc] already configured — nothing to do")
 
 
+def parse_system_locale(status: str) -> dict[str, str]:
+    """The `System Locale:` block of `localectl status`, as a dict.
+
+    The block is one `VAR=value` per line, the first on the `System Locale:` line itself and the
+    rest below it. Delimited by field headers rather than by indentation: localectl right-aligns its
+    keys, so `System Locale:` is flush left only while a longer key (`VC Keymap:`) is present, and a
+    continuation line is indented exactly as far as the next field's label. What separates them is
+    the colon — `LC_TIME=en_DK.UTF-8` has none, `X11 Options: grp_led:scroll` starts with one.
+
+    Pure, so the parsing is unit-testable without systemd — and it is what makes `set_locale` safe,
+    since localed replaces the whole locale configuration and anything missed here would be dropped.
+    """
+    field = re.compile(r"^(?P<key>[A-Za-z0-9][A-Za-z0-9 ]*): ?(?P<rest>.*)$")
+    out: dict[str, str] = {}
+    in_block = False
+    for raw in status.splitlines():
+        line = raw.strip()
+        if header := field.match(line):
+            in_block = header["key"] == "System Locale"
+            line = header["rest"]
+        if in_block and "=" in line:
+            key, _, value = line.partition("=")
+            out[key] = value
+    return out
+
+
 @task
-def set_locale(c: Context, lang: str = "en_US.UTF-8"):
-    """Set system locale via localectl (default: en_US.UTF-8). Idempotent."""
+def set_locale(
+    c: Context,
+    lang: str = "en_US.UTF-8",
+    lc_time: str = "en_DK.UTF-8",
+    lc_numeric: str = "C.UTF-8",
+):
+    """Set the system locale via localectl, preserving every variable not named here. Idempotent.
+
+    The defaults are deliberate and measured (see
+    plans/2026-08-30-english-iso-locale-defaults.md). `en_DK.UTF-8` is the only stock locale giving
+    English weekday and month names, a 24-hour clock and `YYYY-MM-DD` dates at once — `en_CA` gets
+    the date right and the clock wrong, `en_GB` the reverse — and it keeps Monday as the first day
+    of the week, which `en_US` would silently flip to Sunday in the desktop calendar. `LC_NUMERIC`
+    is separate because `en_DK` is comma-decimal like a European locale, so it would leave
+    `awk`/`printf` emitting `1,50`; `C.UTF-8` is the dot-decimal answer developer tooling expects.
+
+    Read-modify-write rather than a bare `set-locale LANG=…`: localed takes the whole locale
+    configuration, so naming only some variables risks dropping the rest. The regional ones a
+    machine legitimately keeps — `LC_MONETARY`, `LC_PAPER`, `LC_MEASUREMENT` — survive because they
+    are read back and passed through untouched.
+    """
     util.require_systemd()
-    current = c.run("localectl status", hide=True).stdout
-    ok = f"System Locale: LANG={lang}" in current
+    current = parse_system_locale(c.run("localectl status", hide=True).stdout)
+    desired = current | {"LANG": lang, "LC_TIME": lc_time, "LC_NUMERIC": lc_numeric}
+    changes = {k: v for k, v in desired.items() if current.get(k) != v}
+
     if util.DRY_RUN:
-        print(f"[locale] {'ok' if ok else f'MISSING  (would set: {lang})'}")
+        summary = ", ".join(f"{k}={v}" for k, v in changes.items())
+        print(f"[locale] {'ok' if not changes else f'MISSING  (would set: {summary})'}")
         return
-    if ok:
-        print(f"[locale] already set to {lang} — nothing to do")
+    if not changes:
+        print(f"[locale] already LANG={lang} LC_TIME={lc_time} LC_NUMERIC={lc_numeric} — nothing to do")
         return
-    c.run(f"{util.SUDO} localectl set-locale LANG={lang}")
-    print(f"[locale] set to {lang}")
+
+    assignments = " ".join(f"{k}={v}" for k, v in sorted(desired.items()))
+    c.run(f"{util.SUDO} localectl set-locale {assignments}")
+    print(f"[locale] set {', '.join(f'{k}={v}' for k, v in changes.items())}")
+    print("[locale] running shells and the desktop session keep the old values until you log out")
 
 
 @task
