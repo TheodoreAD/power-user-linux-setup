@@ -311,6 +311,54 @@ Read `cli-allowlist.md`'s `mode_covered` section for the matching change on the 
 filesystem commands `acceptEdits` gates by path (`mkdir`, `cp`, `rm`, ...) no longer render as `ask`
 rules, because an explicit `ask` rule would beat the mode's in-scope grant.
 
+## The statusline
+
+PULSE ships a custom Claude Code statusline
+([`config/statusline-command.sh`](https://github.com/TheodoreAD/power-user-linux-setup/blob/master/config/statusline-command.sh)),
+installed by `inv setup` along with everything else. It is laid out to match this machine's zsh
+prompt — same colours, same icons, same segments in the same places — so the line above your session
+and the line below it read as one thing. See [zsh.md](zsh.md#the-prompt) for the prompt half.
+
+Where a shell prompt tells you where you are, this tells you **what the session is costing**:
+
+| segment               | what it shows                                                                    |
+| --------------------- | -------------------------------------------------------------------------------- |
+| directory, git status | as in the prompt — staged `+`, unstaged `!`, untracked `?`, ahead `↑`/behind `↓` |
+| model                 | which model is answering                                                         |
+| context window        | tokens used, in K, with a fill glyph `○ ◔ ◑ ◕ ●`                                 |
+| 5h and 7d rate limits | how much of each window is spent                                                 |
+| session cost          | dollars so far, rounded up                                                       |
+| time                  | current time                                                                     |
+| virtualenv / conda    | the active Python environment, if any                                            |
+
+### The colours mean something
+
+Four of those segments share one muted 256-colour scale — gray, green, orange, red, low to high —
+chosen to stay readable rather than to shout. What differs is where each one's thresholds come from,
+and two of them are the interesting part:
+
+- **Context window is coloured by absolute token count, not by percentage of the window**: gray
+  under 75k, green 75–150k, orange 150–300k, red at 300k and above. That is deliberate and it is not
+  what most tools do. Anthropic's own usage page flags ">150k context" as more expensive regardless
+  of window size, because cache read and write cost scales with tokens processed rather than with
+  the fraction of the window you happen to be using. A percentage-based colour would go green on a
+  big window at exactly the point the run gets expensive. The glyph still shows fill percentage; the
+  colour shows cost.
+- **Model is coloured by weight**, following the fallback chain rather than alphabet or preference:
+  haiku gray, sonnet green, opus orange, fable red. A glance tells you whether the session has been
+  bumped up a tier.
+- **Each rate-limit window is coloured independently** by its own used percentage — gray under 13%,
+  green to 50%, orange to 75%, red above. The 5h and 7d windows deplete at different rates, and
+  averaging them would hide whichever one is about to bite.
+- **Session cost**: gray under $5, green to $15, orange to $30, red above.
+
+Icons come from powerlevel10k's own `nerdfont-complete` table — the same table the prompt uses — so
+the two lines share glyphs rather than approximating each other. The git counts deliberately use
+plain ASCII and Unicode (`+ ! ? ↑ ↓`, oh-my-zsh style) instead of Nerd Font glyphs, which are hard
+to read at small counts.
+
+This needs a Nerd Font in the terminal, which PULSE installs — see [fonts.md](fonts.md).
+
 ## Declaring the statusline — the `claude_statusline` field
 
 `[packages.claude-statusline]` deploys the custom Claude Code statusline script
