@@ -9,14 +9,22 @@ depends_on: [agent-skills]
 ## Context
 
 PULSE is a **public** repo. Every config it deploys is therefore a public choice, offered to
-everyone who clones it. But roughly half of what it currently deploys is not a public choice at all
-— it is one person's preference (`config/p10k.zsh`, `config/terminator.conf`, `config/wezterm.lua`,
-the `config/agents-md/` fragments), and shipping those as the repo's defaults forces every consumer
-into peculiarities that may be useless to them. The user's framing, 2026-08-29:
+everyone who clones it. The plan opened on the premise that roughly half of what it deploys is not a
+public choice at all — one person's preference in `config/p10k.zsh`, `config/terminator.conf`,
+`config/wezterm.lua` and the `config/agents-md/` fragments, forcing every consumer into
+peculiarities. The user's framing, 2026-08-29:
 
 > the point is to have a place to keep MY preferences separate from PUBLIC choices that are in
 > pulse, otherwise i will force pulse users to embrace my peculiarities, which might not be at all
 > useful for many.
+
+**That premise did not survive the file-by-file audit** — see the DECISION under "Open questions",
+2026-08-30. Every candidate turned out to be a defensible smart default, and nothing moves out of
+`config/`. What survives is the plan's _other_ half, which was never about peculiarities: a config
+PULSE writes into `~` still has no way home, the surface is still far wider than `config/`, and a
+customization made here still dies with this disk. Read the rest of this document with that
+correction in mind — the layering it designs is for content that does not exist in `config/` today
+and for the machine-bound facts that do.
 
 The second half of the problem is that a config PULSE writes into `~` today has **no way home**.
 `contributing/deploy.md` closes the loop in one direction only — the writer can no longer silently
@@ -356,13 +364,53 @@ file in a repo nobody browses is the same as no file at all).
 
 ## Open questions
 
-[NEEDS CLARIFICATION: what actually moves out of `config/`, and does PULSE keep a default in its
-place? `p10k.zsh`, `terminator.conf`, `wezterm.lua` and the `agents-md/` fragments are the
-candidates, but "move it out" and "replace it with a neutral default" are different projects — a
-consumer who clones PULSE and gets _no_ prompt config is worse off than one who gets someone else's.
-Leaning: PULSE keeps a deliberately plain default for each, and the personal layer overrides it. The
-`agents-md/` fragments are the hardest case — they are arguably this repo's most valuable public
-output, not a peculiarity.]
+[DECISION: **nothing moves out of `config/`. There is no de-peculiarization pass.** Settled by the
+user 2026-08-30 after a file-by-file audit, and it reverses this plan's own opening premise rather
+than merely answering the question:
+
+> it looks like very few things are truly private now, the wezterm split is something that could be
+> a default because it makes life much easier when you start it (…) the terminator color option is
+> there to stay for everyone, the red is very annoying (…) the font is most certainly there to stay,
+> it's a feature of pulse (…) the p10k config is also to keep public as a default (…) the point of
+> pulse is awesome smart defaults, after all.
+
+Every candidate was reclassified as a smart default rather than a peculiarity, which is a coherent
+position and arguably the repo's whole thesis: a config nobody has to think about is the product.
+Per file, with what the audit found:
+
+- **`p10k.zsh`** (1103 lines, 57 KB) stays as the public default. The counter-argument considered
+  and rejected: with no `~/.p10k.zsh`, p10k runs its own `configure` wizard on first shell, so
+  shipping nothing is not "no prompt" but "p10k's own onboarding". Rejected because the wizard is
+  precisely the leftover manual step everything else here exists to remove — the font, the icons and
+  the theme are already vetted to work together, and making the user re-derive the prompt is the odd
+  one out. Tell them they can customize it instead.
+- **`wezterm.lua`'s 2×2 pane grid**, which the audit called the clearest peculiarity in the repo, is
+  a **feature**: it makes the terminal useful the moment it opens. Document it as a power-user
+  feature rather than hiding it.
+- **`terminator.conf`'s `title_transmit_bg_color`** stays for everyone — Terminator's default red is
+  the thing every user ends up changing by hand.
+- **The font** stays, and is a PULSE feature to advertise. It is not taste in the sense this plan
+  meant: PULSE installs the Nerd Font, so pointing its terminals at it is coherence, not preference.
+- **`statusline-command.sh`** stays and should be showcased.
+- **The `agents-md/` fragments** stay, all four. `this-setup.md` looked like the problem — it is
+  literally "this machine" — but every rule in it is true of _any_ machine PULSE sets up, because
+  PULSE is what creates that shape. A public consequence of a public repo.
+- The remaining eight files were never candidates: `actrc`, `askpass-zenity.sh`,
+  `pulse-proxy-start.sh`, `pulse-proxy.service`, `research-update.sh`, both
+  `google-chrome-x11*.desktop` (already `enabled = false` by default) and the two `.example`
+  templates are mechanism, not taste.
+
+Measured while auditing, and worth keeping because both numbers are true and tell opposite stories:
+genuinely-personal content was **2.5 files of 16, but ~64 KB of ~90 KB** — `p10k.zsh` alone is the
+entire gap between the two counts, which is why "roughly half" felt right by weight and wrong by
+count.]
+
+[DEFERRED: two pieces of work this decision generated, each filed separately rather than absorbed
+here — `plans/2026-08-30-font-as-one-config-value.md` (the font is hardcoded in `terminator.conf`,
+`wezterm.lua` and both `pycharm/*.xml` while `[settings.fonts]` independently drives GNOME and VS
+Code: five places, one font, two sources of truth) and
+`plans/2026-08-30-showcase-the-defaults-in-the-docs.md` (the wezterm grid, the font, the statusline
+and p10k customization all want documenting as features).]
 
 [DECISION: **one private repo with a remote, laid out `base/` plus a directory per machine.**
 Settled by the user 2026-08-30, resolving both the per-repo-vs-host-directories question and the
@@ -459,11 +507,14 @@ Sequenced so each step is independently useful and nothing is built before the t
    was written there. What it took, and the two constraints it exposed, are below.
 4. **Layer resolution in `deploy.py`** — first-match search across configured layers, falling back
    to `config/`. Small, and by itself it already lets personal content leave the public repo.
-5. **The de-peculiarization pass** — move what the answer to open question 1 says should move, with
-   a neutral default left behind for each.
+5. ~~**The de-peculiarization pass.**~~ **Cancelled 2026-08-30** — the audit found nothing to move.
+   Every candidate is a smart default and stays public; see the DECISION under "Open questions". Two
+   pieces of work it generated are filed as their own plans (the font as one config value, and
+   documenting the defaults as features). This step's disappearance is the plan getting smaller in
+   the right direction, not scope being dropped.
 6. **`dotfiles.capture` for `whole-file` paths only**, stating the limit. The manifest already knows
-   what PULSE wrote, so the diff is free; the tier question is the only new judgment. The limit is
-   now measurable rather than hand-waved: it covers 20% of the non-derived surface, and the footer
+   what PULSE wrote, so the diff is free; the level question is the only new judgment. The limit is
+   now measurable rather than hand-waved: it covers 18% of the non-derived surface, and the footer
    of `inv home.list-claims` is where a reader sees what it misses.
 7. **Everything else on evidence** — templating, non-whole-file capture, encryption — each revisited
    only when a real duplication or a real loss makes the case. `~/AGENTS.md`'s "Pilot before
