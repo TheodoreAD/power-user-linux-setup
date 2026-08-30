@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-30
 ---
 
@@ -77,14 +77,35 @@ as a wart: the machine wants English formatting for anything a person or a scrip
 Romanian regional facts for currency, paper and measurement. One locale cannot express that, which
 is why the installer produced a mix in the first place.
 
-## Open questions
+## Landed 2026-08-30
 
-[NEEDS CLARIFICATION: does `LC_NUMERIC` change too, or only `LC_TIME`? The user's stated goal covers
-weekdays, times and dates — all `LC_TIME`. Decimal separators were not asked for, and changing
-`LC_NUMERIC` system-wide alters how GUI applications display numbers, not just `awk`. The argument
-for changing it: it is the other half of the rule this came from, and `1,23` from a script is a real
-bug this machine has already produced. The argument against: it is a user-visible change nobody
-requested.]
+`inv system.set-locale` now owns three variables and preserves the rest:
+`LANG=en_US.UTF-8 LC_TIME=en_DK.UTF-8 LC_NUMERIC=C.UTF-8`. Applied on this machine; the seven
+regional values (`LC_MONETARY`, `LC_PAPER`, `LC_MEASUREMENT`, `LC_ADDRESS`, `LC_NAME`,
+`LC_TELEPHONE`, `LC_IDENTIFICATION`) were read back and passed through unchanged.
+
+[DECISION: **`LC_NUMERIC=C.UTF-8`, not `en_US`.** The user: _"most devs prefer non-local stuff
+anyway, since it is more similar to existing systems. well, not in all countries, but let's have a
+user complain first, and we'll worry about it then."_ So dot-decimal with no thousands grouping,
+which is also what the `~/AGENTS.md` rule itself already told scripts to force. `C` alone is not in
+`localectl list-locales`; the accepted spelling is `C.UTF-8`.]
+
+[PITFALL: **`localectl set-locale` replaces the whole locale configuration rather than merging into
+it.** A `set-locale LC_TIME=… LC_NUMERIC=…` naming only the two variables being changed would have
+dropped the other seven — currency, paper size, measurement units — silently and system-wide. The
+task reads the current set back, overlays its three, and passes all ten. Verified before running by
+printing the assignment list and diffing it against the current one: eight preserved, two changed,
+none dropped.]
+
+[PITFALL: **the first `parse_system_locale` keyed off indentation and was wrong.** `localectl`
+right-aligns its field labels, so `System Locale:` is flush left only while a longer key
+(`VC Keymap:`) is present — on a machine without X11 fields it would be indented like a continuation
+line, and the parser would have found nothing, which `set_locale` would have read as "no locale
+configured". Caught by a unit test using an indented fixture, not by the live run, which passed. The
+delimiter is the colon: `LC_TIME=en_DK.UTF-8` has none, `X11 Options: grp_led:scroll` starts with
+one.]
+
+## Open questions
 
 [NEEDS CLARIFICATION: does the `~/AGENTS.md` rule survive, and in what form? If `LC_TIME` becomes
 PULSE-set, the rule's premise ("this machine's `LC_TIME` defaults to `ro_RO`") stops being true and
