@@ -72,48 +72,96 @@ one of those paths permanently `DIRTY` against its source, which is precisely th
 manifest exists to surface. That standalone command _is_ the "option" the request asked for; a flag
 on `fonts.configure` would have been a second way to spell the same thing.]
 
-[DECISION: **two variants, not three spellings** — `family` and `family_mono`, both written in full
-everywhere. The plan assumed three (`CaskaydiaCove Nerd Font`, `… Nerd Font Mono`,
-`CaskaydiaCove NFM`) and a per-target naming rule to pick between them. Measured 2026-08-30 instead:
-Nerd Fonts v3 registers the short name as an alias of the long one, `fc-match` resolves
-`CaskaydiaCove NFM` and `CaskaydiaCove Nerd Font Mono` to the same file, and `wezterm ls-fonts`
-resolves the long form while printing `AKA: "CaskaydiaCove NFM"`. So the third spelling was never a
-third thing. The long form is used everywhere so that a search for the family name finds every
-occurrence — which is what made the original inconsistency hard to see.]
+[DECISION: ~~**two variants, not three spellings**~~ — **reversed 2026-08-30, see below.** The
+original reasoning, kept because the half about fontconfig is still correct: `family` and
+`family_mono`, both written in full everywhere. The plan assumed three (`CaskaydiaCove Nerd Font`,
+`… Nerd Font Mono`, `CaskaydiaCove NFM`) and a per-target naming rule to pick between them. Measured
+2026-08-30 instead: Nerd Fonts v3 registers the short name as an alias of the long one, `fc-match`
+resolves `CaskaydiaCove NFM` and `CaskaydiaCove Nerd Font Mono` to the same file, and
+`wezterm ls-fonts` resolves the long form while printing `AKA: "CaskaydiaCove NFM"`. So the third
+spelling was never a third thing. The long form is used everywhere so that a search for the family
+name finds every occurrence — which is what made the original inconsistency hard to see.]
 
 [PITFALL: the renderer raises when a substitution matches nothing, and that is the load-bearing
 part. A regex that silently matches zero lines leaves the old font in a file the task has just
 reported rewriting — and an upstream rename (PyCharm changing an option name) is exactly how that
 would happen. Tested.]
 
-[UNVERIFIED: PyCharm accepting the long family name where the file previously said
-`CaskaydiaCove NFM`. `fc-match` and WezTerm both confirm the alias resolves, and the JVM takes its
-font list from the same fontconfig on Linux, so this is reasoning from one verified case to a very
-similar one rather than a measurement. Confirming it needs a PyCharm restart and a look at the
-editor — worth doing the next time it is open. The old and new strings name the same file, so the
-worst case is cosmetic and one `git revert` away.]
+## The one inference in this plan was wrong (2026-08-30)
 
-[DEFERRED: `inv verify.all` has no check that the live machine agrees. A drift check ("every place
-that names a font names the same one") is cheap once there is a canonical value to compare against,
-and is what would have caught this by machine rather than by reading four files. The canonical value
-now exists, so the precondition this was waiting on is met.
+The plan had this open:
 
-Confirmed worth building, 2026-08-30, by the case it predicted. `~/.config/terminator/config` had
-been sitting on `JetBrainsMono Nerd Font 13` since 9 June while GNOME's `monospace-font-name`,
-`config/wezterm.lua` and both PyCharm files all said `CaskaydiaCove Nerd Font Mono 12` — roughly
-three months of one application silently disagreeing, on a machine where every other consumer
-agreed. Nothing reported it, and nothing would have: `deploy.status` did list the path, but the file
-had **no manifest entry at all** (PULSE had never written it), so it classified `UNKNOWN`, and
-`_needs_attention()` correctly declines to flag a `SEEDED` path that differs — that is the mechanism
-working as designed, since a seeded config is the user's own after first install. The gap is not in
-`deploy.py`; it is that no check asks the narrower question this plan can now answer.
+> [UNVERIFIED: PyCharm accepting the long family name … the JVM takes its font list from the same
+> fontconfig on Linux, so this is reasoning from one verified case to a very similar one rather than
+> a measurement.]
 
-Resolved for this instance by `inv deploy.all --name terminator --yes`, after establishing that
-nothing in the live file was worth keeping: the extra `[global_config]`, `[layouts]` and `[plugins]`
-sections are Terminator's own boilerplate, and its `[keybindings]` entry
-(`hide_window = <Primary><Shift><Alt>a`) is Terminator's **default** — `config.py:181` ships
-`<Shift><Control><Alt>a`, the same accelerator in GTK's `<Primary>` spelling. So the whole diff was
-one stale font plus a round-trip through the app's own writer.]
+Measured instead of restarting PyCharm, by asking the runtime PyCharm actually uses — its own
+bundled JBR at `~/.local/share/JetBrains/Toolbox/apps/pycharm/jbr/bin/java`:
+
+```
+CaskaydiaCove Nerd Font Mono  ->  resolved family: Dialog
+CaskaydiaCove NFM             ->  resolved family: CaskaydiaCove NFM
+```
+
+`getAvailableFontFamilyNames()` lists only the `NF`/`NFM`/`NFP` forms. `Dialog` is the AWT fallback.
+
+[PITFALL: **the JVM does not use fontconfig for family lookup**, which is the assumption the
+reversed decision rested on. It enumerates the family name embedded in the font file — the
+abbreviated one — so the long form resolves to `Dialog` and PyCharm renders in a default sans font
+while reporting nothing. `fc-match` and `wezterm ls-fonts` agreeing proved only that _fontconfig_
+consumers accept either spelling, and every other target here is one. Generalising from them to the
+JVM was the error, and the plan named it as an inference at the time.]
+
+**The state this left on the machine, which is worse than the decision:** `editor-font.xml` had said
+`CaskaydiaCove Nerd Font` all along — before this plan touched anything — so PyCharm's editor had
+been falling back to `Dialog`, and `SECONDARY_FONT_FAMILY = JetBrains Mono` is probably why nobody
+noticed. This plan's rewrite of `terminal-font.xml` from `CaskaydiaCove NFM` to the long form would
+have broken the terminal the same way; it was never deployed, so the drift that
+`plans/2026-08-30-font-as-one-config-value.md` was about is the only reason it did not land.
+
+[DECISION: **four names, not two** — `family`, `family_mono`, `family_short`, `family_mono_short`.
+Every fontconfig consumer (GNOME, GNOME Terminal, VS Code, Terminator, WezTerm) takes the long form;
+the two PyCharm files take the short. The objection that beat three spellings originally — a grep
+for the family name should find every occurrence — is satisfied differently and better: all four
+live in one `[settings.fonts]` block, which is the "one place to change it" the plan actually
+wanted. A derivation (`Nerd Font Mono` → `NFM`) was rejected as magic that would break on the next
+family whose abbreviation is not mechanical.]
+
+A test pins the asymmetry so it is not simplified back: the PyCharm rules must render a `*_short`
+name and the terminator/wezterm rules must not.]
+
+## The drift check, built (2026-08-30)
+
+`inv fonts.check` — read-only. It reports every place on this machine that names a font and whether
+it agrees with `[settings.fonts]`: the three settings `fonts.configure` applies, and the four files
+`fonts.render-configs` writes, **read at their deployed paths** rather than in the repo.
+
+[DECISION: its own read-only task, not a check inside `inv verify.all`. That task aborts on first
+failure and is not read-only, and a `config_files` destination the user has customized differs by
+design — failing `inv setup` on it would be crying wolf on exactly the mechanism that exists to let
+people keep their own config. `wsl.check` and `devcontainer.check` are the shape this follows.]
+
+[DECISION: it asks "does this file name the configured font", not "is this file identical to its
+source". The second is `inv deploy.status`'s question and a different one — a seeded config may
+legitimately differ everywhere except the font line, which is precisely why three months of
+Terminator drift was invisible. Implemented by re-rendering the _deployed_ text with the same rules
+`render-configs` uses: if the substitutions change nothing, the file already names the right font.
+No second list of paths to keep in sync, and no parser per format.]
+
+It earned itself on its first run, finding a second stale file nobody had looked for —
+`terminal-font.xml` still on the pre-standardisation spelling — and then the reversal above.
+
+## What this plan actually cost, on the live machine
+
+Three of the seven consumers were wrong when the plan was written, and none reported it:
+
+| consumer                      | was                           | now                               |
+| ----------------------------- | ----------------------------- | --------------------------------- |
+| `~/.config/terminator/config` | `JetBrainsMono Nerd Font 13`  | `CaskaydiaCove Nerd Font Mono 12` |
+| PyCharm `editor-font.xml`     | long form → `Dialog` fallback | `CaskaydiaCove NF`                |
+| PyCharm `terminal-font.xml`   | pre-standardisation spelling  | `CaskaydiaCove NFM`               |
+
+`inv fonts.check` now reports all seven agreeing.
 
 [PITFALL: a `config_files` destination PULSE has never deployed is indistinguishable, in
 `deploy.status`, from one the user edited — both are `UNKNOWN`, whose wording is deliberately
@@ -121,3 +169,24 @@ non-committal because claiming either would be wrong half the time. The tell is 
 from `~/.local/state/power-user-linux-setup/deployed.json` means never written here, and the
 apparent "drift" may simply be a config that was never applied in the first place. Worth checking
 before concluding a user customized something.]
+
+## Migrated to
+
+Landed and verified 2026-08-30. `inv fonts.check` reports all seven consumers agreeing.
+
+- **The code** — `[settings.fonts]`'s four names in `setup.toml`, `tasks/fonts.py` (`_named`, the
+  `_RENDERS` rules, `render-configs`, and the new `check`), `tasks/util.py`'s `FontsSettings`. The
+  asymmetry that matters is pinned by
+  `tests/unit/test_fonts.py::test_pycharm_takes_the_abbreviated_family_and_everything_else_the_long_one`,
+  so a future simplification back to one spelling fails CI rather than silently sending PyCharm to
+  `Dialog`.
+- **Usage** — [`docs/fonts.md`](../docs/fonts.md), "Changing the font": the four names, the two
+  tasks plus `inv ide.configure-pycharm`, `inv fonts.check`, and the fontconfig-vs-JVM warning with
+  the measured `Dialog` output.
+- **Design rationale** — the `setup.toml` comment above `[settings.fonts]` carries why there are
+  four names rather than two, which is where someone about to "tidy" them will be standing.
+
+**Not migrated:** the `deploy.status`-cannot-tell-never-deployed-from-edited pitfall. It is about
+`deploy.py`'s classifier rather than about fonts, and it is already recorded where that mechanism is
+documented — see `contributing/deploy.md` and `plans/2026-08-29-dotfiles-repo-config-lifecycle.md`,
+which owns that surface.
