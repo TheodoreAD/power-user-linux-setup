@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-29
+status: in-progress
+updated: 2026-08-30
 ---
 
 ## Context
@@ -78,28 +78,152 @@ Where the weight sits, from the per-section measurement:
 `portable.md` holds the top four and is the obvious target; `this-setup.md` and `claude-code.md`
 together are under 1,000 words and are not the problem.
 
+## The pass as agreed (2026-08-30)
+
+Three decisions taken with the user, which close the three questions this plan opened with.
+
+[DECISION: **no rule is cut, and size is not the target.** Asked to choose a byte target, the user
+declined one outright: "we have to figure out a way to keep all these hard-earned rules." So the
+pass keeps every rule and every distinct claim, and any byte reduction is a by-product to be
+measured rather than a goal to hit. This retires the "shorten in place" lever except where a claim
+is genuinely stated twice, and it defers demotion-to-skills indefinitely rather than rejecting it.]
+
+[DECISION: **merge near-duplicates first**, chosen by the user over demotion and over shortening.
+This is the lever the research already favoured for adherence (~4–7pp, SCALEDIF) and it is the only
+one compatible with the decision above — merging removes a claim's second statement, never the
+claim.]
+
+[DECISION: **one approval round per cluster**, not per rule and not one diff at the end. At ~22
+candidate rules a per-rule pass was judged impractical, and a single end-of-pass review would defer
+every "nothing is deleted without asking" judgement to one large read.]
+
+The Codex 32 KiB cut recorded above is **latent, not live** — `~/.codex` does not exist on this
+machine, so nothing is being truncated today. It is a reason to keep the file's growth visible, not
+a reason to cut, and treating it as a deadline is what the decision above rejects.
+
+## The merge inventory
+
+Six claims stated more than once across the assembled file, found by reading all three fragments in
+full. The first three were done in round 1; the last three are round 2.
+
+| #     | the claim stated twice or more                                                             | rules involved                                                                            |
+| ----- | ------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------- |
+| A     | the tool already reports the exit code; `echo $?`/redirect add nothing; a pipe destroys it | Composing a Bash call · Viewing, searching, or editing files · Reading a command's result |
+| B     | don't `\| head` your own search; count first                                               | Viewing, searching, or editing files · Generalizing from a sample to a set                |
+| **C** | **whether cwd persists between Bash calls — a contradiction**                              | Composing a Bash call · Running a command against a different repo                        |
+| D     | `git commit` ships the index, not the paths you named                                      | Committing multi-part work · Unexplained git/file state in a working tree                 |
+| E     | a ref handed to git is read (`rev-parse`), never derived by eye                            | Force-pushing · Unexplained git/file state in a working tree                              |
+| F     | parallel sessions on this machine share one working tree                                   | Force-pushing · Unexplained git/file state · Running a command against a different repo   |
+
+[PITFALL: **C was a contradiction, not a duplication, and had gone unnoticed because the two halves
+sat in different clusters.** "Composing a Bash call" asserted that cwd persists "on current builds";
+"Running a command against a different repo" recorded both behaviours observed in one session on one
+build and said to assume neither. A reader scanning for a cwd answer got whichever rule they hit
+first. Finding it took reading all three fragments end to end — no per-rule review would have
+surfaced it, because neither rule is wrong when read alone.]
+
+Deliberately **not** merge candidates, checked and rejected: the Bash rules restated inside "Which
+sessions load this file" (a deliberate paste-in for `Plan`/`Explore` subagents, which never load
+this file, so the restatement is the only copy that reaches them), and the auto-mode paragraph's
+reference to the `rg`/`fd` preferences (a pointer, not a second statement).
+
+## Round 1 — Bash & tool use + Verification (landed 2026-08-30)
+
+Taken as one round rather than two because both A and B straddle the cluster boundary: the
+duplicated claims are Bash rules restated in Verification rules.
+
+- **A** — canonical home is "Reading a command's result", unchanged. "Composing a Bash call" keeps
+  the imperative and points at it (85 → 40 words); "Viewing, searching, or editing files" keeps the
+  prohibition alone (55 → 15).
+- **B** — canonical home is "Viewing, searching, or editing files", unchanged. "Generalizing from a
+  sample to a set" keeps what is distinctive to it, the _inference_ that a truncated result stops
+  being evidence about the set, and points at the other rule for the mechanics.
+- **C** — resolved in favour of the researched position; "Composing a Bash call" now says to treat
+  cwd as unknown after a cross-repo chain.
+
+Measured before and after, assembled: **39,536 → 39,176 bytes** (−360), 6,343 → 6,274 words, 597 →
+595 lines, 38 rules unchanged. The byte yield is far below the ~1,150 estimated from the removed
+prose, because the pointers added back and dprint reflowed; worth knowing before anyone plans a
+round around a predicted saving.
+
+[UNVERIFIED: whether round 1 helped, hurt, or did nothing to adherence. A is the interesting one —
+its `echo $?` shape was measured at 10–11% of Fable/Opus calls in the day a contradictory version
+was live, so it is a rule with a known miss rate whose explanation now exists in one place instead
+of three. `session-bash-audit` can measure the `echo-exit` and `redirect-then-filter` rates after
+this has been deployed a while; that measurement is what closes this tag.]
+
+## Round 2 — Git & commits (landed 2026-08-30)
+
+D and E applied; **F deliberately skipped**.
+
+- **D** — the merge that improved both rules rather than only shortening one. The subject had been
+  split down the middle: "Committing multi-part work" named the failure (`git commit` ships the
+  index) and offered only "stage late" against it, while "Unexplained git/file state" held the
+  remedy (`git commit -m "…" -- <path>`) framed purely as parallel-session defence. The remedy moved
+  to the commit-splitting rule, which is the heading a session constructing a commit actually
+  consults; the parallel-session rule keeps what is specific to it and points.
+- **E** — "Force-pushing" now opens by stating the principle (every ref you hand git is one you
+  read, never one you derived) with the lease as its first instance, so "Unexplained git/file state"
+  can cite it instead of restating `rev-parse` and claiming kinship.
+
+[DECISION: **F was rejected, not deferred.** "Parallel sessions share one working tree" is stated in
+about eight words in each of two rules, as the premise for two different consequences. Replacing
+either with a pointer costs the reader the premise at the moment they need it, to save under a line
+— the merge criterion is a claim stated twice, not a fact mentioned twice, and a premise short
+enough to restate is cheaper in place than behind a reference.]
+
+[PITFALL: **a rule can have no entry in `contributing/global-agents-md.md` at all, and nothing
+reports it.** "Force-pushing, or asking what a remote actually has" had none — its evidence sat
+inline in the deployed file, which is the arrangement the whole split exists to prevent. Found only
+because round 2 went looking for the heading to write under. The `## Contents` list in that file is
+also incomplete by several sections, so it cannot be used to answer "does this rule have evidence?"
+either.]
+
 ## Open questions
 
-[NEEDS CLARIFICATION: which lever first — **merge near-duplicates**, **demote to skills**, or
-**shorten in place**? The research says merging overlapping rules is the change most likely to
-improve adherence (real but modest, ~4–7pp), while demotion is the only one that actually removes
-words from the always-loaded set. Shortening in place is the one the same research warns against
-where a rule has been observed being missed: "strengthen its language rather than lengthen its
-explanation" cuts both ways, and several of these rules are long precisely because a shorter version
-was already tried and missed.]
+## Rules with no evidence section (measured 2026-08-30)
+
+Run after round 2 turned one up by accident. Comparing the `###` headings across the three fragments
+against the `##` headings in `contributing/global-agents-md.md`: **11 of 38 rules have no matching
+section.** Two of those carry dated provenance inline in the deployed file, which is precisely the
+arrangement the fragment/evidence split exists to prevent:
+
+| rule                                                | inline provenance     |
+| --------------------------------------------------- | --------------------- |
+| Committing to a repo that is or might become public | `Measured 2026-08-28` |
+| The permission model in force                       | `Measured 2026-08-30` |
+
+The other nine carry none, and most are correctly evidence-free — `sudo` is a two-line exact
+instruction with its own worked example, "Caveman-style terse output" and "Invited to push back" are
+stated user preferences rather than findings, and "Where durable knowledge goes" has evidence filed
+under the evidence file's older heading for it ("Saving to cross-session memory"), so the heading
+correspondence the file's own convention asks for has drifted through a rename rather than gone
+missing.
+
+[DEFERRED: **relocate the two inline-provenance blocks and reconcile the drifted headings.** Not
+done in this pass because moving evidence is a different lever from merging duplicates, and the
+per-cluster approval rounds were agreed for the latter. It is a small, self-contained follow-up: two
+paragraphs move, one heading pair gets reconciled, and the heading-correspondence check above
+becomes worth running routinely.]
+
+[DEFERRED: **make the check mechanical.** The comparison above is six lines of stdlib and answers
+"does every rule have an evidence home, and does every evidence section still match a live rule?" —
+a `verify.all`-style check, or a test in `tests/unit/`, would keep both halves from drifting again.
+The `## Contents` list in the evidence file is separately incomplete by several sections, so it
+cannot serve as that check today.]
+
+[NEEDS CLARIFICATION: does merging alone reach a shape worth stopping at? Six merges is the whole
+inventory, and round 1's three yielded 360 bytes. If D–F land in the same range the file finishes
+this pass around 38 KB with 38 rules — every rule kept, which is what was asked for, but still ~2×
+the review reference points and still over the latent Codex cut. Decide at the close whether that is
+the intended resting state or whether a further lever gets reopened.]
 
 [NEEDS CLARIFICATION: which rules are demotion candidates under the tier test — sharp statable
-trigger, cheap and recoverable miss? `Bash & tool use` is the biggest cluster and the one with a
-topic-owning skill (`session-bash-audit`) that can both hold guidance and _measure_ whether moving
-it made adherence worse. That makes it the safest place to try demotion, and the riskiest to get
-wrong, since its rules were rewritten specifically because they were being missed.]
-
-[NEEDS CLARIFICATION: does the per-rule approval requirement make a pass this large impractical in
-one session? `contributing/global-agents-md.md` states that moving a rule out of the always-loaded
-set needs the same per-rule user approval as deleting it, and that nothing is deleted without
-asking. At ~22 candidate rules in `portable.md` that is a lot of decisions. Batching them into a
-handful of `AskUserQuestion` rounds by cluster is probably the shape, but it should be agreed before
-starting.]
+trigger, cheap and recoverable miss? Deferred rather than answered by the decisions above, and worth
+keeping only if the question above reopens it. `Bash & tool use` is the biggest cluster and the one
+with a topic-owning skill (`session-bash-audit`) that can both hold guidance and _measure_ whether
+moving it made adherence worse. That makes it the safest place to try demotion, and the riskiest to
+get wrong, since its rules were rewritten specifically because they were being missed.]
 
 ## Additions parked pending this pass
 
