@@ -34,9 +34,9 @@ not a writing one.
 **The font.** [`docs/fonts.md`](../docs/fonts.md) covers install mechanics and the v2→v3 migration
 in detail, and says which font is set where. It does not say why a Nerd Font is the point — the
 prompt icons, the statusline glyphs and the editor ligatures all depend on it, and that dependency
-chain is the feature. Related: `plans/2026-08-30-font-as-one-config-value.md`, which is about making
-it changeable in one place. Documenting it as a feature and making it changeable belong together — a
-feature nobody has documented is one nobody changes.
+chain is the feature. Making it changeable in one place landed 2026-08-30 (`docs/fonts.md`), so only
+the "why a Nerd Font at all" half is still owed here — a feature nobody has documented is one nobody
+changes.
 
 **The Claude Code statusline.** [`docs/claude-code.md`](../docs/claude-code.md) mentions
 `statusline` only as an installation side effect (which task writes it, which prompt defaults to
@@ -106,9 +106,12 @@ size as 13 where `setup.toml` says 12, and said "three places" over four rows.
 [PITFALL: the first draft of the fonts section wrote "swap `[settings.fonts]` for any other
 installed family", which is **not true today** — that setting reaches GNOME and VS Code only, while
 Terminator, WezTerm and PyCharm each carry the font in their own file. Caught by re-reading against
-`plans/2026-08-30-font-as-one-config-value.md`'s own measurement before committing. Documenting the
-consolidated behaviour a sibling plan is proposing is the exact failure mode this plan's own closing
-PITFALL warns about, and it nearly happened in the same session that wrote the warning.]
+the (now retired) font plan's own measurement before committing. Documenting the consolidated
+behaviour a sibling plan is proposing is the exact failure mode this plan's own closing PITFALL
+warns about, and it nearly happened in the same session that wrote the warning.
+
+Since 2026-08-30 the consolidated claim **is** true — `[settings.fonts]` drives all seven consumers
+and `inv fonts.check` verifies it — so this section can now say what the first draft wanted to.]
 
 [PITFALL: the same draft duplicated the CaskaydiaCove/OFL rationale that `docs/fonts.md` already
 carried further down under "Default font". Found by reading the whole page rather than the section

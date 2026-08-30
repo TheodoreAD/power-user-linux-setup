@@ -406,9 +406,8 @@ entire gap between the two counts, which is why "roughly half" felt right by wei
 count.]
 
 [DEFERRED: two pieces of work this decision generated, each filed separately rather than absorbed
-here — `plans/2026-08-30-font-as-one-config-value.md` (the font is hardcoded in `terminator.conf`,
-`wezterm.lua` and both `pycharm/*.xml` while `[settings.fonts]` independently drives GNOME and VS
-Code: five places, one font, two sources of truth) and
+here — the font consolidation — landed 2026-08-30, `[settings.fonts]` is now the one place and
+`inv fonts.check` proves the machine agrees, see `docs/fonts.md` — and
 `plans/2026-08-30-showcase-the-defaults-in-the-docs.md` (the wezterm grid, the font, the statusline
 and p10k customization all want documenting as features).]
 
