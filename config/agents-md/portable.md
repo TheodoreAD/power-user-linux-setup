@@ -229,13 +229,6 @@ For the unavoidable quick **read-only** cross-repo command:
   direnv-activated `.venv/bin` (direnv hooks don't fire in non-interactive shells), so the command
   silently runs the wrong repo's interpreter, dependencies, or tasks — and looks like it passed.
 
-### Invoking a venv tool in the session's own project
-
-Check `which <tool>` before prefixing `uv run` or spelling out `.venv/bin/<tool>`: most of this
-user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`), so the bare command already resolves
-into the venv and a wrapper or absolute path only adds prompt friction. If a repo's `AGENTS.md`
-Build & test section is empty or stale, fix it rather than silently working around it.
-
 ## Research & design
 
 ### About to author content, config, or a workaround from scratch

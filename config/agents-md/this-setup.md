@@ -82,6 +82,13 @@ reversed a decision already made to adopt it. A tool a repo's quality gate or te
 goes in that repo's dependency group — the user-wide install is for the human at the shell, the
 group is what CI and consumers resolve.
 
+### Invoking a venv tool in the session's own project
+
+Check `which <tool>` before prefixing `uv run` or spelling out `.venv/bin/<tool>`: most of this
+user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`), so the bare command already resolves
+into the venv and a wrapper or absolute path only adds prompt friction. If a repo's `AGENTS.md`
+Build & test section is empty or stale, fix it rather than silently working around it.
+
 ### Installing agent instructions and skills on this machine
 
 `inv ai.install-skills` sets up `~`'s `.agents/skills/` and its `.claude/skills` symlink, and

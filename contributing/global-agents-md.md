@@ -856,6 +856,17 @@ under a heading a session splitting commits has no reason to consult.
 
 ## Invoking a venv tool in the session's own project
 
+Moved 2026-08-30 from `portable.md` to `this-setup.md`, cluster "Bash & tool use" to "This machine &
+this setup", with no change to its wording. The rule is not a portable convention that happens to
+mention this setup — its content is entirely "most of this user's repos put `.venv/bin` on `PATH`
+via direnv", which is false on a machine without direnv and meaningless on one without these repos.
+The fragments divide by audience, and the assembler contributes whole `##` sections, so a rule
+crossing fragments necessarily crosses clusters; that is the mechanism working rather than a side
+effect to absorb. Done first among the fixes in
+`plans/2026-08-30-portable-fragment-names-one-harness.md` deliberately: a move with no rewording
+tests whether the fragment boundary is worth enforcing before any rule's wording — tuned for
+adherence, some of it after being measured as missed — is touched for it.
+
 Confirmed live 2026-08-23 in `repo-tasks`: used `.venv/bin/python -m pytest tests/integration/` out
 of habit while direnv was already active and plain `pytest tests/integration/` would have resolved
 to the identical binary; corrected mid-session. The absolute path added nothing except a novel
