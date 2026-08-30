@@ -18,7 +18,7 @@ CONFLICTS: dict[str, list[str]] = {
 
 # User extension directory — managed by gext and PULSE.
 # System extensions live at /usr/share/gnome-shell/extensions/ and are never touched here.
-_USER_EXT_DIR = Path.home() / ".local/share/gnome-shell/extensions"
+USER_EXT_DIR = Path.home() / ".local/share/gnome-shell/extensions"
 
 
 def _installed_uuids(c: Context) -> set[str]:
@@ -220,7 +220,7 @@ def status(c: Context):
     for name, cfg in all_configs.items():
         uuid = cfg.get("uuid", "")
         want = cfg.get("enabled", True)
-        installed = ((_USER_EXT_DIR / uuid).is_dir()) if uuid else False
+        installed = ((USER_EXT_DIR / uuid).is_dir()) if uuid else False
         is_active = uuid in active
 
         if not want:
@@ -249,12 +249,12 @@ def clean(c: Context):
     pkgs = util.packages_by_method(util.PackageMethod.GNOME_EXTENSION)
     keep = {uuid for cfg in pkgs.values() if (uuid := cfg.get("uuid"))}
 
-    if not _USER_EXT_DIR.exists():
+    if not USER_EXT_DIR.exists():
         print("[gnome-clean] ~/.local/share/gnome-shell/extensions not found — nothing to do")
         return
 
     removed = 0
-    for path in sorted(_USER_EXT_DIR.iterdir()):
+    for path in sorted(USER_EXT_DIR.iterdir()):
         if not path.is_dir():
             continue
         uuid = path.name

@@ -30,8 +30,8 @@ from . import ui, util
 _PX_INI = Path.home() / ".config" / "px" / "px.ini"
 _PX_BIN = Path.home() / ".local" / "bin" / "px"
 _UNIT_DIR = Path.home() / ".config" / "systemd" / "user"
-_UNIT_PATH = _UNIT_DIR / "pulse-proxy.service"
-_ZSHENV = Path.home() / ".zshenv"
+UNIT_PATH = _UNIT_DIR / "pulse-proxy.service"
+ZSHENV = Path.home() / ".zshenv"
 _DEFAULT_PORT = 3128
 
 _UNIT_CONTENT = f"""[Unit]
@@ -263,13 +263,13 @@ def _write_unit(c: Context) -> bool:
     tasks/system.py). User-owned path, no sudo needed. Returns True if changed.
     """
     if util.DRY_RUN:
-        ok = _UNIT_PATH.exists() and _UNIT_PATH.read_text() == _UNIT_CONTENT
+        ok = UNIT_PATH.exists() and UNIT_PATH.read_text() == _UNIT_CONTENT
         print(f"[proxy] systemd --user unit: {util.ok_label(ok)}")
         return False
-    changed = not (_UNIT_PATH.exists() and _UNIT_PATH.read_text() == _UNIT_CONTENT)
+    changed = not (UNIT_PATH.exists() and UNIT_PATH.read_text() == _UNIT_CONTENT)
     if changed:
         _UNIT_DIR.mkdir(parents=True, exist_ok=True)
-        _UNIT_PATH.write_text(_UNIT_CONTENT)
+        UNIT_PATH.write_text(_UNIT_CONTENT)
         c.run("systemctl --user daemon-reload")
     return changed
 
@@ -543,5 +543,5 @@ def install(c: Context, proxy: str = "auto", noproxy: str | None = None):
         f'export HTTPS_PROXY="http://127.0.0.1:{_DEFAULT_PORT}"\n'
         + (f'export no_proxy="{noproxy}"\nexport NO_PROXY="{noproxy}"\n' if noproxy else "")
     )
-    status = util.ensure_block(_ZSHENV, "proxy", content)
+    status = util.ensure_block(ZSHENV, "proxy", content)
     print(f"[proxy] ~/.zshenv proxy block: {status.value} — open a new terminal for it to take effect")

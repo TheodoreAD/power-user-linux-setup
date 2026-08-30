@@ -45,7 +45,7 @@ from invoke import Context, task
 
 from . import util
 
-_APPLICATIONS_DIR = Path.home() / ".local" / "share" / "applications"
+APPLICATIONS_DIR = Path.home() / ".local" / "share" / "applications"
 _LOCAL_STATE = Path.home() / ".config" / "google-chrome" / "Local State"
 _LAUNCHER_GLOB = "chrome-*.desktop"
 
@@ -328,7 +328,7 @@ def _report_starters(ozone: bool) -> int:
 
 
 def _launchers() -> list[Launcher]:
-    found = (parse_launcher(path) for path in sorted(_APPLICATIONS_DIR.glob(_LAUNCHER_GLOB)))
+    found = (parse_launcher(path) for path in sorted(APPLICATIONS_DIR.glob(_LAUNCHER_GLOB)))
     return [launcher for launcher in found if launcher is not None]
 
 
@@ -418,11 +418,11 @@ def status(c: Context, ozone: bool = False):
     _report_starters(required)
 
     if not launchers:
-        print(f"[chrome] no PWA launchers found in {_APPLICATIONS_DIR}")
+        print(f"[chrome] no PWA launchers found in {APPLICATIONS_DIR}")
         return
 
     primary = profiles.primary
-    print(f"[chrome] {len(launchers)} launcher(s) in {_APPLICATIONS_DIR}")
+    print(f"[chrome] {len(launchers)} launcher(s) in {APPLICATIONS_DIR}")
     print(f"[chrome] primary profile: {primary or 'unknown'} ({profiles.labels.get(primary or '', '?')})")
 
     known_labels = frozenset(profiles.labels.values())
@@ -474,7 +474,7 @@ def fix_launchers(c: Context, yes: bool = False, profile: str | None = None, ozo
     profiles = read_profiles()
     launchers = _launchers()
     if not launchers:
-        print(f"[chrome] no PWA launchers found in {_APPLICATIONS_DIR}")
+        print(f"[chrome] no PWA launchers found in {APPLICATIONS_DIR}")
         return
 
     primary = profile or profiles.primary
@@ -506,5 +506,5 @@ def fix_launchers(c: Context, yes: bool = False, profile: str | None = None, ozo
     print(f"[chrome] rewrote {len(planned)} launcher(s)")
 
     if util.command_exists("update-desktop-database"):
-        c.run(f"update-desktop-database {_APPLICATIONS_DIR}", warn=True, hide=True)
+        c.run(f"update-desktop-database {APPLICATIONS_DIR}", warn=True, hide=True)
     print("[chrome] note: Chrome rewrites these files on PWA install/update — re-run then")

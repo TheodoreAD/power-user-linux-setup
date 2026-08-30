@@ -13,7 +13,7 @@ _JOURNALD_CONF_DIR = Path("/etc/systemd/journald.conf.d")
 _JOURNALD_SIZE_CONF = _JOURNALD_CONF_DIR / "size.conf"
 _RESOLVED_CONF_DIR = Path("/etc/systemd/resolved.conf.d")
 _RESOLVED_CONF = _RESOLVED_CONF_DIR / "pulse-dns.conf"
-_CURLRC = Path.home() / ".config" / "curlrc"
+CURLRC = Path.home() / ".config" / "curlrc"
 
 _IPV6_KEYS = [
     "net.ipv6.conf.all.disable_ipv6",
@@ -52,11 +52,11 @@ def write_curlrc(c: Context):
     """Write ~/.config/curlrc: silent, show errors, follow redirects. Idempotent."""
     content = "--silent\n--show-error\n--location"
     if util.DRY_RUN:
-        text = _CURLRC.read_text() if _CURLRC.exists() else ""
+        text = CURLRC.read_text() if CURLRC.exists() else ""
         _, status = util.ensure_block_text(text, "curlrc", content)
         print(f"[curlrc] {util.ok_label(status == util.BlockStatus.OK)}")
         return
-    result = util.ensure_block(_CURLRC, "curlrc", content)
+    result = util.ensure_block(CURLRC, "curlrc", content)
     if result != util.BlockStatus.OK:
         print(f"[curlrc] {result.value}")
     else:

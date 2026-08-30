@@ -25,7 +25,7 @@ from . import util
 
 _CA_CERT_FILE = Path("/usr/local/share/ca-certificates/pulse-corporate.crt")
 _SYSTEM_BUNDLE = "/etc/ssl/certs/ca-certificates.crt"  # what update-ca-certificates produces
-_ZSHENV = Path.home() / ".zshenv"
+ZSHENV = Path.home() / ".zshenv"
 
 _CERT_RE = re.compile(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", re.DOTALL)
 
@@ -192,7 +192,7 @@ def _env_block_content() -> str:
 
 
 def _zshenv_status() -> str:
-    text = _ZSHENV.read_text() if _ZSHENV.exists() else ""
+    text = ZSHENV.read_text() if ZSHENV.exists() else ""
     _, status = util.ensure_block_text(text, "certs", _env_block_content())
     return util.ok_label(status == util.BlockStatus.OK)
 
@@ -293,7 +293,7 @@ def install(c: Context, bundle: str | None = None):
             )
         print("[certs] bundle installed, update-ca-certificates run")
 
-    zshenv_status = util.ensure_block(_ZSHENV, "certs", _env_block_content())
+    zshenv_status = util.ensure_block(ZSHENV, "certs", _env_block_content())
     print(f"[certs] ~/.zshenv certs block: {zshenv_status.value}")
 
     _configure_java(c, desired)

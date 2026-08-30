@@ -26,7 +26,7 @@ _CUSTOM_PATH_PREFIX = "/org/gnome/settings-daemon/plugins/media-keys/custom-keyb
 _MANAGED_SHELL_KEYS = ["show-screenshot-ui", "screenshot"]
 
 _SCREENSHOTS_DIR = Path.home() / "Pictures" / "Screenshots"
-_FLAMESHOT_INI = Path.home() / ".config" / "flameshot" / "flameshot.ini"
+FLAMESHOT_INI = Path.home() / ".config" / "flameshot" / "flameshot.ini"
 _DESKTOP_FILE = Path("/usr/share/applications/org.flameshot.Flameshot.desktop")
 
 
@@ -151,12 +151,12 @@ def enable(c: Context):  # noqa: C901
         for b in bindings:
             state = "ok (already bound)" if b["name"] in existing_names else "would bind"
             print(f"[screenshot] {b['binding']} -> {b['name']}: {state}")
-        save_ok = _read_ini_key(_FLAMESHOT_INI, "savePath") == str(_SCREENSHOTS_DIR)
+        save_ok = _read_ini_key(FLAMESHOT_INI, "savePath") == str(_SCREENSHOTS_DIR)
         print(f"[screenshot] flameshot savePath: {'ok' if save_ok else f'would set -> {_SCREENSHOTS_DIR}'}")
         return
 
     _SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
-    if _set_ini_key(_FLAMESHOT_INI, "savePath", str(_SCREENSHOTS_DIR)):
+    if _set_ini_key(FLAMESHOT_INI, "savePath", str(_SCREENSHOTS_DIR)):
         print(f"[screenshot] flameshot savePath -> {_SCREENSHOTS_DIR}")
 
     if _is_wayland() and _DESKTOP_FILE.exists():
@@ -247,7 +247,7 @@ def status(c: Context):
     for b in _bindings():
         print(f"[screenshot] {b['binding']} ({b['name']}): {'bound' if b['name'] in names else 'not bound'}")
 
-    save_path = _read_ini_key(_FLAMESHOT_INI, "savePath")
+    save_path = _read_ini_key(FLAMESHOT_INI, "savePath")
     if save_path is None:
         print("[screenshot] flameshot.ini: not found (never configured)")
     else:

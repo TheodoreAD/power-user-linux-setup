@@ -24,12 +24,12 @@ def _load_jsonc(text: str) -> util.JsonObject:
     return cast(util.JsonObject, util.parse_json(text))
 
 
-_FONTS_DIR = Path.home() / ".local" / "share" / "fonts"
+FONTS_DIR = Path.home() / ".local" / "share" / "fonts"
 _BASE_URL = "https://github.com/ryanoasis/nerd-fonts/releases/latest/download"
 
 # Classic-confinement snap VS Code and deb/apt both resolve to ~/.config/Code on Ubuntu;
 # add the snap path as a fallback for installs that diverge.
-_VSCODE_SETTINGS_PATHS = [
+VSCODE_SETTINGS_PATHS = [
     Path.home() / ".config" / "Code" / "User" / "settings.json",
     Path.home() / "snap" / "code" / "current" / ".config" / "Code" / "User" / "settings.json",
 ]
@@ -70,7 +70,7 @@ def _is_installed(entry: util.FontFamily) -> bool:
         terms = [family] if isinstance(family, str) else family
         fc = _fc_list()
         return any(term.lower() in fc for term in terms)
-    return any(_FONTS_DIR.glob(entry.get("check", "")))
+    return any(FONTS_DIR.glob(entry.get("check", "")))
 
 
 def _install_family(entry: util.FontFamily) -> int:
@@ -78,7 +78,7 @@ def _install_family(entry: util.FontFamily) -> int:
     v3_glob = entry.get("check", "")
 
     # v3 files already present — nothing to do
-    if v3_glob and any(_FONTS_DIR.glob(v3_glob)):
+    if v3_glob and any(FONTS_DIR.glob(v3_glob)):
         print(f"  {name}: already installed")
         return 0
 
@@ -86,7 +86,7 @@ def _install_family(entry: util.FontFamily) -> int:
     legacy = entry.get("legacy", [])
     if isinstance(legacy, str):
         legacy = [legacy]
-    removed = [f for glob in legacy for f in _FONTS_DIR.glob(glob)]
+    removed = [f for glob in legacy for f in FONTS_DIR.glob(glob)]
     for f in removed:
         f.unlink(missing_ok=True)
     if removed:
@@ -110,7 +110,7 @@ def _install_family(entry: util.FontFamily) -> int:
 
         font_files = list(tmp_path.glob("*.ttf")) or list(tmp_path.glob("*.otf"))
         for src in font_files:
-            (_FONTS_DIR / src.name).write_bytes(src.read_bytes())
+            (FONTS_DIR / src.name).write_bytes(src.read_bytes())
 
     print(f"{len(font_files)} files")
     return len(font_files)
@@ -123,7 +123,7 @@ def install(c: Context):
     if util.DRY_RUN:
         for entry in families:
             v3_glob = entry.get("check", "")
-            if v3_glob and any(_FONTS_DIR.glob(v3_glob)):
+            if v3_glob and any(FONTS_DIR.glob(v3_glob)):
                 status = "ok"
             elif _is_installed(entry):
                 status = "ok (v2 — will upgrade)"
@@ -131,7 +131,7 @@ def install(c: Context):
                 status = "MISSING"
             print(f"[fonts] {entry['zip']}: {status}")
         return
-    _FONTS_DIR.mkdir(parents=True, exist_ok=True)
+    FONTS_DIR.mkdir(parents=True, exist_ok=True)
     total = sum(_install_family(entry) for entry in families)
     if total:
         print(f"[fonts] Rebuilding font cache ({total} new files)...")
@@ -172,7 +172,7 @@ def configure(c: Context):  # noqa: C901
         else:
             print("[fonts] GNOME Terminal: not found")
 
-        settings_path = next((p for p in _VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
+        settings_path = next((p for p in VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
         if settings_path and settings_path.exists():
             existing = _load_vscode_settings(settings_path)
             vscode_ok = all(existing.get(k) == v for k, v in vscode_settings.items())
@@ -206,7 +206,7 @@ def configure(c: Context):  # noqa: C901
     else:
         print("[fonts] GNOME Terminal not found — skipping")
 
-    settings_path = next((p for p in _VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
+    settings_path = next((p for p in VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
     if settings_path and vscode_settings:
         existing: util.JsonObject = {}
         if settings_path.exists() and settings_path.stat().st_size > 0:
