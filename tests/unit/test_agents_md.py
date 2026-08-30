@@ -113,21 +113,44 @@ def test_every_dependency_label_is_from_the_known_vocabulary():
     assert not bad, f"labels outside the vocabulary (`Claude Code` / `needs …`): {bad}"
 
 
-def test_a_needs_label_naming_a_package_names_one_that_exists():
+def _declared_and_enabled() -> set[str]:
+    """Packages `setup.toml` declares without `enabled = false`, read as text rather than through
+    `util.enabled_packages()`.
+
+    Deliberately ignores `overrides.toml` and `PULSE_EXCLUDE_TAGS`: this runs in the quality gate
+    and in CI, where the answer has to depend only on what is committed. The environment-dependent
+    half — a package this particular machine or profile has switched off — is
+    `inv ai.check-rule-prerequisites`, which is on-demand precisely because a container profile that
+    excludes the `dev` tag makes `[needs direnv]` legitimately false and must not fail a gate for
+    it.
+    """
+    sections = re.split(r"^\[packages\.", (_REPO_ROOT / "setup.toml").read_text(), flags=re.MULTILINE)[1:]
+    out: set[str] = set()
+    for section in sections:
+        name, _, body = section.partition("]")
+        if not re.search(r"^enabled\s*=\s*false", body, re.MULTILINE):
+            out.add(name)
+    return out
+
+
+def test_a_needs_label_names_a_package_that_is_declared_and_not_disabled():
     """`[needs direnv]` is a checkable claim, and this is the check.
 
     Only bare identifiers are tested: a label may also name a file or a mechanism (`needs
     setup.toml`, `needs PULSE's zprofile`), which no `[packages.*]` entry corresponds to. The point
-    is that a label naming a package cannot quietly outlive it — the rule it labels stops being true
-    when the package goes, which is exactly when nobody is looking at the label.
+    is that a label cannot quietly outlive the package it names — the rule it labels stops being
+    true when the package goes, which is exactly when nobody is looking at the label. 29 packages
+    carry `enabled = false` today, so "declared" alone would not have been much of a bar.
     """
-    declared = set(re.findall(r"^\[packages\.([\w.-]+)\]", (_REPO_ROOT / "setup.toml").read_text(), re.MULTILINE))
+    available = _declared_and_enabled()
     missing = [
         (rule, label)
         for rule, label in _labels()
-        if (dep := label.removeprefix("needs ")) != label and re.fullmatch(r"[\w-]+", dep) and dep not in declared
+        if (dep := label.removeprefix("needs ")) != label and re.fullmatch(r"[\w-]+", dep) and dep not in available
     ]
-    assert not missing, f"labels naming a package that setup.toml does not declare: {missing}"
+    assert not missing, (
+        f"labels naming a package setup.toml does not declare, or declares as enabled = false: {missing}"
+    )
 
 
 def test_no_rule_carries_a_dated_confirmation_inline():

@@ -58,6 +58,12 @@ something this machine no longer provides. Config-level by design: whether the b
 present is `inv verify.all`'s job, and leaving that out is what lets this run without invoking
 anything.
 
+The half of that which is deterministic — does `setup.toml` declare the package, and not as
+`enabled = false` — is also a unit test, so the quality gate and CI catch it on the commit that
+breaks it. The rest stays on-demand on purpose: a container or WSL profile excluding the `dev` tag
+makes `[needs direnv]` legitimately false, and a gate that failed on that would break `inv setup`
+for a machine that is configured correctly.
+
 ## Editing
 
 Edit a fragment, then `inv deploy.all --name agents-md`. Never edit `~/AGENTS.md` directly: it is
