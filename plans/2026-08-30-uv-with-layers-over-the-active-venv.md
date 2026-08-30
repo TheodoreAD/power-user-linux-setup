@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-08-30
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
@@ -66,3 +66,14 @@ signal. Suggested addition, to sit alongside those:
 One paragraph, no new rule count, per this repo's own admission criteria in
 `contributing/global-agents-md.md`. Check the current rule/line totals before adding, as that
 document requires.
+
+## Migrated to
+
+Landed 2026-08-30, deployed to `~/AGENTS.md`. Folded into `config/agents-md/portable.md`'s "Reading
+a command's result" as a second paragraph rather than a new heading, exactly as this plan
+recommended — it is another instance of the shape that section already carries, where the convenient
+surface signal is not the signal.
+
+The full measurement, including why the contaminated run is silent (it passes, and AnyIO's
+`pytest11` entry point registers with nothing in the project naming it), is in
+`contributing/global-agents-md.md` under the same heading.

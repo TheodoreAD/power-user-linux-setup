@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-29
+status: landed
+updated: 2026-08-30
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
 
@@ -74,3 +74,21 @@ URLs, and the fix for that is `attribution.sessionUrl = false` in this repo's ge
 `settings.json`. That is filed separately as `2026-08-29-attribution-session-url-off.md` in this
 same directory — the two are related but the settings change is mechanical while these are wording
 changes, so they are kept apart.]
+
+## Migrated to
+
+Both edits landed 2026-08-30 and are deployed to `~/AGENTS.md`.
+
+- **The plan-mode correction** — `config/agents-md/portable.md`, "A narrow check grows into design
+  work". The mechanism now names a `plans/*.md` file via `plan-docs` and says explicitly not to
+  reach for plan mode; the trailing approval sentence was reworded, since there is no mode to exit.
+- **The vendor-data rule** — `config/agents-md/portable.md`, appended to "Committing to a repo that
+  is or might become public", as the plan specified: an extension, not a heading.
+- **Evidence** — `contributing/global-agents-md.md`, under "A narrow check grows into design work"
+  and a new "Data flowing outward to a vendor".
+
+Rule count moved 39 → 38 across this pass (one heading was folded away elsewhere), lines 587 → 625.
+
+**Not migrated:** the `Claude-Session:` URL cleanup, which the plan had already filed separately as
+`plans/2026-08-29-attribution-session-url-off.md` and which is a settings change rather than
+wording. It stays open there.

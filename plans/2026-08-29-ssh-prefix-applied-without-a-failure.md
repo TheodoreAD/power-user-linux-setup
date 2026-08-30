@@ -1,5 +1,5 @@
 ---
-status: planned
+status: landed
 updated: 2026-08-30
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
@@ -102,9 +102,27 @@ the prefix at all, so this is a new concern rather than an addition to that one.
 The check is behavioural, not textual: a later session with commits to push should reach for a plain
 `git push` first. Until one does, the only evidence is the two occurrences above.
 
-[UNVERIFIED: no wording has been written or deployed yet. This plan records a decision and a
-direction; the edit itself is still to be made.]
+The wording was written and deployed 2026-08-30 — see "Migrated to" below. What stays unproven is
+the behavioural check this plan set: that a later session with commits to push reaches for a plain
+`git push` first. That is a question for the adherence watch, not for this plan.
 
 [DEFERRED: the first session also never ran `inv ssh.check`, which is the step the rule actually
 names. Whether the rule should say "and if you have not run `ssh.check`, you have no verdict to
 apply" is a second, smaller clause with the same trade-off as the main change.]
+
+## Migrated to
+
+Landed 2026-08-30, deployed to `~/AGENTS.md`. `config/agents-md/this-setup.md`, "git fetch/push
+needing an SSH key", rewritten per this plan's four design points: the default is stated first and
+more emphatically ("run the plain `git` command — no prefix and no wrapper"), an explicit line says
+everything below fires only after a command has actually failed, and the prefix paragraph is scoped
+to "the rest of that diagnosis" while keeping its emphasis on export-vs-prefix intact.
+
+Evidence, and the general authoring hazard the plan asked for — a conditional stated once in a
+heading sentence followed by an emphatic imperative that reads as standing advice — are in
+`contributing/global-agents-md.md` under "git fetch/push needing an SSH key".
+
+**Deferred item resolved rather than carried:** the clause about having no verdict to apply without
+running `ssh.check` is covered by the new wording, which opens the prefix paragraph on "When
+`ssh.check` has told you to" and closes on "a session that has not seen a publickey failure should
+never be typing it".

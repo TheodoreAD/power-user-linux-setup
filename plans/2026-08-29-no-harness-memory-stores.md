@@ -1,6 +1,6 @@
 ---
-status: planned
-updated: 2026-08-29
+status: landed
+updated: 2026-08-30
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
 
@@ -69,10 +69,28 @@ Behavioural: a later session asked to persist something across sessions should r
 or an `AGENTS.md`, not a harness store. Until one does, the only evidence is the single occurrence
 above.
 
-[UNVERIFIED: no wording has been written or deployed. This records the ruling and the direction.]
+The wording was written and deployed 2026-08-30 — see "Migrated to" below. The behavioural check
+this plan set (a later session reaching for a plan file rather than a harness store) stays with the
+adherence watch.
 
 [DEFERRED: cleanup of what already exists. Four memory entries survive on this machine — three empty
 `MEMORY.md` index files were deleted on sight 2026-08-29, and `ingesta` still holds two real entries
 (`global-rule-candidates-from-ingesta`, `promoting-rules-to-global`) plus its index. Those carry
 content that has no other copy, so they need migrating into that repo's own docs rather than
 deleting, and that is work for a session inside `ingesta`. Filed separately for that repo.]
+
+## Migrated to
+
+Landed 2026-08-30, deployed to `~/AGENTS.md`. The rule is now a flat prohibition in
+`config/agents-md/portable.md`'s "Where durable knowledge goes", with the configuration carve-out
+stated in the same breath and the sorting rule spelled out — configuration describes the harness,
+anything describing the work is a plain file. It was **moved out of the "Claude Code specifics"
+cluster**, per the plan's fourth design point: sitting under a vendor heading made a general routing
+rule read as a note about one product's feature. That fold is why the file's rule count went down
+rather than up.
+
+Evidence in `contributing/global-agents-md.md` under "Saving to cross-session memory".
+
+**Not migrated:** cleanup of the two surviving entries in `ingesta`, which the plan had already
+filed for that repo and which needs a session inside it —
+`ingesta/plans/2026-08-29-migrate-memory-entries-out-of-the-harness.md`, confirmed still open.
