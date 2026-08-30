@@ -1,6 +1,6 @@
 ## Git & commits
 
-### git fetch/push needing an SSH key
+### git fetch/push needing an SSH key [needs PULSE's zprofile]
 
 **Run the plain `git` command — `git push`, `git fetch`, no prefix and no wrapper.** That is the
 normal case and it is what to reach for every time. Keys live unlocked in the desktop keyring's
@@ -34,7 +34,7 @@ style for pushing, and a session that has not seen a publickey failure should ne
 `gh` is not affected — it authenticates with its own token — so a green `gh` command is not evidence
 that the shell's ssh agent is the right one.
 
-### Committing to a repo that is or might become public
+### Committing to a repo that is or might become public [needs agent-skills]
 
 **Never name an employer, client, internal project, work repo, work email address or ticket prefix
 in a repo you publish** — in any file, a plan or a commit message included. A push cannot be taken

@@ -21,7 +21,7 @@ fewer technologies for its own sake (YAGNI still applies to speculative needs). 
 explicit goal is fewer options for an _agent_ pattern-matching off existing code, fewer routine
 defaults wins over specialization.
 
-### About to ask the user something factual
+### About to ask the user something factual [Claude Code]
 
 Check whether it has a discoverable answer first — `AskUserQuestion` is for decisions genuinely the
 user's to make (a real preference, a trade-off with no objectively better side), not for lookups a
@@ -59,7 +59,7 @@ alias (e.g. "pulse-setup") — an alias that half-repeats the disambiguating wor
 not clean. Offer a short form only if asked, or where the full name is genuinely unwieldy (an env
 var prefix).
 
-### Installing a tool on this machine
+### Installing a tool on this machine [needs setup.toml]
 
 Never as a one-off manual step (`curl | bash`, a release tarball into `~/.local/bin`,
 `gh extension install`) — every tool is a `[packages.<name>]` entry in `power-user-linux-setup`'s

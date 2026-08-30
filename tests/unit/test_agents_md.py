@@ -49,9 +49,15 @@ _EVIDENCE_FREE = frozenset(
 )
 
 
+# A trailing `[Claude Code]` / `[needs direnv]` is a dependency label, not part of the rule's name:
+# it says what the rule assumes, and the evidence file keys on the name. Stripped everywhere a
+# heading is compared, so relabelling a rule never looks like renaming one.
+_LABEL = re.compile(r"\s*\[[^\]]+\]$")
+
+
 def _rule_headings() -> list[str]:
     return [
-        m.group(1)
+        _LABEL.sub("", m.group(1))
         for path in sorted(_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
         for m in re.finditer(r"^### (.+)$", path.read_text(), re.MULTILINE)
@@ -84,6 +90,43 @@ def test_declared_evidence_free_rules_still_exist():
     """_EVIDENCE_FREE is a list of exemptions, and an exemption for a deleted rule hides the next one."""
     stale = sorted(_EVIDENCE_FREE - set(_rule_headings()))
     assert not stale, f"_EVIDENCE_FREE names rules that no longer exist: {stale}"
+
+
+def _labels() -> list[tuple[str, str]]:
+    """(rule name, label) for every labelled rule."""
+    return [
+        (m.group(1), m.group(2))
+        for path in sorted(_FRAGMENTS.glob("*.md"))
+        if path.name != "README.md"
+        for m in re.finditer(r"^### (.+?)\s*\[([^\]]+)\]$", path.read_text(), re.MULTILINE)
+    ]
+
+
+def test_every_dependency_label_is_from_the_known_vocabulary():
+    """Two shapes only: `[Claude Code]`, or `[needs <thing>]`.
+
+    An open vocabulary is how a label set stops meaning anything — a reader cannot tell whether
+    `[Claude]` and `[Claude Code]` are the same claim, and neither can a grep.
+    """
+    bad = [(r, lb) for r, lb in _labels() if lb != "Claude Code" and not lb.startswith("needs ")]
+    assert not bad, f"labels outside the vocabulary (`Claude Code` / `needs …`): {bad}"
+
+
+def test_a_needs_label_naming_a_package_names_one_that_exists():
+    """`[needs direnv]` is a checkable claim, and this is the check.
+
+    Only bare identifiers are tested: a label may also name a file or a mechanism (`needs
+    setup.toml`, `needs PULSE's zprofile`), which no `[packages.*]` entry corresponds to. The point
+    is that a label naming a package cannot quietly outlive it — the rule it labels stops being true
+    when the package goes, which is exactly when nobody is looking at the label.
+    """
+    declared = set(re.findall(r"^\[packages\.([\w.-]+)\]", (_REPO_ROOT / "setup.toml").read_text(), re.MULTILINE))
+    missing = [
+        (rule, label)
+        for rule, label in _labels()
+        if (dep := label.removeprefix("needs ")) != label and re.fullmatch(r"[\w-]+", dep) and dep not in declared
+    ]
+    assert not missing, f"labels naming a package that setup.toml does not declare: {missing}"
 
 
 def test_no_rule_carries_a_dated_confirmation_inline():

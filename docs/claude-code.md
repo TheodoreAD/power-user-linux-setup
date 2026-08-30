@@ -134,10 +134,12 @@ rediscover it.
 **The file is assembled, not copied.** `[packages.agents-md]` sets `assembled_from = "agents_md"`,
 and every package declaring an `agents_md` fragment contributes whole `##` sections to the result,
 ordered by a sparse `order` — the same any-section pattern as `zshrc`/`zshenv`, for a file where
-section order carries meaning. Today three fragments split the content by audience:
-`config/agents-md/this-setup.md` (facts true only of this machine and this user's repos),
-`claude-code.md` (one harness's own behavior), and `portable.md` (conventions that hold anywhere).
-Which one owns what, and why the split exists, is `config/agents-md/README.md`.
+section order carries meaning. The fragments split the content **by subject** — `git.md`, `bash.md`,
+`research.md`, `verification.md`, `collaboration.md`, `agent-knowledge.md`, each owning the one `##`
+cluster named after it, plus a `preamble.md` for the title and legend. What a rule _assumes_ is a
+label on its heading instead of a file it lives in: `[Claude Code]` for a rule that describes one
+harness, `[needs <thing>]` for one that holds because PULSE installed that thing. Which fragment
+owns what, and why dependency is a label rather than a directory, is `config/agents-md/README.md`.
 
 Edit the fragment that owns the rule, then `inv deploy.all --name agents-md`, rather than
 hand-editing `~/AGENTS.md` directly — the file is fully PULSE-owned (same as any
@@ -151,7 +153,7 @@ something other than that symlink already lives there, `inv tools.install` warns
 rather than overwriting it.
 
 Several conventions live there too, deliberately global rather than repeated per-repo — see
-`config/agents-md/portable.md` for the exact wording:
+`config/agents-md/agent-knowledge.md` for the exact wording:
 
 - **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
   `AGENTS.md` (the cross-tool standard 30+ agent CLIs read) and, if `CLAUDE.md` exists at all, it's
@@ -250,11 +252,11 @@ of the `skills` task.
 The `npx` source was first validated end-to-end against a real package
 ([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
 long before this repo's own skills used it. Caveman itself ended up living in `~/AGENTS.md` instead
-(see "Caveman-style terse output" in `config/agents-md/portable.md`), not as an installed skill: a
-skill loads conditionally on a trigger, and this behaviour had to be unconditional and reach every
-agent tool, so the always-on `AGENTS.md` version replaced it outright. That test — unconditional and
-cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a skill — is now written up in
-the `skill-authoring` skill.
+(see "Caveman-style terse output" in `config/agents-md/collaboration.md`), not as an installed
+skill: a skill loads conditionally on a trigger, and this behaviour had to be unconditional and
+reach every agent tool, so the always-on `AGENTS.md` version replaced it outright. That test —
+unconditional and cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a skill — is
+now written up in the `skill-authoring` skill.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 

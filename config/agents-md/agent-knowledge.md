@@ -25,7 +25,7 @@ keybindings) and belongs to it; **anything describing the work is a plain file a
 An existing memory entry is migrated to one of the three destinations above and deleted, not kept in
 sync.
 
-### Installing agent instructions and skills on this machine
+### Installing agent instructions and skills on this machine [needs setup.toml]
 
 `inv ai.install-skills` sets up `~`'s `.agents/skills/` and its `.claude/skills` symlink, and
 installs every skill declared in `setup.toml` (never overwriting existing content). A new Python
@@ -40,7 +40,7 @@ afterwards. The convention these implement is in "Agent instructions & knowledge
 clones from the remote, so a committed but unpushed edit reaches nothing. Never edit the copy under
 `~/.agents/skills/` — the next install overwrites it and it never leaves this machine.
 
-### Which sessions load this file
+### Which sessions load this file [Claude Code]
 
 Built-in `Plan`/`Explore` subagents never load it — Claude Code deliberately skips
 `CLAUDE.md`/`AGENTS.md` (every level) for those agent types. Every rule in this file reaches only

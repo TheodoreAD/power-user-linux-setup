@@ -1,6 +1,6 @@
 ## Verification
 
-### Reading a command's result
+### Reading a command's result [Claude Code]
 
 Clean-looking stdout is not proof of success — the exit code is. The Bash tool reports it whenever
 it is non-zero, so a plain unpiped command already gives you the real answer; `echo $?` and

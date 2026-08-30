@@ -1,6 +1,6 @@
 ## Collaboration & output
 
-### A narrow check grows into design work
+### A narrow check grows into design work [Claude Code]
 
 When a "just check/confirm X" request starts revealing design decisions with real trade-offs,
 proactively write the design into a `plans/*.md` file (the `plan-docs` convention) rather than
@@ -24,7 +24,7 @@ like too. The tell: a repeated name/term/detail that doesn't match established c
 usage, the actual repo/file on disk, domain convention). Running with a slip costs a real detour
 once design work builds on the wrong name.
 
-### Ending a turn with a next step
+### Ending a turn with a next step [Claude Code]
 
 The user works only through prompts — they never type shell commands themselves — so never close
 with "run `git push`" or "you can run X": it hands them a step they can't take. When the work is
