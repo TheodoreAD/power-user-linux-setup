@@ -2186,22 +2186,22 @@
   
 
 
-<h1 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h1>
+<h1 id="docker">Docker</h1>
 <p>Installed via apt-repo by <code>inv apt.install-repos</code> (or <code>inv setup</code>). Installs: <code>docker-ce</code>,
 <code>docker-ce-cli</code>, <code>containerd.io</code>, <code>docker-buildx-plugin</code>, <code>docker-compose-plugin</code>.</p>
 <p><code>inv docker.configure</code> (part of <code>inv setup</code>) adds the current user to the <code>docker</code> group and
 configures the daemon.</p>
-<h2 id="post-install">Post-install<a class="headerlink" href="#post-install" title="Permanent link">&para;</a></h2>
+<h2 id="post-install">Post-install</h2>
 <p>Group membership takes effect in new login sessions. Open a new terminal after running
 <code>inv docker.configure</code> — no full logout needed.</p>
 <p>Verify:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>run<span class="w"> </span>hello-world
 </span></code></pre></div>
-<h2 id="compose">Compose<a class="headerlink" href="#compose" title="Permanent link">&para;</a></h2>
+<h2 id="compose">Compose</h2>
 <p>Docker Compose v1 (<code>docker-compose</code>) is deprecated and unmaintained. Use the v2 plugin:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up
 </span></code></pre></div>
-<h2 id="daemon-config">Daemon config<a class="headerlink" href="#daemon-config" title="Permanent link">&para;</a></h2>
+<h2 id="daemon-config">Daemon config</h2>
 <p><code>overlay2</code> storage driver and <code>systemd</code> cgroup driver are the defaults on Ubuntu 24.04 — no changes
 needed for those.</p>
 <p>Log limits and DNS are configured by <code>inv docker.configure</code> (also runs as part of <code>inv setup</code>):</p>
@@ -2226,7 +2226,7 @@ log space (3 × 50 MB). Per-container overrides work via <code>--log-opt</code> 
 docker-compose.</p>
 <p><strong>DNS:</strong> optional but makes containers use Cloudflare, matching <code>inv system.configure-dns</code>. Without
 it, Docker falls back to <code>8.8.8.8</code> automatically. See <a href="networking.html">networking.md</a>.</p>
-<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
+<h2 id="troubleshooting">Troubleshooting</h2>
 <p><strong>Daemon masked</strong> (<code>Loaded: masked</code>): <code>inv docker.configure</code> detects and fixes this automatically.
 To fix manually:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>unmask<span class="w"> </span>docker
@@ -2235,7 +2235,7 @@ To fix manually:</p>
 <p><strong>Socket permission error</strong> (temporary workaround if the group change hasn&rsquo;t propagated):</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>chown<span class="w"> </span><span class="nv">$USER</span>:docker<span class="w"> </span>/var/run/docker.sock
 </span></code></pre></div>
-<h2 id="corporate-registriesmirrors-not-automated-yet">Corporate registries/mirrors (not automated yet)<a class="headerlink" href="#corporate-registriesmirrors-not-automated-yet" title="Permanent link">&para;</a></h2>
+<h2 id="corporate-registriesmirrors-not-automated-yet">Corporate registries/mirrors (not automated yet)</h2>
 <p>Not covered by <code>inv docker.configure</code> or <code>inv certs.install</code> — tracked as a follow-up, documented
 here so the mechanism doesn&rsquo;t have to be re-derived. Three distinct, easily-conflated pieces if this
 network has a corporate registry mirror and/or TLS-inspecting proxy:</p>

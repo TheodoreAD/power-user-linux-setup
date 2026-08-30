@@ -580,6 +580,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#what-pulse-claims-in-your-home-directory-inv-homelist-claims" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What PULSE claims in your home directory — <code>inv home.list-claims</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#managed-files" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2158,6 +2169,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#what-pulse-claims-in-your-home-directory-inv-homelist-claims" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        What PULSE claims in your home directory — <code>inv home.list-claims</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#managed-files" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2332,13 +2354,13 @@
   
 
 
-<h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
+<h1 id="how-it-works">How it works</h1>
 <p>The mechanics behind <code>inv setup</code>: how PULSE writes shared config files without clobbering manual
 edits, how <code>tags</code>/<code>enabled</code>/<code>PULSE_EXCLUDE_TAGS</code> decide what gets installed, and what each setup
 phase actually runs. Start at <a href="index.html">index.md</a> if you just want to run the thing — this page is
 for when you need to change what it does, build a new environment profile, or debug why a package
 was (or wasn&rsquo;t) picked up.</p>
-<h2 id="configuration-management">Configuration management<a class="headerlink" href="#configuration-management" title="Permanent link">&para;</a></h2>
+<h2 id="configuration-management">Configuration management</h2>
 <p>PULSE owns config files through named sentinel blocks rather than overwriting whole files. Any
 snippet written to a shared config file is wrapped in a PULSE block:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># ╔═══════════════════════════════ PULSE::&lt;name&gt; ════════════════════════════╗
@@ -2352,7 +2374,26 @@ write to them. Overwriting the file on each run would destroy manual edits. Sent
 PULSE-managed entry own its own region of the file independently.</p>
 <p><strong>Idempotency:</strong> on re-run the block is found by its opening marker and replaced in place if the
 content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.</p>
-<h3 id="managed-files">Managed files<a class="headerlink" href="#managed-files" title="Permanent link">&para;</a></h3>
+<h3 id="what-pulse-claims-in-your-home-directory-inv-homelist-claims">What PULSE claims in your home directory — <code>inv home.list-claims</code></h3>
+<p>Blocks are one of nine ways this repo puts something in <code>~</code>. To see all of them:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>inv<span class="w"> </span>home.list-claims<span class="w">                     </span><span class="c1"># every claim, classified, read-only</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--writer<span class="w"> </span>block<span class="w">      </span><span class="c1"># just the marker-delimited regions</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--tier<span class="w"> </span>machine<span class="w">      </span><span class="c1"># what is true of this box only</span>
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--json<span class="w">              </span><span class="c1"># the same, machine-readable</span>
+</span></code></pre></div>
+<p>Each row says <strong>how</strong> the content got there (a whole-file deploy, a marker block, a merge into
+co-owned JSON, in-place surgery on one key, a <code>gsettings</code>/<code>dconf</code> call, a symlink, an installed
+tree, or a skill fetched by the <code>skills</code> CLI), <strong>who wins a conflict</strong> (PULSE, you, both, or the
+application), and <strong>where the content lives today</strong> (this public repo, this machine only, a secret,
+or regenerable state).</p>
+<p>This is the command that answers &ldquo;is this path PULSE-managed?&rdquo; for the whole home directory.
+<code>inv deploy.status</code> answers it only for the whole-file third it can also repair — accurate about
+itself, and misleading if read as the whole picture. The <code>state</code> column reflects that split: a real
+deploy state where the deploy manifest covers the path, plain presence everywhere else, because no
+other writer records what it wrote.</p>
+<p>The table below is a curated guide to the files you are most likely to edit; the command is the
+complete, generated answer.</p>
+<h3 id="managed-files">Managed files</h3>
 <table>
 <thead>
 <tr>
@@ -2444,21 +2485,21 @@ content changed, or left untouched if it matches. New blocks are appended. No du
 </tr>
 </tbody>
 </table>
-<h3 id="adding-a-new-block">Adding a new block<a class="headerlink" href="#adding-a-new-block" title="Permanent link">&para;</a></h3>
+<h3 id="adding-a-new-block">Adding a new block</h3>
 <p>Declare <code>zshrc</code>, <code>zshenv</code>, or <code>zprofile</code> on any package entry in <code>setup.toml</code>:</p>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[packages.mytool]</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"apt"</span>
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">zshrc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"""</span>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="s2">export MYTOOL_HOME="${HOME}/.local/share/mytool"</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="s2">eval "$(mytool init zsh)"</span>
-</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a><span class="s2">"""</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[packages.mytool]</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"apt"</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">zshrc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"""</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">export MYTOOL_HOME="${HOME}/.local/share/mytool"</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s2">eval "$(mytool init zsh)"</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s2">"""</span>
 </span></code></pre></div>
 <p>Run <code>inv zsh.configure</code> — the block is written on first run and updated in place on subsequent runs.
 For non-shell config files, call <code>util.ensure_block(path, name, content)</code> or
 <code>util.ensure_block_text(text, name, content)</code> (returns new text without writing, for files that
 require <code>sudo</code>).</p>
 <hr />
-<h2 id="whole-file-configs-config_files">Whole-file configs — <code>config_files</code><a class="headerlink" href="#whole-file-configs-config_files" title="Permanent link">&para;</a></h2>
+<h2 id="whole-file-configs-config_files">Whole-file configs — <code>config_files</code></h2>
 <p>Sentinel blocks only work for files PULSE <em>shares</em> with other writers. Some config files aren&rsquo;t
 shared at all: a tool&rsquo;s config is a single document PULSE authors end to end, in a syntax where a
 <code># ╔══ PULSE::name ══╗</code> comment would be noise (or invalid). WezTerm&rsquo;s Lua config is the clearest
@@ -2466,12 +2507,12 @@ case — the whole file is one Lua program returning one config table; there&rsq
 region&rdquo; of it.</p>
 <p>For those, a package declares <code>config_files</code>: a list of <code>{ src, dst }</code> mappings copying a file from
 this repo into place.</p>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[packages.wezterm]</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"deb-github"</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">config_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"config/wezterm.lua"</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"~/.config/wezterm/wezterm.lua"</span><span class="w"> </span><span class="p">}]</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[packages.wezterm]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"deb-github"</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">config_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"config/wezterm.lua"</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"~/.config/wezterm/wezterm.lua"</span><span class="w"> </span><span class="p">}]</span>
 </span></code></pre></div>
 <p><code>src</code> is relative to the repo root, <code>dst</code> expands <code>~</code>. Any method can declare it.</p>
-<h3 id="install-never-clobbers-redeploy-is-a-separate-deliberate-command">Install never clobbers; redeploy is a separate, deliberate command<a class="headerlink" href="#install-never-clobbers-redeploy-is-a-separate-deliberate-command" title="Permanent link">&para;</a></h3>
+<h3 id="install-never-clobbers-redeploy-is-a-separate-deliberate-command">Install never clobbers; redeploy is a separate, deliberate command</h3>
 <p>The install tasks that apply <code>config_files</code> (<code>inv apt.install-base</code>, <code>inv apt.install-debs</code>) <strong>only
 ever write a destination that doesn&rsquo;t exist yet.</strong> If the file is already there, they skip it
 silently — because after the first install that file is yours, and a re-run of <code>inv setup</code> must
@@ -2481,10 +2522,10 @@ deployed copy.</strong> Re-running the install task won&rsquo;t do it either. Th
 — the one redeploy command for everything this repo puts under <code>~</code> (<code>config_files</code> mappings,
 <code>wrapper-script</code> <code>content_file</code>s such as <code>~/AGENTS.md</code>, and skills), with <code>inv deploy.status</code> as its
 read-only twin:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>deploy.status<span class="w">                      </span><span class="c1"># what has drifted, with diffs; never writes</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>deploy.all<span class="w">                         </span><span class="c1"># redeploy every declared path</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w">          </span><span class="c1"># just one package's</span>
-</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w"> </span>-y<span class="w">       </span><span class="c1"># ...without the confirmation prompt</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>deploy.status<span class="w">                      </span><span class="c1"># what has drifted, with diffs; never writes</span>
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>inv<span class="w"> </span>deploy.all<span class="w">                         </span><span class="c1"># redeploy every declared path</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w">          </span><span class="c1"># just one package's</span>
+</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w"> </span>-y<span class="w">       </span><span class="c1"># ...without the confirmation prompt</span>
 </span></code></pre></div>
 <p>Per path it does one of four things, based on a machine-local manifest of what PULSE last wrote:</p>
 <table>
@@ -2526,21 +2567,21 @@ unconditionally, and no longer skip an existing <code>config_files</code> destin
 <code>bootstrap-devcontainer.sh</code> sets so an unattended container build overwrites (and says so) rather
 than silently leaving a base-image file in place.</p>
 <p>Sample run:</p>
-<div class="language-console highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="gp">$ </span>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="go">[deploy] wezterm: /home/you/.config/wezterm/wezterm.lua was edited since PULSE deployed it — its repo-side source is config/wezterm.lua</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>
-</span><span id="__span-4-5"><a id="__codelineno-4-5" name="__codelineno-4-5" href="#__codelineno-4-5"></a><span class="go">  --- /home/you/.config/wezterm/wezterm.lua</span>
-</span><span id="__span-4-6"><a id="__codelineno-4-6" name="__codelineno-4-6" href="#__codelineno-4-6"></a><span class="go">  +++ config/wezterm.lua</span>
-</span><span id="__span-4-7"><a id="__codelineno-4-7" name="__codelineno-4-7" href="#__codelineno-4-7"></a><span class="go">  @@ -1,16 +1,43 @@</span>
-</span><span id="__span-4-8"><a id="__codelineno-4-8" name="__codelineno-4-8" href="#__codelineno-4-8"></a><span class="go">   local wezterm = require "wezterm"</span>
-</span><span id="__span-4-9"><a id="__codelineno-4-9" name="__codelineno-4-9" href="#__codelineno-4-9"></a><span class="go">  +local act = wezterm.action</span>
-</span><span id="__span-4-10"><a id="__codelineno-4-10" name="__codelineno-4-10" href="#__codelineno-4-10"></a><span class="go">   local mux = wezterm.mux</span>
-</span><span id="__span-4-11"><a id="__codelineno-4-11" name="__codelineno-4-11" href="#__codelineno-4-11"></a><span class="go">  ...</span>
-</span><span id="__span-4-12"><a id="__codelineno-4-12" name="__codelineno-4-12" href="#__codelineno-4-12"></a>
-</span><span id="__span-4-13"><a id="__codelineno-4-13" name="__codelineno-4-13" href="#__codelineno-4-13"></a><span class="go">Overwrite /home/you/.config/wezterm/wezterm.lua? [y/N]</span>
+<div class="language-console highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="gp">$ </span>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="go">[deploy] wezterm: /home/you/.config/wezterm/wezterm.lua was edited since PULSE deployed it — its repo-side source is config/wezterm.lua</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>
+</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="go">  --- /home/you/.config/wezterm/wezterm.lua</span>
+</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="go">  +++ config/wezterm.lua</span>
+</span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="go">  @@ -1,16 +1,43 @@</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="go">   local wezterm = require "wezterm"</span>
+</span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="go">  +local act = wezterm.action</span>
+</span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="go">   local mux = wezterm.mux</span>
+</span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="go">  ...</span>
+</span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
+</span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="go">Overwrite /home/you/.config/wezterm/wezterm.lua? [y/N]</span>
 </span></code></pre></div>
-<h3 id="editing-one-of-these-files">Editing one of these files<a class="headerlink" href="#editing-one-of-these-files" title="Permanent link">&para;</a></h3>
+<h3 id="editing-one-of-these-files">Editing one of these files</h3>
 <p>Because the destination is a real, hand-editable file, there are two valid workflows — pick one per
 change, don&rsquo;t mix them:</p>
 <ol>
@@ -2555,7 +2596,7 @@ change, don&rsquo;t mix them:</p>
 <p>Currently declared: <a href="terminal.html"><code>config/wezterm.lua</code></a> → <code>~/.config/wezterm/wezterm.lua</code>, and
 <code>config/terminator.conf</code> → <code>~/.config/terminator/config</code>.</p>
 <hr />
-<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either<a class="headerlink" href="#tags-enabled-and-which-tasks-actually-respect-either" title="Permanent link">&para;</a></h2>
+<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either</h2>
 <p>Every <code>[packages.*]</code> entry has three independent, unrelated ways to be skipped:</p>
 <ul>
 <li><strong><code>enabled = false</code></strong> — the default for every machine that clones this repo, baked into
@@ -2565,8 +2606,8 @@ change, don&rsquo;t mix them:</p>
 <li><strong><code>~/.config/power-user-linux-setup/overrides.toml</code></strong> — one machine&rsquo;s disagreement with that
   default, written in <code>setup.toml</code>&rsquo;s own shape:</li>
 </ul>
-<div class="language-toml highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="k">[packages.google-chrome-x11]</span>
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[packages.google-chrome-x11]</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">enabled</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
 </span></code></pre></div>
 <p>Only <code>enabled</code> is honoured, and only for a package <code>setup.toml</code> already declares — every package
   <em>definition</em> stays in git where it can be reviewed. The file is deliberately outside git and is
@@ -2691,7 +2732,7 @@ version string, and include <code>{version}</code> in <code>download_url</code> 
 version differently — via the GitHub releases API directly (<code>tag</code> field, or auto-latest if omitted)
 — since it doesn&rsquo;t need a custom command.</p>
 <hr />
-<h2 id="setup-phases">Setup phases<a class="headerlink" href="#setup-phases" title="Permanent link">&para;</a></h2>
+<h2 id="setup-phases">Setup phases</h2>
 <p>What <code>inv setup</code> actually runs, in order. One interruption: a single logout at the end. An optional
 reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural
 reboot — nothing depends on it being immediate.</p>
@@ -2711,29 +2752,29 @@ entirely — defaulting to <strong>skip</strong> on Enter, and skipping silently
 what makes re-running <code>inv setup</code> (or <code>inv wsl.install</code>) after an interruption cheap: phases that
 already succeeded are a single confirmation instead of a full redo. A phase with any outstanding
 work is never gated behind a prompt — it just runs, same as before.</p>
-<h3 id="phase-1-system-config">Phase 1 — System config<a class="headerlink" href="#phase-1-system-config" title="Permanent link">&para;</a></h3>
+<h3 id="phase-1-system-config">Phase 1 — System config</h3>
 <p>All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No
 reboot needed.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>inv<span class="w"> </span>system.set-locale
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>inv<span class="w"> </span>system.write-curlrc
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>inv<span class="w"> </span>system.configure-dns
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>inv<span class="w"> </span>system.disable-ipv6<span class="w">          </span><span class="c1"># optional — sysctl -p applies immediately</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>inv<span class="w"> </span>system.cap-journal-size<span class="w">          </span><span class="c1"># optional — restarts journald</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>inv<span class="w"> </span>system.set-initramfs-compression<span class="w"> </span><span class="c1"># optional — deferred to next reboot</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>inv<span class="w"> </span>system.set-locale
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>inv<span class="w"> </span>system.write-curlrc
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>inv<span class="w"> </span>system.configure-dns
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>inv<span class="w"> </span>system.disable-ipv6<span class="w">          </span><span class="c1"># optional — sysctl -p applies immediately</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>inv<span class="w"> </span>system.cap-journal-size<span class="w">          </span><span class="c1"># optional — restarts journald</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>inv<span class="w"> </span>system.set-initramfs-compression<span class="w"> </span><span class="c1"># optional — deferred to next reboot</span>
 </span></code></pre></div>
 <p>GRUB (<code>nomodeset</code>) is manual and hardware-specific — see <a href="troubleshooting.html">troubleshooting.md</a>.
 If applied, it also defers to next reboot.</p>
-<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools<a class="headerlink" href="#phase-2-packages-and-tools" title="Permanent link">&para;</a></h3>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>inv<span class="w"> </span>apt.configure<span class="w">      </span><span class="c1"># write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>inv<span class="w"> </span>apt.install-repos<span class="w">          </span><span class="c1"># register external repo GPG keys + sources, then install their packages</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>inv<span class="w"> </span>apt.install-base<span class="w">           </span><span class="c1"># install from Ubuntu default repos</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>inv<span class="w"> </span>docker.configure<span class="w">   </span><span class="c1"># merge log limits/DNS into daemon.json, add user to docker group</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>inv<span class="w"> </span>apt.install-debs<span class="w">            </span><span class="c1"># install .deb packages from GitHub releases or direct URLs</span>
-</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># install tools via scripts, binaries, archives; also writes askpass-zenity</span>
-</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a>inv<span class="w"> </span>ai.install-skills<span class="w">          </span><span class="c1"># symlink ~/.claude/skills to ~/.agents/skills — see ai.md</span>
-</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>inv<span class="w"> </span>system.install-apparmor-profiles
-</span><span id="__span-7-9"><a id="__codelineno-7-9" name="__codelineno-7-9" href="#__codelineno-7-9"></a>inv<span class="w"> </span>python.install-tools
-</span><span id="__span-7-10"><a id="__codelineno-7-10" name="__codelineno-7-10" href="#__codelineno-7-10"></a>inv<span class="w"> </span>node.install
+<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools</h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>apt.configure<span class="w">      </span><span class="c1"># write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>inv<span class="w"> </span>apt.install-repos<span class="w">          </span><span class="c1"># register external repo GPG keys + sources, then install their packages</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>inv<span class="w"> </span>apt.install-base<span class="w">           </span><span class="c1"># install from Ubuntu default repos</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>inv<span class="w"> </span>docker.configure<span class="w">   </span><span class="c1"># merge log limits/DNS into daemon.json, add user to docker group</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a>inv<span class="w"> </span>apt.install-debs<span class="w">            </span><span class="c1"># install .deb packages from GitHub releases or direct URLs</span>
+</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># install tools via scripts, binaries, archives; also writes askpass-zenity</span>
+</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>inv<span class="w"> </span>ai.install-skills<span class="w">          </span><span class="c1"># symlink ~/.claude/skills to ~/.agents/skills — see ai.md</span>
+</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a>inv<span class="w"> </span>system.install-apparmor-profiles
+</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>inv<span class="w"> </span>python.install-tools
+</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a>inv<span class="w"> </span>node.install
 </span></code></pre></div>
 <p><code>inv apt.configure</code> writes a drop-in that suppresses dpkg&rsquo;s progress bar output — run it once before
 any other apt tasks.</p>
@@ -2745,11 +2786,11 @@ skipped with a <code>WARNING:</code> message rather than aborting the whole run.
 <code>~/.local/bin/askpass-zenity</code>. Any sudo call via <code>sudo -A</code> (used by the task scripts when
 <code>SUDO_ASKPASS</code> is present) opens a Zenity GUI dialog for the password instead of requiring a
 terminal prompt.</p>
-<h3 id="phase-3-shell-config">Phase 3 — Shell config<a class="headerlink" href="#phase-3-shell-config" title="Permanent link">&para;</a></h3>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>zsh.configure-omz
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>inv<span class="w"> </span>zsh.configure
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w">       </span><span class="c1"># copies config/p10k.zsh to ~/.p10k.zsh if not already present</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">    </span><span class="c1"># usermod -s — takes a new terminal to actually apply, doesn't chsh</span>
+<h3 id="phase-3-shell-config">Phase 3 — Shell config</h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>inv<span class="w"> </span>zsh.configure-omz
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>inv<span class="w"> </span>zsh.configure
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w">       </span><span class="c1"># copies config/p10k.zsh to ~/.p10k.zsh if not already present</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">    </span><span class="c1"># usermod -s — takes a new terminal to actually apply, doesn't chsh</span>
 </span></code></pre></div>
 <p><code>zsh.configure-p10k</code> installs the repo&rsquo;s opinionated baseline (lean style, Nerd Fonts icons,
 transient prompt, instant prompt) and is a no-op if <code>~/.p10k.zsh</code> already exists — manual
@@ -2769,7 +2810,7 @@ flag and prints the single next concrete thing to do: shell first, then
 git settings/profiles applied? SSH keys present for every <code>identity.toml</code> email? <code>~/.ssh/config</code>
 written? keys loaded in the agent? <code>gh</code> authenticated (only checked if <code>gh</code> is installed)? Safe to
 re-run after doing whatever it suggests — it just reports whatever&rsquo;s still outstanding.</p>
-<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em><a class="headerlink" href="#phase-4-desktop-before-logout" title="Permanent link">&para;</a></h3>
+<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em></h3>
 <p><code>inv setup</code> also runs <code>fonts.install</code> and <code>fonts.configure</code>, which:</p>
 <ul>
 <li>Download all Nerd Font families to <code>~/.local/share/fonts/</code></li>
@@ -2781,13 +2822,13 @@ re-run after doing whatever it suggests — it just reports whatever&rsquo;s sti
 <p><strong>Logout and log back in.</strong> Covers: docker group, locale full effect, GNOME extension activation,
 font cache. If GRUB or initramfs were changed, reboot instead of logout — one restart covers both.</p>
 </blockquote>
-<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em><a class="headerlink" href="#phase-5-authentication-interactive-last" title="Permanent link">&para;</a></h3>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>inv<span class="w"> </span>identity.init<span class="w">                </span><span class="c1"># wizard: writes ~/.config/power-user-linux-setup/identity.toml (simple or advanced)</span>
-</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>inv<span class="w"> </span>git.configure<span class="w"> </span>git.apply-settings<span class="w">   </span><span class="c1"># per-directory git identity + global settings from identity.toml</span>
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>ssh.create-keys<span class="w">                     </span><span class="c1"># one ed25519 key per unique email — prompts for a passphrase each</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>inv<span class="w"> </span>ssh.configure<span class="w">                </span><span class="c1"># write ~/.ssh/config</span>
-</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a>inv<span class="w"> </span>ssh.add<span class="w">                      </span><span class="c1"># load this node's keys into ssh-agent</span>
-</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>gh<span class="w"> </span>auth<span class="w"> </span>login<span class="w">                    </span><span class="c1"># GitHub CLI — opens browser, not automatable</span>
+<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>inv<span class="w"> </span>identity.init<span class="w">                </span><span class="c1"># wizard: writes ~/.config/power-user-linux-setup/identity.toml (simple or advanced)</span>
+</span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>inv<span class="w"> </span>git.configure<span class="w"> </span>git.apply-settings<span class="w">   </span><span class="c1"># per-directory git identity + global settings from identity.toml</span>
+</span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>inv<span class="w"> </span>ssh.create-keys<span class="w">                     </span><span class="c1"># one ed25519 key per unique email — prompts for a passphrase each</span>
+</span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>inv<span class="w"> </span>ssh.configure<span class="w">                </span><span class="c1"># write ~/.ssh/config</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>inv<span class="w"> </span>ssh.add<span class="w">                      </span><span class="c1"># load this node's keys into ssh-agent</span>
+</span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>gh<span class="w"> </span>auth<span class="w"> </span>login<span class="w">                    </span><span class="c1"># GitHub CLI — opens browser, not automatable</span>
 </span></code></pre></div>
 <p>Everything after <code>inv identity.init</code> (except <code>gh auth login</code>) needs
 <code>~/.config/power-user-linux-setup/identity.toml</code> filled in first — either via the wizard above
