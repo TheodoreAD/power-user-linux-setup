@@ -3,6 +3,34 @@
 Nerd Fonts patches popular programming fonts with thousands of extra glyphs (icons, powerline
 symbols, devicons) required for a feature-rich terminal and editor experience.
 
+## Why this is load-bearing
+
+The font is not a cosmetic preference here — three other things PULSE configures are drawn from its
+glyph set, and all three degrade to boxes without it:
+
+- the [shell prompt](zsh.md#the-prompt)'s directory, branch and status icons
+  (`POWERLEVEL9K_MODE=nerdfont-complete`);
+- the [Claude Code statusline](claude-code.md#the-statusline)'s clock, calendar and context-fill
+  glyphs, taken from powerlevel10k's own icon table so the two lines match;
+- editor ligatures in VS Code and PyCharm.
+
+So the same family is set everywhere rather than left to each application's default. Where each one
+is set, if you want to change it:
+
+| target                               | set in                                    |
+| ------------------------------------ | ----------------------------------------- |
+| GNOME (all GTK apps), GNOME Terminal | `[settings.fonts]` in `setup.toml`        |
+| VS Code                              | `[settings.fonts.vscode]` in `setup.toml` |
+| Terminator                           | `config/terminator.conf`                  |
+| WezTerm                              | `config/wezterm.lua`                      |
+| PyCharm (editor and terminal)        | `config/pycharm/*.xml`                    |
+
+The first two are applied by `inv fonts.configure`; the rest are deployed as whole files, so change
+the repo-side file and run `inv deploy.all` (or `inv ide.configure-pycharm`). Miss one and the
+machine looks subtly wrong in exactly one application.
+
+Which family, and why that one: [Default font](#default-font-caskaydiacove-nerd-font) below.
+
 ## Install
 
 ```shell
@@ -61,12 +89,12 @@ CaskaydiaCove Nerd Font is the Nerd Fonts project's patched version of Microsoft
 (Open Font License) **Reserved Font Name** clause in Cascadia Code's license — any modified version
 must be distributed under a different name.
 
-`inv fonts.configure` sets it as the default in three places:
+`inv fonts.configure` sets it as the default in these places:
 
 | Context                        | Font                            | Why                                                                               |
 | ------------------------------ | ------------------------------- | --------------------------------------------------------------------------------- |
-| System monospace (`gsettings`) | CaskaydiaCove Nerd Font Mono 13 | Used by GNOME Terminal, gedit, and all GTK apps that respect the system monospace |
-| GNOME Terminal profile         | CaskaydiaCove Nerd Font Mono 13 | Explicit override; single-width icons fit the terminal cell grid                  |
+| System monospace (`gsettings`) | CaskaydiaCove Nerd Font Mono 12 | Used by GNOME Terminal, gedit, and all GTK apps that respect the system monospace |
+| GNOME Terminal profile         | CaskaydiaCove Nerd Font Mono 12 | Explicit override; single-width icons fit the terminal cell grid                  |
 | VS Code editor                 | CaskaydiaCove Nerd Font         | Default variant; double-width icons render correctly, ligatures enabled           |
 | VS Code integrated terminal    | CaskaydiaCove Nerd Font Mono    | Mono for the terminal grid inside VS Code                                         |
 
