@@ -268,6 +268,24 @@ a row ("rows with no stated cost teach nothing"). Worth adding there if it recur
 
 ## Running a command against a different repo than the session's project
 
+The hard no-writing clause was added 2026-08-30, on the user's instruction: "we don't act on other
+repos any more, unless we have some very complex work that needs back and forth ... if something
+needs adjusing in another repo, make a plan." The rule had previously only discouraged _substantial_
+work elsewhere, which left every small, obviously-correct edit looking like an exception — and the
+session it was given in had just made exactly one: a `session-harvest` session, following that
+skill's own "Self-update mechanics" section, edited `agent-skills`, ran its gate and committed
+there, all as instructed. The skill was written before `plan-docs` grew `new --for <repo>`, when a
+cross-repo commit really was the only way to deliver a fix instead of deferring it; the mechanism
+now exists, so the reasoning that justified the commit no longer holds. That correction is itself
+owed to `agent-skills` and was filed there rather than made — see
+`plans.py archive --search "self-update crosses repos"` if it has since been absorbed and retired.
+
+The clause is stated as absolute rather than proportionate because the failure is silent: a commit
+in another repo's tree reads as routine in that repo's own `git log`, so the session that owns the
+repo has no signal distinguishing it from its own work, and the natural next action is to push it.
+Size is not what makes a cross-repo write dangerous, and "it was only two lines" is exactly the
+framing under which one gets made.
+
 The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are now rendered as allow rules by
 `cli-allowlist`'s `global_option_prefixes`, and the mutating ones are meant to prompt — the earlier
 "expect a one-off prompt" framing read as friction to minimize, and under auto mode the prompt never

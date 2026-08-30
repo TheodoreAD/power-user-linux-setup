@@ -176,7 +176,19 @@ plausible-looking output that is not what the file says.
 ### Running a command against a different repo than the session's project
 
 Avoid needing to: keep a session focused on one project — substantial work in another repo belongs
-in its own session. For the unavoidable quick cross-repo command:
+in its own session.
+
+**Writing to another repo is out entirely, not merely discouraged** — no edit and no commit, however
+small, however obviously correct, however much a skill's own instructions tell you to. File it
+instead: `python3 ~/.agents/skills/plan-docs/scripts/plans.py new <topic> --for <repo>` puts a plan
+in that repo's store mirror, outside every working tree, and the next session working there is
+offered it. Commit it in the store immediately and say where it went. The only exception is
+genuinely iterative work needing back-and-forth in that repo, which gets its own session there
+rather than a relay. The reason it is a hard line rather than a judgment call: a commit in someone
+else's tree is silent by construction — it looks routine in `git log`, and the session that owns the
+repo may push it without ever knowing it was not theirs.
+
+For the unavoidable quick **read-only** cross-repo command:
 
 - Whether cwd persists between Bash calls is not reliable either way: some calls end with the
   harness resetting it to the primary directory ("Shell cwd was reset"), others leave it where a
@@ -187,8 +199,9 @@ in its own session. For the unavoidable quick cross-repo command:
 - Prefer the tool's own directory-scoping option (`git -C <path>`, `ruff --config <path>`,
   `basedpyright --project <path>`, the target repo's own `.venv/bin/pytest` by absolute path —
   site-packages resolve from the interpreter, not cwd). Read-only `git -C` verbs are allowlisted; a
-  mutating one (`git -C x commit`/`push`) matches no rule and prompts — that prompt is the
-  checkpoint, not friction to route around.
+  mutating one (`git -C x commit`/`push`) matches no rule and prompts — treat that prompt as a stop,
+  not a checkpoint to click through: by the rule above there is almost nothing legitimate on the far
+  side of it.
 - `inv` is the exception: invoke finds `tasks.py` by walking up from cwd, so no flag redirects it,
   and its tasks shell out to bare tool names (`pytest`, `ruff`, `basedpyright`) that resolve from
   PATH rather than from the `inv` that launched them — an absolute `<repo>/.venv/bin/inv` fixes
