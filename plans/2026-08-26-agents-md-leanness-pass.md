@@ -200,17 +200,40 @@ under the evidence file's older heading for it ("Saving to cross-session memory"
 correspondence the file's own convention asks for has drifted through a rename rather than gone
 missing.
 
-[DEFERRED: **relocate the two inline-provenance blocks and reconcile the drifted headings.** Not
-done in this pass because moving evidence is a different lever from merging duplicates, and the
-per-cluster approval rounds were agreed for the latter. It is a small, self-contained follow-up: two
-paragraphs move, one heading pair gets reconciled, and the heading-correspondence check above
-becomes worth running routinely.]
+### Done 2026-08-30, immediately after the merge pass
 
-[DEFERRED: **make the check mechanical.** The comparison above is six lines of stdlib and answers
-"does every rule have an evidence home, and does every evidence section still match a live rule?" —
-a `verify.all`-style check, or a test in `tests/unit/`, would keep both halves from drifting again.
-The `## Contents` list in the evidence file is separately incomplete by several sections, so it
-cannot serve as that check today.]
+Both blocks relocated, the drifted headings reconciled, and the check made mechanical as
+`tests/unit/test_agents_md.py` — four tests reading the real repo files, since the invariant is
+about this repo's content rather than any function's behaviour:
+
+- every rule has an evidence section, or is named in an `_EVIDENCE_FREE` list of rules that rest on
+  no measurement (8 of 38: exact instructions carrying their own example, and stated preferences);
+- every evidence section still matches a live rule — the direction that catches a rename;
+- `_EVIDENCE_FREE` names no rule that has since been deleted, so an exemption cannot outlive its
+  rule and hide the next one;
+- no _new_ dated provenance appears inline in a fragment.
+
+`Committing to a repo that is or might become public` and `The permission model in force` now have
+sections of their own, with `Data flowing outward to a vendor` and `Auto mode withdraws Grep` folded
+under them as `###` subsections — both had been clause-named `##` headings, which is why the
+correspondence check could not see the rules they belonged to. `Saving to cross-session memory` was
+retitled to `Where durable knowledge goes`, the rule's name since it moved out of the Claude Code
+cluster. The `## Contents` list lost its three stale rows and gained the new sections.
+
+[PITFALL: **the heading check and the inline-provenance check find disjoint problems, and only
+running both gives the real count.** The heading comparison found 2 rules carrying provenance
+inline; the regex over the fragments then found 4 more, all in rules that _do_ have evidence
+sections — invisible to the first check by construction. The first estimate was therefore wrong by
+3× in the direction that reads as "nearly clean".]
+
+[DEFERRED: **the four grandfathered inline-provenance sites** — one in "Reading a command's result"
+(the `gh` poll loop), two in "git fetch/push needing an SSH key", one in "Installing a tool on this
+machine". They are a different shape from the two that moved: each is woven into the sentence
+carrying the instruction rather than being a standalone incident paragraph, and in the ssh case the
+incident is plausibly what does the deterring — a session that has just read about three passphrase
+dialogs behaves differently from one that has read a reference to them. Moving them is a content
+decision the user has not been asked for; they are enumerated in the test so the list cannot grow
+while it is open.]
 
 [NEEDS CLARIFICATION: does merging alone reach a shape worth stopping at? Six merges is the whole
 inventory, and round 1's three yielded 360 bytes. If D–F land in the same range the file finishes
