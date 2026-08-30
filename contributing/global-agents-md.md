@@ -127,10 +127,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
 - [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
 - [git fetch/push needing an SSH key](#git-fetchpush-needing-an-ssh-key)
-- [Auto mode withdraws Grep](#auto-mode-withdraws-grep)
 - [A narrow check grows into design work](#a-narrow-check-grows-into-design-work)
-- [Data flowing outward to a vendor](#data-flowing-outward-to-a-vendor)
-- [Saving to cross-session memory](#saving-to-cross-session-memory)
 - [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
 - [Installing a tool on this machine](#installing-a-tool-on-this-machine)
 - [About to author content, config, or a workaround from scratch](#about-to-author-content-config-or-a-workaround-from-scratch)
@@ -143,6 +140,9 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Reading a command's result](#reading-a-commands-result)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
 - [Force-pushing, or asking what a remote actually has](#force-pushing-or-asking-what-a-remote-actually-has)
+- [Committing to a repo that is or might become public](#committing-to-a-repo-that-is-or-might-become-public)
+- [The permission model in force](#the-permission-model-in-force)
+- [Where durable knowledge goes](#where-durable-knowledge-goes)
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
 - [About to commit](#about-to-commit)
 - [Committing multi-part work](#committing-multi-part-work)
@@ -158,7 +158,17 @@ classifier both before and after the user said "I will approve it" — auto mode
 interactive step for that approval to land on. The Edit tool, which goes through a separate
 permission path, was not blocked for the identical change.
 
-## Data flowing outward to a vendor
+## Committing to a repo that is or might become public
+
+Measured 2026-08-28, and the reason the rule exists at all: an agent published, in a public repo, a
+plan tabulating six employer/client root directory names plus one client's internal project path,
+and a second public repo had four work email addresses committed inside a listing of SSH key
+filenames. Both were written by agents with no rule telling them not to. Moved here from the
+deployed file 2026-08-30 — it had been the largest block of inline provenance left in any rule, and
+criterion 3 puts a dated confirmation in this file. The rule keeps the instruction and the
+mechanical check; what it no longer carries is the incident.
+
+### Data flowing outward to a vendor
 
 Added 2026-08-30, from the user 2026-08-29: _"as a general rule, we dislike data flowing out to
 vendors."_ Stated while reviewing `claude plugin eval`'s HTML report, which publishes to claude.ai
@@ -191,7 +201,9 @@ standing advice when quoted or skimmed alone. Rules in this file are retrieved b
 most emphatic sentence in a section is the one that fires — if that sentence is the exceptional
 branch, the exception becomes the default.
 
-## Auto mode withdraws Grep
+## The permission model in force
+
+### Auto mode withdraws Grep
 
 Measured 2026-08-30. Auto mode's system note asks the session to work through Bash rather than the
 dedicated tools, which inverts "Viewing, searching, or editing files". Four sessions had been
@@ -223,7 +235,12 @@ repo it belongs to and under version control. The trailing sentence about "exiti
 reworded to match, since there is no longer a mode to exit; the approval signal it describes
 ("Implement and document …") is unchanged and still correct.
 
-## Saving to cross-session memory
+## Where durable knowledge goes
+
+Retitled 2026-08-30 from "Saving to cross-session memory". The rule it documents had itself been
+renamed and moved out of the "Claude Code specifics" cluster (see the 2026-08-29 entry below), and
+this heading was left behind naming the old trigger — so the rule and its evidence, which this file
+keeps findable from each other by name, no longer matched. Nothing else changed.
 
 Confirmed 2026-08-22: auto-memory is a separate `memory/` folder per project directory —
 `repo-tasks`, `power-user-linux-setup`, `scaffoldapy`, and the `*-polite-mcp` repos each had their

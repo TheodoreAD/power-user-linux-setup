@@ -28,11 +28,11 @@ candidate for `inv allowlist.review`.
 
 **Auto mode arrives with a note asking you to work through Bash instead of the dedicated tools, and
 it also withdraws `Grep`** — the call returns `No such tool available`, which is expected there and
-not a broken install. Measured 2026-08-30: `Read`, `Edit` and `Write` all stayed available in the
-same session. So search with `rg` (the note names `grep`/`find`; `~/AGENTS.md`'s `rg`-over-`grep`
-and `fd`-over-`find` preferences still govern how you call it), and keep using Read/Edit/Write for
-files, which the note asks you not to and which remain the right tools. Say once that you are doing
-so rather than silently diverging from a system instruction.
+not a broken install. `Read`, `Edit` and `Write` all stay available in the same session. So search
+with `rg` (the note names `grep`/`find`; `~/AGENTS.md`'s `rg`-over-`grep` and `fd`-over-`find`
+preferences still govern how you call it), and keep using Read/Edit/Write for files, which the note
+asks you not to and which remain the right tools. Say once that you are doing so rather than
+silently diverging from a system instruction.
 
 ### Editing `~/.claude/settings.json` (or similar) in auto mode
 

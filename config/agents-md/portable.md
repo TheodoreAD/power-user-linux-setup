@@ -53,11 +53,6 @@ A hit in **pushed** history is not an edit to make quietly: redacting the workin
 nothing about what is published. Report it, name the commits, and let the user decide — purging
 means rewriting history, force-pushing, and asking the host to expire the old commits.
 
-Measured 2026-08-28: an agent published, in a public repo, a plan tabulating six employer/client
-root directory names plus one client's internal project path, and a second public repo had four work
-email addresses committed inside a listing of SSH key filenames. Both were written by agents with no
-rule telling them not to.
-
 The same principle applies to data leaving the machine at all: **a feature that uploads, publishes
 or phones home by default is a decision, not a default.** Pin the flag off deliberately and say why,
 rather than accepting the behaviour because it shipped that way — report publishing, telemetry, any
