@@ -742,6 +742,19 @@ Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-comm
 output through `xxd`/`cat -A` and reading the literal bytes; a rendered terminal glyph or a quick
 "does this look like a number" glance would have caught neither.
 
+Rewritten 2026-08-30 to lead with the imperative and drop the machine fact, because the machine fact
+stopped being true: `inv system.set-locale` now pins `LC_TIME=en_DK.UTF-8` and `LC_NUMERIC=C.UTF-8`
+(`plans/2026-08-30-english-iso-locale-defaults.md`), so a rule opening "this machine's `LC_TIME`
+defaults to `ro_RO`" asserted something false into every session. The instruction was always the
+portable half — forcing the C locale for output a script parses is correct wherever it runs, and
+merely unnecessary on a single-locale machine — so what changed is which half leads. The two
+concrete tells stay in the rule (`Mi` for `Wed`, `1,23` for `1.23`) because they are what makes the
+hazard recognisable; the incident that produced them stays here.
+
+It also means the rule needs no dependency label, which is what closed the last open question about
+it: it depends on nothing PULSE installs, and it is not a rule about this machine. It is ordinary
+defensive scripting that this machine happened to teach.
+
 ## Force-pushing, or asking what a remote actually has
 
 Measured 2026-08-29: a lease built from a 40-character SHA that had been hand-extended from a short

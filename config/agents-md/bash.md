@@ -122,8 +122,8 @@ than hunting for another scripted workaround.
 
 ### Formatting a date or decimal in a shell script
 
-This machine's `LC_TIME`/`LC_NUMERIC` default to `ro_RO.UTF-8` (mixed locale — `LANG`/`LC_MESSAGES`
-stay `en_US.UTF-8`), so `date` with a locale-sensitive specifier (`%a`, `%b`, ...) or `awk`/`printf`
-with a decimal format silently emits Romanian-locale output. Force the C locale —
-`LC_TIME=C date ...`, `LC_NUMERIC=C awk ...`. "The terminal looks fine" is not proof — verify the
-actual bytes.
+Force the C locale for any output a script parses or asserts on — `LC_TIME=C date ...`,
+`LC_NUMERIC=C awk ...`. A locale-sensitive `date` specifier (`%a`, `%b`, ...) or a decimal
+`awk`/`printf` format emits whatever the ambient locale says, and that is not yours to assume: a
+weekday can come back `Mi` rather than `Wed`, a number `1,23` rather than `1.23`. "The terminal
+looks fine" is not proof — verify the actual bytes.

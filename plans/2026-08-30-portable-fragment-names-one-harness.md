@@ -260,11 +260,13 @@ The locale rule's fate has its own plan now — `plans/2026-08-30-english-iso-lo
 opened when the question turned out to be about what this machine's locale _should_ be rather than
 about which fragment holds a rule.
 
-[NEEDS CLARIFICATION: does the locale rule survive? It is the one rule that is neither
-PULSE-provisioned nor portable — an environment fact PULSE works around in its own code but does not
-create, so it is the one rule `inv ai.check-rule-prerequisites` can say nothing about. Either PULSE
-should set the locale (making it labellable like the rest), or the rule stays deliberately
-unlabelled and the fact that it describes the machine rather than the setup is simply accepted.]
+[DECISION: **the locale rule keeps its imperative and loses its machine fact**, 2026-08-30 — so it
+needs no label and is not an exception after all. Its premise ("this machine's `LC_TIME` defaults to
+`ro_RO`") stopped being true when `inv system.set-locale` took ownership of the locale
+(`plans/2026-08-30-english-iso-locale-defaults.md`). The instruction was always the portable half:
+forcing the C locale for output a script parses is correct wherever it runs, merely unnecessary on a
+single-locale machine. It depends on nothing PULSE installs and describes no machine — ordinary
+defensive scripting that this machine happened to teach.]
 
 ## Recommended direction
 
