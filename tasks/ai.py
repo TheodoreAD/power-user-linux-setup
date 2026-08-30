@@ -1,9 +1,10 @@
 import json
+import re
 import shlex
 from pathlib import Path
 from typing import cast
 
-from invoke import Context, task
+from invoke import Context, Exit, task
 
 from . import deploy, ui, util
 
@@ -535,3 +536,72 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
         _apply_declared_default_mode()
         _apply_declared_statusline()
         _note_copilot_permissions()
+
+
+# `[Claude Code]` / `[needs <thing>]` on a `### ` heading in config/agents-md/*.md. Only the
+# `needs` form is machine-checkable, and only where <thing> is a bare name: a label may also cite a
+# file or a mechanism ("needs setup.toml", "needs PULSE's zprofile"), which no package corresponds
+# to. See that directory's README.md for the vocabulary.
+_RULE_LABEL = re.compile(r"^### (?P<rule>.+?)\s*\[(?P<label>[^\]]+)\]$", re.MULTILINE)
+_CHECKABLE = re.compile(r"^[\w-]+$")
+_AGENTS_MD_FRAGMENTS = Path(__file__).parent.parent / "config" / "agents-md"
+
+
+def _labelled_rules() -> list[tuple[str, str, str]]:
+    """(fragment, rule, label) for every labelled rule across the ~/AGENTS.md fragments."""
+    return [
+        (path.name, m["rule"], m["label"])
+        for path in sorted(_AGENTS_MD_FRAGMENTS.glob("*.md"))
+        if path.name != "README.md"
+        for m in _RULE_LABEL.finditer(path.read_text())
+    ]
+
+
+def _stale_prerequisites(rules: list[tuple[str, str, str]], declared: set[str], enabled: set[str]) -> list[str]:
+    """The complaint line for each rule whose prerequisite is gone — pure, so it is unit-testable
+    without a setup.toml or a config/agents-md/ on disk.
+
+    A label that is not `needs <bare name>` is skipped rather than reported: `[Claude Code]` names
+    no package, and `needs setup.toml` / `needs PULSE's zprofile` name a file and a mechanism that
+    no `[packages.*]` entry corresponds to. Those are for the reader, and treating them as failures
+    would make the check cry wolf on every run.
+    """
+    stale: list[str] = []
+    for fragment, rule, label in rules:
+        dep = label.removeprefix("needs ")
+        if dep == label or not _CHECKABLE.match(dep):
+            continue
+        if dep not in declared:
+            stale.append(f"[ai] {fragment}: '{rule}' needs '{dep}', which setup.toml does not declare")
+        elif dep not in enabled:
+            stale.append(f"[ai] {fragment}: '{rule}' needs '{dep}', which is declared but disabled or tag-excluded")
+    return stale
+
+
+@task
+def check_rule_prerequisites(c: Context):
+    """Report ~/AGENTS.md rules whose declared prerequisite is no longer installed.
+
+    A rule labelled `[needs direnv]` is only true while direnv is there. Disable
+    `[packages.direnv]`, or exclude its tag, and the rule keeps asserting something false into
+    every session on this machine — silently, because nothing reads a label. This is what reads
+    them.
+
+    Read-only, and deliberately config-level: it answers "is this still declared and enabled",
+    using the same precedence `inv setup` does (setup.toml -> overrides.toml ->
+    PULSE_EXCLUDE_TAGS). Whether the binary is physically present is `inv verify.all`'s job, and
+    keeping that out is what lets this run without invoking anything.
+    """
+    stale = _stale_prerequisites(_labelled_rules(), set(util.load_config()["packages"]), set(util.enabled_packages()))
+    if not stale:
+        print("[ai] every [needs …] label in the ~/AGENTS.md fragments names an enabled package")
+        return
+
+    for line in stale:
+        print(line)
+    ui.warn(
+        "A rule above asserts something this machine no longer provides. Either re-enable the "
+        "package, or edit the rule in config/agents-md/ so it stops claiming a prerequisite that "
+        "is gone — then redeploy with `inv deploy.all --name agents-md`."
+    )
+    raise Exit(code=1)

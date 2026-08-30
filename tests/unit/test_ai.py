@@ -840,3 +840,51 @@ def test_apply_declared_default_mode_noop_when_nothing_declared(monkeypatch):
     monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
 
     ai._apply_declared_default_mode()
+
+
+# --- ai.check-rule-prerequisites -------------------------------------------------------------
+#
+# A `[needs direnv]` label on a ~/AGENTS.md rule is a claim that direnv is there. These cover the
+# decision itself (_stale_prerequisites is pure) plus the label parsing that feeds it.
+
+
+def test_stale_prerequisites_is_quiet_when_every_dependency_is_enabled():
+    rules = [("bash.md", "Invoking a venv tool", "needs direnv")]
+    assert ai._stale_prerequisites(rules, {"direnv"}, {"direnv"}) == []
+
+
+def test_stale_prerequisites_reports_a_package_that_is_declared_but_disabled():
+    """The case the check exists for: someone switches direnv off and the rule keeps asserting it."""
+    rules = [("bash.md", "Invoking a venv tool", "needs direnv")]
+    (line,) = ai._stale_prerequisites(rules, {"direnv"}, set())
+    assert "direnv" in line
+    assert "disabled or tag-excluded" in line
+
+
+def test_stale_prerequisites_reports_a_package_setup_toml_never_declared():
+    rules = [("bash.md", "Some rule", "needs nonesuch")]
+    (line,) = ai._stale_prerequisites(rules, set(), set())
+    assert "does not declare" in line
+
+
+def test_stale_prerequisites_ignores_labels_that_name_no_package():
+    """`[Claude Code]` is a harness label, and `needs setup.toml` names a file — neither is a
+    package, and reporting them would make the check cry wolf on every single run."""
+    rules = [
+        ("bash.md", "Viewing files", "Claude Code"),
+        ("research.md", "Installing a tool", "needs setup.toml"),
+        ("git.md", "Ssh", "needs PULSE's zprofile"),
+    ]
+    assert ai._stale_prerequisites(rules, set(), set()) == []
+
+
+def test_labelled_rules_reads_headings_and_skips_the_readme(tmp_path, monkeypatch):
+    frag = tmp_path / "agents-md"
+    frag.mkdir()
+    (frag / "bash.md").write_text(
+        "## Bash & tool use\n\n### Plain rule\n\nBody.\n\n### Labelled rule  [needs direnv]\n\nBody.\n"
+    )
+    (frag / "README.md").write_text("### Not a rule  [needs direnv]\n")
+    monkeypatch.setattr(ai, "_AGENTS_MD_FRAGMENTS", frag)
+
+    assert ai._labelled_rules() == [("bash.md", "Labelled rule", "needs direnv")]
