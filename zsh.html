@@ -682,6 +682,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The prompt
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-gets-installed" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2161,6 +2172,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#the-prompt" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        The prompt
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#what-gets-installed" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2402,19 +2424,44 @@
   
 
 
-<h1 id="zsh">Zsh<a class="headerlink" href="#zsh" title="Permanent link">&para;</a></h1>
-<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<h1 id="zsh">Zsh</h1>
+<h2 id="setup">Setup</h2>
 <p>All zsh configuration is declared in <code>setup.toml</code> and applied via invoke:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># installs OMZ, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>zsh.configure-omz<span class="w">  </span><span class="c1"># updates plugins=() and ZSH_THEME in ~/.zshrc</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>zsh.configure<span class="w">      </span><span class="c1"># writes sentinel blocks (completions, aliases, keybindings, direnv, etc.)</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w"> </span><span class="c1"># seeds ~/.p10k.zsh from the repo baseline</span>
 </span></code></pre></div>
 <p>Or all at once via <code>inv setup</code>.</p>
-<p><strong>First run only</strong> — configure the Powerlevel10k prompt interactively:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>p10k<span class="w"> </span>configure
+<h2 id="the-prompt">The prompt</h2>
+<p><strong>There is no first-run wizard to sit through.</strong> PULSE ships a Powerlevel10k configuration that
+already matches everything else it installs — the Nerd Font, its icon set, and the
+<a href="claude-code.html#the-statusline">Claude Code statusline</a> — and <code>inv zsh.configure-p10k</code> seeds it to
+<code>~/.p10k.zsh</code>. Open a new terminal and the prompt is finished.</p>
+<p>What the baseline is, in p10k&rsquo;s own wizard vocabulary: <strong>lean 8-color style, nerdfont-complete
+icons, two lines, no frame, compact, transient prompt, instant prompt (verbose)</strong>. In practice:</p>
+<ul>
+<li><strong>Two lines</strong> — OS icon, directory and git status on the first; you type on the second, so a long
+  path never pushes the cursor across the terminal.</li>
+<li><strong>Transient prompt</strong> — once a command finishes, its prompt collapses to a single character.
+  Scrollback stays readable no matter how deep the directory or how noisy the git status.</li>
+<li><strong>Instant prompt</strong> — the shell accepts input before the rest of the config has finished loading.</li>
+<li><strong>8 colors, not 256</strong> — it looks right in whatever colour scheme the terminal already has.</li>
+<li>The right side carries p10k&rsquo;s context-sensitive segments: exit status and duration of the last
+  command, <code>direnv</code>, the active Python virtualenv or conda env, the Node/Ruby/Java/Go version
+  manager in play, <code>kubecontext</code>, Terraform workspace, AWS/Azure/GCloud profile — each appears only
+  when it actually applies, so an ordinary shell shows almost nothing.</li>
+</ul>
+<p><strong>To change it</strong>, either edit it directly or run p10k&rsquo;s own wizard:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>p10k<span class="w"> </span>configure<span class="w">        </span><span class="c1"># interactive; rewrites ~/.p10k.zsh from scratch</span>
 </span></code></pre></div>
-<p>Config is saved to <code>~/.p10k.zsh</code>. Re-run any time to change the prompt layout.</p>
-<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
+<p>Either way the file is yours afterwards. It is seeded through the same writer as every other config
+this repo deploys, so a customized <code>~/.p10k.zsh</code> is never overwritten:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>deploy.status<span class="w"> </span>--path<span class="w"> </span>~/.p10k.zsh<span class="w">      </span><span class="c1"># diff your copy against the repo baseline</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>powerlevel10k<span class="w"> </span>--yes<span class="w"> </span><span class="c1"># deliberate way back to the baseline</span>
+</span></code></pre></div>
+<p>To keep your version as the baseline instead, copy it over <code>config/p10k.zsh</code> and commit.</p>
+<h2 id="what-gets-installed">What gets installed</h2>
 <table>
 <thead>
 <tr>
@@ -2446,7 +2493,7 @@
 </tr>
 </tbody>
 </table>
-<h2 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h2>
+<h2 id="plugins">Plugins</h2>
 <p>Applied by <code>inv zsh.configure-omz</code>, which rewrites the <code>plugins=(...)</code> block in <code>~/.zshrc</code> in-place.
 <code>zsh-syntax-highlighting</code> is always kept last — it post-processes already-parsed input.</p>
 <p>The final plugins list is assembled from two sources:</p>
@@ -2538,7 +2585,7 @@ drops it.</p>
 conflict.</p>
 <p>The <code>jsontools</code> plugin was removed — <code>ppjson</code>, <code>isjson</code>, <code>urlencode</code>, and <code>urldecode</code> are
 re-implemented in <code>[packages.jq-aliases]</code> (see Aliases).</p>
-<h2 id="keybindings">Keybindings<a class="headerlink" href="#keybindings" title="Permanent link">&para;</a></h2>
+<h2 id="keybindings">Keybindings</h2>
 <p>No custom bindings — OMZ uses emacs mode (<code>bindkey -e</code>) which covers everything via <code>Alt</code> (or <code>Esc</code>)
 combinations:</p>
 <table>
@@ -2595,7 +2642,7 @@ combinations:</p>
 </tr>
 </tbody>
 </table>
-<h2 id="aliases">Aliases<a class="headerlink" href="#aliases" title="Permanent link">&para;</a></h2>
+<h2 id="aliases">Aliases</h2>
 <ul>
 <li><code>jq='jq -S'</code>: sort keys by default — declared in <code>[packages.jq-aliases]</code>; alias scope means
   scripts calling <code>jq</code> directly are unaffected (jq has no config file or <code>JQ_FLAGS</code> env var)</li>
@@ -2608,7 +2655,7 @@ combinations:</p>
 <li><code>curl</code> defaults: <code>--silent --show-error --location</code> written to <code>~/.config/curlrc</code> by
   <code>inv system.write-curlrc</code> — no alias needed</li>
 </ul>
-<h2 id="clipboard">Clipboard<a class="headerlink" href="#clipboard" title="Permanent link">&para;</a></h2>
+<h2 id="clipboard">Clipboard</h2>
 <p>Declared in <code>[packages.clipboard]</code> in <code>setup.toml</code>. Requires <code>wl-clipboard</code> (apt). <strong>Wayland only —
 does not work over SSH or in X11-only sessions.</strong></p>
 <table>
@@ -2633,7 +2680,7 @@ does not work over SSH or in X11-only sessions.</strong></p>
 </tr>
 </tbody>
 </table>
-<h2 id="completions">Completions<a class="headerlink" href="#completions" title="Permanent link">&para;</a></h2>
+<h2 id="completions">Completions</h2>
 <p>Sourced as sentinel blocks in <code>~/.zshrc</code> after <code>source $ZSH/oh-my-zsh.sh</code>:</p>
 <table>
 <thead>
@@ -2662,18 +2709,18 @@ does not work over SSH or in X11-only sessions.</strong></p>
 </tbody>
 </table>
 <p>OMZ calls <code>compinit</code> internally — no manual <code>autoload -Uz compinit &amp;&amp; compinit</code> needed.</p>
-<h2 id="history">History<a class="headerlink" href="#history" title="Permanent link">&para;</a></h2>
+<h2 id="history">History</h2>
 <p>Declared in <code>[packages.zsh-history]</code>:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="nv">HISTSIZE</span><span class="o">=</span><span class="m">1000000</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">SAVEHIST</span><span class="o">=</span><span class="m">1000000</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>setopt<span class="w"> </span>EXTENDED_HISTORY<span class="w">       </span><span class="c1"># record timestamp + elapsed time per command</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a>setopt<span class="w"> </span>HIST_IGNORE_ALL_DUPS<span class="w">   </span><span class="c1"># remove older duplicate when same command is entered</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a>setopt<span class="w"> </span>HIST_FIND_NO_DUPS<span class="w">      </span><span class="c1"># skip duplicates during Ctrl+R search</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a>setopt<span class="w"> </span>HIST_IGNORE_SPACE<span class="w">      </span><span class="c1"># don't record commands prefixed with a space</span>
-</span><span id="__span-2-7"><a id="__codelineno-2-7" name="__codelineno-2-7" href="#__codelineno-2-7"></a>setopt<span class="w"> </span>HIST_REDUCE_BLANKS<span class="w">     </span><span class="c1"># strip superfluous whitespace before recording</span>
-</span><span id="__span-2-8"><a id="__codelineno-2-8" name="__codelineno-2-8" href="#__codelineno-2-8"></a>setopt<span class="w"> </span>HIST_VERIFY<span class="w">            </span><span class="c1"># show expanded history before executing (e.g. !foo)</span>
-</span><span id="__span-2-9"><a id="__codelineno-2-9" name="__codelineno-2-9" href="#__codelineno-2-9"></a>setopt<span class="w"> </span>SHARE_HISTORY<span class="w">          </span><span class="c1"># live cross-session sharing via atomic appends</span>
-</span><span id="__span-2-10"><a id="__codelineno-2-10" name="__codelineno-2-10" href="#__codelineno-2-10"></a>setopt<span class="w"> </span>HIST_FCNTL_LOCK<span class="w">        </span><span class="c1"># fcntl-based file locking for concurrent-session writes</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">HISTSIZE</span><span class="o">=</span><span class="m">1000000</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">SAVEHIST</span><span class="o">=</span><span class="m">1000000</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>setopt<span class="w"> </span>EXTENDED_HISTORY<span class="w">       </span><span class="c1"># record timestamp + elapsed time per command</span>
+</span><span id="__span-3-4"><a id="__codelineno-3-4" name="__codelineno-3-4" href="#__codelineno-3-4"></a>setopt<span class="w"> </span>HIST_IGNORE_ALL_DUPS<span class="w">   </span><span class="c1"># remove older duplicate when same command is entered</span>
+</span><span id="__span-3-5"><a id="__codelineno-3-5" name="__codelineno-3-5" href="#__codelineno-3-5"></a>setopt<span class="w"> </span>HIST_FIND_NO_DUPS<span class="w">      </span><span class="c1"># skip duplicates during Ctrl+R search</span>
+</span><span id="__span-3-6"><a id="__codelineno-3-6" name="__codelineno-3-6" href="#__codelineno-3-6"></a>setopt<span class="w"> </span>HIST_IGNORE_SPACE<span class="w">      </span><span class="c1"># don't record commands prefixed with a space</span>
+</span><span id="__span-3-7"><a id="__codelineno-3-7" name="__codelineno-3-7" href="#__codelineno-3-7"></a>setopt<span class="w"> </span>HIST_REDUCE_BLANKS<span class="w">     </span><span class="c1"># strip superfluous whitespace before recording</span>
+</span><span id="__span-3-8"><a id="__codelineno-3-8" name="__codelineno-3-8" href="#__codelineno-3-8"></a>setopt<span class="w"> </span>HIST_VERIFY<span class="w">            </span><span class="c1"># show expanded history before executing (e.g. !foo)</span>
+</span><span id="__span-3-9"><a id="__codelineno-3-9" name="__codelineno-3-9" href="#__codelineno-3-9"></a>setopt<span class="w"> </span>SHARE_HISTORY<span class="w">          </span><span class="c1"># live cross-session sharing via atomic appends</span>
+</span><span id="__span-3-10"><a id="__codelineno-3-10" name="__codelineno-3-10" href="#__codelineno-3-10"></a>setopt<span class="w"> </span>HIST_FCNTL_LOCK<span class="w">        </span><span class="c1"># fcntl-based file locking for concurrent-session writes</span>
 </span></code></pre></div>
 <p><strong>Corruption:</strong> <code>EXTENDED_HISTORY</code> + <code>SHARE_HISTORY</code> is the standard zsh combo for a large,
 cross-session-shared history, but zsh&rsquo;s history file format has no crash-safety against power loss
@@ -2681,18 +2728,18 @@ mid-write — an unfixed upstream limitation, not something a <code>setopt</code
 mitigates the other real-world cause (concurrent shells racing to write the file at once) by using
 standard <code>fcntl()</code> locking instead of zsh&rsquo;s ad-hoc default. If <code>~/.zsh_history</code> still gets corrupted
 (unreadable lines, <code>zsh: corrupt history file</code>), recover it with:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>zsh.fix-history<span class="w">   </span><span class="c1"># strings(1) strips non-printable bytes, then reloads history</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>zsh.fix-history<span class="w">   </span><span class="c1"># strings(1) strips non-printable bytes, then reloads history</span>
 </span></code></pre></div>
 <p><strong>Atuin</strong> (SQLite-backed history with a richer Ctrl+R UI, exit codes, durations, optional sync) was
 evaluated and deliberately deferred — fzf&rsquo;s Ctrl+R over the native history file is sufficient for
 now and adds no daemon or separate data store. <code>[packages.atuin]</code> exists in <code>setup.toml</code> with
 <code>enabled = false</code> for whenever it&rsquo;s worth revisiting; see the fzf section below for what changes
 when switching.</p>
-<h2 id="fzf">fzf<a class="headerlink" href="#fzf" title="Permanent link">&para;</a></h2>
+<h2 id="fzf">fzf</h2>
 <p>fzf is wired to <code>fd</code> (fast file finder) and <code>bat</code> (syntax-highlighted preview) via env vars in
 <code>[packages.fzf]</code>. All bindings open an interactive fuzzy picker — type to filter, <code>Enter</code> to accept,
 <code>Esc</code> to cancel.</p>
-<h3 id="key-bindings">Key bindings<a class="headerlink" href="#key-bindings" title="Permanent link">&para;</a></h3>
+<h3 id="key-bindings">Key bindings</h3>
 <p><strong><code>Ctrl+R</code> — history search</strong></p>
 <p>Opens a picker over your full shell history. Type any fragment of the command. Results are sorted by
 recency. Press <code>Ctrl+/</code> to toggle a preview pane showing the full command text (useful for long
@@ -2701,39 +2748,39 @@ commands). Accepts into the prompt without executing — press <code>Enter</code
 <p>Searches files recursively from the current directory (via <code>fd</code>, so <code>.gitignore</code> is respected and
 <code>.git</code> directories are excluded). Pastes the selected path at the cursor position in the current
 command. Useful mid-command:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>vim &lt;Ctrl+T&gt;          # pick a file to open
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>cp &lt;Ctrl+T&gt; ./dest/   # pick the source file
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>git add &lt;Ctrl+T&gt;      # stage a specific file
+<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>vim &lt;Ctrl+T&gt;          # pick a file to open
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cp &lt;Ctrl+T&gt; ./dest/   # pick the source file
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>git add &lt;Ctrl+T&gt;      # stage a specific file
 </span></code></pre></div>
 <p>Preview pane shows the file&rsquo;s contents via <code>bat</code> (syntax highlighting, line numbers, first 300
 lines).</p>
 <p><strong><code>Alt+C</code> — directory jump</strong></p>
 <p>Searches subdirectories recursively and <code>cd</code>s into the selected one immediately. Preview shows
 <code>ls -la</code> of the directory.</p>
-<h3 id="fuzzy-tab-completion"><code>**</code> fuzzy tab completion<a class="headerlink" href="#fuzzy-tab-completion" title="Permanent link">&para;</a></h3>
+<h3 id="fuzzy-tab-completion"><code>**</code> fuzzy tab completion</h3>
 <p>Type a command, then <code>**</code> and press <code>Tab</code> to get a fuzzy picker for what comes next:</p>
-<div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>vim **&lt;Tab&gt;           # pick any file under current dir
-</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>cd **&lt;Tab&gt;            # pick a subdirectory to cd into
-</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a>ssh **&lt;Tab&gt;           # pick from ~/.ssh/config hosts
-</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a>kill **&lt;Tab&gt;          # pick a running process by name
-</span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>unset **&lt;Tab&gt;         # pick an environment variable
-</span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a>export **&lt;Tab&gt;        # pick an environment variable
+<div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>vim **&lt;Tab&gt;           # pick any file under current dir
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cd **&lt;Tab&gt;            # pick a subdirectory to cd into
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>ssh **&lt;Tab&gt;           # pick from ~/.ssh/config hosts
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a>kill **&lt;Tab&gt;          # pick a running process by name
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>unset **&lt;Tab&gt;         # pick an environment variable
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>export **&lt;Tab&gt;        # pick an environment variable
 </span></code></pre></div>
 <p>The picker for each context is context-aware — <code>kill **&lt;Tab&gt;</code> shows processes, <code>ssh **&lt;Tab&gt;</code> shows
 hosts from your SSH config, etc.</p>
-<h3 id="in-scripts-and-pipelines">In scripts and pipelines<a class="headerlink" href="#in-scripts-and-pipelines" title="Permanent link">&para;</a></h3>
+<h3 id="in-scripts-and-pipelines">In scripts and pipelines</h3>
 <p>fzf can be used directly in scripts as a generic picker — pipe any list to it and it returns the
 selected line:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="c1"># pick a git branch to check out</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>git<span class="w"> </span>checkout<span class="w"> </span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a>
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="c1"># pick a running docker container to exec into</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span><span class="k">$(</span>docker<span class="w"> </span>ps<span class="w"> </span>--format<span class="w"> </span><span class="s1">'{{.Names}}'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span><span class="w"> </span>bash
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a>
-</span><span id="__span-6-7"><a id="__codelineno-6-7" name="__codelineno-6-7" href="#__codelineno-6-7"></a><span class="c1"># pick a file to edit from ripgrep results</span>
-</span><span id="__span-6-8"><a id="__codelineno-6-8" name="__codelineno-6-8" href="#__codelineno-6-8"></a>vim<span class="w"> </span><span class="k">$(</span>rg<span class="w"> </span>--files<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># pick a git branch to check out</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>git<span class="w"> </span>checkout<span class="w"> </span><span class="k">$(</span>git<span class="w"> </span>branch<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="c1"># pick a running docker container to exec into</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a>docker<span class="w"> </span><span class="nb">exec</span><span class="w"> </span>-it<span class="w"> </span><span class="k">$(</span>docker<span class="w"> </span>ps<span class="w"> </span>--format<span class="w"> </span><span class="s1">'{{.Names}}'</span><span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span><span class="w"> </span>bash
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a>
+</span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># pick a file to edit from ripgrep results</span>
+</span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>vim<span class="w"> </span><span class="k">$(</span>rg<span class="w"> </span>--files<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
 </span></code></pre></div>
-<h3 id="navigation-inside-fzf">Navigation inside fzf<a class="headerlink" href="#navigation-inside-fzf" title="Permanent link">&para;</a></h3>
+<h3 id="navigation-inside-fzf">Navigation inside fzf</h3>
 <table>
 <thead>
 <tr>
@@ -2771,7 +2818,7 @@ selected line:</p>
 <p><strong>When enabling Atuin:</strong> remove the <code>key-bindings.zsh</code> source from <code>[packages.fzf]</code> in <code>setup.toml</code>
 (keep <code>completion.zsh</code>) to avoid the <code>Ctrl+R</code> conflict. <code>Ctrl+T</code>, <code>Alt+C</code>, and <code>**</code> completion are
 unaffected.</p>
-<h2 id="path">PATH<a class="headerlink" href="#path" title="Permanent link">&para;</a></h2>
+<h2 id="path">PATH</h2>
 <p>PATH is controlled entirely through <code>setup.toml</code> sentinel blocks written to <code>~/.zshenv</code> (loaded for
 all zsh instances):</p>
 <table>
