@@ -126,6 +126,43 @@ stem feeds the `PULSE::agents-md/<stem>` provenance markers in the deployed file
 a pure doc change. Worth doing, but as its own change and probably alongside the re-cut, since the
 category set below may not leave a fragment for it to be renamed into.]
 
+## The category set, measured (2026-08-30)
+
+All 38 rules classified by what they depend on rather than by where they sit. Three structural facts
+fall out, and they constrain the answer more than any preference does.
+
+**A clean partition by dependency does not exist.** Roughly ten of the 38 are a portable principle
+wearing a local instantiation: "About to commit" is universal and names `inv quality.precommit`;
+"Committing to a repo that is or might become public" is universal and names `plans.py scan`;
+"Running a command against a different repo" mixes portable cwd reasoning with direnv and `.venv`;
+"Naming around a collision" is universal with a PULSE example. Because a rule may not live half in
+one fragment and half in another, any dependency-partition forces each of those to a side — and
+filing "About to commit" under PULSE because it names an `inv` task tells a reader the wrong thing
+about when it fires.
+
+**The file already carries two axes, and the assembler entangles them.** Fragment is dependency
+(`this-setup` / `claude-code` / `portable`); cluster is subject (Git & commits, Bash & tool use,
+Research & design, Verification, Collaboration & output). Since a fragment contributes whole
+clusters, the two cannot vary independently: changing which fragment owns a rule necessarily changes
+which subject-cluster a reader finds it under, and vice versa.
+
+**The skills category already exists and is scattered** — five rules across three clusters in two
+fragments:
+
+| rule                                                     | currently in                              |
+| -------------------------------------------------------- | ----------------------------------------- |
+| Setting up a repo's agent instructions and skills        | portable / Agent instructions & knowledge |
+| Where durable knowledge goes                             | portable / Agent instructions & knowledge |
+| Writing conventions into a shareable skill or template   | portable / Research & design              |
+| Proposing an enforcement mechanism for agent behavior    | portable / Research & design              |
+| Installing agent instructions and skills on this machine | this-setup / What this setup provisions   |
+
+[PITFALL: **consolidating the skills cluster pulls a PULSE rule out of the PULSE fragment.** Four of
+the five are already in `portable.md`; the fifth is PULSE-dependent (`inv ai.install-skills`). A
+cluster cannot span fragments, so gathering them puts either that rule outside the fragment its
+dependency belongs to, or the other four inside a fragment whose remit they do not meet. This is the
+entanglement above showing up on the first concrete case, not a special difficulty of this cluster.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: what are the categories, and how many? The user proposed "pulse-specific
