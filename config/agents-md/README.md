@@ -31,11 +31,14 @@ That protection is the deploy manifest's, not the markers': unlike `~/.zshrc`, w
 rewritten end to end. The `<!-- PULSE::agents-md/<stem> -->` markers are provenance — they say which
 fragment to go edit for a given section — not an ownership boundary.
 
-## Still to do on the content itself
+## Which fragment a rule belongs in
 
-The split moved rules between clusters but deliberately did **not** rewrite their wording. About a
-dozen rules in `portable.md` still name Claude-specific tools (`Read`/`Grep`/`Edit`,
-`AskUserQuestion`, "plan mode") or this user's own setup (`inv quality.precommit`, "most of this
-user's repos") in passing. They generalize with one-line rewrites, but each one is a rule whose
-exact wording was tuned for adherence — rewrite them one at a time, not in a sweep, per
-`contributing/global-agents-md.md`.
+Audience, not subject matter. A rule goes in `portable.md` only if it holds on another machine, run
+by another agent; anything true because of how this machine is set up goes in `this-setup.md`, and
+anything describing one harness's behaviour in `claude-code.md`.
+
+The boundary is not currently clean — `portable.md` inherited wording from before the split, and
+several of its rules name Claude Code's tools or this machine's paths. That is tracked, with the
+measurement, in `plans/2026-08-30-portable-fragment-names-one-harness.md`; it is not a licence to
+sweep, because each rule's wording was tuned for adherence and some of it deliberately names the
+harness this machine actually runs.
