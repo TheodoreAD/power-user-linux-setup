@@ -84,8 +84,9 @@ put on `PATH`. The second row above is not the distro's Python: `repo-tasks`' `.
 written down as "Ubuntu 24.04 ships 3.11", which is false. A skill script is invoked from wherever
 the agent's session happens to be, so in practice it inherits an unrelated project's venv — any
 floor stated for skills has to say which of the three it is a claim about. Same
-non-isolated-environment trap as `uv run --with` in
-`plans/2026-08-30-uv-with-layers-over-the-active-venv.md`, hit again in a different tool.]
+non-isolated-environment trap as `uv run --with`, hit again in a different tool — that one is now a
+rule in `~/AGENTS.md`'s "Reading a command's result", with the measurement in
+`contributing/global-agents-md.md` under the same heading.]
 
 ## Open questions
 
