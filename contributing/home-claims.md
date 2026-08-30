@@ -42,13 +42,18 @@ Collapsing those to one row per file would hide exactly the thing an inventory e
 `Writer` says how the bytes get there and therefore what "drift" could even mean. `Authority` is
 `deploy.py`'s existing `MANAGED`/`SEEDED` split generalized to four values. `Tier` is the new one.
 
-**Tier reports where a claim's content lives today — it is not a recommendation.** Deciding that
-`config/p10k.zsh` belongs in a private personal layer rather than in this public repo is the
-de-peculiarization pass, which `plans/2026-08-29-dotfiles-repo-config-lifecycle.md` deliberately
-holds until this inventory's number exists. Encoding that judgement in the inventory would answer
-the question the inventory was built to inform. So `personal` and `unassigned` are part of the
-vocabulary and carry **zero** claims — and that zero is the measurement: there is no personal tier
-today because there is nowhere for one to live.
+**Tier reports where a claim's content lives today — it is not a recommendation**, and
+`config/p10k.zsh` is the case that settled why. It is 1103 lines of one person's prompt, generated
+by p10k's own wizard: the most personal-looking file in the repo, and the one
+`plans/2026-08-29-dotfiles-repo-config-lifecycle.md` named first as a peculiarity that should not
+ship publicly. Its owner then ruled it a deliberate public default (2026-08-30) — the vetted font,
+icons and theme are the product, and leaving the prompt to a wizard was the odd manual step out.
+
+An inventory that had inferred `personal` from the shape of the content would have been wrong,
+confidently, about the single file the whole exercise was pointed at. So `personal` and `unassigned`
+are part of the vocabulary and carry **zero** claims. That zero is the measurement: everything PULSE
+writes is a public default, machine-bound, secret, or regenerable — nothing is
+personal-but-homeless.
 
 ## The number this was built to produce
 

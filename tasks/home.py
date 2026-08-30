@@ -97,10 +97,15 @@ class Tier(StrEnum):
     """Where this claim's content lives **today** — a statement of fact about the current machine,
     not a recommendation about where it ought to live.
 
-    That distinction is the whole reason this axis is reported rather than assigned: deciding that
-    `config/p10k.zsh` is `personal` rather than `public` is the de-peculiarization pass, which the
-    plan holds until after this inventory exists. `PERSONAL` and `UNASSIGNED` are therefore part of
-    the vocabulary and carry zero claims today, and that zero is itself the measurement.
+    That distinction is the whole reason this axis is reported rather than assigned, and
+    `config/p10k.zsh` is the case that proves it: 1103 lines of one person's prompt, the most
+    personal-looking file in the repo, and its owner ruled it a deliberate public default
+    (2026-08-30) — "the point of pulse is awesome smart defaults". An inventory that had guessed
+    `personal` from the shape of the content would have been wrong, and confidently so.
+
+    `PERSONAL` and `UNASSIGNED` are part of the vocabulary and carry zero claims today. That zero is
+    itself the measurement: nothing in `~` is personal-but-homeless, because everything PULSE writes
+    is either a public default, machine-bound, secret, or regenerable.
     """
 
     PUBLIC = "public"  # content comes from this public repo
