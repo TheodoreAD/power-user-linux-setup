@@ -203,6 +203,46 @@ the same commit as the content.** Six new fragment files means six new `src` ent
 deployed output. The rules themselves are moving unchanged; the deployment plumbing is a separate
 concern and a separate failure mode, and `deploy.status` compares against what PULSE last wrote.]
 
+## Landed 2026-08-30
+
+Three fragments became seven, and 15 of 38 rules gained a dependency label.
+
+- **Fragments by subject.** `preamble.md` (5), `agent-knowledge.md` (10), `git.md` (20), `bash.md`
+  (30), `research.md` (40), `verification.md` (50), `collaboration.md` (60), each owning the one
+  `##` cluster named after it. The preamble carries the title, the assembly note that
+  `this-setup.md` used to hold, and the label legend.
+- **Labels.** `[Claude Code]` on nine rules, `[needs <thing>]` on six. The vocabulary is closed at
+  those two shapes, and three tests hold it: the shapes themselves, that a package-shaped label
+  names a real `[packages.*]` entry, and that heading comparisons strip labels so relabelling never
+  reads as renaming.
+
+[DECISION: **the label vocabulary is closed at two shapes.** An open one is how a label set stops
+meaning anything — nothing tells a reader whether `[Claude]` and `[Claude Code]` are the same claim,
+and no grep can either. Chosen over a coarse `[PULSE]`, because a coarse label cannot be checked
+against anything, and the prerequisite warning deferred above needs a checkable claim to read.]
+
+[PITFALL: **`[needs plan-docs]` looked like a package name and was a skill.** Caught by the test
+within a minute of writing it: skills are not declared individually in `setup.toml` — they arrive as
+a bundle through `[packages.agent-skills]` — so the label named nothing checkable. Relabelled to the
+package, losing no precision because the rule's own text already names the `plan-docs` script by
+path. A label whose form implies a check it does not pass is worse than no label.]
+
+[PITFALL: **the old fragments stayed tracked after being deleted from disk, and the gate caught it
+rather than the tests.** `repo-tasks`' `link_check` walks `git ls-files "*.md"`, so it tried to read
+`config/agents-md/claude-code.md` and raised `FileNotFoundError`. Staging the deletions fixed it.
+The lesson generalises past this repo: a "which files exist" check sourced from the index disagrees
+with the working tree for exactly as long as a deletion sits unstaged.]
+
+Verification that no rule text was lost: all 38 rule bodies were snapshotted before the move and
+diffed against the assembled output afterwards — same 38 headings, zero bodies differing once
+leading whitespace was normalised.
+
+[PITFALL: **the first run of that diff reported all 38 bodies changed, and it was the diff that was
+wrong.** The deployed format leaves an extra leading newline the source fragments do not.
+"Everything changed" is nearly always a measurement bug rather than 38 real changes, and reading one
+diff concretely settled it in one command — the same reflex the "generalizing from a sample" rule
+asks for, applied to a result that looked alarming rather than reassuring.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: what are the categories, and how many? The user proposed "pulse-specific
