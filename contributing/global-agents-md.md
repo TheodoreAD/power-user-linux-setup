@@ -142,6 +142,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Naming around a collision](#naming-around-a-collision)
 - [Reading a command's result](#reading-a-commands-result)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
+- [Force-pushing, or asking what a remote actually has](#force-pushing-or-asking-what-a-remote-actually-has)
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
 - [About to commit](#about-to-commit)
 - [Committing multi-part work](#committing-multi-part-work)
@@ -308,7 +309,31 @@ try to keep out of context. That was a gate-output problem rather than a wording
 fixed at the source — this repo is at zero warnings with `failOnWarnings: true`, so the gate's
 output fits one tool result again. See `repo-tasks`' `contributing/type-checking.md` for how.
 
+Merged 2026-08-30, in the leanness pass's first round
+(`plans/2026-08-26-agents-md-leanness-pass.md`). Two changes, both removing a claim's _second_
+statement rather than the claim:
+
+- **The redirect paragraph lost its own explanation of what the Bash tool already reports**, keeping
+  the imperative and pointing at "Reading a command's result", which states it in full. The same
+  claim had been written out in three rules across two clusters — this section, "Viewing, searching,
+  or editing files", and "Reading a command's result" — which is the configuration recorded below as
+  having previously made models follow the wrong one.
+- **The cwd sentence was a contradiction, not a duplication, and was resolved against this file.**
+  It asserted that "`cd` sticks: cwd persists into the following calls on current builds"; the
+  measurement under "Running a command against a different repo" below records both behaviours in
+  one session on one build, and that rule says to assume neither. The confident half was the stale
+  one and now reads "treat cwd as unknown". The practical consequence it existed to state — the next
+  call assuming the session repo must re-establish it — is unchanged.
+
 ## Viewing, searching, or editing files
+
+The `; echo "EXIT=$?"` clause was cut to one sentence 2026-08-30, same round and same reason as
+above: the tool-reports-the-exit-code explanation now lives once, in "Reading a command's result".
+The prohibition itself is untouched. Worth watching rather than assuming settled — that shape was
+measured at 10–11% of Fable/Opus calls in the day a contradictory version was in force, so it is a
+rule with a known miss rate, and the finding below says to strengthen language rather than lengthen
+explanation when one is missed. What was removed here is neither: it is the third copy of an
+explanation, which is the driver the SCALEDIF result names.
 
 The `| head`/`| tail` clause, added 2026-08-24: 1,128 of 3,956 audited calls (29–32% for
 Sonnet/Opus) piped tool output through `head`/`tail`; 662 of those were `2>&1 | tail/head/grep`,
@@ -586,6 +611,13 @@ Extended 2026-08-24 (`repo-tasks`): the same failure with a self-inflicted sampl
 complete list; a file it cut off kept a stale path and failed a test one step later. Repeated in the
 same session — the truncation, not the reading, was the constant.
 
+Merged 2026-08-30, first round of the leanness pass. The clause had restated the mechanical rule and
+named the same substitute command (`rg -c`, `wc -l`) as "Viewing, searching, or editing files",
+which owns it. What is distinctive here is the _inference_ — that your own truncated output is a
+sample and stops being evidence about the set — and that is what the clause now says, pointing at
+the other rule for the mechanics. The two halves had been drifting toward being one rule written
+twice, in two clusters, which is the case criterion 2 exists to catch.
+
 ## Verifying behavior in a repo with test coverage
 
 Confirmed 2026-08-24 (`repo-tasks`): three commits were checked out in a worktree and their tests
@@ -614,6 +646,16 @@ Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-comm
 `ro_RO.UTF-8` while `LANG`/`LC_MESSAGES` stay `en_US.UTF-8`. Both were caught only by piping real
 output through `xxd`/`cat -A` and reading the literal bytes; a rendered terminal glyph or a quick
 "does this look like a number" glance would have caught neither.
+
+## Force-pushing, or asking what a remote actually has
+
+Reworded 2026-08-30, round 2 of the leanness pass, to lead with the principle instead of with the
+flag. It had opened on `--force-with-lease` specifically, and "Unexplained git/file state in a
+working tree" then had to reach across and say "same principle as a force-push lease SHA" to borrow
+it — so the general rule existed only as one rule's incidental property plus another rule's
+cross-reference, and neither heading is one a session looks under for "how do I name a commit". It
+now opens "every ref you hand git is one you read, never one you derived", with the lease as its
+first instance. No evidence changed; the 2026-08-29 measurement it rests on is unaffected.
 
 ## Unexplained git/file state in a working tree
 
@@ -658,6 +700,30 @@ lost, nothing pushed. There is no error because both readings are valid git, whi
 silent-by-construction shape as the rest of this cluster — and the file already required a
 force-push lease SHA to come from `git rev-parse` rather than the eye, so this is that principle one
 step earlier and it was simply unstated.
+
+Merged 2026-08-30, round 2 of the leanness pass. Two claims this section shared with its siblings,
+both moved to a single home:
+
+- **The pathspec remedy moved to "Committing multi-part work"**, and this section points at it. The
+  two rules had split one subject down the middle — that section named the failure (`git commit`
+  ships the index, so anything staged earlier rides along) without naming the remedy, while this one
+  named the remedy but framed it purely as parallel-session defence. Committing by pathspec answers
+  both, and a session reading only the commit-splitting rule had been learning "stage late" while
+  never meeting the stronger protection. What stays here is what is genuinely specific: that the
+  interloper is another live session, and that `git status --short` run before the commit is not a
+  check.
+- **The `git rev-parse` half of "undo by SHA" is now inherited rather than restated.** This section
+  had ended on "same principle as a force-push lease SHA", which left the principle owned by a
+  `--force-with-lease` fact that this rule had to claim kinship with. "Force-pushing" now opens by
+  stating it as a principle — every ref you hand git is one you read, never one you derived — and
+  this section cites it.
+
+Considered and rejected in the same round: merging the "parallel sessions share one working tree"
+fact, which this section and "Force-pushing" each state in about eight words as the premise for
+different consequences. Replacing one with a pointer would cost a reader the premise at the point
+they need it, to save less than a line. Checked at the same time and confirmed **not** a third site:
+"Running a command against a different repo than the session's project" — its "a commit in someone
+else's tree is silent by construction" is about repo ownership, not about the shared tree.
 
 ## Regenerating a file from a canonical source
 
@@ -735,6 +801,12 @@ while editing rode into the next commit, which was about an unrelated plan — a
 under an explicit rule, having previously been classified as "arguably plain git literacy". The
 wording observation that survives: `rm` and `add` both read as _staging_ verbs, whereas `git mv`
 reads as an _edit_, so a reader checking "did I stage anything ahead of time?" does not think of it.
+
+Gained the pathspec remedy 2026-08-30, round 2 of the leanness pass — see "Unexplained git/file
+state in a working tree" for why it moved here. The section had described the index-ships-everything
+failure in full and then offered only "stage late" against it, which is a discipline rather than a
+mechanism; `git commit -m "…" -- <path>` is the mechanism, and it had been sitting in a sibling rule
+under a heading a session splitting commits has no reason to consult.
 
 ## Invoking a venv tool in the session's own project
 

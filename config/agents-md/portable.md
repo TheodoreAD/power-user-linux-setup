@@ -66,10 +66,10 @@ same reasoning that keeps the plans store's sensitive tier without a remote.
 
 ### Force-pushing, or asking what a remote actually has
 
-`--force-with-lease` is only as good as the SHA handed to it: pass one read from `git rev-parse`,
-never one completed from a short form by eye. Measured 2026-08-29 — a lease built from a
-hand-extended 40-character SHA was refused as stale info, which is the mechanism working, but the
-invented value was the author's, not git's.
+Every ref you hand git is one you read, never one you derived: `--force-with-lease` is only as good
+as its SHA, so pass one from `git rev-parse` rather than a short form completed by eye. Measured
+2026-08-29 — a lease built from a hand-extended 40-character SHA was refused as stale info, which is
+the mechanism working, but the invented value was the author's, not git's.
 
 Before assuming another session holds its own copy of the history, check: `git worktree list` and a
 look for a second clone. Parallel sessions on this machine share one working tree, so the usual
@@ -110,7 +110,8 @@ Stage each commit's paths immediately before that commit, never ahead of time. `
 the whole index, so anything staged earlier — a `git rm` run while tidying, a `git mv` run while
 editing, a `git add` from a previous step — rides along under the next message, and the split has to
 be rewritten. `git mv` is the one that gets missed: `rm` and `add` read as staging, a rename reads
-as an edit.
+as an edit. What removes the risk entirely is committing by pathspec —
+`git commit -m "…" -- <path> <path>` takes the named paths whatever else sits in the index.
 
 When two concerns land in the _same file_, staging by path can't separate them and `git add -p`/`-i`
 is unavailable here — but that is not a reason to give up and ship one fat commit. Copy the finished
@@ -144,14 +145,13 @@ remote moved.
 Stage by path there, never `git add -A`/`git add .` — a parallel session's edit can land between
 your last `git status` and your commit, and a blanket stage silently ships it under your commit
 message. `git status --short` immediately before committing is not protection: it reports the staged
-set, not what changed while you were reading it. What _is_ protection is committing by pathspec —
-`git commit -m "…" -- <path> <path>` takes those paths whatever else sits in the index, so a
-parallel session's staged file can neither ride along nor be disturbed.
+set, not what changed while you were reading it. Commit by pathspec (see "Committing multi-part
+work") — a parallel session's staged file can then neither ride along nor be disturbed.
 
 **Undo by SHA, never by a relative ref.** `git reset --soft HEAD~1` silently retargets when another
 session commits in the interval — `HEAD~1` then resolves to _your_ commit and the reset discards
 _theirs_, with no error, because both readings are valid git. Read the SHA (`git rev-parse`, or the
-reflog) and reset to it. Same principle as a force-push lease SHA, one step earlier.
+reflog) and reset to it — the same rule as the force-push lease, one step earlier.
 
 The same holds one step later: before pushing, `git log origin/<branch>..HEAD` — a commit there you
 didn't make belongs to another live session, which may still mean to amend or reorder it. Say so and
@@ -166,17 +166,16 @@ whole output and one real exit code, while a chain's `$?` is its last command's 
 one blob; and independent calls issued as separate tool-call blocks in one response already run in
 parallel, so gluing with `;`/`&&` gains nothing. `echo "=== label ==="` between steps is the tell
 that a chain should have been several calls. Exactly one chain shape is fine:
-`cd <other repo> && <one command>` for a cross-repo step — and that `cd` sticks: cwd persists into
-the following calls on current builds, so a cross-repo chain ends the session's cwd elsewhere until
-something moves it back. Never `cd` into the session's own repo as a matter of course — cwd already
-is it — but after a cross-repo chain, the next call that assumes the session repo (`inv`, `pytest`,
-a bare `rg`) either takes an absolute path or is itself a `cd <session repo> && …`.
+`cd <other repo> && <one command>` for a cross-repo step — and after it, treat cwd as unknown: it
+may persist or be reset, both observed on one build (see "Running a command against a different
+repo"). Never `cd` into the session's own repo as a matter of course — cwd already is it — but after
+a cross-repo chain, the next call that assumes the session repo (`inv`, `pytest`, a bare `rg`)
+either takes an absolute path or is itself a `cd <session repo> && …`.
 
-Run a gate or test plain — `inv quality.precommit`, `pytest` — not `> log 2>&1; echo $?` with a Read
-of the log afterwards. The Bash tool already reports a non-zero exit code on its own, keeps the
-whole output, and when output is oversized saves the full text to a file and tells you where. The
-redirect form turns one call into two (plus a prompt when the target is a `$VAR` path) and buys
-nothing. Redirect only when the log is genuinely needed later, then Grep/Read it as a second call.
+Run a gate or test plain — `inv quality.precommit`, `pytest` — never `> log 2>&1; echo $?` with a
+Read of the log afterwards: that turns one call into two and adds nothing the tool does not already
+give you (see "Reading a command's result"). Redirect only when the log is genuinely needed later,
+then Grep/Read it as a second call.
 
 ### Viewing, searching, or editing files
 
@@ -186,14 +185,13 @@ permission gate and keep the whole result. Never pipe tool output through `| hea
 context: the harness already truncates large output and saves the full text to a file, so
 pre-truncating only loses data and forces a second run; if size is the worry, count first (`rg -c`,
 `wc -l`). That includes a log you did redirect to: Grep/Read _on the log_ as a second call — never
-`; rg … log | head` tacked onto the same one. And never append `; echo "EXIT=$?"` to a command — the
-tool already reports a non-zero exit, and a bare `$?` after `;` is the previous command's anyway
-only because nothing else ran, so it adds a chain for information you already have. When shelling
-out to search anyway, use `rg` over `grep -r` and `fd` over `find` (faster, `.gitignore`-aware);
-plain `grep`/`find` stay fine for non-recursive lookups, `find -exec`/`-delete`, or portability. Do
-not carry `grep -r`'s flag across with the habit: `rg` is recursive by default and its `-r` is
-`--replace`, so `rg -r <pat> <path>` silently prints matches with the matched text _rewritten_ —
-plausible-looking output that is not what the file says.
+`; rg … log | head` tacked onto the same one. And never append `; echo "EXIT=$?"` — it adds a chain
+for information the tool already reports. When shelling out to search anyway, use `rg` over
+`grep -r` and `fd` over `find` (faster, `.gitignore`-aware); plain `grep`/`find` stay fine for
+non-recursive lookups, `find -exec`/`-delete`, or portability. Do not carry `grep -r`'s flag across
+with the habit: `rg` is recursive by default and its `-r` is `--replace`, so `rg -r <pat> <path>`
+silently prints matches with the matched text _rewritten_ — plausible-looking output that is not
+what the file says.
 
 ### Running a command against a different repo than the session's project
 
@@ -362,9 +360,9 @@ the run-id comes from `gh run list --branch <branch>`, the filter that actually 
 
 A clean-looking sample is not evidence about its siblings, and "they're all the same kind of file"
 is not evidence either. `--stat`'s per-file line counts are the cheap tell: when they disagree, read
-the outliers, not the representative-looking one. This includes samples you created yourself: piping
-a search through `| head` when the point of the search was completeness turns the set into a sample
-without saying so. Count first (`rg -c`, `| wc -l`) or don't truncate.
+the outliers, not the representative-looking one. This includes a sample you created yourself —
+truncating your own search output turns a complete set into a sample without saying so (see
+"Viewing, searching, or editing files").
 
 ### Verifying behavior in a repo with test coverage
 
