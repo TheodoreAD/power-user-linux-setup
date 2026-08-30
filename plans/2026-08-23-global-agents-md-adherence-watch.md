@@ -374,3 +374,40 @@ proposing, as that document requires.]
 [DECISION: leave the `rg -r` wording alone unless a third session hits it. Two occurrences in one
 session is one data point, not two, and the existing decision is that adherence rather than wording
 is the lever.]
+
+### Session 7 — `power-user-linux-setup`, 2026-08-30: the two metrics moved in opposite directions
+
+Plan absorption and merging, a package added, a shared installer fixed, and an audit of `verify.all`
+against every GUI-tagged package. Counted from the session's own transcript.
+
+| metric                           | session 7    | session 6 | session 5 | baseline (2026-08-21→24) |
+| -------------------------------- | ------------ | --------- | --------- | ------------------------ |
+| Bash calls                       | 162          | 250       | 254       | 3,956                    |
+| piped through `head`/`tail`      | 33 (20%)     | 51 (20%)  | 86 (33%)  | 29–32%                   |
+| chained (`&&` / `;`)             | **65 (40%)** | 36 (14%)  | 103 (40%) | 64–71%                   |
+| file reads via `cat`/`sed -n`    | 20 (12%)     | —         | —         | —                        |
+| `cd` into the session's own repo | 3            | 0         | 0         | 114                      |
+| `rg -r` misuses                  | 0            | 2         | —         | —                        |
+
+**`head`/`tail` held at session 6's improved rate while chaining regressed all the way back to
+session 5's.** Two consecutive samples at 20% is the first sign the piping figure is genuinely
+moving rather than fluctuating; chaining doing the opposite in the same session is what makes them
+separate problems. That is now the sharpest evidence for the open chaining question in
+`plans/2026-08-28-auto-mode-contradicts-bash-rules.md`, and it is recorded there too.
+
+The three `cd`s into the session's own repo are **not** the violation the baseline's 114 were: each
+re-established cwd after a chain into another directory had moved it, which is exactly what the
+rule's own last sentence prescribes. Worth stating because the counter cannot tell the two apart,
+and a future automated version will report them as failures.
+
+[PITFALL: the `rg -r` counter over-reports in a second way the existing note does not cover. Beyond
+matching `grep -r`, a naive regex also matches the **body of a heredoc** — a `python3 - <<'PY'` or
+`cat >> file <<'EOF'` whose content happens to contain the pattern is counted as a command. All
+three hits this session were that; the true count was 0. Any automated counter has to match against
+the command verb, not the whole call text.]
+
+[PITFALL: this session's file-read rate is not comparable to the earlier ones, and neither is any
+future sample taken under auto mode. `Grep` was **not available** — the harness withdrew it and
+returned `No such tool available` — so every content search had to go through Bash regardless of
+what `~/AGENTS.md` says. A counter that reads those as adherence failures is measuring the harness.
+See the auto-mode plan, which now owns that finding.]

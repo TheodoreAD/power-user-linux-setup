@@ -86,14 +86,48 @@ this session did know.
   `config/agents-md/claude-code.md` about the note will not touch this one, and a session that fixes
   its reads because the note is resolved will still be chaining.
 
+## The note removes tools, and that settles half the question (2026-08-30)
+
+A fifth session, in this repo, under the note from its first system turn. It read the note, decided
+`~/AGENTS.md` wins, said so, and then hit the thing four sessions of counting had missed:
+
+```
+Error: No such tool available: Grep. Grep is not available in this session —
+search file contents with `grep` via the Bash tool instead.
+```
+
+**Auto mode is not only advisory. It withdraws the dedicated search tools.** Measured over the
+session's own transcript: 164 Bash calls, 17 `Read`, 35 `Edit`, 2 `Write` — so Read/Edit/Write
+stayed available throughout and were used — against exactly one `Grep` call, which errored as above.
+(`Glob` was never called, so it is unmeasured rather than confirmed present or absent.)
+
+That splits this plan's central question into two halves with different answers, which is why four
+sessions of rate-counting could not settle it:
+
+- **Searching: there is no conflict, because there is no choice.** `~/AGENTS.md`'s "Grep/Glob over
+  `grep`/`find`" is unfollowable while the note is active. A session obeying it is not diverging
+  from the user's rule by preference; the rule has no referent. Every `grep`/`rg` call such a
+  session makes is forced, and counting them as adherence failures — which the four-session table
+  above implicitly does — measures the harness rather than the agent.
+- **Reading and editing: the conflict is real and the user's rule can win.** Read, Edit and Write
+  are all still there. This is the half a rule in `config/agents-md/claude-code.md` can actually
+  direct, and it is where the earlier sessions' 5–12% Bash-read rates are genuine choices.
+
+[PITFALL: the note's own wording hides this. It says to fall back to a dedicated tool "only when
+Bash genuinely cannot do the job", which reads as a preference among available tools — so an agent
+budgets its choices rather than discovering that one of them is gone. The removal surfaces only on
+the call that fails, and only for a tool the session happens to reach for.]
+
 ## Open questions
 
-[NEEDS CLARIFICATION: **which instruction wins?** Asked during the first session and not answered.
-The options are not symmetric — `~/AGENTS.md` is the user's own standing preference and is enforced
-in review, while the auto-mode note is harness guidance whose rationale is unstated. Following the
-note means producing work the user has already corrected; ignoring it means overriding a system
-turn. A one-line answer in `config/agents-md/claude-code.md` would settle it for every future
-session, which is the point of that fragment existing.]
+[NEEDS CLARIFICATION: **which instruction wins, for reads and edits?** Narrowed 2026-08-30 — the
+search half is answered by the tool removal above, and only this half is still a question. Asked
+during the first session and not answered. The options are not symmetric — `~/AGENTS.md` is the
+user's own standing preference and is enforced in review, while the auto-mode note is harness
+guidance whose rationale is unstated. Following the note means producing work the user has already
+corrected; ignoring it means overriding a system turn. A one-line answer in
+`config/agents-md/claude-code.md` would settle it for every future session, which is the point of
+that fragment existing.]
 
 [NEEDS CLARIFICATION: what actually triggers the mode switch — the user toggling it, the harness
 escalating on its own, or something about the task? It arrived attached to a plan-mode exit the
@@ -114,7 +148,11 @@ the sense `session-bash-audit` distinguishes. The rule's own stated reason — o
 code and one output — is sound and was known to the session that broke it 22% of the time, which
 suggests wording is not the gap. Worth one deliberate audit across sessions with and without the
 note before rewording anything, since chaining should be independent of it and a difference would
-mean the causes are entangled after all.]
+mean the causes are entangled after all. Sharpened 2026-08-30 by the fifth session: it chained in
+**40%** of 162 calls — the same rate as session 5 and nearly three times session 6's 14% — while its
+`head`/`tail` rate sat at 20%, at the good end of the range. So the two metrics moved independently
+in one session, which is the strongest evidence yet that they are separate problems with separate
+causes, and that fixing the note will not touch chaining.]
 
 [UNVERIFIED: whether the note's preference has a real basis in how auto mode reviews tool calls.
 `~/AGENTS.md` already records that auto mode runs a background classifier over every Bash call with
@@ -135,6 +173,15 @@ appears** rather than only which side wins — acknowledge it, keep using the de
 so once rather than silently diverging from a system instruction. A session under the note has no
 way to know it is diverging: nothing in the harness reports the conflict, and the note reads as
 current and specific.
+
+**And it has to cover the case where the tool is simply gone**, which the 2026-08-30 finding above
+makes the more common one. "Keep using the dedicated tools" is not executable advice for search
+under auto mode: `Grep` returns `No such tool available`. The sentence should say that reaching for
+`Grep` and finding it absent is expected rather than a misconfiguration, that `rg` is then the
+correct tool and `~/AGENTS.md`'s `rg`-over-`grep`/`fd`-over-`find` preferences still apply to how it
+is called, and that Read/Edit/Write remain available and should still be preferred. Written the
+other way round — as "the user's rules win" alone — it directs a session to keep trying a tool that
+is not there.
 
 Do not write the rule before the second question is answered. If the switch turns out to be
 user-initiated, a rule telling agents to ignore it would be overriding a deliberate choice.
