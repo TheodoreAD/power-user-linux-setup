@@ -1,5 +1,6 @@
 import shutil
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from invoke import Context, task
 
@@ -184,33 +185,42 @@ def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  #
         url = url.format(version=version)
 
     print(f"[{name}] installing...")
-    if bin_pick := cfg.get("bin_pick"):
-        dest = Path.home() / ".local" / "bin" / bin_pick
-        dest.parent.mkdir(parents=True, exist_ok=True)
-        if cfg.get("bin_in_root"):
-            # Binary sits at archive root with no subdirectory
-            c.run(f'curl -fsSL "{url}" | tar -zx -C {dest.parent} {bin_pick}')
+    # Downloaded to a file rather than piped into tar, because tar can only auto-detect an
+    # archive's compression when it can seek: `curl | tar -x` fails outright on anything but the
+    # gzip its old hardcoded -z assumed ("Archive is compressed. Use -J option"), while `tar -xf`
+    # on the same bytes handles gzip, xz and bzip2 alike. Sniffing the URL suffix instead would
+    # not work either — an upstream "latest" endpoint (telegram.org/dl/desktop/linux) carries no
+    # extension at all and only reveals the format via redirect.
+    with TemporaryDirectory(prefix="pulse-archive-") as tmp:
+        tarball = Path(tmp) / "archive"
+        c.run(f'curl -fsSL "{url}" -o {tarball}')
+        if bin_pick := cfg.get("bin_pick"):
+            dest = Path.home() / ".local" / "bin" / bin_pick
+            dest.parent.mkdir(parents=True, exist_ok=True)
+            if cfg.get("bin_in_root"):
+                # Binary sits at archive root with no subdirectory
+                c.run(f"tar -x -f {tarball} -C {dest.parent} {bin_pick}")
+            else:
+                strip = cfg.get("strip_components", 1)
+                c.run(
+                    f"tar -x -f {tarball} --strip-components={strip} -C {dest.parent} "
+                    f'--wildcards --wildcards-match-slash "*/{bin_pick}"'
+                )
+            c.run(f"chmod +x {dest}")
         else:
-            strip = cfg.get("strip_components", 1)
-            c.run(
-                f'curl -fsSL "{url}" | tar -zx --strip-components={strip} -C {dest.parent} '
-                f'--wildcards --wildcards-match-slash "*/{bin_pick}"'
-            )
-        c.run(f"chmod +x {dest}")
-    else:
-        if "install_dir" not in cfg or "extract_to" not in cfg:
-            raise util.missing_fields(name, "install_dir", "extract_to")
-        install_dir = Path(cfg["install_dir"]).expanduser()
-        if install_dir.exists():
-            shutil.rmtree(install_dir)
-        extract_to = Path(cfg["extract_to"]).expanduser()
-        strip = cfg.get("strip_components", 0)
-        if strip:
-            # Strip the versioned top-level dir and extract directly into install_dir.
-            install_dir.mkdir(parents=True, exist_ok=True)
-            c.run(f'curl -fsSL "{url}" | tar -zx --strip-components={strip} --directory {install_dir}')
-        else:
-            c.run(f'curl -fsSL "{url}" | tar -zx --directory {extract_to}')
+            if "install_dir" not in cfg or "extract_to" not in cfg:
+                raise util.missing_fields(name, "install_dir", "extract_to")
+            install_dir = Path(cfg["install_dir"]).expanduser()
+            if install_dir.exists():
+                shutil.rmtree(install_dir)
+            extract_to = Path(cfg["extract_to"]).expanduser()
+            strip = cfg.get("strip_components", 0)
+            if strip:
+                # Strip the versioned top-level dir and extract directly into install_dir.
+                install_dir.mkdir(parents=True, exist_ok=True)
+                c.run(f"tar -x -f {tarball} --strip-components={strip} --directory {install_dir}")
+            else:
+                c.run(f"tar -x -f {tarball} --directory {extract_to}")
 
     if symlinks := cfg.get("symlinks"):
         if "install_dir" not in cfg:

@@ -4,12 +4,19 @@ tasks/deploy.py, what's tested here is the contract at this call site: a fresh d
 created, a hand-edited one is never silently overwritten (the exact loss this conversion exists to
 close), PULSE_ASSUME_YES restores the unattended overwrite, and the symlink handling that stays in
 tools.py still works. See tests/README.md.
+
+Also covers _install_archive's compression handling, which is the one part of that installer with
+a format it cannot declare: the archive is fetched to a file and read with `tar -xf` so tar sniffs
+gzip/xz/bzip2 itself. These run the real shell against real tarballs over file:// URLs — the bug
+being guarded is a tar invocation, so mocking the run would test nothing.
 """
 
+import subprocess
 from pathlib import Path
+from typing import override
 
 import pytest
-from invoke import MockContext
+from invoke import Context, MockContext, Result
 
 from tasks import deploy, tools, util
 
@@ -177,3 +184,60 @@ def test_install_wrapper_script_links_the_installed_agents_and_skips_the_rest(tm
 
     assert present.is_symlink()
     assert not absent.parent.exists()
+
+
+class _ShellContext(Context):
+    """Runs the command strings _install_archive builds, for real, via subprocess.
+
+    Only the runner is substituted — the commands, and the tar that executes them, are the real
+    ones, which is where the bug being guarded lives. Invoke's own Local runner can't be used here:
+    it mirrors stdin (which pytest's capture refuses outright) and leaks the subprocess file
+    objects, which pytest's unraisable-exception plugin then reports as a failure in whichever
+    unrelated test happens to trigger the collection.
+    """
+
+    @override
+    def run(self, command: str, **kwargs: object) -> Result:
+        subprocess.run(command, shell=True, check=True)
+        return Result(command=command, exited=0)
+
+
+def _tarball(tmp_path: Path, name: str, flag: str) -> Path:
+    """A real archive with one file one level down, so strip_components has something to strip."""
+    src = tmp_path / "src" / "Telegram"
+    src.mkdir(parents=True)
+    (src / "binary").write_text("payload\n")
+    archive = tmp_path / name
+    subprocess.run(["tar", f"-c{flag}f", str(archive), "-C", str(tmp_path / "src"), "Telegram"], check=True)
+    return archive
+
+
+def _archive_cfg(install_dir: Path, archive: Path) -> util.PackageConfig:
+    return {
+        "download_url": archive.as_uri(),
+        "extract_to": str(install_dir),
+        "install_dir": str(install_dir),
+        "strip_components": 1,
+        "check_path": str(install_dir / "binary"),
+    }
+
+
+@pytest.mark.parametrize(("suffix", "flag"), [("tar.gz", "z"), ("tar.xz", "J"), ("tar.bz2", "j")])
+def test_install_archive_extracts_every_compression_format(tmp_path, suffix, flag):
+    """tar's -z was hardcoded, so anything but gzip failed outright with "Archive is compressed.
+    Use -J option". Telegram Desktop ships only .tar.xz, and its download URL carries no extension
+    to sniff, so the format has to be detected from the bytes."""
+    install_dir = tmp_path / "installed"
+
+    tools._install_archive(_ShellContext(), "t", _archive_cfg(install_dir, _tarball(tmp_path, f"a.{suffix}", flag)))
+
+    assert (install_dir / "binary").read_text() == "payload\n"
+
+
+def test_install_archive_leaves_no_download_behind(tmp_path):
+    """The fetched archive is a temp file — extracting from one must not leave it in install_dir."""
+    install_dir = tmp_path / "installed"
+
+    tools._install_archive(_ShellContext(), "t", _archive_cfg(install_dir, _tarball(tmp_path, "a.tar.xz", "J")))
+
+    assert sorted(p.name for p in install_dir.iterdir()) == ["binary"]

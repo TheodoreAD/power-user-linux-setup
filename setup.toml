@@ -92,9 +92,12 @@
 #   check_cmd     binary name to check/install as (default: section name)
 #
 # archive sections:
-#   download_url  URL to a .tar.gz archive; supports {version} + version_cmd exactly like deb-url
-#                 above (see [packages.atuin]), or {version} + version_url (fetch latest version
-#                 string via `curl | head -1` instead of a custom command)
+#   download_url  URL to a tar archive — gzip, xz or bzip2, detected from the downloaded bytes
+#                 rather than declared, so an upstream "latest" endpoint whose URL carries no file
+#                 extension at all works; supports {version} +
+#                 version_cmd exactly like deb-url above (see [packages.atuin]), or
+#                 {version} + version_url (fetch latest version string via `curl | head -1`
+#                 instead of a custom command)
 #   extract_to    directory to extract into (creates <name> subdirectory)
 #   install_dir   expected post-extract path; removed and re-extracted if missing
 #   strip_components  path components to strip on extract (default: 1 with bin_pick, 0 with install_dir)
