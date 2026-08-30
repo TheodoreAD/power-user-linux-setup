@@ -268,12 +268,24 @@ install_repo_tasks = true
 # config files `inv fonts.render-configs` rewrites (terminator, wezterm, both PyCharm files).
 # Change these, run both tasks, commit the result — see docs/fonts.md.
 #
-# Two variants, not three spellings. Nerd Fonts v3 registers a short alias for each family
-# ("CaskaydiaCove NFM" for "CaskaydiaCove Nerd Font Mono"), and the two resolve to the same file —
-# verified 2026-08-30 with fc-match and `wezterm ls-fonts`, which prints the alias itself. The long
-# form is used everywhere so a grep for the family name finds every occurrence.
+# Two variants, and both spellings — because which one works depends on who is asking.
+#
+# Nerd Fonts v3 ships each family under an abbreviated name ("CaskaydiaCove NFM") and fontconfig
+# additionally resolves the long one ("CaskaydiaCove Nerd Font Mono") to the same file — verified
+# 2026-08-30 with fc-match and `wezterm ls-fonts`, which prints the alias itself. So every
+# fontconfig consumer here (GNOME, GNOME Terminal, VS Code, Terminator, WezTerm) takes the long
+# form, which is what a grep for the family name finds.
+#
+# The JVM does not go through fontconfig for family lookup. It enumerates the family name embedded
+# in the font file, which is the abbreviated one — measured 2026-08-30 with PyCharm's own bundled
+# JBR: `new Font("CaskaydiaCove Nerd Font Mono", …).getFamily()` returns **"Dialog"**, the silent
+# fallback, while "CaskaydiaCove NFM" returns itself, and `getAvailableFontFamilyNames()` lists
+# only the NF/NFM/NFP forms. So the two PyCharm files take `family_short`/`family_mono_short`.
+# Getting this wrong is invisible: PyCharm renders in Dialog and reports nothing.
 family = "CaskaydiaCove Nerd Font" # default variant: editors — icons at full width, ligatures
 family_mono = "CaskaydiaCove Nerd Font Mono" # mono variant: terminals — icons forced to one cell
+family_short = "CaskaydiaCove NF" # same two, as the JVM enumerates them
+family_mono_short = "CaskaydiaCove NFM"
 size = 12
 
 # Extra keys merged into VS Code settings.json, for anything that is NOT the font itself — the four

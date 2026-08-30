@@ -47,24 +47,31 @@ def _cfg() -> util.FontsSettings:
     return util.load_config().get("settings", {}).get("fonts", {})
 
 
-def _named() -> tuple[str, str, int]:
-    """`(family, family_mono, size)` from `[settings.fonts]` — the one place the font is named.
+_FONT_KEYS = ("family", "family_mono", "family_short", "family_mono_short")
+
+
+def _named() -> dict[str, str | int]:
+    """The `[settings.fonts]` names, as the substitution variables every consumer builds from.
+
+    Four names rather than two: fontconfig resolves the long form and the abbreviated one to the
+    same file, but the JVM only enumerates the abbreviated one, so PyCharm needs `*_short` while
+    everything else takes the long form. See the comment in `setup.toml`.
 
     Raises rather than defaulting: a missing font name would silently configure GNOME and VS Code
     with an empty family, which renders as the system fallback and looks like the Nerd Font simply
     failed to install.
     """
     cfg = _cfg()
-    if "family" not in cfg or "family_mono" not in cfg:
-        raise util.missing_fields("settings.fonts", "family", "family_mono")
-    return cfg["family"], cfg["family_mono"], cfg.get("size", 12)
+    if missing := [k for k in _FONT_KEYS if k not in cfg]:
+        raise util.missing_fields("settings.fonts", *missing)
+    return {**{k: cfg[k] for k in _FONT_KEYS}, "size": cfg.get("size", 12)}  # pyright: ignore[reportTypedDictNotRequiredAccess]
 
 
 def monospace_font() -> str:
     """GNOME's `<family> <size>` form, for `org.gnome.desktop.interface monospace-font-name` and
     the GNOME Terminal profile. Mono variant: both land in a terminal cell grid."""
-    _, mono, size = _named()
-    return f"{mono} {size}"
+    n = _named()
+    return f"{n['family_mono']} {n['size']}"
 
 
 def vscode_settings() -> util.JsonObject:
@@ -75,12 +82,12 @@ def vscode_settings() -> util.JsonObject:
     Font is missing; the integrated terminal takes the mono variant bare, matching every other
     terminal here.
     """
-    family, mono, size = _named()
+    n = _named()
     derived: util.JsonObject = {
-        "editor.fontFamily": f"'{family}', monospace",
-        "editor.fontSize": size,
-        "terminal.integrated.fontFamily": mono,
-        "terminal.integrated.fontSize": size,
+        "editor.fontFamily": f"'{n['family']}', monospace",
+        "editor.fontSize": n["size"],
+        "terminal.integrated.fontFamily": n["family_mono"],
+        "terminal.integrated.fontSize": n["size"],
     }
     return {**derived, **_cfg().get("vscode", {})}
 
@@ -273,12 +280,12 @@ _REPO_ROOT = Path(__file__).parent.parent
 _RENDERS: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
     (
         "config/terminator.conf",
-        ((r"^(\s*font\s*=\s*).*$", r"\g<1>{mono} {size}"),),
+        ((r"^(\s*font\s*=\s*).*$", r"\g<1>{family_mono} {size}"),),
     ),
     (
         "config/wezterm.lua",
         (
-            (r'^(config\.font\s*=\s*wezterm\.font\s*")[^"]*(")', r"\g<1>{mono}\g<2>"),
+            (r'^(config\.font\s*=\s*wezterm\.font\s*")[^"]*(")', r"\g<1>{family_mono}\g<2>"),
             (r"^(config\.font_size\s*=\s*).*$", r"\g<1>{size}.0"),
         ),
     ),
@@ -287,7 +294,7 @@ _RENDERS: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
         (
             (r'(<option name="FONT_SIZE" value=")[^"]*(")', r"\g<1>{size}\g<2>"),
             (r'(<option name="FONT_SIZE_2D" value=")[^"]*(")', r"\g<1>{size}.0\g<2>"),
-            (r'(<option name="FONT_FAMILY" value=")[^"]*(")', r"\g<1>{family}\g<2>"),
+            (r'(<option name="FONT_FAMILY" value=")[^"]*(")', r"\g<1>{family_short}\g<2>"),
         ),
     ),
     (
@@ -297,7 +304,7 @@ _RENDERS: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
             (r'(<option name="FONT_SIZE_2D" value=")[^"]*(")', r"\g<1>{size}.0\g<2>"),
             # Mono here and the default variant in editor-font.xml above: PyCharm's embedded
             # terminal is a cell grid, its editor is not.
-            (r'(<option name="FONT_FAMILY" value=")[^"]*(")', r"\g<1>{mono}\g<2>"),
+            (r'(<option name="FONT_FAMILY" value=")[^"]*(")', r"\g<1>{family_mono_short}\g<2>"),
         ),
     ),
 )
@@ -314,9 +321,9 @@ def render_text(source: str, rules: tuple[tuple[str, str], ...]) -> str:
     a file this claims to have updated, and a rename upstream (PyCharm changing an option name, say)
     is exactly how that would happen.
     """
-    family, mono, size = _named()
+    names = _named()
     for pattern, template in rules:
-        replacement = template.format(family=family, mono=mono, size=size)
+        replacement = template.format(**names)
         source, count = re.subn(pattern, replacement, source, flags=re.MULTILINE)
         if not count:
             raise RuntimeError(f"[fonts] pattern {pattern!r} matched nothing — has the file's shape changed?")
@@ -357,3 +364,104 @@ def render_configs(c: Context):
         print(f"[fonts] rewrote {rel}")
     if not util.DRY_RUN:
         print(f"[fonts] {len(changed)} file(s) rewritten — commit them, then `inv deploy.all`")
+
+
+# ---------------------------------------------------------------------------
+# Does the live machine actually agree?
+# ---------------------------------------------------------------------------
+
+
+def _gsettings(c: Context, args: str) -> str | None:
+    """A gsettings value with its quoting stripped, or None when the schema isn't there."""
+    result = c.run(f"gsettings get {args}", hide=True, warn=True)
+    return result.stdout.strip().strip("'") if result.ok else None
+
+
+def _file_font_rows(c: Context) -> list[tuple[str, str]]:
+    """One `(label, verdict)` per deployed file that names a font.
+
+    Asks the narrow question — does this file name the configured font — rather than "is it
+    byte-identical to its source", which is `inv deploy.status`'s job and a different answer: a
+    `config_files` destination is the user's to customize, so it may legitimately differ everywhere
+    except the font line. Re-rendering the *deployed* text answers exactly that: if the
+    substitutions change nothing, the file already names the right font.
+    """
+    from . import deploy, ide  # noqa: PLC0415 — avoids an import cycle at module load
+
+    sources = {m.source: m.path for m in deploy.managed_paths().values() if m.source}
+    sources.update({m.source: m.path for m in ide.managed_files() if m.source})
+
+    rows: list[tuple[str, str]] = []
+    for rel, rules in _RENDERS:
+        path = sources.get(rel)
+        if path is None:
+            rows.append((rel, "not deployed here"))
+            continue
+        if not path.exists():
+            rows.append((rel, f"MISSING — {path} not there"))
+            continue
+        text = path.read_text()
+        try:
+            rows.append((rel, "ok" if render_text(text, rules) == text else f"DIFFERS — {path}"))
+        except RuntimeError:
+            # render_text raises when a pattern matches nothing. Here that means the deployed file
+            # has no font line where one is expected — worth reporting, never worth aborting.
+            rows.append((rel, f"no font line found in {path}"))
+    return rows
+
+
+@task
+def check(c: Context):
+    """Report every place on this machine that names a font, and whether it agrees.
+
+    Read-only, and the answer `inv deploy.status` cannot give: that one compares whole files, so a
+    `config_files` destination the user has customized differs for reasons that have nothing to do
+    with the font, and a stale font inside an otherwise-untouched file looks the same as any other
+    edit. Confirmed worth having 2026-08-30 — `~/.config/terminator/config` sat on a different font
+    for three months while every other consumer agreed, and nothing reported it.
+
+    Covers both halves: the settings `inv fonts.configure` applies (GNOME, GNOME Terminal, VS Code)
+    and the files `inv fonts.render-configs` writes (Terminator, WezTerm, PyCharm), read at their
+    deployed paths rather than in the repo.
+    """
+    monospace = monospace_font()
+    print(f"[fonts] [settings.fonts] → {monospace}\n")
+
+    rows: list[tuple[str, str]] = []
+
+    current = _gsettings(c, "org.gnome.desktop.interface monospace-font-name")
+    if current is None:
+        rows.append(("system monospace", "no GNOME schema here"))
+    else:
+        rows.append(("system monospace", "ok" if current == monospace else f"DIFFERS — {current!r}"))
+
+    profile = _gsettings(c, "org.gnome.Terminal.ProfilesList default")
+    if profile is None:
+        rows.append(("GNOME Terminal", "not installed"))
+    else:
+        schema = f"org.gnome.Terminal.Legacy.Profile:/org/gnome/terminal/legacy/profiles/:/{profile}/"
+        current = _gsettings(c, f"{schema} font")
+        rows.append(("GNOME Terminal", "ok" if current == monospace else f"DIFFERS — {current!r}"))
+
+    settings_path = next((p for p in VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
+    if settings_path is None or not settings_path.exists():
+        rows.append(("VS Code", "not installed"))
+    else:
+        existing = _load_vscode_settings(settings_path)
+        stale = [k for k, v in vscode_settings().items() if existing.get(k) != v]
+        rows.append(("VS Code", "ok" if not stale else f"DIFFERS — {', '.join(stale)}"))
+
+    rows.extend(_file_font_rows(c))
+
+    width = max(len(label) for label, _ in rows)
+    for label, verdict in rows:
+        print(f"  {label:<{width}}  {verdict}")
+
+    disagreeing = [label for label, verdict in rows if verdict.startswith(("DIFFERS", "MISSING", "no font"))]
+    print()
+    if disagreeing:
+        print(f"[fonts] {len(disagreeing)} disagree: {', '.join(disagreeing)}")
+        print("[fonts] settings: `inv fonts.configure`")
+        print("[fonts] files:    `inv fonts.render-configs`, then `inv deploy.all` / `inv ide.configure-pycharm`")
+    else:
+        print(f"[fonts] all {len(rows)} agree")

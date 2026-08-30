@@ -195,6 +195,8 @@ class FontsSettings(TypedDict, total=False):
 
     family: str
     family_mono: str
+    family_short: str
+    family_mono_short: str
     size: int
     vscode: dict[str, Json]
     families: list[FontFamily]

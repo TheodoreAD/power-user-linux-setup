@@ -65,13 +65,31 @@ def _stub_fonts(monkeypatch, cfg: util.FontsSettings) -> None:
 
 
 def test_monospace_is_the_mono_variant_with_the_size_appended(monkeypatch):
-    _stub_fonts(monkeypatch, {"family": "Fam", "family_mono": "Fam Mono", "size": 14})
+    _stub_fonts(
+        monkeypatch,
+        {
+            "family": "Fam",
+            "family_mono": "Fam Mono",
+            "family_short": "FM",
+            "family_mono_short": "FMM",
+            "size": 14,
+        },
+    )
 
     assert fonts.monospace_font() == "Fam Mono 14"
 
 
 def test_vscode_font_keys_are_derived_from_the_two_families(monkeypatch):
-    _stub_fonts(monkeypatch, {"family": "Fam", "family_mono": "Fam Mono", "size": 14})
+    _stub_fonts(
+        monkeypatch,
+        {
+            "family": "Fam",
+            "family_mono": "Fam Mono",
+            "family_short": "FM",
+            "family_mono_short": "FMM",
+            "size": 14,
+        },
+    )
 
     assert fonts.vscode_settings() == {
         "editor.fontFamily": "'Fam', monospace",
@@ -84,7 +102,13 @@ def test_vscode_font_keys_are_derived_from_the_two_families(monkeypatch):
 def test_vscode_passthrough_keys_survive_alongside_the_derived_ones(monkeypatch):
     _stub_fonts(
         monkeypatch,
-        {"family": "Fam", "family_mono": "Fam Mono", "vscode": {"editor.fontLigatures": True}},
+        {
+            "family": "Fam",
+            "family_mono": "Fam Mono",
+            "family_short": "FM",
+            "family_mono_short": "FMM",
+            "vscode": {"editor.fontLigatures": True},
+        },
     )
 
     assert fonts.vscode_settings()["editor.fontLigatures"] is True
@@ -106,9 +130,18 @@ def test_a_missing_family_raises_rather_than_configuring_an_empty_font(monkeypat
 
 
 def test_render_rewrites_every_rule_it_is_given(monkeypatch):
-    _stub_fonts(monkeypatch, {"family": "Fam", "family_mono": "Fam Mono", "size": 14})
+    _stub_fonts(
+        monkeypatch,
+        {
+            "family": "Fam",
+            "family_mono": "Fam Mono",
+            "family_short": "FM",
+            "family_mono_short": "FMM",
+            "size": 14,
+        },
+    )
     rules = (
-        (r'^(config\.font\s*=\s*wezterm\.font\s*")[^"]*(")', r"\g<1>{mono}\g<2>"),
+        (r'^(config\.font\s*=\s*wezterm\.font\s*")[^"]*(")', r"\g<1>{family_mono}\g<2>"),
         (r"^(config\.font_size\s*=\s*).*$", r"\g<1>{size}.0"),
     )
 
@@ -120,10 +153,13 @@ def test_render_rewrites_every_rule_it_is_given(monkeypatch):
 def test_a_rule_matching_nothing_raises(monkeypatch):
     """A silently-skipped substitution leaves the old font in a file this claims to have updated —
     which is how an upstream option rename would slip through unnoticed."""
-    _stub_fonts(monkeypatch, {"family": "Fam", "family_mono": "Fam Mono"})
+    _stub_fonts(
+        monkeypatch,
+        {"family": "Fam", "family_mono": "Fam Mono", "family_short": "FM", "family_mono_short": "FMM"},
+    )
 
     with pytest.raises(RuntimeError, match="matched nothing"):
-        fonts.render_text("nothing here\n", ((r"^font = .*$", r"font = {mono}"),))
+        fonts.render_text("nothing here\n", ((r"^font = .*$", r"font = {family_mono}"),))
 
 
 def test_the_committed_configs_match_what_settings_fonts_declares():
@@ -133,3 +169,24 @@ def test_the_committed_configs_match_what_settings_fonts_declares():
     stale = [path.name for path, text in fonts.rendered().items() if path.read_text() != text]
 
     assert not stale, f"run `inv fonts.render-configs` — these no longer match: {stale}"
+
+
+def test_pycharm_takes_the_abbreviated_family_and_everything_else_the_long_one():
+    """The one asymmetry in the render rules, pinned so it is not "simplified" back.
+
+    Every fontconfig consumer (terminator, wezterm) resolves the long family name; the JVM does
+    not. Measured 2026-08-30 with PyCharm's own bundled JBR: `new Font("CaskaydiaCove Nerd Font
+    Mono", …).getFamily()` returns "Dialog" — the silent fallback — while "CaskaydiaCove NFM"
+    returns itself. So the two PyCharm files must render `family_short`/`family_mono_short`, and a
+    rule that sends them the long form renders a font PyCharm cannot find and never reports.
+    """
+    by_file = dict(fonts._RENDERS)
+    family_rule = r'(<option name="FONT_FAMILY" value=")[^"]*(")'
+
+    for rel in ("config/pycharm/editor-font.xml", "config/pycharm/terminal-font.xml"):
+        templates = [tpl for pat, tpl in by_file[rel] if pat == family_rule]
+        assert templates, f"{rel} no longer has a FONT_FAMILY rule"
+        assert all("_short}" in tpl for tpl in templates), f"{rel} must render an abbreviated family name"
+
+    for rel in ("config/terminator.conf", "config/wezterm.lua"):
+        assert all("_short}" not in tpl for _, tpl in by_file[rel]), f"{rel} is fontconfig — long form"

@@ -24,17 +24,25 @@ It is named in exactly one place — `[settings.fonts]` in `setup.toml`:
 [settings.fonts]
 family = "CaskaydiaCove Nerd Font" # editors: icons at full width, ligatures
 family_mono = "CaskaydiaCove Nerd Font Mono" # terminals: icons forced to one cell
+family_short = "CaskaydiaCove NF" # the same two, as the JVM enumerates them
+family_mono_short = "CaskaydiaCove NFM"
 size = 12
 ```
 
-Two variants, because a terminal needs every glyph to occupy exactly one cell and an editor does
-not. Everything else derives from those three values, through two tasks:
+Two variants, because a terminal needs every glyph to occupy exactly one cell and an editor does not
+— and each in two spellings, because PyCharm will only accept one of them (see the warning below).
+Everything else derives from these values, through two tasks:
 
 ```shell
 inv fonts.configure       # GNOME, GNOME Terminal, VS Code — settings on the live machine
 inv fonts.render-configs  # rewrites config/terminator.conf, config/wezterm.lua, config/pycharm/*.xml
 inv deploy.all            # pushes those rewritten files to ~
+inv ide.configure-pycharm # ...and the PyCharm pair, whose destination is discovered at run time
 ```
+
+`inv fonts.check` is the read-only counterpart: it reports every place on this machine that names a
+font — the three settings and the four files, read at their deployed paths — and whether each agrees
+with `[settings.fonts]`. Run it if a single application looks wrong.
 
 The split is what each application will accept: GNOME and VS Code take a setting, while Terminator,
 WezTerm and PyCharm read a config file, so their copy of the font lives in this repo and has to be
@@ -43,12 +51,26 @@ committed and reviewed like any other change — it is not run by `inv setup`, a
 committed files stop matching `[settings.fonts]`, so a font change that skips it is caught in CI
 rather than leaving one application on the old font.
 
-!!! note "Short names like `CaskaydiaCove NFM` are the same font"
+!!! warning "PyCharm needs the short name — the long one silently falls back"
 
     Nerd Fonts v3 registers an abbreviation for every family — `NFM` for `Nerd Font Mono`, `NF` for
-    `Nerd Font`. `fc-match` and `wezterm ls-fonts` both resolve the two to the same file, and
-    WezTerm even prints the alias. This repo writes the long form everywhere so that a search for
-    the family name finds every occurrence.
+    `Nerd Font` — and both name the same file. Every **fontconfig** consumer resolves either:
+    `fc-match` and `wezterm ls-fonts` agree, and WezTerm even prints the alias. So GNOME, GNOME
+    Terminal, VS Code, Terminator and WezTerm all get the long form, which is what a search for the
+    family name finds.
+
+    **The JVM does not go through fontconfig for family lookup.** It enumerates the family name
+    embedded in the font file, which is the abbreviation. Measured 2026-08-30 with PyCharm's own
+    bundled JBR:
+
+    ```
+    CaskaydiaCove Nerd Font Mono  ->  resolved family: Dialog
+    CaskaydiaCove NFM             ->  resolved family: CaskaydiaCove NFM
+    ```
+
+    `Dialog` is the fallback. PyCharm given the long name renders in a default sans font and reports
+    nothing — which is why the two PyCharm files take `family_short`/`family_mono_short`, and why
+    `inv fonts.check` exists.
 
 Which family, and why that one: [Default font](#default-font-caskaydiacove-nerd-font) below.
 
