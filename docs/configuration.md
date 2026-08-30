@@ -198,8 +198,9 @@ Every `[packages.*]` entry has three independent, unrelated ways to be skipped:
 
 - **`enabled = false`** — the default for every machine that clones this repo, baked into
   `setup.toml`. Used for things that are evaluated-but-not-wanted (e.g. `freon`, superseded by
-  `vitals`), opt-in extras (e.g. `glab`, `atuin`), and machine-specific workarounds that would be
-  wrong as a universal default (e.g. `google-chrome-x11`).
+  `vitals`), opt-in extras (e.g. `glab`, `atuin`), machine-specific workarounds that would be wrong
+  as a universal default (e.g. `google-chrome-x11`), and applications one person's work needs that
+  nobody else's does (e.g. `telegram-desktop`).
 - **`~/.config/power-user-linux-setup/overrides.toml`** — one machine's disagreement with that
   default, written in `setup.toml`'s own shape:
 
