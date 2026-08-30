@@ -256,6 +256,10 @@ six subject fragments, and the label is a bracketed suffix on the rule's heading
 category the user asked for exists as `agent-knowledge.md`, gathering the five rules that had been
 scattered across three clusters in two fragments.
 
+The locale rule's fate has its own plan now — `plans/2026-08-30-english-iso-locale-defaults.md`,
+opened when the question turned out to be about what this machine's locale _should_ be rather than
+about which fragment holds a rule.
+
 [NEEDS CLARIFICATION: does the locale rule survive? It is the one rule that is neither
 PULSE-provisioned nor portable — an environment fact PULSE works around in its own code but does not
 create, so it is the one rule `inv ai.check-rule-prerequisites` can say nothing about. Either PULSE
