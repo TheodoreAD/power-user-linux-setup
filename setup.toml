@@ -260,18 +260,24 @@ install_repo_tasks = true
 # ---------------------------------------------------------------------------
 
 [settings.fonts]
-# Font set as org.gnome.desktop.interface monospace-font-name (covers all GTK apps).
-monospace = "CaskaydiaCove Nerd Font Mono 12"
-# Font set on the GNOME Terminal default profile.
-terminal = "CaskaydiaCove Nerd Font Mono 12"
+# The one place the font is named. Everything that needs it derives from these three values: the
+# GNOME, GNOME Terminal and VS Code settings `inv fonts.configure` applies, and the four repo-side
+# config files `inv fonts.render-configs` rewrites (terminator, wezterm, both PyCharm files).
+# Change these, run both tasks, commit the result — see docs/fonts.md.
+#
+# Two variants, not three spellings. Nerd Fonts v3 registers a short alias for each family
+# ("CaskaydiaCove NFM" for "CaskaydiaCove Nerd Font Mono"), and the two resolve to the same file —
+# verified 2026-08-30 with fc-match and `wezterm ls-fonts`, which prints the alias itself. The long
+# form is used everywhere so a grep for the family name finds every occurrence.
+family = "CaskaydiaCove Nerd Font" # default variant: editors — icons at full width, ligatures
+family_mono = "CaskaydiaCove Nerd Font Mono" # mono variant: terminals — icons forced to one cell
+size = 12
 
-# Keys merged into VS Code settings.json. Quoted keys preserve dots (TOML quoted-key syntax).
+# Extra keys merged into VS Code settings.json, for anything that is NOT the font itself — the four
+# font/size keys are derived from the values above. Quoted keys preserve dots (TOML quoted-key
+# syntax).
 [settings.fonts.vscode]
-"editor.fontFamily" = "'CaskaydiaCove Nerd Font', monospace"
-"editor.fontSize" = 12
 "editor.fontLigatures" = true
-"terminal.integrated.fontFamily" = "CaskaydiaCove Nerd Font Mono"
-"terminal.integrated.fontSize" = 12
 
 # Nerd Font families downloaded from:
 #   https://github.com/ryanoasis/nerd-fonts/releases/latest/download/<zip>.zip

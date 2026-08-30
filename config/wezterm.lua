@@ -3,7 +3,7 @@ local act = wezterm.action
 local mux = wezterm.mux
 local config = wezterm.config_builder()
 
-config.font = wezterm.font "CaskaydiaCove NFM"
+config.font = wezterm.font "CaskaydiaCove Nerd Font Mono"
 config.font_size = 12.0
 
 -- Start maximized with a 2x2 grid of panes; top-left gets focus.

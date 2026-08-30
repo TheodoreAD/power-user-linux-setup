@@ -188,8 +188,14 @@ class FontFamily(TypedDict, total=False):
 
 
 class FontsSettings(TypedDict, total=False):
-    monospace: str
-    terminal: str
+    """`[settings.fonts]`. `family`/`family_mono`/`size` are the one place the font is named —
+    everything else that needs it derives from them, including the four repo-side config files
+    `inv fonts.render-configs` rewrites. `vscode` stays a passthrough for keys that aren't the
+    font itself."""
+
+    family: str
+    family_mono: str
+    size: int
     vscode: dict[str, Json]
     families: list[FontFamily]
 

@@ -47,6 +47,44 @@ def _cfg() -> util.FontsSettings:
     return util.load_config().get("settings", {}).get("fonts", {})
 
 
+def _named() -> tuple[str, str, int]:
+    """`(family, family_mono, size)` from `[settings.fonts]` — the one place the font is named.
+
+    Raises rather than defaulting: a missing font name would silently configure GNOME and VS Code
+    with an empty family, which renders as the system fallback and looks like the Nerd Font simply
+    failed to install.
+    """
+    cfg = _cfg()
+    if "family" not in cfg or "family_mono" not in cfg:
+        raise util.missing_fields("settings.fonts", "family", "family_mono")
+    return cfg["family"], cfg["family_mono"], cfg.get("size", 12)
+
+
+def monospace_font() -> str:
+    """GNOME's `<family> <size>` form, for `org.gnome.desktop.interface monospace-font-name` and
+    the GNOME Terminal profile. Mono variant: both land in a terminal cell grid."""
+    _, mono, size = _named()
+    return f"{mono} {size}"
+
+
+def vscode_settings() -> util.JsonObject:
+    """The VS Code keys to merge — the four font/size ones derived, plus whatever
+    `[settings.fonts.vscode]` declares for anything that is not the font itself.
+
+    `editor.fontFamily` takes a CSS-style list so VS Code has something to fall back to if the Nerd
+    Font is missing; the integrated terminal takes the mono variant bare, matching every other
+    terminal here.
+    """
+    family, mono, size = _named()
+    derived: util.JsonObject = {
+        "editor.fontFamily": f"'{family}', monospace",
+        "editor.fontSize": size,
+        "terminal.integrated.fontFamily": mono,
+        "terminal.integrated.fontSize": size,
+    }
+    return {**derived, **_cfg().get("vscode", {})}
+
+
 def _families() -> list[util.FontFamily]:
     return _cfg().get("families", [])
 
@@ -142,10 +180,12 @@ def install(c: Context):
 @task
 def configure(c: Context):  # noqa: C901
     """Set the configured monospace font as system default, GNOME Terminal, and VS Code font."""
-    cfg = _cfg()
-    monospace = cfg.get("monospace", "")
-    terminal = cfg.get("terminal", monospace)
-    vscode_settings = cfg.get("vscode", {})
+    # All three derived from [settings.fonts]'s family/family_mono/size rather than declared
+    # separately — GNOME and its terminal take the same mono string, and the VS Code keys are built
+    # from the same two families. See vscode_settings().
+    monospace = monospace_font()
+    terminal = monospace
+    settings = vscode_settings()
 
     if util.DRY_RUN:
         mono_result = c.run(
@@ -175,7 +215,7 @@ def configure(c: Context):  # noqa: C901
         settings_path = next((p for p in VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
         if settings_path and settings_path.exists():
             existing = _load_vscode_settings(settings_path)
-            vscode_ok = all(existing.get(k) == v for k, v in vscode_settings.items())
+            vscode_ok = all(existing.get(k) == v for k, v in settings.items())
             print(f"[fonts] VS Code: {util.ok_label(vscode_ok)}")
         else:
             print("[fonts] VS Code: not found")
@@ -207,14 +247,113 @@ def configure(c: Context):  # noqa: C901
         print("[fonts] GNOME Terminal not found — skipping")
 
     settings_path = next((p for p in VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
-    if settings_path and vscode_settings:
+    if settings_path and settings:
         existing: util.JsonObject = {}
         if settings_path.exists() and settings_path.stat().st_size > 0:
             existing = _load_jsonc(settings_path.read_text())
-        if not all(existing.get(k) == v for k, v in vscode_settings.items()):
-            settings_path.write_text(json.dumps({**existing, **vscode_settings}, indent=2) + "\n")
+        if not all(existing.get(k) == v for k, v in settings.items()):
+            settings_path.write_text(json.dumps({**existing, **settings}, indent=2) + "\n")
             print(f"[fonts] VS Code → {settings_path}")
         else:
             print("[fonts] VS Code already configured")
     elif not settings_path:
         print("[fonts] VS Code settings.json not found — launch VS Code once, then re-run")
+
+
+# ---------------------------------------------------------------------------
+# Rendering the font into the repo-side configs that name it themselves
+# ---------------------------------------------------------------------------
+
+_REPO_ROOT = Path(__file__).parent.parent
+
+# One rule per line that names a font in a repo-side config file: the pattern that finds it, and
+# how to rebuild it from (family, family_mono, size). Four files, four formats — a regex per line
+# rather than a parser per format, because each of these is this repo's own file with a known
+# shape, and a Lua/XML/Qt-ini parser apiece would be far more machinery than the four lines earn.
+_RENDERS: tuple[tuple[str, tuple[tuple[str, str], ...]], ...] = (
+    (
+        "config/terminator.conf",
+        ((r"^(\s*font\s*=\s*).*$", r"\g<1>{mono} {size}"),),
+    ),
+    (
+        "config/wezterm.lua",
+        (
+            (r'^(config\.font\s*=\s*wezterm\.font\s*")[^"]*(")', r"\g<1>{mono}\g<2>"),
+            (r"^(config\.font_size\s*=\s*).*$", r"\g<1>{size}.0"),
+        ),
+    ),
+    (
+        "config/pycharm/editor-font.xml",
+        (
+            (r'(<option name="FONT_SIZE" value=")[^"]*(")', r"\g<1>{size}\g<2>"),
+            (r'(<option name="FONT_SIZE_2D" value=")[^"]*(")', r"\g<1>{size}.0\g<2>"),
+            (r'(<option name="FONT_FAMILY" value=")[^"]*(")', r"\g<1>{family}\g<2>"),
+        ),
+    ),
+    (
+        "config/pycharm/terminal-font.xml",
+        (
+            (r'(<option name="FONT_SIZE" value=")[^"]*(")', r"\g<1>{size}\g<2>"),
+            (r'(<option name="FONT_SIZE_2D" value=")[^"]*(")', r"\g<1>{size}.0\g<2>"),
+            # Mono here and the default variant in editor-font.xml above: PyCharm's embedded
+            # terminal is a cell grid, its editor is not.
+            (r'(<option name="FONT_FAMILY" value=")[^"]*(")', r"\g<1>{mono}\g<2>"),
+        ),
+    ),
+)
+
+
+def render_text(source: str, rules: tuple[tuple[str, str], ...]) -> str:
+    """Apply one file's substitution rules to its text, with the configured font values.
+
+    Pure, so the test suite can assert the four committed files already match what this would
+    produce without writing anything — which is what catches a `[settings.fonts]` change that was
+    never rendered.
+
+    Raises when a rule matches nothing: a silently-skipped substitution would leave the old font in
+    a file this claims to have updated, and a rename upstream (PyCharm changing an option name, say)
+    is exactly how that would happen.
+    """
+    family, mono, size = _named()
+    for pattern, template in rules:
+        replacement = template.format(family=family, mono=mono, size=size)
+        source, count = re.subn(pattern, replacement, source, flags=re.MULTILINE)
+        if not count:
+            raise RuntimeError(f"[fonts] pattern {pattern!r} matched nothing — has the file's shape changed?")
+    return source
+
+
+def rendered() -> dict[Path, str]:
+    """What every repo-side config that names a font should contain, keyed by absolute path."""
+    return {_REPO_ROOT / rel: render_text((_REPO_ROOT / rel).read_text(), rules) for rel, rules in _RENDERS}
+
+
+@task(name="render-configs")
+def render_configs(c: Context):
+    """Rewrite the repo-side configs that name a font from `[settings.fonts]`.
+
+    `inv fonts.configure` covers GNOME, GNOME Terminal and VS Code, which are settings applied to a
+    live machine. Terminator, WezTerm and PyCharm read a config file instead, so their copy of the
+    font lives in this repo and has to be rewritten rather than set — this is that half.
+
+    Deliberately its own command, and deliberately not wired into `fix`/`check`/`precommit`: the
+    output is committed and reviewed like any other change (`~/AGENTS.md`, "Regenerating a file from
+    a canonical source"). Run it after changing `[settings.fonts]`, commit the diff, then
+    `inv deploy.all` to push the new files to `~`. `PULSE_DRY_RUN=1` reports without writing.
+
+    A test asserts the committed files already match this output, so a font change that skips this
+    step fails CI rather than leaving one application on the old font.
+    """
+    changed = [path for path, text in rendered().items() if path.read_text() != text]
+    if not changed:
+        print(f"[fonts] {len(_RENDERS)} config(s) already match [settings.fonts]")
+        return
+    for path in changed:
+        rel = path.relative_to(_REPO_ROOT)
+        if util.DRY_RUN:
+            print(f"[fonts] would rewrite {rel}")
+            continue
+        path.write_text(rendered()[path])
+        print(f"[fonts] rewrote {rel}")
+    if not util.DRY_RUN:
+        print(f"[fonts] {len(changed)} file(s) rewritten — commit them, then `inv deploy.all`")
