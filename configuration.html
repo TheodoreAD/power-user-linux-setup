@@ -2375,22 +2375,22 @@ PULSE-managed entry own its own region of the file independently.</p>
 <p><strong>Idempotency:</strong> on re-run the block is found by its opening marker and replaced in place if the
 content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.</p>
 <h3 id="what-pulse-claims-in-your-home-directory-inv-homelist-claims">What PULSE claims in your home directory — <code>inv home.list-claims</code></h3>
-<p>Blocks are one of nine ways this repo puts something in <code>~</code>. To see all of them:</p>
+<p>Blocks are one of ten ways this repo puts something in <code>~</code>. To see all of them:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>inv<span class="w"> </span>home.list-claims<span class="w">                     </span><span class="c1"># every claim, classified, read-only</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--writer<span class="w"> </span>block<span class="w">      </span><span class="c1"># just the marker-delimited regions</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--tier<span class="w"> </span>machine<span class="w">      </span><span class="c1"># what is true of this box only</span>
 </span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--json<span class="w">              </span><span class="c1"># the same, machine-readable</span>
 </span></code></pre></div>
-<p>Each row says <strong>how</strong> the content got there (a whole-file deploy, a marker block, a merge into
-co-owned JSON, in-place surgery on one key, a <code>gsettings</code>/<code>dconf</code> call, a symlink, an installed
-tree, or a skill fetched by the <code>skills</code> CLI), <strong>who wins a conflict</strong> (PULSE, you, both, or the
-application), and <strong>where the content lives today</strong> (this public repo, this machine only, a secret,
-or regenerable state).</p>
+<p>Each row says <strong>how</strong> the content got there (a whole-file deploy, declared in <code>setup.toml</code> or with a
+destination decided at run time; a marker block; a merge into co-owned JSON; in-place surgery on one
+key; a <code>gsettings</code>/<code>dconf</code> call; a symlink; an installed tree; a generated file; or a skill fetched
+by the <code>skills</code> CLI), <strong>who wins a conflict</strong> (PULSE, you, both, or the application), and <strong>where
+the content lives today</strong> (this public repo, this machine only, a secret, or regenerable state).</p>
 <p>This is the command that answers &ldquo;is this path PULSE-managed?&rdquo; for the whole home directory.
-<code>inv deploy.status</code> answers it only for the whole-file third it can also repair — accurate about
-itself, and misleading if read as the whole picture. The <code>state</code> column reflects that split: a real
-deploy state where the deploy manifest covers the path, plain presence everywhere else, because no
-other writer records what it wrote.</p>
+<code>inv deploy.status</code> answers it only for the whole files declared in <code>setup.toml</code> — accurate about
+its own registry, and misleading if read as the whole picture. The <code>state</code> column reflects that
+split: a real deploy state wherever <code>deploy.py</code> is the writer, plain <code>present</code>/<code>absent</code> everywhere
+else, because no other writer records what it wrote, and <code>—</code> for a claim with no file at all.</p>
 <p>The table below is a curated guide to the files you are most likely to edit; the command is the
 complete, generated answer.</p>
 <h3 id="managed-files">Managed files</h3>
@@ -2456,7 +2456,7 @@ complete, generated answer.</p>
 <tr>
 <td><code>~/.config/systemd/user/pulse-proxy.service</code></td>
 <td><code>inv proxy.fix</code>/<code>install</code></td>
-<td>Runs the Px proxy daemon — see <a href="corporate-proxy.html">corporate-proxy.md</a></td>
+<td>Whole file from <code>config/pulse-proxy.service</code> — runs the Px proxy daemon, see <a href="corporate-proxy.html">corporate-proxy.md</a>. Deployed through <code>deploy.py</code> but not declared in <code>setup.toml</code>: only a machine that configures a corporate proxy writes it.</td>
 </tr>
 <tr>
 <td><code>~/.config/px/px.ini</code></td>
@@ -2789,15 +2789,17 @@ terminal prompt.</p>
 <h3 id="phase-3-shell-config">Phase 3 — Shell config</h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>inv<span class="w"> </span>zsh.configure-omz
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>inv<span class="w"> </span>zsh.configure
-</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w">       </span><span class="c1"># copies config/p10k.zsh to ~/.p10k.zsh if not already present</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w">       </span><span class="c1"># seeds config/p10k.zsh to ~/.p10k.zsh (yours once it exists)</span>
 </span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">    </span><span class="c1"># usermod -s — takes a new terminal to actually apply, doesn't chsh</span>
 </span></code></pre></div>
 <p><code>zsh.configure-p10k</code> installs the repo&rsquo;s opinionated baseline (lean style, Nerd Fonts icons,
-transient prompt, instant prompt) and is a no-op if <code>~/.p10k.zsh</code> already exists — manual
-customizations are never overwritten.</p>
-<p>To redo or fix the prompt: delete <code>~/.p10k.zsh</code> and run <code>inv zsh.configure-p10k</code> to restore the
-baseline, or run <code>p10k configure</code> to go through the interactive wizard. To update the baseline
-itself, copy your <code>~/.p10k.zsh</code> to <code>config/p10k.zsh</code>.</p>
+transient prompt, instant prompt). It is a <code>config_files</code> mapping on <code>[packages.powerlevel10k]</code>, so
+it goes through the same writer as every other whole file: a customized <code>~/.p10k.zsh</code> is reported
+and left alone, never overwritten, and <code>inv deploy.status --path ~/.p10k.zsh</code> will show you the diff
+against the repo baseline.</p>
+<p>To redo or fix the prompt: run <code>p10k configure</code> for the interactive wizard, or
+<code>inv deploy.all --name powerlevel10k --yes</code> to overwrite your copy with the repo baseline. To update
+the baseline itself, copy your <code>~/.p10k.zsh</code> to <code>config/p10k.zsh</code>.</p>
 <p><code>zsh.set-default-shell</code> uses <code>usermod -s</code>, not <code>chsh</code> — <code>chsh</code>&rsquo;s PAM password prompt doesn&rsquo;t work
 non-interactively the way <code>sudo -A</code> does. It&rsquo;s a no-op if the login shell is already some zsh
 (matched by binary name, not exact path — a machine can have more than one zsh on disk). Takes a
