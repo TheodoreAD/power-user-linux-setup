@@ -27,6 +27,32 @@ PULSE-managed entry own its own region of the file independently.
 **Idempotency:** on re-run the block is found by its opening marker and replaced in place if the
 content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.
 
+### What PULSE claims in your home directory — `inv home.list-claims`
+
+Blocks are one of nine ways this repo puts something in `~`. To see all of them:
+
+```shell
+inv home.list-claims                     # every claim, classified, read-only
+inv home.list-claims --writer block      # just the marker-delimited regions
+inv home.list-claims --tier machine      # what is true of this box only
+inv home.list-claims --json              # the same, machine-readable
+```
+
+Each row says **how** the content got there (a whole-file deploy, a marker block, a merge into
+co-owned JSON, in-place surgery on one key, a `gsettings`/`dconf` call, a symlink, an installed
+tree, or a skill fetched by the `skills` CLI), **who wins a conflict** (PULSE, you, both, or the
+application), and **where the content lives today** (this public repo, this machine only, a secret,
+or regenerable state).
+
+This is the command that answers "is this path PULSE-managed?" for the whole home directory.
+`inv deploy.status` answers it only for the whole-file third it can also repair — accurate about
+itself, and misleading if read as the whole picture. The `state` column reflects that split: a real
+deploy state where the deploy manifest covers the path, plain presence everywhere else, because no
+other writer records what it wrote.
+
+The table below is a curated guide to the files you are most likely to edit; the command is the
+complete, generated answer.
+
 ### Managed files
 
 | File                                                   | Managed by                                                  | Content                                                                                                                                                                                                 |

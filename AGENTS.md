@@ -76,6 +76,18 @@ every installer — was rejected the same way, and `deploy.all` is the result. T
 repo is that every change this machine has is reproducible from a declared, re-runnable command; a
 manual copy or an ad-hoc Python call is a change nobody can re-run.
 
+**`deploy.*` covers only the whole-file third of what this repo puts in `~` — 20% of the surface
+that a config lifecycle could ever touch.** Before concluding that a path is "not PULSE-managed",
+run `inv home.list-claims` (read-only): it is the registry of all nine ways this repo writes into
+the home directory — whole-file deploys, `util.ensure_block` marker regions, merges into co-owned
+JSON, regex surgery on one key of an app-owned file, `gsettings`/`dconf`, symlinks, installed trees,
+and skills fetched by the `skills` CLI — each classified by writer, authority and portability tier.
+`deploy.status`'s "not deployed by PULSE" is true of `deploy.py` and misleading about the repo.
+Design rationale, the measured breakdown, and what is deliberately **not** claimed (skill-written
+config, `/etc` targets, the contents of installed trees) are in
+[`contributing/home-claims.md`](contributing/home-claims.md) — read that before extending the
+registry or adding a tenth writer.
+
 ## PULSE tag/method architecture
 
 The `setup.toml` config/tag system is fully documented in the repo — don't re-derive it by reading
