@@ -163,41 +163,46 @@ and what is deliberately not claimed are in `contributing/home-claims.md`; the u
 `docs/configuration.md`. **109 claims on this machine**, against the 10 paths `deploy.status` could
 see:
 
-| writer             | claims |
-| ------------------ | -----: |
-| `install`          |     36 |
-| `block`            |     24 |
-| `imperative`       |     23 |
-| `whole-file`       |     10 |
-| `whole-file-adhoc` |      5 |
-| `symlink`          |      5 |
-| `key`              |      3 |
-| `merge`            |      2 |
-| `external`         |      1 |
+| writer                  | claims |
+| ----------------------- | -----: |
+| `install`               |     36 |
+| `block`                 |     24 |
+| `imperative`            |     23 |
+| `whole-file`            |     11 |
+| `symlink`               |      5 |
+| `whole-file-undeclared` |      3 |
+| `key`                   |      3 |
+| `merge`                 |      2 |
+| `generated`             |      1 |
+| `external`              |      1 |
 
 By tier: 69 `public`, 35 `derived`, 4 `machine`, 1 `secret`, **0 `personal`**.
 
-**The number the rest of this plan has to be sized against: a whole-file-only lifecycle reaches 15
-of the 74 non-derived claims — 20% — and only 10 of those (13%) can be classified at all.**
-`derived` is excluded from the denominator because an installed Go toolchain or an `nvm` directory
-can never be the subject of a config lifecycle; including them would flatter the number by a third.
+**The number the rest of this plan has to be sized against: a whole-file-only lifecycle reaches 14
+of the 74 non-derived claims — 18%.** `derived` is excluded from the denominator because an
+installed Go toolchain or an `nvm` directory can never be the subject of a config lifecycle;
+including them would flatter the number by a third. The first measurement, before step 3 folded the
+ad-hoc writers in, was 15 of 74 with only 10 classifiable — the reach barely moved, because those
+files were already whole files; what changed is that all 14 now carry a manifest entry and a diff.
 
 Five findings that change the plan below rather than merely confirming it:
 
-1. **Axis A needs ten values, not seven.** Three writers the table above did not name are real and
-   each has a different notion of a conflict: `whole-file-adhoc` (a whole file written by a task of
-   its own, outside `deploy.py` — five of them), `key` (regex surgery on one key of a file an
-   application owns, which can rewrite the wrong line where a JSON merge can only lose its own key),
-   and `symlink` (the claim is the link, not any bytes — five of them, invisible to
-   `deploy.lookup()`, which resolves them onto their target's entry). `human` was dropped: a path
-   nothing claims is by definition not in a registry of claims.
+1. **Axis A needs ten values, not seven.** Four writers the table above did not name are real and
+   each has a different notion of a conflict: `whole-file-undeclared` (deploy.py's writer, but a
+   destination decided at run time rather than declared — see step 3 below for why that is a
+   category and not an oversight), `key` (regex surgery on one key of a file an application owns,
+   which can rewrite the wrong line where a JSON merge can only lose its own key), `symlink` (the
+   claim is the link, not any bytes — five of them, invisible to `deploy.lookup()`, which resolves
+   them onto their target's entry), and `generated` (composed by a task, with no source to compare
+   against, so it can never be classified and that is correct). `human` was dropped: a path nothing
+   claims is by definition not in a registry of claims.
 2. **`deploy.py`'s unification stopped three writers short.** `zsh.configure-p10k` writes
    `~/.p10k.zsh` skip-if-exists with **no redeploy path at all**; `ide.configure-pycharm`
    unconditionally overwrites two files in a **glob-discovered** JetBrains directory;
    `proxy.install` writes its systemd unit from a module constant rather than a `config/` file.
    These are exactly the "too many ways to write into `~`" `contributing/deploy.md` set out to
-   remove. Folding them into `deploy.py` is a small, independently useful change and a prerequisite
-   for step 5 — `dotfiles.capture` for whole files cannot capture a path with no manifest entry.
+   remove, and a prerequisite for step 6 — `dotfiles.capture` for whole files cannot capture a path
+   with no manifest entry. Acted on the same day; see "Step 3 landed too" below.
 3. **Every skill on this machine is invisible to `deploy.py`.** `deploy._skill_entries` registers
    only `source = "local"` skills and this repo deliberately declares none, so the whole of
    `~/.agents/skills/` is declared in `setup.toml` and absent from the registry.
@@ -233,6 +238,39 @@ the skill; the skill's own config belongs to `agent-skills`, and hard-coding ano
 here would rot the first time one moves. The command's footer says so rather than leaving the gap
 looking like an oversight. Open question 4 below is where this gets decided — and it has to be
 decided in `agent-skills`, not here.]
+
+## Step 3 landed too, and what it exposed (2026-08-30)
+
+All five ad-hoc whole-file writers now go through `deploy.py`. `~/.p10k.zsh` is declared
+`config_files` on `[packages.powerlevel10k]`; the systemd unit became `config/pulse-proxy.service`
+(static, because systemd's own `%h` specifier does what the f-string was doing by hand) and the two
+PyCharm font files are deployed from `Managed` objects resolved against whichever PyCharm is
+installed; `identity.toml` stays outside, correctly, as its own `generated` writer — a wizard
+composes it from answers, so there is nothing to diff it against.
+
+[DECISION: **a destination declared in `setup.toml` is one `inv verify.all` requires to exist.** It
+runs at the end of `inv setup`'s packages phase and fails on `ABSENT` for MANAGED and SEEDED alike.
+So a file written only in some situations (the corporate-only systemd unit) or at a path discovered
+on the machine (the glob-matched PyCharm directory) goes through the writer **without** being
+declared — hence the `whole-file-undeclared` writer value. Declaring either would fail `inv setup`
+on every machine that legitimately lacks it. This is the constraint that decides what can ever be
+declared, and it was not visible before step 3 tried.]
+
+[DECISION: `Mechanism.MANAGED_FILE` — a verbatim copy that PULSE owns and does **not** chmod 0755.
+`wrapper-script` was the only MANAGED whole-file shape and it makes its destination executable,
+which is wrong for a systemd unit and for an XML options file, so a PULSE-owned non-executable file
+had no way to be expressed at all — which is exactly why the unit ended up as a module constant. A
+matching `managed_files` setup.toml field was written and then removed: with both its users
+undeclarable by the decision above, it had no consumer, and a field nothing declares is a second way
+to spell something.]
+
+[PITFALL: `config_files` is documented as method-agnostic and was not — the applier was `apt.py`'s
+private helper, called only from the apt and deb install paths. An `archive` or `git-clone`
+package's declared config (`~/.config/wezterm/wezterm.lua`, and `~/.p10k.zsh` once declared) was
+therefore never written during `inv setup` at all: it waited for an `inv deploy.all` a fresh machine
+has no reason to run, while `verify.all` at the end of that same phase demanded it exist. Found only
+by trying to declare `~/.p10k.zsh` and asking what would happen on a fresh machine. Fixed —
+`deploy.apply_config_files`, called by `tools.install` after every installer.]
 
 ## The layering
 
@@ -358,13 +396,10 @@ Sequenced so each step is independently useful and nothing is built before the t
 2. **Answer the remote question for the machine tier** (open question 3). It decides whether this is
    one mechanism or two, and it is a policy question that no amount of building resolves. The
    inventory sharpened it: the machine tier is four real claims today, not a hypothesis.
-3. **Fold the three `whole-file-adhoc` writers into `deploy.py`** — `~/.p10k.zsh`, the two PyCharm
-   option files, the systemd unit. New, from finding 2 of the inventory. Independently useful (each
-   gains a diff, a manifest entry and a redeploy path it does not have), it raises the classifiable
-   share from 13% to 20% at no design cost, and step 6 depends on it: `capture` cannot capture a
-   path with no record of what was written there. `~/.p10k.zsh` is the sharpest case — a
-   skip-if-exists file with no redeploy path at all, and simultaneously the plan's own headline
-   example of a peculiarity that should not ship from a public repo.
+3. ~~**Fold the ad-hoc whole-file writers into `deploy.py`.**~~ **Landed 2026-08-30**, same session
+   as step 1. All five now go through the one writer, so classifiable went 10 → 14 of 14 whole-file
+   claims — which step 6 depends on, since `capture` cannot capture a path with no record of what
+   was written there. What it took, and the two constraints it exposed, are below.
 4. **Layer resolution in `deploy.py`** — first-match search across configured layers, falling back
    to `config/`. Small, and by itself it already lets personal content leave the public repo.
 5. **The de-peculiarization pass** — move what the answer to open question 1 says should move, with
