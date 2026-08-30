@@ -111,6 +111,21 @@ own README, and the assembler contributes whole `##` sections. So the tidy-looki
 rule's portable principle in one fragment and its Claude instantiation in another is not available
 without changing that convention first. It is why labelling, not splitting, is the cheap move.]
 
+## Done — the remit renamed (2026-08-30)
+
+The cluster is now `## What this setup provisions`, with an intro stating the admission test as a
+dependency question (does this hold because PULSE put something there?) rather than a location one.
+The fragment README's "which fragment a rule belongs in" section was reworded to match: filed by
+what a rule depends on, not what it is about, and "this machine" explicitly is not a category.
+
+Description only — no rule moved, and the assembled output still carries 38 rules.
+
+[DECISION: **the file keeps the name `this-setup.md` for now**, so it lags its own contents. The
+stem feeds the `PULSE::agents-md/<stem>` provenance markers in the deployed file and its `src` in
+`setup.toml`, so a rename touches the deployed output and the package declaration rather than being
+a pure doc change. Worth doing, but as its own change and probably alongside the re-cut, since the
+category set below may not leave a fragment for it to be renamed into.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: what are the categories, and how many? The user proposed "pulse-specific
@@ -137,10 +152,8 @@ prerequisite-warning case in the DEFERRED tag above.]
 
 ## Recommended direction
 
-Rename before re-cutting. `this-setup.md`'s description is wrong today and that is a one-line fix
-with no content movement — and getting the axis stated correctly is what makes the next question
-("does this rule belong here?") answerable at all. Then decide the category set, then label the
-Claude rules, and re-cut last.
+Rename before re-cutting — done. Next is the category set, then the Claude Code label, then the
+re-cut, then the file rename that the re-cut may make moot anyway.
 
 Do not sweep, and do not genericise: the reframing above settles that Claude tool names stay, and
 several of these rules are worded the way they are because a shorter or vaguer version was measured
