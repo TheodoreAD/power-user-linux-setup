@@ -45,12 +45,19 @@ setup, after all, we can't make it extremely generic."_ So "does this hold for a
 machine" is the wrong admission test for a fragment; "is this true of a PULSE machine, and is it
 labelled with the harness it assumes" is the right one.]
 
-[DEFERRED: **a warning for a disabled prerequisite.** _"on the off chance someone disables that, we
-might want a warning, e.g. if someone disables direnv the Claude setup will suffer and it's a bad
-idea."_ A rule that assumes a PULSE-installed prerequisite is only true while that prerequisite is
-installed, and today nothing notices when one is switched off. Shape unclear — a `verify.all` check,
-a line in the rule itself, or a `doctor`-style report — and it is a separate piece of work from
-re-cutting the fragments.]
+[DECISION: **the disabled-prerequisite warning is `inv ai.check-rule-prerequisites`**, landed
+2026-08-30. Asked for as _"on the off chance someone disables that, we might want a warning, e.g. if
+someone disables direnv the Claude setup will suffer and it's a bad idea."_ It reads every
+`[needs …]` label off the fragments and reports any rule whose package is undeclared, disabled, or
+tag-excluded, exiting non-zero. Cheap only because the labels landed first — before them there was
+nothing to read, which is why this was deferred rather than designed up front.]
+
+[DECISION: **the check is config-level, not presence-level.** It answers "is this still declared and
+enabled", using the same precedence `inv setup` does (`setup.toml` → `overrides.toml` →
+`PULSE_EXCLUDE_TAGS`). Whether the binary is physically on disk is `inv verify.all`'s job, and
+keeping that out is what lets this task invoke nothing — which matters because the machine's
+allowlist auto-approves `<ns>.check-*` on the strength of the naming convention alone, so a `check`
+task that ran commands would run them unprompted.]
 
 ## `this-setup.md` is mostly PULSE (measured 2026-08-30)
 

@@ -46,6 +46,18 @@ A rule heading may end with a bracketed label. Two shapes, and no others:
 No label means the rule assumes neither and holds anywhere. `tests/unit/test_agents_md.py` enforces
 the vocabulary and that a package-shaped label names a package that exists.
 
+The point of a checkable label is that something checks it:
+
+```shell
+inv ai.check-rule-prerequisites   # read-only
+```
+
+It reads every `[needs …]` label and reports any rule whose package is undeclared, disabled, or
+excluded by `PULSE_EXCLUDE_TAGS` — the case where a rule keeps asserting into every session
+something this machine no longer provides. Config-level by design: whether the binary is physically
+present is `inv verify.all`'s job, and leaving that out is what lets this run without invoking
+anything.
+
 ## Editing
 
 Edit a fragment, then `inv deploy.all --name agents-md`. Never edit `~/AGENTS.md` directly: it is
