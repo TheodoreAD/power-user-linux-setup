@@ -1049,9 +1049,13 @@ symlink_dest = [
 # Any package may add an `agents_md` fragment; this entry only declares where the result lands.
 assembled_from = "agents_md"
 agents_md = [
-  { src = "config/agents-md/this-setup.md", order = 10 },
-  { src = "config/agents-md/claude-code.md", order = 20 },
-  { src = "config/agents-md/portable.md", order = 30 },
+  { src = "config/agents-md/preamble.md", order = 5 },
+  { src = "config/agents-md/agent-knowledge.md", order = 10 },
+  { src = "config/agents-md/git.md", order = 20 },
+  { src = "config/agents-md/bash.md", order = 30 },
+  { src = "config/agents-md/research.md", order = 40 },
+  { src = "config/agents-md/verification.md", order = 50 },
+  { src = "config/agents-md/collaboration.md", order = 60 },
 ]
 
 [packages.repo-tasks]
