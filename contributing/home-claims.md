@@ -54,25 +54,27 @@ today because there is nowhere for one to live.
 
 Measured on this machine, 2026-08-30:
 
-| writer             | claims | what it is                                                    |
-| ------------------ | -----: | ------------------------------------------------------------- |
-| `install`          |     36 | trees and binaries an installer puts under `~`                |
-| `block`            |     24 | `util.ensure_block` marker regions                            |
-| `imperative`       |     23 | `gsettings`/`dconf` — no file at any path                     |
-| `whole-file`       |     10 | `deploy.py`'s registry                                        |
-| `whole-file-adhoc` |      5 | whole files written by a task of its own, outside `deploy.py` |
-| `symlink`          |      5 | links this repo creates                                       |
-| `key`              |      3 | regex surgery on one key of a file an application owns        |
-| `merge`            |      2 | structured merge into co-owned JSON                           |
-| `external`         |      1 | `~/.agents/skills/`, installed by the `skills` CLI            |
-| **total**          |    109 |                                                               |
+| writer                  | claims | what it is                                             |
+| ----------------------- | -----: | ------------------------------------------------------ |
+| `install`               |     36 | trees and binaries an installer puts under `~`         |
+| `block`                 |     24 | `util.ensure_block` marker regions                     |
+| `imperative`            |     23 | `gsettings`/`dconf` — no file at any path              |
+| `whole-file`            |     11 | `deploy.py`, from a `setup.toml` declaration           |
+| `symlink`               |      5 | links this repo creates                                |
+| `whole-file-undeclared` |      3 | `deploy.py`, destination decided at run time           |
+| `key`                   |      3 | regex surgery on one key of a file an application owns |
+| `merge`                 |      2 | structured merge into co-owned JSON                    |
+| `generated`             |      1 | composed by a task, with no source to compare against  |
+| `external`              |      1 | `~/.agents/skills/`, installed by the `skills` CLI     |
+| **total**               |    109 |                                                        |
 
 By tier: 69 `public`, 35 `derived`, 4 `machine`, 1 `secret`; zero `personal`.
 
-**A whole-file-only lifecycle would reach 15 of the 74 non-derived claims — 20% — and only 10 of
-those (13%) can be classified at all.** That is the number
-`plans/2026-08-29-dotfiles-repo-config-lifecycle.md` step 1 exists to produce, and it is what the
-rest of that plan has to be sized against.
+**A whole-file-only lifecycle would reach 14 of the 74 non-derived claims — 18%.** That is the
+number `plans/2026-08-29-dotfiles-repo-config-lifecycle.md` step 1 exists to produce, and it is what
+the rest of that plan has to be sized against. (The first measurement, before step 3 folded the
+ad-hoc writers in, was 15 of 74 with only 10 classifiable; the reach barely moved because those
+files were already whole files — what changed is that all 14 now carry a manifest entry and a diff.)
 
 `derived` is excluded from that denominator deliberately: an installed Go toolchain or an `nvm`
 directory can never be the subject of a config lifecycle, because its content is upstream's and
@@ -83,12 +85,13 @@ regenerating it is the repair. Including them would flatter every coverage numbe
 Building it turned up five claims nobody had written down, each a real ownership model the
 `deploy.py` rework did not absorb:
 
-- **`whole-file-adhoc` exists, and it is five paths.** `zsh.configure-p10k` (`~/.p10k.zsh`,
-  skip-if-exists with no redeploy path at all), `ide.configure-pycharm` (two files, unconditional
-  overwrite into a **glob-discovered** JetBrains directory), `proxy.install`
-  (`~/.config/systemd/user/pulse-proxy.service`, content from a module constant rather than a
-  `config/` file), and `identity.init`. These are exactly the "too many ways to write into `~`" that
-  `contributing/deploy.md` set out to unify — the unification landed for three writers and stopped.
+- **Five whole files were written by a task of their own, outside `deploy.py`.** `~/.p10k.zsh`
+  (skip-if-exists, no redeploy path at all), the two PyCharm font files (unconditional overwrite
+  into a **glob-discovered** JetBrains directory), the systemd unit (content an f-string in
+  `tasks/proxy.py`, so no repo-side source), and `identity.toml`. These are exactly the "too many
+  ways to write into `~`" that `contributing/deploy.md` set out to unify — the unification landed
+  for three writers and stopped. All five have since been resolved; see "Folding the ad-hoc writers
+  in" below.
 - **`key` is a distinct writer, not a variant of `merge`.** Merging into JSON parses the document
   and replaces a value; `zsh.configure-omz`, `screenshot.enable` and `chrome.fix-launchers` do regex
   substitution on text some other program owns. The failure modes differ: a merge can only lose the
@@ -104,6 +107,48 @@ Building it turned up five claims nobody had written down, each a real ownership
   `~/.zshenv`, the `ssh` block in `~/.ssh/config`, and `overrides.toml`. All four are derived from
   `identity.toml` or hand-written, and all four are genuinely true of this box only — which is
   evidence for the layering the plan proposes, from before it is built.
+
+## Folding the ad-hoc writers in
+
+All five now go through `deploy.py`, so each has a manifest entry, a diff before it is overwritten,
+and the never-destroy-what-we-can't-prove-we-wrote rule — or is correctly outside it:
+
+- **`~/.p10k.zsh`** is declared `config_files` on `[packages.powerlevel10k]`. SEEDED is right: the
+  prompt config is yours the moment p10k's own `configure` wizard rewrites it.
+- **The systemd unit** is `config/pulse-proxy.service`, deployed by `inv proxy.fix`/`install`
+  through a `Managed` built in `tasks/proxy.py`. The file could become static because systemd's own
+  `%h` specifier expands the home directory, which is what the f-string was doing by hand.
+- **The PyCharm font files** are deployed by `inv ide.configure-pycharm` through `Managed` objects
+  resolved against whichever PyCharm is installed. With no PyCharm on the machine there are no
+  claims, which beats two rows reporting a file absent that was never going to exist.
+- **`identity.toml`** stays outside, and that is the right answer rather than a gap: it is composed
+  by a wizard from answers, so there is no source to diff it against, and it is the one claim on the
+  surface whose content must reach no repo at all. It gets its own writer value, `generated`.
+
+### Why two of those are _not_ declared in `setup.toml`
+
+This is the constraint the fold-in ran into, and it is the reason the `whole-file-undeclared` writer
+exists at all: **every declared destination is one `inv verify.all` requires to exist** — it runs at
+the end of `inv setup`'s packages phase and fails on `ABSENT` for MANAGED and SEEDED alike. The
+systemd unit is written only on a machine that configures a corporate proxy; the PyCharm files need
+a destination discovered by glob, which a `[packages.*]` mapping's literal `dst` cannot express.
+Declaring either would fail `inv setup` on every machine that legitimately lacks it.
+
+`Mechanism.MANAGED_FILE` was added for both: `wrapper-script` was the only MANAGED whole-file shape
+and it chmods 0755, which is wrong for a systemd unit and for an XML options file, so a PULSE-owned
+**non-executable** file had no way to be expressed. A matching `managed_files` setup.toml field was
+written and then removed — with both users undeclarable, it had no consumer, and a field nothing
+declares is a second way to spell something.
+
+### The latent bug this surfaced
+
+`config_files` is documented as method-agnostic, and it was not: the applier was `apt.py`'s private
+helper, called only from the apt and deb install paths. An `archive` or `git-clone` package's
+declared config — `~/.config/wezterm/wezterm.lua`, and `~/.p10k.zsh` once declared — was therefore
+never written during `inv setup` at all. It waited for an `inv deploy.all` a fresh machine has no
+reason to run, while `verify.all` at the end of that same phase demanded it exist. The helper moved
+to `deploy.apply_config_files` and `tools.install` now calls it after every installer, which is what
+makes declaring `~/.p10k.zsh` safe.
 
 ## Deliberately not claimed
 

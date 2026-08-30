@@ -29,7 +29,7 @@ content changed, or left untouched if it matches. New blocks are appended. No du
 
 ### What PULSE claims in your home directory — `inv home.list-claims`
 
-Blocks are one of nine ways this repo puts something in `~`. To see all of them:
+Blocks are one of ten ways this repo puts something in `~`. To see all of them:
 
 ```shell
 inv home.list-claims                     # every claim, classified, read-only
@@ -38,41 +38,41 @@ inv home.list-claims --tier machine      # what is true of this box only
 inv home.list-claims --json              # the same, machine-readable
 ```
 
-Each row says **how** the content got there (a whole-file deploy, a marker block, a merge into
-co-owned JSON, in-place surgery on one key, a `gsettings`/`dconf` call, a symlink, an installed
-tree, or a skill fetched by the `skills` CLI), **who wins a conflict** (PULSE, you, both, or the
-application), and **where the content lives today** (this public repo, this machine only, a secret,
-or regenerable state).
+Each row says **how** the content got there (a whole-file deploy, declared in `setup.toml` or with a
+destination decided at run time; a marker block; a merge into co-owned JSON; in-place surgery on one
+key; a `gsettings`/`dconf` call; a symlink; an installed tree; a generated file; or a skill fetched
+by the `skills` CLI), **who wins a conflict** (PULSE, you, both, or the application), and **where
+the content lives today** (this public repo, this machine only, a secret, or regenerable state).
 
 This is the command that answers "is this path PULSE-managed?" for the whole home directory.
-`inv deploy.status` answers it only for the whole-file third it can also repair — accurate about
-itself, and misleading if read as the whole picture. The `state` column reflects that split: a real
-deploy state where the deploy manifest covers the path, plain presence everywhere else, because no
-other writer records what it wrote.
+`inv deploy.status` answers it only for the whole files declared in `setup.toml` — accurate about
+its own registry, and misleading if read as the whole picture. The `state` column reflects that
+split: a real deploy state wherever `deploy.py` is the writer, plain `present`/`absent` everywhere
+else, because no other writer records what it wrote, and `—` for a claim with no file at all.
 
 The table below is a curated guide to the files you are most likely to edit; the command is the
 complete, generated answer.
 
 ### Managed files
 
-| File                                                   | Managed by                                                  | Content                                                                                                                                                                                                 |
-| ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `~/.zshrc`                                             | `inv zsh.configure`                                         | completions, aliases, hooks — from `zshrc` fields in `setup.toml`                                                                                                                                       |
-| `~/.zshenv`                                            | `inv zsh.configure`                                         | environment variables, PATH — from `zshenv` fields in `setup.toml`                                                                                                                                      |
-| `~/.zshenv` (separate `proxy` block)                   | `inv proxy.install`                                         | `http_proxy`/`https_proxy`/`no_proxy` pointed at the local Px daemon — written only once verified working, see [corporate-proxy.md](corporate-proxy.md)                                                 |
-| `~/.zprofile`                                          | `inv zsh.configure`                                         | login-shell config — from `zprofile` fields in `setup.toml`                                                                                                                                             |
-| `~/.config/curlrc`                                     | `inv system.write-curlrc`                                   | curl defaults (silent, follow redirects)                                                                                                                                                                |
-| `/etc/sysctl.conf`                                     | `inv system.disable-ipv6`                                   | IPv6 disable keys                                                                                                                                                                                       |
-| `/etc/systemd/journald.conf.d/size.conf`               | `inv system.cap-journal-size`                               | `SystemMaxUse` drop-in                                                                                                                                                                                  |
-| `/etc/apt/apt.conf.d/99-pulse`                         | `inv apt.configure`                                         | Disable dpkg progress bars                                                                                                                                                                              |
-| `~/.local/bin/askpass-zenity`                          | `inv tools.install`                                         | Zenity GUI askpass helper — enables `sudo -A` without a TTY                                                                                                                                             |
-| `~/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it)   | `inv tools.install`                                         | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline)                                                                                                                 |
-| `~/.config/systemd/user/pulse-proxy.service`           | `inv proxy.fix`/`install`                                   | Runs the Px proxy daemon — see [corporate-proxy.md](corporate-proxy.md)                                                                                                                                 |
-| `~/.config/px/px.ini`                                  | **not PULSE-managed** — owned entirely by Px's own `--save` | Upstream proxy address, bypass list, username. `inv proxy.*` never hand-authors this file's schema.                                                                                                     |
-| `/usr/local/share/ca-certificates/pulse-corporate.crt` | `inv certs.install`                                         | Corporate CA bundle, auto-converted to PEM from whatever format IT provided — feeds `update-ca-certificates`, see [certs.md](certs.md)                                                                  |
-| `~/.zshenv` (separate `certs` block)                   | `inv certs.install`                                         | `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`/`AWS_CA_BUNDLE`, pointed at the rebuilt system trust bundle — written only after `update-ca-certificates` succeeds, see [certs.md](certs.md) |
-| `~/.config/wezterm/wezterm.lua`                        | `inv deploy.all`                                            | Whole file, not a block — pane layout and keybindings, see [terminal.md](terminal.md). Written on install only if absent; redeployed on demand, see "Whole-file configs" below.                         |
-| `~/.config/terminator/config`                          | `inv deploy.all`                                            | Whole file, not a block — Terminator profile. Same install-once / redeploy-on-demand rules as above.                                                                                                    |
+| File                                                   | Managed by                                                  | Content                                                                                                                                                                                                                                           |
+| ------------------------------------------------------ | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `~/.zshrc`                                             | `inv zsh.configure`                                         | completions, aliases, hooks — from `zshrc` fields in `setup.toml`                                                                                                                                                                                 |
+| `~/.zshenv`                                            | `inv zsh.configure`                                         | environment variables, PATH — from `zshenv` fields in `setup.toml`                                                                                                                                                                                |
+| `~/.zshenv` (separate `proxy` block)                   | `inv proxy.install`                                         | `http_proxy`/`https_proxy`/`no_proxy` pointed at the local Px daemon — written only once verified working, see [corporate-proxy.md](corporate-proxy.md)                                                                                           |
+| `~/.zprofile`                                          | `inv zsh.configure`                                         | login-shell config — from `zprofile` fields in `setup.toml`                                                                                                                                                                                       |
+| `~/.config/curlrc`                                     | `inv system.write-curlrc`                                   | curl defaults (silent, follow redirects)                                                                                                                                                                                                          |
+| `/etc/sysctl.conf`                                     | `inv system.disable-ipv6`                                   | IPv6 disable keys                                                                                                                                                                                                                                 |
+| `/etc/systemd/journald.conf.d/size.conf`               | `inv system.cap-journal-size`                               | `SystemMaxUse` drop-in                                                                                                                                                                                                                            |
+| `/etc/apt/apt.conf.d/99-pulse`                         | `inv apt.configure`                                         | Disable dpkg progress bars                                                                                                                                                                                                                        |
+| `~/.local/bin/askpass-zenity`                          | `inv tools.install`                                         | Zenity GUI askpass helper — enables `sudo -A` without a TTY                                                                                                                                                                                       |
+| `~/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it)   | `inv tools.install`                                         | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline)                                                                                                                                                           |
+| `~/.config/systemd/user/pulse-proxy.service`           | `inv proxy.fix`/`install`                                   | Whole file from `config/pulse-proxy.service` — runs the Px proxy daemon, see [corporate-proxy.md](corporate-proxy.md). Deployed through `deploy.py` but not declared in `setup.toml`: only a machine that configures a corporate proxy writes it. |
+| `~/.config/px/px.ini`                                  | **not PULSE-managed** — owned entirely by Px's own `--save` | Upstream proxy address, bypass list, username. `inv proxy.*` never hand-authors this file's schema.                                                                                                                                               |
+| `/usr/local/share/ca-certificates/pulse-corporate.crt` | `inv certs.install`                                         | Corporate CA bundle, auto-converted to PEM from whatever format IT provided — feeds `update-ca-certificates`, see [certs.md](certs.md)                                                                                                            |
+| `~/.zshenv` (separate `certs` block)                   | `inv certs.install`                                         | `SSL_CERT_FILE`/`REQUESTS_CA_BUNDLE`/`NODE_EXTRA_CA_CERTS`/`AWS_CA_BUNDLE`, pointed at the rebuilt system trust bundle — written only after `update-ca-certificates` succeeds, see [certs.md](certs.md)                                           |
+| `~/.config/wezterm/wezterm.lua`                        | `inv deploy.all`                                            | Whole file, not a block — pane layout and keybindings, see [terminal.md](terminal.md). Written on install only if absent; redeployed on demand, see "Whole-file configs" below.                                                                   |
+| `~/.config/terminator/config`                          | `inv deploy.all`                                            | Whole file, not a block — Terminator profile. Same install-once / redeploy-on-demand rules as above.                                                                                                                                              |
 
 ### Adding a new block
 
@@ -365,17 +365,19 @@ terminal prompt.
 ```shell
 inv zsh.configure-omz
 inv zsh.configure
-inv zsh.configure-p10k       # copies config/p10k.zsh to ~/.p10k.zsh if not already present
+inv zsh.configure-p10k       # seeds config/p10k.zsh to ~/.p10k.zsh (yours once it exists)
 inv zsh.set-default-shell    # usermod -s — takes a new terminal to actually apply, doesn't chsh
 ```
 
 `zsh.configure-p10k` installs the repo's opinionated baseline (lean style, Nerd Fonts icons,
-transient prompt, instant prompt) and is a no-op if `~/.p10k.zsh` already exists — manual
-customizations are never overwritten.
+transient prompt, instant prompt). It is a `config_files` mapping on `[packages.powerlevel10k]`, so
+it goes through the same writer as every other whole file: a customized `~/.p10k.zsh` is reported
+and left alone, never overwritten, and `inv deploy.status --path ~/.p10k.zsh` will show you the diff
+against the repo baseline.
 
-To redo or fix the prompt: delete `~/.p10k.zsh` and run `inv zsh.configure-p10k` to restore the
-baseline, or run `p10k configure` to go through the interactive wizard. To update the baseline
-itself, copy your `~/.p10k.zsh` to `config/p10k.zsh`.
+To redo or fix the prompt: run `p10k configure` for the interactive wizard, or
+`inv deploy.all --name powerlevel10k --yes` to overwrite your copy with the repo baseline. To update
+the baseline itself, copy your `~/.p10k.zsh` to `config/p10k.zsh`.
 
 `zsh.set-default-shell` uses `usermod -s`, not `chsh` — `chsh`'s PAM password prompt doesn't work
 non-interactively the way `sudo -A` does. It's a no-op if the login shell is already some zsh

@@ -76,15 +76,23 @@ every installer — was rejected the same way, and `deploy.all` is the result. T
 repo is that every change this machine has is reproducible from a declared, re-runnable command; a
 manual copy or an ad-hoc Python call is a change nobody can re-run.
 
-**`deploy.*` covers only the whole-file third of what this repo puts in `~` — 20% of the surface
-that a config lifecycle could ever touch.** Before concluding that a path is "not PULSE-managed",
-run `inv home.list-claims` (read-only): it is the registry of all nine ways this repo writes into
-the home directory — whole-file deploys, `util.ensure_block` marker regions, merges into co-owned
-JSON, regex surgery on one key of an app-owned file, `gsettings`/`dconf`, symlinks, installed trees,
-and skills fetched by the `skills` CLI — each classified by writer, authority and portability tier.
-`deploy.status`'s "not deployed by PULSE" is true of `deploy.py` and misleading about the repo.
-Design rationale, the measured breakdown, and what is deliberately **not** claimed (skill-written
-config, `/etc` targets, the contents of installed trees) are in
+**`deploy.status` covers only the whole files declared in `setup.toml` — 18% of the surface a config
+lifecycle could ever touch, and not even all of what `deploy.py` writes.** Before concluding that a
+path is "not PULSE-managed", run `inv home.list-claims` (read-only): it is the registry of all ten
+ways this repo writes into the home directory — declared whole-file deploys, undeclared ones whose
+destination is decided at run time, `util.ensure_block` marker regions, merges into co-owned JSON,
+regex surgery on one key of an app-owned file, `gsettings`/`dconf`, symlinks, installed trees,
+generated files, and skills fetched by the `skills` CLI — each classified by writer, authority and
+portability tier. `deploy.status`'s "not deployed by PULSE" is true of its own registry and
+misleading about the repo.
+
+**A destination declared in `setup.toml` is one `inv verify.all` requires to exist** at the end of
+`inv setup`'s packages phase. A file written only in some situations (a corporate-only systemd unit)
+or at a path discovered on the machine (a glob-matched IDE config directory) therefore goes through
+`deploy.py` without being declared — construct a `deploy.Managed` in the writing module and call
+`deploy.deploy()`. Declaring it instead fails `inv setup` on every machine that legitimately lacks
+it. Design rationale, the measured breakdown, and what is deliberately **not** claimed
+(skill-written config, `/etc` targets, the contents of installed trees) are in
 [`contributing/home-claims.md`](contributing/home-claims.md) — read that before extending the
 registry or adding a tenth writer.
 
