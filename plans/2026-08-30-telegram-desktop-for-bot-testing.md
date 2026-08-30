@@ -63,9 +63,9 @@ over real tarballs guard it, and they were confirmed to fail against the old fla
 `WAYLAND_DISPLAY` stripped so nothing could surface a window: both `--version` and the `-version`
 that tdesktop's own docs mention are ignored, the app starts, and `verify.all`'s 15s timeout fires
 (rc=124). It therefore carries a `verify_cmd` that resolves the binary's shared libraries instead —
-same evidence a launch would give, without the launch. This is the same trap `[packages.freelens]`
-is still in; see `plans/2026-08-28-verify-launches-gui-apps.md`, which now has a second confirmed
-instance and a worked example of what the replacement check looks like.]
+same evidence a launch would give, without the launch. Being the second instance of the `freelens`
+class is what prompted auditing the rest of it; that audit came back clean and is written up in
+`contributing/verify.md`, along with why the same check would be wrong for `freelens` itself.]
 
 ## Remaining
 

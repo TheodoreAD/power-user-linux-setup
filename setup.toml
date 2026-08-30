@@ -1306,9 +1306,10 @@ symlinks = [{ src = "Telegram", dst = "telegram-desktop" }]
 # Not the archive method's default `telegram-desktop --version`: this binary has no CLI at all.
 # Measured 2026-08-30 with the display stripped so nothing could surface a window — both
 # `--version` and the `-version` tdesktop documents ignore the flag and start the app, hitting
-# verify's 15s timeout (rc=124). That is the same trap [packages.freelens] is still in; see
-# plans/2026-08-28-verify-launches-gui-apps.md. Resolving every shared library instead proves the
-# same thing a launch would — the build runs here — without launching it.
+# verify's 15s timeout (rc=124). Resolving every shared library instead proves the same thing a
+# launch would — the build runs here — without launching it. That check works for a self-contained
+# download and NOT for [packages.freelens], whose Electron bundle resolves libffmpeg.so at runtime;
+# see contributing/verify.md, "Why freelens keeps the existence check rather than a stronger one".
 verify_cmd = "sh -c '! ldd ~/.local/share/telegram-desktop/Telegram | grep -q \"not found\"'"
 
 [packages.google-chrome]

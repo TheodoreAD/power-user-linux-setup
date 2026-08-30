@@ -138,8 +138,13 @@ every installed package, and some of those open windows on the user's desktop: `
 launched the Freelens GUI and still exited 0, so the check passed silently while a window appeared
 (2026-08-28, caught by the user seeing two of them after two runs). Redirect the first run's output
 and grep that instead. To test one package's check, run that command on its own rather than the
-whole task. See `contributing/verify.md` and `plans/2026-08-28-verify-launches-gui-apps.md` for the
-unaudited rest.
+whole task.
+
+The rest of the GUI-tagged set was audited on 2026-08-30 and is clean — the class is `freelens` and
+`telegram-desktop`, both fixed with a per-package `verify_cmd`. **Before adding a new GUI package,
+probe its check against a throwaway `Xvfb` display rather than the live session**;
+`contributing/verify.md`'s "Auditing the rest of the class, without launching anything" has the
+three commands and the result table.
 
 [`docs/dev-container.md`'s "Automated functional verification"
 section](docs/dev-container.md#automated-functional-verification-inv-verifyall) is the published

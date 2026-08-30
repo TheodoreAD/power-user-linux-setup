@@ -203,7 +203,10 @@ def all(c: Context):  # noqa: A001, C901
     first install); anything else that differs fails. gnome-extension always skips (inv setup
     never installs extensions — see tasks/gnome.py). Override per package in setup.toml with
     `verify_cmd` (different invocation) or `verify = false` (no functional check is possible at
-    all). No fallback chain — first failure
+    all). A GUI application whose only interface is a window needs one of those — audited
+    2026-08-30, the whole class is `freelens` and `telegram-desktop`, and what each can honestly
+    promise depends on how it is packaged (see contributing/verify.md, "Auditing the rest of the
+    class"). No fallback chain — first failure
     aborts immediately (plain c.run(), no warn=True), the deliberate opposite of apt.py's
     warn=True-and-continue pattern: this task exists to catch exactly what that pattern lets
     through silently. Every invocation is bounded by _TIMEOUT_SECS — a hang counts as a failure,

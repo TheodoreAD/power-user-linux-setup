@@ -58,19 +58,96 @@ Fixed with `verify_cmd = "test -x /usr/bin/freelens"` — an existence check, th
 was previously scoped to `git-clone`/`apparmor-profile` by method; this is the first case where an
 _invocable_ method needed it, decided per package rather than by widening the method rule.
 
-Two follow-ons worth knowing:
-
-- **`test` is a real binary** (`/usr/bin/test`), which is why it works here. Checks run as
-  `timeout 15s <cmd>`, so `timeout` execs the command directly — a shell builtin like `command -v`
-  would not survive that wrapper.
-- **The class is not audited.** Eight enabled packages carry a GUI-ish tag on an invocable method
-  and still resolve to the default `--version`; `jetbrains-toolbox` is also an Electron app and is
-  the obvious next suspect, but confirming it means launching it, so it has not been. See
-  `plans/2026-08-28-verify-launches-gui-apps.md`.
+**`test` is a real binary** (`/usr/bin/test`), which is why it works here. Checks run as
+`timeout 15s <cmd>`, so `timeout` execs the command directly — a shell builtin like `command -v`
+would not survive that wrapper.
 
 **Re-running `inv verify.all` is not free**, which is how this was found: it invokes every installed
 package, so a second run to re-read or filter the first run's output launches every GUI app again.
 Redirect or grep the output you already have.
+
+### Auditing the rest of the class, without launching anything
+
+The open worry after `freelens` was that the whole GUI-tagged set might be doing this invisibly, and
+that confirming it meant launching each one and watching the screen. It does not: run the check
+against a **throwaway X display** instead of the user's session. A program that falls through to its
+default action opens its window there and hangs or lingers; a program with a real CLI prints its
+version and exits in milliseconds. Nothing reaches the real desktop either way.
+
+```shell
+Xvfb :99 -screen 0 1280x800x24 -nolisten tcp &
+env -u WAYLAND_DISPLAY DISPLAY=:99 timeout 20s <the check>   # rc, elapsed, and output are the verdict
+xlsclients -display :99                                      # did anything map a window?
+```
+
+Both `Xvfb` and `xlsclients` are already on this machine (`xvfb`, `x11-utils`). Stripping `DISPLAY`
+and `WAYLAND_DISPLAY` entirely is the cheaper variant and was the first thing tried, but its
+failures are ambiguous — a Qt app dying on a missing display looks the same whether or not it
+recognized the flag. The virtual display removes that ambiguity, which is what makes this an audit
+rather than a hint.
+
+**Run `freelens` in the same batch as a positive control.** It is the known-bad case, so a batch
+where it comes back clean is measuring nothing — that is how this procedure was validated rather
+than assumed.
+
+One caveat the control itself exposed: **the failure shape is environment-dependent.** On the real
+session `freelens` detached and exited 0 (which is why the timeout missed it); on the virtual
+display it hung and was killed at 20s. Same defect, opposite symptom. So read a probe as "this check
+is unsafe" or "this check is fine", never as a prediction of how it will fail in front of the user —
+and do not conclude a check is safe because it merely exited 0, without also checking it was fast
+and mapped no window.
+
+Audited 2026-08-30, every GUI-tagged package resolving to the default `--version`:
+
+| Package                | Result                      |
+| ---------------------- | --------------------------- |
+| `jetbrains-toolbox`    | `Toolbox 3.5.0.84344`, 12ms |
+| `wezterm`              | version, 15ms               |
+| `flameshot`            | version, 51ms               |
+| `google-chrome`        | version, 62ms               |
+| `font-manager`         | version, 141ms              |
+| `terminator`           | version, 186ms              |
+| `gnome-extensions-cli` | version, 273ms              |
+| `freelens` (control)   | **hung**, killed at 20s     |
+
+So the class was one package wide all along, and it was already fixed. Three corrections fall out of
+that, each of which had been written down as an expectation:
+
+- **`jetbrains-toolbox` was named the prime suspect on the reasoning that it is also an Electron
+  app. It is the fastest check in the table.** "Same kind of program" turned out to predict nothing;
+  what matters is whether the packager wired up a CLI, which is a per-package fact.
+- **The `vaapi` error blamed on `google-chrome --version` was not Chrome's.**
+  `google-chrome-stable
+  --version` exits in 62ms with empty stderr, on both a virtual and the real
+  display. `freelens` emits `vaInitialize failed` verbatim, and both run inside the same
+  `inv verify.all` — the line was attributed to the wrong package by proximity in a shared log.
+- **A regression guard requiring `verify_cmd` on every GUI-tagged package would be noise on 7 of 8
+  entries.** Deliberately not built. The replacement is this procedure being written down: check a
+  new GUI package once, when it is added, and record the answer in its section.
+
+### Why `freelens` keeps the existence check rather than a stronger one
+
+`telegram-desktop` (2026-08-30) is a second package whose only interface is a GUI — both `--version`
+and the `-version` its upstream documents start the app — so it needed the same treatment. It got a
+better check than `test -x`: resolving every shared library the binary needs.
+
+```toml
+verify_cmd = "sh -c '! ldd ~/.local/share/telegram-desktop/Telegram | grep -q \"not found\"'"
+```
+
+That is a real functional test — a downloaded static build that is present but unrunnable fails it,
+which is the failure existence checking cannot see — and it launches nothing.
+
+**It is not portable to `freelens`, and measuring that is the point.** `ldd /usr/bin/freelens`
+reports `libffmpeg.so => not found` on an installation that works perfectly well: Electron ships
+that library inside its own resources directory and resolves it at runtime, so the top-level
+binary's link table is genuinely incomplete. Moving `freelens` onto the `ldd` check would fail
+`inv setup` on a healthy machine.
+
+The rule, then, is per packaging rather than per symptom: a self-contained downloaded build can be
+checked by resolving its libraries; an app that loads bundled libraries at runtime cannot, and
+existence is what is honestly available. That is a real narrowing of what `verify.all` promises for
+GUI applications, and it is better stated than papered over.
 
 ### `git-clone`/`wrapper-script` were originally going to force a hard error, not a safe default
 

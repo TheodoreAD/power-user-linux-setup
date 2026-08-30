@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-08-30
 ---
 
@@ -110,3 +110,33 @@ narrowing the contract's wording rather than pretending the check is equivalent.
 not the binary one this question assumed. What is still open is whether `freelens` and the rest
 should be moved onto it — that depends on how each is packaged, and an Electron `.deb`'s libraries
 resolving says less than a downloaded static build's do.]
+
+## Migrated to
+
+Settled 2026-08-30 by auditing the class rather than reasoning about it. Everything durable is in
+[`contributing/verify.md`](../contributing/verify.md), which was already this task's rationale home:
+
+- **"Auditing the rest of the class, without launching anything"** — the Xvfb procedure that
+  replaces this plan's step 1, the positive-control rule, the environment-dependence caveat, and the
+  full result table. Also carries the two corrections the audit forced: `jetbrains-toolbox` was not
+  the prime suspect (12ms, real CLI), and the `vaapi` error was `freelens`'s, not `google-chrome`'s.
+- **"Why `freelens` keeps the existence check rather than a stronger one"** — the answer to this
+  plan's open question. There is a middle option between `test -x` and launching, it is in use on
+  `telegram-desktop`, and it is measurably wrong for `freelens`.
+- The `--version`-falls-through-to-default-action class, the timeout's load-bearing role, and the
+  detach-and-exit-0 shape were already written up there and stay where they are.
+
+`tasks/verify.py`'s docstring names the class and points at that section, so the constraint is
+visible from the code as well as from the docs.
+
+**Deliberately not migrated:**
+
+- **The regression guard** (`DEFERRED`). Killed, not deferred again: the audit produced the ratio it
+  was waiting on — 7 of 8 GUI-tagged packages have a perfectly good `--version` — so a lint
+  demanding `verify_cmd` on all of them is noise. The reasoning is recorded in that section so it is
+  not re-proposed from scratch.
+- **The "not safely invocable" marker mechanism** (step 3). The class is two packages, each already
+  fixed with a per-package `verify_cmd`, exactly as `nyancat`/`px-proxy` were. A mechanism was
+  conditional on the set being large; it is not.
+- **The per-package "probably fine" table.** Superseded by measurements; keeping the guesses beside
+  the results would only invite trusting the wrong column.
