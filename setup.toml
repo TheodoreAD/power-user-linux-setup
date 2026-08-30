@@ -13,6 +13,9 @@
 #                 that still holds exactly what PULSE last wrote there, and leave a customized one
 #                 alone with a note (never clobber a hand-edited config). After changing a src, run
 #                 `inv deploy.all [--name <pkg>] [--yes]` to diff and redeploy it.
+#                 Applied by whichever install task installs the package (apt, deb, and every
+#                 tools.install method), so a declared config lands in the packages phase — before
+#                 `inv verify.all`, which checks every registry destination exists.
 #
 # Tag-based exclusion:
 #   Set PULSE_EXCLUDE_TAGS=<tag> or PULSE_EXCLUDE_TAGS=<tag1>,<tag2> to skip packages with matching tags.
@@ -1163,6 +1166,9 @@ tags = ["shell", "zsh"]
 repo = "https://github.com/romkatv/powerlevel10k.git"
 dest = "~/.oh-my-zsh/custom/themes/powerlevel10k"
 depth = 1
+# The prompt itself is yours once it exists — p10k's own configure wizard rewrites it — so this is
+# a seed, not a managed file. `inv zsh.configure-p10k` deploys it through tasks/deploy.py.
+config_files = [{ src = "config/p10k.zsh", dst = "~/.p10k.zsh" }]
 
 [packages.zsh-autosuggestions]
 description = "Fish-style history-based command suggestions as you type"

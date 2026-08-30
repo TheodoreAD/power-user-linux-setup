@@ -222,19 +222,29 @@ def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  #
     print(f"[{name}] installed")
 
 
+_INSTALLERS = (
+    (util.PackageMethod.SCRIPT, _install_script),
+    (util.PackageMethod.BINARY, _install_binary),
+    (util.PackageMethod.ARCHIVE, _install_archive),
+    (util.PackageMethod.GIT_CLONE, _install_git_clone),
+    (util.PackageMethod.WRAPPER_SCRIPT, _install_wrapper_script),
+)
+
+
 @task
 def install(c: Context):
-    """Install tools that use official installer scripts, direct binary downloads, or archives."""
-    for name, cfg in util.packages_by_method(util.PackageMethod.SCRIPT).items():
-        _install_script(c, name, cfg)
-    for name, cfg in util.packages_by_method(util.PackageMethod.BINARY).items():
-        _install_binary(c, name, cfg)
-    for name, cfg in util.packages_by_method(util.PackageMethod.ARCHIVE).items():
-        _install_archive(c, name, cfg)
-    for name, cfg in util.packages_by_method(util.PackageMethod.GIT_CLONE).items():
-        _install_git_clone(c, name, cfg)
-    for name, cfg in util.packages_by_method(util.PackageMethod.WRAPPER_SCRIPT).items():
-        _install_wrapper_script(c, name, cfg)
+    """Install tools that use official installer scripts, direct binary downloads, or archives.
+
+    Each package's `config_files` are seeded right after it installs, the same as the apt and deb
+    methods already did. Without this a declared config on an `archive` or `git-clone` package
+    (`~/.config/wezterm/wezterm.lua`, `~/.p10k.zsh`) was never written during `inv setup` at all —
+    it waited for a separate `inv deploy.all` that a fresh machine has no reason to run, while
+    `inv verify.all`, at the end of this very phase, requires every declared destination to exist.
+    """
+    for method, installer in _INSTALLERS:
+        for name, cfg in util.packages_by_method(method).items():
+            installer(c, name, cfg)
+            deploy.apply_config_files(name, cfg)
 
 
 # Matches [packages.rust]'s CARGO_HOME in setup.toml. Only the registry (downloaded crate

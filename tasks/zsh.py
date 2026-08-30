@@ -5,9 +5,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import util
-
-_REPO_ROOT = Path(__file__).parent.parent
+from . import deploy, util
 
 
 def _snippets(cfg: util.PackageConfig) -> list[tuple[str, str]]:
@@ -152,17 +150,14 @@ def fix_history(c: Context):
 
 @task
 def configure_p10k(c: Context):
-    """Copy repo baseline config/p10k.zsh to ~/.p10k.zsh if not already present."""
-    dest = Path.home() / ".p10k.zsh"
-    if util.DRY_RUN:
-        print(f"[p10k] ~/.p10k.zsh: {util.ok_label(dest.exists())}")
-        return
-    if dest.exists():
-        print("[p10k] ~/.p10k.zsh already exists — skipping")
-        return
-    src = _REPO_ROOT / "config" / "p10k.zsh"
-    if not src.exists():
-        print("[p10k] config/p10k.zsh not found in repo — skipping")
-        return
-    dest.write_bytes(src.read_bytes())
-    print("[p10k] ~/.p10k.zsh installed from repo baseline")
+    """Seed ~/.p10k.zsh from the repo baseline, through tasks/deploy.py's writer.
+
+    The prompt config is yours once it exists — p10k's own `p10k configure` wizard rewrites it — so
+    it is declared as `config_files` on [packages.powerlevel10k] and carries the SEEDED policy: an
+    absent destination is created, a customized one is left alone and said so. This used to be a
+    bare `write_bytes` with a skip-if-exists guard, which meant the file had no manifest entry, no
+    diff, and no redeploy path at all when the repo baseline changed. `inv deploy.all --name
+    powerlevel10k --yes` is now the deliberate overwrite.
+    """
+    cfg = util.load_config()["packages"]["powerlevel10k"]
+    deploy.apply_config_files("powerlevel10k", cfg)
