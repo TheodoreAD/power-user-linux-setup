@@ -8,17 +8,47 @@ All zsh configuration is declared in `setup.toml` and applied via invoke:
 inv tools.install      # installs OMZ, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting
 inv zsh.configure-omz  # updates plugins=() and ZSH_THEME in ~/.zshrc
 inv zsh.configure      # writes sentinel blocks (completions, aliases, keybindings, direnv, etc.)
+inv zsh.configure-p10k # seeds ~/.p10k.zsh from the repo baseline
 ```
 
 Or all at once via `inv setup`.
 
-**First run only** — configure the Powerlevel10k prompt interactively:
+## The prompt
+
+**There is no first-run wizard to sit through.** PULSE ships a Powerlevel10k configuration that
+already matches everything else it installs — the Nerd Font, its icon set, and the
+[Claude Code statusline](claude-code.md#the-statusline) — and `inv zsh.configure-p10k` seeds it to
+`~/.p10k.zsh`. Open a new terminal and the prompt is finished.
+
+What the baseline is, in p10k's own wizard vocabulary: **lean 8-color style, nerdfont-complete
+icons, two lines, no frame, compact, transient prompt, instant prompt (verbose)**. In practice:
+
+- **Two lines** — OS icon, directory and git status on the first; you type on the second, so a long
+  path never pushes the cursor across the terminal.
+- **Transient prompt** — once a command finishes, its prompt collapses to a single character.
+  Scrollback stays readable no matter how deep the directory or how noisy the git status.
+- **Instant prompt** — the shell accepts input before the rest of the config has finished loading.
+- **8 colors, not 256** — it looks right in whatever colour scheme the terminal already has.
+- The right side carries p10k's context-sensitive segments: exit status and duration of the last
+  command, `direnv`, the active Python virtualenv or conda env, the Node/Ruby/Java/Go version
+  manager in play, `kubecontext`, Terraform workspace, AWS/Azure/GCloud profile — each appears only
+  when it actually applies, so an ordinary shell shows almost nothing.
+
+**To change it**, either edit it directly or run p10k's own wizard:
 
 ```shell
-p10k configure
+p10k configure        # interactive; rewrites ~/.p10k.zsh from scratch
 ```
 
-Config is saved to `~/.p10k.zsh`. Re-run any time to change the prompt layout.
+Either way the file is yours afterwards. It is seeded through the same writer as every other config
+this repo deploys, so a customized `~/.p10k.zsh` is never overwritten:
+
+```shell
+inv deploy.status --path ~/.p10k.zsh      # diff your copy against the repo baseline
+inv deploy.all --name powerlevel10k --yes # deliberate way back to the baseline
+```
+
+To keep your version as the baseline instead, copy it over `config/p10k.zsh` and commit.
 
 ## What gets installed
 
