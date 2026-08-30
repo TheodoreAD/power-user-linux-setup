@@ -52,6 +52,15 @@ someone disables direnv the Claude setup will suffer and it's a bad idea."_ It r
 tag-excluded, exiting non-zero. Cheap only because the labels landed first — before them there was
 nothing to read, which is why this was deferred rather than designed up front.]
 
+[DECISION: **the deterministic half of the check runs in the quality gate; the rest stays
+on-demand.** "Does `setup.toml` declare this package, and not as `enabled = false`" depends only on
+committed content, so it is a unit test and CI catches it on the breaking commit. The
+environment-dependent half — `overrides.toml`, `PULSE_EXCLUDE_TAGS` — stays in the task.
+`verify.all` was rejected as the home: it aborts on first failure, and a container or WSL profile
+excluding the `dev` tag makes `[needs direnv]` legitimately false, so gating there would break
+`inv setup` on a correctly configured machine. The bar is "declared and enabled", not "declared" —
+29 packages carry `enabled = false`, so declaration alone was barely a check.]
+
 [DECISION: **the check is config-level, not presence-level.** It answers "is this still declared and
 enabled", using the same precedence `inv setup` does (`setup.toml` → `overrides.toml` →
 `PULSE_EXCLUDE_TAGS`). Whether the binary is physically on disk is `inv verify.all`'s job, and
