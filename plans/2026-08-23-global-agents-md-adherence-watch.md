@@ -265,3 +265,112 @@ print this table, so any session can self-measure in one call rather than reimpl
 the exit-code-bearing split it does not yet compute is
 `plans/2026-08-30-head-tail-piping-survived-the-bash-recut.md`'s open item, now merged into session
 4 above. Filed there rather than acted on here.]
+
+### Session 6 — `repo-tasks`, 2026-08-30: the first sample below baseline, and two git findings
+
+Plan triage, a currency pass over twelve plans, two new tasks, and a source-reading research pass
+across five vendor repos. Filed from that repo, which cannot edit a plan here.
+
+| metric                             | session 6    | session 5      | session 4    | baseline (2026-08-21→24) |
+| ---------------------------------- | ------------ | -------------- | ------------ | ------------------------ |
+| Bash calls                         | 250          | 254            | 232          | 3,956                    |
+| piped through `head`/`tail`        | **51 (20%)** | 86 (33%)       | 67 (28%)     | 29–32%                   |
+| chained (`&&` / `;`)               | 36 (14%)     | 103 (40%)      | not measured | 64–71%                   |
+| `cd` into the session's own repo   | 0            | 0              | not measured | 114                      |
+| `rg -r` (i.e. `--replace`) misuses | **2**        | first recorded | —            | —                        |
+
+**This is the first sample below the baseline on `head`/`tail`**, and chaining is a quarter of
+session 5's rate. If this plan's `[DECISION: adherence, not wording]` is right, that is what
+improvement looks like — but one sample is not a trend, and the confound is obvious: this session
+did an unusual amount of source reading, where `git show <tag>:<path>` and `grep -n <pat> <file>`
+are naturally unpiped. A session doing more log-reading would likely score worse.
+
+[PITFALL: counting `rg -r` naively over-reports. A regex for `\brg\s+-[a-zA-Z]*r` also matches
+`grep -rn` and `grep -rln`, where `-r` is the legitimate recursive flag — that is the whole reason
+the `rg` confusion exists. The raw count here was 4; the real one is 2. Any future automated counter
+has to exclude `grep`, or it will inflate exactly the metric it exists to watch.]
+
+#### The two `rg -r` occurrences
+
+Both in one research pass, minutes apart, in a session whose context held `~/AGENTS.md`'s verbatim
+statement of the trap:
+
+```shell
+rg -rn --no-heading 'credsStore|CredentialsStore|NewStore|DockerConfig' <path>   # printed `credentials.n(`
+rg -rn 'DetectDefaultNativeStore' <path> --glob '*.go' -l                        # returned nothing
+```
+
+The first is the dangerous shape the rule warns about, and it behaved exactly as advertised: it
+printed `credentials.n(` where the source says `credentials.NewStore(`, i.e. plausible-looking
+output that is not what the file says. It was caught only because `NewStore` was the string being
+searched for and its absence from the results was conspicuous. **Had the pattern been anything the
+eye did not expect to see echoed back, the corrupted output would have been read as fact** — and
+this was a research pass whose findings then went into three plans.
+
+The second returned nothing and was misread as "no matches" rather than "malformed command", which
+cost one wrong turn before the layout was checked directly.
+
+Same session, same rule, twice — supporting the existing `[DECISION: adherence, not wording]` rather
+than complicating it. Worth noting for the wording question anyway: the rule is stated as a fact
+about `rg` (`its -r is --replace`) rather than as a habit to break
+(`never write -rn; rg is already
+recursive`), and both misuses were `-rn`, the bundled form, where
+the `-r` is least visible.
+
+#### Two git findings
+
+##### 1. `git mv` stages, and the rule's examples do not name it
+
+Session 3 of the adherence plan recorded this exact incident — renames sitting in the index from
+earlier landing in the wrong commit, unwound with `reset --soft` — and concluded "nothing in the git
+cluster states this; it is arguably plain git literacy rather than a rule gap."
+
+**Something in the git cluster does state it now**, under "Committing multi-part work": _"Stage each
+commit's paths immediately before that commit, never ahead of time... anything staged earlier — a
+`git rm` run while tidying, a `git add` from a previous step — rides along under the next message."_
+And it happened again anyway, 2026-08-30: a `git mv` renaming a plan file, run while editing rather
+than while committing, rode into the next commit, which was about an unrelated new plan.
+
+So the classification changes: no longer "arguably git literacy", now a second occurrence under an
+explicit rule. The one wording observation worth making is that the rule's two examples — `git rm`
+and `git add` — are both verbs that read as _staging_, whereas `git mv` reads as an _edit_. A reader
+checking "did I stage anything ahead of time?" does not think of the rename.
+
+##### 2. Nothing states what the actual protection is
+
+The cluster says, under "Unexplained git/file state in a working tree", that `git status --short`
+immediately before committing _is not_ protection, because it reports the staged set rather than
+what changed while you were reading it. That is correct and it was confirmed here in the sharpest
+possible way: a store commit staged by explicit path still shipped a third file that a parallel
+session had staged into the shared index in the seconds between.
+
+But the cluster stops at the warning and never names a defence. There is one, and it worked:
+
+```shell
+git commit -m "…" -- <path> <path>     # commits these paths only, whatever else is in the index
+```
+
+The pathspec form ignores the index for the named paths and leaves everything else staged, so a
+parallel session's staged file cannot ride along and is not disturbed either. Used later in the same
+session to split the contaminated commit cleanly.
+
+[PITFALL: **a relative ref is not safe in a repo with parallel sessions, and this is the sharp
+edge.** Undoing that contaminated commit with `git reset --soft HEAD~1` removed a _different_
+commit: the other session had committed on top in the interval, so `HEAD~1` resolved to my commit
+and the reset discarded theirs. Recovered from the reflog with `reset --soft <their-sha>`, nothing
+lost, nothing pushed. The cluster already says a lease SHA must come from `git rev-parse` rather
+than be completed by eye — this is the same principle one step earlier, and it is not stated: **read
+the SHA, reset to the SHA.** `HEAD~1` silently retargets and there is no error, because both
+readings are valid git.]
+
+[DECISION: the two git findings above are wording candidates, unlike everything else in this plan.
+Both are cases where the cluster frames a problem and stops short of the remedy, which is a
+different failure from the adherence gap the other five sessions measure. Judge them on
+`contributing/global-agents-md.md`'s admission criteria, and prefer extending "Unexplained git/file
+state in a working tree" — which already sets up the parallel-session problem and ends on a warning
+with nothing to do about it — over adding a heading. Report the before/after line count when
+proposing, as that document requires.]
+
+[DECISION: leave the `rg -r` wording alone unless a third session hits it. Two occurrences in one
+session is one data point, not two, and the existing decision is that adherence rather than wording
+is the lever.]
