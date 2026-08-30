@@ -134,6 +134,15 @@ a destructive question; `deploy.all` is the deliberate, human-invoked moment for
   installer's sharper "edited since PULSE deployed it — overwrite?" prompt (default no) can only
   fire for copies made after the manifest existed; older copies that differ from source get the
   plain "update?" prompt, because there is no record to prove they were edited rather than stale.
+- **`--yes` was inert on exactly the paths it exists for.** The `SEEDED` branch returned
+  `LEFT_ALONE` before ever reading `assume_yes`, so a customized `config_files` destination could
+  not be overwritten at all — while the message that branch prints names the command
+  (`inv deploy.all --name <pkg> --yes`) and `all_()`'s docstring says such a destination is "left
+  alone unless `--yes`". Both documented an escape hatch the code did not have. Found 2026-08-30 by
+  running the command the message suggested, after a font rename changed `config/wezterm.lua`; the
+  existing tests covered the leave-it-alone path thoroughly and never asserted the documented way
+  out of it. The general shape worth remembering: a branch that prints advice is a branch whose
+  advice nobody has executed.
 - **`deploy.all` must show the diff before it asks, never just prompt.** Both real exercises of the
   mechanism before the writers were converted had the same value: telling a human _which_ files to
   look at before overwriting — five stale deployed sources after a task-rename pass, and a
