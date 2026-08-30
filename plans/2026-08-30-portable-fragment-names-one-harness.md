@@ -127,11 +127,10 @@ what a rule depends on, not what it is about, and "this machine" explicitly is n
 
 Description only — no rule moved, and the assembled output still carries 38 rules.
 
-[DECISION: **the file keeps the name `this-setup.md` for now**, so it lags its own contents. The
-stem feeds the `PULSE::agents-md/<stem>` provenance markers in the deployed file and its `src` in
-`setup.toml`, so a rename touches the deployed output and the package declaration rather than being
-a pure doc change. Worth doing, but as its own change and probably alongside the re-cut, since the
-category set below may not leave a fragment for it to be renamed into.]
+The filename question this raised — `this-setup.md` lagging its own contents — was answered by the
+re-cut a few hours later rather than by a rename: that file no longer exists. Deferring it was right
+for the reason given at the time, that the category set might not leave a fragment to rename into,
+which is exactly what happened.
 
 ## The category set, measured (2026-08-30)
 
@@ -252,27 +251,16 @@ asks for, applied to a result that looked alarming rather than reassuring.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: what are the categories, and how many? The user proposed "pulse-specific
-agents.md things and skills-specific things, at least" and asked what the third was — the current
-third is `portable.md`. A skills category is real and currently scattered: "Setting up a repo's
-agent instructions and skills", "Installing agent instructions and skills on this machine", "Where
-durable knowledge goes", and the `plan-docs` references inside several other rules. Candidate cut:
-**PULSE** (what a provisioned machine gives you), **agent knowledge & skills**
-(AGENTS.md/skills/plans conventions), **Claude Code** (one harness), **portable** (the rest).
-Whether that last one survives as its own fragment, or portable rules simply live unlabelled in the
-others, is the open half.]
+Both of the questions this section opened with are answered above and closed: the categories are the
+six subject fragments, and the label is a bracketed suffix on the rule's heading. The skills
+category the user asked for exists as `agent-knowledge.md`, gathering the five rules that had been
+scattered across three clusters in two fragments.
 
-[NEEDS CLARIFICATION: what does the Claude Code label look like? Options: a per-rule prefix in the
-heading (`Claude Code — viewing, searching, or editing files`), which is loud and hurts the
-heading's job as a retrieval cue; a marker line inside the rule; or keeping the label at cluster
-granularity by moving labelled rules under a Claude Code cluster in whichever fragment they end up.
-Only the last avoids touching wording that was tuned for adherence, and it interacts with the
-whole-`##`-sections constraint above.]
-
-[NEEDS CLARIFICATION: does the locale rule survive the recut? It is the one rule that is neither
+[NEEDS CLARIFICATION: does the locale rule survive? It is the one rule that is neither
 PULSE-provisioned nor portable — an environment fact PULSE works around in its own code but does not
-create. Either PULSE should set it (making the rule PULSE-specific like the rest) or the rule is the
-prerequisite-warning case in the DEFERRED tag above.]
+create, so it is the one rule `inv ai.check-rule-prerequisites` can say nothing about. Either PULSE
+should set the locale (making it labellable like the rest), or the rule stays deliberately
+unlabelled and the fact that it describes the machine rather than the setup is simply accepted.]
 
 ## Recommended direction
 
