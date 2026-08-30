@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-30
 ---
 
@@ -43,46 +43,57 @@ way nothing reports.
 Confirmed 2026-08-30 by reading all five. Nothing is broken today; the values agree. The cost is
 that they agree _by hand_.
 
-## Open questions
+## What landed (2026-08-30)
 
-[NEEDS CLARIFICATION: which direction — does `[settings.fonts]` become the source that rewrites the
-four files, or do those files stop naming a font at all? Rewriting is what the user's phrasing
-suggests ("pulse can update the configs with the font where needed"), and it keeps each file
-readable and deployable on its own. Not naming a font would mean templating or per-format injection,
-which the lifecycle plan is deliberately avoiding — that plan's whole layering design turns on
-whole-file replacement rather than patching.]
+`[settings.fonts]` now declares `family`, `family_mono` and `size`, and nothing else names a font.
 
-[NEEDS CLARIFICATION: if PULSE rewrites them, what does it rewrite — the repo-side `config/` file,
-or the deployed copy? Rewriting the repo source makes the change reviewable and commits it like any
-other, which matches "Regenerating a file from a canonical source" in `~/AGENTS.md`. Rewriting only
-the deployed copy would make every one of these paths permanently `DIRTY` against its source, which
-is exactly the drift the deploy manifest exists to surface.]
+- `fonts.monospace_font()` and `fonts.vscode_settings()` derive what `inv fonts.configure` applies,
+  replacing six hand-written strings (`monospace`, `terminal`, and four VS Code keys).
+  `[settings.fonts.vscode]` survives as a passthrough for keys that are not the font — today just
+  `editor.fontLigatures`.
+- **`inv fonts.render-configs`** rewrites the four repo-side files that carry their own copy:
+  `config/terminator.conf`, `config/wezterm.lua`, both `config/pycharm/*.xml`. A regex per line
+  rather than a parser per format — four formats, four lines, and a Lua/XML/Qt-ini parser apiece
+  would be far more machinery than they earn.
+- A test asserts the committed files already match what the renderer would produce, so a
+  `[settings.fonts]` change that skips the render step fails CI rather than leaving one application
+  on the old font.
 
-[NEEDS CLARIFICATION: the three spellings. A single `family = "CaskaydiaCove Nerd Font"` cannot be
-substituted verbatim into all four — terminator and GNOME want the `Mono` variant with a trailing
-size, wezterm wants the `NFM` abbreviation, PyCharm wants the bare family in one file and `NFM` in
-the other. Either the config carries the variants explicitly, or the writer knows a per-target
-naming rule. The first is honest and slightly verbose; the second is the kind of implicit knowledge
-that rots.]
+[DECISION: **`[settings.fonts]` rewrites the four files; the files keep naming a font.** The
+alternative — files that name no font, filled in at deploy time — is templating, which the sibling
+lifecycle plan is deliberately avoiding: its whole layering design turns on whole-file replacement,
+and a per-format merge would be the second config language both plans exist to prevent. Each file
+also stays readable and deployable on its own this way.]
 
-[NEEDS CLARIFICATION: is this opt-in? The user said "an option that pulse can update the configs
-with the font where needed". An option implies a flag or a setting; the alternative is that it is
-simply what `inv fonts.configure` does. Note `fonts.configure` already mutates the live GNOME
-session, so it is not a read-only task and this would not change its character.]
+[DECISION: **it rewrites the repo-side `config/` file, never the deployed copy**, and it is its own
+deliberate command rather than part of `inv setup` or the quality gate — `~/AGENTS.md`,
+"Regenerating a file from a canonical source". Rewriting only the deployed copy would leave every
+one of those paths permanently `DIRTY` against its source, which is precisely the drift the deploy
+manifest exists to surface. That standalone command _is_ the "option" the request asked for; a flag
+on `fonts.configure` would have been a second way to spell the same thing.]
 
-## Recommended direction
+[DECISION: **two variants, not three spellings** — `family` and `family_mono`, both written in full
+everywhere. The plan assumed three (`CaskaydiaCove Nerd Font`, `… Nerd Font Mono`,
+`CaskaydiaCove NFM`) and a per-target naming rule to pick between them. Measured 2026-08-30 instead:
+Nerd Fonts v3 registers the short name as an alias of the long one, `fc-match` resolves
+`CaskaydiaCove NFM` and `CaskaydiaCove Nerd Font Mono` to the same file, and `wezterm ls-fonts`
+resolves the long form while printing `AKA: "CaskaydiaCove NFM"`. So the third spelling was never a
+third thing. The long form is used everywhere so that a search for the family name finds every
+occurrence — which is what made the original inconsistency hard to see.]
 
-Establish one canonical font declaration in `[settings.fonts]`, carrying the variants explicitly
-rather than deriving them, and have a task rewrite the four repo-side files from it — reviewed and
-committed like any other regeneration, never auto-run as part of `fix`/`check`/`precommit`, per
-`~/AGENTS.md`'s rule on regenerating from a canonical source. Keep the current values as the default
-so nothing changes for anyone who does not ask.
+[PITFALL: the renderer raises when a substitution matches nothing, and that is the load-bearing
+part. A regex that silently matches zero lines leaves the old font in a file the task has just
+reported rewriting — and an upstream rename (PyCharm changing an option name) is exactly how that
+would happen. Tested.]
 
-Worth doing only alongside `plans/2026-08-30-showcase-the-defaults-in-the-docs.md`: the reason to
-make the font one value is that the font is a PULSE feature people should be able to change in one
-place, and a feature nobody has documented is one nobody changes.
+[UNVERIFIED: PyCharm accepting the long family name where the file previously said
+`CaskaydiaCove NFM`. `fc-match` and WezTerm both confirm the alias resolves, and the JVM takes its
+font list from the same fontconfig on Linux, so this is reasoning from one verified case to a very
+similar one rather than a measurement. Confirming it needs a PyCharm restart and a look at the
+editor — worth doing the next time it is open. The old and new strings name the same file, so the
+worst case is cosmetic and one `git revert` away.]
 
-[DEFERRED: `inv verify.all` has no check that the five agree. A drift check ("every place that names
-a font names the same one") is cheap once there is a canonical value to compare against, and is what
-would have caught this by machine rather than by reading four files. Not worth building before the
-canonical value exists.]
+[DEFERRED: `inv verify.all` has no check that the live machine agrees. A drift check ("every place
+that names a font names the same one") is cheap once there is a canonical value to compare against,
+and is what would have caught this by machine rather than by reading four files. Not worth building
+before the canonical value exists.]
