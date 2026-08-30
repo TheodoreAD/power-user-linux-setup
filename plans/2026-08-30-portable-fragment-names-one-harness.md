@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-08-30
 ---
 
@@ -46,12 +46,31 @@ about that work by its shape", "Read the SHA", and the hyphenated adjective in "
 verbs". A mechanical sweep over capitalised tool names flags all three, which is the argument
 against doing this as a sweep.
 
-[PITFALL: **`Invoking a venv tool in the session's own project` is misfiled, not merely
-un-generalised.** Its whole content is "most of this user's repos put `.venv/bin` on `PATH` via
-direnv (`.envrc`)" — a fact about this machine, in the fragment whose stated remit is conventions
-that hold on any machine. The README's framing ("rules that name this user's setup in passing") does
-not cover a rule that is nothing but this user's setup. Its neighbour "Running a command against a
-different repo" has the same problem in one bullet rather than throughout.]
+[PITFALL: **`Invoking a venv tool in the session's own project` was misfiled, not merely
+un-generalised** — fixed below, but the finding generalises. Its whole content is "most of this
+user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`)", a fact about this machine, sitting in
+the fragment whose stated remit is conventions that hold on any machine. The README's framing
+("rules that name this user's setup in passing") could not describe it, so the audit that framing
+invited would not have caught it: a category worded as "X mentioned in passing" is blind to the case
+where X is the whole rule.]
+
+## Done — the misfiled rule moved (2026-08-30)
+
+[DECISION: **`Invoking a venv tool in the session's own project` moved to `this-setup.md`**, no
+wording changed. The rule is not a portable convention mentioning this setup in passing — it is
+entirely "most of this user's repos put `.venv/bin` on `PATH` via direnv", false on a machine
+without direnv and meaningless on one without these repos. Verified in the assembled output: it now
+renders under `## This machine & this setup`, and the rule count is unchanged at 38.]
+
+[PITFALL: **a rule cannot change fragment without changing cluster.** The assembler contributes
+whole `##` sections and never merges at the rule level, so "which fragment owns this" and "which
+cluster does a reader find it under" are one question, not two. Benign here — the destination
+cluster's own intro ("rules that are true because of how this particular machine and this user's
+repos are set up") describes the rule exactly — but any future move has to check the destination
+cluster is a home the rule belongs in, not merely the right fragment.]
+
+Its neighbour "Running a command against a different repo" still has the same problem in one bullet
+rather than throughout, and stays in `portable.md` pending the questions below.
 
 ## Open questions
 
@@ -69,17 +88,14 @@ absolute path like `python3 ~/.agents/skills/plan-docs/scripts/plans.py scan` is
 machine but is exactly what makes the rule actionable on this one, and the rule's value is that the
 command can be run without thinking. "Run your plans store's scan command" is portable and useless.]
 
-[NEEDS CLARIFICATION: should `Invoking a venv tool in the session's own project` simply move to
-`this-setup.md`? That is a smaller, more obviously-correct change than rewording anything, and it
-would test whether the fragment boundary is worth enforcing before any rule is reworded for it.]
-
 ## Recommended direction
 
-Move first, reword second, and do not sweep. The misfiled rule is one `git mv`-shaped edit between
-two fragments with no wording change, and it is the cheapest way to find out whether the boundary is
-real. Only then decide whether a tool name in a rule is a defect or a deliberate concession to the
-harness this machine actually runs — and if it is a defect, whether the fix is generalising the
-wording or relocating the rule.
+Move first, reword second, and do not sweep. The move is done and cost nothing, which is one data
+point that the fragment boundary is enforceable — but a rule that is _wholly_ misplaced is the easy
+case, and it says little about the rules that are merely worded for one harness. What remains is to
+decide whether a tool name in a rule is a defect or a deliberate concession to the harness this
+machine actually runs, and if a defect, whether the fix is generalising the wording or relocating
+the rule to `claude-code.md`.
 
 Per `contributing/global-agents-md.md`, rewrite these one at a time rather than in a sweep: each
 rule's exact wording was tuned for adherence, several of them after being measured as missed, and
