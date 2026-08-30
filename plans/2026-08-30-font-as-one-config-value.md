@@ -95,5 +95,29 @@ worst case is cosmetic and one `git revert` away.]
 
 [DEFERRED: `inv verify.all` has no check that the live machine agrees. A drift check ("every place
 that names a font names the same one") is cheap once there is a canonical value to compare against,
-and is what would have caught this by machine rather than by reading four files. Not worth building
-before the canonical value exists.]
+and is what would have caught this by machine rather than by reading four files. The canonical value
+now exists, so the precondition this was waiting on is met.
+
+Confirmed worth building, 2026-08-30, by the case it predicted. `~/.config/terminator/config` had
+been sitting on `JetBrainsMono Nerd Font 13` since 9 June while GNOME's `monospace-font-name`,
+`config/wezterm.lua` and both PyCharm files all said `CaskaydiaCove Nerd Font Mono 12` — roughly
+three months of one application silently disagreeing, on a machine where every other consumer
+agreed. Nothing reported it, and nothing would have: `deploy.status` did list the path, but the file
+had **no manifest entry at all** (PULSE had never written it), so it classified `UNKNOWN`, and
+`_needs_attention()` correctly declines to flag a `SEEDED` path that differs — that is the mechanism
+working as designed, since a seeded config is the user's own after first install. The gap is not in
+`deploy.py`; it is that no check asks the narrower question this plan can now answer.
+
+Resolved for this instance by `inv deploy.all --name terminator --yes`, after establishing that
+nothing in the live file was worth keeping: the extra `[global_config]`, `[layouts]` and `[plugins]`
+sections are Terminator's own boilerplate, and its `[keybindings]` entry
+(`hide_window = <Primary><Shift><Alt>a`) is Terminator's **default** — `config.py:181` ships
+`<Shift><Control><Alt>a`, the same accelerator in GTK's `<Primary>` spelling. So the whole diff was
+one stale font plus a round-trip through the app's own writer.]
+
+[PITFALL: a `config_files` destination PULSE has never deployed is indistinguishable, in
+`deploy.status`, from one the user edited — both are `UNKNOWN`, whose wording is deliberately
+non-committal because claiming either would be wrong half the time. The tell is the manifest: absent
+from `~/.local/state/power-user-linux-setup/deployed.json` means never written here, and the
+apparent "drift" may simply be a config that was never applied in the first place. Worth checking
+before concluding a user customized something.]
