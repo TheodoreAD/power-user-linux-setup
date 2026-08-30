@@ -1637,6 +1637,10 @@ tags = ["corporate"]
 # --version doesn't exit — starts the proxy daemon itself instead (hung for the full check
 # timeout during the audit pass before this override was added). --help exits cleanly.
 verify_cmd = "px --help"
+# The systemd --user unit that runs the daemon lives at config/pulse-proxy.service and is deployed
+# by `inv proxy.fix`/`install` through tasks/deploy.py. Deliberately NOT declared here: it is
+# written only on a machine that actually configures a corporate proxy, while every declared
+# destination is one `inv verify.all` requires to exist after the packages phase.
 
 [packages.pulse-proxy-start]
 description = "Devcontainer/no-systemd fallback starter for the Px proxy daemon (inv proxy.fix/install use this when systemd --user isn't available)"

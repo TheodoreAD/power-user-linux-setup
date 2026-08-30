@@ -23,31 +23,14 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import ui, util
+from . import deploy, ui, util
 
 # Confirmed against a real `px --save` run (not guessed from --help): Px's default config
 # location is XDG's user-config dir, not ~/.px/.
 _PX_INI = Path.home() / ".config" / "px" / "px.ini"
-_PX_BIN = Path.home() / ".local" / "bin" / "px"
-_UNIT_DIR = Path.home() / ".config" / "systemd" / "user"
-UNIT_PATH = _UNIT_DIR / "pulse-proxy.service"
+UNIT_PATH = Path.home() / ".config" / "systemd" / "user" / "pulse-proxy.service"
 ZSHENV = Path.home() / ".zshenv"
 _DEFAULT_PORT = 3128
-
-_UNIT_CONTENT = f"""[Unit]
-Description=PULSE local proxy (Px) - unauthenticated localhost front for the corporate proxy
-After=network-online.target
-Wants=network-online.target
-
-[Service]
-Type=simple
-ExecStart={_PX_BIN}
-Restart=on-failure
-RestartSec=5
-
-[Install]
-WantedBy=default.target
-"""
 
 
 # ---------------------------------------------------------------------------
@@ -257,19 +240,32 @@ def _user_systemd_available(c: Context) -> bool:
     return c.run("systemctl --user status", hide=True, warn=True).ok
 
 
+UNIT = deploy.Managed(
+    path=UNIT_PATH,
+    package="px-proxy",
+    source="config/pulse-proxy.service",
+    mechanism=deploy.Mechanism.MANAGED_FILE,
+)
+
+
 def _write_unit(c: Context) -> bool:
-    """Write ~/.config/systemd/user/pulse-proxy.service — a genuinely new pattern in this repo,
-    no existing tasks/*.py installs a systemd --user unit (only system-level units, see
-    tasks/system.py). User-owned path, no sudo needed. Returns True if changed.
+    """Deploy ~/.config/systemd/user/pulse-proxy.service. Returns True if it changed.
+
+    No existing tasks/*.py installs a systemd --user unit (only system-level ones, see
+    tasks/system.py); user-owned path, no sudo needed. The content used to be an f-string in this
+    module interpolating the px binary path, so the file had no repo-side source, no manifest
+    entry, no diff and no redeploy path. It is now `config/pulse-proxy.service` — static, because
+    systemd's own `%h` specifier expands the home directory — deployed through the one writer,
+    which is what makes a hand edit to it something PULSE reports rather than silently overwrites.
+
+    Constructed here rather than declared in setup.toml on purpose: every declared destination is
+    one `inv verify.all` requires to exist at the end of the packages phase, and this unit is
+    written only on a machine that actually configures a corporate proxy. MANAGED_FILE rather than
+    a wrapper-script `dest` because a unit file must not be executable.
     """
-    if util.DRY_RUN:
-        ok = UNIT_PATH.exists() and UNIT_PATH.read_text() == _UNIT_CONTENT
-        print(f"[proxy] systemd --user unit: {util.ok_label(ok)}")
-        return False
-    changed = not (UNIT_PATH.exists() and UNIT_PATH.read_text() == _UNIT_CONTENT)
-    if changed:
-        _UNIT_DIR.mkdir(parents=True, exist_ok=True)
-        UNIT_PATH.write_text(_UNIT_CONTENT)
+    action = deploy.deploy(UNIT)
+    changed = action in (deploy.Action.CREATED, deploy.Action.UPDATED)
+    if changed and not util.DRY_RUN:
         c.run("systemctl --user daemon-reload")
     return changed
 

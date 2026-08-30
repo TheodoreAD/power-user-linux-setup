@@ -1,0 +1,16 @@
+[Unit]
+Description=PULSE local proxy (Px) - unauthenticated localhost front for the corporate proxy
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+# %h is systemd's own specifier for the user's home directory, so this file stays a static,
+# diffable artifact instead of a string interpolated at write time — which is what let it live in
+# tasks/proxy.py as a module constant with no manifest entry and no redeploy path.
+ExecStart=%h/.local/bin/px
+Restart=on-failure
+RestartSec=5
+
+[Install]
+WantedBy=default.target
