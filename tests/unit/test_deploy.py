@@ -824,3 +824,107 @@ def test_assembled_from_naming_a_field_no_package_fills_raises(tmp_path, monkeyp
     )
     with pytest.raises(RuntimeError, match="agents_md"):
         deploy.managed_paths()
+
+
+# ---------------------------------------------------------------------------
+# The install-time applier, and the MANAGED_FILE mechanism
+# ---------------------------------------------------------------------------
+
+
+def _mapped_cfg(tmp_path) -> util.PackageConfig:
+    return {"config_files": [{"src": "config/app.conf", "dst": str(tmp_path / "home" / "app.conf")}]}
+
+
+def _unit(tmp_path) -> deploy.Managed:
+    """A MANAGED_FILE destination, as tasks/proxy.py builds one for the systemd --user unit."""
+    return deploy.Managed(
+        path=tmp_path / "home" / "app.conf",
+        package="px-proxy",
+        source="config/app.conf",
+        mechanism=deploy.Mechanism.MANAGED_FILE,
+    )
+
+
+@pytest.fixture
+def no_prompt(monkeypatch):
+    """An install run must never prompt — it is reached from `inv setup`, where there is nobody to
+    answer."""
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("an install run must never prompt"))
+
+
+def test_apply_seeds_a_missing_config_files_destination(tmp_path, src, no_prompt):
+    deploy.apply_config_files("app", _mapped_cfg(tmp_path))
+
+    dst = tmp_path / "home" / "app.conf"
+    assert dst.read_text() == "new content\n"
+    assert deploy.load_manifest()[str(dst)]["mechanism"] == "config-file"
+
+
+def test_apply_reports_and_keeps_a_customized_config_files_destination(tmp_path, src, no_prompt, capsys):
+    deploy.apply_config_files("app", _mapped_cfg(tmp_path))
+    dst = tmp_path / "home" / "app.conf"
+    dst.write_text("customized by the user\n")
+
+    deploy.apply_config_files("app", _mapped_cfg(tmp_path))
+
+    assert dst.read_text() == "customized by the user\n"
+    assert "yours to own" in capsys.readouterr().out
+
+
+def test_apply_keeps_a_pre_existing_config_files_destination_it_never_wrote(tmp_path, src, no_prompt, capsys):
+    # A machine where the file already existed before PULSE ever ran: no manifest entry, content
+    # differs. Seeded policy — it's the user's, leave it and say so.
+    dst = tmp_path / "home" / "app.conf"
+    dst.parent.mkdir()
+    dst.write_text("was here first\n")
+
+    deploy.apply_config_files("app", _mapped_cfg(tmp_path))
+
+    assert dst.read_text() == "was here first\n"
+    assert "yours to own" in capsys.readouterr().out
+
+
+def test_apply_refreshes_an_untouched_destination_when_the_source_changes(tmp_path, src, no_prompt):
+    deploy.apply_config_files("app", _mapped_cfg(tmp_path))
+    src.write_text("new content v2\n")
+
+    deploy.apply_config_files("app", _mapped_cfg(tmp_path))
+
+    assert (tmp_path / "home" / "app.conf").read_text() == "new content v2\n"
+
+
+def test_apply_with_no_mappings_is_a_no_op(tmp_path, src, no_prompt):
+    deploy.apply_config_files("app", {"method": "apt"})
+
+    assert not deploy._MANIFEST.exists()
+
+
+def test_a_managed_file_destination_is_managed_not_seeded(tmp_path):
+    assert _unit(tmp_path).policy == deploy.Policy.MANAGED
+
+
+def test_a_managed_file_is_copied_verbatim_and_left_non_executable(tmp_path, src):
+    """The whole reason this mechanism exists: `wrapper-script` was the only MANAGED whole-file
+    shape and it chmods 0755, which is wrong for a systemd unit."""
+    src.write_text("[Unit]\nDescription=x\n\n")
+
+    deploy.deploy(_unit(tmp_path))
+
+    dst = tmp_path / "home" / "app.conf"
+    assert dst.read_bytes() == b"[Unit]\nDescription=x\n\n"
+    assert not dst.stat().st_mode & 0o111
+
+
+def test_an_edited_managed_file_is_reported_not_accepted(tmp_path, src, monkeypatch, capsys):
+    monkeypatch.setattr(util, "confirm", lambda *a, **k: False)
+    deploy.deploy(_unit(tmp_path))
+    dst = tmp_path / "home" / "app.conf"
+    dst.write_text("hand-edited\n")
+
+    deploy.deploy(_unit(tmp_path))
+
+    # Opposite of the config_files case above: the edit is drift, shown as a diff, not "yours".
+    out = capsys.readouterr().out
+    assert "edited since PULSE deployed it" in out
+    assert "yours to own" not in out
+    assert dst.read_text() == "hand-edited\n"

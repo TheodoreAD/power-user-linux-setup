@@ -74,6 +74,13 @@ class Mechanism(StrEnum):
 
     WRAPPER_SCRIPT = "wrapper-script"
     CONFIG_FILE = "config-file"
+    # A whole file this repo owns outright that must NOT be executable — a systemd unit, an editor
+    # options file. `wrapper-script` was the only MANAGED whole-file mechanism and it chmods 0755,
+    # so a PULSE-owned non-executable file had no way to be declared at all: `~/.config/systemd/
+    # user/pulse-proxy.service` was a module constant written by a task of its own instead, with no
+    # manifest entry, no diff and no never-clobber guarantee. Same verbatim copy as CONFIG_FILE,
+    # opposite policy.
+    MANAGED_FILE = "managed-file"
     SKILL = "skill"
     # One destination composed from several repo-side fragments rather than copied from a single
     # source file — `~/AGENTS.md`, assembled from every `agents_md` fragment declared anywhere in
@@ -272,17 +279,27 @@ def _wrapper_script_entries() -> Iterator[Managed]:
             yield Managed(path=dest, package=name, source=content_file, mechanism=Mechanism.WRAPPER_SCRIPT)
 
 
+def config_file_entries(name: str, cfg: util.PackageConfig) -> Iterator[Managed]:
+    """One package's `config_files` declarations, as registry entries.
+
+    Public so the install-time applier below and the registry read the identical declaration rather
+    than each building its own `Managed` — the two lived in different modules and disagreed about
+    which field spelled the destination once already.
+    """
+    for mapping in cfg.get("config_files", []):
+        yield Managed(
+            path=Path(mapping["dst"]).expanduser(),
+            package=name,
+            source=mapping["src"],
+            mechanism=Mechanism.CONFIG_FILE,
+        )
+
+
 def _config_file_entries() -> Iterator[Managed]:
     # enabled_packages(), not packages_by_method(): `config_files` is method-agnostic, and a lookup
     # keyed on the `dest` field would miss these entirely — they use `dst`.
     for name, cfg in util.enabled_packages().items():
-        for mapping in cfg.get("config_files", []):
-            yield Managed(
-                path=Path(mapping["dst"]).expanduser(),
-                package=name,
-                source=mapping["src"],
-                mechanism=Mechanism.CONFIG_FILE,
-            )
+        yield from config_file_entries(name, cfg)
 
 
 def _skill_entries(base: Path) -> Iterator[Managed]:
@@ -509,6 +526,20 @@ def deploy(m: Managed, *, assume_yes: bool = False, manifest: Manifest | None = 
     record(m, _write(m))
     print(f"[deploy] {m.package}: overwrote {m.path}")
     return Action.UPDATED
+
+
+def apply_config_files(name: str, cfg: util.PackageConfig) -> None:
+    """Seed one package's `config_files` at install time, through the writer above.
+
+    Called from every install task, so a declared config lands in the packages phase with its
+    package — which `inv verify.all`, running at the end of that phase, then requires to exist. It
+    lives here rather than in whichever install module happened to need it first (it was apt.py's
+    private helper, so only apt- and deb-method packages ever got their config seeded during
+    `inv setup`; an `archive` or `git-clone` package's declared config waited for a separate
+    `inv deploy.all` that a fresh machine never runs).
+    """
+    for managed in config_file_entries(name, cfg):
+        deploy(managed)
 
 
 # ---------------------------------------------------------------------------

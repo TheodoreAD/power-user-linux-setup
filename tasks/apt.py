@@ -60,7 +60,7 @@ def _install_apt_package(c: Context, name: str, cfg: util.PackageConfig) -> None
     for sym in cfg.get("symlinks", []):
         if util.ensure_symlink(sym["src"], sym["dst"]):
             print(f"[{name}] symlink: {sym['dst']} -> {sym['src']}")
-    _apply_config_files(name, cfg)
+    deploy.apply_config_files(name, cfg)
 
 
 @task
@@ -183,30 +183,6 @@ def install_repos(c: Context):
 
 
 # ---------------------------------------------------------------------------
-# Config file deployment (shared across methods)
-# ---------------------------------------------------------------------------
-
-
-def _apply_config_files(name: str, cfg: util.PackageConfig) -> None:
-    """Seed each config_files entry at its destination, through tasks/deploy.py's writer.
-
-    A `config_files` destination is the user's after first install (deploy.Policy.SEEDED), so one
-    that has been customized is left alone and said so — not silently skipped, as this used to,
-    and never overwritten. A destination still holding exactly what PULSE last wrote is refreshed
-    when its source changes; `inv deploy.all --yes` is the only path that overwrites a customized
-    one.
-    """
-    for mapping in cfg.get("config_files", []):
-        managed = deploy.Managed(
-            path=Path(mapping["dst"]).expanduser(),
-            package=name,
-            source=mapping["src"],
-            mechanism=deploy.Mechanism.CONFIG_FILE,
-        )
-        deploy.deploy(managed)
-
-
-# ---------------------------------------------------------------------------
 # deb-github / deb-url
 # ---------------------------------------------------------------------------
 
@@ -293,7 +269,7 @@ def _install_github_deb(c: Context, name: str, cfg: util.PackageConfig) -> None:
     else:
         print(f"[{name}] already installed")
 
-    _apply_config_files(name, cfg)
+    deploy.apply_config_files(name, cfg)
 
 
 def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
