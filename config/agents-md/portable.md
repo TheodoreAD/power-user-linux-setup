@@ -62,9 +62,9 @@ same reasoning that keeps the plans store's sensitive tier without a remote.
 ### Force-pushing, or asking what a remote actually has
 
 Every ref you hand git is one you read, never one you derived: `--force-with-lease` is only as good
-as its SHA, so pass one from `git rev-parse` rather than a short form completed by eye. Measured
-2026-08-29 — a lease built from a hand-extended 40-character SHA was refused as stale info, which is
-the mechanism working, but the invented value was the author's, not git's.
+as its SHA, so pass one from `git rev-parse` rather than a short form completed by eye. A lease
+built from a hand-extended 40-character SHA was refused as stale info — the mechanism working, but
+the invented value was the author's, not git's.
 
 Before assuming another session holds its own copy of the history, check: `git worktree list` and a
 look for a second clone. Parallel sessions on this machine share one working tree, so the usual
@@ -76,8 +76,8 @@ A remote-tracking ref answers "what did I last fetch", not "what does the remote
 and `git branch -r --contains` will happily report that ghost. Ask the host
 (`gh api
 repos/<owner>/<repo>/branches`) or `git ls-remote`, and `git fetch --prune` before trusting
-any local answer about remote state. Confirmed the same day: a branch was folded into a history
-rewrite to protect against an exposure that had not existed for weeks.
+any local answer about remote state. A branch was once folded into a history rewrite to protect
+against an exposure that had not existed for weeks.
 
 ### About to commit
 
@@ -329,27 +329,25 @@ and check `sys.prefix` if in doubt. A package registering a plugin through an en
 `pytest11`) needs nothing in the project to name it, so absence probes are exactly where
 contamination hides.
 
-Backgrounding from the shell can leave you reading state from a command that **never ran**. Measured
-2026-08-26: `nohup script.sh & disown` and `setsid script.sh &` both returned non-zero while the
-script's first statement, a file write, never happened — yet a plain `cmd &` plus `sleep` in the
-same call did run. Intermittent is the danger: the next call inspects processes or files as though
-the work happened, so the failure yields false evidence rather than an error, and a background write
-or delete that silently didn't happen looks exactly like one that did. Use the Bash tool's own
-`run_in_background` (it survives across turns and re-invokes you on exit); if something must be
-backgrounded anyway, have it write a marker the next call checks before trusting any result.
+Backgrounding from the shell can leave you reading state from a command that **never ran**:
+`nohup script.sh & disown` and `setsid script.sh &` both returned non-zero while the script's first
+statement, a file write, never happened — yet a plain `cmd &` plus `sleep` in the same call did run.
+Intermittent is the danger: the next call inspects processes or files as though the work happened,
+so the failure yields false evidence rather than an error, and a background write or delete that
+silently didn't happen looks exactly like one that did. Use the Bash tool's own `run_in_background`
+(it survives across turns and re-invokes you on exit); if something must be backgrounded anyway,
+have it write a marker the next call checks before trusting any result.
 
 A wait is only as sound as the value its condition tests, and a filter that can return _nothing_
-never satisfies one. Measured 2026-08-28: `gh run list --commit <7-char-sha>` prints `[]` and exits
-0 — `--commit` matches only the full 40-char SHA — so `.[0].status` is `null` forever and
-`until [ "$(…)" = "completed" ]` can never become true. Four such loops from one session were still
-polling 36 hours later, every 15–20s, while the session had already told the user it would report
-when CI landed: the loop cannot fail, so it reports nothing, and "still running" and "will never
-finish" look identical. Before wrapping anything in a loop, run the inner command once and look at
-what it actually returns; bound the wait by an iteration count or deadline, and say so when it
-expires. Best is not to hand-roll the loop at all — reach for the purpose-built waiter first:
-`gh run watch <run-id> --exit-status` blocks until a run finishes and turns failure into a non-zero
-exit (verified 2026-08-28: on an already-finished run it returns at once with the conclusion), and
-the run-id comes from `gh run list --branch <branch>`, the filter that actually matches.
+never satisfies one: `gh run list --commit <7-char-sha>` prints `[]` and exits 0 — `--commit`
+matches only the full 40-char SHA — so `.[0].status` is `null` forever and
+`until [ "$(…)" = "completed" ]` can never become true. Such a loop cannot fail, so it reports
+nothing, and "still running" and "will never finish" look identical. Before wrapping anything in a
+loop, run the inner command once and look at what it actually returns; bound the wait by an
+iteration count or deadline, and say so when it expires. Best is not to hand-roll the loop at all —
+reach for the purpose-built waiter first: `gh run watch <run-id> --exit-status` blocks until a run
+finishes and turns failure into a non-zero exit, and the run-id comes from
+`gh run list --branch <branch>`, the filter that actually matches.
 
 ### Generalizing from a sample to a set
 

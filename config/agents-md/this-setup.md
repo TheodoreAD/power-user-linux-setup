@@ -37,24 +37,24 @@ first.
 **When it fails with "Permission denied (publickey)", run `inv ssh.check` before anything else** —
 do not reach for `ssh-add`, and never ask the user for a passphrase on the strength of that error.
 This machine runs two agents (the keyring's and keychain's), and a shell pinned to the empty one
-fails exactly that way while every key sits unlocked in the other. Confirmed 2026-08-28: a session
-read the failure as a missing key, ran `ssh-add`, and had the user type a passphrase into three
-dialogs for a key that was already loaded elsewhere and needed none. A session's own shell snapshot
-is captured once and survives a reboot, so an agent session is the most likely thing to be holding a
-stale socket. `ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2 for no agent — those
-last two look alike and mean opposite things.
+fails exactly that way while every key sits unlocked in the other. A session that read the failure
+as a missing key ran `ssh-add`, and had the user type a passphrase into three dialogs for a key that
+was already loaded elsewhere and needed none. A session's own shell snapshot is captured once and
+survives a reboot, so an agent session is the most likely thing to be holding a stale socket.
+`ssh-add -l` exits 0 with keys, 1 for a live but empty agent, 2 for no agent — those last two look
+alike and mean opposite things.
 
 **When `ssh.check` has told you to, apply its verdict as a per-call prefix, not as an `export`.**
 `ssh.check` ends with `export SSH_AUTH_SOCK=/run/user/1000/keyring/ssh` for a human's interactive
 shell; an agent's Bash calls each get a fresh shell, so the export evaporates and the next command
 fails exactly as before — which reads as "the fix didn't work" and sends the session back toward
 `ssh-add`. Prefix instead, on every ssh call **for the rest of that diagnosis**:
-`SSH_AUTH_SOCK=/run/user/1000/keyring/ssh git push`. Confirmed 2026-08-29: a session pushed with the
-prefix, then ran a bare `git fetch` two turns later and got the same publickey error while every key
-sat unlocked in the keyring's agent. The prefix is the repair for a shell pinned to the empty agent
-— not the house style for pushing, and a session that has not seen a publickey failure should never
-be typing it. `gh` is not affected — it authenticates with its own token, verified in the same
-session — so a green `gh` command is not evidence that the shell's ssh agent is the right one.
+`SSH_AUTH_SOCK=/run/user/1000/keyring/ssh git push`. A session that pushed with the prefix then ran
+a bare `git fetch` two turns later and got the same publickey error, while every key sat unlocked in
+the keyring's agent. The prefix is the repair for a shell pinned to the empty agent — not the house
+style for pushing, and a session that has not seen a publickey failure should never be typing it.
+`gh` is not affected — it authenticates with its own token — so a green `gh` command is not evidence
+that the shell's ssh agent is the right one.
 
 ### Formatting a date or decimal in a shell script
 
@@ -75,12 +75,12 @@ stays one mechanism deep; "maintained" means its version tracks the upstream rel
 against the upstream changelog, not assumed. Judge the wrapper from its own PyPI file list
 (`curl -s https://pypi.org/pypi/<name>/json`), never from a search summary: platform-tagged wheels
 mean the binary ships inside one, an sdist alone means it fetches at install time, and the file
-sizes and release count are the adoption cost. Measured 2026-08-26, both directions in one session —
-a summary claimed `hadolint-py` downloads at install (it ships real 12 MB wheels, and was nearly
-rejected for a false reason), while `lychee-bin` turned out to be a 78 MB wheel with exactly one
-release ever, which reversed the decision that had already been made to adopt it. A tool a repo's
-quality gate or test tasks run also goes in that repo's dependency group — the user-wide install is
-for the human at the shell, the group is what CI and consumers resolve.
+sizes and release count are the adoption cost. It goes wrong in both directions: a summary claimed
+`hadolint-py` downloads at install and it was nearly rejected for a false reason (it ships real 12
+MB wheels), while `lychee-bin` turned out to be a 78 MB wheel with exactly one release ever, which
+reversed a decision already made to adopt it. A tool a repo's quality gate or test tasks run also
+goes in that repo's dependency group — the user-wide install is for the human at the shell, the
+group is what CI and consumers resolve.
 
 ### Installing agent instructions and skills on this machine
 

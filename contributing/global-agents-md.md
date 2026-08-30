@@ -180,6 +180,18 @@ discovered by observing normal behaviour.
 
 ## git fetch/push needing an SSH key
 
+Both incidents the rule narrates, with their dates, moved here 2026-08-30 — the narratives stay in
+the rule, because each names the wrong move the reader is about to make and a session reaching for
+`ssh-add` does not take a reference hop first.
+
+Confirmed 2026-08-28: a session read a `Permission denied (publickey)` failure as a missing key, ran
+`ssh-add`, and had the user type a passphrase into three dialogs for a key that was already loaded
+in the other agent and needed none. Confirmed 2026-08-29: a session applied `ssh.check`'s verdict,
+then ran a bare `git fetch` two turns later and got the identical publickey error while every key
+sat unlocked in the keyring's agent — the failure the export-vs-prefix distinction exists to
+prevent, and the reason that distinction stayed emphatic in the rewrite below. `gh` was verified
+unaffected in the same session; it authenticates with its own token.
+
 Rewritten 2026-08-30 to bound the prefix. The section had opened with "Run the `git` command as
 normal" and then, two paragraphs down, an emphatic unconditional-sounding imperative: "Prefix
 instead, on every call that talks to the remote over ssh." The conditional that governs it — that
@@ -552,6 +564,11 @@ that half-repeats the disambiguating word reads as awkward rather than clean.
 
 ## Reading a command's result
 
+Measured 2026-08-26, the backgrounding half: `nohup script.sh & disown` and `setsid script.sh &`
+both returned non-zero while the script's first statement, a file write, never happened — yet a
+plain `cmd &` plus `sleep` in the same call did run. Date moved here 2026-08-30; the rule keeps the
+two forms and the reason intermittence is what makes it dangerous.
+
 `basedpyright` hard-errors (exit 3) on a config error while still printing a clean
 `"0 errors, N warnings, 0 notes"` summary line — a real regression across three repos went unnoticed
 for a stretch of a session because every check was read via `... | tail -N`, and `tail`/`grep` in a
@@ -665,6 +682,18 @@ output through `xxd`/`cat -A` and reading the literal bytes; a rendered terminal
 "does this look like a number" glance would have caught neither.
 
 ## Force-pushing, or asking what a remote actually has
+
+Measured 2026-08-29: a lease built from a 40-character SHA that had been hand-extended from a short
+form was refused as stale info. That is `--force-with-lease` working exactly as designed — the point
+is that the value handed to it was the author's invention rather than anything git had produced, so
+the refusal was luck about which invented SHA it was. Date moved here 2026-08-30; the rule keeps the
+account, which is what makes "never one you derived" concrete.
+
+The stale-remote-ref half is from the same day: a branch was folded into a history rewrite to
+protect against an exposure that had not existed for weeks, because `origin/<branch>` had outlived a
+branch deleted upstream and a plain `git fetch` never prunes. The rule said "confirmed the same
+day", which dangled the moment the date above moved out of it — a relative date is only as good as
+the absolute one next to it, and stripping provenance is exactly when that link breaks.
 
 Reworded 2026-08-30, round 2 of the leanness pass, to lead with the principle instead of with the
 flag. It had opened on `--force-with-lease` specifically, and "Unexplained git/file state in a
@@ -843,6 +872,13 @@ project that merely depends on it, because PEP 735 groups aren't pulled in trans
 `[project.dependencies]`/extras are.
 
 ## Installing a tool on this machine
+
+Measured 2026-08-26, both directions in one session, and moved here 2026-08-30: a search summary
+claimed `hadolint-py` downloads its binary at install time — it ships real 12 MB platform-tagged
+wheels, and was nearly rejected on that false reading — while `lychee-bin` turned out to be a 78 MB
+wheel with exactly one release ever, which reversed a decision already made to adopt it. The rule
+keeps both examples because they are what "judge from the PyPI file list, never from a search
+summary" means concretely, in the two directions it can fail; the date is what moved.
 
 Confirmed 2026-08-24: an agent reached for `gh extension install nektos/gh-act` and
 `curl … download-actionlint.bash | bash` to get `act` and `actionlint` onto the machine, with no
