@@ -1,7 +1,9 @@
 ---
 status: in-progress
-updated: 2026-08-23
+updated: 2026-08-30
 ---
+
+# Do the compressed `~/AGENTS.md` rules actually fire? — the adherence watch
 
 ## Context
 
@@ -141,3 +143,74 @@ compliant shape at all; add "the gate reported green for the wrong repo" as the 
 the `inv` exception; or treat both as evidence for `plans/2026-08-26-agents-md-leanness-pass.md`'s
 open question about demoting the Bash cluster to `session-bash-audit`, which can measure the rate
 rather than restate the rule.]
+
+### Session 4 — `agent-skills`, 2026-08-30: the re-cut's after-number, and it did not move
+
+This is the verification session 2's `[DECISION:]` asked for ("re-run the audit after a week of
+`acceptEdits` sessions"). One `acceptEdits` session, Opus 5, `agent-skills` — a session whose model
+had the re-cut wording loaded the entire time:
+
+| metric                      | this session | baseline (2026-08-21→24, 3,956 calls) |
+| --------------------------- | ------------ | ------------------------------------- |
+| Bash calls                  | 232          | 3,956                                 |
+| piped through `head`/`tail` | **67 (28%)** | **29–32%**                            |
+
+**The rate did not move.** Six days, a re-cut rule and a mode change produced no measurable
+difference. Small sample, one model, one repo — but it is the same order as the baseline rather than
+a reduction, which is the outcome the DECISION was hoping to falsify.
+
+Of the 67, **21 piped a command whose exit code was the actual answer** — `inv`, `pytest`,
+`gh run watch`, `git push`, `git fetch`. The single largest shape was the quality gate itself:
+
+```
+17  inv quality.precommit … | tail -N
+10  git -C … | tail -N
+ 8  plans.py … | tail -N
+```
+
+[PITFALL: **`inv quality.precommit | tail -4` is the shape to name, and it is not a context-saving
+mistake — it is an exit-code-discarding one.** Seventeen gate runs in one session each replaced the
+gate's verdict with `tail`'s, which is always 0. Every one happened to pass, so nothing surfaced it;
+a failure would have printed a similar-looking tail and reported success. The same session then did
+it to `gh run watch --exit-status`, whose entire purpose is turning a red run into a non-zero exit,
+and reported a green CI result it had not observed.]
+
+A **third occurrence the same day**, in the harvest session that filed
+`plans/2026-08-30-git-history-rewriting-to-tidy-a-commit.md`: it piped `git fetch` through `tail`
+while running the checklist that forbids it. Same shape — a stated rule held in context and not
+applied.
+
+The rule is currently split across two clusters that each hold half the answer, and neither states
+the consequence for the shape that actually occurs:
+
+- **"Viewing, searching, or editing files"** says never pipe through `head`/`tail` to save context,
+  and gives the reason as _data loss_ — "pre-truncating only loses data and forces a second run".
+- **"Reading a command's result"** says a pipe returns the filter's exit code, so `$?` never
+  reflects an upstream failure — but frames it around `$?` and log files.
+
+An agent piping a gate is not trying to save context and is not reading `$?`, so it matches neither
+warning as written. It is truncating _display_ of a command it believes it is running normally.
+
+[DECISION: name the shape in **"Reading a command's result"**, where the consequence lives — one
+clause: piping a gate, a test run or a waiter through `head`/`tail` discards its exit code and
+replaces it with the filter's, which is 0 whether or not the command failed, with
+`inv quality.precommit | tail -4` as the canonical instance. End on the replacement habit rather
+than the warning: run it bare, since the Bash tool already reports a non-zero exit, keeps the whole
+output, and saves oversized output to a file it names. Do **not** lengthen "Viewing, searching, or
+editing files" — its data-loss framing is correct for the search case (`rg … | head` on a search
+meant to be complete), which is a different failure with a different fix (`rg -c` first). Two
+shapes, two homes, one clause each.]
+
+Not yet written or deployed. When it is: the fragment in `config/agents-md/` owning "Reading a
+command's result", the evidence into `contributing/global-agents-md.md` under a matching heading,
+then `inv deploy.all --name agents-md`.
+
+[UNVERIFIED: one session, one model, one repo, against a baseline spanning three repos and four
+days. The honest claim is "no evidence the re-cut worked", not "the re-cut failed". Re-run the real
+`session-bash-audit` measurement before treating the comparison as sound — and again after the
+clause above lands. The number to beat is 28%.]
+
+[DEFERRED: the audit script does not separate the exit-code-bearing subset from ordinary display
+truncation, which is the distinction this measurement turns on — the 21-of-67 split was computed ad
+hoc. Teaching `session-bash-audit` to report it belongs in `agent-skills` and would make the
+after-measurement answer the right question. Not blocking: the headline rate is already measurable.]
