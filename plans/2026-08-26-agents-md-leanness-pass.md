@@ -226,14 +226,49 @@ inline; the regex over the fragments then found 4 more, all in rules that _do_ h
 sections — invisible to the first check by construction. The first estimate was therefore wrong by
 3× in the direction that reads as "nearly clean".]
 
-[DEFERRED: **the four grandfathered inline-provenance sites** — one in "Reading a command's result"
-(the `gh` poll loop), two in "git fetch/push needing an SSH key", one in "Installing a tool on this
-machine". They are a different shape from the two that moved: each is woven into the sentence
-carrying the instruction rather than being a standalone incident paragraph, and in the ssh case the
-incident is plausibly what does the deterring — a session that has just read about three passphrase
-dialogs behaves differently from one that has read a reference to them. Moving them is a content
-decision the user has not been asked for; they are enumerated in the test so the list cannot grow
-while it is open.]
+### The remaining four, resolved the same day
+
+Checked before deciding, and they were not one case:
+
+- **The `gh` poll loop** was a genuine duplicate — the evidence file already carries the incident in
+  full (the process sweep, four loops alive ~36 hours, ~26,000 API calls), and the rule retold a
+  compressed version. Compressed to its mechanism, like any other merge in this pass.
+- **The two ssh incidents and the PyPI-wrapper measurement had no evidence section at all.** Moving
+  them wholesale would have removed the narrative from the only place it existed.
+
+[DECISION: **the date is provenance; the failure narrative is instruction.** So all four lose the
+`Confirmed <date>:` / `Measured <date>,` framing and keep the story. "A session read the failure as
+a missing key, ran `ssh-add`, and had the user type a passphrase into three dialogs for a key that
+was already loaded elsewhere" stays in the rule, because it names the wrong move the reader is about
+to make and nobody takes a reference hop before making it; the dated attribution goes to the
+evidence file, because "who confirmed this, and when" is a question no session is asking mid-task.
+This reads criterion 3 as being about dated confirmations specifically, which is what it says,
+rather than about incident prose generally.]
+
+With no exceptions left, the test dropped its grandfather list and asserts the invariant outright.
+
+[PITFALL: **the check that found the four had been passing while missing two more, because `dprint`
+reflows prose and a pattern spelled with a literal space cannot span the line break it inserts.**
+`Measured 2026-08-29` sat in the file as `Measured\n2026-08-29`, and the regex read clean. Switching
+the space to `\s+` immediately surfaced two further sites (in "Force-pushing" and the backgrounding
+half of "Reading a command's result"). The general form: in a repo whose formatter owns line breaks,
+any pattern spanning two words is wrong unless it allows one — and it fails _silently_, in the
+reassuring direction, exactly like the truncation and empty-filter cases the rules themselves warn
+about.]
+
+[PITFALL: **stripping a date orphans every relative date pointing at it.** "Confirmed the same day"
+in "Force-pushing" had referred to the `2026-08-29` two paragraphs above; moving that date left the
+phrase pointing at nothing, and it still read as though it meant something. Caught by grepping the
+fragments for relative-date phrases after the edit, not by reading the paragraph. There is now a
+test for it, anchored to a provenance verb — "the same session" appears twice in these files as the
+substance of a claim ("`Read`, `Edit` and `Write` all stay available in the same session"), and a
+pattern matching the bare phrase flagged both.]
+
+[PITFALL: **"they are all the same kind of exception" was wrong, and one command showed it.** The
+four had been filed together as woven-in provenance to be decided as a unit. Grepping the evidence
+file for each incident split them 1–3: one was already documented there and the other three existed
+nowhere else, which inverts what "move it to the evidence file" costs in each case. Sorting by how a
+passage _looks_ grouped a duplicate with three uniques.]
 
 [NEEDS CLARIFICATION: does merging alone reach a shape worth stopping at? Six merges is the whole
 inventory, and round 1's three yielded 360 bytes. If D–F land in the same range the file finishes
