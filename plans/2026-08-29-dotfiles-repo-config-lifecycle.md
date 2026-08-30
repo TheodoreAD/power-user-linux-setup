@@ -421,11 +421,21 @@ Leaning: layers stay invisible inside `deploy.*` (forward), and `dotfiles.*` own
 for it with a second language in the config files. The layer model may make it unnecessary — a whole
 file per machine instead of one file with conditionals. Cheapest position: no templating in v1, and
 if the same file keeps being duplicated across host directories with a one-line difference, that is
-the evidence to revisit.]
+the evidence to revisit. The `base/` + `machines/<hostname>/` shape settled above is exactly the
+"whole file per machine" side of that trade, so the leaning is now structural rather than merely
+cheap — but "no templating" is still a build-time decision to take deliberately when step 4 lands,
+not one this structure forces.]
 
-[NEEDS CLARIFICATION: does any of this want an encryption story (`age`, as chezmoi and yadm both
-use), or is "secrets are never in a layer, full stop" sufficient? The `secret` tier above asserts
-the latter. `identity.toml` is the test case — emails and a proxy host, no keys.]
+[DECISION: **no encryption story — secrets are never in a layer, full stop.** Settled 2026-08-30 by
+the admission rule for the private repo: no secrets, nothing security-risky, no intellectual
+property. `age`/GPG exists in chezmoi and yadm because those tools' users keep their dotfiles repo
+**public**, so encryption is what lets a secret live there at all; this repo is private and the
+boundary does the same job with no key management, no second tool and nothing to lose.
+`identity.toml` was the test case and it passes: measured 2026-08-30, it carries names, addresses,
+hostnames, ports, CIDRs and a filesystem path, and no credential — the proxy password is in the OS
+keyring and the ssh private keys are in `~/.ssh/`, both by construction rather than by convention.
+If something genuinely secret ever needs to follow the user between machines, the answer is a secret
+manager, not a layer with encryption bolted on.]
 
 ## Recommended direction
 
