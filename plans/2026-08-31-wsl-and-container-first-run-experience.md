@@ -1,0 +1,241 @@
+---
+status: in-progress
+updated: 2026-08-31
+---
+
+# WSL and container first-run experience
+
+## Context
+
+A first `inv wsl.install` on a second machine (corporate Windows, WSL2) failed in two ways at once:
+it **hung** after the sudo password prompt, and the **password was echoed in plain text** while
+being typed. Separately, on the same corporate network, `pypi.org` was unreachable while "whatever
+uv downloads from" was reachable — an asymmetry the setup has no way to report, so a run just fails
+somewhere inside `uv tool install` with a network error and no diagnosis.
+
+Both are first-run experience problems for the two environments PULSE cannot dogfood on the author's
+own workstation: **WSL** (a password-protected sudo user, no display, a Windows host holding the
+proxy and DNS configuration) and **containers** (no tty at all, no systemd, unattended).
+
+Everything below was reproduced in a container built for the purpose (`ubuntu:22.04` + a
+password-protected sudo user + `WSL_DISTRO_NAME` set), not reasoned about from the code.
+
+### Finding 1 — invoke echoes stdin, and races sudo for it
+
+`Runner.should_echo_stdin()` is `(not self.using_pty) and isatty(input_)` (`invoke/runners.py:918`).
+For **every non-pty `c.run`** from a terminal, invoke's stdin mirror thread reads the user's
+keystrokes and **writes them to stdout itself** — invoke has put the terminal in cbreak (ECHO off),
+so without that echo the user would see nothing.
+
+Demonstrated directly: a task running `c.run("head -n 1 > /dev/null")`, typing `SUPERSECRET`, prints
+`SUPERSECRET` back.
+
+`sudo` reads its password from `/dev/tty`, not from stdin — the same terminal invoke's mirror thread
+is reading. So a sudo password prompt reached from inside any `c.run` is a **race between two
+readers of one terminal**:
+
+- sudo wins the read → nothing echoes, everything works (what happens on this workstation, and in
+  the container repro, every time it was run).
+- invoke wins some or all of it → those characters are printed in plain text **and** sudo never sees
+  them, so it fails the attempt and re-prompts. Three of those and it gives up. That is exactly "it
+  got stuck after asking for the password, which appeared in plain text".
+
+The race is why this reproduces on one machine and not another, and why the same command can behave
+differently twice in a row.
+
+[PITFALL: `pty=True` does not fix this — it moves the prompt into a second pty whose ECHO state sudo
+controls, which is why `wsl.install`'s existing pre-auth looks fine here. Every _other_ sudo call in
+the repo (46 of them, all `f"{util.SUDO} …"`) is non-pty, so any one of them that prompts is the bug
+again.]
+
+The real invariant is not "use a pty": it is **no sudo call inside `c.run` may ever prompt**.
+
+### Finding 1b — on Python 3.14 invoke cannot forward stdin at all
+
+The hang half of the report is not the race; it is deterministic, and it is upstream.
+`terminals.bytes_to_read()` calls `fcntl.ioctl(stdin, FIONREAD, b"  ")` — a 2-byte buffer for a
+4-byte result. Every Python before 3.14 overflowed it silently; 3.14 hardened `fcntl.ioctl` and
+raises `SystemError: buffer overflow`, which kills invoke's stdin thread on the first keystroke.
+Nothing is ever written to the child, pty or not, and it waits forever.
+
+Measured in the container, same invoke 3.0.3 throughout: 3.10/3.11/3.12/3.13 forward stdin (and echo
+it — Finding 1); **3.14 hangs**. `uv_python_default = "3.14"`, so this is the default path on any
+machine bootstrapped today. Upstream: pyinvoke/invoke#1070, fixes open, unreleased.
+
+[PITFALL: `ssh-keygen`, `ssh-copy-id` and `ssh-add` all used `pty=True` too, so every SSH key
+operation this repo automates hangs on 3.14 for the same reason. Found by grepping for `pty=True`
+after the sudo cause was understood, not by anyone hitting it.]
+
+### Finding 2 — the credential cache lapses mid-run
+
+The pre-auth warms sudo's cache (15 min default) and then a full `inv wsl.install` runs for much
+longer than that on a slow/corporate connection. The next sudo call after the lapse prompts — see
+Finding 1.
+
+### Finding 3 — apt can prompt, and that hang is invisible
+
+`DEBIAN_FRONTEND` appears **nowhere** in this repo, so every `sudo apt install -y …` runs with the
+interactive frontend. A package with a debconf question (`tzdata`, `wireshark-common`'s dumpcap
+question, `keyboard-configuration`) or a modified conffile stops and waits.
+
+Confirmed the hard way while building the reproduction container for this plan: a plain
+`apt-get install … tzdata` in a `docker build` sat on tzdata's "Geographic area" prompt for **25
+minutes** before it was killed. `docker build -q` shows nothing while that happens — the same "stuck
+with no output" shape the user reported, from a different cause.
+
+### Finding 4 — WSL gets a GUI askpass with no GUI
+
+`[packages.askpass-zenity]` writes `SUDO_ASKPASS`/`SSH_ASKPASS` into `~/.zshenv` unconditionally,
+and `zsh.configure`'s zshenv writer ignores tags (documented in `docs/configuration.md`). So on WSL
+without WSLg, and in any container:
+
+- every new shell exports `SUDO_ASKPASS=~/.local/bin/askpass-zenity`,
+- `util.SUDO` therefore becomes `sudo -A`,
+- `wsl.install`'s pre-auth is **skipped** (its condition is "SUDO_ASKPASS is not set"),
+- and `zenity` fails without a display.
+
+Reproduced: `sudo -A -v` with a zenity-less askpass gives `sudo: no password was provided` /
+`sudo: a password is required`, exit 1 — so the _second_ run of `inv wsl.install` on a fresh WSL
+distro fails where the first one worked.
+
+`[packages.zenity]` is tagged `shell, system`, not `gui`, so a headless WSL distro also installs
+zenity's whole GTK dependency tree for a dialog it can never show.
+
+### Finding 5 — nothing tells you which endpoint is blocked
+
+`inv proxy.check` answers "is there a proxy and what auth does it want". The corporate failure that
+actually happened is a different question: **which of the hosts this setup needs are reachable, and
+by what route**. PyPI blocked while GitHub is fine is a completely ordinary corporate posture (an
+internal Artifactory/Nexus mirror is the sanctioned path), and it is invisible until a download
+fails deep inside `uv tool install`.
+
+That diagnosis has to work **before** PULSE is installed — before `uv`, before `invoke`, before this
+repo's own venv — so it cannot be an invoke task. Ubuntu 22.04's system Python (3.10) is the floor,
+which also rules out `tomllib`.
+
+### Finding 6 — every system file this repo writes was mode 0600
+
+Found by re-running the fixed flow in the container: `inv wsl.fix` wrote `/etc/wsl.conf` and the
+next line, which reads it back to report what changed, died with `PermissionError`.
+`util.sudo_write()` wrote through `tempfile.NamedTemporaryFile` (0600) and `cp`, which preserves the
+mode. Unreachable from the development workstation — the file is only read back by a non-root
+process on a machine where PULSE wrote it.
+
+## Design
+
+### 1. `tasks/netdoctor.py` — a stdlib-only, Python 3.10 diagnostic
+
+```shell
+python3 tasks/netdoctor.py            # nothing installed; runs on Ubuntu 22.04's own python3
+inv net.check                          # the same code, from the invoke side (tasks/net.py)
+```
+
+Hard constraints, each enforced by a unit test: **standard library only**, **no import from
+`tasks/`**, and it must parse as Python 3.10 (so no `tomllib`, no `StrEnum`). The dependency runs
+one way — `tasks/*.py` may import it, never the reverse; `wsl.py`'s raw DNS query moved there and is
+imported back.
+
+[DECISION: one self-contained module inside `tasks/`, not a new top-level `doctor/` package. A
+top-level package would sit outside `pyrightconfig.json`'s `include` (`src*`/`tests*`/`tasks*`),
+which is a file shared byte-identically across the repo family — so it would be neither type-checked
+nor fixable without diverging that config. Running a _file_ (`python3 tasks/netdoctor.py`) rather
+than importing a module is what keeps the zero-install entrypoint working: it never executes
+`tasks/__init__.py`, which imports invoke.]
+
+Sections within the module: the endpoint catalog (what breaks without each host); the probes (DNS,
+TCP, TLS with and without verification, HTTP through an optional proxy); facts read off the machine
+(proxy env, `/etc/environment`, apt proxy config, pip/uv/npm/git indexes, resolv.conf provenance,
+extra CA roots); the Windows side under WSL (`reg.exe`, `netsh.exe`, the PAC file, `/etc/wsl.conf`,
+`%USERPROFILE%\.wslconfig`); and `evaluate()`, which turns all of it into findings that each end in
+the command that fixes them.
+
+[DECISION: `evaluate()` takes every measurement as an argument, including whether public DNS
+answered. That purity is what makes a corporate network a literal in a unit test — PyPI blocked
+while GitHub answers, a 407, an untrusted issuer, a Windows-side proxy the distro doesn't know about
+— none of which this repo can otherwise test against.]
+
+[PITFALL: the certificate issuer is read by scanning the DER for the commonName OID rather than
+parsing X.509. `ssl` only returns a parsed certificate dict for a chain it _validated_, and the
+interesting case is precisely the one that failed validation. Verified against a real self-signed
+certificate in a container, not only against a synthetic buffer.]
+
+### 2. Sudo that cannot prompt from inside `c.run`
+
+In `tasks/util.py`:
+
+- `sudo_state()` — root? `sudo -n true` (passwordless)? cached? askpass usable (set, executable, and
+  a display if it is the zenity one)? a tty?
+- `ensure_sudo()` — idempotent, called once by `inv setup`/`inv wsl.install` and by each sudo-using
+  task that can be run on its own. Authenticates **outside invoke**, with
+  `subprocess.run(["sudo", "-v"])` inheriting the real terminal, so sudo owns `/dev/tty` alone and
+  there is no second reader. Then sets `util.SUDO = "sudo -n"` so that **every** later call fails
+  loudly instead of prompting invisibly, and starts a daemon keepalive thread refreshing
+  `sudo -n -v` every 60s so the 15-minute cache cannot lapse mid-run (Finding 2).
+- `SUDO` becomes `""` when already root, so the container path stops needing `sudo` installed at
+  all.
+- No tty, no askpass, not root, not passwordless → stop **before** the first install with the
+  actionable message, rather than at some random package.
+
+### 3. apt that cannot prompt
+
+A single helper wraps every apt invocation with `DEBIAN_FRONTEND=noninteractive` and
+`-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef`, so a debconf question or a
+conffile conflict can never stop an unattended run (Finding 3).
+
+### 4. askpass that degrades to the terminal
+
+`config/askpass-zenity.sh` gets a no-display fallback: when neither `DISPLAY` nor `WAYLAND_DISPLAY`
+is set, read the passphrase from `/dev/tty` with echo off instead of failing, and exit cleanly when
+there is no terminal either. `[packages.zenity]` moves to the `gui` tag so a headless WSL distro
+stops installing GTK for a window it can never show (Finding 4).
+
+[DECISION: the helper degrades, rather than the `zshenv` export becoming conditional on a display.
+The export is written once, at install time, by a writer that ignores tags — but `DISPLAY` is a
+property of the _session_, and the same machine has both kinds. A helper that decides at call time
+is right in both.]
+
+## Still open
+
+[DEFERRED: `inv net.check` is not wired into `inv verify.all`. verify.all is a post-install
+functional check of what was just installed, and a network probe there would fail a run over a
+reachability problem that no longer matters once everything is installed. Revisit only if a real
+failure argues for it.]
+
+[DEFERRED: one unavailable apt package aborts the whole run — `inv wsl.install` on an Ubuntu 22.04
+distro dies at `eza`, which only exists in 24.04+. The repo targets 24.04, but
+`wsl --install
+Ubuntu-22.04` is a perfectly ordinary thing for someone to have done. The fix is
+per-package tolerance with a summary at the end, not `warn=True` everywhere, which would hide real
+failures.]
+
+[DEFERRED: `zsh.configure`'s zshenv writer ignores tags, which is what put a GUI askpass into every
+headless distro to begin with. The askpass helper degrades gracefully now, so the symptom is gone,
+but the writer is still tag-blind and the next GUI-only export will repeat it.]
+
+## Verification
+
+Done, all of it in containers driven through a real pty (a pipe would make both original symptoms
+impossible to observe):
+
+- **The two causes, isolated.** invoke echoing a typed secret on 3.10–3.13; the deterministic hang
+  on 3.14; the standard-library reproduction that named `FIONREAD`; `subprocess` working where both
+  invoke forms fail.
+- **`inv wsl.install` end to end** on a simulated WSL distro (`ubuntu:24.04`, password-protected
+  sudo user, `WSL_DISTRO_NAME` set, no systemd, no display), from `bash bootstrap.sh` — including
+  its new preflight — through the packages phase. The sudo password is asked once and nothing later
+  stops for input. An earlier pass on `ubuntu:22.04` also exercised the module under that release's
+  own python3.10.
+- **The doctor against simulated corporate networks**: no network at all, PyPI blocked while GitHub
+  answers, a self-signed "Corp Root Inspection CA" presented on :443, and a proxy answering 407 with
+  `Negotiate, NTLM`. Each produced the intended single finding after two rounds of tightening — a
+  TLS-trust failure was initially also reported as a blocked index, and an all-DNS failure produced
+  eight findings for one cause.
+- **The askpass helper** with and without a terminal.
+- **Unit tests**: the sudo state machine with every probe stubbed, the apt command construction,
+  netdoctor's parsers, its whole `evaluate()` layer, and the three constraint tests (stdlib only, no
+  `tasks/` import, 3.10 syntax).
+
+[UNVERIFIED: none of this has run on a real WSL2 distro on real corporate infrastructure. The
+Windows-side reads (`reg.exe`, `netsh.exe`, the PAC fetch, `.wslconfig` discovery) are exercised
+only through their captured-output parsers in unit tests, since the development machine has no
+Windows.]
