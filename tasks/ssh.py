@@ -114,7 +114,7 @@ def create_keys(c: Context):
             print(f"[ssh] key exists: {key.name}")
             continue
         print(f"[ssh] creating key for {email}:")
-        c.run(f'ssh-keygen -t ed25519 -C "{email}__{node}" -f "{key}"', pty=True)
+        util.run_interactive(["ssh-keygen", "-t", "ed25519", "-C", f"{email}__{node}", "-f", str(key)])
 
 
 @task
@@ -159,7 +159,7 @@ def forward(c: Context):
         if not pub.exists():
             print(f"[ssh] missing public key for {h['email']} — run inv ssh.create-keys first")
             continue
-        c.run(f'ssh-copy-id -f -i "{pub}" "{h["user"]}@{h["alias"]}"', pty=True)
+        util.run_interactive(["ssh-copy-id", "-f", "-i", str(pub), f"{h['user']}@{h['alias']}"], check=False)
 
 
 def _probe_agent(sock: str | None) -> int:
@@ -294,4 +294,4 @@ def add(c: Context):
     # One passphrase prompt per key, and ssh-add retries three times per key before giving up —
     # so this is deliberately not run by any composite task. See docs/ssh.md.
     for key in pending:
-        c.run(f'ssh-add "{key}"', warn=True, pty=True)
+        util.run_interactive(["ssh-add", str(key)], check=False)

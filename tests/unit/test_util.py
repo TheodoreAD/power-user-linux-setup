@@ -1,7 +1,12 @@
-"""Unit tests for tasks/util.py's pure helpers — ok_label, ensure_block_text/BlockStatus, and
-packages_by_method's enabled/tag-filtering logic (given an in-memory config, no file I/O). See
-tests/README.md.
+"""Unit tests for tasks/util.py's pure helpers — ok_label, ensure_block_text/BlockStatus,
+packages_by_method's enabled/tag-filtering logic (given an in-memory config, no file I/O), and the
+sudo state machine with every probe stubbed out. See tests/README.md.
 """
+
+import os
+import sys
+
+import pytest
 
 from tasks import util
 
@@ -159,3 +164,105 @@ def test_load_overrides_is_empty_when_the_file_does_not_exist(monkeypatch, tmp_p
 
     assert util.load_overrides() == {}
     util.load_overrides.cache_clear()
+
+
+# --- sudo: the "nothing may prompt from inside c.run" invariant --------------
+#
+# The failure this guards against is not hypothetical: `c.run("sudo -v", pty=True)` hangs forever
+# on Python 3.14 (invoke can't forward stdin — pyinvoke/invoke#1070) and races sudo for the
+# keystrokes on every older one, printing the password in plain text when it wins. See
+# util.ensure_sudo's header and plans/2026-08-31-wsl-and-container-first-run-experience.md.
+
+
+@pytest.fixture
+def fresh_sudo(monkeypatch):
+    """Reset the module-level "already authenticated" state around each test."""
+    monkeypatch.setattr(util, "_sudo_ready", False)
+    monkeypatch.setattr(util, "_sudo_keepalive", None)
+    monkeypatch.setattr(util, "SUDO", "sudo")
+    monkeypatch.setattr(util, "DRY_RUN", False)
+
+
+def _sudo_answers(monkeypatch, *, root=False, ok_flags=(), askpass=None, tty=True):
+    """Stand in for the machine: which `sudo` probes succeed, and what's available to ask with."""
+    calls: list[list[str]] = []
+
+    def fake_ok(*args: str) -> bool:
+        calls.append(list(args))
+        return tuple(args) in ok_flags
+
+    monkeypatch.setattr(util, "_sudo_ok", fake_ok)
+    monkeypatch.setattr(os, "geteuid", lambda: 0 if root else 1000)
+    monkeypatch.setattr(util, "command_exists", lambda name: name == "sudo")
+    monkeypatch.setattr(util, "_usable_askpass", lambda: askpass)
+    monkeypatch.setattr(sys.stdin, "isatty", lambda: tty)
+    return calls
+
+
+def test_sudo_state_separates_a_nopasswd_rule_from_a_warm_cache(monkeypatch, fresh_sudo):
+    _sudo_answers(monkeypatch, ok_flags={("-n", "-k", "true"), ("-n", "true")})
+    assert util.sudo_state().passwordless is True
+
+    _sudo_answers(monkeypatch, ok_flags={("-n", "true")})
+    state = util.sudo_state()
+    assert (state.passwordless, state.cached, state.ready) == (False, True, True)
+
+
+def test_ensure_sudo_authenticates_outside_invoke_and_then_forbids_prompting(monkeypatch, fresh_sudo):
+    _sudo_answers(monkeypatch, ok_flags=())
+    ran: list[list[str]] = []
+    monkeypatch.setattr(util, "run_interactive", lambda cmd, **kw: ran.append(list(cmd)) or 0)
+
+    assert util.ensure_sudo("a test") is True
+    assert ran == [["sudo", "-v"]], "the password must be collected by sudo itself, not through invoke"
+    assert util.SUDO == "sudo -n", "every later c.run must be unable to prompt"
+
+
+def test_ensure_sudo_prefers_a_usable_askpass_over_the_terminal(monkeypatch, fresh_sudo):
+    _sudo_answers(monkeypatch, ok_flags=(), askpass="/home/u/.local/bin/askpass-zenity")
+    ran: list[list[str]] = []
+    monkeypatch.setattr(util, "run_interactive", lambda cmd, **kw: ran.append(list(cmd)) or 0)
+
+    util.ensure_sudo()
+    assert ran == [["sudo", "-A", "-v"]]
+
+
+def test_ensure_sudo_needs_nothing_when_already_root(monkeypatch, fresh_sudo):
+    _sudo_answers(monkeypatch, root=True)
+    monkeypatch.setattr(util, "run_interactive", lambda cmd, **kw: pytest.fail(f"asked for a password: {cmd}"))
+
+    assert util.ensure_sudo() is True
+    assert util.SUDO == "", "as root there is nothing to prefix, and sudo may not even be installed"
+
+
+def test_ensure_sudo_refuses_early_when_it_cannot_ask_at_all(monkeypatch, fresh_sudo):
+    """A container's postCreateCommand with a password-protected user: better to stop here, with
+    the three ways out, than at an invisible prompt somewhere inside an apt run."""
+    _sudo_answers(monkeypatch, ok_flags=(), askpass=None, tty=False)
+    monkeypatch.setattr(util, "run_interactive", lambda cmd, **kw: pytest.fail("should not have tried to ask"))
+
+    with pytest.raises(RuntimeError, match="no terminal to ask on"):
+        util.ensure_sudo()
+
+
+def test_ensure_sudo_is_idempotent(monkeypatch, fresh_sudo):
+    _sudo_answers(monkeypatch, ok_flags=())
+    ran: list[list[str]] = []
+    monkeypatch.setattr(util, "run_interactive", lambda cmd, **kw: ran.append(list(cmd)) or 0)
+
+    util.ensure_sudo()
+    util.ensure_sudo()
+    assert len(ran) == 1
+
+
+def test_apt_command_can_never_stop_on_a_question(monkeypatch):
+    monkeypatch.setattr(util, "SUDO", "sudo -n")
+    command = util.apt_command("install -y tzdata")
+    assert command.startswith("sudo -n env DEBIAN_FRONTEND=noninteractive")
+    assert "--force-confold" in command  # a modified conffile must not prompt either
+    assert command.endswith("install -y tzdata")
+
+
+def test_apt_command_as_root_has_no_stray_sudo(monkeypatch):
+    monkeypatch.setattr(util, "SUDO", "")
+    assert util.apt_command("update").startswith("env DEBIAN_FRONTEND=noninteractive")

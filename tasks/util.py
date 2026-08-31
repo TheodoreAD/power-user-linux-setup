@@ -5,7 +5,10 @@ import shutil
 import subprocess
 import sys
 import tempfile
+import threading
 import tomllib
+from collections.abc import Sequence
+from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
@@ -22,9 +25,13 @@ DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "ye
 # silently skip it. Set this to get the overwrite-and-say-so behavior instead.
 ASSUME_YES: bool = os.environ.get("PULSE_ASSUME_YES", "").lower() in ("1", "true", "yes")
 
-# Use 'sudo -A' when SUDO_ASKPASS is set (non-TTY contexts like Claude Code, or a shell
-# where inv zsh.configure has run). Falls back to plain 'sudo' in a fresh terminal.
-SUDO: str = "sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo"
+# The sudo prefix every task interpolates into its own `c.run(f"{util.SUDO} …")`. Rebound at
+# runtime by ensure_sudo(), which is what makes the "no sudo call inside c.run may ever prompt"
+# invariant hold — see that function for why prompting from inside invoke is unsafe at all.
+#
+# Empty when already root: `sudo` then isn't needed and, in a container built FROM a stock base
+# image, often isn't even installed.
+SUDO: str = "" if os.geteuid() == 0 else ("sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo")
 
 _PULSE_WIDTH = 78
 
@@ -646,6 +653,227 @@ def apt_installed(pkg: str) -> bool:
 
 def command_exists(name: str) -> bool:
     return shutil.which(name) is not None
+
+
+# ---------------------------------------------------------------------------
+# Interactive children, and sudo
+#
+# One invariant holds this section together: **no command run through invoke may ever wait for
+# something typed at the terminal.** Not sudo's password prompt, not an ssh key passphrase, not a
+# debconf question. Two independent reasons, both reproduced in a container (see
+# plans/2026-08-31-wsl-and-container-first-run-experience.md):
+#
+# 1. invoke echoes stdin itself. `Runner.should_echo_stdin()` is `(not using_pty) and
+#    isatty(stdin)`, so for a non-pty run from a terminal invoke prints every byte it reads back
+#    to stdout — while sudo reads the same terminal through /dev/tty. Two readers, one terminal:
+#    whichever wins is a race, and when invoke wins, the password is printed in plain text *and*
+#    sudo never sees those characters, so it re-prompts and the run looks stuck.
+# 2. On Python 3.14 invoke cannot forward stdin at all. `terminals.bytes_to_read()` calls
+#    `fcntl.ioctl(stdin, FIONREAD, b"  ")` with a 2-byte buffer for a 4-byte result; 3.14 turned
+#    that into `SystemError: buffer overflow`, killing invoke's stdin thread on the first
+#    keystroke. Every interactive `c.run` then waits forever — pty or not. Upstream:
+#    pyinvoke/invoke#1070, fix unreleased as of invoke 3.0.3, which is what
+#    `uv_python_default = "3.14"` gets us.
+#
+# So interactive children go through run_interactive() (plain subprocess, real terminal), and
+# every *other* sudo call is made non-interactive by ensure_sudo() rebinding SUDO to `sudo -n`.
+# ---------------------------------------------------------------------------
+
+
+def run_interactive(cmd: Sequence[str], *, check: bool = True) -> int:
+    """Run a command that needs the user's terminal — password/passphrase prompts, anything
+    reading /dev/tty — as a plain subprocess inheriting this process's stdin/stdout/stderr.
+
+    Never `c.run(..., pty=True)`: see this section's header. The child owns the terminal for the
+    duration, exactly as if it had been typed at the shell, so echo suppression is the child's own
+    business and nothing races it for the keystrokes.
+    """
+    argv = list(cmd)
+    if DRY_RUN:
+        print(f"[dry-run] would run interactively: {' '.join(argv)}")
+        return 0
+    return subprocess.run(argv, check=check).returncode
+
+
+# Everything an apt/dpkg call needs so it can't stop and wait for a human. Both halves are load-
+# bearing and neither implies the other:
+#
+#   DEBIAN_FRONTEND=noninteractive  a package with a debconf question (tzdata's "Geographic area",
+#                                   wireshark-common's dumpcap question, keyboard-configuration)
+#                                   takes the default instead of drawing a dialog nobody can
+#                                   answer. `-y` does not cover this — it answers apt's own
+#                                   "do you want to continue", not debconf's.
+#   --force-confold/--force-confdef  a conffile this machine has edited keeps the local version
+#                                   rather than asking which to install. dpkg's prompt is the
+#                                   other half of the same hang.
+#
+# Passed via `env` rather than as a `VAR=value sudo …` prefix (sudo's env_reset drops that) or a
+# `sudo VAR=value …` prefix (allowed only where sudoers grants setenv).
+_NONINTERACTIVE_ENV = "env DEBIAN_FRONTEND=noninteractive DEBIAN_PRIORITY=critical"
+_KEEP_LOCAL_CONFFILES = "-o Dpkg::Options::=--force-confold -o Dpkg::Options::=--force-confdef"
+
+
+def apt_command(args: str) -> str:
+    """A complete `apt-get` command line that can never stop for a question.
+
+    `apt-get`, not `apt`: apt's own CLI warns that it has no stable interface for scripts, and
+    every subcommand this repo uses (install/update/purge/autoremove/clean/autoclean) exists in
+    both.
+    """
+    return f"{SUDO} {_NONINTERACTIVE_ENV} apt-get {_KEEP_LOCAL_CONFFILES} {args}".strip()
+
+
+def dpkg_command(args: str) -> str:
+    """Same, for a direct `dpkg` call (installing a downloaded .deb)."""
+    return f"{SUDO} {_NONINTERACTIVE_ENV} dpkg --force-confold --force-confdef {args}".strip()
+
+
+@dataclass(frozen=True)
+class SudoState:
+    """What `sudo` will do here if we ask it to, decided before anything is installed rather than
+    discovered halfway through an apt run."""
+
+    root: bool
+    passwordless: bool
+    cached: bool
+    askpass: str | None
+    tty: bool
+
+    @property
+    def ready(self) -> bool:
+        """True if a `sudo -n` call will succeed right now with nothing typed."""
+        return self.root or self.passwordless or self.cached
+
+    @property
+    def can_authenticate(self) -> bool:
+        """True if there's some way to *get* to that state — a GUI askpass or a real terminal."""
+        return self.ready or self.askpass is not None or self.tty
+
+
+def _sudo_ok(*args: str) -> bool:
+    return (
+        subprocess.run(
+            ["sudo", *args],
+            stdin=subprocess.DEVNULL,
+            capture_output=True,
+            check=False,
+        ).returncode
+        == 0
+    )
+
+
+def _usable_askpass() -> str | None:
+    """SUDO_ASKPASS, but only when it can actually produce a password here. The helper this repo
+    deploys is a Zenity dialog (config/askpass-zenity.sh); with no display it can only fail, and
+    sudo's own failure for that is the unhelpful "no password was provided". A helper that reads
+    the terminal instead is fine either way, so a display is required only for the GUI one.
+    """
+    askpass = os.environ.get("SUDO_ASKPASS")
+    if not askpass or not os.access(askpass, os.X_OK):
+        return None
+    if "zenity" in Path(askpass).name and not (os.environ.get("DISPLAY") or os.environ.get("WAYLAND_DISPLAY")):
+        return None
+    return askpass
+
+
+def sudo_state() -> SudoState:
+    if os.geteuid() == 0:
+        return SudoState(root=True, passwordless=True, cached=True, askpass=None, tty=sys.stdin.isatty())
+    if not command_exists("sudo"):
+        return SudoState(root=False, passwordless=False, cached=False, askpass=None, tty=sys.stdin.isatty())
+    # `sudo -n true` succeeds for a NOPASSWD rule *and* for a live credential cache; `sudo -n -k
+    # true` ignores the cache, so the pair separates the two without ever prompting. -k here only
+    # tells this one call to ignore the timestamp — unlike a bare `sudo -k`, it doesn't clear it.
+    passwordless = _sudo_ok("-n", "-k", "true")
+    cached = passwordless or _sudo_ok("-n", "true")
+    return SudoState(
+        root=False,
+        passwordless=passwordless,
+        cached=cached,
+        askpass=_usable_askpass(),
+        tty=sys.stdin.isatty(),
+    )
+
+
+_sudo_ready = False
+_sudo_keepalive: "threading.Thread | None" = None
+_sudo_keepalive_stop = threading.Event()
+
+# How often the keepalive re-stamps sudo's credential cache. sudo's own default timeout is 15
+# minutes and a full `inv setup` on a slow connection runs far longer than that, so without this
+# the cache lapses mid-run and the next `sudo -n` call fails for no reason the user can see.
+_SUDO_KEEPALIVE_SECONDS = 60
+
+
+def _sudo_keepalive_loop() -> None:
+    while not _sudo_keepalive_stop.wait(_SUDO_KEEPALIVE_SECONDS):
+        _sudo_ok("-n", "-v")
+
+
+def ensure_sudo(reason: str = "the rest of this run") -> bool:
+    """Authenticate sudo once, up front, then guarantee no later sudo call can prompt.
+
+    Returns True when sudo is usable. Idempotent — later calls are a no-op, so every task that
+    needs root can call it without coordinating with the others.
+
+    Three things happen here, in order:
+
+    1. The password (if one is needed at all) is collected **outside invoke** — a GUI askpass if
+       one can work here, otherwise `sudo -v` as a plain subprocess owning the real terminal.
+    2. `SUDO` is rebound to `sudo -n`, so every `c.run(f"{util.SUDO} …")` in the repo becomes
+       non-interactive. A lapsed cache then fails loudly and immediately instead of printing an
+       invisible prompt into a `hide=True` stream and hanging.
+    3. A daemon thread re-stamps the credential cache every minute, so it can't lapse during a
+       long install in the first place.
+    """
+    # SUDO is deliberately rebindable despite its name: it is the one piece of process-wide state
+    # every task interpolates, and the whole point of this function is to change what it means for
+    # the rest of the run. Renaming it to lowercase would touch 46 call sites for a naming rule.
+    global _sudo_ready, SUDO, _sudo_keepalive  # noqa: PLW0603 — process-wide state by design
+    if _sudo_ready or DRY_RUN:
+        return True
+
+    state = sudo_state()
+    if state.root:
+        SUDO = ""  # pyright: ignore[reportConstantRedefinition]
+        _sudo_ready = True
+        return True
+    if not command_exists("sudo"):
+        raise RuntimeError(
+            "sudo is not installed and this isn't running as root — install sudo (or run as "
+            "root) before setting up this machine."
+        )
+
+    if not state.ready:
+        if state.askpass:
+            print(f"[sudo] authenticating via {state.askpass} — a password dialog should appear")
+            run_interactive(["sudo", "-A", "-v"])
+        elif state.tty:
+            print(
+                f"[sudo] this machine needs a sudo password for {reason}. Asking once now, so "
+                "nothing later stops to ask again — nothing you type is echoed."
+            )
+            run_interactive(["sudo", "-v"])
+        else:
+            raise RuntimeError(
+                "sudo needs a password here, but there's no terminal to ask on and no usable "
+                "SUDO_ASKPASS helper.\n"
+                "Pick one:\n"
+                "  • run `sudo -v` yourself first, then re-run this within the credential "
+                "cache's lifetime;\n"
+                "  • give this user a NOPASSWD rule (`/etc/sudoers.d/`), which is what dev "
+                "container base images do;\n"
+                "  • or run this as root.\n"
+                "Refusing to continue: every install step below needs root, and each would stop "
+                "at its own invisible password prompt."
+            )
+
+    SUDO = "sudo -n"  # pyright: ignore[reportConstantRedefinition]
+    _sudo_ready = True
+    if _sudo_keepalive is None and not state.passwordless:
+        _sudo_keepalive = threading.Thread(target=_sudo_keepalive_loop, daemon=True, name="pulse-sudo-keepalive")
+        _sudo_keepalive.start()
+    return True
 
 
 def require_systemd() -> None:

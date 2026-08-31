@@ -54,7 +54,7 @@ def _install_apt_package(c: Context, name: str, cfg: util.PackageConfig) -> None
     missing = [p for p in packages if not util.apt_installed(p)]
     if missing:
         print(f"[{name}] installing: {', '.join(missing)}")
-        c.run(f"{util.SUDO} apt install -y {' '.join(missing)}")
+        c.run(util.apt_command(f"install -y {' '.join(missing)}"))
     else:
         print(f"[{name}] already installed")
     for sym in cfg.get("symlinks", []):
@@ -74,7 +74,7 @@ def install_base(c: Context):
         return
     needs_update = any(not util.apt_installed(p) for name, cfg in pkgs.items() for p in util.apt_packages(name, cfg))
     if needs_update:
-        c.run(f"{util.SUDO} apt update")
+        c.run(util.apt_command("update"))
     for name, cfg in pkgs.items():
         _install_apt_package(c, name, cfg)
 
@@ -121,7 +121,7 @@ def _install_repo_packages(c: Context, name: str, cfg: util.PackageConfig) -> No
     missing = [p for p in util.apt_packages(name, cfg) if not util.apt_installed(p)]
     if missing:
         print(f"[{name}] installing: {', '.join(missing)}")
-        result = c.run(f"{util.SUDO} apt install -y {' '.join(missing)}", warn=True)
+        result = c.run(util.apt_command(f"install -y {' '.join(missing)}"), warn=True)
         if not result.ok:
             print(f"[{name}] WARNING: apt install failed — check repo or run manually")
     else:
@@ -166,8 +166,8 @@ def install_repos(c: Context):
         pkg for pkg, cmd in [("lsb-release", "lsb_release"), ("gnupg", "gpg")] if not util.command_exists(cmd)
     ]
     if missing_prereqs:
-        c.run(f"{util.SUDO} apt update")
-        c.run(f"{util.SUDO} apt install -y {' '.join(missing_prereqs)}")
+        c.run(util.apt_command("update"))
+        c.run(util.apt_command(f"install -y {' '.join(missing_prereqs)}"))
     codename = c.run("lsb_release -cs", hide=True).stdout.strip()
 
     # Phase 1: register all repos, then one apt update.
@@ -175,7 +175,7 @@ def install_repos(c: Context):
     for name, cfg in pkgs.items():
         needs_update |= _register_repo(c, name, cfg, codename)
     if needs_update:
-        c.run(f"{util.SUDO} apt update", warn=True)
+        c.run(util.apt_command("update"), warn=True)
 
     # Phase 2: install packages from all repos.
     for name, cfg in pkgs.items():
@@ -236,10 +236,10 @@ def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) 
             print(f"[{name}] WARNING: no .deb found inside {asset} — skipping")
             c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
             return False
-        c.run(f"{util.SUDO} dpkg -i {deb}", warn=True)
+        c.run(util.dpkg_command(f"-i {deb}"), warn=True)
         c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
     else:
-        c.run(f"{util.SUDO} dpkg -i {downloaded}", warn=True)
+        c.run(util.dpkg_command(f"-i {downloaded}"), warn=True)
         c.run(f"rm -f {downloaded}")
     return True
 
@@ -292,7 +292,7 @@ def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
         if not path:
             print(f"[{name}] skipped")
             return
-        c.run(f"{util.SUDO} dpkg -i {path}")
+        c.run(util.dpkg_command(f"-i {path}"))
         print(f"[{name}] installed")
         return
     if "{version}" in url:
@@ -303,7 +303,7 @@ def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
     print(f"[{name}] installing...")
     deb = f"/tmp/{name}.deb"
     c.run(f'curl -fsSL "{url}" -o {deb}')
-    c.run(f"{util.SUDO} dpkg -i {deb} && rm {deb}")
+    c.run(util.dpkg_command(f"-i {deb}") + f" && rm {deb}")
     print(f"[{name}] installed")
 
 
@@ -324,7 +324,7 @@ def clean_cache(c: Context):
     if util.DRY_RUN:
         _cache_size_report(c, "apt.clean-cache")
         return
-    c.run(f"{util.SUDO} apt-get autoclean")
+    c.run(util.apt_command("autoclean"))
     print("[apt.clean-cache] obsolete entries removed from /var/cache/apt/archives")
 
 
@@ -338,7 +338,7 @@ def clean_cache_full(c: Context):
     if util.DRY_RUN:
         _cache_size_report(c, "apt.clean-cache-full")
         return
-    c.run(f"{util.SUDO} apt-get clean")
+    c.run(util.apt_command("clean"))
     print("[apt.clean-cache-full] /var/cache/apt/archives cleared")
 
 
@@ -358,7 +358,7 @@ def install_debs(c: Context):
         # machine but missing on a fresh install) leaves dpkg with that package "unconfigured"
         # instead of actually installed. `apt-get install -f` resolves and installs whatever's
         # currently missing for any package dpkg left in that state; cheap no-op if nothing broke.
-        c.run(f"{util.SUDO} apt-get install -f -y", warn=True)
+        c.run(util.apt_command("install -f -y"), warn=True)
 
 
 @task
@@ -387,8 +387,8 @@ def uninstall(c: Context, name: str):
         return
 
     if installed:
-        c.run(f"{util.SUDO} apt purge -y {' '.join(installed)}")
-        c.run(f"{util.SUDO} apt autoremove -y", warn=True)
+        c.run(util.apt_command(f"purge -y {' '.join(installed)}"))
+        c.run(util.apt_command("autoremove -y"), warn=True)
         print(f"[{name}] purged: {', '.join(installed)}")
     else:
         print(f"[{name}] not installed")

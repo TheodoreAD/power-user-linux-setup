@@ -436,16 +436,12 @@ def install(c: Context, wslg: str = "auto", docker: bool = False, dns: str = "au
         print("[wsl.install] aborted")
         return
 
-    if not os.environ.get("SUDO_ASKPASS") and not util.DRY_RUN:
-        # Every other sudo call below runs through invoke's non-interactive Runner, which doesn't
-        # give the child process a real tty — sudo can't read a password from that (it prints the
-        # prompt, then fails immediately with "a password is required"), even for calls that
-        # aren't piped. Warming up sudo's credential cache here, in a real pty, means those later
-        # calls succeed without prompting at all as long as the cache stays valid (~15min default;
-        # re-run `sudo -v` in another terminal, or just re-run `inv wsl.install`, if it lapses on
-        # a slow connection).
-        print("[wsl.install] pre-authenticating sudo — enter your password if asked:")
-        c.run(f"{util.SUDO} -v", pty=True)
+    # Authenticate sudo once, before anything installs, and keep the credential cache warm for the
+    # rest of the run so no later step stops to ask (see util.ensure_sudo). This used to be
+    # `c.run("sudo -v", pty=True)`, which hangs outright on Python 3.14 — invoke can't forward
+    # stdin there at all (pyinvoke/invoke#1070), so the prompt appeared and nothing typed ever
+    # reached it.
+    util.ensure_sudo("installing packages and editing /etc/wsl.conf")
 
     check(c)
 

@@ -42,6 +42,10 @@ def setup(c: Context):
         wsl.install(c)
         return
 
+    # Once, up front: every phase below needs root somewhere, and a password prompt reached from
+    # inside a task is either invisible or unanswerable (util.ensure_sudo's header explains why).
+    util.ensure_sudo("installing packages and writing system config")
+
     if not util.has_systemd():
         print(
             "[setup] no systemd detected (not WSL) — skipping the `system` phase (locale/DNS "
