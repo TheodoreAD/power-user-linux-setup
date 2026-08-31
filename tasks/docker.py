@@ -83,6 +83,7 @@ def _configure_daemon_json(c: Context) -> None:
 @task
 def configure(c: Context):
     """Merge log limits and DNS into /etc/docker/daemon.json, add user to docker group."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     if util.is_docker_desktop_wsl_integration():
         print(
             "[docker] `docker` CLI found but no local dockerd — nothing to configure here. "

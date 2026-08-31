@@ -258,6 +258,7 @@ def install(c: Context, bundle: str | None = None):
     python/node/awscli. --bundle=path overrides the [certs] table in
     ~/.config/power-user-linux-setup/identity.toml. See docs/certs.md.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     if not util.command_exists("openssl"):
         raise RuntimeError("openssl not found — run `sudo apt install openssl` first")

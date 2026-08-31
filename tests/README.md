@@ -62,6 +62,14 @@ _new_ session's snapshot already has `.venv/bin` on `PATH` — no explicit activ
 session whose snapshot predates `.envrc`/`direnv allow` existing won't see it retroactively (the
 snapshot doesn't refresh mid-session); start a new session if that happens.
 
+**A test that calls a task which calls `util.ensure_sudo()` must stub it.** That covers most tasks
+touching the system now (see AGENTS.md, "Nothing run through invoke may wait for typed input"), and
+on a desktop machine the unstubbed version does something no test should: `SUDO_ASKPASS` is set, so
+it opens a Zenity password dialog and waits for it. Confirmed by doing it — a `pytest` run hung with
+a password prompt sitting on the desktop. `tests/unit/test_util.py`'s `fresh_sudo`/`_sudo_answers`
+fixtures show the shape; the invariant those tests are for is worth keeping testable, not worth a
+`PYTEST_CURRENT_TEST` check inside production code.
+
 ## Layout: `tests/unit/` only, no integration tier — on purpose
 
 The suite lives in `tests/unit/`, matching the two-tier layout `repo-tasks` ships to every consumer

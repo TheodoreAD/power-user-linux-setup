@@ -132,6 +132,7 @@ def enable(c: Context):  # noqa: C901
     and Flameshot has no active-window capture mode to offer instead. The screencast shortcut
     (Ctrl+Shift+Alt+R) is untouched too — Flameshot has no video capability.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     if not util.command_exists("flameshot"):
         print(
             "[screenshot] flameshot not installed — enable [packages.flameshot] in setup.toml "

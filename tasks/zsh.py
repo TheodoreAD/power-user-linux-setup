@@ -116,6 +116,7 @@ def set_default_shell(c: Context):
     work in a non-interactive/piped session the way sudo -A does). Only takes effect in a new
     login shell/terminal, not the one this runs in.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     zsh_path = shutil.which("zsh")
     if not zsh_path:
         print("[zsh] zsh not found on PATH — install it first (apt.install-base)")

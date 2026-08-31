@@ -328,6 +328,7 @@ def fix(c: Context, dns: bool = False):
       if you know you don't need those — `inv wsl.check` reports whether public DNS is even
       reachable on this network as one data point, but reachability alone isn't proof it's safe.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     if not util.is_wsl():
         print("[wsl] not running under WSL — nothing to fix")
         return

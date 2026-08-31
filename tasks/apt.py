@@ -26,6 +26,7 @@ _APT_CONF_CONTENT = 'DPkg::Progress-Fancy "false";\n'
 @task
 def configure(c: Context):
     """Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     if util.DRY_RUN:
         ok = util.sudo_read(c, _APT_CONF) == _APT_CONF_CONTENT
@@ -66,6 +67,7 @@ def _install_apt_package(c: Context, name: str, cfg: util.PackageConfig) -> None
 @task
 def install_base(c: Context):
     """Install base apt packages from config."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     pkgs = util.packages_by_method(util.PackageMethod.APT)
     if util.DRY_RUN:
@@ -144,6 +146,7 @@ def _status_repo(name: str, cfg: util.PackageConfig) -> None:
 @task
 def install_repos(c: Context):
     """Set up external apt repos and install their packages."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     pkgs = util.packages_by_method(util.PackageMethod.APT_REPO)
 
@@ -320,6 +323,7 @@ def clean_cache(c: Context):
     cached for reinstall. Opt-in, not part of `inv setup`/`apt.install-base` — see `inv clean.caches`.
     For a full wipe of /var/cache/apt/archives instead, see `apt.clean-cache-full`.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     if util.DRY_RUN:
         _cache_size_report(c, "apt.clean-cache")
@@ -334,6 +338,7 @@ def clean_cache_full(c: Context):
     currently-installed packages — apt just re-downloads them if reinstalled. Opt-in, not part of
     `inv setup`/`apt.install-base` — see `inv clean.all-full`.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     if util.DRY_RUN:
         _cache_size_report(c, "apt.clean-cache-full")
@@ -345,6 +350,7 @@ def clean_cache_full(c: Context):
 @task
 def install_debs(c: Context):
     """Install packages sourced from GitHub releases or direct deb URLs."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
         _install_github_deb(c, name, cfg)
@@ -369,6 +375,7 @@ def uninstall(c: Context, name: str):
     dpkg-owned (vendor installers under /opt, stale logs, orphaned dconf locks, etc.) and so
     survive a plain `apt purge`.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     cfg = util.load_config()["packages"].get(name)
     if not cfg:
         print(f"[apt.uninstall] no such section: {name}")
@@ -418,6 +425,7 @@ def upgrade_debs(c: Context):
 @task
 def refresh_keys(c: Context):
     """Re-download GPG keys for all enabled apt-repo sources."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     for name, cfg in util.packages_by_method(util.PackageMethod.APT_REPO).items():
         if "gpg_path" not in cfg or "gpg_url" not in cfg:
             raise util.missing_fields(name, "gpg_path", "gpg_url")

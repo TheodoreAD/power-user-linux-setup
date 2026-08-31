@@ -25,6 +25,7 @@ _IPV6_KEYS = [
 @task
 def install_apparmor_profiles(c: Context):
     """Install AppArmor profiles declared in setup.toml with method = 'apparmor-profile'."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     profiles = util.packages_by_method(util.PackageMethod.APPARMOR_PROFILE)
     if not profiles:
         if util.DRY_RUN:
@@ -111,6 +112,7 @@ def set_locale(
     machine legitimately keeps — `LC_MONETARY`, `LC_PAPER`, `LC_MEASUREMENT` — survive because they
     are read back and passed through untouched.
     """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_systemd()
     current = parse_system_locale(c.run("localectl status", hide=True).stdout)
     desired = current | {"LANG": lang, "LC_TIME": lc_time, "LC_NUMERIC": lc_numeric}
@@ -133,6 +135,7 @@ def set_locale(
 @task
 def disable_ipv6(c: Context):
     """Ensure IPv6 is disabled in /etc/sysctl.conf and apply immediately."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     content = "\n".join(f"{k} = 1" for k in _IPV6_KEYS)
     text = util.sudo_read(c, _SYSCTL_CONF)
     new_text, status = util.ensure_block_text(text, "ipv6-disable", content)
@@ -150,6 +153,7 @@ def disable_ipv6(c: Context):
 @task
 def cap_journal_size(c: Context, max_use: str = "500M"):
     """Cap persistent journal size (default: 500M) and restart journald if changed."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_systemd()
     content = f"[Journal]\nSystemMaxUse={max_use}"
     text = util.sudo_read(c, _JOURNALD_SIZE_CONF)
@@ -169,6 +173,7 @@ def cap_journal_size(c: Context, max_use: str = "500M"):
 @task
 def set_initramfs_compression(c: Context, algorithm: str = "xz"):
     """Set initramfs compression algorithm (default: xz) and rebuild if changed."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     text = util.sudo_read(c, _INITRAMFS_CONF)
     pattern = re.compile(r"^([ \t]*#?[ \t]*COMPRESS[ \t]*=[ \t]*)(\S+)$", re.MULTILINE)
     m = pattern.search(text)
@@ -192,6 +197,7 @@ def set_initramfs_compression(c: Context, algorithm: str = "xz"):
 @task
 def configure_dns(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.1", fallback: str = "8.8.8.8"):
     """Configure DNS via systemd-resolved drop-in (Cloudflare + Google fallback). Idempotent."""
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_systemd()
     content = f"[Resolve]\nDNS={primary} {secondary}\nFallbackDNS={fallback}\nDNSSEC=no"
     text = util.sudo_read(c, _RESOLVED_CONF)
