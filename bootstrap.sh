@@ -25,6 +25,10 @@ if command -v apt-get &> /dev/null; then
   command -v curl &> /dev/null || missing+=(curl)
   command -v gpg &> /dev/null || missing+=(gnupg)
   command -v sudo &> /dev/null || missing+=(sudo)
+  # git: `uv tool install 'repo-tasks @ git+https://…'` below shells out to it, and so does every
+  # `git-clone` package later. A stock ubuntu:24.04 base has no git, so docker/Dockerfile's bake
+  # died here with uv's "Git executable not found" — after a two-minute Python download.
+  command -v git &> /dev/null || missing+=(git)
   dpkg -s ca-certificates &> /dev/null 2>&1 || missing+=(ca-certificates)
 
   if [ ${#missing[@]} -gt 0 ]; then
