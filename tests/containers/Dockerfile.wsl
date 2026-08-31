@@ -1,0 +1,16 @@
+# A stand-in for a fresh WSL2 Ubuntu distro: a *password-protected* sudo user (WSL's default,
+# unlike every dev-container base image, which gives its user NOPASSWD), no systemd, no display.
+# The repo itself is bind-mounted at run time so edits need no rebuild.
+ARG BASE=ubuntu:22.04
+FROM ${BASE}
+ENV DEBIAN_FRONTEND=noninteractive
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+    sudo python3 python3-venv curl ca-certificates git gnupg locales tzdata \
+    && rm -rf /var/lib/apt/lists/*
+RUN useradd -m -s /bin/bash dev && echo 'dev:devpass' | chpasswd && usermod -aG sudo dev
+USER dev
+ENV HOME=/home/dev
+ENV PATH=/home/dev/.local/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin
+WORKDIR /home/dev
+CMD ["bash", "-l"]
