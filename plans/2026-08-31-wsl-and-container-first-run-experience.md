@@ -121,6 +121,29 @@ next line, which reads it back to report what changed, died with `PermissionErro
 mode. Unreachable from the development workstation — the file is only read back by a non-root
 process on a machine where PULSE wrote it.
 
+### Finding 7 — the documented container bake path was broken, twice
+
+Running `docker build -f docker/Dockerfile` (the canonical bake, and the thing the dev-container
+docs point at as an example) failed twice for reasons that have nothing to do with sudo:
+
+1. **No git.** `bootstrap.sh` self-heals curl/gnupg/sudo/ca-certificates but not git, and
+   `uv tool install 'repo-tasks @ git+https://…'` shells out to it — so the build died with uv's
+   "Git executable not found" two minutes in, after downloading four Pythons.
+2. **`skills` before the thing that installs it.** `ai.install_skills` ran _before_ `node.install`
+   in both phase lists, and the `skills` CLI is a global npm package `node.install` provides. Exit
+   127, ~90% of the way through an unattended build, with no message.
+
+[PITFALL: reordering the phases is necessary but not sufficient. A global npm package lives under a
+version-specific nvm path that is only on `PATH` once `nvm.sh` has been sourced — a login shell does
+that through Oh My Zsh's nvm plugin, an `inv` process never does. So a bare `skills` call works when
+a human tries it by hand and exits 127 inside a `RUN` layer or any non-interactive run.
+`[packages.node]`'s own `verify_cmd` already documented this gap for `node --version`; nothing had
+generalised it. `node.nvm_command()` does now.]
+
+[PITFALL: the existing tests for that code path passed only because `skills` happens to be on the
+developer's `PATH`. A test asserting on a command string is asserting about the machine unless the
+lookup is pinned.]
+
 ## Design
 
 ### 1. `tasks/netdoctor.py` — a stdlib-only, Python 3.10 diagnostic
