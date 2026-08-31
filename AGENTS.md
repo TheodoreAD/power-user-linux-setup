@@ -165,6 +165,50 @@ install tasks fail fast with an actionable message instead of partway through a 
 generic capability checks, not WSL-specific branching. If asked about WSL support again, extend that
 module rather than re-researching from scratch.
 
+## Nothing run through invoke may wait for typed input
+
+**A password prompt, a passphrase prompt, a debconf question — none of them may be reached from
+inside a `c.run(...)`, with or without `pty=True`.** Two independent reasons, both reproduced in a
+container rather than reasoned about (full write-up:
+[`contributing/interactive-input.md`](contributing/interactive-input.md)):
+
+- invoke echoes stdin itself for any non-pty run from a terminal (`should_echo_stdin` is
+  `(not using_pty) and isatty(stdin)`), while sudo reads the _same_ terminal through `/dev/tty` —
+  two readers racing, printing the password in plain text whenever invoke wins the read.
+- on **Python 3.14** invoke can't forward stdin at all: `terminals.bytes_to_read()` hands a 2-byte
+  buffer to a `FIONREAD` ioctl that writes 4, which 3.14 made a `SystemError`. The stdin thread dies
+  on the first keystroke and the child waits forever. Upstream pyinvoke/invoke#1070, unreleased —
+  and `uv_python_default = "3.14"`, so it is the default path here.
+
+So:
+
+- **Interactive child → `util.run_interactive([...])`** (a plain `subprocess` inheriting the real
+  terminal). `ssh-keygen`, `ssh-copy-id`, `ssh-add` and the sudo pre-auth all go through it.
+- **Anything needing root → call `util.ensure_sudo()` first**, then keep using `f"{util.SUDO} …"`.
+  It authenticates once outside invoke, rebinds `util.SUDO` to `sudo -n` so no later call _can_
+  prompt, and keeps the credential cache warm for the whole run. Never add a new `sudo -v`/`sudo -A`
+  call of your own.
+- **apt/dpkg → `util.apt_command(...)` / `util.dpkg_command(...)`**, never a hand-written
+  `f"{util.SUDO} apt …"`. They carry `DEBIAN_FRONTEND=noninteractive` and
+  `--force-confold`/`--force-confdef`; `-y` covers apt's own question, not debconf's or dpkg's, and
+  a conffile prompt in a hidden stream is indistinguishable from a hang.
+- **Writing a root-owned file → `util.sudo_write()`**, which uses `install -m 0644`. A tempfile is
+  0600 and `cp` preserves that, which left `/etc/wsl.conf` unreadable by the user who had just
+  written it.
+
+## Network diagnosis before anything is installed (`tasks/netdoctor.py`)
+
+`python3 tasks/netdoctor.py` (or `inv net.check`) reports which of the hosts a run needs are
+reachable, by what route, and the command that fixes each failure — including the Windows side of a
+WSL distro. `bootstrap.sh` runs it as an advisory preflight. Published page:
+[`docs/net-doctor.md`](docs/net-doctor.md).
+
+**It is standard-library-only, Python 3.10 syntax, and imports nothing from `tasks/`** — it has to
+run on a fresh Ubuntu 22.04 WSL distro before uv, invoke or this repo's venv exist. Unit tests
+enforce each of those three, so a `from . import util` or a `tomllib` added here fails the gate
+rather than the next fresh machine. The dependency direction is one-way: `tasks/*.py` may import
+`netdoctor` (`wsl.py` does, for the raw DNS query), never the reverse.
+
 ## Dev container distribution pipeline
 
 Two paths for running PULSE inside a dev container, both landed: a `devcontainer.json` +

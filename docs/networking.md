@@ -1,5 +1,12 @@
 # Networking
 
+## When something can't be reached
+
+Before reading any of this: `python3 tasks/netdoctor.py` (or `inv net.check`) reports which of the
+hosts a setup run needs are actually reachable from this machine, what is in the way, and the
+command that addresses it — DNS, proxy, TLS interception and the Windows side of a WSL distro in one
+pass. See [net-doctor.md](net-doctor.md).
+
 ## Corporate proxy
 
 For authenticating HTTP(S) proxies (common on corporate networks) — detecting what auth scheme is

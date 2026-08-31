@@ -177,6 +177,41 @@ relink/`system.configure-dns`/ fallback dance described above. **Pass `--dns=yes
 `wsl.install` asks this exact question interactively before doing anything if you leave `--dns`
 unset — see [Interactive prompts](#interactive-prompts) below.)
 
+## Corporate networks: most of the answer is on the Windows side
+
+A WSL distro sits behind whatever the Windows host does with the network, and by default it inherits
+almost none of it: not the proxy, not the PAC file, not the corporate root CA, and — in NAT mode —
+not a VPN's routing either. That asymmetry is why a corporate laptop can browse fine on Windows
+while `curl` inside the distro times out.
+
+**Run the diagnosis first.** `python3 tasks/netdoctor.py` works before anything is installed, and
+reads both sides of the boundary — the distro's own proxy/DNS/CA configuration _and_ the Windows
+host's, via `reg.exe`, `netsh.exe`, its PAC file, and `%USERPROFILE%\.wslconfig`. See
+[net-doctor.md](net-doctor.md); it names which host is unreachable and what to type next.
+
+**Then set `.wslconfig`.** These are Microsoft's own recommendations for enterprise and VPN
+networks, and they fix at the source most of what people otherwise work around inside the distro.
+The file lives on the **Windows** side, at `%USERPROFILE%\.wslconfig` (i.e.
+`C:\Users\<you>\.wslconfig`, not anywhere inside the distro), and needs `wsl.exe --shutdown` before
+it takes effect:
+
+```ini
+[wsl2]
+networkingMode=mirrored   # VPN-compatible networking; also gives the distro the host's addresses
+dnsTunneling=true         # resolve through Windows rather than a NAT'd DNS packet
+autoProxy=true            # inherit Windows' own HTTP proxy inside the distro
+firewall=true             # Windows firewall rules apply to the distro too
+```
+
+Requires Windows 11 22H2 (or Windows 10 22H2 for the non-networking parts) and WSL 2.0.9 or later —
+check with `wsl --version`. Reference:
+[Set up WSL for your company](https://learn.microsoft.com/en-us/windows/wsl/enterprise).
+
+With `autoProxy=true`, nothing needs a proxy environment variable inside the distro. Without it,
+export one by hand (`http_proxy`/`https_proxy`/`no_proxy`) or run `inv proxy.install`
+([corporate-proxy.md](corporate-proxy.md)) — and if the proxy inspects TLS, install its root CA
+inside the distro as well ([certs.md](certs.md)); the Windows trust store does not carry across.
+
 ## Docker
 
 `[packages.docker]` is tagged `workstation`, so it's excluded by the recommended tag set above by
@@ -371,6 +406,22 @@ asks before doing anything:
 - Once running, the **packages** and **shell** phases each ask "Already looks complete — skip this
   phase?" if their own dry-run probe found nothing missing — see
   [Recommended sequence](#recommended-sequence) above.
+
+**The sudo password is asked for exactly once**, right after "Proceed?", and never again for the
+rest of the run: `util.ensure_sudo()` authenticates up front and a background thread keeps the
+credential cache warm, so a two-hour install on a slow connection can't stop halfway to ask again. A
+WSL distro's default user has a password (unlike every dev-container base image, which grants
+NOPASSWD), so this is the one prompt that always appears there.
+
+Nothing you type is echoed, and nothing hangs waiting for input you can't see. Both of those were
+real: the prompt used to be run through invoke, which reads the same terminal sudo does — a race
+that prints the password in plain text when invoke wins it, and, on Python 3.14, a hang with no
+prompt at all (invoke can't forward stdin there; pyinvoke/invoke#1070). It is a plain subprocess
+now, owning the terminal outright.
+
+If sudo can't be asked for at all — no terminal, no working askpass helper, not root, no NOPASSWD
+rule — the run stops immediately and says so, instead of failing at whichever package happened to
+need root first.
 
 The DNS question defaults to "no" (decline the override) on Enter; the rest default to "yes"
 (proceed / skip). `yes | inv wsl.install` still works non-interactively if you ever need it

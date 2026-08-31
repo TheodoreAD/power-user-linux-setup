@@ -126,6 +126,7 @@ nav:
       - gcloud.md
       - ssh.md
       - networking.md
+      - net-doctor.md
       - corporate-proxy.md
       - certs.md
   - AI:
