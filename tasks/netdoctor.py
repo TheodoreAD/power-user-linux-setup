@@ -498,7 +498,7 @@ def _windows_user_profile() -> str | None:
     return None
 
 
-def _windows_proxy() -> tuple[str | None, str | None]:
+def windows_proxy() -> tuple[str | None, str | None]:
     """The Windows host's own proxy settings, read from inside the distro.
 
     This is the single most useful thing WSL can ask that a plain Linux box cannot: the proxy the
@@ -528,7 +528,7 @@ def parse_windows_proxy(reg_output: str, winhttp_output: str = "") -> tuple[str 
     return proxy, autoconfig.group(1).strip() if autoconfig else None
 
 
-def _pac_proxies(url: str, timeout: float) -> list[str]:
+def pac_proxies(url: str, timeout: float) -> list[str]:
     """Fetch a PAC file and pull the `PROXY host:port` literals out of it. Not an interpreter for
     its JavaScript — just the addresses it names, which is what a human would grep for."""
     parsed = split_host_port(url, default_port=443 if url.lower().startswith("https") else 80)
@@ -629,9 +629,9 @@ def _wsl_facts(facts: Facts, timeout: float) -> None:
         if candidate.exists():
             facts.wslconfig_path = str(candidate)
             facts.wslconfig = _ini_values(_read(candidate))
-    facts.windows_proxy, facts.windows_pac = _windows_proxy()
+    facts.windows_proxy, facts.windows_pac = windows_proxy()
     if facts.windows_pac:
-        facts.pac_proxies = _pac_proxies(facts.windows_pac, timeout)
+        facts.pac_proxies = pac_proxies(facts.windows_pac, timeout)
 
 
 def gather_facts(timeout: float = DEFAULT_TIMEOUT) -> Facts:

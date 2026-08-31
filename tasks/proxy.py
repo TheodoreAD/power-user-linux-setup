@@ -23,7 +23,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import deploy, ui, util
+from . import deploy, netdoctor, ui, util
 
 # Confirmed against a real `px --save` run (not guessed from --help): Px's default config
 # location is XDG's user-config dir, not ~/.px/.
@@ -136,6 +136,20 @@ def _discover_candidate(c: Context) -> tuple[str, int, str] | None:  # noqa: C90
         env = _parse_env_proxy(os.environ)
         if env:
             return (*env, "environment (inside WSL guest)")
+        # Ask Windows what proxy *it* uses. On a corporate laptop that setting is the real answer
+        # and nothing copies it into the distro unless .wslconfig's autoProxy=true is set — so
+        # without this, discovery inside WSL comes back empty on exactly the machines that most
+        # need a proxy. Read through netdoctor, which owns the reg.exe/netsh.exe/PAC parsing and
+        # is the same code the zero-install `python3 tasks/netdoctor.py` uses.
+        windows_proxy, pac_url = netdoctor.windows_proxy()
+        candidates = [windows_proxy] if windows_proxy else []
+        if pac_url:
+            candidates += netdoctor.pac_proxies(pac_url, timeout=3.0)
+        for candidate in candidates:
+            parsed = netdoctor.split_host_port(candidate)
+            if parsed and _probe(c, *parsed) is not None:
+                source = "Windows host's own proxy setting" + (f" (PAC: {pac_url})" if pac_url else "")
+                return (*parsed, source)
         return None
 
     if util.is_devcontainer():
