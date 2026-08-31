@@ -75,7 +75,7 @@ def _configure_daemon_json(c: Context) -> None:
     with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
         f.write(updated)
         tmp = f.name
-    c.run(f"{util.SUDO} mkdir -p {_DAEMON_JSON.parent} && {util.SUDO} cp {tmp} {_DAEMON_JSON} && rm {tmp}")
+    c.run(f"{util.SUDO} mkdir -p {_DAEMON_JSON.parent} && {util.SUDO} install -m 0644 {tmp} {_DAEMON_JSON} && rm {tmp}")
     _ensure_running(c)
     print("[docker] daemon.json updated, daemon restarted")
 

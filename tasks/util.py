@@ -477,13 +477,21 @@ def ensure_block(path: Path, name: str, content: str, *, style: MarkerStyle = Ma
 
 
 def sudo_write(c: Context, path: Path, text: str) -> None:
-    """Write `text` to a root-owned `path` via a tempfile + `sudo cp` — direct `path.write_text()`
-    can't reach root-owned locations, and `sudo tee` from Python would need the text piped through
-    a subprocess shell instead of written directly."""
+    """Write `text` to a root-owned `path` via a tempfile + `sudo install` — direct
+    `path.write_text()` can't reach root-owned locations, and `sudo tee` from Python would need the
+    text piped through a subprocess shell instead of written directly.
+
+    `install -m 0644`, not `cp`: NamedTemporaryFile creates its file 0600 and `cp` carries that
+    mode across, so every system file written this way came out readable by root alone. Caught in
+    a WSL simulation container — `inv wsl.fix` wrote /etc/wsl.conf, and the very next line, which
+    reads it back to report what changed, died with PermissionError. Every destination this is
+    used for (/etc/wsl.conf, apt sources, systemd drop-ins, a CA bundle, daemon.json) is meant to
+    be world-readable; none of them carries a secret.
+    """
     with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
         f.write(text)
         tmp = f.name
-    c.run(f"{SUDO} cp {tmp} {path} && rm {tmp}")
+    c.run(f"{SUDO} install -m 0644 {tmp} {path} && rm {tmp}")
 
 
 def sudo_read(c: Context, path: Path) -> str:

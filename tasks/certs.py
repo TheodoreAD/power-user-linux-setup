@@ -34,7 +34,7 @@ def _sudo_write(c: Context, path: Path, text: str) -> None:
     with tempfile.NamedTemporaryFile("w", suffix=".crt", delete=False) as f:
         f.write(text)
         tmp = f.name
-    c.run(f"{util.SUDO} mkdir -p {path.parent} && {util.SUDO} cp {tmp} {path} && rm {tmp}")
+    c.run(f"{util.SUDO} mkdir -p {path.parent} && {util.SUDO} install -m 0644 {tmp} {path} && rm {tmp}")
 
 
 def _sudo_read(c: Context, path: Path) -> str | None:
