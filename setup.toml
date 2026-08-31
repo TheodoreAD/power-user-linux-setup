@@ -398,7 +398,11 @@ verify_cmd = "fc-list --version" # package provides fc-* tools, not a "fontconfi
 [packages.zenity]
 description = "Runtime dependency of the askpass-zenity wrapper script (GUI password/passphrase dialog for sudo -A / SSH_ASKPASS)"
 method = "apt"
-tags = ["shell", "system"]
+# `gui` as well as shell/system: this is a GTK dialog, and installing its whole dependency tree
+# into a headless WSL distro or a dev container buys a window that can never be shown. The helper
+# itself stays installed there and falls back to reading /dev/tty with echo off — see
+# config/askpass-zenity.sh.
+tags = ["gui", "shell", "system"]
 
 [packages.lm-sensors]
 description = "Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command"

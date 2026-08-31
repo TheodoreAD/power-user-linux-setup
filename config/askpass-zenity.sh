@@ -15,4 +15,28 @@ case "${prompt}" in
   *) title="Authentication required" ;;
 esac
 
+# No display, no dialog. ~/.zshenv exports SUDO_ASKPASS/SSH_ASKPASS for every shell, and
+# zsh.configure's writer ignores tags, so a headless WSL distro or a dev container gets this
+# helper too — where `zenity` either isn't installed or can't connect, and sudo's own report of
+# that is the unhelpful "sudo: no password was provided". Read the terminal instead: the caller
+# handed us a prompt, /dev/tty is the one thing that's definitely there, and turning echo off is
+# two lines. Fails cleanly (exit 1, nothing on stdout) when there is no terminal either, which is
+# what a non-interactive caller needs to see.
+if [ -z "${DISPLAY}" ] && [ -z "${WAYLAND_DISPLAY}" ]; then
+  # Open it rather than test for it: /dev/tty exists as a device node even with no controlling
+  # terminal, where opening it fails with ENXIO ("No such device or address") — so `[ -e /dev/tty ]`
+  # passes and the next line prints an error nobody can act on.
+  exec 3<> /dev/tty 2> /dev/null || exit 1
+  printf '%s ' "${prompt}" >&3
+  stty -echo <&3
+  IFS= read -r reply <&3
+  status=$?
+  stty echo <&3
+  printf '\n' >&3
+  exec 3>&-
+  [ "${status}" -eq 0 ] || exit 1
+  printf '%s\n' "${reply}"
+  exit 0
+fi
+
 zenity --password --title="${title}" --text="${prompt}"
