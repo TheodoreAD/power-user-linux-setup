@@ -542,9 +542,10 @@ def install(c: Context, wslg: str = "auto", docker: bool = False, dns: str = "au
             apt.install_base,
             apt.install_debs,
             tools.install,
-            ai.install_skills,
             python.install_tools,
             node.install,
+            # After node.install — see the same ordering note in tasks/setup.py.
+            ai.install_skills,
             verify.all,
         ],
         note=(

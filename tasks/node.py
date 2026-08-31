@@ -1,3 +1,4 @@
+import shlex
 from pathlib import Path
 
 from invoke import Context, task
@@ -13,6 +14,21 @@ def _node_cfg() -> tuple[util.PackageConfig, Path, str]:
     cfg = util.load_config()["packages"]["node"]
     nvm_dir = Path(cfg.get("nvm_dir", "~/.local/share/nvm")).expanduser()
     return cfg, nvm_dir, _nvm_sh(nvm_dir)
+
+
+def nvm_command(command: str) -> str | None:
+    """Wrap `command` so it runs with nvm's node/npm on PATH, or None if nvm isn't installed.
+
+    A globally-installed npm package lives under a version-specific nvm path that only exists on
+    PATH after `nvm.sh` has been sourced — which a login shell does via Oh My Zsh's nvm plugin, and
+    a task run from `inv` never does. So a bare `skills`/`npx` call works for a human and fails
+    with exit 127 inside a `RUN` layer or an `inv setup`; see [packages.node]'s verify_cmd, which
+    hits the same gap.
+    """
+    _cfg, nvm_dir, nvm_sh = _node_cfg()
+    if not nvm_dir.exists():
+        return None
+    return f"bash -c {shlex.quote(f'{nvm_sh} && {command}')}"
 
 
 @task

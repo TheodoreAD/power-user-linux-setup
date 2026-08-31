@@ -6,7 +6,7 @@ from typing import cast
 
 from invoke import Context, Exit, task
 
-from . import deploy, ui, util
+from . import deploy, node, ui, util
 
 # Deliberately separate from tasks/allowlist.py's _APPLIED_MANIFEST — that one tracks
 # CLI-classification-derived Bash rules specifically; this tracks static, hand-declared rules
@@ -181,6 +181,19 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
     deploy.deploy(managed, assume_yes=True)
 
 
+def _skills_command(command: str) -> str | None:
+    """`command` as something actually runnable here, or None if the `skills` CLI is nowhere.
+
+    Two ways it can be reachable and one way it can't: on PATH (a machine where a login shell has
+    already sourced nvm, or a different install method), or under nvm — which is where PULSE puts
+    it, and which a non-interactive `inv` process cannot see without sourcing nvm.sh. A bare call
+    exited 127 and took a whole unattended container build down with it.
+    """
+    if util.command_exists("skills"):
+        return command
+    return node.nvm_command(command)
+
+
 def _install_remote_skill(c: Context, entry: util.SkillEntry, *, label: str, yes: bool) -> None:
     """Install a skill from a GitHub repo via the `skills` CLI (source = "npx").
 
@@ -215,7 +228,15 @@ def _install_remote_skill(c: Context, entry: util.SkillEntry, *, label: str, yes
     for a in agents:
         cmd += ["--agent", a]
     cmd += ["--skill", *(names or ["*"])]
-    c.run(shlex.join(cmd))
+    command = _skills_command(shlex.join(cmd))
+    if command is None:
+        ui.warn(
+            f"[{label}] {desc}: skipped — the `skills` CLI isn't available yet. It's a global npm "
+            "package (see [packages.node]), so on a first run it doesn't exist until "
+            "`inv node.install` has run. Re-run `inv ai.install-skills` afterwards."
+        )
+        return
+    c.run(command)
     print(f"[{label}] installed {desc}")
 
 

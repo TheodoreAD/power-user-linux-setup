@@ -352,6 +352,44 @@ def test_install_local_skill_dry_run_never_prompts_or_writes(tmp_path, monkeypat
 # ---------------------------------------------------------------------------
 
 
+@pytest.fixture(autouse=True)
+def _skills_cli_on_path(monkeypatch):
+    """`skills` is a global npm package under nvm, so whether a bare call works depends on the
+    machine running the tests — it does on the developer's, and doesn't in CI or a container.
+    Pin it, so these tests assert on this module's behaviour rather than on the environment.
+    The unpinned branches get their own tests below."""
+    monkeypatch.setattr(ai.util, "command_exists", lambda name: name == "skills")
+
+
+def test_install_remote_skill_reaches_the_cli_through_nvm_when_it_is_not_on_path(monkeypatch):
+    """The ordinary first-run case: nvm has just installed `skills` globally, and nothing in this
+    non-interactive process has sourced nvm.sh, so a bare call would exit 127."""
+    c = _FakeContext()
+    monkeypatch.setattr(ai.util, "command_exists", lambda name: False)
+    monkeypatch.setattr(ai.node, "nvm_command", lambda command: f"bash -c 'nvm && {command}'")
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._install_remote_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+
+    assert c.commands == ["bash -c 'nvm && skills add owner/repo --global --yes --agent claude-code --skill '*''"]
+
+
+def test_install_remote_skill_skips_when_the_cli_exists_nowhere(monkeypatch, capsys):
+    """Not a crash: a bare `skills` call exited 127 and took a whole unattended container build
+    down with it."""
+    c = _FakeContext()
+    monkeypatch.setattr(ai.util, "command_exists", lambda name: False)
+    monkeypatch.setattr(ai.node, "nvm_command", lambda command: None)
+
+    ai._install_remote_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+
+    assert c.commands == []
+    # ui.warn word-wraps, so match on words that survive a line break rather than a phrase.
+    printed = capsys.readouterr().out
+    assert "skipped" in printed
+    assert "inv node.install" in printed
+
+
 def test_install_remote_skill_asks_before_running_skills_add(monkeypatch):
     c = _FakeContext()
     entry: util.SkillEntry = {"repo": "owner/repo", "names": ["foo"], "description": "Does foo things."}

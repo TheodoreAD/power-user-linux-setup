@@ -11,10 +11,11 @@ PACKAGES_PHASE = [
     docker.configure,
     apt.install_debs,
     tools.install,
-    ai.install_skills,
     system.install_apparmor_profiles,
     python.install_tools,
     node.install,
+    # After node.install: the `skills` CLI it installs globally is what ai.install_skills runs.
+    ai.install_skills,
     verify.all,
 ]
 PACKAGES_NOTE = (
