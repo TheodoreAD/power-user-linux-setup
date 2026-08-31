@@ -289,8 +289,17 @@ Verified specifically: `util.current_user()` resolves to the non-root username (
 in a Dockerfile build, root or non-root, since plain `docker run`/`RUN` never sets `$USER` at all
 (that's a login-shell/profile behavior, not something Docker sets itself); every tool-installed file
 (`~/.local/bin`, `~/.cache/uv`, `~/.npm`, `~/.local/share/{cargo,rustup,nvm}`) lands under the
-non-root user's real home; and `sudo` (not `sudo -A` — no `SUDO_ASKPASS` is set in a container
-either way) works non-interactively against the `NOPASSWD` sudoers entry with no prompt.
+non-root user's real home; and sudo works non-interactively against the `NOPASSWD` sudoers entry
+with no prompt.
+
+`util.ensure_sudo()` recognises all three container shapes and never prompts in any of them: as
+**root** it sets the sudo prefix to nothing at all (so a base image without `sudo` installed is
+fine), with a **`NOPASSWD` rule** it notes that no password is needed, and with a
+**password-protected user and no terminal** — a `postCreateCommand`, a `docker build` — it stops
+immediately and says so, rather than stalling at an invisible password prompt somewhere inside an
+apt run. That last case is the one WSL hits by default and containers almost never do; see
+[`contributing/interactive-input.md`](https://github.com/TheodoreAD/power-user-linux-setup/blob/master/contributing/interactive-input.md)
+for why it can't be left to fail later.
 
 ### Alternate base image: `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`
 
