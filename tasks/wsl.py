@@ -1,12 +1,10 @@
 import os
-import socket
-import struct
 import tempfile
 from pathlib import Path
 
 from invoke import Context, task
 
-from . import ai, apt, next_steps, node, phases, python, system, tools, ui, util, verify, zsh
+from . import ai, apt, netdoctor, next_steps, node, phases, python, system, tools, ui, util, verify, zsh
 
 _WSL_CONF = Path("/etc/wsl.conf")
 _RESOLV_CONF = Path("/etc/resolv.conf")
@@ -134,37 +132,6 @@ def _dns_resolves(c: Context) -> bool:
     return c.run("getent hosts archive.ubuntu.com", warn=True, hide=True).ok
 
 
-def _dns_query_packet(hostname: str, query_id: int) -> bytes:
-    """Pure builder for a minimal DNS A-record query packet (header + QNAME + QTYPE/QCLASS) — no
-    I/O, split out from _query_dns_server so it's testable without a live socket.
-    """
-    header = struct.pack(">HHHHHH", query_id, 0x0100, 1, 0, 0, 0)
-    qname = b"".join(bytes([len(part)]) + part.encode() for part in hostname.split(".")) + b"\x00"
-    return header + qname + struct.pack(">HH", 1, 1)  # type A, class IN
-
-
-def _query_dns_server(server: str, hostname: str = "archive.ubuntu.com", timeout: float = 2.0) -> bool:
-    """Send a raw DNS query straight to `server:53` over UDP, bypassing /etc/resolv.conf entirely
-    — the only way to test "would public DNS work" *before* changing any config. _dns_resolves
-    above always goes through the current system resolver, so it can only verify a config that's
-    already been applied; this probes reachability first, non-destructively, so wsl.install/
-    wsl.check can inform their DNS recommendation without a write + restart cycle to find out.
-    Any well-formed response (even NXDOMAIN) counts as reachable; a timeout or connection error
-    means the path is blocked or unreachable — the corporate-VPN/firewall signature from
-    docs/wsl.md, "If public DNS is blocked".
-    """
-    query_id = os.getpid() & 0xFFFF
-    packet = _dns_query_packet(hostname, query_id)
-    try:
-        with socket.socket(socket.AF_INET, socket.SOCK_DGRAM) as sock:
-            sock.settimeout(timeout)
-            sock.sendto(packet, (server, 53))
-            data = sock.recvfrom(512)[0]  # discard sender address (typeshed types it loosely)
-        return len(data) >= 2 and data[:2] == packet[:2]
-    except OSError:
-        return False
-
-
 def _public_dns_reachable() -> bool:
     """True if a direct query to any well-known public resolver gets an answer. Informs (but,
     deliberately, never overrides) wsl.install's DNS default — see docs/wsl.md, "If public DNS is
@@ -172,7 +139,7 @@ def _public_dns_reachable() -> bool:
     internal/VPN-only hostnames a corporate resolver knows about that public DNS never will, so
     reachability alone isn't proof the override is safe.
     """
-    return any(_query_dns_server(server) for server in ("1.1.1.1", "8.8.8.8"))
+    return any(netdoctor.query_dns_server(server) for server in ("1.1.1.1", "8.8.8.8"))
 
 
 def _write_static_resolv_conf(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.1") -> None:

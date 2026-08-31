@@ -1,4 +1,5 @@
-"""Unit tests for tasks/wsl.py's _dns_query_packet (builds a raw DNS query packet in memory — no
+"""Unit tests for the raw DNS query packet builder (now tasks/netdoctor.py's, still exercised
+here alongside tasks/wsl.py's own pure helpers) (builds a raw DNS query packet in memory — no
 socket I/O) and _parse_tristate (the --dns/--wslg yes/no override parser — no subprocess/file
 I/O). See tests/README.md.
 """
@@ -7,7 +8,8 @@ import struct
 
 import pytest
 
-from tasks.wsl import _dns_query_packet, _parse_tristate
+from tasks.netdoctor import dns_query_packet as _dns_query_packet
+from tasks.wsl import _parse_tristate
 
 
 def test_dns_query_packet_header_round_trips_query_id():
