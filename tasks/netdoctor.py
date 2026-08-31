@@ -186,8 +186,15 @@ def query_dns_server(server: str, hostname: str = "archive.ubuntu.com", timeout:
     return len(data) >= 2 and data[:2] == packet[:2]
 
 
-def _resolve(host: str, timeout: float) -> tuple[list[str], str | None]:
-    socket.setdefaulttimeout(timeout)
+def _resolve(host: str, _timeout: float) -> tuple[list[str], str | None]:
+    """Name resolution, with the error text kept — "Temporary failure in name resolution" and
+    "Name or service not known" mean different things to a reader.
+
+    No timeout is applied: `socket.setdefaulttimeout()` would not bound `getaddrinfo` anyway (the
+    resolver's own `/etc/resolv.conf` timeouts govern that), and setting it from inside a thread
+    pool would quietly change the default for every socket the importing process creates
+    afterwards — this module is imported by tasks/proxy.py, not only run as a script.
+    """
     try:
         infos = socket.getaddrinfo(host, None, proto=socket.IPPROTO_TCP)
     except socket.gaierror as exc:
