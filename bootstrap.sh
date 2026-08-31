@@ -1,6 +1,25 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+
+# Everything below this line is a download. On a corporate network some of them fail and the
+# error arrives from whatever tool happened to make the request — `curl: (7)`, or a uv resolver
+# error three screens down — with no indication of which host was blocked or what to do. So ask
+# first, with the machine's own python3 (no dependencies, works on 3.10, see tasks/netdoctor.py),
+# and print the diagnosis before the failure rather than after it.
+#
+# Advisory on purpose: a probe is not authoritative about a network that might allow the real
+# request through a route it can't see, and refusing to bootstrap on its say-so would be worse
+# than a confusing error. Skip it entirely with PULSE_SKIP_PREFLIGHT=1.
+if [ "${PULSE_SKIP_PREFLIGHT:-}" != "1" ] && command -v python3 &> /dev/null; then
+  if ! python3 "${SCRIPT_DIR}/tasks/netdoctor.py" --quick --timeout 3; then
+    echo ""
+    echo "Continuing anyway — the report above is advisory. Ctrl-C now if you'd rather fix it first."
+    sleep 5
+  fi
+fi
+
 if command -v apt-get &> /dev/null; then
   missing=()
   command -v curl &> /dev/null || missing+=(curl)
@@ -22,7 +41,6 @@ if command -v apt-get &> /dev/null; then
   fi
 fi
 
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 SETUP_TOML="${SCRIPT_DIR}/setup.toml"
 
 # Read Python versions from setup.toml.
