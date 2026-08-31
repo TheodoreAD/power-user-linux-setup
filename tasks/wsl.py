@@ -300,6 +300,15 @@ def check(c: Context):  # noqa: C901
         "Windows side manually for terminal glyphs to render correctly."
     )
 
+    # This task's DNS check answers "can this distro resolve"; a corporate network fails in ways
+    # that question can't see (an index blocked while GitHub is fine, TLS interception, a proxy the
+    # Windows side knows about and this one doesn't). Point at the task that does look.
+    print(
+        "[wsl] network: run `inv net.check` (or `python3 tasks/netdoctor.py`, which needs nothing "
+        "installed) for a per-host report — proxies, TLS interception, and the Windows host's own "
+        "proxy/PAC settings, which this distro does not inherit by default. See docs/net-doctor.md."
+    )
+
 
 @task
 def fix(c: Context, dns: bool = False):
