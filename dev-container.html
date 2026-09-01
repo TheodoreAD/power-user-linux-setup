@@ -1784,6 +1784,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#which-shell-finds-which-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Which shell finds which tool
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mounting-host-directories" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2188,6 +2199,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#which-shell-finds-which-tool" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Which shell finds which tool
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#mounting-host-directories" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2412,9 +2434,15 @@ load-bearing for both, not incidental background.</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-project"</span><span class="p">,</span>
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="w">  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"</span><span class="p">,</span>
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh | bash"</span>
+</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh -o /tmp/pulse-bootstrap.sh &amp;&amp; bash /tmp/pulse-bootstrap.sh"</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="p">}</span>
 </span></code></pre></div>
+<p><strong>Download to a file, then run it — never <code>curl … | bash</code>.</strong> A shell pipeline reports its <em>last</em>
+command&rsquo;s status, so a failed download hands <code>bash</code> an empty stdin and the whole command exits <code>0</code>:
+the container comes up with nothing installed and <code>postCreateCommand</code> reports success. Measured
+against a ref that did not exist — <code>curl -f</code> exits 22, <code>curl … | bash</code> exits 0, and the two-step
+form above exits 22. Nothing about that is specific to a bad ref; a corporate proxy&rsquo;s error page or
+a dropped connection produces the same silent no-op.</p>
 <p>This repo&rsquo;s own <code>.devcontainer/devcontainer.json</code> dogfoods the same script with <code>--local</code> (skip the
 clone — it&rsquo;s already inside a checkout):</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="p">{</span>
@@ -2437,6 +2465,76 @@ specific commit or branch you&rsquo;ve verified yourself, not <code>stable</code
 <p><strong>Constraint:</strong> this only works on apt-based (Debian/Ubuntu-family) images — <code>bootstrap.sh</code>&rsquo;s
 self-heal preamble and every <code>[packages.*]</code> <code>apt</code>/<code>apt-repo</code>/<code>deb-github</code>/<code>deb-url</code> method assume
 <code>apt</code>/<code>dpkg</code>. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.</p>
+<h3 id="which-shell-finds-which-tool">Which shell finds which tool<a class="headerlink" href="#which-shell-finds-which-tool" title="Permanent link">&para;</a></h3>
+<p><strong>PULSE configures zsh, and only zsh.</strong> There is no <code>bashrc</code> field in <code>setup.toml</code> and no writer for
+one — <code>~/.local/bin</code> reaches <code>PATH</code> through <code>[packages.zsh-path]</code>&rsquo;s <code>zshenv</code>, and nothing else PULSE
+writes touches bash.</p>
+<p>What saves the common case is the distro, not this repo: Ubuntu&rsquo;s stock <code>~/.profile</code> prepends
+<code>~/.local/bin</code> <strong>if that directory exists</strong>, so a <em>login</em> bash shell finds <code>inv</code>, <code>uv</code>, <code>dprint</code> and
+everything else that lands there. A <strong>non-login</strong> shell does not, and neither does <code>sh</code> — which is
+what a Docker <code>RUN</code> layer and most <code>postCreateCommand</code>/CI <code>runCmd</code> invocations actually use.
+Measured against <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code> as the <code>vscode</code> user:</p>
+<table>
+<thead>
+<tr>
+<th>shell</th>
+<th><code>~/.local/bin</code> on <code>PATH</code></th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>zsh</code> (PULSE&rsquo;s default)</td>
+<td>yes — <code>zsh-path</code></td>
+</tr>
+<tr>
+<td><code>bash -l</code></td>
+<td>yes — Ubuntu&rsquo;s <code>~/.profile</code>, once the dir exists</td>
+</tr>
+<tr>
+<td><code>bash -c</code>, <code>sh -c</code></td>
+<td><strong>no</strong> — neither file is read</td>
+</tr>
+</tbody>
+</table>
+<p>On top of that, two toolchains install to their own prefix and are outside <code>~/.local/bin</code> entirely:</p>
+<table>
+<thead>
+<tr>
+<th>tool</th>
+<th>outside zsh</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>go</code>, <code>gofmt</code></td>
+<td>works — symlinked into <code>~/.local/bin</code> (the go command resolves GOROOT through the link)</td>
+</tr>
+<tr>
+<td><code>cargo</code>, <code>rustc</code></td>
+<td>needs <code>RUSTUP_HOME</code>/<code>CARGO_HOME</code>; without them rustup exits 1 rather than falling back</td>
+</tr>
+<tr>
+<td><code>node</code>, <code>npm</code></td>
+<td>not on <code>PATH</code> — see below</td>
+</tr>
+</tbody>
+</table>
+<p>Set the two rust variables with <strong><code>containerEnv</code></strong>, which the devcontainer spec applies to every
+process in the container (<code>remoteEnv</code> covers only your editor&rsquo;s own terminals, though it is the one
+that supports <code>${containerEnv:PATH}</code> substitution):</p>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="p">{</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="w">  </span><span class="nt">"containerEnv"</span><span class="p">:</span><span class="w"> </span><span class="p">{</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="w">    </span><span class="nt">"RUSTUP_HOME"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/home/vscode/.local/share/rustup"</span><span class="p">,</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="w">    </span><span class="nt">"CARGO_HOME"</span><span class="p">:</span><span class="w"> </span><span class="s2">"/home/vscode/.local/share/cargo"</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="w">  </span><span class="p">}</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="p">}</span>
+</span></code></pre></div>
+<p><strong><code>node</code> is deliberately left out of that.</strong> nvm is a sourced shell function by design — its README
+says <code>which nvm</code> cannot work — and it publishes no stable path to point an environment variable at:
+node lives under <code>~/.local/share/nvm/versions/node/&lt;version&gt;/bin</code>, and <code>alias/default</code> holds another
+alias rather than a version, so any hardcoded entry goes stale at the next upgrade. Reach it the way
+nvm documents: <code>zsh -lic '&lt;command&gt;'</code>, or <code>source "$NVM_DIR/nvm.sh"</code> first. This repo&rsquo;s own
+<code>[packages.node]</code> <code>verify_cmd</code> does exactly the latter.</p>
 <h3 id="mounting-host-directories">Mounting host directories<a class="headerlink" href="#mounting-host-directories" title="Permanent link">&para;</a></h3>
 <p>A fresh container has none of your credentials: <code>inv identity.init</code> has to be re-run,
 <code>ssh.create-keys</code> mints a brand-new keypair (which then needs re-adding to GitHub), and a corporate
@@ -2448,7 +2546,7 @@ CI-smoke-tested; your personal host paths don&rsquo;t belong in it). Run it on t
 <code>devcontainer up</code> or opening the folder in VS Code — devcontainer mounts are fixed at
 container-creation time, <code>postCreateCommand</code> runs too late to add any, which is also why this can&rsquo;t
 just be folded into <code>bootstrap-devcontainer.sh</code>.</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>devcontainer.print-mounts
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>devcontainer.print-mounts
 </span></code></pre></div>
 <p>It only prompts for candidates that actually exist on this host (no <code>~/.aws</code>? no prompt for it).</p>
 <p><strong>SSH — agent forwarding first.</strong> The default candidate forwards <code>$SSH_AUTH_SOCK</code> via
@@ -2472,7 +2570,7 @@ also mounted.</p>
 convention: the current repo is already mounted as the workspace folder by the devcontainer spec
 itself. The rare case of genuinely needing a sibling repo too is a single manual <code>mounts</code> entry, not
 something to automate:</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nt">"mounts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"source=${localEnv:HOME}/projects/other-repo,target=/workspaces/other-repo,type=bind"</span><span class="p">]</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="nt">"mounts"</span><span class="p">:</span><span class="w"> </span><span class="p">[</span><span class="s2">"source=${localEnv:HOME}/projects/other-repo,target=/workspaces/other-repo,type=bind"</span><span class="p">]</span>
 </span></code></pre></div>
 <p><strong>Security note.</strong> Anything mounted into the container is visible to everything that runs inside it
 — any dependency, any installed tool. This is why most candidates default to <code>readonly</code>, and why the
@@ -2513,10 +2611,10 @@ lower-value/higher-sensitivity ones (<code>~/.aws</code>, <code>~/.kube</code>, 
 </table>
 <p>Example — this is the default (equivalent to omitting <code>--exclude-tags</code>; see
 <code>bootstrap-devcontainer.sh</code>&rsquo;s own default resolution via <code>inv devcontainer.print-exclude-tags</code>):</p>
-<div class="language-json highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a><span class="p">{</span>
-</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a><span class="w">  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"</span><span class="p">,</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bash bootstrap-devcontainer.sh"</span>
-</span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a><span class="p">}</span>
+<div class="language-json highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="p">{</span>
+</span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a><span class="w">  </span><span class="nt">"image"</span><span class="p">:</span><span class="w"> </span><span class="s2">"mcr.microsoft.com/devcontainers/base:ubuntu-24.04"</span><span class="p">,</span>
+</span><span id="__span-5-3"><a id="__codelineno-5-3" name="__codelineno-5-3" href="#__codelineno-5-3"></a><span class="w">  </span><span class="nt">"postCreateCommand"</span><span class="p">:</span><span class="w"> </span><span class="s2">"bash bootstrap-devcontainer.sh"</span>
+</span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="p">}</span>
 </span></code></pre></div>
 <p>To override: <code>bash bootstrap-devcontainer.sh --exclude-tags gui,workstation,corporate,ide,gnome</code></p>
 <!-- /PULSE::devcontainer-tags -->
@@ -2534,7 +2632,7 @@ documented working example, a vehicle for testing uncommitted local changes to
 <code>bootstrap-devcontainer.sh --local</code>, not a git clone), and a template to <code>FROM</code>/copy when
 hand-rolling a custom image with extra tooling layered on a strong base. Build it from the repo
 root:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>docker/Dockerfile<span class="w"> </span>-t<span class="w"> </span>pulse-devcontainer<span class="w"> </span>.
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>docker<span class="w"> </span>build<span class="w"> </span>-f<span class="w"> </span>docker/Dockerfile<span class="w"> </span>-t<span class="w"> </span>pulse-devcontainer<span class="w"> </span>.
 </span></code></pre></div>
 <p>No <code>apt-get install</code> line at all — <code>bootstrap.sh</code> (called by <code>bootstrap-devcontainer.sh</code>)
 self-installs every OS-level prerequisite (<code>curl</code>, <code>gnupg</code>, <code>ca-certificates</code>, <code>sudo</code>) the base
@@ -2639,12 +2737,12 @@ regardless of whether anything changed.</p>
 <p>Every real devcontainer runs as a non-root user with passwordless sudo, not root.
 <code>docker/Dockerfile</code> needs no code changes for that — only a Dockerfile-side user, added before
 <code>WORKDIR</code>:</p>
-<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-m<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>dev<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"dev ALL=(ALL) NOPASSWD:ALL"</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/sudoers.d/dev<span class="w"> </span><span class="se">\</span>
-</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0440</span><span class="w"> </span>/etc/sudoers.d/dev
-</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="k">USER</span><span class="w"> </span><span class="s">dev</span>
-</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/home/dev/setup</span>
-</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="c"># ...same COPY/ENV/RUN as docker/Dockerfile, with --chown=dev:dev on each COPY</span>
+<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">RUN</span><span class="w"> </span>useradd<span class="w"> </span>-m<span class="w"> </span>-s<span class="w"> </span>/bin/bash<span class="w"> </span>dev<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span><span class="nb">echo</span><span class="w"> </span><span class="s2">"dev ALL=(ALL) NOPASSWD:ALL"</span><span class="w"> </span>&gt;<span class="w"> </span>/etc/sudoers.d/dev<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="w">    </span><span class="o">&amp;&amp;</span><span class="w"> </span>chmod<span class="w"> </span><span class="m">0440</span><span class="w"> </span>/etc/sudoers.d/dev
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="k">USER</span><span class="w"> </span><span class="s">dev</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="k">WORKDIR</span><span class="w"> </span><span class="s">/home/dev/setup</span>
+</span><span id="__span-7-6"><a id="__codelineno-7-6" name="__codelineno-7-6" href="#__codelineno-7-6"></a><span class="c"># ...same COPY/ENV/RUN as docker/Dockerfile, with --chown=dev:dev on each COPY</span>
 </span></code></pre></div>
 <p>Verified specifically: <code>util.current_user()</code> resolves to the non-root username (not <code>root</code>) via its
 <code>pwd.getpwuid()</code> fallback — and that fallback path turns out to be the one that&rsquo;s <em>always</em> exercised
@@ -2782,7 +2880,7 @@ daemon.json gets written and the user gets added to the <code>docker</code> grou
 restart is skipped with a one-line message instead of attempted.</p>
 <p>If you need Docker CLI tooling inside the container (e.g. for socket passthrough from the host),
 install just the CLI packages manually in your Dockerfile instead:</p>
-<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>docker-ce-cli<span class="w"> </span>docker-compose-plugin<span class="w"> </span>docker-buildx-plugin
+<div class="language-dockerfile highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a><span class="k">RUN</span><span class="w"> </span>apt-get<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>docker-ce-cli<span class="w"> </span>docker-compose-plugin<span class="w"> </span>docker-buildx-plugin
 </span></code></pre></div>
 <p>The OMZ <code>docker</code> and <code>docker-compose</code> plugins will still be loaded if you do this, since they come
 from <code>[packages.docker].omz_plugin</code> — but that entry is excluded, so you&rsquo;d need to add those plugins
