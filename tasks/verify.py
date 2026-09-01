@@ -130,8 +130,10 @@ def _all_checks() -> list[tuple[str, str, str]]:
         for name, cfg in util.packages_by_method(method).items()
     ]
     # method = "zsh" entries are config-only (zshrc/zshenv/zprofile snippets) and invisible to
-    # packages_by_method() by design (no "zsh" PackageMethod member — see tasks/zsh.py's own
-    # direct scan) — accounted for here explicitly so nothing silently has zero coverage.
+    # packages_by_method() by design (no "zsh" PackageMethod member) — accounted for here
+    # explicitly so nothing silently has zero coverage. Tag-blind, unlike zsh.configure itself,
+    # which stopped being so; harmless because every row this produces is a "skip" with nothing to
+    # verify, so the only effect is that an excluded package is still named as skipped.
     checks += [
         (name, "skip", "config-only, no command to verify")
         for name, cfg in util.load_config()["packages"].items()

@@ -68,6 +68,47 @@ def test_ensure_block_text_html_style_is_idempotent_when_unchanged():
     assert second == first
 
 
+def test_remove_block_text_takes_out_only_the_named_block():
+    text, _ = util.ensure_block_text("hand-written line\n", "mine", "exported=1")
+    text, _ = util.ensure_block_text(text, "theirs", "other=2")
+
+    result, removed = util.remove_block_text(text, "mine")
+
+    assert removed is True
+    assert "exported=1" not in result
+    assert "other=2" in result
+    assert result.startswith("hand-written line\n")
+
+
+def test_remove_block_text_reports_nothing_to_do_when_the_block_is_absent():
+    result, removed = util.remove_block_text("just a file\n", "never-written")
+    assert (result, removed) == ("just a file\n", False)
+
+
+def test_remove_block_text_leaves_no_widening_gap_when_applied_repeatedly():
+    """add → remove → add → remove has to converge, or a dotfile grows blank lines every run."""
+    base = "hand-written line\n"
+    text, _ = util.ensure_block_text(base, "mine", "exported=1")
+    once, _ = util.remove_block_text(text, "mine")
+    text, _ = util.ensure_block_text(once, "mine", "exported=1")
+    twice, _ = util.remove_block_text(text, "mine")
+
+    assert once == twice == base
+
+
+def test_remove_block_writes_only_when_the_block_was_there(tmp_path):
+    path = tmp_path / ".zshenv"
+    path.write_text(util.ensure_block_text("", "mine", "exported=1")[0])
+
+    assert util.remove_block(path, "mine") is True
+    assert "exported=1" not in path.read_text()
+    assert util.remove_block(path, "mine") is False
+
+
+def test_remove_block_on_a_missing_file_is_not_an_error(tmp_path):
+    assert util.remove_block(tmp_path / "never-created", "mine") is False
+
+
 def test_packages_by_method_filters_by_method_and_enabled(monkeypatch):
     monkeypatch.setattr(
         util,

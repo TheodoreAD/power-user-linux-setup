@@ -30,8 +30,7 @@ def _shell_is_zsh(shell_path: str) -> bool:
 @task
 def configure_omz(c: Context):  # noqa: C901
     """Update Oh My Zsh theme and plugins list in ~/.zshrc in-place."""
-    all_cfg = util.load_config()["packages"]
-    cfg = all_cfg.get("oh-my-zsh", {})
+    cfg = util.load_config()["packages"].get("oh-my-zsh", {})
     zshrc = Path.home() / ".zshrc"
     if not zshrc.exists():
         print("[oh-my-zsh] ~/.zshrc not found — skipping")
@@ -60,9 +59,9 @@ def configure_omz(c: Context):  # noqa: C901
     if base:
         tail = "zsh-syntax-highlighting"
         ordered = [p for p in base if p != tail]
-        for pkg_cfg in all_cfg.values():
-            if not pkg_cfg.get("enabled", True):
-                continue
+        # enabled_packages(), not every section plus an `enabled` check: the same tag-blindness
+        # configure() had. A gui package's omz_plugin has nothing to complete on a headless machine.
+        for pkg_cfg in util.enabled_packages().values():
             extra = pkg_cfg.get("omz_plugin", [])
             if isinstance(extra, str):
                 extra = [extra]
@@ -88,26 +87,53 @@ def configure_omz(c: Context):  # noqa: C901
 
 @task
 def configure(c: Context):
-    """Add or update zsh configuration blocks declared in setup.toml."""
-    if util.DRY_RUN:
-        for name, cfg in util.load_config()["packages"].items():
-            if not cfg.get("enabled", True):
-                continue
-            for target, content in _snippets(cfg):
-                path = Path.home() / f".{target}"
-                text = path.read_text() if path.exists() else ""
-                _, status = util.ensure_block_text(text, name, content)
-                print(f"[{name}] .{target}: {util.ok_label(status == util.BlockStatus.OK)}")
-        return
+    """Add or update the zsh blocks declared in setup.toml, and take back the ones that no longer
+    apply to this machine.
+
+    Tag-aware via util.enabled_packages(), which was the bug: this writer read
+    `load_config()["packages"]` and checked only `enabled`, so a `gui`-tagged package's export went
+    into every headless WSL distro and container regardless of PULSE_EXCLUDE_TAGS. That is how a
+    GTK askpass ended up exported on machines with no display (see
+    plans/2026-08-31-wsl-and-container-first-run-experience.md). Tags describe capability, and a
+    shell export is as incapable on a display-less machine as the binary it names.
+
+    Removal is the other half and cannot be skipped: excluding a tag on a machine that already ran
+    without the exclusion leaves the block behind, and nothing else on the machine would ever take
+    it out. Only PULSE's own marker-delimited region goes; anything hand-written around it stays.
+    """
+    applies = util.enabled_packages()
     for name, cfg in util.load_config()["packages"].items():
-        if not cfg.get("enabled", True):
-            continue
         for target, content in _snippets(cfg):
             path = Path.home() / f".{target}"
-            path.parent.mkdir(parents=True, exist_ok=True)
-            result = util.ensure_block(path, name, content)
-            if result != util.BlockStatus.OK:
-                print(f"[{name}] .{target}: {result.value}")
+            if name in applies:
+                _apply_snippet(path, name, target, content)
+            else:
+                _drop_snippet(path, name, target)
+
+
+def _apply_snippet(path: Path, name: str, target: str, content: str) -> None:
+    if util.DRY_RUN:
+        text = path.read_text() if path.exists() else ""
+        _, status = util.ensure_block_text(text, name, content)
+        print(f"[{name}] .{target}: {util.ok_label(status == util.BlockStatus.OK)}")
+        return
+    path.parent.mkdir(parents=True, exist_ok=True)
+    result = util.ensure_block(path, name, content)
+    if result != util.BlockStatus.OK:
+        print(f"[{name}] .{target}: {result.value}")
+
+
+def _drop_snippet(path: Path, name: str, target: str) -> None:
+    """Report or remove a block whose package no longer applies here."""
+    if util.DRY_RUN:
+        text = path.read_text() if path.exists() else ""
+        # "MISSING" is what phases.probe() greps for to decide a phase still has work to do, and a
+        # stale block is work — the word reads oddly for a removal, but the token is the protocol.
+        if util.remove_block_text(text, name)[1]:
+            print(f"[{name}] .{target}: MISSING  (stale block — package no longer applies here)")
+        return
+    if util.remove_block(path, name):
+        print(f"[{name}] .{target}: removed — package no longer applies here")
 
 
 @task

@@ -476,6 +476,35 @@ def ensure_block(path: Path, name: str, content: str, *, style: MarkerStyle = Ma
     return status
 
 
+def remove_block_text(text: str, name: str, *, style: MarkerStyle = MarkerStyle.COMMENT) -> tuple[str, bool]:
+    """Return (new_text, removed) with a named PULSE block taken out. Does not write.
+
+    The inverse of ensure_block_text, and needed for the same reason deploy.py tracks what it wrote:
+    a block stops being wanted when its package stops applying to the machine (a `gui` package on a
+    headless distro), and nothing else would ever take it out. Only the marker-delimited region goes
+    — everything a human put in the file around it is left exactly as it was.
+    """
+    start = _marker(name, open_=True, style=style)
+    end = _marker(name, open_=False, style=style)
+    if start not in text or end not in text:
+        return text, False
+    s = text.index(start)
+    e = text.index(end) + len(end)
+    # Take the blank line ensure_block_text put in front of the block with it, or every removal
+    # leaves a widening gap behind in a file that keeps being rewritten.
+    return (text[:s].rstrip("\n") + "\n" + text[e:].lstrip("\n")).rstrip("\n") + "\n", True
+
+
+def remove_block(path: Path, name: str, *, style: MarkerStyle = MarkerStyle.COMMENT) -> bool:
+    """Remove a named PULSE block from a file if it is there. Returns True if the file changed."""
+    if not path.exists():
+        return False
+    new_text, removed = remove_block_text(path.read_text(), name, style=style)
+    if removed:
+        path.write_text(new_text)
+    return removed
+
+
 def sudo_write(c: Context, path: Path, text: str) -> None:
     """Write `text` to a root-owned `path` via a tempfile + `sudo install` — direct
     `path.write_text()` can't reach root-owned locations, and `sudo tee` from Python would need the
