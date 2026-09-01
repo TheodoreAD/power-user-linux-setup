@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from invoke import Context, task
+from invoke import Context, Exit, task
 
 from . import deploy, util
 
@@ -42,26 +42,81 @@ def configure(c: Context):
 
 
 # ---------------------------------------------------------------------------
+# Package failures: tolerated per package, reported once, still fatal
+#
+# A single unavailable package used to end a whole run at the first `apt-get install` that
+# returned non-zero, leaving every later package uninstalled — and the shape is not specific to
+# any one release: a package pulled from the archive, a mirror serving a partial index, or a typo
+# in setup.toml all look the same from here. The opposite reflex, `warn=True` everywhere, is worse:
+# it hides real failures behind output nobody reads to the end.
+#
+# So failures are collected rather than raised, every installable package still gets installed, and
+# _report_failures() raises once at the end of the task with the whole list. The run fails — just
+# after doing all the work it could, and saying exactly what it could not do.
+# ---------------------------------------------------------------------------
+
+# name of the setup.toml section -> what could not be installed for it
+Failures = dict[str, list[str]]
+
+
+def _install_batch(c: Context, name: str, packages: list[str]) -> list[str]:
+    """Install `packages` in one apt call, and return the ones that could not be installed.
+
+    The retry is not redundant work: `apt-get install` resolves the whole command line before it
+    installs anything, so one unavailable name means *none* of its batch-mates were installed
+    either. Only by asking for them one at a time does the archive say which package was actually
+    the problem — and the siblings get installed instead of being lost to it.
+    """
+    if c.run(util.apt_command(f"install -y {' '.join(packages)}"), warn=True).ok:
+        return []
+    if len(packages) == 1:
+        print(f"[{name}] FAILED: {packages[0]}")
+        return list(packages)
+    print(f"[{name}] batch install failed — retrying {len(packages)} package(s) individually")
+    failed: list[str] = []
+    for pkg in packages:
+        if c.run(util.apt_command(f"install -y {pkg}"), warn=True).ok:
+            continue
+        print(f"[{name}] FAILED: {pkg}")
+        failed.append(pkg)
+    return failed
+
+
+def _report_failures(label: str, failed: Failures) -> None:
+    """Raise once with everything that could not be installed, or return quietly if nothing did."""
+    if not failed:
+        return
+    total = sum(len(pkgs) for pkgs in failed.values())
+    lines = [f"  [{name}] {', '.join(pkgs)}" for name, pkgs in sorted(failed.items())]
+    raise Exit(
+        f"[{label}] {total} package(s) could not be installed — everything else was:\n" + "\n".join(lines),
+        code=1,
+    )
+
+
+# ---------------------------------------------------------------------------
 # apt (base packages)
 # ---------------------------------------------------------------------------
 
 
-def _install_apt_package(c: Context, name: str, cfg: util.PackageConfig) -> None:
+def _install_apt_package(c: Context, name: str, cfg: util.PackageConfig) -> list[str]:
     packages = util.apt_packages(name, cfg)
     if util.DRY_RUN:
         parts = [f"{p}:{util.ok_label(util.apt_installed(p))}" for p in packages]
         print(f"[{name}] {',  '.join(parts)}")
-        return
+        return []
     missing = [p for p in packages if not util.apt_installed(p)]
+    failed: list[str] = []
     if missing:
         print(f"[{name}] installing: {', '.join(missing)}")
-        c.run(util.apt_command(f"install -y {' '.join(missing)}"))
+        failed = _install_batch(c, name, missing)
     else:
         print(f"[{name}] already installed")
     for sym in cfg.get("symlinks", []):
         if util.ensure_symlink(sym["src"], sym["dst"]):
             print(f"[{name}] symlink: {sym['dst']} -> {sym['src']}")
     deploy.apply_config_files(name, cfg)
+    return failed
 
 
 @task
@@ -77,8 +132,11 @@ def install_base(c: Context):
     needs_update = any(not util.apt_installed(p) for name, cfg in pkgs.items() for p in util.apt_packages(name, cfg))
     if needs_update:
         c.run(util.apt_command("update"))
+    failed: Failures = {}
     for name, cfg in pkgs.items():
-        _install_apt_package(c, name, cfg)
+        if pkg_failed := _install_apt_package(c, name, cfg):
+            failed[name] = pkg_failed
+    _report_failures("apt.install-base", failed)
 
 
 # ---------------------------------------------------------------------------
@@ -86,8 +144,13 @@ def install_base(c: Context):
 # ---------------------------------------------------------------------------
 
 
-def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str) -> bool:
-    """Write GPG key and sources entry. Returns True if apt update is needed."""
+def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str) -> tuple[bool, bool]:
+    """Write GPG key and sources entry. Returns (apt update needed, registration succeeded).
+
+    The two are separate answers and conflating them was the bug: a repo that failed to register
+    and one that was already registered both need no `apt update`, but only the first means its
+    packages have nowhere to come from.
+    """
     if "gpg_path" not in cfg or "gpg_url" not in cfg or "sources_path" not in cfg or "sources_entry" not in cfg:
         raise util.missing_fields(name, "gpg_path", "gpg_url", "sources_path", "sources_entry")
     gpg = Path(cfg["gpg_path"])
@@ -100,8 +163,8 @@ def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str
             warn=True,
         )
         if not result.ok:
-            print(f"[{name}] WARNING: GPG key fetch failed — skipping repo")
-            return False
+            print(f"[{name}] FAILED: GPG key fetch — repo not registered")
+            return needs_update, False
         needs_update = True
 
     entry = cfg["sources_entry"].format(gpg_path=gpg, codename=codename)
@@ -112,24 +175,24 @@ def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str
             hide="stdout",
         )
         if not result.ok:
-            print(f"[{name}] WARNING: sources file write failed — skipping")
-            return False
+            print(f"[{name}] FAILED: sources file write — repo not registered")
+            return needs_update, False
         needs_update = True
 
-    return needs_update
+    return needs_update, True
 
 
-def _install_repo_packages(c: Context, name: str, cfg: util.PackageConfig) -> None:
+def _install_repo_packages(c: Context, name: str, cfg: util.PackageConfig) -> list[str]:
     missing = [p for p in util.apt_packages(name, cfg) if not util.apt_installed(p)]
+    failed: list[str] = []
     if missing:
         print(f"[{name}] installing: {', '.join(missing)}")
-        result = c.run(util.apt_command(f"install -y {' '.join(missing)}"), warn=True)
-        if not result.ok:
-            print(f"[{name}] WARNING: apt install failed — check repo or run manually")
+        failed = _install_batch(c, name, missing)
     else:
         print(f"[{name}] already installed")
     if post_install := cfg.get("post_install"):
         c.run(post_install, warn=True)
+    return failed
 
 
 def _status_repo(name: str, cfg: util.PackageConfig) -> None:
@@ -175,14 +238,25 @@ def install_repos(c: Context):
 
     # Phase 1: register all repos, then one apt update.
     needs_update = False
+    failed: Failures = {}
+    registered: list[tuple[str, util.PackageConfig]] = []
     for name, cfg in pkgs.items():
-        needs_update |= _register_repo(c, name, cfg, codename)
+        update, ok = _register_repo(c, name, cfg, codename)
+        needs_update |= update
+        if ok:
+            registered.append((name, cfg))
+        elif unavailable := [p for p in util.apt_packages(name, cfg) if not util.apt_installed(p)]:
+            # Nothing to install from: phase 2 would only ask apt for a package no source provides.
+            failed[name] = unavailable
     if needs_update:
         c.run(util.apt_command("update"), warn=True)
 
-    # Phase 2: install packages from all repos.
-    for name, cfg in pkgs.items():
-        _install_repo_packages(c, name, cfg)
+    # Phase 2: install packages from the repos that registered.
+    for name, cfg in registered:
+        if pkg_failed := _install_repo_packages(c, name, cfg):
+            failed[name] = pkg_failed
+
+    _report_failures("apt.install-repos", failed)
 
 
 # ---------------------------------------------------------------------------
@@ -211,10 +285,16 @@ def _resolve_version(c: Context, name: str, cfg: util.PackageConfig) -> str | No
 
 
 def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) -> bool:
-    """Download and dpkg-install a deb-github asset. Returns True on success.
+    """Download and dpkg-install a deb-github asset. Returns True if dpkg accepted it outright.
 
     Some projects (e.g. flameshot's CI artifacts) publish the .deb wrapped in a .zip rather than
     as a bare asset — unzip to a scratch dir and install whatever .deb is inside.
+
+    False is not the same as "failed". `dpkg -i` exits non-zero for a .deb whose dependencies
+    aren't on the system yet and leaves the package unconfigured, which is precisely what
+    install_debs()'s closing `apt-get install -f -y` repairs — so the caller reports a deferred
+    install rather than a failure, and the download/unzip failures above, which nothing later can
+    repair, are the ones that say FAILED.
     """
     if "repo" not in cfg or "asset" not in cfg:
         raise util.missing_fields(name, "repo", "asset")
@@ -226,25 +306,28 @@ def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) 
         warn=True,
     )
     if not result.ok:
-        print(f"[{name}] WARNING: download failed — skipping")
+        print(f"[{name}] FAILED: download of {asset}")
         return False
 
     if downloaded.endswith(".zip"):
         extract_dir = f"/tmp/{name}-deb-extract"
-        c.run(f"rm -rf {extract_dir} && mkdir -p {extract_dir}")
-        c.run(f"unzip -oq {downloaded} -d {extract_dir}")
-        deb_result = c.run(f"find {extract_dir} -name '*.deb' | head -1", hide=True)
-        deb = deb_result.stdout.strip()
-        if not deb:
-            print(f"[{name}] WARNING: no .deb found inside {asset} — skipping")
+        c.run(f"rm -rf {extract_dir} && mkdir -p {extract_dir}", warn=True)
+        if not c.run(f"unzip -oq {downloaded} -d {extract_dir}", warn=True).ok:
+            print(f"[{name}] FAILED: could not unzip {asset}")
             c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
             return False
-        c.run(util.dpkg_command(f"-i {deb}"), warn=True)
+        deb_result = c.run(f"find {extract_dir} -name '*.deb' | head -1", hide=True, warn=True)
+        deb = deb_result.stdout.strip()
+        if not deb:
+            print(f"[{name}] FAILED: no .deb inside {asset}")
+            c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
+            return False
+        accepted = c.run(util.dpkg_command(f"-i {deb}"), warn=True).ok
         c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
     else:
-        c.run(util.dpkg_command(f"-i {downloaded}"), warn=True)
-        c.run(f"rm -f {downloaded}")
-    return True
+        accepted = c.run(util.dpkg_command(f"-i {downloaded}"), warn=True).ok
+        c.run(f"rm -f {downloaded}", warn=True)
+    return accepted
 
 
 def _dpkg_install_and_report(
@@ -256,6 +339,10 @@ def _dpkg_install_and_report(
     print(f"[{name}] {verb} {tag_prefix}{version}...")
     if _dpkg_install(c, name, cfg, version):
         print(f"[{name}] {past_verb} {tag_prefix}{version}")
+    else:
+        # Previously this printed nothing at all, so a package dpkg had left unconfigured was
+        # indistinguishable in the log from one that was never reached.
+        print(f"[{name}] {tag_prefix}{version} unconfigured — deferred to `apt-get install -f`")
 
 
 def _install_github_deb(c: Context, name: str, cfg: util.PackageConfig) -> None:
@@ -273,6 +360,15 @@ def _install_github_deb(c: Context, name: str, cfg: util.PackageConfig) -> None:
         print(f"[{name}] already installed")
 
     deploy.apply_config_files(name, cfg)
+
+
+def _report_deb_result(name: str, accepted: bool) -> None:
+    """Say what dpkg did — including the unconfigured case, which used to print nothing.
+
+    Not a failure: see _dpkg_install's docstring for why the `apt-get install -f -y` at the end of
+    install_debs() is the thing that decides.
+    """
+    print(f"[{name}] installed" if accepted else f"[{name}] unconfigured — deferred to `apt-get install -f`")
 
 
 def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
@@ -295,19 +391,27 @@ def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
         if not path:
             print(f"[{name}] skipped")
             return
-        c.run(util.dpkg_command(f"-i {path}"))
-        print(f"[{name}] installed")
+        _report_deb_result(name, c.run(util.dpkg_command(f"-i {path}"), warn=True).ok)
         return
     if "{version}" in url:
         if "version_cmd" not in cfg:
             raise util.missing_fields(name, "version_cmd")
-        version = c.run(cfg["version_cmd"], hide=True).stdout.strip()
-        url = url.format(version=version)
+        version_result = c.run(cfg["version_cmd"], hide=True, warn=True)
+        if not version_result.ok:
+            print(f"[{name}] FAILED: version_cmd — cannot build the download URL")
+            return
+        url = url.format(version=version_result.stdout.strip())
     print(f"[{name}] installing...")
     deb = f"/tmp/{name}.deb"
-    c.run(f'curl -fsSL "{url}" -o {deb}')
-    c.run(util.dpkg_command(f"-i {deb}") + f" && rm {deb}")
-    print(f"[{name}] installed")
+    if not c.run(f'curl -fsSL "{url}" -o {deb}', warn=True).ok:
+        print(f"[{name}] FAILED: download from {url}")
+        c.run(f"rm -f {deb}", warn=True)
+        return
+    accepted = c.run(util.dpkg_command(f"-i {deb}"), warn=True).ok
+    # Unconditional, unlike the `&& rm` this replaced: a dpkg failure used to leave the .deb in
+    # /tmp, where the next run neither reuses nor cleans it.
+    c.run(f"rm -f {deb}", warn=True)
+    _report_deb_result(name, accepted)
 
 
 def _cache_size_report(c: Context, label: str) -> None:
