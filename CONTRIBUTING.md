@@ -40,12 +40,17 @@ That's `fix` (fix everything auto-fixable) followed by `check` (verify clean), e
 
 ```shell
 inv quality.check   # lint_check + format_check + type_check + shell_check + shell_format_check +
-                     # test — CI-style gate, no changes written
+                     # workflow_check + dockerfile_check + link_check + deps_check +
+                     # untested_modules + unit — CI-style gate, no changes written
 inv quality.fix      # lint_apply + format_apply + shell_format_apply — fixes everything auto-fixable
 ```
 
-Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_check`,
-`shell_check`, `shell_format_check`, `shell_format_apply`, `test`.
+Individually, in the `quality` namespace: `lint-check`, `lint-apply`, `format-check`,
+`format-apply`, `type-check`, `verify-types`, `shell-check`, `shell-format-check`,
+`shell-format-apply`, `workflow-check`, `dockerfile-check`. Four members of the `check` chain live
+in other namespaces and are invocable there: `inv docs.link-check`, `inv test.untested-modules`,
+`inv test.unit`, and `repo-tasks`' own `deps.check` — which this repo runs through the chain but
+does not publish as a task of its own, since `tasks/__init__.py` adds no `deps` collection.
 
 > [!NOTE]
 > `dprint fmt`/`dprint check` need `--config-discovery=ignore-descendants` (already baked into the
@@ -65,6 +70,28 @@ Individually: `lint_check`, `lint_apply`, `format_check`, `format_apply`, `type_
 > markdown `lineWidth` of 100. Don't change it to `"never"`, which does not mean "leave wrapping
 > alone" but "never insert a line break", i.e. join every paragraph onto one line. See
 > [`contributing/quality-tooling.md`](contributing/quality-tooling.md).
+
+## Docs site
+
+The published site is built from `docs/` and `mkdocs.yml` by [zensical](https://zensical.org/),
+which `.github/workflows/publish_on_push.yml` runs as `zensical build --strict` on every push to
+`master`. Locally:
+
+```shell
+inv docs.serve        # zensical serve — live reload while writing
+inv docs.build        # zensical build --strict, the same command CI runs (wipes site/ first)
+inv docs.clean        # remove the built site/
+```
+
+`zensical` is not a dependency of `repo-tasks` and is not in this repo's `pyproject.toml` either —
+it is pinned on its own in [`requirements-docs.txt`](requirements-docs.txt), which is what CI
+installs and what a local `pip install -r` needs. The built `site/` is gitignored.
+
+> [!WARNING]
+> `inv quality.precommit` does **not** build the site. `inv docs.link-check` runs in the gate, but
+> it checks that a link's _file_ exists and stops at the fragment — so renaming a heading that
+> another page links to (`configuration.md#some-heading`) passes every local check and fails the
+> Pages deploy. After renaming a heading, grep for inbound links to it and run `inv docs.build`.
 
 ## Naming a task
 

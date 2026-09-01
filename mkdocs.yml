@@ -7,8 +7,8 @@
 # https://github.com/mkdocs/mkdocs/wiki/MkDocs-Recipes
 # TODO: include everything relevant from here
 
-# TODO: figure out how CI works, implement, document
-#https://github.com/mhausenblas/mkdocs-deploy-gh-pages
+# CI: .github/workflows/publish_on_push.yml runs `zensical build --strict` on every push to master
+# and deploys the result to GitHub Pages. See CONTRIBUTING.md, "Docs site", for the local commands.
 
 # https://www.mkdocs.org/user-guide/configuration/
 
