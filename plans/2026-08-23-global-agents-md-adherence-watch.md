@@ -478,3 +478,44 @@ bare and reading the harness's own non-zero report, which is exactly what the ru
 is exactly what is not happening. Worth asking whether the pull is output _volume_ rather than exit
 codes: the gate prints ~40 lines on success, and every one of this session's 29 pipes was `tail -3`
 to `tail -6`. If so the fix is a quieter gate, not a better rule.]
+
+### Session 10 — `power-user-linux-setup`, 2026-08-31/09-01: the announcement, then the opposite
+
+The WSL/container first-run session (sudo pre-auth, `netdoctor`, the container harness). 404 Bash
+calls over roughly ten hours, counted at harvest — the largest sample in this watch so far, and the
+worst `head`/`tail` rate since session 5.
+
+| metric                           | session 10    | session 9 | session 8 | baseline (auto mode) |
+| -------------------------------- | ------------- | --------- | --------- | -------------------- |
+| Bash calls                       | **404**       | 270       | ~280      | 3,956                |
+| piped through `head`/`tail`      | **161 (40%)** | 62 (22%)  | 31 (11%)  | 29–32% (+9pp MISS)   |
+| chained (`&&` / `;`)             | 218 (54%)     | 99 (36%)  | 58 (21%)  | 64–71% (−12pp OK)    |
+| heredoc instead of Edit/Write    | **105 (26%)** | —         | —         | 16% (+10pp MISS)     |
+| `sed -n` file reads              | 32 (8%)       | —         | —         | 8% (+0pp MISS)       |
+| exit-masked (pipe hides `$?`)    | 81 (20%)      | —         | —         | —                    |
+| `cd` into the session's own repo | 4 (1%)        | 2         | 0         | 114                  |
+
+[PITFALL: **this session opened by announcing the rule and then broke it more than the baseline
+does.** Its first substantive line was "per `~/AGENTS.md` I'll keep using Read/Edit/Write for files
+(and `rg` for search) rather than the auto-mode Bash-only note" — a deliberate, correct reading of
+the auto-mode contradiction (see plans/2026-08-28-auto-mode-contradicts-bash-rules.md). It then
+wrote files through `python3 - <<'PY'` heredocs in 26% of its calls, 10pp _worse_ than the auto-mode
+baseline it was overriding. This is the third recorded instance of announcing adherence preceding a
+worse-than-baseline rate, after the ingesta session in the store's own log. Whatever the
+announcement is doing, it is not the thing that changes behaviour — and it makes the transcript read
+as compliant to anyone who does not count.]
+
+[PITFALL: the heredoc rate has a cause the earlier sessions did not have — this session made ~40
+edits that were _mechanical rewrites across several files at once_ (renaming a helper in three
+modules, inserting one line into fifteen task functions, replacing a paragraph in four docs). Edit
+requires one call per site and a prior Read of each; a heredoc does the set in one call. That is a
+real ergonomic pull the rule does not acknowledge, and it is the same shape as session 9's gate
+finding: the aggregate rate is measuring what kind of work the session did. Worth separating
+"heredoc as a file editor" from "heredoc as a multi-file refactor" before more wording is spent on
+it.]
+
+The `head`/`tail` number splits the same way session 9's did: a large share is
+`inv quality.precommit … | tail -3/-4`, run ~20 times because the gate prints ~40 lines and only the
+last three matter. Session 9's open question — whether the pull is output volume rather than exit
+codes — now has a second session's evidence pointing the same way, and this one never once needed
+the exit code it was discarding.
