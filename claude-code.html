@@ -2397,15 +2397,15 @@
   
 
 
-<h1 id="claude-code-environment">Claude Code environment<a class="headerlink" href="#claude-code-environment" title="Permanent link">&para;</a></h1>
+<h1 id="claude-code-environment">Claude Code environment</h1>
 <p>What this repo does specifically to make <a href="https://claude.ai/code">Claude Code</a> (the CLI agent) work
 smoothly on this machine — as opposed to <code>docs/ai.md</code>, which covers AI tools generally (install,
 model choice, other agents).</p>
-<h2 id="the-core-problem-no-tty">The core problem: no TTY<a class="headerlink" href="#the-core-problem-no-tty" title="Permanent link">&para;</a></h2>
+<h2 id="the-core-problem-no-tty">The core problem: no TTY</h2>
 <p>Claude Code&rsquo;s Bash tool runs commands non-interactively — there&rsquo;s no controlling terminal, so
 anything that tries to prompt interactively (a <code>sudo</code> password, an SSH key passphrase) just fails
 outright instead of waiting for input. Two independent instances of this are solved the same way:</p>
-<h2 id="askpass-zenity-gui-dialog-instead-of-a-tty-prompt">askpass-zenity — GUI dialog instead of a TTY prompt<a class="headerlink" href="#askpass-zenity-gui-dialog-instead-of-a-tty-prompt" title="Permanent link">&para;</a></h2>
+<h2 id="askpass-zenity-gui-dialog-instead-of-a-tty-prompt">askpass-zenity — GUI dialog instead of a TTY prompt</h2>
 <p><code>[packages.askpass-zenity]</code> in <code>setup.toml</code> writes <code>~/.local/bin/askpass-zenity</code>, a script that pops
 a Zenity GUI password dialog and prints whatever was entered to stdout — the standard <code>*_ASKPASS</code>
 program contract. It&rsquo;s wired up for two separate purposes:</p>
@@ -2438,7 +2438,7 @@ command times out rather than hanging forever.</p>
 <p>The askpass script itself shows the caller&rsquo;s actual prompt (<code>$1</code> — sudo passes something like
 <code>[sudo] password for user:</code>, ssh passes <code>Enter passphrase for key '...':</code>) instead of a hardcoded
 string, so the dialog text is accurate regardless of which one triggered it.</p>
-<h2 id="direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook">direnv auto-activation in the Bash tool — <code>inv agents.wire-claude-hook</code><a class="headerlink" href="#direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook" title="Permanent link">&para;</a></h2>
+<h2 id="direnv-auto-activation-in-the-bash-tool-inv-agentswire-claude-hook">direnv auto-activation in the Bash tool — <code>inv agents.wire-claude-hook</code></h2>
 <p>A second consequence of the Bash tool&rsquo;s execution model (see &ldquo;The core problem: no TTY&rdquo; above),
 separate from the askpass issue: direnv (<code>[packages.direnv]</code>, e.g. a project&rsquo;s <code>.envrc</code> activating
 its Python <code>.venv</code>) doesn&rsquo;t auto-activate for Claude Code&rsquo;s Bash tool the way it does in a real
@@ -2488,7 +2488,7 @@ there.</p>
 <p>Caveat: <code>env</code> values in <code>settings.json</code> are only read at Claude Code process launch, unlike hooks,
 which are read fresh per call — so this needs a session restart (or VS Code window reload) to take
 effect after first being configured, even though the hook itself starts firing immediately.</p>
-<h2 id="installing-the-cli">Installing the CLI<a class="headerlink" href="#installing-the-cli" title="Permanent link">&para;</a></h2>
+<h2 id="installing-the-cli">Installing the CLI</h2>
 <p><code>[packages.claude-code]</code> installs the <code>claude</code> binary itself via <code>inv tools.install</code>, using
 Anthropic&rsquo;s native installer (<code>curl -fsSL https://claude.ai/install.sh | bash</code>) — a <code>script</code>-method
 entry, same as Oh My Zsh. This is the officially recommended method: it needs no Node.js, ships a
@@ -2497,7 +2497,7 @@ symlinked into <code>~/.local/share/claude/versions/</code>). Don&rsquo;t use
 <code>npm install -g @anthropic-ai/claude-code</code> for a fresh install on this machine — it still works but
 is the legacy path; PULSE only needs to <code>curl</code>-install once and then leaves auto-update to Claude
 Code itself.</p>
-<h2 id="agentsmd-global-instructions-declaratively-managed"><code>~/AGENTS.md</code> — global instructions, declaratively managed<a class="headerlink" href="#agentsmd-global-instructions-declaratively-managed" title="Permanent link">&para;</a></h2>
+<h2 id="agentsmd-global-instructions-declaratively-managed"><code>~/AGENTS.md</code> — global instructions, declaratively managed</h2>
 <p><code>[packages.agents-md]</code> writes <code>~/AGENTS.md</code> (the cross-tool, cross-project instructions file every
 agent CLI on this machine can read) from <code>setup.toml</code>, and symlinks
 <code>~/.claude/CLAUDE.md -&gt; ~/AGENTS.md</code> via the <code>wrapper-script</code> method&rsquo;s <code>symlink_dest</code> field — the
@@ -2551,7 +2551,7 @@ rather than overwriting it.</p>
   can&rsquo;t match a prefix rule that was written for the plain command alone — so it prompts every time
   even when every individual piece is already allowlisted.</li>
 </ul>
-<h2 id="claudesettingsjson-permissions-merged-in-by-inv-allowlistapply"><code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code><a class="headerlink" href="#claudesettingsjson-permissions-merged-in-by-inv-allowlistapply" title="Permanent link">&para;</a></h2>
+<h2 id="claudesettingsjson-permissions-merged-in-by-inv-allowlistapply"><code>~/.claude/settings.json</code> — permissions merged in by <code>inv allowlist.apply</code></h2>
 <p>Unlike <code>~/.claude/CLAUDE.md</code> above, <code>~/.claude/settings.json</code> is <em>not</em> fully PULSE-owned — it&rsquo;s a
 partial merge. <code>inv allowlist.apply</code> (see <a href="cli-allowlist.html"><code>cli-allowlist.md</code></a> for the full
 pipeline this is the last step of) rewrites only the <code>permissions.allow</code>/<code>permissions.ask</code> arrays,
@@ -2560,7 +2560,7 @@ other key in the file (<code>theme</code>, <code>effortLevel</code>, <code>clean
 specifically — governs how long session transcripts/tasks/shell-snapshots/backups are kept — is set
 to <code>365</code> here (default is <code>30</code>) as a deliberate preference, reviewed and confirmed while building
 the allowlist pipeline, not something PULSE enforces or will change on your behalf.</p>
-<h2 id="agentsskills-inv-aiinstall-skills"><code>.agents/skills/</code> — <code>inv ai.install-skills</code><a class="headerlink" href="#agentsskills-inv-aiinstall-skills" title="Permanent link">&para;</a></h2>
+<h2 id="agentsskills-inv-aiinstall-skills"><code>.agents/skills/</code> — <code>inv ai.install-skills</code></h2>
 <p><code>.agents/skills/</code> is the emerging cross-tool convention for Agent Skills, but Claude Code itself
 currently only discovers skills from <code>~/.claude/skills/</code> and <code>&lt;project&gt;/.claude/skills/</code> — not
 <code>.agents/skills/</code> directly. To get both the cross-tool convention <em>and</em> a working Claude Code setup,
@@ -2575,7 +2575,7 @@ PULSE symlinks <code>.claude/skills</code> to <code>.agents/skills</code>:</p>
 to point at a project that already has hand-written skills content. A new Python project&rsquo;s own
 <code>AGENTS.md</code>/<code>CLAUDE.md</code>/<code>.agents/skills</code>/<code>.claude/skills</code> scaffold isn&rsquo;t this task&rsquo;s job —
 <a href="https://github.com/TheodoreAD/scaffoldapy"><code>scaffoldapy</code></a> stamps that at generation time instead.</p>
-<h2 id="declaring-skills-to-install-the-skills-field">Declaring skills to install — the <code>skills</code> field<a class="headerlink" href="#declaring-skills-to-install-the-skills-field" title="Permanent link">&para;</a></h2>
+<h2 id="declaring-skills-to-install-the-skills-field">Declaring skills to install — the <code>skills</code> field</h2>
 <p>Any <code>setup.toml</code> package entry can carry a <code>skills</code> list, checked by <code>inv ai.install-skills</code>
 regardless of that entry&rsquo;s own <code>method</code> — same any-section pattern as <code>zshenv</code>/<code>zshrc</code>/<code>zprofile</code>.
 Two sources:</p>
@@ -2622,7 +2622,7 @@ skill: a skill loads conditionally on a trigger, and this behaviour had to be un
 reach every agent tool, so the always-on <code>AGENTS.md</code> version replaced it outright. That test —
 unconditional and cross-tool means <code>AGENTS.md</code>, sharp trigger and cheap to miss means a skill — is
 now written up in the <code>skill-authoring</code> skill.</p>
-<h2 id="declaring-static-permission-rules-the-claude_permissions_allow-field">Declaring static permission rules — the <code>claude_permissions_allow</code> field<a class="headerlink" href="#declaring-static-permission-rules-the-claude_permissions_allow-field" title="Permanent link">&para;</a></h2>
+<h2 id="declaring-static-permission-rules-the-claude_permissions_allow-field">Declaring static permission rules — the <code>claude_permissions_allow</code> field</h2>
 <p>A second any-section field, same pattern as <code>skills</code>: any package entry can carry
 <code>claude_permissions_allow</code>, a list of literal Claude Code permission-rule strings, checked
 regardless of that entry&rsquo;s <code>method</code>. <code>inv ai.install-skills</code> merges every declared rule into
@@ -2647,7 +2647,7 @@ confirmed, documented Copilot setting for path-scoped <em>file-read</em> auto-ap
 <code>github.copilot.chat.agent.autoApproveFileChanges</code> boolean, which governs edits, not reads, and
 isn&rsquo;t scopable to one directory. Shipping a guessed key into a real settings.json seemed worse than
 an honest &ldquo;nothing applied, here&rsquo;s why.&rdquo; Revisit if a scoped-read key is ever confirmed.</p>
-<h2 id="declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories">Declaring the permission mode and scratch directories — <code>claude_default_mode</code>, <code>claude_additional_directories</code><a class="headerlink" href="#declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories" title="Permanent link">&para;</a></h2>
+<h2 id="declaring-the-permission-mode-and-scratch-directories-claude_default_mode-claude_additional_directories">Declaring the permission mode and scratch directories — <code>claude_default_mode</code>, <code>claude_additional_directories</code></h2>
 <p>Two more <code>settings.json</code> keys <code>inv ai.install-skills</code> syncs, both declared on
 <code>[packages.claude-code]</code> (the mode is a single scalar read directly, like <code>claude_statusline</code>; the
 directories are an any-section list merged through their own manifest,
@@ -2671,7 +2671,7 @@ directories are an any-section list merged through their own manifest,
 <p>Read <code>cli-allowlist.md</code>&rsquo;s <code>mode_covered</code> section for the matching change on the rules side: the
 filesystem commands <code>acceptEdits</code> gates by path (<code>mkdir</code>, <code>cp</code>, <code>rm</code>, &hellip;) no longer render as <code>ask</code>
 rules, because an explicit <code>ask</code> rule would beat the mode&rsquo;s in-scope grant.</p>
-<h2 id="the-statusline">The statusline<a class="headerlink" href="#the-statusline" title="Permanent link">&para;</a></h2>
+<h2 id="the-statusline">The statusline</h2>
 <p>PULSE ships a custom Claude Code statusline
 (<a href="https://github.com/TheodoreAD/power-user-linux-setup/blob/master/config/statusline-command.sh"><code>config/statusline-command.sh</code></a>),
 installed by <code>inv setup</code> along with everything else. It is laid out to match this machine&rsquo;s zsh
@@ -2716,7 +2716,7 @@ and the line below it read as one thing. See <a href="zsh.html#the-prompt">zsh.m
 </tr>
 </tbody>
 </table>
-<h3 id="the-colours-mean-something">The colours mean something<a class="headerlink" href="#the-colours-mean-something" title="Permanent link">&para;</a></h3>
+<h3 id="the-colours-mean-something">The colours mean something</h3>
 <p>Four of those segments share one muted 256-colour scale — gray, green, orange, red, low to high —
 chosen to stay readable rather than to shout. What differs is where each one&rsquo;s thresholds come from,
 and two of them are the interesting part:</p>
@@ -2741,7 +2741,7 @@ the two lines share glyphs rather than approximating each other. The git counts 
 plain ASCII and Unicode (<code>+ ! ? ↑ ↓</code>, oh-my-zsh style) instead of Nerd Font glyphs, which are hard
 to read at small counts.</p>
 <p>This needs a Nerd Font in the terminal, which PULSE installs — see <a href="fonts.html">fonts.md</a>.</p>
-<h2 id="declaring-the-statusline-the-claude_statusline-field">Declaring the statusline — the <code>claude_statusline</code> field<a class="headerlink" href="#declaring-the-statusline-the-claude_statusline-field" title="Permanent link">&para;</a></h2>
+<h2 id="declaring-the-statusline-the-claude_statusline-field">Declaring the statusline — the <code>claude_statusline</code> field</h2>
 <p><code>[packages.claude-statusline]</code> deploys the custom Claude Code statusline script
 (<code>config/statusline-command.sh</code> → <code>~/.claude/statusline-command.sh</code>, a <code>wrapper-script</code>-method
 entry, chmod 0o755 — same mechanism as <code>agents-md</code>/<code>pulse-proxy-start</code>) and declares

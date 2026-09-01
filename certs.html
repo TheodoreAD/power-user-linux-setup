@@ -2309,7 +2309,7 @@
   
 
 
-<h1 id="corporate-ca-bundle">Corporate CA bundle<a class="headerlink" href="#corporate-ca-bundle" title="Permanent link">&para;</a></h1>
+<h1 id="corporate-ca-bundle">Corporate CA bundle</h1>
 <p>Many corporate networks run a TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, etc.) that
 terminates HTTPS and re-signs it with its own root CA. Every TLS client on the machine needs to
 trust that CA, or verification fails everywhere (<code>SSL: CERTIFICATE_VERIFY_FAILED</code>,
@@ -2319,13 +2319,13 @@ Installing it into the OS trust store alone isn&rsquo;t enough — several commo
 bundle instead of reading the OS one: Python (<code>certifi</code>), Node/npm, and the AWS CLI.</p>
 <p><code>inv certs.*</code> installs an IT-provided bundle into the OS trust store via <code>update-ca-certificates</code>,
 then points those tools at the resulting merged bundle.</p>
-<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
+<h2 id="quick-start">Quick start</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>certs.check<span class="w">      </span><span class="c1"># read-only — bundle/env-var/Java status, changes nothing</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>certs.install<span class="w">     </span><span class="c1"># installs into the OS trust store, exports env vars for python/node/awscli</span>
 </span></code></pre></div>
 <p>On a personal machine with no corporate CA configured, both exit cleanly with &ldquo;nothing to configure&rdquo;
 — expected, not a failure.</p>
-<h2 id="config">Config<a class="headerlink" href="#config" title="Permanent link">&para;</a></h2>
+<h2 id="config">Config</h2>
 <p>Add a <code>[certs]</code> section to <code>~/.config/power-user-linux-setup/identity.toml</code> (see
 <code>config/identity.toml.example</code>):</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[certs]</span>
@@ -2333,7 +2333,7 @@ then points those tools at the resulting merged bundle.</p>
 </span></code></pre></div>
 <p>A root + separate intermediate can be given as a list instead. <code>--bundle=path</code> on either task
 overrides this for a one-off run without editing the file.</p>
-<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
+<h2 id="what-gets-installed">What gets installed</h2>
 <ol>
 <li>Each configured file is format-detected and normalized to PEM (see below), then written to
    <code>/usr/local/share/ca-certificates/pulse-corporate.crt</code>.</li>
@@ -2345,7 +2345,7 @@ overrides this for a one-off run without editing the file.</p>
 </ol>
 <p>Re-running <code>inv certs.install</code> is idempotent: it compares the desired bundle text against what&rsquo;s
 already installed and skips <code>update-ca-certificates</code> entirely when nothing changed.</p>
-<h2 id="format-detection">Format detection<a class="headerlink" href="#format-detection" title="Permanent link">&para;</a></h2>
+<h2 id="format-detection">Format detection</h2>
 <p>The bundle&rsquo;s file extension is not trusted — <code>.crt</code>/<code>.cer</code>/<code>.pem</code> are filename conventions, not a
 format guarantee, and IT-issued files show up as ASCII PEM, raw binary DER, or a Windows PKCS#7
 <code>.p7b</code>/<code>.p7c</code> (common from AD Certificate Services) with no reliable way to tell from the name
@@ -2362,7 +2362,7 @@ a deliberate departure from <code>update-ca-certificates</code>&rsquo;s own beha
 can&rsquo;t parse (just a warning), so a plain reinstall attempt with a bad file would otherwise &ldquo;succeed&rdquo;
 while TLS verification keeps failing with no clear signal why. Inspect a rejected file manually with
 <code>file &lt;path&gt;</code> or <code>openssl asn1parse -in &lt;path&gt;</code>.</p>
-<h2 id="java">Java<a class="headerlink" href="#java" title="Permanent link">&para;</a></h2>
+<h2 id="java">Java</h2>
 <p>No JDK is installed or managed by this repo — Scala tooling uses Coursier&rsquo;s own private JVM instead
 (see <a href="scala.html">scala.md</a>), and nothing else here needs one. The <code>cacerts</code> import step is purely
 conditional on <code>keytool</code> already being on <code>PATH</code>: a no-op today, and it activates automatically
@@ -2371,7 +2371,7 @@ without any further changes if a JDK is added independently later.</p>
 under aliases <code>pulse-corporate-0</code>, <code>pulse-corporate-1</code>, etc. (idempotent — checked via
 <code>keytool
 -list</code> first, <code>storepass</code> is the Java default <code>changeit</code>).</p>
-<h2 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h2>
+<h2 id="wsl">WSL</h2>
 <p>WSL2&rsquo;s trust store is fully independent of Windows&rsquo; own. IT populating the Windows certificate store
 via Group Policy/Intune does <strong>not</strong> carry over into WSL — <code>update-ca-certificates</code> still has to run
 inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an OS-trust-store
@@ -2379,7 +2379,7 @@ issue, not a networking one). If the bundle needs to be pulled off the Windows s
 one-time manual copy (e.g. via <code>/mnt/c</code>) — this repo has no automation for reading the Windows
 certificate store or shelling out to <code>certutil.exe</code>/<code>powershell.exe</code>; usually simplest to just ask
 IT for the raw file directly.</p>
-<h2 id="uninstall-rotation">Uninstall / rotation<a class="headerlink" href="#uninstall-rotation" title="Permanent link">&para;</a></h2>
+<h2 id="uninstall-rotation">Uninstall / rotation</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/share/ca-certificates/pulse-corporate.crt
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>update-ca-certificates
 </span></code></pre></div>
@@ -2393,7 +2393,7 @@ by hand:</p>
   "$JAVA_HOME/lib/security/cacerts" -storepass changeit</code>
   (repeat per alias).</li>
 </ul>
-<h2 id="genuine-limitations">Genuine limitations<a class="headerlink" href="#genuine-limitations" title="Permanent link">&para;</a></h2>
+<h2 id="genuine-limitations">Genuine limitations</h2>
 <ul>
 <li><strong>Real Windows-issued PKCS#7 bundles are untested</strong> — only locally-generated test fixtures were
   used to build and verify the four detection branches.</li>
@@ -2406,7 +2406,7 @@ by hand:</p>
   <a href="docker.html#corporate-registriesmirrors-not-automated-yet">docker.md</a> for the mechanism (tracked as
   a follow-up, not covered by this task).</li>
 </ul>
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="corporate-proxy.html">corporate-proxy.md</a> — the separate concern of authenticating <em>through</em> a
   corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA; proxy
