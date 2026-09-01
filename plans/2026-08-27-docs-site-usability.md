@@ -178,35 +178,80 @@ to the `AI` tab reads.
 - A contributing entry point — `CONTRIBUTING.md` is linked from no docs page, only from the repo
   header link.
 
-## Open questions
+## Decided 2026-09-02
 
-[NEEDS CLARIFICATION: is a generated package catalog page the right first move, and generated how?
-`inv devcontainer.render-docs` already establishes the pattern — `util.ensure_block` with
-`util.MarkerStyle.HTML` writing a table into a committed `docs/*.md` — and `~/AGENTS.md`'s
-"Regenerating a file from a canonical source" rule says the output is committed and regeneration is
-its own deliberate standalone command, never wired into `fix`/`check`/`precommit`. Open: what the
-catalog is grouped by (tag, method, or nav-topic), whether disabled entries appear at all, and
-whether `description` fields in `setup.toml` are currently good enough to publish verbatim — they
-were written as inline comments for a maintainer, not as catalog copy.]
+All four open questions answered by the user in one pass, plus the visual-aids question the
+`showcase-the-defaults` plan had left open. Recorded close to their words where the wording carries
+the reasoning.
 
-[NEEDS CLARIFICATION: how should single-machine pages be framed? Two options with different costs.
-(a) A nav group named for what they are — "This machine" — keeping them public but honestly scoped;
-cheap, and fixes the framing problem without moving content. (b) Move the genuinely
-hardware-specific ones out of `docs/` entirely, since a Gigabyte Z390 ELD workaround and a Kinesis
-layout dump are not documentation of this repo. (b) collides with the fact that they are real,
-useful, hard-won notes with no other home — `contributing/` is explicitly for _this repo's_ design
-rationale, not machine ops.]
+[DECISION: **diagrams are mermaid. No screenshots, no image files.** _"we keep mermaid. period."_
+That also closes `2026-08-30-showcase-the-defaults-in-the-docs.md`'s deferred "is a screenshot worth
+it for the statusline and the prompt" — the answer is the same one, and an image in a docs site is a
+maintenance burden that goes stale silently while a mermaid block is text in the repo.]
 
-[NEEDS CLARIFICATION: what happens to `docs/ai.md`? It is a 226-line survey of the AI tooling market
-of which PULSE installs one entry (`claude-code`). Trimming it to what this repo installs and
-linking out would shrink the `AI` tab to `claude-code.md` + `cli-allowlist.md`, which is arguably
-the honest shape. Deleting research the user deliberately gathered is a different call from
-reframing it, so this needs a decision rather than an assumption.]
+[DECISION: **the catalog is one flat table with tags as a column** — name, description, tags,
+method, sorted, generated from `setup.toml`. No grouping axis to arbitrate: a package carrying
+several tags appears once with all of them, which the grouped forms cannot do without either a new
+`primary_tag` field or listing packages repeatedly. Disabled entries are excluded, and the
+`description` fields get a pass for ones written as maintainer notes rather than catalog copy before
+any of them is published verbatim. Generation reuses the `inv devcontainer.render-docs` shape
+(`util.ensure_block`, `util.MarkerStyle.HTML`) and stays a standalone command, per `~/AGENTS.md`'s
+regeneration rule.]
 
-[NEEDS CLARIFICATION: `docs/shortcuts.md` — fold the flameshot binding into `screen_capture.md` and
-delete, or keep? The script is unreferenced by `setup.toml`, duplicates `screen_capture.md`, and
-carries a typo. Nothing in the repo executes it, so it is either a manual recipe worth one section
-elsewhere or dead weight on the public nav.]
+[DECISION: **the machine-specific pages stay on the site, stay categorised, and are not renamed
+after their observer.** _"'this machine' is meaningless. this points to nothing and varies by
+observer."_ The requirement is a search one, stated plainly: _"when i hit f or s on the site and
+type kinesis, i want to get to the page that tells me how to fix my keyboard. because it's mine. and
+i made the site."_ So: no page moves out of `docs/`, no "This machine" group, and no miscellaneous
+pool — _"the current categories are likely fine, and they should stay categorised, not as a 'pool of
+random stuff'"_. What is allowed is a genuinely last, low-visibility section for whatever does not
+fit a real category. This reverses the original recommendation in step 2 below, which proposed
+exactly the "This machine" group being rejected here.
+
+Checked rather than assumed: **the search requirement already holds today.** The built
+`site/search.json` indexes 318 sections, and `kinesis` hits five of them — first among them
+`input_devices.html#kinesis-advantage-360`, the section that fixes the keyboard. So nothing about
+the stated UX need is broken; what is broken is the framing and the reading path, which is a nav
+question and not a findability one. Any nav change has to keep this property, not create it.]
+
+[DECISION: **`docs/ai.md`'s survey moves to `contributing/`, filtered rather than transplanted, and
+the site keeps only what PULSE does.** _"the site shows what pulse does, the research goes to
+contributing, merged with what we already have, but only if it seems useful."_ The filter is
+explicit: market-share figures, ARR and other dated market claims are dropped — _"we don't care
+about market share figures and vague stuff, we care about installation particularities and things
+that affect developers who actually choose those"_. The framing behind it, which the AI pages
+currently do not state: _"we don't choose the tools, devs do, and it's our job to show we give them
+better experiences for whichever tools we can"_ — so the pages should say that PULSE ships an
+**agent-agnostic** structure (`AGENTS.md`, `.agents/skills/`) rather than a Claude-only one.]
+
+[DECISION: **`docs/shortcuts.md` is not deleted, and the page that replaces it owes the reader a
+list of what PULSE changes from the defaults.** _"the user should have a list of shortcuts that are
+pulse-modified from defaults."_ The content may be stale but the question it answers is not: _"it's
+important to know what keyboard shortcuts are modified and which aren't, if they are similar or
+achieve similar goals."_ And the screenshot stack specifically must not read as a settled obvious
+choice — _"the screenshot tool was fiddly to figure out and we don't want to make that look like an
+obvious choice, since there's a lot of shadowing between flameshot and gnome and the default
+screenshot tool. the recording is working from the original tool as well."_ Reorganising, adding
+tooling, and turning the loose script into something real are all in scope.]
+
+## Still open
+
+[NEEDS CLARIFICATION: the exact nav shape. The decision above settles what may **not** happen (no
+observer-named group, no miscellaneous pool, nothing leaves `docs/`) but not what the tab bar
+becomes. The known defects it still has to fix: `apt_packages.md` — core mechanism — sits in
+`Reference` at the far right, and `Reference` otherwise holds `citrix`, `webex`, `locale` and
+`troubleshooting`, which is the junk-drawer problem (#4). A proposal goes to the user before
+`mkdocs.yml` is touched.]
+
+[NEEDS CLARIFICATION: how much of the shortcuts list can be **generated** rather than snapshotted.
+`tasks/screenshot.py` already holds its two custom bindings and `_MANAGED_SHELL_KEYS` as data, with
+the reasoning for what it deliberately leaves alone (`screenshot-window`,
+`show-screen-recording-ui`) in comments — that is a generated table waiting to happen, and it cannot
+go stale. `config/
+wezterm.lua`'s bindings are structured but in Lua, and `docs/keybindings.md` is a
+dated live-state dump (2026-08-08) of GNOME and extension defaults, which is a different thing
+again: what exists, not what PULSE changed. Whether the new page generates the PULSE-modified half
+and keeps the snapshot as context, or something else, is the design question.]
 
 ## Recommended direction
 
@@ -215,15 +260,18 @@ order above.
 
 1. **Package catalog generated from `setup.toml`.** The single biggest gap and the most mechanical
    to close. Answer the grouping question first, then reuse the `devcontainer.render-docs` shape.
-2. **Re-cut the nav into a path rather than a topic list.** Roughly: Start here (index,
-   configuration, apt_packages) → Daily use → Environments → This machine → Reference. Moving
-   `apt_packages.md` out of `Reference` and naming the machine-specific group fixes problems 2 and 4
-   together, with no content rewritten.
+2. **Re-cut the nav into a path rather than a topic list.** ~~Roughly: Start here (index,
+   configuration, apt_packages) → Daily use → Environments → This machine → Reference.~~ The "This
+   machine" half is **rejected** — see the decision above. What survives: `apt_packages.md` leaves
+   `Reference`, the categories stay topical, and every page stays on the site and findable by
+   search. The replacement shape is the open question above.
 3. **Four mermaid diagrams** — setup phases, the deploy classifier, the allowlist pipeline,
    sentinel-block ownership. Already supported and verified end-to-end; nothing to build first.
 4. **A one-line "what this page is for" opener and a `## See also` footer on every page.**
    `certs.md` and `corporate-proxy.md` already model both; this is a sweep, not a design.
-5. **Resolve `shortcuts.md` and reframe `ai.md`,** per the open questions above.
+5. **Rebuild `shortcuts.md` around what PULSE changes, and split `ai.md`** — the survey to
+   `contributing/` minus its dated market claims, the site keeping what PULSE does and saying that
+   the structure it ships is agent-agnostic. Both per the decisions above.
 6. **Add the task index and an updating/uninstalling page.**
 7. **Fix the two stale references in `configuration.md`,** plus the `CONTRIBUTING.md` test-tier line
    and the undocumented `docs.*` tasks. Small enough to land independently of everything above, and
