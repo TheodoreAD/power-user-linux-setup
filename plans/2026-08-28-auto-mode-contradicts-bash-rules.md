@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-30
+updated: 2026-09-01
 ---
 
 # Auto mode's Bash note contradicts `~/AGENTS.md`, and it measurably changes behaviour
@@ -34,11 +34,12 @@ Two things make this more than a curiosity:
 
 The practical cost in that first session was near zero — everything after the note was git,
 installer and verification work, which is genuinely shell-shaped either way, and no file was read or
-edited under it. **That caveat does not generalise**, and the section below is why: three later
-sessions that did read and edit files under the note are measured, and one of them consciously
-refused it and diverged anyway.
+edited under it. **That caveat does not generalise**, and the section below is why: four later
+sessions that did read and edit files under the note are measured, one of them consciously refused
+it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
+the table.
 
-## What the note costs, measured across four sessions
+## What the note costs, measured across five sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
@@ -49,6 +50,7 @@ share of its own Bash calls.
 | `repo-tasks`, 08-29/30 |   133 | yes            |             12% |               0% |       — |             — |
 | `agent-skills`, 08-30  |   110 | **refused it** |             ~8% |               4% |       — |             — |
 | `ingesta`, 08-30       |   228 | yes            |              5% |              36% |     22% |           20% |
+| `ingesta`, 08-31/09-01 |   306 | **announced**  |         **18%** |          **46%** | **57%** |       **30%** |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -85,6 +87,42 @@ this session did know.
   has an external cause and the chaining divergence does not. Whatever sentence lands in
   `config/agents-md/claude-code.md` about the note will not touch this one, and a session that fixes
   its reads because the note is resolved will still be chaining.
+
+**The second `ingesta` row is why the "under the note" column needs a third value.** Merged in from
+`plans/2026-09-01-bash-discipline-sample-ingesta-0901.md`, filed by that session because it could
+not edit this repo. It did not passively sit under the note like the `repo-tasks` row, and it did
+not reason its way to a refusal like the `agent-skills` row — it **stated the resolution of this
+plan's central question in its own words, in its second message**:
+
+> "Using Read/Edit/Write rather than Bash for files, per `~/AGENTS.md`; searching with `rg`."
+
+It then produced the worst numbers in the table. Measured with `session-bash-audit`, not recalled:
+
+```
+this session  n=306  chain=57%  chain5=5%  head/tail=46%  exit-masked=28%
+              redirect-then-filter=0%  sed-n=18%  cat-view=0%  heredoc=30%
+              cd-own-repo=0%  git-C-own-repo=0%  git-mutating-in-chain=9%
+
+vs 2026-08-24-auto-mode.json: 7/11 expectations met
+head/tail 46%(+15pp,MISS)  sed-n 18%(+10pp,MISS)  heredoc 30%(+14pp,MISS)
+git-mutating-in-chain 9%(+1pp,MISS)  chain 57%(-9pp,OK)
+```
+
+Transcript:
+`~/.claude/projects/-home-tdumitrescu-projects-github-com-personal-ingesta/f489b075-6f46-4814-a71b-57f5879ef27e.jsonl`,
+session start `2026-08-31T18:41:11.778Z`, ~7 hours.
+
+Two things sharpen it. The regression is **specific rather than general** — `cd-own-repo`,
+`git-C-own-repo`, `cat-view` and `redirect-then-filter` were all 0%, so it is the output-filtering
+and file-reading habits that moved, not the whole Bash cluster. And the same seven hours were spent
+writing verification-discipline rationale into that repo's `contributing/` docs, including a pitfall
+about a green check that was evidence for the wrong thing: the rule-authoring and the rule-breaking
+are the same session.
+
+That makes it the second recorded instance of the shape, after the session that authored the
+`head`/`tail` rule and then produced it in a third of its calls.
+`plans/2026-08-23-global-agents-md-adherence-watch.md`'s session 10 records a third from this repo
+and cites this one — so the count across both plans is three.
 
 ## The note removes tools, and that settles half the question (2026-08-30)
 
@@ -141,7 +179,31 @@ rule about something that may be user-initiated and therefore intentional.]
 caused by the note at all. `sed -n '<a>,<b>p'` on a 100-line region is one call where
 `Read(offset, limit)` is also one call, so the pull may simply be that the range syntax is more
 compact to write than the parameter pair. Distinguishable: measure a session with no auto-mode note
-in it. If the residue survives there, the rule needs a reason, not a reminder.]
+in it. If the residue survives there, the rule needs a reason, not a reminder. Sharpened 2026-09-01
+by the second `ingesta` row: 18% is the highest `sed -n` rate recorded here, +10pp over the
+auto-mode baseline, on a session that had **said** it was using `Read`. So the residue survives an
+explicit statement of the rule, which rules out "the session did not know" and leaves the
+compactness hypothesis standing.]
+
+[NEEDS CLARIFICATION: **is "the session said the right thing first" a variable worth its own column,
+or noise?** Three occurrences now (the two named above plus the watch's session 10), and in all
+three the announcing session scored at or below the baseline it was overriding. If it is real, it is
+the most actionable finding either plan has: it would mean the announcement is a substitute for the
+behaviour rather than a precursor to it, and every fix of the form "make the agent state which rule
+wins" — including this plan's own recommended direction — is aimed at the wrong thing. Distinguish
+it by measuring announcing and non-announcing sessions separately; `session-bash-audit` can detect
+the announcement, since all three used a recognisable phrase in the first two messages.]
+
+[NEEDS CLARIFICATION: **is `heredoc edits` at 30% the same failure as the others, or the rule being
+wrong about a case it never considered?** The heredocs in that session were `python3 - <<'PY'`
+blocks doing multi-site string replacement across a file — work `Edit` genuinely cannot do in one
+call, and the same cause the watch's session 10 records for its own 26% (renaming a helper across
+three modules, one line into fifteen task functions). Two sessions, same explanation, and the note's
+own escape hatch ("only when Bash genuinely cannot do the job") arguably covers it. If it is a real
+gap the rule needs a stated exception for mechanical multi-site rewrites and the metric needs to
+stop counting them as misses; if it is not, both sessions are simply reaching for the cheaper call.
+The split is measurable — a heredoc writing one file whole is not the same call as one rewriting a
+pattern across several — and neither the audit script nor either plan separates them yet.]
 
 [NEEDS CLARIFICATION: whether the chaining rate is a wording problem or a measurement problem, in
 the sense `session-bash-audit` distinguishes. The rule's own stated reason — one call keeps one exit
@@ -173,6 +235,15 @@ appears** rather than only which side wins — acknowledge it, keep using the de
 so once rather than silently diverging from a system instruction. A session under the note has no
 way to know it is diverging: nothing in the harness reports the conflict, and the note reads as
 current and specific.
+
+[PITFALL: **that clause has since landed in `~/AGENTS.md`, and the three sessions that obeyed it
+scored worse than the ones that did not.** "Say so once" was written to stop silent divergence, and
+it does — the transcripts now read as compliant — but the second `ingesta` row, the `agent-skills`
+refusal and the watch's session 10 all made the statement and then diverged anyway, at 46%, 4% and
+40% `head`/`tail` respectively, two of them above the baseline they were overriding. The
+announcement is verifiable and the behaviour is not, so the clause improved the thing that is easy
+to check. Do not treat it as the fix; it is at best half of one. See the announcement question above
+before writing any more of this shape.]
 
 **And it has to cover the case where the tool is simply gone**, which the 2026-08-30 finding above
 makes the more common one. "Keep using the dedicated tools" is not executable advice for search

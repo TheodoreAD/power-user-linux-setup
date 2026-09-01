@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-30
+updated: 2026-09-01
 ---
 
 # Do the compressed `~/AGENTS.md` rules actually fire? — the adherence watch
@@ -501,9 +501,11 @@ does.** Its first substantive line was "per `~/AGENTS.md` I'll keep using Read/E
 the auto-mode contradiction (see plans/2026-08-28-auto-mode-contradicts-bash-rules.md). It then
 wrote files through `python3 - <<'PY'` heredocs in 26% of its calls, 10pp _worse_ than the auto-mode
 baseline it was overriding. This is the third recorded instance of announcing adherence preceding a
-worse-than-baseline rate, after the ingesta session in the store's own log. Whatever the
-announcement is doing, it is not the thing that changes behaviour — and it makes the transcript read
-as compliant to anyone who does not count.]
+worse-than-baseline rate; the other two are in
+`plans/2026-08-28-auto-mode-contradicts-bash-rules.md`, which now owns the question of whether the
+announcement is a variable worth measuring. Whatever the announcement is doing, it is not the thing
+that changes behaviour — and it makes the transcript read as compliant to anyone who does not
+count.]
 
 [PITFALL: the heredoc rate has a cause the earlier sessions did not have — this session made ~40
 edits that were _mechanical rewrites across several files at once_ (renaming a helper in three
