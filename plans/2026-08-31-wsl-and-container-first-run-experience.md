@@ -165,6 +165,20 @@ people directly, on the timescale where 22.04 will not be what any of them is ru
 target everywhere else in the repo is already 24.04. The zero-install property — no uv, no invoke,
 no venv — is unchanged and is the part that actually matters; only the version bound moved.]
 
+[PITFALL: "the distro's python3" is only true of the _first_ bootstrap. `uv_python_set_default`
+(true by default) puts `~/.local/bin/python3` — uv's managed interpreter — ahead of
+`/usr/bin/python3`, which setup.toml documents, so every later run of the preflight is on uv's
+Python rather than the system one. That satisfies the floor either way, but it means the floor is
+set by one run only, and that wording was wrong in three files before it was checked.]
+
+[PITFALL: the stock `ubuntu:24.04` _docker_ image has no Python at all — zero python packages, no
+binary anywhere on the filesystem, and `python3` is not in `ubuntu-minimal`'s dependencies. A real
+Ubuntu install always has one (cloud-init, unattended-upgrades and the Pro client are Python, and
+the WSL rootfs is built from the cloud image), so this is a container-only gap. Adding python3 to
+bootstrap.sh's apt prerequisites to close it was proposed and rejected: it is a second system-wide
+Python on a machine where uv owns them, installed from a shell script outside setup.toml, for the
+one environment where the diagnosis matters least. The preflight says it is skipping instead.]
+
 [DECISION: one self-contained module inside `tasks/`, not a new top-level `doctor/` package. A
 top-level package would sit outside `pyrightconfig.json`'s `include` (`src*`/`tests*`/`tasks*`),
 which is a file shared byte-identically across the repo family — so it would be neither type-checked

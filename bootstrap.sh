@@ -6,10 +6,15 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 # Everything below this line is a download whose failure is opaque: on a corporate network the
 # error arrives from whichever tool made the request — a bare `curl: (7)`, or a uv resolver error
 # three screens down — naming neither the blocked host nor what to do about it. So ask first, on
-# the python3 the distro already has, and print the diagnosis before the failure rather than
+# whatever python3 is already on PATH, and print the diagnosis before the failure rather than
 # after it. Nothing is installed to make this possible: tasks/netdoctor.py is standard-library
 # only for exactly this moment, and uv — which owns every other Python on the machine — does not
 # exist yet three lines further down.
+#
+# Which python3 that is depends on the run. On a *first* bootstrap it is the distro's (3.12 on
+# 24.04), which is what the module's version floor is set by. On every later run it is uv's,
+# because `uv_python_set_default` puts ~/.local/bin/python3 ahead of /usr/bin/python3 (see
+# setup.toml). Either satisfies the floor; only the first run constrains it.
 #
 # Advisory on purpose: a probe is not authoritative about a network that might allow the real
 # request through a route it can't see, and refusing to bootstrap on its say-so would be worse
