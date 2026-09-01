@@ -1665,6 +1665,17 @@ version_url = "https://go.dev/VERSION?m=text"
 download_url = "https://go.dev/dl/{version}.linux-amd64.tar.gz"
 extract_to = "~/.local/share"
 install_dir = "~/.local/share/go"
+# The symlink this repo's own XDG rule has always called for ("multi-file runtimes install to
+# ~/.local/share/<tool> with a binary symlinked into ~/.local/bin/") and that this entry never
+# declared — which is why `go` was reachable from zsh and not from bash, or from any non-interactive
+# shell. Safe for go specifically because the go command resolves GOROOT from its own executable
+# path and follows the symlink: verified in a container, `go env GOROOT` reports
+# ~/.local/share/go through the link. The zshenv block below stays — it also puts GOPATH/bin on
+# PATH, which no symlink covers.
+symlinks = [
+  { src = "bin/go", dst = "go" },
+  { src = "bin/gofmt", dst = "gofmt" },
+]
 zshenv = """
 export GOROOT="${HOME}/.local/share/go"
 export GOPATH="${HOME}/go"
@@ -1783,6 +1794,13 @@ script_url = "https://sh.rustup.rs"
 shell = "sh -s -- -y --no-modify-path --profile default"
 check_path = "~/.local/share/cargo/bin/rustc"
 post_install = "~/.local/share/cargo/bin/rustup component add rust-analyzer"
+# Deliberately NOT symlinked into ~/.local/bin the way [packages.go] is. These are rustup shims,
+# and they dispatch using RUSTUP_HOME — which only the zshenv block below exports. A symlink alone
+# puts a command on PATH that fails: verified in a container, `cargo --version` with the variable
+# unset exits 1 with "rustup could not choose a version of cargo to run", because rustup looks in
+# ~/.rustup, a directory this layout deliberately does not use. Broken-on-PATH is worse than
+# absent. Making rust work outside zsh means supplying the two variables, which is why
+# docker/Dockerfile sets them rather than linking anything.
 zshenv = """
 export RUSTUP_HOME="${HOME}/.local/share/rustup"
 export CARGO_HOME="${HOME}/.local/share/cargo"

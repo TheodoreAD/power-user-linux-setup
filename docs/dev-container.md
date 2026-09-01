@@ -70,6 +70,52 @@ specific commit or branch you've verified yourself, not `stable`.
 self-heal preamble and every `[packages.*]` `apt`/`apt-repo`/`deb-github`/`deb-url` method assume
 `apt`/`dpkg`. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.
 
+### Which shell finds which tool
+
+**PULSE configures zsh, and only zsh.** There is no `bashrc` field in `setup.toml` and no writer for
+one — `~/.local/bin` reaches `PATH` through `[packages.zsh-path]`'s `zshenv`, and nothing else PULSE
+writes touches bash.
+
+What saves the common case is the distro, not this repo: Ubuntu's stock `~/.profile` prepends
+`~/.local/bin` **if that directory exists**, so a _login_ bash shell finds `inv`, `uv`, `dprint` and
+everything else that lands there. A **non-login** shell does not, and neither does `sh` — which is
+what a Docker `RUN` layer and most `postCreateCommand`/CI `runCmd` invocations actually use.
+Measured against `mcr.microsoft.com/devcontainers/base:ubuntu-24.04` as the `vscode` user:
+
+| shell                   | `~/.local/bin` on `PATH`                         |
+| ----------------------- | ------------------------------------------------ |
+| `zsh` (PULSE's default) | yes — `zsh-path`                                 |
+| `bash -l`               | yes — Ubuntu's `~/.profile`, once the dir exists |
+| `bash -c`, `sh -c`      | **no** — neither file is read                    |
+
+On top of that, two toolchains install to their own prefix and are outside `~/.local/bin` entirely:
+
+| tool             | outside zsh                                                                             |
+| ---------------- | --------------------------------------------------------------------------------------- |
+| `go`, `gofmt`    | works — symlinked into `~/.local/bin` (the go command resolves GOROOT through the link) |
+| `cargo`, `rustc` | needs `RUSTUP_HOME`/`CARGO_HOME`; without them rustup exits 1 rather than falling back  |
+| `node`, `npm`    | not on `PATH` — see below                                                               |
+
+Set the two rust variables with **`containerEnv`**, which the devcontainer spec applies to every
+process in the container (`remoteEnv` covers only your editor's own terminals, though it is the one
+that supports `${containerEnv:PATH}` substitution):
+
+```json
+{
+  "containerEnv": {
+    "RUSTUP_HOME": "/home/vscode/.local/share/rustup",
+    "CARGO_HOME": "/home/vscode/.local/share/cargo"
+  }
+}
+```
+
+**`node` is deliberately left out of that.** nvm is a sourced shell function by design — its README
+says `which nvm` cannot work — and it publishes no stable path to point an environment variable at:
+node lives under `~/.local/share/nvm/versions/node/<version>/bin`, and `alias/default` holds another
+alias rather than a version, so any hardcoded entry goes stale at the next upgrade. Reach it the way
+nvm documents: `zsh -lic '<command>'`, or `source "$NVM_DIR/nvm.sh"` first. This repo's own
+`[packages.node]` `verify_cmd` does exactly the latter.
+
 ### Mounting host directories
 
 A fresh container has none of your credentials: `inv identity.init` has to be re-run,
