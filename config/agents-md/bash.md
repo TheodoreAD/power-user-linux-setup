@@ -35,13 +35,21 @@ silently diverging from a system instruction.
 One command per call. The costs of a chain are harness-side, not just prompts: one call keeps one
 whole output and one real exit code, while a chain's `$?` is its last command's and its output is
 one blob; and independent calls issued as separate tool-call blocks in one response already run in
-parallel, so gluing with `;`/`&&` gains nothing. `echo "=== label ==="` between steps is the tell
-that a chain should have been several calls. Exactly one chain shape is fine:
-`cd <other repo> && <one command>` for a cross-repo step — and after it, treat cwd as unknown: it
-may persist or be reset, both observed on one build (see "Running a command against a different
-repo"). Never `cd` into the session's own repo as a matter of course — cwd already is it — but after
-a cross-repo chain, the next call that assumes the session repo (`inv`, `pytest`, a bare `rg`)
-either takes an absolute path or is itself a `cd <session repo> && …`.
+parallel, so gluing with `;`/`&&` gains nothing.
+
+**A chain also hides the thing being approved.** The prompt shows the whole compound command, so
+whatever the user actually needs to read — a commit message, the paths being deleted, the branch
+being pushed — sits in the middle of it instead of being the thing on screen. Said plainly by the
+user 2026-09-01 on a `git add && scan && git commit -F … && git log` chain: _"i don't like this
+chaining at all, it obscures the commit message, which is what i want to read when i approve or not
+approve this."_ Anything carrying content for a human to review goes in its own call.
+`echo "=== label ==="` between steps is the tell that a chain should have been several calls.
+Exactly one chain shape is fine: `cd <other repo> && <one command>` for a cross-repo step — and
+after it, treat cwd as unknown: it may persist or be reset, both observed on one build (see "Running
+a command against a different repo"). Never `cd` into the session's own repo as a matter of course —
+cwd already is it — but after a cross-repo chain, the next call that assumes the session repo
+(`inv`, `pytest`, a bare `rg`) either takes an absolute path or is itself a
+`cd <session repo> && …`.
 
 Run a gate or test plain — `inv quality.precommit`, `pytest` — never `> log 2>&1; echo $?` with a
 Read of the log afterwards: that turns one call into two and adds nothing the tool does not already

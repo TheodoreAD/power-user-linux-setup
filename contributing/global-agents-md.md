@@ -956,6 +956,26 @@ clause rather than given a heading of its own. Deployed file: 598 → 607 lines,
 Both numbers were already past the ≤200-line/≤15-rule reference points before this clause, so it
 adds nine lines to a pre-existing question rather than raising a new one.
 
+**Reversed the same day, on the user's correction.** The clause originally mandated
+`git commit -F <file>` for any message containing a backtick. That fixed the quoting hazard and
+introduced a worse one: `-m` is what puts the message into the approval prompt, and a path does not.
+The user's words, on a session that had also chained the commit behind `git add` and a scan: _"i
+don't like this chaining at all, it obscures the commit message, which is what i want to read when i
+approve or not approve this... if there's a problem with quoting and backticks, prefer to simply not
+use backticks and replace with something else that doesn't break bash/zsh."_
+
+That is the better answer and the clause now says it: keep the message inline, and write it without
+backticks or `$`, because a commit message is prose rather than Markdown and naming a command in
+plain words costs nothing. `-F` survives only as the escape hatch for a message that genuinely must
+carry a backtick.
+
+The correction generalises past commits, so half of it went to the Bash cluster instead: a chain
+hides whatever the user needs to read inside a compound command. That is a reviewability cost the
+"Composing a Bash call" rule had never stated — it argued from exit codes, output blobs and parallel
+tool-call blocks, all of which are about the agent's own accuracy rather than the human's ability to
+approve. Worth noting that the rule was already in the file and already being followed for most of
+that session; what failed was applying it to the one call shape where it mattered most.
+
 ## Committing multi-part work
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general

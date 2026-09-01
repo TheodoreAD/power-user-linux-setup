@@ -93,14 +93,20 @@ the repo's own equivalent) — every commit, including a markdown-only one. "Jus
 these repos, all of them pushed from commits that skipped the gate. The gate is what CI runs;
 skipping it schedules a red run that someone else reads.
 
-**A message containing a backtick goes through a file — `git commit -F <file>` — never an inline
-`-m "…"`.** Backticks inside a double-quoted shell argument are command substitution: the shell runs
-what they enclose before git ever sees it, and stores the output in their place. A message
-describing an apt fix ran `apt-get install -f -y` and `dpkg -i && rm` on the machine and committed
-two empty strings where the quoted commands should have been; only the lack of privilege made it
-harmless. These repos' messages routinely quote commands, so treat the backtick as the trigger and
-not the rarity. Same for any other double-quoted body — `gh pr create --body`, `gh issue comment`.
-Pathspec still works: `git commit -F <file> -- <path> <path>`.
+**Keep the message inline in `-m`, and write it without backticks or `$`.** Both are live inside a
+double-quoted shell argument: backticks are command substitution, so the shell _runs_ what they
+enclose before git sees it and stores the output in their place. A message describing an apt fix ran
+`apt-get install -f -y` and `dpkg -i && rm` on the machine and committed two empty strings where the
+quoted commands belonged; only the lack of privilege made it harmless. Commit messages are prose,
+not Markdown — name a command in plain words and nothing breaks.
+
+**Inline is the point, not a convenience.** `-m` puts the message in the approval prompt, which is
+what the user reads to decide. `git commit -F <file>` hides it behind a path, and so does burying
+the commit inside a chain — the prompt then shows a compound command with the message somewhere in
+the middle. Reach for `-F` only when a message genuinely must contain a backtick; pathspec works
+either way (`git commit -m "…" -- <path> <path>`).
+
+Same hazard in any other double-quoted body — `gh pr create --body`, `gh issue comment`.
 
 ### Committing multi-part work
 
