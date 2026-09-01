@@ -106,8 +106,12 @@ The `setup.toml` config/tag system is fully documented in the repo — don't re-
   `gnome-extension`, `apparmor-profile`, `zsh`), plus the tag catalog.
 - `docs/configuration.md`, section "Tags, `enabled`, and which tasks actually respect either" —
   which tasks go through `util.packages_by_method()` (tag+enabled aware) vs which read a
-  `[packages.*]` section directly and ignore tags (`node.install`, `docker.configure`, `fonts.*`) or
-  ignore tags but not `enabled` (`zsh.configure`'s `zshrc`/`zshenv`/`zprofile` writer).
+  `[packages.*]` section directly and ignore tags (`node.install`, `docker.configure`, `fonts.*`). A
+  third shape sits between them: `zsh.configure` bypasses `packages_by_method()` because a shell
+  snippet is not a method, but goes through `util.enabled_packages()`, so it honours both — and it
+  removes the block of a package that stopped applying, which is the only writer here that takes its
+  own output back. Bypassing `packages_by_method()` is not by itself the same as ignoring tags; read
+  the table's own column per task.
 
 Only 7 tags actually gate anything: `gui`, `desktop`, `gnome`, `workstation`, `corporate`, `ide`,
 `windows-native`. Everything else in the tag catalog is organizational only. Building an environment
