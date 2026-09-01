@@ -31,6 +31,11 @@ Each `--on REGEX=REPLY` fires once, when the regex first matches the accumulated
 streamed to `--log` as it arrives, so a hang is visible _while_ it hangs; the run gives up after
 three minutes with no output and says so in the log.
 
+**`drive.py` exits as the driven command did** — `124` if it had to be killed at the deadline, and
+`128+signal` if the child died on one — so a run can be asserted rather than read. It returned `0`
+unconditionally until 2026-09-01, which made a failed `inv wsl.install` indistinguishable from a
+clean one to anything but a human reading the log.
+
 ## `Dockerfile.wsl` — a stand-in for a fresh WSL distro
 
 A password-protected sudo user (`dev` / `devpass`), no systemd, no display. `WSL_DISTRO_NAME` is set

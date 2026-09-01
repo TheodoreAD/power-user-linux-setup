@@ -111,7 +111,15 @@ def main() -> int:
         log.write(f"\n<<< finished={finished} exit={proc.returncode} ".encode())
         log.write(f"unfired={[r.pattern.pattern for r in rules if not r.fired]} >>>\n".encode())
     print(f"finished={finished} exit={proc.returncode}")
-    return 0
+    # Exit as the child did, so a caller can assert on this run instead of reading the log for a
+    # verdict the harness already knew. Returning 0 unconditionally made every failure — a non-zero
+    # `inv wsl.install`, a hang killed at the deadline, a container that never started — look
+    # identical to a clean pass from the outside, in the one script whose entire purpose is
+    # observing whether a run survives to exit 0. A killed child has returncode -SIGKILL, which is
+    # negative and not a valid exit status, so a timeout reports 124 the way timeout(1) does.
+    if not finished:
+        return 124
+    return proc.returncode if proc.returncode >= 0 else 128 - proc.returncode
 
 
 if __name__ == "__main__":
