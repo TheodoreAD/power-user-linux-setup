@@ -9,10 +9,17 @@ set -euo pipefail
 #
 # Usage:
 #   curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh \
-#     | bash -s -- [options]
+#     -o /tmp/pulse-bootstrap.sh && bash /tmp/pulse-bootstrap.sh [options]
 #   bash bootstrap-devcontainer.sh --local [options]   # from inside an existing checkout —
 #                                                       # used by this repo's own .devcontainer
 #                                                       # and by docker/Dockerfile
+#
+# Download to a file and then run it — never `curl … | bash`. A pipeline reports its *last*
+# command's status, so a failed download hands bash an empty stdin and the whole thing exits 0:
+# the container comes up with nothing installed and the postCreateCommand claims success. Measured
+# against a ref that did not exist: `curl -f` exits 22, the pipeline exits 0, the two-step form
+# exits 22. That is not specific to a missing ref — a proxy error page or a network blip does the
+# same.
 #
 # Options:
 #   --exclude-tags <tags>   comma-separated PULSE_EXCLUDE_TAGS. Default: resolved after

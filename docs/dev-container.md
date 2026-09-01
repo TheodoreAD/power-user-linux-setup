@@ -31,9 +31,16 @@ Point any Debian/Ubuntu-family `image` at `bootstrap-devcontainer.sh`, curled fr
 {
   "name": "my-project",
   "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",
-  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh | bash"
+  "postCreateCommand": "curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh -o /tmp/pulse-bootstrap.sh && bash /tmp/pulse-bootstrap.sh"
 }
 ```
+
+**Download to a file, then run it — never `curl … | bash`.** A shell pipeline reports its _last_
+command's status, so a failed download hands `bash` an empty stdin and the whole command exits `0`:
+the container comes up with nothing installed and `postCreateCommand` reports success. Measured
+against a ref that did not exist — `curl -f` exits 22, `curl … | bash` exits 0, and the two-step
+form above exits 22. Nothing about that is specific to a bad ref; a corporate proxy's error page or
+a dropped connection produces the same silent no-op.
 
 This repo's own `.devcontainer/devcontainer.json` dogfoods the same script with `--local` (skip the
 clone — it's already inside a checkout):
