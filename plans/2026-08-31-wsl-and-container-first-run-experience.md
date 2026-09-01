@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-31
+updated: 2026-09-01
 ---
 
 # WSL and container first-run experience
@@ -252,20 +252,63 @@ is right in both.]
 
 ## Still open
 
-[DEFERRED: `inv net.check` is not wired into `inv verify.all`. verify.all is a post-install
-functional check of what was just installed, and a network probe there would fail a run over a
-reachability problem that no longer matters once everything is installed. Revisit only if a real
-failure argues for it.]
+[DECISION: **`inv net.check` stays out of `inv verify.all`.** Settled 2026-09-01, converting what
+was filed as a DEFERRED item — it was a reasoned rejection all along, not work put off, and leaving
+it tagged as deferred kept a backlog entry nobody intended to act on. `verify.all` is a post-install
+functional check of what was just installed, and a network probe there fails a run over a
+reachability problem that no longer matters once everything _is_ installed. Two things sharpen it
+since: `verify.all` aborts on the first failure by design, so a transient probe would take the whole
+check down rather than report alongside it; and `bootstrap.sh` already runs the diagnostic as a
+preflight, which is where reachability is actionable — before the downloads, not after. Revisit only
+if a real failure argues for it.]
 
-[DEFERRED: one unavailable apt package aborts the whole run. Seen on a 22.04 container, which is out
-of scope now that the floor is 24.04 — but the shape is not release-specific: a package pulled from
-an archive, a mirror serving a partial index, or a typo in `setup.toml` each end a run at the first
-failure with everything after it undone. The fix is per-package tolerance with a summary at the end,
-not `warn=True` everywhere, which would hide real failures.]
+### Landed 2026-09-01
 
-[DEFERRED: `zsh.configure`'s zshenv writer ignores tags, which is what put a GUI askpass into every
-headless distro to begin with. The askpass helper degrades gracefully now, so the symptom is gone,
-but the writer is still tag-blind and the next GUI-only export will repeat it.]
+- **Per-package apt tolerance.** `install_base`'s apt call had no `warn=True`, so the first package
+  the archive could not supply raised and left every later one uninstalled. Failures are collected
+  per package and raised once at the end, so the run still fails but only after installing
+  everything it could. The individual retry is what makes the batch survivable: `apt-get` resolves
+  the whole command line before installing anything, so one bad name means none of its batch-mates
+  were installed either. `install_repos` had the mirror-image bug — `_register_repo` returned the
+  same `False` for "already registered" and "the key fetch failed", so an unregistered repo still
+  went through phase 2. `tests/unit/test_apt.py` guards both; its fake Context raises on a non-zero
+  command that was not passed `warn=True`, so deleting one fails five tests.
+- **`zsh.configure` honours tags**, via `util.enabled_packages()`, and removes the block of a
+  package that stopped applying — `util.remove_block_text`/`remove_block` are new for that. Removal
+  was not optional: excluding a tag on a machine that already ran without the exclusion leaves the
+  export sitting in the dotfile, and nothing else would ever take it out. `configure_omz` had the
+  same blindness for `omz_plugin`. `tests/unit/test_zsh.py` guards it.
+
+### Turned up while fixing those, not acted on
+
+[DEFERRED: **`apt._install_deb_url` calls `input()`, which hangs an unattended run** — a container
+bake or an `inv wsl.install` on a machine nobody is sitting at. It is reached by the three
+`download_page` packages (`corporate`-tagged Citrix ones) that have no direct URL and ask for a
+hand-downloaded `.deb` by path. This does not hit the invoke-stdin bug documented in
+`contributing/interactive-input.md`, because the read is Python's rather than a child process's —
+which is exactly why it slipped past that pass. The repo's stated invariant is that nothing run
+through invoke may wait for typed input, and this waits. The fix is probably to skip with a message
+when stdin is not a tty rather than to prompt, but that is a behaviour change for the interactive
+case and wants its own decision.]
+
+[DEFERRED: **`install_debs` still cannot fail.** Both deb installers report their failures and
+return, so a run where every `deb-github` download 404'd exits 0. The apt paths got a failure
+summary; this one did not, because the honest verdict is not available at the point of failure:
+`dpkg -i` exits non-zero for a package whose dependencies aren't in place yet, and the closing
+`apt-get install -f -y` is what repairs precisely that — so its exit code is not evidence, and
+treating it as such would fail runs that are about to succeed (google-chrome-stable on a fresh
+machine is the named case). The answerable form is a `check_cmd` existence sweep _after_ the `-f`
+pass, which is what `verify.all` already does for these packages one phase later. Deciding whether
+that duplication is worth it, and how it distinguishes a genuine failure from a package the user
+deliberately skipped at the manual-download prompt, is the open part.]
+
+[DEFERRED: **the tag-blindness fixed in `zsh.py` may not be the only instance.** `deploy.py:310`,
+`home.py:571`, `ai.py:255`/`296`/`348` and `gnome.py:222` all read sections with a manual `enabled`
+check rather than `util.enabled_packages()`. Some are certainly deliberate — `deploy.py`'s registry
+has to cover everything declared so `deploy.status` can report drift on a package this profile
+excludes — so this is an audit, not a sweep, and each one needs its own answer. The reason to do it
+at all is that the zsh instance was found by its symptom on a real machine rather than by reading
+the code, and the same symptom elsewhere would be just as quiet.]
 
 ## Verification
 
