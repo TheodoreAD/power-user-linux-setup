@@ -323,6 +323,8 @@
       
         
       
+        
+      
     
     
     
@@ -1271,6 +1273,8 @@
       
         
       
+        
+      
     
     
     
@@ -1464,6 +1468,33 @@
     
   
   Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./net-doctor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Network doctor
 
     
   </span>
@@ -2192,7 +2223,7 @@
   
 
 
-<h1 id="chrome-pwa-launchers">Chrome PWA launchers<a class="headerlink" href="#chrome-pwa-launchers" title="Permanent link">&para;</a></h1>
+<h1 id="chrome-pwa-launchers">Chrome PWA launchers</h1>
 <p>Google Chrome writes a <code>.desktop</code> launcher for every PWA you install, one per (app, Chrome profile)
 pair, into <code>~/.local/share/applications/chrome-&lt;app-id&gt;-&lt;Profile&gt;.desktop</code>. With more than one
 profile signed in, those generated files make the app grid worse rather than better:</p>
@@ -2213,7 +2244,7 @@ plan without writing.</p>
 off by default even when <code>[packages.google-chrome-x11]</code> is enabled, because it costs per-profile
 pinning — see &ldquo;Known limitation&rdquo; below, and <code>contributing/chrome-ozone.md</code> for the measurements.
 What decides whether Chrome runs on X11 is the autostart question below, not these files.</p>
-<h2 id="who-starts-chrome-at-login">Who starts Chrome at login<a class="headerlink" href="#who-starts-chrome-at-login" title="Permanent link">&para;</a></h2>
+<h2 id="who-starts-chrome-at-login">Who starts Chrome at login</h2>
 <p><code>inv chrome.status</code> opens with the question that actually decides whether the ozone flag works:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>[chrome] --ozone-platform=x11: required ([packages.google-chrome-x11])
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>[chrome] autostart entries launching Chrome: 1
@@ -2233,7 +2264,7 @@ this check exists: it reports drift rather than repairing it. A <code>NO FLAG</c
 can claim Wayland first, and Netflix goes back to playing sound over a black picture. Both ways an
 entry can be switched off are honoured — <code>Hidden=true</code> and <code>X-GNOME-Autostart-enabled=false</code> — as is
 the XDG rule that a <code>~/.config/autostart</code> file masks a <code>/etc/xdg/autostart</code> one of the same name.</p>
-<h2 id="what-it-derives-and-what-it-never-touches">What it derives, and what it never touches<a class="headerlink" href="#what-it-derives-and-what-it-never-touches" title="Permanent link">&para;</a></h2>
+<h2 id="what-it-derives-and-what-it-never-touches">What it derives, and what it never touches</h2>
 <p>Nothing here is configured in <code>setup.toml</code>. Profile display names (&ldquo;Main&rdquo;, &ldquo;Work&rdquo;) come from
 Chrome&rsquo;s own <code>Local State</code>, and the profile whose apps get unhidden defaults to the one Chrome
 records as <code>last_used</code>. Whether the ozone flag is wanted comes from whether
@@ -2248,7 +2279,7 @@ records as <code>last_used</code>. Whether the ozone flag is wanted comes from w
 </ul>
 <p>Component extensions Chrome installs for itself (Chrome Web Store Payments) are hidden on purpose
 and are left exactly as found.</p>
-<h2 id="which-profile-a-launcher-opens">Which profile a launcher opens<a class="headerlink" href="#which-profile-a-launcher-opens" title="Permanent link">&para;</a></h2>
+<h2 id="which-profile-a-launcher-opens">Which profile a launcher opens</h2>
 <p>Chrome has no &ldquo;default profile&rdquo; setting in its UI. It picks its startup profile from
 <code>profile.last_active_profiles</code> in <code>~/.config/google-chrome/Local State</code>, and any launcher passing an
 explicit <code>--profile-directory</code> overrides that — which is what every PWA launcher does.</p>
@@ -2260,14 +2291,14 @@ what you need to know which <code>Profile N</code> is which account.</p>
 <p>Do <strong>not</strong> rename profile directories to make a different one be <code>Default</code>. The paths are referenced
 throughout <code>Local State</code>, <code>Preferences</code> and extension state; it needs Chrome fully closed, sync can
 undo it, and the payoff is cosmetic.</p>
-<h2 id="this-is-a-repair-not-a-fix">This is a repair, not a fix<a class="headerlink" href="#this-is-a-repair-not-a-fix" title="Permanent link">&para;</a></h2>
+<h2 id="this-is-a-repair-not-a-fix">This is a repair, not a fix</h2>
 <p>Chrome owns these files and rewrites them whenever a PWA is installed or updated, discarding the
 labels. <code>inv chrome.fix-launchers</code> is therefore re-runnable by design and is wired into no phase, no
 <code>inv setup</code> step, and no hook — run it when <code>inv chrome.status</code> says it&rsquo;s needed.</p>
 <p>That is also why this lives in its own namespace rather than under <code>deploy.*</code>. <code>inv deploy.all</code> only
 ever writes paths PULSE created and can prove it wrote; these are another program&rsquo;s generated files,
 and blurring that boundary would break the ownership model the deploy tasks depend on.</p>
-<h2 id="known-limitation-profiles-are-indistinguishable-under-x11">Known limitation: profiles are indistinguishable under X11<a class="headerlink" href="#known-limitation-profiles-are-indistinguishable-under-x11" title="Permanent link">&para;</a></h2>
+<h2 id="known-limitation-profiles-are-indistinguishable-under-x11">Known limitation: profiles are indistinguishable under X11</h2>
 <p>Every copy of an app carries the same <code>StartupWMClass=crx_&lt;app-id&gt;</code> — Chrome puts no profile in the
 X11 WM_CLASS. Under X11 the shell therefore cannot tell one profile&rsquo;s window from another&rsquo;s for the
 same app, so an app installed in two or more profiles cannot be reliably pinned or grouped. Under

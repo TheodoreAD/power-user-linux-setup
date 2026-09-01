@@ -321,6 +321,8 @@
       
         
       
+        
+      
     
     
     
@@ -1164,6 +1166,8 @@
       
         
       
+        
+      
     
     
     
@@ -1357,6 +1361,33 @@
     
   
   Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./net-doctor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Network doctor
 
     
   </span>
@@ -2434,11 +2465,11 @@
   
 
 
-<h1 id="ai-tools">AI tools<a class="headerlink" href="#ai-tools" title="Permanent link">&para;</a></h1>
+<h1 id="ai-tools">AI tools</h1>
 <p>Tools for running local LLMs, agentic coding, and getting more out of hosted assistants (Claude,
 Copilot).</p>
 <hr />
-<h2 id="local-model-runner-ollama">Local model runner — Ollama<a class="headerlink" href="#local-model-runner-ollama" title="Permanent link">&para;</a></h2>
+<h2 id="local-model-runner-ollama">Local model runner — Ollama</h2>
 <p><a href="https://ollama.com">https://ollama.com</a></p>
 <p>The de-facto standard for running open-weight LLMs locally. MIT-licensed, exposes an
 OpenAI-compatible API on <code>localhost:11434</code>, and integrates with every tool in this doc.</p>
@@ -2478,8 +2509,8 @@ OpenAI-compatible API on <code>localhost:11434</code>, and integrates with every
 </tbody>
 </table>
 <hr />
-<h2 id="cli-coding-agents">CLI coding agents<a class="headerlink" href="#cli-coding-agents" title="Permanent link">&para;</a></h2>
-<h3 id="aider">Aider<a class="headerlink" href="#aider" title="Permanent link">&para;</a></h3>
+<h2 id="cli-coding-agents">CLI coding agents</h2>
+<h3 id="aider">Aider</h3>
 <p><a href="https://aider.chat">https://aider.chat</a></p>
 <p>Terminal-native, git-first coding agent. Maps the codebase, edits files across multiple paths, and
 auto-commits every accepted change with a conventional message. Works with any LLM provider or a
@@ -2495,7 +2526,7 @@ local Ollama model.</p>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a><span class="c1"># Add files to the context explicitly</span>
 </span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>aider<span class="w"> </span>src/main.go<span class="w"> </span>src/handler.go
 </span></code></pre></div>
-<h3 id="claude-code">Claude Code<a class="headerlink" href="#claude-code" title="Permanent link">&para;</a></h3>
+<h3 id="claude-code">Claude Code</h3>
 <p><a href="https://claude.ai/code">https://claude.ai/code</a></p>
 <p>Anthropic&rsquo;s official terminal agent. Strongest at large-scope refactors, architecture reasoning, and
 multi-file changes. Requires an Anthropic API key or Pro/Max subscription.</p>
@@ -2509,7 +2540,7 @@ so on this machine you generally don&rsquo;t need the command above at all.
 hooks, and slash commands. For what this repo specifically does to make it work well on this machine
 (sudo/ssh without a TTY, the global <code>~/AGENTS.md</code> symlinked as <code>CLAUDE.md</code>,
 <code>AGENTS.md</code>/<code>.agents/skills</code> scaffolding for any project), see <a href="claude-code.html">claude-code.md</a>.</p>
-<h3 id="goose">Goose<a class="headerlink" href="#goose" title="Permanent link">&para;</a></h3>
+<h3 id="goose">Goose</h3>
 <p><a href="https://goose-docs.ai">https://goose-docs.ai</a></p>
 <p>Editor-agnostic autonomous agent (Apache-2.0, Linux Foundation AI). Goes beyond code: can run shell
 commands, manage files, call APIs, and execute test suites. Works offline with Ollama.</p>
@@ -2521,7 +2552,7 @@ commands, manage files, call APIs, and execute test suites. Works offline with O
 </span></code></pre></div>
 <p>Connects to Zed, JetBrains, or VS Code as an ACP server. Choose Goose when you need an agent that
 works outside VS Code or need repeatable &ldquo;recipes&rdquo; for recurring workflows.</p>
-<h3 id="gemini-cli">Gemini CLI<a class="headerlink" href="#gemini-cli" title="Permanent link">&para;</a></h3>
+<h3 id="gemini-cli">Gemini CLI</h3>
 <p><a href="https://github.com/google-gemini/gemini-cli">https://github.com/google-gemini/gemini-cli</a></p>
 <p>Google&rsquo;s open-source terminal agent. Free tier is generous (1,500 requests/day with a personal
 Google account), making it useful for high-volume or exploratory tasks where you don&rsquo;t want to burn
@@ -2530,8 +2561,8 @@ paid credits.</p>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>gemini
 </span></code></pre></div>
 <hr />
-<h2 id="ide-extensions">IDE extensions<a class="headerlink" href="#ide-extensions" title="Permanent link">&para;</a></h2>
-<h3 id="continuedev">Continue.dev<a class="headerlink" href="#continuedev" title="Permanent link">&para;</a></h3>
+<h2 id="ide-extensions">IDE extensions</h2>
+<h3 id="continuedev">Continue.dev</h3>
 <p><a href="https://continue.dev">https://continue.dev</a></p>
 <p>The most editor-portable option: same config drives both VS Code and JetBrains extensions. Supports
 autocomplete, inline edit, and chat. Routes to any backend — Ollama, Claude, OpenAI, or a
@@ -2555,7 +2586,7 @@ self-hosted Tabby server.</p>
 </span><span id="__span-6-11"><a id="__codelineno-6-11" name="__codelineno-6-11" href="#__codelineno-6-11"></a><span class="w">  </span><span class="p">}</span>
 </span><span id="__span-6-12"><a id="__codelineno-6-12" name="__codelineno-6-12" href="#__codelineno-6-12"></a><span class="p">}</span>
 </span></code></pre></div>
-<h3 id="cline">Cline<a class="headerlink" href="#cline" title="Permanent link">&para;</a></h3>
+<h3 id="cline">Cline</h3>
 <p><a href="https://github.com/cline/cline">https://github.com/cline/cline</a></p>
 <p>VS Code extension that gives you an autonomous coding agent in a side panel. Bring-your-own-key:
 Claude, GPT-4o, local Ollama, or any OpenAI-compatible endpoint. Cline CLI 2.0 (2026) supports
@@ -2563,8 +2594,8 @@ headless and parallel workflows.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>code<span class="w"> </span>--install-extension<span class="w"> </span>saoudrizwan.claude-dev
 </span></code></pre></div>
 <hr />
-<h2 id="hosted-assistants">Hosted assistants<a class="headerlink" href="#hosted-assistants" title="Permanent link">&para;</a></h2>
-<h3 id="github-copilot">GitHub Copilot<a class="headerlink" href="#github-copilot" title="Permanent link">&para;</a></h3>
+<h2 id="hosted-assistants">Hosted assistants</h2>
+<h3 id="github-copilot">GitHub Copilot</h3>
 <p><a href="https://github.com/features/copilot">https://github.com/features/copilot</a></p>
 <p>The most widely-used paid assistant (~42% market share). Tight IDE integration and a free tier (50
 agent requests + 2,000 completions/month). Pro is $10/month. Available in VS Code, JetBrains,
@@ -2577,17 +2608,17 @@ Neovim, and the terminal.</p>
 </span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>gh<span class="w"> </span>extension<span class="w"> </span>install<span class="w"> </span>github/gh-copilot
 </span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a>gh<span class="w"> </span>copilot<span class="w"> </span>suggest<span class="w"> </span><span class="s2">"undo last git commit"</span>
 </span></code></pre></div>
-<h3 id="cursor">Cursor<a class="headerlink" href="#cursor" title="Permanent link">&para;</a></h3>
+<h3 id="cursor">Cursor</h3>
 <p><a href="https://cursor.sh">https://cursor.sh</a></p>
 <p>VS Code fork with AI woven into every layer. Market leader in AI editors ($2B ARR). Best for
 developers who want deep autocomplete and Composer (multi-file agent) without leaving the editor.
 Linux <code>.deb</code> / AppImage available.</p>
-<h3 id="windsurf">Windsurf<a class="headerlink" href="#windsurf" title="Permanent link">&para;</a></h3>
+<h3 id="windsurf">Windsurf</h3>
 <p><a href="https://codeium.com/windsurf">https://codeium.com/windsurf</a></p>
 <p>Another VS Code fork from Codeium. Notable for &ldquo;Cascade&rdquo; — a flow-based multi-step agent that
 maintains a codemap. Free tier available. Linux <code>.deb</code> available.</p>
 <hr />
-<h2 id="self-hosted-inference-server-tabby">Self-hosted inference server — Tabby<a class="headerlink" href="#self-hosted-inference-server-tabby" title="Permanent link">&para;</a></h2>
+<h2 id="self-hosted-inference-server-tabby">Self-hosted inference server — Tabby</h2>
 <p><a href="https://tabby.tabbyml.com">https://tabby.tabbyml.com</a></p>
 <p>Self-hosted completion server. Runs on your own hardware, exposes an OpenAI-compatible API, and
 serves any GGUF model. Right choice when your org has data-residency requirements or you want
@@ -2601,7 +2632,7 @@ team-wide shared inference.</p>
 </span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="w">    </span>--device<span class="w"> </span>cuda
 </span></code></pre></div>
 <hr />
-<h2 id="recommended-combinations">Recommended combinations<a class="headerlink" href="#recommended-combinations" title="Permanent link">&para;</a></h2>
+<h2 id="recommended-combinations">Recommended combinations</h2>
 <table>
 <thead>
 <tr>

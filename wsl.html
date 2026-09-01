@@ -321,6 +321,8 @@
       
         
       
+        
+      
     
     
     
@@ -1164,6 +1166,8 @@
       
         
       
+        
+      
     
     
     
@@ -1357,6 +1361,33 @@
     
   
   Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./net-doctor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Network doctor
 
     
   </span>
@@ -1738,6 +1769,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#corporate-networks-most-of-the-answer-is-on-the-windows-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Corporate networks: most of the answer is on the Windows side
+      </span>
+    </span>
+  </a>
   
 </li>
       
@@ -2162,6 +2204,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#corporate-networks-most-of-the-answer-is-on-the-windows-side" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Corporate networks: most of the answer is on the Windows side
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#docker" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2332,7 +2385,7 @@
   
 
 
-<h1 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h1>
+<h1 id="wsl">WSL</h1>
 <p>The same <code>setup.toml</code> and invoke tasks that configure a workstation can bootstrap a WSL2 distro.
 Most of it works unmodified — apt/apt-repo/deb-github/deb-url/uv-tool/archive installs and the
 zsh/uv/nvm toolchain are plain userspace and don&rsquo;t care that they&rsquo;re running under WSL. The parts
@@ -2358,7 +2411,7 @@ missing those tools. This repo targets WSL2 (with systemd enabled) specifically 
 kernel and can&rsquo;t run systemd at all, so it&rsquo;s rejected by the same generic check, not a special case.
 <code>docker.configure</code> similarly detects &ldquo;no local <code>dockerd</code>&rdquo; (Docker Desktop&rsquo;s WSL integration) and
 skips cleanly instead of failing on <code>systemctl restart docker</code> — see <a href="#docker">Docker</a> below.</p>
-<h2 id="tags-to-exclude">Tags to exclude<a class="headerlink" href="#tags-to-exclude" title="Permanent link">&para;</a></h2>
+<h2 id="tags-to-exclude">Tags to exclude</h2>
 <p>The general principle under WSL: install as little as possible on the Linux side of the boundary.
 Every extra GUI app installed inside the distro is something to keep updated, something that can
 break in a WSLg-specific way, and — if it duplicates an app you already run on Windows — a second
@@ -2420,7 +2473,7 @@ for and why it&rsquo;s excluded by default.</p>
 <p>With the recommended set, what&rsquo;s left installed from the GUI/desktop tags is just
 <code>[packages.clipboard]</code> (<code>wl-clipboard</code>) and <code>[packages.google-chrome]</code> — see below for why those two
 specifically earn their place.</p>
-<h2 id="prerequisites-etcwslconf">Prerequisites — <code>/etc/wsl.conf</code><a class="headerlink" href="#prerequisites-etcwslconf" title="Permanent link">&para;</a></h2>
+<h2 id="prerequisites-etcwslconf">Prerequisites — <code>/etc/wsl.conf</code></h2>
 <p>One setting gates most of the rest, and requires a full WSL restart to take effect
 (<code>wsl.exe --shutdown</code> from Windows, then reopen the terminal):</p>
 <div class="language-ini highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[boot]</span>
@@ -2468,7 +2521,7 @@ host</code>, etc.) until the symlink is put back:</p>
 <p><code>inv wsl.install --dns=yes</code> does this relink automatically; <code>inv wsl.check</code> detects and reports
 whichever of these three states you&rsquo;re in (WSL still generating it, generated-but-frozen without the
 symlink, or correctly symlinked) if you&rsquo;re running the steps by hand instead.</p>
-<h3 id="if-public-dns-is-blocked-on-this-network">If public DNS is blocked on this network<a class="headerlink" href="#if-public-dns-is-blocked-on-this-network" title="Permanent link">&para;</a></h3>
+<h3 id="if-public-dns-is-blocked-on-this-network">If public DNS is blocked on this network</h3>
 <p><code>generateResolvConf=true</code> (WSL&rsquo;s own default, and <code>inv wsl.fix</code>/<code>inv wsl.install</code>&rsquo;s default too —
 see below) makes WSL regenerate <code>/etc/resolv.conf</code> on every restart from whatever DNS server Windows
 itself is configured to use. Overriding that (<code>generateResolvConf=false</code>, what
@@ -2503,7 +2556,34 @@ relink/<code>system.configure-dns</code>/ fallback dance described above. <stron
 <code>generateResolvConf</code> back to <code>true</code> and the override is gone again. (In a real terminal,
 <code>wsl.install</code> asks this exact question interactively before doing anything if you leave <code>--dns</code>
 unset — see <a href="#interactive-prompts">Interactive prompts</a> below.)</p>
-<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
+<h2 id="corporate-networks-most-of-the-answer-is-on-the-windows-side">Corporate networks: most of the answer is on the Windows side</h2>
+<p>A WSL distro sits behind whatever the Windows host does with the network, and by default it inherits
+almost none of it: not the proxy, not the PAC file, not the corporate root CA, and — in NAT mode —
+not a VPN&rsquo;s routing either. That asymmetry is why a corporate laptop can browse fine on Windows
+while <code>curl</code> inside the distro times out.</p>
+<p><strong>Run the diagnosis first.</strong> <code>python3 tasks/netdoctor.py</code> works before anything is installed, and
+reads both sides of the boundary — the distro&rsquo;s own proxy/DNS/CA configuration <em>and</em> the Windows
+host&rsquo;s, via <code>reg.exe</code>, <code>netsh.exe</code>, its PAC file, and <code>%USERPROFILE%\.wslconfig</code>. See
+<a href="net-doctor.html">net-doctor.md</a>; it names which host is unreachable and what to type next.</p>
+<p><strong>Then set <code>.wslconfig</code>.</strong> These are Microsoft&rsquo;s own recommendations for enterprise and VPN
+networks, and they fix at the source most of what people otherwise work around inside the distro.
+The file lives on the <strong>Windows</strong> side, at <code>%USERPROFILE%\.wslconfig</code> (i.e.
+<code>C:\Users\&lt;you&gt;\.wslconfig</code>, not anywhere inside the distro), and needs <code>wsl.exe --shutdown</code> before
+it takes effect:</p>
+<div class="language-ini highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="k">[wsl2]</span>
+</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a><span class="na">networkingMode</span><span class="o">=</span><span class="s">mirrored</span><span class="w">   </span><span class="c1"># VPN-compatible networking; also gives the distro the host's addresses</span>
+</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a><span class="na">dnsTunneling</span><span class="o">=</span><span class="s">true</span><span class="w">         </span><span class="c1"># resolve through Windows rather than a NAT'd DNS packet</span>
+</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a><span class="na">autoProxy</span><span class="o">=</span><span class="s">true</span><span class="w">            </span><span class="c1"># inherit Windows' own HTTP proxy inside the distro</span>
+</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="na">firewall</span><span class="o">=</span><span class="s">true</span><span class="w">             </span><span class="c1"># Windows firewall rules apply to the distro too</span>
+</span></code></pre></div>
+<p>Requires Windows 11 22H2 (or Windows 10 22H2 for the non-networking parts) and WSL 2.0.9 or later —
+check with <code>wsl --version</code>. Reference:
+<a href="https://learn.microsoft.com/en-us/windows/wsl/enterprise">Set up WSL for your company</a>.</p>
+<p>With <code>autoProxy=true</code>, nothing needs a proxy environment variable inside the distro. Without it,
+export one by hand (<code>http_proxy</code>/<code>https_proxy</code>/<code>no_proxy</code>) or run <code>inv proxy.install</code>
+(<a href="corporate-proxy.html">corporate-proxy.md</a>) — and if the proxy inspects TLS, install its root CA
+inside the distro as well (<a href="certs.html">certs.md</a>); the Windows trust store does not carry across.</p>
+<h2 id="docker">Docker</h2>
 <p><code>[packages.docker]</code> is tagged <code>workstation</code>, so it&rsquo;s excluded by the recommended tag set above by
 default. Two ways to get Docker working, matching the split in
 <a href="dev-container.html">docs/dev-container.md</a>:</p>
@@ -2519,7 +2599,7 @@ box. This needs <code>systemd=true</code> from the prerequisites above; <code>do
 <p><code>inv wsl.check</code> tells you which situation you&rsquo;re in — presence of a local <code>dockerd</code> binary is a
 reliable signal for &ldquo;native&rdquo;, its absence alongside a working <code>docker</code> CLI means Desktop
 integration.</p>
-<h2 id="gui-wslg-and-clipboard">GUI, WSLg, and clipboard<a class="headerlink" href="#gui-wslg-and-clipboard" title="Permanent link">&para;</a></h2>
+<h2 id="gui-wslg-and-clipboard">GUI, WSLg, and clipboard</h2>
 <p>WSLg (default on current Windows 11 builds; check with <code>inv wsl.check</code>) runs a real Wayland
 compositor (<code>weston</code>) plus PulseAudio/PipeWire inside the WSL2 VM, and bridges individual app
 windows onto the Windows desktop over an RDP-based channel — not a full remote desktop, just
@@ -2564,7 +2644,7 @@ Anything actually <code>gnome</code>-tagged (Shell extensions, <code>gnome-exten
 WSLg for the same reason it&rsquo;s meaningless in any non-GNOME compositor. <code>gnome.*</code> and <code>screenshot.*</code>
 invoke tasks still shouldn&rsquo;t be run under WSL regardless — see the note at the bottom of this doc.</p>
 <p>Without WSLg, skip <code>gui</code>, <code>desktop</code>, and <code>gnome</code> entirely — there&rsquo;s no display server at all.</p>
-<h2 id="ides-edit-from-windows-instead">IDEs: edit from Windows instead<a class="headerlink" href="#ides-edit-from-windows-instead" title="Permanent link">&para;</a></h2>
+<h2 id="ides-edit-from-windows-instead">IDEs: edit from Windows instead</h2>
 <p><code>[packages.vscode]</code>, <code>[packages.jetbrains-toolbox]</code>, and <code>[packages.apparmor-jbr-cef]</code> are tagged
 <code>ide</code> and excluded by default under WSL — not because they don&rsquo;t work under WSLg (they would, same
 as any other Electron/GTK app), but because installing them inside the distro duplicates a client
@@ -2586,7 +2666,7 @@ that already runs better on the Windows side:</p>
 </ul>
 <p>Drop <code>ide</code> from <code>PULSE_EXCLUDE_TAGS</code> if you specifically want a Linux-side IDE window running inside
 the distro rather than a remote client from Windows.</p>
-<h2 id="windows-native-duplicates">Windows-native duplicates<a class="headerlink" href="#windows-native-duplicates" title="Permanent link">&para;</a></h2>
+<h2 id="windows-native-duplicates">Windows-native duplicates</h2>
 <p>Tagged <code>windows-native</code> and excluded by default under WSL — these install and run fine under WSLg,
 but there&rsquo;s no Linux-specific reason to, and you almost certainly already have (or would rather
 have) the same tool on the Windows side:</p>
@@ -2608,7 +2688,7 @@ have) the same tool on the Windows side:</p>
 </ul>
 <p>Drop <code>windows-native</code> selectively (not as a block) if one of these is a deliberate exception — e.g.
 you want WezTerm&rsquo;s Linux build specifically to test its GPU passthrough behavior under WSLg.</p>
-<h2 id="fonts">Fonts<a class="headerlink" href="#fonts" title="Permanent link">&para;</a></h2>
+<h2 id="fonts">Fonts</h2>
 <p><code>inv fonts.install</code> installs Nerd Fonts into <code>~/.local/share/fonts</code> <em>inside the WSL filesystem</em>. If
 your terminal is Windows Terminal (or anything else running on the Windows side, not through WSLg),
 it can&rsquo;t see fonts installed there — install the Nerd Font on the Windows side separately. This
@@ -2618,18 +2698,18 @@ WSL/Windows boundary to install a font on the host from a distro-side task.</p>
 <code>gsettings</code> — both no-op safely without a GNOME session (confirmed: <code>gsettings set</code> failures are
 caught and printed as a skip, not a crash). The VS Code settings.json part of the same task is
 useful under WSL if you&rsquo;re using VS Code&rsquo;s Remote-WSL extension.</p>
-<h2 id="recommended-sequence">Recommended sequence<a class="headerlink" href="#recommended-sequence" title="Permanent link">&para;</a></h2>
+<h2 id="recommended-sequence">Recommended sequence</h2>
 <p><code>inv setup</code> auto-detects WSL (via <code>util.is_wsl()</code>) and delegates straight to <code>inv wsl.install</code> — you
 don&rsquo;t need to know to call <code>wsl.install</code> specifically; running the same <code>inv setup</code> from the
 <a href="index.html#quick-start">Quick start</a> does the right thing on WSL too. Run <code>inv wsl.install</code> directly
 instead of <code>inv setup</code> only when you want its <code>--wslg</code>/<code>--docker</code>/<code>--dns</code> options (<code>inv setup</code>
 always uses their defaults).</p>
 <p><code>inv wsl.install</code> runs the sequence below for you, as task calls inside a single invoke process:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>inv<span class="w"> </span>wsl.install<span class="w">              </span><span class="c1"># auto-detects WSLg, excludes workstation/corporate/ide/... per the table above</span>
-</span><span id="__span-7-2"><a id="__codelineno-7-2" name="__codelineno-7-2" href="#__codelineno-7-2"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--wslg<span class="o">=</span>no<span class="w">    </span><span class="c1"># force the no-WSLg tag set instead of auto-detecting</span>
-</span><span id="__span-7-3"><a id="__codelineno-7-3" name="__codelineno-7-3" href="#__codelineno-7-3"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--docker<span class="w">     </span><span class="c1"># also keep the workstation tag (installs Docker natively)</span>
-</span><span id="__span-7-4"><a id="__codelineno-7-4" name="__codelineno-7-4" href="#__codelineno-7-4"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--dns<span class="o">=</span>yes<span class="w">    </span><span class="c1"># opt into the public-DNS override — see "If public DNS is blocked" above</span>
-</span><span id="__span-7-5"><a id="__codelineno-7-5" name="__codelineno-7-5" href="#__codelineno-7-5"></a><span class="w">                              </span><span class="c1"># (--dns=no is the default and needs no flag; shown here for clarity)</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>wsl.install<span class="w">              </span><span class="c1"># auto-detects WSLg, excludes workstation/corporate/ide/... per the table above</span>
+</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--wslg<span class="o">=</span>no<span class="w">    </span><span class="c1"># force the no-WSLg tag set instead of auto-detecting</span>
+</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--docker<span class="w">     </span><span class="c1"># also keep the workstation tag (installs Docker natively)</span>
+</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a>inv<span class="w"> </span>wsl.install<span class="w"> </span>--dns<span class="o">=</span>yes<span class="w">    </span><span class="c1"># opt into the public-DNS override — see "If public DNS is blocked" above</span>
+</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">                              </span><span class="c1"># (--dns=no is the default and needs no flag; shown here for clarity)</span>
 </span></code></pre></div>
 <p>It calls <code>wsl.check</code> and <code>wsl.fix</code> first, then <code>system.set-locale</code>/<code>system.configure-dns</code> (only if
 systemd/DNS are actually live yet — skipped with a message otherwise, if <code>wsl.fix</code> just changed
@@ -2656,7 +2736,7 @@ network problem mid-<code>apt</code>, say) and you hit Ctrl-C, the shell only ki
 reads the next already-pasted line from its input buffer and keeps going, which looks like Ctrl-C
 &ldquo;did nothing&rdquo; and skipped ahead. <code>wsl.install</code> runs everything in one process instead, so Ctrl-C at
 any point aborts the whole thing.</p>
-<h3 id="interactive-prompts">Interactive prompts<a class="headerlink" href="#interactive-prompts" title="Permanent link">&para;</a></h3>
+<h3 id="interactive-prompts">Interactive prompts</h3>
 <p>In a real terminal (not piped, scripted, or CI — checked via <code>sys.stdin.isatty()</code>), <code>wsl.install</code>
 asks before doing anything:</p>
 <ul>
@@ -2670,6 +2750,19 @@ asks before doing anything:</p>
   phase?&rdquo; if their own dry-run probe found nothing missing — see
   <a href="#recommended-sequence">Recommended sequence</a> above.</li>
 </ul>
+<p><strong>The sudo password is asked for exactly once</strong>, right after &ldquo;Proceed?&rdquo;, and never again for the
+rest of the run: <code>util.ensure_sudo()</code> authenticates up front and a background thread keeps the
+credential cache warm, so a two-hour install on a slow connection can&rsquo;t stop halfway to ask again. A
+WSL distro&rsquo;s default user has a password (unlike every dev-container base image, which grants
+NOPASSWD), so this is the one prompt that always appears there.</p>
+<p>Nothing you type is echoed, and nothing hangs waiting for input you can&rsquo;t see. Both of those were
+real: the prompt used to be run through invoke, which reads the same terminal sudo does — a race
+that prints the password in plain text when invoke wins it, and, on Python 3.14, a hang with no
+prompt at all (invoke can&rsquo;t forward stdin there; pyinvoke/invoke#1070). It is a plain subprocess
+now, owning the terminal outright.</p>
+<p>If sudo can&rsquo;t be asked for at all — no terminal, no working askpass helper, not root, no NOPASSWD
+rule — the run stops immediately and says so, instead of failing at whichever package happened to
+need root first.</p>
 <p>The DNS question defaults to &ldquo;no&rdquo; (decline the override) on Enter; the rest default to &ldquo;yes&rdquo;
 (proceed / skip). <code>yes | inv wsl.install</code> still works non-interactively if you ever need it
 scripted, since piping <code>yes</code> answers every prompt affirmatively regardless of its own default. A
@@ -2682,7 +2775,7 @@ silently rather than redone.</p>
 actually makes them stand out from the apt/dpkg/curl/gpg output scrolling past in the same run.
 Terse per-package status lines (<code>[gh] repo:ok</code>) are deliberately left alone — they&rsquo;re meant to blend
 in with everything else&rsquo;s output, not compete with it.</p>
-<h3 id="next-steps-reporting">&ldquo;next steps&rdquo; reporting<a class="headerlink" href="#next-steps-reporting" title="Permanent link">&para;</a></h3>
+<h3 id="next-steps-reporting">&ldquo;next steps&rdquo; reporting</h3>
 <p>Both <code>inv wsl.install</code> and <code>inv setup</code> end by calling <code>next_steps.print_next_steps()</code> — it checks
 real state rather than a stored &ldquo;did we already tell you&rdquo; flag, and prints the single next thing to
 do:</p>
@@ -2702,36 +2795,36 @@ do:</p>
 <p>Safe to re-run after doing whatever it suggests — it&rsquo;s checking, not remembering.</p>
 <p>If you want to run the phases individually instead — e.g. to stop and inspect state between steps —
 here&rsquo;s the same sequence by hand:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>wsl.check<span class="w">   </span><span class="c1"># do this first — tells you whether WSLg is available, and whether public DNS</span>
-</span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a><span class="w">                </span><span class="c1"># (1.1.1.1/8.8.8.8) is even reachable on this network</span>
-</span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>inv<span class="w"> </span>wsl.fix<span class="w">     </span><span class="c1"># sets systemd=true; leaves generateResolvConf=true (WSL-managed DNS, the safe</span>
-</span><span id="__span-8-4"><a id="__codelineno-8-4" name="__codelineno-8-4" href="#__codelineno-8-4"></a><span class="w">                </span><span class="c1"># default — see "If public DNS is blocked" above). Pass --dns to override with</span>
-</span><span id="__span-8-5"><a id="__codelineno-8-5" name="__codelineno-8-5" href="#__codelineno-8-5"></a><span class="w">                </span><span class="c1"># public DNS instead: `inv wsl.fix --dns`</span>
-</span><span id="__span-8-6"><a id="__codelineno-8-6" name="__codelineno-8-6" href="#__codelineno-8-6"></a>
-</span><span id="__span-8-7"><a id="__codelineno-8-7" name="__codelineno-8-7" href="#__codelineno-8-7"></a><span class="c1"># then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —</span>
-</span><span id="__span-8-8"><a id="__codelineno-8-8" name="__codelineno-8-8" href="#__codelineno-8-8"></a><span class="c1"># and reopen your terminal before continuing</span>
-</span><span id="__span-8-9"><a id="__codelineno-8-9" name="__codelineno-8-9" href="#__codelineno-8-9"></a>
-</span><span id="__span-8-10"><a id="__codelineno-8-10" name="__codelineno-8-10" href="#__codelineno-8-10"></a><span class="c1"># only if /etc/wsl.conf has systemd=true:</span>
-</span><span id="__span-8-11"><a id="__codelineno-8-11" name="__codelineno-8-11" href="#__codelineno-8-11"></a>inv<span class="w"> </span>system.set-locale
-</span><span id="__span-8-12"><a id="__codelineno-8-12" name="__codelineno-8-12" href="#__codelineno-8-12"></a>
-</span><span id="__span-8-13"><a id="__codelineno-8-13" name="__codelineno-8-13" href="#__codelineno-8-13"></a><span class="c1"># only if you ran `inv wsl.fix --dns` (generateResolvConf=false) — fix DNS *before* anything below</span>
-</span><span id="__span-8-14"><a id="__codelineno-8-14" name="__codelineno-8-14" href="#__codelineno-8-14"></a><span class="c1"># that needs network access, and restore the symlink WSL replaced first, see "Prerequisites" above:</span>
-</span><span id="__span-8-15"><a id="__codelineno-8-15" name="__codelineno-8-15" href="#__codelineno-8-15"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/stub-resolv.conf<span class="w"> </span>/etc/resolv.conf
-</span><span id="__span-8-16"><a id="__codelineno-8-16" name="__codelineno-8-16" href="#__codelineno-8-16"></a>inv<span class="w"> </span>system.configure-dns
-</span><span id="__span-8-17"><a id="__codelineno-8-17" name="__codelineno-8-17" href="#__codelineno-8-17"></a><span class="c1"># if you didn't run `inv wsl.fix --dns`, skip both lines above — WSL is already managing</span>
-</span><span id="__span-8-18"><a id="__codelineno-8-18" name="__codelineno-8-18" href="#__codelineno-8-18"></a><span class="c1"># /etc/resolv.conf itself and DNS works out of the box</span>
-</span><span id="__span-8-19"><a id="__codelineno-8-19" name="__codelineno-8-19" href="#__codelineno-8-19"></a>
-</span><span id="__span-8-20"><a id="__codelineno-8-20" name="__codelineno-8-20" href="#__codelineno-8-20"></a><span class="c1"># with WSLg (default on current Windows 11):</span>
-</span><span id="__span-8-21"><a id="__codelineno-8-21" name="__codelineno-8-21" href="#__codelineno-8-21"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gnome,ide,windows-native,workstation,corporate<span class="w"> </span>inv<span class="w"> </span>apt.install-repos<span class="w"> </span>apt.install-base<span class="w"> </span>apt.install-debs
-</span><span id="__span-8-22"><a id="__codelineno-8-22" name="__codelineno-8-22" href="#__codelineno-8-22"></a><span class="c1"># without WSLg:</span>
-</span><span id="__span-8-23"><a id="__codelineno-8-23" name="__codelineno-8-23" href="#__codelineno-8-23"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.install-repos apt.install-base apt.install-debs</span>
-</span><span id="__span-8-24"><a id="__codelineno-8-24" name="__codelineno-8-24" href="#__codelineno-8-24"></a>
-</span><span id="__span-8-25"><a id="__codelineno-8-25" name="__codelineno-8-25" href="#__codelineno-8-25"></a>inv<span class="w"> </span>tools.install
-</span><span id="__span-8-26"><a id="__codelineno-8-26" name="__codelineno-8-26" href="#__codelineno-8-26"></a>inv<span class="w"> </span>ai.install-skills
-</span><span id="__span-8-27"><a id="__codelineno-8-27" name="__codelineno-8-27" href="#__codelineno-8-27"></a>inv<span class="w"> </span>python.install-tools
-</span><span id="__span-8-28"><a id="__codelineno-8-28" name="__codelineno-8-28" href="#__codelineno-8-28"></a>inv<span class="w"> </span>node.install
-</span><span id="__span-8-29"><a id="__codelineno-8-29" name="__codelineno-8-29" href="#__codelineno-8-29"></a>inv<span class="w"> </span>zsh.configure-omz<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.configure-p10k
-</span><span id="__span-8-30"><a id="__codelineno-8-30" name="__codelineno-8-30" href="#__codelineno-8-30"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">   </span><span class="c1"># usermod -s — takes a new terminal to actually apply</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>inv<span class="w"> </span>wsl.check<span class="w">   </span><span class="c1"># do this first — tells you whether WSLg is available, and whether public DNS</span>
+</span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a><span class="w">                </span><span class="c1"># (1.1.1.1/8.8.8.8) is even reachable on this network</span>
+</span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>wsl.fix<span class="w">     </span><span class="c1"># sets systemd=true; leaves generateResolvConf=true (WSL-managed DNS, the safe</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a><span class="w">                </span><span class="c1"># default — see "If public DNS is blocked" above). Pass --dns to override with</span>
+</span><span id="__span-9-5"><a id="__codelineno-9-5" name="__codelineno-9-5" href="#__codelineno-9-5"></a><span class="w">                </span><span class="c1"># public DNS instead: `inv wsl.fix --dns`</span>
+</span><span id="__span-9-6"><a id="__codelineno-9-6" name="__codelineno-9-6" href="#__codelineno-9-6"></a>
+</span><span id="__span-9-7"><a id="__codelineno-9-7" name="__codelineno-9-7" href="#__codelineno-9-7"></a><span class="c1"># then, from Windows (PowerShell/cmd): wsl.exe --shutdown — only if wsl.fix changed anything —</span>
+</span><span id="__span-9-8"><a id="__codelineno-9-8" name="__codelineno-9-8" href="#__codelineno-9-8"></a><span class="c1"># and reopen your terminal before continuing</span>
+</span><span id="__span-9-9"><a id="__codelineno-9-9" name="__codelineno-9-9" href="#__codelineno-9-9"></a>
+</span><span id="__span-9-10"><a id="__codelineno-9-10" name="__codelineno-9-10" href="#__codelineno-9-10"></a><span class="c1"># only if /etc/wsl.conf has systemd=true:</span>
+</span><span id="__span-9-11"><a id="__codelineno-9-11" name="__codelineno-9-11" href="#__codelineno-9-11"></a>inv<span class="w"> </span>system.set-locale
+</span><span id="__span-9-12"><a id="__codelineno-9-12" name="__codelineno-9-12" href="#__codelineno-9-12"></a>
+</span><span id="__span-9-13"><a id="__codelineno-9-13" name="__codelineno-9-13" href="#__codelineno-9-13"></a><span class="c1"># only if you ran `inv wsl.fix --dns` (generateResolvConf=false) — fix DNS *before* anything below</span>
+</span><span id="__span-9-14"><a id="__codelineno-9-14" name="__codelineno-9-14" href="#__codelineno-9-14"></a><span class="c1"># that needs network access, and restore the symlink WSL replaced first, see "Prerequisites" above:</span>
+</span><span id="__span-9-15"><a id="__codelineno-9-15" name="__codelineno-9-15" href="#__codelineno-9-15"></a>sudo<span class="w"> </span>ln<span class="w"> </span>-sf<span class="w"> </span>/run/systemd/resolve/stub-resolv.conf<span class="w"> </span>/etc/resolv.conf
+</span><span id="__span-9-16"><a id="__codelineno-9-16" name="__codelineno-9-16" href="#__codelineno-9-16"></a>inv<span class="w"> </span>system.configure-dns
+</span><span id="__span-9-17"><a id="__codelineno-9-17" name="__codelineno-9-17" href="#__codelineno-9-17"></a><span class="c1"># if you didn't run `inv wsl.fix --dns`, skip both lines above — WSL is already managing</span>
+</span><span id="__span-9-18"><a id="__codelineno-9-18" name="__codelineno-9-18" href="#__codelineno-9-18"></a><span class="c1"># /etc/resolv.conf itself and DNS works out of the box</span>
+</span><span id="__span-9-19"><a id="__codelineno-9-19" name="__codelineno-9-19" href="#__codelineno-9-19"></a>
+</span><span id="__span-9-20"><a id="__codelineno-9-20" name="__codelineno-9-20" href="#__codelineno-9-20"></a><span class="c1"># with WSLg (default on current Windows 11):</span>
+</span><span id="__span-9-21"><a id="__codelineno-9-21" name="__codelineno-9-21" href="#__codelineno-9-21"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span>gnome,ide,windows-native,workstation,corporate<span class="w"> </span>inv<span class="w"> </span>apt.install-repos<span class="w"> </span>apt.install-base<span class="w"> </span>apt.install-debs
+</span><span id="__span-9-22"><a id="__codelineno-9-22" name="__codelineno-9-22" href="#__codelineno-9-22"></a><span class="c1"># without WSLg:</span>
+</span><span id="__span-9-23"><a id="__codelineno-9-23" name="__codelineno-9-23" href="#__codelineno-9-23"></a><span class="c1"># PULSE_EXCLUDE_TAGS=gui,desktop,gnome,workstation,corporate inv apt.install-repos apt.install-base apt.install-debs</span>
+</span><span id="__span-9-24"><a id="__codelineno-9-24" name="__codelineno-9-24" href="#__codelineno-9-24"></a>
+</span><span id="__span-9-25"><a id="__codelineno-9-25" name="__codelineno-9-25" href="#__codelineno-9-25"></a>inv<span class="w"> </span>tools.install
+</span><span id="__span-9-26"><a id="__codelineno-9-26" name="__codelineno-9-26" href="#__codelineno-9-26"></a>inv<span class="w"> </span>ai.install-skills
+</span><span id="__span-9-27"><a id="__codelineno-9-27" name="__codelineno-9-27" href="#__codelineno-9-27"></a>inv<span class="w"> </span>python.install-tools
+</span><span id="__span-9-28"><a id="__codelineno-9-28" name="__codelineno-9-28" href="#__codelineno-9-28"></a>inv<span class="w"> </span>node.install
+</span><span id="__span-9-29"><a id="__codelineno-9-29" name="__codelineno-9-29" href="#__codelineno-9-29"></a>inv<span class="w"> </span>zsh.configure-omz<span class="w"> </span>zsh.configure<span class="w"> </span>zsh.configure-p10k
+</span><span id="__span-9-30"><a id="__codelineno-9-30" name="__codelineno-9-30" href="#__codelineno-9-30"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">   </span><span class="c1"># usermod -s — takes a new terminal to actually apply</span>
 </span></code></pre></div>
 <p><code>gnome.*</code> and <code>screenshot.*</code> tasks are never called by <code>inv setup</code> and have no meaning under WSL —
 just don&rsquo;t invoke them.</p>

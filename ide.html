@@ -323,6 +323,8 @@
       
         
       
+        
+      
     
     
     
@@ -1355,6 +1357,8 @@
       
         
       
+        
+      
     
     
     
@@ -1548,6 +1552,33 @@
     
   
   Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./net-doctor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Network doctor
 
     
   </span>
@@ -2360,9 +2391,9 @@
   
 
 
-<h1 id="ides">IDEs<a class="headerlink" href="#ides" title="Permanent link">&para;</a></h1>
-<h2 id="vs-code">VS Code<a class="headerlink" href="#vs-code" title="Permanent link">&para;</a></h2>
-<h3 id="install-method-apt-deb-not-snap">Install method: apt deb (not snap)<a class="headerlink" href="#install-method-apt-deb-not-snap" title="Permanent link">&para;</a></h3>
+<h1 id="ides">IDEs</h1>
+<h2 id="vs-code">VS Code</h2>
+<h3 id="install-method-apt-deb-not-snap">Install method: apt deb (not snap)</h3>
 <p>VS Code is installed via the Microsoft apt repo, managed by <code>inv apt.install-repos</code>. The snap
 version was removed in favour of the deb.</p>
 <p><strong>Why deb over snap:</strong></p>
@@ -2420,13 +2451,13 @@ directly in addition to the startup crash and SSH Remote Dev concerns.</p>
 </span></code></pre></div>
 <p>Settings/extensions are preserved because both snap (classic confinement) and deb use
 <code>~/.config/Code/User/</code> for the user profile.</p>
-<h3 id="font-configuration">Font configuration<a class="headerlink" href="#font-configuration" title="Permanent link">&para;</a></h3>
+<h3 id="font-configuration">Font configuration</h3>
 <p>Run <code>inv fonts.configure</code> to set CaskaydiaCove Nerd Font Mono 12 in VS Code. The settings written
 are declared in <code>setup.toml</code> under <code>[settings.fonts.vscode]</code> and include both <code>editor.fontSize</code> and
 <code>terminal.integrated.fontSize</code> (both 12).</p>
 <hr />
-<h2 id="jetbrains">JetBrains<a class="headerlink" href="#jetbrains" title="Permanent link">&para;</a></h2>
-<h3 id="jetbrains-toolbox">JetBrains Toolbox<a class="headerlink" href="#jetbrains-toolbox" title="Permanent link">&para;</a></h3>
+<h2 id="jetbrains">JetBrains</h2>
+<h3 id="jetbrains-toolbox">JetBrains Toolbox</h3>
 <p>Toolbox is installed via <code>inv tools.install</code> using the <code>archive</code> method. It downloads the full
 Toolbox archive, extracts it to <code>~/.local/share/jetbrains-toolbox/</code>, and symlinks the binary to
 <code>~/.local/bin/jetbrains-toolbox</code>.</p>
@@ -2458,7 +2489,7 @@ versionless URL in favour of versioned filenames like <code>jetbrains-toolbox-3.
 self-manages IDE installs and updates. No further <code>inv</code> tasks needed for IDEs.</p>
 <p><strong>Data directory:</strong> <code>~/.local/share/JetBrains/</code> (~12 GB) — contains IDE local history, caches, and
 plugin state. Kept intentionally across reinstalls.</p>
-<h3 id="pycharm-professional">PyCharm Professional<a class="headerlink" href="#pycharm-professional" title="Permanent link">&para;</a></h3>
+<h3 id="pycharm-professional">PyCharm Professional</h3>
 <p>Install via JetBrains Toolbox (see above). The snap version (<code>pycharm-professional</code>) has a known
 Wayland issue on Ubuntu 24.04 — it starts but fails to flush the Wayland display socket, producing a
 flood of <code>Wayland display error flushing data out to the server</code> warnings and showing no window. The
@@ -2483,7 +2514,7 @@ namespaces.</p>
 </ul>
 <p>Both use <code>include if exists &lt;local/chrome&gt;</code> so any site-local Chrome rules are inherited if that
 file is ever created (e.g. by installing Google Chrome&rsquo;s AppArmor profile).</p>
-<h3 id="font-configuration_1">Font configuration<a class="headerlink" href="#font-configuration_1" title="Permanent link">&para;</a></h3>
+<h3 id="font-configuration_1">Font configuration</h3>
 <p>JetBrains IDEs do not pick up the system monospace font. For PyCharm, run:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>inv<span class="w"> </span>ide.configure-pycharm
 </span></code></pre></div>
@@ -2493,7 +2524,7 @@ Nerd Font (editor) and CaskaydiaCove NFM (terminal), 12pt, 1.1 line spacing, lig
 task globs <code>PyCharm*</code> and picks the most recent version directory, so it survives version upgrades.</p>
 <p>For other JetBrains IDEs (IntelliJ, GoLand, etc.), set manually: <strong>Settings → Editor → Font →
 Font:</strong> <code>CaskaydiaCove Nerd Font Mono</code>, size 12.</p>
-<h3 id="rust-plugin">Rust plugin<a class="headerlink" href="#rust-plugin" title="Permanent link">&para;</a></h3>
+<h3 id="rust-plugin">Rust plugin</h3>
 <p>PyCharm has no built-in Rust support — install the
 <a href="https://plugins.jetbrains.com/plugin/22407-rust">Rust plugin</a> from <strong>Settings → Plugins →
 Marketplace</strong> (search &ldquo;Rust&rdquo;). Like other JetBrains plugins, this is a manual Marketplace install;
@@ -2508,10 +2539,10 @@ duplicate the one already in <code>~/.local/share/cargo</code>. GUI-launched PyC
 <code>~/.zshenv</code> <code>PATH</code> export, so if the plugin doesn&rsquo;t autodetect the toolchain, set it explicitly:
 <strong>Settings → Languages &amp; Frameworks → Rust → Toolchain location</strong> → <code>~/.local/share/cargo/bin</code>.</p>
 <hr />
-<h2 id="terminal-emulators">Terminal emulators<a class="headerlink" href="#terminal-emulators" title="Permanent link">&para;</a></h2>
+<h2 id="terminal-emulators">Terminal emulators</h2>
 <p>Two terminal emulators are configured in PULSE. Both use CaskaydiaCove Nerd Font Mono 12 and have
 their configs tracked in the repo.</p>
-<h3 id="wezterm">WezTerm<a class="headerlink" href="#wezterm" title="Permanent link">&para;</a></h3>
+<h3 id="wezterm">WezTerm</h3>
 <p>GPU-accelerated terminal with native Lua config, split panes, tabs, and SSH multiplexing.</p>
 <p><strong>Install:</strong> <code>inv apt.install-debs</code> — method <code>deb-github</code>, nightly rolling release from
 <code>wez/wezterm</code>.</p>
@@ -2526,7 +2557,7 @@ wezterm nightly (see <a href="index.html">index.md</a> — Maintenance).</p>
 <p><strong>Package note:</strong> the nightly release is tagged <code>nightly</code> with asset
 <code>wezterm-nightly.Ubuntu24.04.deb</code>. The installed package name is <code>wezterm-nightly</code>; the binary
 installs as <code>/usr/bin/wezterm</code>.</p>
-<h3 id="terminator">Terminator<a class="headerlink" href="#terminator" title="Permanent link">&para;</a></h3>
+<h3 id="terminator">Terminator</h3>
 <p>Classic GTK terminal with split panes, profiles, and GNOME integration.</p>
 <p><strong>Install:</strong> <code>inv apt.install-base</code> — method <code>apt</code>.</p>
 <p><strong>Config:</strong> <code>config/terminator.conf</code> — copied to <code>~/.config/terminator/config</code> on first install.

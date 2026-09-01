@@ -323,6 +323,8 @@
       
         
       
+        
+      
     
     
     
@@ -1366,6 +1368,8 @@
       
         
       
+        
+      
     
     
     
@@ -1559,6 +1563,33 @@
     
   
   Networking
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./net-doctor.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Network doctor
 
     
   </span>
@@ -2382,7 +2413,7 @@
   
 
 
-<h1 id="gnome-extensions">GNOME extensions<a class="headerlink" href="#gnome-extensions" title="Permanent link">&para;</a></h1>
+<h1 id="gnome-extensions">GNOME extensions</h1>
 <blockquote>
 <p><strong>Citrix Workspace breaks all user extensions.</strong> <code>icaclient</code>&rsquo;s &ldquo;AppProtection&rdquo; module installs a
 <em>mandatory</em> dconf policy (<code>/etc/dconf/db/local.d/00-extensions</code> + a lock on
@@ -2397,7 +2428,7 @@ directly (<code>/etc/dconf/db/local.d/locks/extensions-mandatory</code>) and run
 what let extensions become writable again immediately on 2026-08-08 without waiting for a reboot.
 See <a href="citrix.html">citrix.md</a> — Citrix is currently uninstalled (paused, not abandoned).</p>
 </blockquote>
-<h2 id="ubuntu-2404">Ubuntu 24.04<a class="headerlink" href="#ubuntu-2404" title="Permanent link">&para;</a></h2>
+<h2 id="ubuntu-2404">Ubuntu 24.04</h2>
 <p>Extensions are installed via <strong>gext</strong> (<code>gnome-extensions-cli</code>) — a Python CLI that queries
 extensions.gnome.org directly. No browser extension or native host connector required.</p>
 <p>All extensions are declared in <code>setup.toml</code> under <code>method = "gnome-extension"</code>. The key commands:</p>
@@ -2418,10 +2449,10 @@ disable-user-extensions</code>
 — <code>inv gnome.enable</code> will fix it if it&rsquo;s <code>true</code>.</p>
 <p>Newly installed or updated extensions activate after logout/login (no shell restart on Wayland).</p>
 <hr />
-<h3 id="extension-types">Extension types<a class="headerlink" href="#extension-types" title="Permanent link">&para;</a></h3>
+<h3 id="extension-types">Extension types</h3>
 <p>GNOME Shell loads extensions from two locations. Understanding the distinction matters because
 <code>inv gnome.clean</code> only touches the user directory.</p>
-<h4 id="system-extensions-usrsharegnome-shellextensions">System extensions — <code>/usr/share/gnome-shell/extensions/</code><a class="headerlink" href="#system-extensions-usrsharegnome-shellextensions" title="Permanent link">&para;</a></h4>
+<h4 id="system-extensions-usrsharegnome-shellextensions">System extensions — <code>/usr/share/gnome-shell/extensions/</code></h4>
 <p>Owned by Ubuntu apt packages. Cannot be removed without purging those packages. PULSE does not
 install or remove these; <code>inv gnome.clean</code> leaves them untouched.</p>
 <table>
@@ -2448,7 +2479,7 @@ install or remove these; <code>inv gnome.clean</code> leaves them untouched.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="apt-package-extensions-gnome-shell-extensions">Apt-package extensions — <code>gnome-shell-extensions</code><a class="headerlink" href="#apt-package-extensions-gnome-shell-extensions" title="Permanent link">&para;</a></h4>
+<h4 id="apt-package-extensions-gnome-shell-extensions">Apt-package extensions — <code>gnome-shell-extensions</code></h4>
 <p>The upstream GNOME team ships a curated set of extensions as the <code>gnome-shell-extensions</code> apt
 package. Not currently installed on this machine. Listed here to document evaluation decisions —
 most are covered by better gext alternatives.</p>
@@ -2541,16 +2572,16 @@ most are covered by better gext alternatives.</p>
 <p><strong>Worth reconsidering:</strong> <code>user-theme</code> is the only one that has no gext equivalent and may be needed
 later if you apply a custom Shell theme. If that comes up, reinstall the package and add it to
 <code>setup.toml</code>.</p>
-<h4 id="user-extensions-localsharegnome-shellextensions">User extensions — <code>~/.local/share/gnome-shell/extensions/</code><a class="headerlink" href="#user-extensions-localsharegnome-shellextensions" title="Permanent link">&para;</a></h4>
+<h4 id="user-extensions-localsharegnome-shellextensions">User extensions — <code>~/.local/share/gnome-shell/extensions/</code></h4>
 <p>Installed by gext (or left over from old installs). Owned entirely by PULSE.
 <code>inv gnome.install-extensions</code> installs declared extensions here. <code>inv gnome.clean</code> removes every
 directory not matching an <code>enabled = true</code> UUID in <code>setup.toml</code>.</p>
 <hr />
-<h3 id="pulse-managed-extension-list">PULSE-managed extension list<a class="headerlink" href="#pulse-managed-extension-list" title="Permanent link">&para;</a></h3>
+<h3 id="pulse-managed-extension-list">PULSE-managed extension list</h3>
 <p>All entries below have a <code>[packages.gnome-ext-*]</code> section in <code>setup.toml</code>. Set <code>enabled = true</code> and
 run <code>inv gnome.install-extensions</code> to install and activate. Currently 12 <code>enabled = true</code>, 10
 <code>enabled = false</code> (22 total).</p>
-<h4 id="currently-active">Currently active<a class="headerlink" href="#currently-active" title="Permanent link">&para;</a></h4>
+<h4 id="currently-active">Currently active</h4>
 <p>All 12 confirmed active as of 2026-06-09:</p>
 <table>
 <thead>
@@ -2745,7 +2776,7 @@ Vitals dropdown, right-click desired readings to pin them, then read back the ID
 <p><strong>Freon (<code>gnome-ext-freon</code>)</strong> is kept <code>enabled = false</code> — Vitals is a strict superset (adds
 voltage, more temps, storage) with 10× the install base.</p>
 </blockquote>
-<h4 id="not-installed-disabled-in-setuptoml">Not installed — disabled in setup.toml<a class="headerlink" href="#not-installed-disabled-in-setuptoml" title="Permanent link">&para;</a></h4>
+<h4 id="not-installed-disabled-in-setuptoml">Not installed — disabled in setup.toml</h4>
 <p>These 3 extensions are <code>enabled = false</code> in <code>setup.toml</code> and not on disk. Enable individually if
 needed; <code>inv gnome.install-extensions</code> will install and activate.</p>
 <table>
@@ -2778,7 +2809,7 @@ needed; <code>inv gnome.install-extensions</code> will install and activate.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="not-yet-installed-evaluated-pending-decision">Not yet installed — evaluated, pending decision<a class="headerlink" href="#not-yet-installed-evaluated-pending-decision" title="Permanent link">&para;</a></h4>
+<h4 id="not-yet-installed-evaluated-pending-decision">Not yet installed — evaluated, pending decision</h4>
 <p>All are in <code>setup.toml</code> with <code>enabled = false</code>. GNOME 46 compatible.</p>
 <table>
 <thead>
@@ -2807,7 +2838,7 @@ needed; <code>inv gnome.install-extensions</code> will install and activate.</p>
 </tr>
 </tbody>
 </table>
-<h4 id="worth-enabling">Worth enabling<a class="headerlink" href="#worth-enabling" title="Permanent link">&para;</a></h4>
+<h4 id="worth-enabling">Worth enabling</h4>
 <p>All entries below are in <code>setup.toml</code> with <code>enabled = false</code>. Enable via the usual workflow.</p>
 <table>
 <thead>
@@ -2879,7 +2910,7 @@ needed; <code>inv gnome.install-extensions</code> will install and activate.</p>
 </tbody>
 </table>
 <hr />
-<h3 id="dropped-superseded">Dropped / superseded<a class="headerlink" href="#dropped-superseded" title="Permanent link">&para;</a></h3>
+<h3 id="dropped-superseded">Dropped / superseded</h3>
 <p>Extensions that were evaluated and ruled out. Not in <code>setup.toml</code>.</p>
 <table>
 <thead>
@@ -2952,7 +2983,7 @@ needed; <code>inv gnome.install-extensions</code> will install and activate.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="browser-based-install-alternative">Browser-based install (alternative)<a class="headerlink" href="#browser-based-install-alternative" title="Permanent link">&para;</a></h3>
+<h3 id="browser-based-install-alternative">Browser-based install (alternative)</h3>
 <p>If you prefer the extensions.gnome.org web UI, install the native host connector:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>gnome-browser-connector
 </span></code></pre></div>
