@@ -384,12 +384,22 @@ GOROOT through its symlink, which `[packages.go]`'s own `verify_cmd` cannot prov
 the absolute path, and rustup's shims exit 1 without `RUSTUP_HOME`), and node plus `skills` under
 `zsh -lic`, the route Finding 7's exit-127 bake failure came through.
 
-[PITFALL: the assertions were run in `pulse-devcontainer-verify` — the `docker/Dockerfile` bake,
-root on `ubuntu:24.04` with the image's own `ENV` — and all pass there, `zsh -lic` included. CI
-builds `.devcontainer/` instead: `vscode` on the Microsoft base, no `ENV`, PATH coming only from
-what PULSE wrote into that user's `~/.zshenv`. The same set was installed there in the consumer run
-above (57 `verify.all` passes), but the shell assertions themselves have not run in that image;
-dispatching the workflow is what confirms it.]
+The assertions were written against `pulse-devcontainer-verify` — the `docker/Dockerfile` bake, root
+on `ubuntu:24.04` with the image's own `ENV` — where all of them pass, `zsh -lic` included. That is
+not the image CI builds: `.devcontainer/` is `vscode` on the Microsoft base, with no `ENV` at all
+and PATH coming only from what PULSE wrote into that user's `~/.zshenv`. So the workflow was
+dispatched (run 33568352091, `smoke-test` 2m55s, green) and the log carries the actual values:
+`go version go1.27.1` through the symlink, helm's `BuildInfo`, `cargo 1.98.0`, `node v24.20.0`, and
+`skills` resolving to `/home/vscode/.local/share/nvm/versions/node/v24.20.0/bin/skills`. The rust
+variables therefore reach a plain `zsh -c` from the zshenv `[packages.rust]` writes, with no
+`containerEnv` involved — which is the half of the docs table the Dockerfile's `ENV` had been
+masking.
+
+[PITFALL: that run also moved `stable` from `92d83ff` to `52cba6e` — `publish-stable` runs on every
+green dispatch from `master`, so verifying a workflow change and publishing a new consumer ref are
+the same action here. Nothing warns about it at dispatch time. Harmless this once (the three commits
+in between are plans and docs), but a dispatch made purely to test CI will re-point the tag every
+consumer's `postCreateCommand` clones.]
 
 ## Verification
 
