@@ -521,3 +521,98 @@ The `head`/`tail` number splits the same way session 9's did: a large share is
 last three matter. Session 9's open question — whether the pull is output volume rather than exit
 codes — now has a second session's evidence pointing the same way, and this one never once needed
 the exit code it was discarding.
+
+### Session 11 — `ingesta`, 2026-09-01: a regression, and the instrument moved the number
+
+Merged from `plans/2026-09-01-adherence-sample-11-a-harvest-that-raised-its-own-rate.md`. Auto mode,
+`claude-opus-5`, ~2h implementation then a harvest.
+
+| metric              | session 11 | baseline (2026-08-24) |
+| ------------------- | ---------- | --------------------- |
+| Bash calls          | 127        | 3,956                 |
+| piped `head`/`tail` | **37%**    | 29–32% (+6pp MISS)    |
+| chained             | 50%        | 66% (−17pp OK)        |
+| `git -C` own repo   | 3%         | 0% (+3pp MISS)        |
+| met                 | 9/11       | —                     |
+
+**A regression against a watch that had started to read like a recovery.** Sessions 6 and 8 put the
+figure at or below baseline; this one is six points above it, with the rule in context and read
+during the session. It also announced the auto-mode resolution and then _kept_ to it on the
+read/edit side — so the announcement question came out compliant here and the piping question did
+not, which separates the two for the first time.
+
+[PITFALL: **the harvest raised the number while measuring it.** 37% at n=127 when the sweep began,
+40% at n=136 by the time the report was written — `session-harvest`'s step 5 prescribes inspection
+commands whose natural written form is piped, so the instrument and the rule disagree and the
+published figure is inflated by an amount no reader of that report can see. A sample taken at
+harvest time is therefore not comparable with one from a session that was never harvested, and this
+watch mixes both.]
+
+### Session 12 — `agent-skills`, 2026-09-01: the counterweight, and `git -C` at 22%
+
+Merged from `plans/2026-09-01-adherence-sample-12-a-background-job-and-the-git-c-habit.md`. A
+background job, ~90min authoring and shipping a skill, then a harvest. Same day as session 11.
+
+| when                 | n   | `head`/`tail` | chained | `git -C` own repo | heredoc | met  |
+| -------------------- | --- | ------------- | ------- | ----------------- | ------- | ---- |
+| sweep begun          | 101 | 6%            | 10%     | **22%**           | 18%     | 8/11 |
+| report being written | 132 | 6%            | —       | 17%               | 14%     | 9/11 |
+
+**Two samples one day apart, 31 points apart on `head`/`tail`, in opposite directions** — and here
+the sweep _improved_ the score where session 11's worsened it. What separates them is plausibly the
+work: session 11 was implementation plus a piped-by-construction sweep; this was authoring, where
+the long-output commands are a gate and a `git log`, both of which the rules say to run plain.
+
+[PITFALL: **`git -C <own repo>` at 22% is a rule interacting with itself.** `~/AGENTS.md` warns that
+cwd is unreliable after a cross-repo `cd … && …`; this session ran three such chains, saw the
+harness confirm `Shell cwd was reset` each time, and then wrote every later call defensively with an
+absolute `git -C` — including calls where cwd had never moved. 8% were _mutating_ git behind `-C`,
+which the file says matches no allowlist rule; none prompted, so nothing contradicted the habit. The
+miss is a caution outliving the situation that justified it, which is a gap in the rule's scope
+rather than in the reader's attention.]
+
+[PITFALL: **a sample can straddle a rule change and nothing in the numbers says so.** This session's
+18% heredoc rate is entirely `cat > … <<'EOF'` writing commit-message files — obeying the
+then-current "a message containing a backtick goes through `git commit -F <file>`" while violating
+the Bash section. That rule was **inverted later the same day** (session 13 below), so this rate
+measures adherence to a rule that no longer exists. Worth stamping each sample with the
+`~/AGENTS.md` commit it was taken against.]
+
+### Session 13 — `power-user-linux-setup`, 2026-09-01: the first 11/11, and the first announcement that held
+
+This session — the WSL/container end-to-end work, the apt and zsh fixes, and the rule changes
+sessions 11 and 12 refer to. Auto mode, `claude-opus-5`. Both figures recorded per session 11's open
+question:
+
+| when                 | n   | `head`/`tail` | chained | heredoc | `cd` own repo | met       |
+| -------------------- | --- | ------------- | ------- | ------- | ------------- | --------- |
+| sweep begun          | 266 | 7%            | 28%     | 2%      | 0%            | 10/11     |
+| report being written | 302 | **6%**        | 26%     | 2%      | 0%            | **11/11** |
+
+**The first sample to meet every expectation**, and the third consecutive one where the sweep moved
+the number — improving it here and in session 12, worsening it in session 11. Three data points now
+say the pre/post distinction is real and not always signed the same way, which settles session 11's
+question in favour of recording both.
+
+**It is also the first announcement that held.** Sessions 10 and 11 both opened by stating the
+auto-mode resolution and then scored at or above baseline, which is what made "the announcement is
+not the thing that changes behaviour" the watch's working conclusion. This session made the same
+announcement and posted the best figures in the series — so the pattern is not deterministic, and
+whatever the announcement correlates with, it is not reliably regression.
+
+[PITFALL: **the aggregate hides a mid-session correction, and the correction is the more useful
+fact.** The user interrupted a `git add && scan && git commit -F … && git log` chain with _"i don't
+like this chaining at all, it obscures the commit message, which is what i want to read when i
+approve or not approve this"_. Every commit before that point was `-F <file>` behind a chain; every
+one after was inline `-m` in its own call. The 26% chain rate averages both halves, so the number
+understates a real behaviour change that the transcript shows cleanly — the same "before/after
+inside one session" shape session 12 identified for the heredoc rule, from the other side of the
+same change.]
+
+[DECISION: the `-F` rule that session 12 measured was reversed on that correction. "About to commit"
+now reads **keep the message inline in `-m`, and write it without backticks or `$`** — because `-m`
+is what puts the message in the approval prompt and a path is not — with the escape hatch kept for a
+message that genuinely must carry a backtick. The companion clause landed in "Composing a Bash
+call": a chain hides whatever the user needs to read inside a compound command, a reviewability cost
+that rule had never stated, having argued only from exit codes and output blobs. Evidence in
+`contributing/global-agents-md.md` under "Pull versus generate…" and the backtick section.]
