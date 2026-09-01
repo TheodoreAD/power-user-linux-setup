@@ -52,20 +52,3 @@ jobs:
       - run: |
           git tag -f stable
           git push origin stable --force
-
-  docs:
-    needs: smoke-test
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
-    permissions:
-      contents: write
-    steps:
-      # Same as publish-stable: git-auto-commit-action below commits and pushes with the
-      # credentials this checkout leaves behind, so declining artipacked is the correct call.
-      - uses: actions/checkout@v4 # zizmor: ignore[artipacked]
-      - uses: astral-sh/setup-uv@v9.0.0
-      - run: uv run inv devcontainer.render-docs
-      - uses: stefanzweifel/git-auto-commit-action@v7
-        with:
-          commit_message: "docs: regenerate dev-container.md tag block (inv devcontainer.render-docs)"
-          file_pattern: docs/dev-container.md
