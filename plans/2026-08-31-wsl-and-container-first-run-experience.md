@@ -86,8 +86,9 @@ with no output" shape the user reported, from a different cause.
 ### Finding 4 — WSL gets a GUI askpass with no GUI
 
 `[packages.askpass-zenity]` writes `SUDO_ASKPASS`/`SSH_ASKPASS` into `~/.zshenv` unconditionally,
-and `zsh.configure`'s zshenv writer ignores tags (documented in `docs/configuration.md`). So on WSL
-without WSLg, and in any container:
+and `zsh.configure`'s zshenv writer ignored tags — as `docs/configuration.md` documented at the
+time; both were fixed 2026-09-01 and that page now says the opposite, so read this paragraph as the
+state at discovery. So on WSL without WSLg, and in any container:
 
 - every new shell exports `SUDO_ASKPASS=~/.local/bin/askpass-zenity`,
 - `util.SUDO` therefore becomes `sudo -A`,
@@ -246,9 +247,13 @@ there is no terminal either. `[packages.zenity]` moves to the `gui` tag so a hea
 stops installing GTK for a window it can never show (Finding 4).
 
 [DECISION: the helper degrades, rather than the `zshenv` export becoming conditional on a display.
-The export is written once, at install time, by a writer that ignores tags — but `DISPLAY` is a
-property of the _session_, and the same machine has both kinds. A helper that decides at call time
-is right in both.]
+The export is written once, at install time, while `DISPLAY` is a property of the _session_ and the
+same machine has both kinds — so a helper that decides at call time is right in both. Restated
+2026-09-01: the original wording gave the reason as "a writer that ignores tags", which stopped
+being true when `zsh.configure` became tag-aware. The conclusion is unchanged and now rests on
+something firmer than a bug: `[packages.askpass-zenity]` is tagged `shell, system`, not `gui`, so a
+tag-honouring writer still writes that export on a headless distro — correctly, because the machine
+may later have a display. Only `[packages.zenity]`, the dialog binary, moved to `gui`.]
 
 ## Still open
 
@@ -310,9 +315,55 @@ excludes — so this is an audit, not a sweep, and each one needs its own answer
 at all is that the zsh instance was found by its symptom on a real machine rather than by reading
 the code, and the same symptom elsewhere would be just as quiet.]
 
+## The consumer dev-container path is broken, and it fails silently
+
+Found 2026-09-01 while running both distribution paths end to end. Unlike everything above, this one
+is about the _recommended_ path a consumer copies, not about what happens once PULSE is running.
+
+```
+$ curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh | bash
+curl: (22) The requested URL returned error: 404
+pipeline exit=0
+```
+
+Two independent defects, both confirmed:
+
+[PITFALL: **`stable` does not exist.** `git ls-remote origin 'refs/tags/*'` returns nothing — the
+remote has no tags at all. The only thing that creates the tag is `devcontainer.yml`'s
+`publish-stable`, and `gh run list --workflow devcontainer.yml` returns `[]`: that workflow has
+never executed. `docs/dev-container.md` hands consumers that exact URL in its headline snippet, and
+the caveat explaining the situation sits 25 lines below it, under a "Why `stable`" aside a reader
+copying the block never reaches. Nothing publishes an image either — the `smoke-test` job names
+`ghcr.io/theodoread/power-user-linux-setup-devcontainer` but carries `push: never`, and that package
+does not exist. **Delivery is pure git**: one script over `raw.githubusercontent.com` and a shallow
+clone, both addressed by ref.]
+
+[PITFALL: **`curl … | bash` converts the 404 into a success.** `curl -f` exits 22, `bash` reads an
+empty stdin and exits 0, and a pipeline reports its _last_ command's status — so a
+`postCreateCommand` written this way reports success while installing nothing, and the container
+comes up bare. This is the repo's own "Reading a command's result" rule, in the one command handed
+to strangers. It is not specific to the missing tag: a network blip, a corporate proxy's error page,
+or any future ref problem produces the same silent no-op. The two-step form returns 22, verified:
+`curl -fsSL <url> -o pulse.sh && bash pulse.sh`.]
+
 ## Verification
 
-Done, all of it in containers driven through a real pty (a pipe would make both original symptoms
+Both distribution paths were re-run end to end 2026-09-01, against the working tree including that
+day's apt and zsh changes:
+
+- **WSL simulation, exit 0.** `bash bootstrap.sh --invoke-only && inv wsl.install` under the pty
+  harness on `pulse-wsl-sim`. `verify.all` reported 57 packages `ok`, 6 config-only skipped, zero
+  failures; the run reached `next steps`. The sudo password appears exactly once in the whole log,
+  and that occurrence is `drive.py`'s own `<<< sent >>>` marker — so nothing echoed it.
+- **The zsh tag fix, confirmed on a headless machine rather than in a unit test.** That run resolved
+  `PULSE_EXCLUDE_TAGS=corporate,desktop,gnome,gui,workstation` and wrote 19 shell blocks;
+  `[clipboard]` (tagged `cli, desktop, gui`) was **absent**, where the same task on the workstation
+  lists it. `[askpass-zenity]` was written, correctly — it is tagged `shell, system`.
+- **Dev container bake, exit 0.** `docker build -f docker/Dockerfile` with the local tree. The image
+  smoke-tests clean: `inv --list`, and `rg fd fzf gh jq eza bat kubectl helm python3 uv dprint` all
+  present.
+
+Earlier, all of it in containers driven through a real pty (a pipe would make both original symptoms
 impossible to observe):
 
 - **The two causes, isolated.** invoke echoing a typed secret on 3.10–3.13; the deterministic hang
