@@ -21,7 +21,11 @@ def test_bootstrap_devcontainer_runs_setup_with_pulse_assume_yes():
     # devcontainer.json postCreateCommand both reach `inv setup` only through this script.
     script = (_REPO_ROOT / "bootstrap-devcontainer.sh").read_text()
 
-    setup_lines = [line for line in script.splitlines() if re.search(r"\binv setup\b", line)]
+    # Invocations, not prose: a comment line mentioning `inv setup` is not a call, and the
+    # comments around it explain exactly this sequencing, so they name it often.
+    setup_lines = [
+        line for line in script.splitlines() if re.search(r"\binv setup\b", line) and not line.lstrip().startswith("#")
+    ]
     assert setup_lines, "bootstrap-devcontainer.sh no longer runs `inv setup`?"
     assert all("PULSE_ASSUME_YES=1" in line for line in setup_lines), setup_lines
 

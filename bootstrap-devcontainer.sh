@@ -70,6 +70,17 @@ if [ -z "${EXCLUDE_TAGS}" ]; then
   EXCLUDE_TAGS="$(inv devcontainer.print-exclude-tags)"
 fi
 
+# The network report, here rather than in bootstrap.sh's preflight. Neither container base image
+# this flow targets ships a python3 (verified: not `ubuntu:24.04`, not
+# `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`), so that preflight skips itself — but by
+# this line uv has installed one and `inv` runs on it. `inv setup` below is where nearly every
+# download happens, so this is the useful place to know a host is blocked anyway.
+#
+# Advisory, like the preflight: it reports and the build continues.
+if [ "${PULSE_SKIP_PREFLIGHT:-}" != "1" ]; then
+  inv net.check --quick || true
+fi
+
 echo "PULSE_EXCLUDE_TAGS=${EXCLUDE_TAGS}"
 # PULSE_ASSUME_YES: the deploy writer (tasks/deploy.py) asks before overwriting a destination it
 # can't prove it wrote, and that prompt defaults to *no* with no terminal attached — so without
