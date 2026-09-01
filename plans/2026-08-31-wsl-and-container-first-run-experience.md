@@ -183,11 +183,13 @@ container while changing nothing on a real Ubuntu. Recorded next to the setting 
 
 [PITFALL: the stock `ubuntu:24.04` _docker_ image has no Python at all — zero python packages, no
 binary anywhere on the filesystem, and `python3` is not in `ubuntu-minimal`'s dependencies. A real
-Ubuntu install always has one (cloud-init, unattended-upgrades and the Pro client are Python, and
-the WSL rootfs is built from the cloud image), so this is a container-only gap. Adding python3 to
-bootstrap.sh's apt prerequisites to close it was proposed and rejected: it is a second system-wide
-Python on a machine where uv owns them, installed from a shell script outside setup.toml, for the
-one environment where the diagnosis matters least. The preflight says it is skipping instead.]
+Ubuntu install always has one — and for WSL specifically that is now checked rather than assumed:
+Ubuntu's published WSL image manifest for noble lists `python3 3.12.3-0ubuntu2` and
+`python3-minimal` (`cloud-images.ubuntu.com/wsl/noble/current/ubuntu-noble-wsl-amd64-wsl.manifest`,
+529 packages). So this is a container-only gap. Adding python3 to bootstrap.sh's apt prerequisites
+to close it was proposed and rejected: it is a second system-wide Python on a machine where uv owns
+them, installed from a shell script outside setup.toml, for the one environment where the diagnosis
+matters least. The preflight says it is skipping instead.]
 
 [DECISION: one self-contained module inside `tasks/`, not a new top-level `doctor/` package. A
 top-level package would sit outside `pyrightconfig.json`'s `include` (`src*`/`tests*`/`tasks*`),

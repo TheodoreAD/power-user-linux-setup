@@ -57,6 +57,20 @@ targets 24.04, and a run against `ubuntu:22.04` stops partway through at a packa
 archives don't carry (`eza`). What _is_ worth running there is `tasks/netdoctor.py` on its own —
 that module is the one thing that meets whatever python3 a distro happens to ship.
 
+## Answering "what does a real WSL distro actually have?" without Windows
+
+The simulation is a container with packages this repo chose to install, so it can't answer that.
+Ubuntu publishes the real thing's package list, which can:
+
+```shell
+curl -fsSL https://cloud-images.ubuntu.com/wsl/noble/current/ubuntu-noble-wsl-amd64-wsl.manifest \
+  | grep -E '^python3\s'
+```
+
+529 packages for noble, and that is how "a WSL distro ships python3 3.12.3" stopped being an
+assumption. Swap `noble` for another release; `unpacked/` beside it has the rootfs itself if a
+question needs more than the package list.
+
 ## `fakecorp.py` — the corporate network, on localhost
 
 Serves the two shapes the network doctor has to recognise: a proxy answering every `CONNECT` with
