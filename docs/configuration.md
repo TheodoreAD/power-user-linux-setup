@@ -258,11 +258,12 @@ assuming a tag exclusion is enough.
 
 **A third bucket: tasks that don't read `setup.toml` at all.** `apt.clean-cache(-full)`,
 `python.clean-cache(-full)`, `node.clean-cache(-full)`, `tools.clean-cache(-full)`,
-`docker.clean(-full)`, and the `cleanup.*` umbrella tasks that depend on them operate on whatever's
-actually on disk for that tool (apt's archive cache, `~/.cache/uv`, `~/.npm`, cargo's registry,
-Docker images) — `enabled`/`tags` are irrelevant to them since there's no `[packages.*]` entry being
-consulted in the first place. Excluding a tag stops something from being _installed_; it has no
-bearing on whether that tool's cache-cleanup task has anything to do.
+`docker.clean(-full)`, and the `clean.*` umbrella tasks that depend on them (`clean.caches`,
+`clean.caches-full`, `clean.all`, `clean.all-full`) operate on whatever's actually on disk for that
+tool (apt's archive cache, `~/.cache/uv`, `~/.npm`, cargo's registry, Docker images) —
+`enabled`/`tags` are irrelevant to them since there's no `[packages.*]` entry being consulted in the
+first place. Excluding a tag stops something from being _installed_; it has no bearing on whether
+that tool's cache-cleanup task has anything to do.
 
 **Tag catalog** — only seven tags currently gate anything (used across the exclusion recipes in this
 repo):
@@ -343,7 +344,7 @@ inv apt.install-base           # install from Ubuntu default repos
 inv docker.configure   # merge log limits/DNS into daemon.json, add user to docker group
 inv apt.install-debs            # install .deb packages from GitHub releases or direct URLs
 inv tools.install      # install tools via scripts, binaries, archives; also writes askpass-zenity
-inv ai.install-skills          # symlink ~/.claude/skills to ~/.agents/skills — see ai.md
+inv ai.install-skills          # symlink ~/.claude/skills to ~/.agents/skills — see claude-code.md
 inv system.install-apparmor-profiles
 inv python.install-tools
 inv node.install
