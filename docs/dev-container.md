@@ -62,9 +62,17 @@ then `inv setup` with `PULSE_EXCLUDE_TAGS` resolved from `--exclude-tags` or, if
 `postCreateCommand` runs whatever's currently on `master`, including anything broken mid-commit.
 `stable` is a git tag that CI (`.github/workflows/devcontainer.yml`) only force-moves forward when a
 build/smoke-test against `.devcontainer/devcontainer.json` passes — "up to date" without ever
-running untested instructions. That workflow is currently `workflow_dispatch`-only while under
-active development (see the workflow file for the re-enable note); until it's live, pin `--ref` to a
-specific commit or branch you've verified yourself, not `stable`.
+running untested instructions.
+
+The tag exists as of 2026-09-01, on that workflow's first-ever run. It had never executed before
+then, so `stable` did not resolve at all and the snippet above returned 404 to anyone who copied it.
+The workflow stays `workflow_dispatch`-only for now (see the file for the re-enable note), which
+means **`stable` moves only when someone runs it by hand** — it is a reviewed marker rather than a
+moving head, and it can lag `master` by however long nobody has dispatched it.
+
+**There is no image and no registry.** Delivery is entirely git: one script fetched from
+`raw.githubusercontent.com` at a ref, and a shallow clone of this repo at the same ref. The
+`imageName` in the smoke-test job carries `push: never` and publishes nothing.
 
 **Constraint:** this only works on apt-based (Debian/Ubuntu-family) images — `bootstrap.sh`'s
 self-heal preamble and every `[packages.*]` `apt`/`apt-repo`/`deb-github`/`deb-url` method assume
