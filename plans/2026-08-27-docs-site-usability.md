@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-27
+updated: 2026-09-02
 ---
 
 ## Context
@@ -102,6 +102,38 @@ gate, catches it before every commit) or leave it standalone and rely on the aut
 after a docs edit (which is what just failed). Note the rename also violated `plan-docs`' own "grep
 inbound references before renaming a section title" rule, so a strict build is the backstop for a
 discipline that is already written down and was still missed.]
+
+### The anchor half, half-closed 2026-09-02
+
+`inv docs.link-check` now exists and runs inside `quality.check` — but it verifies only that a
+link's _file_ exists. `repo_tasks/docs.py:59-64` strips the fragment by design, so `file.md#heading`
+still passes after the heading is renamed. The gate therefore covers the link class that was never
+the problem, and the `docs/ssh.md` failure above would happen again today.
+
+The fix belongs in `repo-tasks`, which this repo may not edit, so it is filed there:
+`github.com-personal/repo-tasks/2026-09-02-anchor-checking-in-link-check.md` in the plans store. It
+carries the design — two sluggers, `markdown.extensions.toc` for the published site (this repo's
+`mkdocs.yml` uses the stock one, checked) and GitHub's for everything read on github.com, plus
+`attr_list` ids and inline HTML anchors — and the measurement below.
+
+Measured here first, with a throwaway implementation, so the feature would not land blind: **79
+fragment links in this repo (59 same-file, 20 cross-file), zero unresolved**; 29 in `agent-skills`,
+9 in `repo-tasks`, 0 in `scaffoldapy` and `olx-polite-mcp`, all clean. Nothing in the family needs
+cleaning up before such a check goes straight into the gate. It was also shown able to fail, on a
+two-file fixture whose target heading was renamed — a measurement that can only print zero is not
+evidence.
+
+[PITFALL: the first run reported two unresolved links and **both were the measuring script's bugs**
+— `docs/terminal.md`'s link to `configuration.md#whole-file-configs-config_files`, and
+`contributing/global-agents-md.md`'s own contents entry. Treating `_` as emphasis mangles
+`config_files` into `configfiles`, and collapsing runs of spaces loses GitHub's double hyphen in
+`bash--the-cli-allowlist-cluster-intro` (from a heading containing an ampersand). Both links are
+correct in both renderers. A checker of this kind fails toward false positives, and a false positive
+in a family-wide gate is worse than the dangling anchor it was meant to catch — which is the
+argument for measuring across every repo before shipping it rather than after.]
+
+`zensical build --strict` in the gate stays a separate question: anchor checking removes the failure
+that motivated it, not every strict-build failure — an unresolved nav entry, say.
 
 `docs/ai.md` is a separate accuracy class: it carries dated market claims ("Cursor … $2B ARR",
 Copilot "~42% market share", "top open-weight coding model as of mid-2026") about tools this repo
