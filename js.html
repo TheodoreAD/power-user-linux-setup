@@ -2207,7 +2207,7 @@
   
 
 
-<h1 id="nodejs">Node.js</h1>
+<h1 id="nodejs">Node.js<a class="headerlink" href="#nodejs" title="Permanent link">&para;</a></h1>
 <p><a href="https://github.com/nvm-sh/nvm">https://github.com/nvm-sh/nvm</a></p>
 <p>Installed via <code>inv node.install</code> (nvm method — installs nvm to <code>~/.local/share/nvm</code>, then installs
 Node LTS and global packages declared in <code>setup.toml</code>).</p>
@@ -2220,7 +2220,7 @@ Node LTS and global packages declared in <code>setup.toml</code>).</p>
 <p>The oh-my-zsh <code>nvm</code> plugin (declared in <code>setup.toml</code> as <code>omz_plugin = "nvm"</code>) sources <code>nvm.sh</code> and
 handles zsh completion via <code>bashcompinit</code>. The <code>nvm install</code> script is run with <code>PROFILE=/dev/null</code>
 so it never writes to shell config files directly — PULSE owns those.</p>
-<h2 id="version-management">Version management</h2>
+<h2 id="version-management">Version management<a class="headerlink" href="#version-management" title="Permanent link">&para;</a></h2>
 <p>nvm manages Node versions. Common commands:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>nvm<span class="w"> </span>install<span class="w"> </span>--lts<span class="w">          </span><span class="c1"># install latest LTS</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>nvm<span class="w"> </span>install<span class="w"> </span><span class="m">22</span><span class="w">             </span><span class="c1"># install a specific major version</span>
@@ -2228,7 +2228,7 @@ so it never writes to shell config files directly — PULSE owns those.</p>
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>nvm<span class="w"> </span><span class="nb">alias</span><span class="w"> </span>default<span class="w"> </span>lts/*<span class="w">    </span><span class="c1"># set default for new shells</span>
 </span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a>nvm<span class="w"> </span>ls<span class="w">                     </span><span class="c1"># list installed versions</span>
 </span></code></pre></div>
-<h2 id="global-packages">Global packages</h2>
+<h2 id="global-packages">Global packages<a class="headerlink" href="#global-packages" title="Permanent link">&para;</a></h2>
 <p>Global npm packages are declared in <code>setup.toml</code> under <code>global_packages</code> and installed by
 <code>inv node.install</code>. Currently:</p>
 <table>
@@ -2245,7 +2245,7 @@ so it never writes to shell config files directly — PULSE owns those.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="global-installs-vs-uv-tool-install">Global installs vs uv tool install</h3>
+<h3 id="global-installs-vs-uv-tool-install">Global installs vs uv tool install<a class="headerlink" href="#global-installs-vs-uv-tool-install" title="Permanent link">&para;</a></h3>
 <p><code>npm install -g</code> puts all tools in a single shared location under the active nvm version — there is
 no per-tool isolation like <code>uv tool install</code> provides. In practice this rarely causes conflicts
 because Node CLI tools have few shared dependencies.</p>
@@ -2254,7 +2254,7 @@ Only add to <code>global_packages</code> for commands used daily.</p>
 <p>If tool isolation ever becomes a real need, <a href="https://volta.sh">Volta</a> is the upgrade path: it
 manages Node versions and installs global tools in isolated shims, pinnable per project via
 <code>package.json</code>.</p>
-<h2 id="verify">Verify</h2>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>node<span class="w"> </span>--version
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>npm<span class="w"> </span>--version
 </span></code></pre></div>
