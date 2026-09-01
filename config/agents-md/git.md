@@ -93,6 +93,15 @@ the repo's own equivalent) — every commit, including a markdown-only one. "Jus
 these repos, all of them pushed from commits that skipped the gate. The gate is what CI runs;
 skipping it schedules a red run that someone else reads.
 
+**A message containing a backtick goes through a file — `git commit -F <file>` — never an inline
+`-m "…"`.** Backticks inside a double-quoted shell argument are command substitution: the shell runs
+what they enclose before git ever sees it, and stores the output in their place. A message
+describing an apt fix ran `apt-get install -f -y` and `dpkg -i && rm` on the machine and committed
+two empty strings where the quoted commands should have been; only the lack of privilege made it
+harmless. These repos' messages routinely quote commands, so treat the backtick as the trigger and
+not the rarity. Same for any other double-quoted body — `gh pr create --body`, `gh issue comment`.
+Pathspec still works: `git commit -F <file> -- <path> <path>`.
+
 ### Committing multi-part work
 
 Split it into small single-concern commits, even when the request was a single ask — git history is

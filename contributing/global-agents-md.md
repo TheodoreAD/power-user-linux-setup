@@ -887,6 +887,36 @@ developers — see "Proposing an enforcement mechanism for agent behavior". If t
 real rate after this rule has been deployed for a while, that plan holds the researched hook design
 as the next step.
 
+### The backtick clause
+
+Admitted 2026-09-01, from one confirmed occurrence in this repo. A commit describing the `apt.py`
+tolerance fix was written as an inline `git commit -m "…"` whose body quoted two commands in
+backticks. Inside a double-quoted shell argument those are command substitution, so **the shell ran
+them**: the terminal returned `E: Could not open lock file /var/lib/dpkg/lock-frontend` and
+`dpkg: error: requested operation requires superuser privilege`, and the stored message carried two
+empty strings where the quoted commands belonged. Nothing was installed or removed — the sandbox has
+no passwordless root, which is the only reason this is a note rather than an incident. Fixed with
+`git commit --amend -F <file>`.
+
+One occurrence, which is normally below the bar. It is admitted anyway on the strength of three
+things the frequency does not capture:
+
+- **The trigger is structural, not rare.** These repos' commit messages routinely quote command
+  names, task names and flags in backticks — the house style makes the hazard likely, and every
+  message written in this session after the first one would have hit it.
+- **The failure is silent in the direction that matters.** The substitution succeeded as far as the
+  shell was concerned; git committed cleanly, and the damage was visible only by reading the stored
+  message back with `git log --format=%B`. A message that quoted a _destructive_ command would have
+  run it with the session's own privileges and still committed.
+- **No existing rule reaches it.** "Composing a Bash call" governs how many commands go in a call,
+  not how their arguments quote; nothing in either cluster mentions shell quoting at all.
+
+Placed in "About to commit" rather than the Bash cluster, per criterion 2: the trigger is the moment
+of committing, which is where the section already fires, and the `gh --body` case is named in one
+clause rather than given a heading of its own. Deployed file: 598 → 607 lines, 38 rules unchanged.
+Both numbers were already past the ≤200-line/≤15-rule reference points before this clause, so it
+adds nine lines to a pre-existing question rather than raising a new one.
+
 ## Committing multi-part work
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general
