@@ -367,6 +367,30 @@ to strangers. It is not specific to the missing tag: a network blip, a corporate
 or any future ref problem produces the same silent no-op. The two-step form returns 22, verified:
 `curl -fsSL <url> -o pulse.sh && bash pulse.sh`.]
 
+### The smoke test asserted almost nothing
+
+Noticed 2026-09-01 while reading the workflow for its stale plan pointer, and fixed the same day.
+`devcontainers/ci`'s `runCmd` is handed to a single `sh -c`, which reports its **last** command's
+status — so `inv --list` and two of the three `command -v` lines could each have failed without the
+job noticing. The repo's own "clean output is not proof, the exit code is" rule, unenforced in the
+one place this repo runs CI on itself. `set -eu` now heads the block.
+
+What it asserts also moved. `inv verify.all` already runs during the build and invokes every package
+it installed, so repeating that in `runCmd` adds nothing; the untested promise was
+`docs/dev-container.md`'s "Which shell finds which tool" table, written 2026-09-01 and guarded by
+nothing. The three blocks now mirror it: `/usr/bin` binaries in the bare context, everything
+zshenv-reached under `zsh -c` (with `go` and `cargo` **executed** rather than located — go resolves
+GOROOT through its symlink, which `[packages.go]`'s own `verify_cmd` cannot prove because it calls
+the absolute path, and rustup's shims exit 1 without `RUSTUP_HOME`), and node plus `skills` under
+`zsh -lic`, the route Finding 7's exit-127 bake failure came through.
+
+[PITFALL: the assertions were run in `pulse-devcontainer-verify` — the `docker/Dockerfile` bake,
+root on `ubuntu:24.04` with the image's own `ENV` — and all pass there, `zsh -lic` included. CI
+builds `.devcontainer/` instead: `vscode` on the Microsoft base, no `ENV`, PATH coming only from
+what PULSE wrote into that user's `~/.zshenv`. The same set was installed there in the consumer run
+above (57 `verify.all` passes), but the shell assertions themselves have not run in that image;
+dispatching the workflow is what confirms it.]
+
 ## Verification
 
 Both distribution paths were re-run end to end 2026-09-01, against the working tree including that
