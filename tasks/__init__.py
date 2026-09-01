@@ -49,15 +49,15 @@ def _import_repo_tasks_modules(simulate_missing: bool = False):
     directly and testably instead, with no need to fake an import failure via sys.modules
     patching."""
     if simulate_missing:
-        return None, None, None, None, None, None
+        return None, None, None, None, None, None, None
     try:
-        from repo_tasks import agents, configs, dev_env, docs, quality, testing  # noqa: PLC0415
+        from repo_tasks import agents, configs, deps, dev_env, docs, quality, testing  # noqa: PLC0415
     except ImportError:
-        return None, None, None, None, None, None
-    return agents, configs, dev_env, docs, quality, testing
+        return None, None, None, None, None, None, None
+    return agents, configs, deps, dev_env, docs, quality, testing
 
 
-agents, configs, dev_env, docs, quality, testing = _import_repo_tasks_modules()
+agents, configs, deps, dev_env, docs, quality, testing = _import_repo_tasks_modules()
 
 namespace = Collection(
     setup.setup,
@@ -106,6 +106,12 @@ if agents is not None:
     namespace.add_collection(Collection.from_module(agents))
 if docs is not None:
     namespace.add_collection(Collection.from_module(docs))
+if deps is not None:
+    # `deps.check` (lock drift) is a member of `quality.check`'s pre-chain, so the gate ran it
+    # while `inv deps.check` did not exist here — a failing check nobody could re-run on its own
+    # to see what it objected to. The rest of the namespace (`lock`, `audit`, `list`, `tree`,
+    # `export`) comes with it, the same way every other repo_tasks collection is published whole.
+    namespace.add_collection(Collection.from_module(deps))
 if configs is not None:
     # Not repo_tasks' bare top-level `configure` — this repo already has its own top-level
     # entrypoints (`inv setup` for full machine bootstrap, `inv dev-env.setup` for the dev loop);

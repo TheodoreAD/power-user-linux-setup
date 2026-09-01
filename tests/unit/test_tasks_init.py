@@ -46,12 +46,20 @@ def test_namespace_publishes_repo_tasks_test_namespace():
     assert {"unit", "integration", "smoke", "regression", "all"} <= set(test_collection.task_names)
 
 
+def test_namespace_publishes_repo_tasks_deps_namespace():
+    """`deps.check` is in `quality.check`'s pre-chain, so the gate runs it either way — this is
+    about being able to invoke it on its own when it fails."""
+    deps_collection = tasks.namespace.collections.get("deps")
+    assert deps_collection is not None
+    assert {"check", "lock", "audit"} <= set(deps_collection.task_names)
+
+
 def test_import_repo_tasks_modules_returns_real_modules_when_available():
     modules = tasks._import_repo_tasks_modules()
-    assert len(modules) == 6
+    assert len(modules) == 7
     assert all(module is not None for module in modules)
 
 
 def test_import_repo_tasks_modules_degrades_to_all_none_when_missing():
     result = tasks._import_repo_tasks_modules(simulate_missing=True)
-    assert result == (None,) * 6
+    assert result == (None,) * 7
