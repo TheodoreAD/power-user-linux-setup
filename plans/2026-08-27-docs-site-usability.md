@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-02
 ---
 
@@ -90,6 +90,33 @@ Adjacent, outside `docs/`:
   site, not in `CONTRIBUTING.md`.
 
 - `mkdocs.yml` opens with five unresolved `TODO:` comments, plus one in `docs/extra/extra.css`.
+  Recounted 2026-09-02: **eleven** in `mkdocs.yml`, not five — the five at the top are the ones a
+  reader meets first, which is how the count came out low.
+
+### Step 7 landed 2026-09-02
+
+- Both `docs/configuration.md` references fixed: the `cleanup.*` umbrella tasks are named `clean.*`
+  (and are now listed rather than gestured at), and `inv ai.install-skills` points at
+  `claude-code.md`, which is where the two skills sections actually are.
+- `CONTRIBUTING.md` gained **`## Docs site`** — `docs.serve`/`build`/`clean`, that `docs.build` is
+  the same `zensical build --strict` the Pages workflow runs, that zensical is pinned in
+  `requirements-docs.txt` rather than in `pyproject.toml`, and a warning that the gate does not
+  build the site.
+- The same file's gate description was **wrong, not merely incomplete**: it listed `check` as five
+  members ending in `test`, where the chain has eleven. `workflow_check`, `dockerfile_check`,
+  `link_check`, `deps_check` and `untested_modules` had all joined without the page noticing.
+- `mkdocs.yml`'s "figure out how CI works, implement, document" TODO and its dead
+  `mkdocs-deploy-gh-pages` link were replaced by what CI actually does. The other ten TODOs are live
+  intentions of the author's (theme tuning, extension research) and were left alone.
+- Verified with `inv docs.build` — `No issues found`, strict.
+
+[PITFALL: writing that list turned up a gap the docs were accurately describing: `deps_check` ran
+inside `quality.check` while `inv deps.check` did not exist here — `tasks/__init__.py` published
+`agents`, `configs`, `dev_env`, `docs`, `quality` and `testing`, and no `deps`. The gate ran a check
+nobody could re-run on its own to see what it objected to. Fixed rather than documented, on the
+user's call: the collection is published like every other repo-tasks namespace, bringing `lock`,
+`audit`, `list`, `tree` and `export` with it. The find is the point — a stale docs sweep is a cheap
+way to notice a real one, because writing down what a command does is when you check.]
 
 [PITFALL: **`inv quality.precommit` does not build the docs, so a docs edit can pass the gate and
 still break CI.** `inv docs.build` runs the same `zensical build --strict` the Pages workflow does,
