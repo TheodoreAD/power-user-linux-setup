@@ -315,10 +315,31 @@ excludes — so this is an audit, not a sweep, and each one needs its own answer
 at all is that the zsh instance was found by its symptom on a real machine rather than by reading
 the code, and the same symptom elsewhere would be just as quiet.]
 
-## The consumer dev-container path is broken, and it fails silently
+## The consumer dev-container path was broken, and it failed silently
 
-Found 2026-09-01 while running both distribution paths end to end. Unlike everything above, this one
-is about the _recommended_ path a consumer copies, not about what happens once PULSE is running.
+Found and fixed 2026-09-01 while running both distribution paths end to end. Unlike everything
+above, this one is about the _recommended_ path a consumer copies, not about what happens once PULSE
+is running.
+
+**Resolved the same day, and verified as a consumer rather than as the author.** The devcontainer
+workflow was dispatched for the first time in its existence: `smoke-test` passed in 3m0s and
+`publish-stable` created the tag, so `stable` now resolves (`92d83ff`) and the documented URL
+returns 200. Then the documented command itself was run in a stock
+`mcr.microsoft.com/devcontainers/base:ubuntu-24.04` as the `vscode` user — not `--local`, not the
+bake, the actual two-step curl a stranger would paste:
+
+```
+Cloning power-user-linux-setup@stable into /home/vscode/.local/share/pulse-devcontainer-src...
+...
+PULSE_EXCLUDE_TAGS=gui,workstation,corporate,ide,gnome
+```
+
+57 `verify.all` passes, zero failures, reached `next steps`, exit 0.
+
+[PITFALL: `stable` moving is **not** automatic, and the docs now say so. The workflow stays
+`workflow_dispatch`-only, so the tag advances only when someone dispatches it by hand — a reviewed
+marker rather than a moving head, which can lag `master` indefinitely. That is a different promise
+from the one "CI only force-moves it forward when the smoke test passes" implies on first reading.]
 
 ```
 $ curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/bootstrap-devcontainer.sh | bash
