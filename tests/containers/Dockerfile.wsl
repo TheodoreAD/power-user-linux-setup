@@ -1,7 +1,7 @@
 # A stand-in for a fresh WSL2 Ubuntu distro: a *password-protected* sudo user (WSL's default,
 # unlike every dev-container base image, which gives its user NOPASSWD), no systemd, no display.
 # The repo itself is bind-mounted at run time so edits need no rebuild.
-ARG BASE=ubuntu:22.04
+ARG BASE=ubuntu:24.04
 FROM ${BASE}
 ENV DEBIAN_FRONTEND=noninteractive
 RUN apt-get update \

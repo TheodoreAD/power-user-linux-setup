@@ -50,9 +50,12 @@ python3 tests/containers/drive.py --log /tmp/wsl.log --timeout 2400 \
 ```
 
 What to look for: the sudo password is asked **once**, nothing echoes it, and the run reaches "next
-steps" with exit 0. Build with `BASE=ubuntu:22.04` to exercise the Python 3.10 floor
-(`tasks/netdoctor.py` must still run there) — but expect `inv wsl.install` itself to stop at a
-package 22.04's archives don't carry.
+steps" with exit 0.
+
+`BASE` exists for checking an older release deliberately, not because one is supported: this repo
+targets 24.04, and a run against `ubuntu:22.04` stops partway through at a package that release's
+archives don't carry (`eza`). What _is_ worth running there is `tasks/netdoctor.py` on its own —
+that module is the one thing that meets whatever python3 a distro happens to ship.
 
 ## `fakecorp.py` — the corporate network, on localhost
 

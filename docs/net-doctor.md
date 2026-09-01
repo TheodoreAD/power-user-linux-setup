@@ -4,7 +4,7 @@ Answers one question: **which of the hosts a PULSE run needs are reachable from 
 and when one isn't — what do I type next.**
 
 ```shell
-python3 tasks/netdoctor.py       # nothing installed yet: works on any Python ≥ 3.10
+python3 tasks/netdoctor.py       # nothing installed yet: runs on the distro's own python3
 inv net.check                    # the same code, once you have an inv
 inv net.check --json-output      # machine-readable
 ```
@@ -70,9 +70,10 @@ advisory — it prints, waits five seconds and continues, because a probe is not
 network that might route the real request differently. `PULSE_SKIP_PREFLIGHT=1` skips it.
 
 Being able to run there is what shapes the module: `tasks/netdoctor.py` uses the **standard library
-only** and stays within **Python 3.10** syntax (Ubuntu 22.04's system Python), imports nothing from
-`tasks/`, and is executed as a file rather than imported as part of the package — so it works before
-uv, invoke, or this repo's venv exist. Tests enforce all three.
+only**, stays within **Python 3.12** (Ubuntu 24.04's system Python — this repo's target), imports
+nothing from `tasks/`, and is executed as a file rather than imported as part of the package — so it
+works before uv, invoke, or this repo's venv exist. Tests enforce all three, and CI runs it under a
+real 3.12.
 
 ## Limits
 

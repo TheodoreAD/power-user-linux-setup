@@ -1,9 +1,10 @@
 """`inv net.*` — the invoke face of tasks/netdoctor.py.
 
-All of the work is in that module, which is standard-library-only and Python-3.10-safe so it can
-also run as `python3 tasks/netdoctor.py` before uv, invoke or this repo's venv exist (see its
-docstring). This file adds nothing but the task wrapper: the same diagnosis has to be available
-both to a fresh machine that has nothing installed and to someone already living in `inv`.
+All of the work is in that module, which is standard-library-only and stays within the system
+Python's version so it can also run as `python3 tasks/netdoctor.py` before uv, invoke or this
+repo's venv exist (see its docstring). This file adds nothing but the task wrapper: the same
+diagnosis has to be available both to a fresh machine that has nothing installed and to someone
+already living in `inv`.
 """
 
 import json

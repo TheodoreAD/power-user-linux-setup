@@ -203,11 +203,12 @@ reachable, by what route, and the command that fixes each failure — including 
 WSL distro. `bootstrap.sh` runs it as an advisory preflight. Published page:
 [`docs/net-doctor.md`](docs/net-doctor.md).
 
-**It is standard-library-only, Python 3.10 syntax, and imports nothing from `tasks/`** — it has to
-run on a fresh Ubuntu 22.04 WSL distro before uv, invoke or this repo's venv exist. Unit tests
-enforce each of those three, so a `from . import util` or a `tomllib` added here fails the gate
-rather than the next fresh machine. The dependency direction is one-way: `tasks/*.py` may import
-`netdoctor` (`wsl.py` does, for the raw DNS query), never the reverse.
+**It is standard-library-only, no newer than Python 3.12, and imports nothing from `tasks/`** — it
+has to run on a fresh WSL distro or container before uv, invoke or this repo's venv exist, where the
+only interpreter is the distro's own (24.04 ships 3.12). Unit tests enforce each of those three and
+a CI job runs it under a real 3.12, so a `from . import util` or a 3.13-only API added here fails
+the gate rather than the next fresh machine. The dependency direction is one-way: `tasks/*.py` may
+import `netdoctor` (`wsl.py` does, for the raw DNS query), never the reverse.
 
 ## Dev container distribution pipeline
 

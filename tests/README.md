@@ -23,19 +23,19 @@ judgement layer (every measurement is an argument, so a corporate network — Py
 GitHub answers, a 407, an untrusted certificate issuer, a Windows-side proxy — is a literal in the
 test rather than infrastructure nobody has; the socket-touching half is exercised against simulated
 networks in containers), plus three tests that hold that module's constraints in place: standard
-library only, no import from `tasks/`, Python 3.10 syntax, `tasks/allowlist.py`'s
-`Classification`/`Source` enums plus `_resolve_flat_verdict`/ `_classify_flag_result` (pure data
-transforms — the LLM call and subprocess/strace probing around them aren't), `tasks/git.py`'s
-`resolve_project_dir` (relative-vs-absolute `directory` resolution — no subprocess/filesystem calls,
-unlike `configure()`/`settings()` around it, which shell out to git), `tasks/identity.py`'s
-`_render`/`_toml_string` (TOML string-building for the generated identity.toml — no
-filesystem/prompting, unlike `init()` around them), and `tasks/ai.py`'s skill install/confirm logic:
-`_parse_frontmatter_description`/`_local_skill_plan`/`_remote_skill_label`/ `_remote_skill_prompt`
-(pure), plus `_install_local_skill`/`_install_remote_skill`/ `_install_declared_skills`/the `skills`
-task itself exercised against `tmp_path` with `ui.ask`/`c.run`/`util.load_config` monkeypatched out
-— same "stub the collaborators, assert on calls" shape as `tasks/phases.py`'s tests, since none of
-it needs a real `~/.agents/skills` or a real `skills` CLI invocation to verify the
--y/prompt/up-to-date-skip behavior.
+library only, no import from `tasks/`, and no syntax newer than the system Python (3.12),
+`tasks/allowlist.py`'s `Classification`/`Source` enums plus `_resolve_flat_verdict`/
+`_classify_flag_result` (pure data transforms — the LLM call and subprocess/strace probing around
+them aren't), `tasks/git.py`'s `resolve_project_dir` (relative-vs-absolute `directory` resolution —
+no subprocess/filesystem calls, unlike `configure()`/`settings()` around it, which shell out to
+git), `tasks/identity.py`'s `_render`/`_toml_string` (TOML string-building for the generated
+identity.toml — no filesystem/prompting, unlike `init()` around them), and `tasks/ai.py`'s skill
+install/confirm logic: `_parse_frontmatter_description`/`_local_skill_plan`/`_remote_skill_label`/
+`_remote_skill_prompt` (pure), plus `_install_local_skill`/`_install_remote_skill`/
+`_install_declared_skills`/the `skills` task itself exercised against `tmp_path` with
+`ui.ask`/`c.run`/`util.load_config` monkeypatched out — same "stub the collaborators, assert on
+calls" shape as `tasks/phases.py`'s tests, since none of it needs a real `~/.agents/skills` or a
+real `skills` CLI invocation to verify the -y/prompt/up-to-date-skip behavior.
 
 Set up once after cloning:
 

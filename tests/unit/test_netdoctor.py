@@ -324,21 +324,9 @@ def test_netdoctor_imports_only_the_standard_library():
     assert imported <= set(sys.stdlib_module_names), sorted(imported - set(sys.stdlib_module_names))
 
 
-def test_netdoctor_parses_as_python_310():
-    """Ubuntu 22.04 — still a supported WSL image — ships Python 3.10, and this has to run on it
-    before uv can install anything newer. (Also run end to end under 22.04's own interpreter in a
-    container; see this module's docstring.)"""
+def test_netdoctor_parses_as_the_system_python():
+    """Ubuntu 24.04 — this repo's target — ships Python 3.12, and this has to run on it before uv
+    can install anything newer. Syntax only; CI runs the module itself under a real 3.12, which is
+    the check that actually proves it (a newer *API* is invisible to the parser)."""
     source = (_REPO_ROOT / "tasks" / "netdoctor.py").read_text()
-    tree = ast.parse(source, feature_version=(3, 10))
-    # Names, not a substring search: the module's own docstring talks about what it may not use.
-    banned = {"tomllib", "StrEnum", "batched", "UTC"}
-    used = {node.attr for node in ast.walk(tree) if isinstance(node, ast.Attribute)}
-    used |= {node.id for node in ast.walk(tree) if isinstance(node, ast.Name)}
-    for node in ast.walk(tree):
-        if isinstance(node, ast.Import):
-            used.update(alias.name for alias in node.names)
-        elif isinstance(node, ast.ImportFrom):
-            used.update(alias.name for alias in node.names)
-            if node.module:
-                used.add(node.module)
-    assert not (used & banned), f"newer than the Python 3.10 floor: {sorted(used & banned)}"
+    ast.parse(source, feature_version=(3, 12))

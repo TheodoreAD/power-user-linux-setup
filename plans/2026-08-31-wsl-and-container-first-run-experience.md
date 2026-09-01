@@ -110,8 +110,8 @@ internal Artifactory/Nexus mirror is the sanctioned path), and it is invisible u
 fails deep inside `uv tool install`.
 
 That diagnosis has to work **before** PULSE is installed — before `uv`, before `invoke`, before this
-repo's own venv — so it cannot be an invoke task. Ubuntu 22.04's system Python (3.10) is the floor,
-which also rules out `tomllib`.
+repo's own venv — so it cannot be an invoke task. Whatever python3 the distro ships is the only
+interpreter available there, which for this repo's target (Ubuntu 24.04) is 3.12.
 
 ### Finding 6 — every system file this repo writes was mode 0600
 
@@ -146,17 +146,24 @@ lookup is pinned.]
 
 ## Design
 
-### 1. `tasks/netdoctor.py` — a stdlib-only, Python 3.10 diagnostic
+### 1. `tasks/netdoctor.py` — a stdlib-only diagnostic that runs on the system Python
 
 ```shell
-python3 tasks/netdoctor.py            # nothing installed; runs on Ubuntu 22.04's own python3
+python3 tasks/netdoctor.py            # nothing installed; runs on the distro's own python3
 inv net.check                          # the same code, from the invoke side (tasks/net.py)
 ```
 
 Hard constraints, each enforced by a unit test: **standard library only**, **no import from
-`tasks/`**, and it must parse as Python 3.10 (so no `tomllib`, no `StrEnum`). The dependency runs
-one way — `tasks/*.py` may import it, never the reverse; `wsl.py`'s raw DNS query moved there and is
-imported back.
+`tasks/`**, and it must parse as Python 3.12 (24.04's system Python). The dependency runs one way —
+`tasks/*.py` may import it, never the reverse; `wsl.py`'s raw DNS query moved there and is imported
+back.
+
+[DECISION: the floor is Ubuntu 24.04's Python 3.12, not 22.04's 3.10. The module was written against
+3.10 first, on the reasoning that a corporate fleet lags and a WSL distro installed years ago is
+never upgraded. Reconsidered and narrowed deliberately: this repo is distributed to a handful of
+people directly, on the timescale where 22.04 will not be what any of them is running, and the
+target everywhere else in the repo is already 24.04. The zero-install property — no uv, no invoke,
+no venv — is unchanged and is the part that actually matters; only the version bound moved.]
 
 [DECISION: one self-contained module inside `tasks/`, not a new top-level `doctor/` package. A
 top-level package would sit outside `pyrightconfig.json`'s `include` (`src*`/`tests*`/`tasks*`),
@@ -224,12 +231,11 @@ functional check of what was just installed, and a network probe there would fai
 reachability problem that no longer matters once everything is installed. Revisit only if a real
 failure argues for it.]
 
-[DEFERRED: one unavailable apt package aborts the whole run — `inv wsl.install` on an Ubuntu 22.04
-distro dies at `eza`, which only exists in 24.04+. The repo targets 24.04, but
-`wsl --install
-Ubuntu-22.04` is a perfectly ordinary thing for someone to have done. The fix is
-per-package tolerance with a summary at the end, not `warn=True` everywhere, which would hide real
-failures.]
+[DEFERRED: one unavailable apt package aborts the whole run. Seen on a 22.04 container, which is out
+of scope now that the floor is 24.04 — but the shape is not release-specific: a package pulled from
+an archive, a mirror serving a partial index, or a typo in `setup.toml` each end a run at the first
+failure with everything after it undone. The fix is per-package tolerance with a summary at the end,
+not `warn=True` everywhere, which would hide real failures.]
 
 [DEFERRED: `zsh.configure`'s zshenv writer ignores tags, which is what put a GUI askpass into every
 headless distro to begin with. The askpass helper degrades gracefully now, so the symptom is gone,
@@ -246,8 +252,8 @@ impossible to observe):
 - **`inv wsl.install` end to end** on a simulated WSL distro (`ubuntu:24.04`, password-protected
   sudo user, `WSL_DISTRO_NAME` set, no systemd, no display), from `bash bootstrap.sh` — including
   its new preflight — through the packages phase. The sudo password is asked once and nothing later
-  stops for input. An earlier pass on `ubuntu:22.04` also exercised the module under that release's
-  own python3.10.
+  stops for input. An earlier pass ran on `ubuntu:22.04` as well, which is how the module was
+  exercised under a 3.10 interpreter before the floor was settled at 24.04's 3.12.
 - **The doctor against simulated corporate networks**: no network at all, PyPI blocked while GitHub
   answers, a self-signed "Corp Root Inspection CA" presented on :443, and a proxy answering 407 with
   `Negotiate, NTLM`. Each produced the intended single finding after two rounds of tightening — a
@@ -256,7 +262,7 @@ impossible to observe):
 - **The askpass helper** with and without a terminal.
 - **Unit tests**: the sudo state machine with every probe stubbed, the apt command construction,
   netdoctor's parsers, its whole `evaluate()` layer, and the three constraint tests (stdlib only, no
-  `tasks/` import, 3.10 syntax).
+  `tasks/` import, 3.12 syntax).
 
 [UNVERIFIED: none of this has run on a real WSL2 distro on real corporate infrastructure. The
 Windows-side reads (`reg.exe`, `netsh.exe`, the PAC fetch, `.wslconfig` discovery) are exercised

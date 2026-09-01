@@ -7,13 +7,14 @@ Run it with nothing installed:
 
 or from the invoke side, once there is one, as `inv net.check` (tasks/net.py).
 
-**Standard library only, and Python 3.10 syntax only.** That is a hard constraint, not a style
-preference: this has to run on a fresh Ubuntu 22.04 WSL distro *before* uv, invoke, or this repo's
-venv exist — which is exactly when a corporate network's blocks are worth knowing about, since
-every one of those is itself a download. 22.04 ships Python 3.10, so no `tomllib` (3.11), no
-`StrEnum`, no `datetime.UTC`. It also imports nothing from `tasks/`: `python3 tasks/netdoctor.py`
-executes this file directly, without importing the `tasks` package (which would pull in invoke).
-The dependency runs one way — `tasks/*.py` may import this module, never the reverse.
+**Standard library only, and no newer than the distro's own Python.** That is a hard constraint,
+not a style preference: this has to run on a fresh WSL distro or container *before* uv, invoke, or
+this repo's venv exist — which is exactly when a corporate network's blocks are worth knowing
+about, since every one of those is itself a download. This repo targets Ubuntu 24.04, whose system
+Python is 3.12, so 3.12 is the floor (nothing here needs 3.13's `itertools.batched` or anything
+later). It also imports nothing from `tasks/`: `python3 tasks/netdoctor.py` executes this file
+directly, without importing the `tasks` package (which would pull in invoke). The dependency runs
+one way — `tasks/*.py` may import this module, never the reverse.
 
 The question it answers is deliberately narrower than "is the internet up". It is: *which of the
 specific hosts a PULSE run needs are reachable, by which route, and when one isn't, what is the
@@ -76,7 +77,10 @@ ENDPOINTS: tuple[Endpoint, ...] = (
 )
 
 # Anything in setup.toml that isn't in the catalog above is still worth probing on a full run.
-# Regex rather than a TOML parse on purpose — see the module docstring's 3.10 constraint.
+# A regex over the whole file rather than a TOML parse: URLs live in a dozen different fields
+# (`url`, `gpg_url`, `script_url`, `download_page`, `sources_entry`, a `repo` inside a git URL …),
+# so "every https:// in the file" covers a newly added package that a field-by-field walk would
+# miss until someone taught it the new field.
 _URL_RE = re.compile(r"https?://([A-Za-z0-9.-]+\.[A-Za-z]{2,})(?::(\d+))?")
 
 DEFAULT_TIMEOUT = 4.0

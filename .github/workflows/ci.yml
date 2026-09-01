@@ -42,10 +42,11 @@ jobs:
       - run: inv --list
       - run: PULSE_DRY_RUN=1 inv apt.install-repos apt.install-base apt.install-debs tools.install fonts.install
 
-  # The zero-install entrypoint, on the oldest interpreter it claims to support. A unit test
-  # already asserts the module parses as 3.10 and imports nothing outside the standard library,
-  # but "parses" is not "runs": this is the only thing that proves the diagnostic a blocked
-  # machine is told to run actually works there, with no uv, no invoke and no venv in sight.
+  # The zero-install entrypoint, on the interpreter it will actually meet: Ubuntu 24.04's system
+  # python3 is 3.12, and this repo targets 24.04. A unit test already asserts the module parses at
+  # that version and imports nothing outside the standard library, but "parses" is not "runs" —
+  # this is the only thing that proves the diagnostic a blocked machine is told to run works
+  # there, with no uv, no invoke and no venv in sight.
   netdoctor-python-floor:
     runs-on: ubuntu-latest
     steps:
@@ -54,7 +55,7 @@ jobs:
           persist-credentials: false
       - uses: actions/setup-python@v5
         with:
-          python-version: "3.10"
+          python-version: "3.12"
       # --advisory: a blocked endpoint on a GitHub runner is a fact about the runner's network,
       # not a defect in this repo. The job is asserting that it runs and produces a report.
       - run: python3 tasks/netdoctor.py --quick --advisory
