@@ -8,7 +8,14 @@ import re
 from pathlib import Path
 from typing import cast
 
-from tasks.devcontainer import MountCandidate, _discover_candidates, _render_mounts_json
+from tasks import util
+from tasks.devcontainer import (
+    _DOC_PATH,
+    MountCandidate,
+    _discover_candidates,
+    _generated_content,
+    _render_mounts_json,
+)
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
 
@@ -233,3 +240,24 @@ def test_render_mounts_json_is_valid_json():
     )
     parsed = cast(dict[str, object], json.loads(_render_mounts_json([cand], "/home/vscode")))
     assert parsed["mounts"] == ["source=${localEnv:HOME}/.gitconfig,target=/home/vscode/.gitconfig,type=bind,readonly"]
+
+
+def test_dev_container_docs_have_no_unrendered_drift():
+    """docs/dev-container.md's generated block must already match CONTAINER_EXCLUDE_TAGS.
+
+    This is the drift protection that `.github/workflows/devcontainer.yml`'s `docs` job used to
+    provide by running `inv devcontainer.render-docs` in CI and committing the result back to
+    master. That job was deleted 2026-09-01: a CI job may not commit a generated file to a branch
+    (see ~/AGENTS.md's "Regenerating a file from a canonical source"). Detecting the drift is the
+    half worth keeping, and a test detects it without writing anything.
+
+    Fix a failure by running `inv devcontainer.render-docs` and committing the result — the same
+    command, run by whoever made the change rather than by a robot afterwards.
+    """
+    _, status = util.ensure_block_text(
+        _DOC_PATH.read_text(),
+        "devcontainer-tags",
+        _generated_content(),
+        style=util.MarkerStyle.HTML,
+    )
+    assert status == util.BlockStatus.OK, "docs/dev-container.md is stale — run `inv devcontainer.render-docs`"

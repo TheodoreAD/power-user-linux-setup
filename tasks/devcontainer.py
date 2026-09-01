@@ -60,11 +60,16 @@ def _tag_table() -> str:
 
 def _generated_content() -> str:
     tags_csv = ",".join(CONTAINER_EXCLUDE_TAGS)
+    # Pre-wrapped at dprint.json's markdown lineWidth (100), for the same reason _tag_table() is
+    # pre-padded: whatever this emits, `dprint fmt` reformats, and render_docs then sees its own
+    # output as changed and rewrites it — the two disagree forever about the "idempotent" result.
+    # The table had that treatment from the start; this prose paragraph did not, so the block was
+    # stale in git the whole time and no run could settle it (found 2026-09-01 by the drift test in
+    # tests/unit/test_devcontainer.py, which failed on its first execution).
     return (
         f"{_tag_table()}\n\n"
-        "Example — this is the default (equivalent to omitting `--exclude-tags`; see "
-        "`bootstrap-devcontainer.sh`'s own default resolution via "
-        "`inv devcontainer.print-exclude-tags`):\n\n"
+        "Example — this is the default (equivalent to omitting `--exclude-tags`; see\n"
+        "`bootstrap-devcontainer.sh`'s own default resolution via `inv devcontainer.print-exclude-tags`):\n\n"
         "```json\n"
         "{\n"
         '  "image": "mcr.microsoft.com/devcontainers/base:ubuntu-24.04",\n'
