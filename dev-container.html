@@ -2385,7 +2385,7 @@
   
 
 
-<h1 id="dev-container">Dev Container</h1>
+<h1 id="dev-container">Dev Container<a class="headerlink" href="#dev-container" title="Permanent link">&para;</a></h1>
 <p>The same <code>setup.toml</code> and invoke tasks that configure a workstation can provision a dev container.
 Two distribution paths, both built on the same underlying fix (the systemd gap, described next):</p>
 <ul>
@@ -2397,7 +2397,7 @@ Two distribution paths, both built on the same underlying fix (the systemd gap, 
   prebuilt image&rsquo;s startup-time win matters more than the postCreateCommand flow&rsquo;s flexibility (e.g.
   CI runner images).</li>
 </ul>
-<h2 id="inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically"><code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically</h2>
+<h2 id="inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically"><code>inv setup</code> in a container — the systemd gap, and why it&rsquo;s handled automatically<a class="headerlink" href="#inv-setup-in-a-container-the-systemd-gap-and-why-its-handled-automatically" title="Permanent link">&para;</a></h2>
 <p><code>inv setup</code> runs a <code>system</code> phase first (<code>system.set-locale</code>, <code>system.configure-dns</code>) that needs
 <code>systemctl</code>/ <code>localectl</code> — meaningless, and previously fatal, in a container with no init system.
 <code>inv setup</code> now detects this itself (<code>util.has_systemd()</code>, the same check <code>require_systemd()</code> uses)
@@ -2407,7 +2407,7 @@ and, when there&rsquo;s no systemd and it isn&rsquo;t WSL, skips both the <code>
 same way <code>inv setup</code> already auto-detects WSL and delegates to <code>wsl.install</code>. Both distribution
 paths below call <code>inv setup</code> directly (via <code>bootstrap-devcontainer.sh</code>), so this explanation is
 load-bearing for both, not incidental background.</p>
-<h2 id="recommended-devcontainerjson-postcreatecommand">Recommended: <code>devcontainer.json</code> + <code>postCreateCommand</code></h2>
+<h2 id="recommended-devcontainerjson-postcreatecommand">Recommended: <code>devcontainer.json</code> + <code>postCreateCommand</code><a class="headerlink" href="#recommended-devcontainerjson-postcreatecommand" title="Permanent link">&para;</a></h2>
 <p>Point any Debian/Ubuntu-family <code>image</code> at <code>bootstrap-devcontainer.sh</code>, curled from a pinned ref:</p>
 <div class="language-json highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="p">{</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span><span class="nt">"name"</span><span class="p">:</span><span class="w"> </span><span class="s2">"my-project"</span><span class="p">,</span>
@@ -2437,7 +2437,7 @@ specific commit or branch you&rsquo;ve verified yourself, not <code>stable</code
 <p><strong>Constraint:</strong> this only works on apt-based (Debian/Ubuntu-family) images — <code>bootstrap.sh</code>&rsquo;s
 self-heal preamble and every <code>[packages.*]</code> <code>apt</code>/<code>apt-repo</code>/<code>deb-github</code>/<code>deb-url</code> method assume
 <code>apt</code>/<code>dpkg</code>. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.</p>
-<h3 id="mounting-host-directories">Mounting host directories</h3>
+<h3 id="mounting-host-directories">Mounting host directories<a class="headerlink" href="#mounting-host-directories" title="Permanent link">&para;</a></h3>
 <p>A fresh container has none of your credentials: <code>inv identity.init</code> has to be re-run,
 <code>ssh.create-keys</code> mints a brand-new keypair (which then needs re-adding to GitHub), and a corporate
 CA bundle <code>certs.install</code> needs isn&rsquo;t present at all. <code>inv devcontainer.print-mounts</code> discovers
@@ -2478,7 +2478,7 @@ something to automate:</p>
 — any dependency, any installed tool. This is why most candidates default to <code>readonly</code>, and why the
 lower-value/higher-sensitivity ones (<code>~/.aws</code>, <code>~/.kube</code>, <code>~/.config/gcloud</code>, <code>~/.config/gh</code>,
 <code>~/.gnupg</code>) default to <strong>not offered/opt-in</strong> rather than pre-selected.</p>
-<h2 id="tags-to-exclude">Tags to exclude</h2>
+<h2 id="tags-to-exclude">Tags to exclude<a class="headerlink" href="#tags-to-exclude" title="Permanent link">&para;</a></h2>
 <!-- PULSE::devcontainer-tags -->
 
 <table>
@@ -2526,7 +2526,7 @@ lower-value/higher-sensitivity ones (<code>~/.aws</code>, <code>~/.kube</code>, 
 <p><code>ide</code>/<code>gnome</code> weren&rsquo;t part of the original recipe here but earn their place the same way they do
 under WSL (see <code>docs/wsl.md</code>) — nothing in a container has a GNOME session or benefits from a second
 IDE window running inside it.</p>
-<h2 id="alternative-baking-a-custom-base-image">Alternative: baking a custom base image</h2>
+<h2 id="alternative-baking-a-custom-base-image">Alternative: baking a custom base image<a class="headerlink" href="#alternative-baking-a-custom-base-image" title="Permanent link">&para;</a></h2>
 <p><code>docker/Dockerfile</code> is the canonical, tested example of layering PULSE onto a base image at <em>build</em>
 time — the bake-time analog of the <code>postCreateCommand</code> flow above. It serves three purposes: a
 documented working example, a vehicle for testing uncommitted local changes to
@@ -2562,7 +2562,7 @@ already be in Ubuntu&rsquo;s own <code>universe</code> repo instead of the pinne
 even outside the <code>bootstrap.sh</code> flow. This specific bug is also exactly the shape of thing
 <code>inv verify.all</code> now catches automatically and generally — see below — so <code>inv setup</code> no longer
 exits 0 while quietly missing something.</p>
-<h3 id="automated-functional-verification-inv-verifyall">Automated functional verification (<code>inv verify.all</code>)</h3>
+<h3 id="automated-functional-verification-inv-verifyall">Automated functional verification (<code>inv verify.all</code>)<a class="headerlink" href="#automated-functional-verification-inv-verifyall" title="Permanent link">&para;</a></h3>
 <p><code>inv setup</code>&rsquo;s <code>packages</code> phase ends with <code>inv verify.all</code> (<code>tasks/verify.py</code>) — a hard,
 convention-based check that every package this run installed also actually <em>works</em>, not just that
 it&rsquo;s present. The gnupg bug above was originally found by hand (manually checking <code>gh --version</code> and
@@ -2635,7 +2635,7 @@ reinstalled or duplicated. The one thing that doesn&rsquo;t participate in that 
 re-resolves each package on every run rather than probing first, which is harmless (<code>uv</code> no-ops
 instantly on an already-satisfied install) but means you&rsquo;ll see it &ldquo;reinstall&rdquo; on every re-run
 regardless of whether anything changed.</p>
-<h3 id="non-root-user">Non-root user</h3>
+<h3 id="non-root-user">Non-root user<a class="headerlink" href="#non-root-user" title="Permanent link">&para;</a></h3>
 <p>Every real devcontainer runs as a non-root user with passwordless sudo, not root.
 <code>docker/Dockerfile</code> needs no code changes for that — only a Dockerfile-side user, added before
 <code>WORKDIR</code>:</p>
@@ -2661,13 +2661,13 @@ immediately and says so, rather than stalling at an invisible password prompt so
 apt run. That last case is the one WSL hits by default and containers almost never do; see
 <a href="https://github.com/TheodoreAD/power-user-linux-setup/blob/master/contributing/interactive-input.md"><code>contributing/interactive-input.md</code></a>
 for why it can&rsquo;t be left to fail later.</p>
-<h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code></h3>
+<h3 id="alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404">Alternate base image: <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code><a class="headerlink" href="#alternate-base-image-mcrmicrosoftcomdevcontainersbaseubuntu-2404" title="Permanent link">&para;</a></h3>
 <p>Swapping <code>FROM ubuntu:24.04</code> for <code>mcr.microsoft.com/devcontainers/base:ubuntu-24.04</code> in
 <code>docker/Dockerfile</code> needs no other changes and drops the need for the <code>useradd</code>/sudoers block above
 — that image already ships a passwordless-sudo <code>vscode</code> user plus <code>curl</code>/<code>gnupg</code>/<code>ca-certificates</code>
 preinstalled, so <code>bootstrap.sh</code>&rsquo;s self-heal preamble finds nothing missing (pure no-op). No
 conflicts observed between this image&rsquo;s preinstalled packages and anything <code>setup.toml</code> installs.</p>
-<h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code></h3>
+<h3 id="round-tripping-through-devcontainerscli">Round-tripping through <code>@devcontainers/cli</code><a class="headerlink" href="#round-tripping-through-devcontainerscli" title="Permanent link">&para;</a></h3>
 <p><code>docker/Dockerfile</code> is a bare <code>docker build</code>, but the actual VS Code Dev Containers /
 <code>@devcontainers/cli</code> workflow adds its own layer of environment setup before your Dockerfile even
 runs. To verify it round-trips cleanly, point a throwaway <code>devcontainer.json</code>&rsquo;s <code>build.dockerfile</code>
@@ -2676,7 +2676,7 @@ at <code>docker/Dockerfile</code> (<code>context</code> set to the repo root) an
 <code>devcontainer exec -- inv --list</code>. The primary, CI-smoke-tested artifact for this round-trip is this
 repo&rsquo;s own <code>.devcontainer/devcontainer.json</code> (the <code>postCreateCommand</code> path above), not
 <code>docker/Dockerfile</code> — see <a href="#recommended-devcontainerjson-postcreatecommand">Recommended</a>.</p>
-<h2 id="cleanup-reclaiming-image-layer-space">Cleanup — reclaiming image-layer space</h2>
+<h2 id="cleanup-reclaiming-image-layer-space">Cleanup — reclaiming image-layer space<a class="headerlink" href="#cleanup-reclaiming-image-layer-space" title="Permanent link">&para;</a></h2>
 <p>Every layer <code>inv setup</code> writes is permanent once committed — a later <code>RUN rm -rf</code> doesn&rsquo;t shrink an
 <em>earlier</em> layer, it only hides those files from the final filesystem view while the bytes stay in
 the image. This is why <code>docker/Dockerfile</code> puts cleanup in the <em>same</em> <code>RUN</code> as
@@ -2762,7 +2762,7 @@ knowing before reaching for it as the main size lever: it isn&rsquo;t one. <code
 leaving out toolchains you don&rsquo;t need (rust, go, k8s tooling are each hundreds of MB to multiple GB)
 dwarfs anything cache cleanup can reclaim. Run cleanup because it&rsquo;s free and has no downside in a
 container, not because it meaningfully shrinks the image on its own.</p>
-<h2 id="docker">Docker</h2>
+<h2 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h2>
 <p><code>[packages.docker]</code> is tagged <code>workstation</code> and excluded by default, so none of this is reachable in
 the recommended tag profile — it only matters if you deliberately drop <code>workstation</code> from
 <code>PULSE_EXCLUDE_TAGS</code>, which was tested specifically to check for exactly this kind of tag-gated
@@ -2788,7 +2788,7 @@ install just the CLI packages manually in your Dockerfile instead:</p>
 from <code>[packages.docker].omz_plugin</code> — but that entry is excluded, so you&rsquo;d need to add those plugins
 via a separate mechanism or accept they won&rsquo;t load. Alternatively, mount the host socket and use the
 host Docker installation directly.</p>
-<h2 id="other-notes">Other notes</h2>
+<h2 id="other-notes">Other notes<a class="headerlink" href="#other-notes" title="Permanent link">&para;</a></h2>
 <ul>
 <li>Tasks use <code>sudo</code> internally; either run as root (as <code>docker/Dockerfile</code> does) or ensure <code>sudo</code> is
   installed and the build user is in sudoers.</li>

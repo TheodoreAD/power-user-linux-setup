@@ -2199,8 +2199,8 @@
   
 
 
-<h1 id="git">Git</h1>
-<h2 id="identity-setup">Identity setup</h2>
+<h1 id="git">Git<a class="headerlink" href="#git" title="Permanent link">&para;</a></h1>
+<h2 id="identity-setup">Identity setup<a class="headerlink" href="#identity-setup" title="Permanent link">&para;</a></h2>
 <p>Git identity is driven by <code>~/.config/power-user-linux-setup/identity.toml</code> — a personal file that is
 never committed to the repo.</p>
 <p><strong>Quick start</strong> — one name/email, one projects directory:</p>
@@ -2230,7 +2230,7 @@ git automatically picks the right identity based on which projects directory the
 machine for a long time, but hasn&rsquo;t yet been validated end-to-end on a genuinely fresh install —
 worth confirming the created <code>.gitconfig</code> files and the global <code>includeIf</code> entries look right the
 next time this repo is bootstrapped on a new machine.</p>
-<h2 id="multi-account-platforms">Multi-account platforms</h2>
+<h2 id="multi-account-platforms">Multi-account platforms<a class="headerlink" href="#multi-account-platforms" title="Permanent link">&para;</a></h2>
 <p>For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in
 <code>identity.toml</code>:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[[ssh_hosts]]</span>
@@ -2243,7 +2243,7 @@ next time this repo is bootstrapped on a new machine.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>git<span class="w"> </span>clone<span class="w"> </span>git@github-work:org/repo.git
 </span></code></pre></div>
 <p>SSH will route through the alias and use the correct key. See <a href="ssh.html">ssh.md</a> for key setup.</p>
-<h2 id="global-configuration">Global configuration</h2>
+<h2 id="global-configuration">Global configuration<a class="headerlink" href="#global-configuration" title="Permanent link">&para;</a></h2>
 <p>Applied by <code>inv git.apply-settings</code>:</p>
 <table>
 <thead>
@@ -2306,7 +2306,7 @@ next time this repo is bootstrapped on a new machine.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="pycharm-diff-and-merge-tools">PyCharm diff and merge tools</h2>
+<h2 id="pycharm-diff-and-merge-tools">PyCharm diff and merge tools<a class="headerlink" href="#pycharm-diff-and-merge-tools" title="Permanent link">&para;</a></h2>
 <p>Run once after installing PyCharm via Toolbox:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="nv">PYCHARM_PATH</span><span class="o">=</span><span class="s2">"</span><span class="si">${</span><span class="nv">HOME</span><span class="si">}</span><span class="s2">/.local/share/JetBrains/Toolbox/apps/pycharm/bin/pycharm"</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>git<span class="w"> </span>config<span class="w"> </span>--global<span class="w"> </span>diff.tool<span class="w"> </span>pycharm-professional

@@ -2385,13 +2385,13 @@
   
 
 
-<h1 id="how-it-works">How it works</h1>
+<h1 id="how-it-works">How it works<a class="headerlink" href="#how-it-works" title="Permanent link">&para;</a></h1>
 <p>The mechanics behind <code>inv setup</code>: how PULSE writes shared config files without clobbering manual
 edits, how <code>tags</code>/<code>enabled</code>/<code>PULSE_EXCLUDE_TAGS</code> decide what gets installed, and what each setup
 phase actually runs. Start at <a href="index.html">index.md</a> if you just want to run the thing — this page is
 for when you need to change what it does, build a new environment profile, or debug why a package
 was (or wasn&rsquo;t) picked up.</p>
-<h2 id="configuration-management">Configuration management</h2>
+<h2 id="configuration-management">Configuration management<a class="headerlink" href="#configuration-management" title="Permanent link">&para;</a></h2>
 <p>PULSE owns config files through named sentinel blocks rather than overwriting whole files. Any
 snippet written to a shared config file is wrapped in a PULSE block:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a># ╔═══════════════════════════════ PULSE::&lt;name&gt; ════════════════════════════╗
@@ -2405,7 +2405,7 @@ write to them. Overwriting the file on each run would destroy manual edits. Sent
 PULSE-managed entry own its own region of the file independently.</p>
 <p><strong>Idempotency:</strong> on re-run the block is found by its opening marker and replaced in place if the
 content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.</p>
-<h3 id="what-pulse-claims-in-your-home-directory-inv-homelist-claims">What PULSE claims in your home directory — <code>inv home.list-claims</code></h3>
+<h3 id="what-pulse-claims-in-your-home-directory-inv-homelist-claims">What PULSE claims in your home directory — <code>inv home.list-claims</code><a class="headerlink" href="#what-pulse-claims-in-your-home-directory-inv-homelist-claims" title="Permanent link">&para;</a></h3>
 <p>Blocks are one of ten ways this repo puts something in <code>~</code>. To see all of them:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>inv<span class="w"> </span>home.list-claims<span class="w">                     </span><span class="c1"># every claim, classified, read-only</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>home.list-claims<span class="w"> </span>--writer<span class="w"> </span>block<span class="w">      </span><span class="c1"># just the marker-delimited regions</span>
@@ -2424,7 +2424,7 @@ split: a real deploy state wherever <code>deploy.py</code> is the writer, plain 
 else, because no other writer records what it wrote, and <code>—</code> for a claim with no file at all.</p>
 <p>The table below is a curated guide to the files you are most likely to edit; the command is the
 complete, generated answer.</p>
-<h3 id="managed-files">Managed files</h3>
+<h3 id="managed-files">Managed files<a class="headerlink" href="#managed-files" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2516,7 +2516,7 @@ complete, generated answer.</p>
 </tr>
 </tbody>
 </table>
-<h3 id="adding-a-new-block">Adding a new block</h3>
+<h3 id="adding-a-new-block">Adding a new block<a class="headerlink" href="#adding-a-new-block" title="Permanent link">&para;</a></h3>
 <p>Declare <code>zshrc</code>, <code>zshenv</code>, or <code>zprofile</code> on any package entry in <code>setup.toml</code>:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[packages.mytool]</span>
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"apt"</span>
@@ -2530,7 +2530,7 @@ For non-shell config files, call <code>util.ensure_block(path, name, content)</c
 <code>util.ensure_block_text(text, name, content)</code> (returns new text without writing, for files that
 require <code>sudo</code>).</p>
 <hr />
-<h2 id="whole-file-configs-config_files">Whole-file configs — <code>config_files</code></h2>
+<h2 id="whole-file-configs-config_files">Whole-file configs — <code>config_files</code><a class="headerlink" href="#whole-file-configs-config_files" title="Permanent link">&para;</a></h2>
 <p>Sentinel blocks only work for files PULSE <em>shares</em> with other writers. Some config files aren&rsquo;t
 shared at all: a tool&rsquo;s config is a single document PULSE authors end to end, in a syntax where a
 <code># ╔══ PULSE::name ══╗</code> comment would be noise (or invalid). WezTerm&rsquo;s Lua config is the clearest
@@ -2543,7 +2543,7 @@ this repo into place.</p>
 </span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">config_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"config/wezterm.lua"</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"~/.config/wezterm/wezterm.lua"</span><span class="w"> </span><span class="p">}]</span>
 </span></code></pre></div>
 <p><code>src</code> is relative to the repo root, <code>dst</code> expands <code>~</code>. Any method can declare it.</p>
-<h3 id="install-never-clobbers-redeploy-is-a-separate-deliberate-command">Install never clobbers; redeploy is a separate, deliberate command</h3>
+<h3 id="install-never-clobbers-redeploy-is-a-separate-deliberate-command">Install never clobbers; redeploy is a separate, deliberate command<a class="headerlink" href="#install-never-clobbers-redeploy-is-a-separate-deliberate-command" title="Permanent link">&para;</a></h3>
 <p>The install tasks that apply <code>config_files</code> (<code>inv apt.install-base</code>, <code>inv apt.install-debs</code>) <strong>only
 ever write a destination that doesn&rsquo;t exist yet.</strong> If the file is already there, they skip it
 silently — because after the first install that file is yours, and a re-run of <code>inv setup</code> must
@@ -2612,7 +2612,7 @@ than silently leaving a base-image file in place.</p>
 </span><span id="__span-5-12"><a id="__codelineno-5-12" name="__codelineno-5-12" href="#__codelineno-5-12"></a>
 </span><span id="__span-5-13"><a id="__codelineno-5-13" name="__codelineno-5-13" href="#__codelineno-5-13"></a><span class="go">Overwrite /home/you/.config/wezterm/wezterm.lua? [y/N]</span>
 </span></code></pre></div>
-<h3 id="editing-one-of-these-files">Editing one of these files</h3>
+<h3 id="editing-one-of-these-files">Editing one of these files<a class="headerlink" href="#editing-one-of-these-files" title="Permanent link">&para;</a></h3>
 <p>Because the destination is a real, hand-editable file, there are two valid workflows — pick one per
 change, don&rsquo;t mix them:</p>
 <ol>
@@ -2627,7 +2627,7 @@ change, don&rsquo;t mix them:</p>
 <p>Currently declared: <a href="terminal.html"><code>config/wezterm.lua</code></a> → <code>~/.config/wezterm/wezterm.lua</code>, and
 <code>config/terminator.conf</code> → <code>~/.config/terminator/config</code>.</p>
 <hr />
-<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either</h2>
+<h2 id="tags-enabled-and-which-tasks-actually-respect-either">Tags, <code>enabled</code>, and which tasks actually respect either<a class="headerlink" href="#tags-enabled-and-which-tasks-actually-respect-either" title="Permanent link">&para;</a></h2>
 <p>Every <code>[packages.*]</code> entry has three independent, unrelated ways to be skipped:</p>
 <ul>
 <li><strong><code>enabled = false</code></strong> — the default for every machine that clones this repo, baked into
@@ -2658,9 +2658,10 @@ every <em>generic</em> install-method task loops over: <code>apt</code>, <code>a
 <code>archive</code>, <code>uv-tool</code>, <code>script</code>, <code>binary</code>, <code>git-clone</code>, <code>wrapper-script</code>, <code>gnome-extension</code>,
 <code>apparmor-profile</code>. An entry needs to pass <strong>both</strong> checks (<code>enabled != false</code> <em>and</em> no tag in
 <code>PULSE_EXCLUDE_TAGS</code>) to be picked up by any of these.</p>
-<p><strong>Several core tasks bypass <code>packages_by_method</code> entirely</strong> and read one hardcoded
-<code>[packages.&lt;name&gt;]</code> section directly — for these, <code>enabled</code> and <code>tags</code> do nothing at all; the only
-way to skip them is to not invoke the <code>inv</code> task:</p>
+<p><strong>Several core tasks bypass <code>packages_by_method</code> entirely.</strong> Most read one hardcoded
+<code>[packages.&lt;name&gt;]</code> section directly, and for those <code>enabled</code> and <code>tags</code> do nothing at all — the
+only way to skip them is to not invoke the <code>inv</code> task. Bypassing <code>packages_by_method</code> is not by
+itself the same as ignoring tags, though, so read the last column per row rather than the heading:</p>
 <table>
 <thead>
 <tr>
@@ -2687,8 +2688,8 @@ way to skip them is to not invoke the <code>inv</code> task:</p>
 </tr>
 <tr>
 <td><code>zsh.configure</code></td>
-<td><strong>every</strong> entry in <code>packages.*</code> that has a <code>zshrc</code>/<code>zshenv</code>/<code>zprofile</code> field</td>
-<td><code>enabled</code> only — <strong>tags are ignored</strong>. A <code>gui</code>-tagged tool&rsquo;s shell block (PATH entry, completion, OMZ plugin coupling) still gets written to <code>.zshrc</code> even when <code>PULSE_EXCLUDE_TAGS</code> skipped installing the tool itself. Usually harmless (blocks tend to guard on the binary existing), but worth knowing before assuming an exclude-tags profile produced a byte-for-byte-minimal <code>.zshrc</code>.</td>
+<td><code>util.enabled_packages()</code> — every entry with a <code>zshrc</code>/<code>zshenv</code>/<code>zprofile</code> field</td>
+<td><strong>Yes, both</strong> (since 2026-09-01). It also <em>removes</em> the block of a package that no longer applies, so switching a profile takes the old exports back out instead of leaving them behind — the marker-delimited region only, never anything hand-written around it. Before this it was <code>enabled</code>-only, which is how a GUI askpass export reached headless WSL distros.</td>
 </tr>
 </tbody>
 </table>
@@ -2700,8 +2701,8 @@ profile actually installed. <code>gnome-extension</code> is force-skipped regard
 automated path, not even <code>inv setup</code> itself, ever calls <code>inv gnome.install-extensions</code> (see
 <code>tasks/gnome.py</code>), so checking those by default would fail <code>inv setup</code> for extensions it never
 attempted to install. It also does a manual scan for <code>method = "zsh"</code> entries (<code>enabled</code>-only, tags
-ignored — same bypass <code>zsh.configure</code> already uses), always skipping them since they&rsquo;re config-only
-with no command to verify.</p>
+ignored), always skipping them since they&rsquo;re config-only with no command to verify — so the only
+effect of its tag-blindness is that a tag-excluded entry is still named as skipped.</p>
 <p>This split is exactly what <a href="wsl.html">wsl.md</a> and <a href="dev-container.html">dev-container.md</a> rely on — when
 building a new environment profile, check which bucket the task you&rsquo;re skipping falls into before
 assuming a tag exclusion is enough.</p>
@@ -2764,7 +2765,7 @@ version string, and include <code>{version}</code> in <code>download_url</code> 
 version differently — via the GitHub releases API directly (<code>tag</code> field, or auto-latest if omitted)
 — since it doesn&rsquo;t need a custom command.</p>
 <hr />
-<h2 id="setup-phases">Setup phases</h2>
+<h2 id="setup-phases">Setup phases<a class="headerlink" href="#setup-phases" title="Permanent link">&para;</a></h2>
 <p>What <code>inv setup</code> actually runs, in order. One interruption: a single logout at the end. An optional
 reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural
 reboot — nothing depends on it being immediate.</p>
@@ -2784,7 +2785,7 @@ entirely — defaulting to <strong>skip</strong> on Enter, and skipping silently
 what makes re-running <code>inv setup</code> (or <code>inv wsl.install</code>) after an interruption cheap: phases that
 already succeeded are a single confirmation instead of a full redo. A phase with any outstanding
 work is never gated behind a prompt — it just runs, same as before.</p>
-<h3 id="phase-1-system-config">Phase 1 — System config</h3>
+<h3 id="phase-1-system-config">Phase 1 — System config<a class="headerlink" href="#phase-1-system-config" title="Permanent link">&para;</a></h3>
 <p>All of these take effect immediately (sysctl, DNS, journald restart) or on next login (locale). No
 reboot needed.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a>inv<span class="w"> </span>system.set-locale
@@ -2796,7 +2797,7 @@ reboot needed.</p>
 </span></code></pre></div>
 <p>GRUB (<code>nomodeset</code>) is manual and hardware-specific — see <a href="troubleshooting.html">troubleshooting.md</a>.
 If applied, it also defers to next reboot.</p>
-<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools</h3>
+<h3 id="phase-2-packages-and-tools">Phase 2 — Packages and tools<a class="headerlink" href="#phase-2-packages-and-tools" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>inv<span class="w"> </span>apt.configure<span class="w">      </span><span class="c1"># write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>inv<span class="w"> </span>apt.install-repos<span class="w">          </span><span class="c1"># register external repo GPG keys + sources, then install their packages</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>inv<span class="w"> </span>apt.install-base<span class="w">           </span><span class="c1"># install from Ubuntu default repos</span>
@@ -2818,7 +2819,7 @@ skipped with a <code>WARNING:</code> message rather than aborting the whole run.
 <code>~/.local/bin/askpass-zenity</code>. Any sudo call via <code>sudo -A</code> (used by the task scripts when
 <code>SUDO_ASKPASS</code> is present) opens a Zenity GUI dialog for the password instead of requiring a
 terminal prompt.</p>
-<h3 id="phase-3-shell-config">Phase 3 — Shell config</h3>
+<h3 id="phase-3-shell-config">Phase 3 — Shell config<a class="headerlink" href="#phase-3-shell-config" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>inv<span class="w"> </span>zsh.configure-omz
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>inv<span class="w"> </span>zsh.configure
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w">       </span><span class="c1"># seeds config/p10k.zsh to ~/.p10k.zsh (yours once it exists)</span>
@@ -2844,7 +2845,7 @@ flag and prints the single next concrete thing to do: shell first, then
 git settings/profiles applied? SSH keys present for every <code>identity.toml</code> email? <code>~/.ssh/config</code>
 written? keys loaded in the agent? <code>gh</code> authenticated (only checked if <code>gh</code> is installed)? Safe to
 re-run after doing whatever it suggests — it just reports whatever&rsquo;s still outstanding.</p>
-<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em></h3>
+<h3 id="phase-4-desktop-before-logout">Phase 4 — Desktop <em>(before logout)</em><a class="headerlink" href="#phase-4-desktop-before-logout" title="Permanent link">&para;</a></h3>
 <p><code>inv setup</code> also runs <code>fonts.install</code> and <code>fonts.configure</code>, which:</p>
 <ul>
 <li>Download all Nerd Font families to <code>~/.local/share/fonts/</code></li>
@@ -2856,7 +2857,7 @@ re-run after doing whatever it suggests — it just reports whatever&rsquo;s sti
 <p><strong>Logout and log back in.</strong> Covers: docker group, locale full effect, GNOME extension activation,
 font cache. If GRUB or initramfs were changed, reboot instead of logout — one restart covers both.</p>
 </blockquote>
-<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em></h3>
+<h3 id="phase-5-authentication-interactive-last">Phase 5 — Authentication <em>(interactive, last)</em><a class="headerlink" href="#phase-5-authentication-interactive-last" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-10-1"><a id="__codelineno-10-1" name="__codelineno-10-1" href="#__codelineno-10-1"></a>inv<span class="w"> </span>identity.init<span class="w">                </span><span class="c1"># wizard: writes ~/.config/power-user-linux-setup/identity.toml (simple or advanced)</span>
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>inv<span class="w"> </span>git.configure<span class="w"> </span>git.apply-settings<span class="w">   </span><span class="c1"># per-directory git identity + global settings from identity.toml</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>inv<span class="w"> </span>ssh.create-keys<span class="w">                     </span><span class="c1"># one ed25519 key per unique email — prompts for a passphrase each</span>

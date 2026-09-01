@@ -2469,7 +2469,7 @@
   
 
 
-<h1 id="citrix">Citrix</h1>
+<h1 id="citrix">Citrix<a class="headerlink" href="#citrix" title="Permanent link">&para;</a></h1>
 <blockquote>
 <p><strong>Paused, not abandoned — uninstalled 2026-08-08.</strong> All three packages were on this machine and
 working (VPN/EPA blocked only by the IT-side gateway bug below) up through 2026-06-12. They were
@@ -2490,14 +2490,14 @@ AppProtection dconf lock at <code>/etc/dconf/db/local.d/locks/extensions-mandato
 the 2026-08-08 uninstall did. To pick this back up: flip <code>enabled = true</code>, <code>inv apt.install-debs</code>,
 then re-open this doc from the top.</p>
 </blockquote>
-<h2 id="what-citrix-secure-access-is">What Citrix Secure Access is</h2>
+<h2 id="what-citrix-secure-access-is">What Citrix Secure Access is<a class="headerlink" href="#what-citrix-secure-access-is" title="Permanent link">&para;</a></h2>
 <p><strong>Citrix Secure Access</strong> (formerly NetScaler Gateway Plugin) is the corporate VPN client for
 connecting to resources behind a Citrix Gateway (NetScaler Gateway). It creates an SSL/TLS tunnel on
 port 443 — not a traditional IPsec VPN.</p>
 <p>On Windows, the web portal automatically downloads and launches <code>nglauncher.exe</code>, which is part of
 the Secure Access client. <code>nglauncher</code> handles <strong>Endpoint Analysis (EPA)</strong>: device posture checks
 that verify OS version, antivirus state, etc. before granting access.</p>
-<h2 id="linux-packages">Linux packages</h2>
+<h2 id="linux-packages">Linux packages<a class="headerlink" href="#linux-packages" title="Permanent link">&para;</a></h2>
 <p>Two packages exist, both from Cloud Software Group (Citrix):</p>
 <table>
 <thead>
@@ -2528,7 +2528,7 @@ that verify OS version, antivirus state, etc. before granting access.</p>
   <a href="https://www.citrix.com/downloads/citrix-endpoint-analysis/plug-ins/EPA-Clients-Linux.html">https://www.citrix.com/downloads/citrix-endpoint-analysis/plug-ins/EPA-Clients-Linux.html</a></li>
 </ul>
 <p>Select the Ubuntu 22/24 section. Require version ≥ 24.8.5 for Ubuntu 24.04 support.</p>
-<h2 id="why-not-the-browser-extension">Why not the browser extension</h2>
+<h2 id="why-not-the-browser-extension">Why not the browser extension<a class="headerlink" href="#why-not-the-browser-extension" title="Permanent link">&para;</a></h2>
 <p>The <strong>Citrix Web Extension</strong> (browser plugin, Chrome Web Store ID
 <code>dbdlmgpfijccjgnnpacnamgdfmljoeee</code>) is the mechanism that lets the VPN portal auto-launch the client
 from the browser — equivalent to the Windows behavior. It has consistently poor reviews and is
@@ -2537,8 +2537,8 @@ unreliable.</p>
 connects directly without any browser extension. Launch it from the app menu or:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>/opt/Citrix/NSGClient/bin/NSGClient
 </span></code></pre></div>
-<h2 id="installation">Installation</h2>
-<h3 id="the-resolvconf-problem">The <code>resolvconf</code> problem</h3>
+<h2 id="installation">Installation<a class="headerlink" href="#installation" title="Permanent link">&para;</a></h2>
+<h3 id="the-resolvconf-problem">The <code>resolvconf</code> problem<a class="headerlink" href="#the-resolvconf-problem" title="Permanent link">&para;</a></h3>
 <p><code>nsginstaller64.deb</code> lists <code>resolvconf</code> as a dependency, but Ubuntu 24.04 uses <code>systemd-resolved</code>
 exclusively — <code>resolvconf</code> is not available in the Noble repos (see <a href="networking.html">networking.md</a>).
 <code>openresolv</code> is also absent from 24.04 repos, so there is no clean substitute package.</p>
@@ -2546,7 +2546,7 @@ exclusively — <code>resolvconf</code> is not available in the Noble repos (see
 DNS at runtime, not resolvconf directly.</p>
 <p><strong>In practice, <code>apt</code> resolves this silently</strong> — just use <code>apt install</code>, it handles it without
 needing <code>--force-depends</code>.</p>
-<h3 id="install-commands">Install commands</h3>
+<h3 id="install-commands">Install commands<a class="headerlink" href="#install-commands" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>sudo<span class="w"> </span>-A<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>~/Downloads/nsginstaller64.deb
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>sudo<span class="w"> </span>-A<span class="w"> </span>apt<span class="w"> </span>install<span class="w"> </span>-y<span class="w"> </span>~/Downloads/nsepa.deb
 </span></code></pre></div>
@@ -2555,7 +2555,7 @@ needing <code>--force-depends</code>.</p>
 or force flags needed.</p>
 <p>The harmless errors during install (&ldquo;NSGClient: no process found&rdquo;, &ldquo;Failed to stop
 nsgverctl.service&rdquo;) are just pre-install cleanup trying to stop a service that wasn&rsquo;t running yet.</p>
-<h3 id="after-install">After install</h3>
+<h3 id="after-install">After install<a class="headerlink" href="#after-install" title="Permanent link">&para;</a></h3>
 <p>Launch from the app menu (&ldquo;Citrix Secure Access&rdquo;) or:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>NSGClient
 </span></code></pre></div>
@@ -2567,8 +2567,8 @@ nsgverctl.service&rdquo;) are just pre-install cleanup trying to stop a service 
 <p>If not registered, fix with:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>xdg-mime<span class="w"> </span>default<span class="w"> </span>nsgcepa.desktop<span class="w"> </span>x-scheme-handler/nsgcepa
 </span></code></pre></div>
-<h2 id="access-denied-your-device-is-not-compliant">&ldquo;Access denied — your device is not compliant&rdquo;</h2>
-<h3 id="how-epa-works-on-linux">How EPA works on Linux</h3>
+<h2 id="access-denied-your-device-is-not-compliant">&ldquo;Access denied — your device is not compliant&rdquo;<a class="headerlink" href="#access-denied-your-device-is-not-compliant" title="Permanent link">&para;</a></h2>
+<h3 id="how-epa-works-on-linux">How EPA works on Linux<a class="headerlink" href="#how-epa-works-on-linux" title="Permanent link">&para;</a></h3>
 <p>The gateway serves <code>nsg-epa.js</code> which detects the OS and invokes the EPA binary via a custom
 protocol:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>nsgcepa://nsgcepa/epav2plugin/{gateway-host}/{session-token}/
@@ -2576,7 +2576,7 @@ protocol:</p>
 <p>The browser (or NSGClient&rsquo;s embedded WebView) navigates to this URL, which triggers the registered
 <code>nsgcepa</code> protocol handler, launching <code>/opt/Citrix/Browser-EPA/nsgcepa</code>. That binary runs the
 compliance checks and reports results back to the gateway through a NetScaler proxy channel.</p>
-<h3 id="root-cause">Root cause</h3>
+<h3 id="root-cause">Root cause<a class="headerlink" href="#root-cause" title="Permanent link">&para;</a></h3>
 <p>Investigation confirmed that the software side is correct — the protocol handler is registered, the
 EPA binary runs, and the gateway JavaScript does have Linux support. The actual failure is that
 <strong>the gateway does not include the session token in the <code>nsgcepa://</code> URL for Linux clients</strong>.</p>
@@ -2591,7 +2591,7 @@ and exits. Without a token the scan cannot complete, so the gateway denies acces
 <p>This is a <strong>gateway-side configuration gap</strong> — the pre-authentication EPA policy for Linux is not
 generating session tokens. On Windows/Mac it issues a token; on Linux the token step is skipped and
 the client falls through to the denial page.</p>
-<h3 id="what-to-tell-it">What to tell IT</h3>
+<h3 id="what-to-tell-it">What to tell IT<a class="headerlink" href="#what-to-tell-it" title="Permanent link">&para;</a></h3>
 <blockquote>
 <p>I&rsquo;m on Ubuntu 24.04 with <code>nsgclient 25.8.2</code> and <code>nsepa 26.2.3</code> installed (official Citrix Linux
 packages). The EPA binary is invoked correctly via the <code>nsgcepa://</code> protocol handler, but the
@@ -2600,17 +2600,17 @@ gateway is not including the session token in the URL for Linux clients — the 
 Linux pre-authentication EPA policy that provides the session token in the <code>nsgcepa://</code>
 invocation.</p>
 </blockquote>
-<h3 id="logs-to-check">Logs to check</h3>
+<h3 id="logs-to-check">Logs to check<a class="headerlink" href="#logs-to-check" title="Permanent link">&para;</a></h3>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>cat<span class="w"> </span>~/.citrix/nssslvpn.txt<span class="w">   </span><span class="c1"># main EPA/VPN log</span>
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>cat<span class="w"> </span>~/.citrix/nsepa.txt<span class="w">      </span><span class="c1"># EPA scan detail (only created if scan runs)</span>
 </span><span id="__span-8-3"><a id="__codelineno-8-3" name="__codelineno-8-3" href="#__codelineno-8-3"></a>cat<span class="w"> </span>~/.citrix/nsgcepa.txt<span class="w">    </span><span class="c1"># EPA launcher log (only created if scan runs)</span>
 </span></code></pre></div>
-<h2 id="known-issues">Known issues</h2>
-<h3 id="tls-13-required-on-ubuntu-22">TLS 1.3 required on Ubuntu 22+</h3>
+<h2 id="known-issues">Known issues<a class="headerlink" href="#known-issues" title="Permanent link">&para;</a></h2>
+<h3 id="tls-13-required-on-ubuntu-22">TLS 1.3 required on Ubuntu 22+<a class="headerlink" href="#tls-13-required-on-ubuntu-22" title="Permanent link">&para;</a></h3>
 <p>Ubuntu 22.04+ enforces TLS 1.3. If the employer&rsquo;s NetScaler Gateway only has TLS 1.2 enabled, the
 VPN connects but the tunnel silently fails. The fix is on the IT/gateway side: they need to set
 <code>denySSLReneg NONSECURE</code> in the NetScaler CLI config.</p>
-<h3 id="split-tunnel-dns">Split-tunnel DNS</h3>
+<h3 id="split-tunnel-dns">Split-tunnel DNS<a class="headerlink" href="#split-tunnel-dns" title="Permanent link">&para;</a></h3>
 <p>If the VPN connects but internal hostnames don&rsquo;t resolve, <code>systemd-resolved</code> needs to be told to
 route those domains through the VPN&rsquo;s DNS server. Check which interface the VPN creates:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>ip<span class="w"> </span>link<span class="w"> </span>show<span class="w"> </span><span class="p">|</span><span class="w"> </span>grep<span class="w"> </span>-i<span class="w"> </span>citrix
