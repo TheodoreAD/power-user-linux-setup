@@ -171,6 +171,16 @@ no venv — is unchanged and is the part that actually matters; only the version
 Python rather than the system one. That satisfies the floor either way, but it means the floor is
 set by one run only, and that wording was wrong in three files before it was checked.]
 
+[PITFALL: neither container base image this repo targets ships a Python — not `ubuntu:24.04`, and
+not `mcr.microsoft.com/devcontainers/base:ubuntu-24.04` either, which is the surprising one. What
+provides `python3` in a container is `uv_python_set_default`'s symlink, and that is load-bearing
+beyond the preflight: five `version_cmd` entries in setup.toml (atuin, glab, helm, tilt,
+jetbrains-toolbox) pipe a release JSON through a bare `python3`, and none of those packages is
+excluded by the container tag set. Verified in a Python-less image: helm's version_cmd fails before
+`uv python install --default` and returns 4.2.4 after. So turning that setting off — documented as
+"leave python/python3 fully system/apt-owned", which sounds harmless — breaks those five in a
+container while changing nothing on a real Ubuntu. Recorded next to the setting itself.]
+
 [PITFALL: the stock `ubuntu:24.04` _docker_ image has no Python at all — zero python packages, no
 binary anywhere on the filesystem, and `python3` is not in `ubuntu-minimal`'s dependencies. A real
 Ubuntu install always has one (cloud-init, unattended-upgrades and the Pro client are Python, and

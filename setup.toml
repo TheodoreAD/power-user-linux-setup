@@ -250,6 +250,13 @@ uv_python_extra = ["3.11", "3.12", "3.13"]
 # than an absolute shebang (most system tooling uses absolute `#!/usr/bin/python3` and is
 # unaffected either way — see docs/python.md). Set to false to leave python/python3 fully
 # system/apt-owned.
+#
+# One coupling to know about before turning it off: several `version_cmd` entries below (atuin,
+# glab, helm, tilt, jetbrains-toolbox) pipe a release JSON through a bare `python3`. On a real
+# Ubuntu that falls back to /usr/bin/python3 and nothing changes. In a *container* it does not —
+# neither `ubuntu:24.04` nor `mcr.microsoft.com/devcontainers/base:ubuntu-24.04` ships a Python at
+# all, and this symlink is the only thing providing one (verified: helm's version_cmd works in a
+# Python-less image once uv has run with --default, and cannot without it).
 uv_python_set_default = true
 # Whether bootstrap.sh installs the shared repo-tasks tool (brings inv/invoke with it) instead of
 # bare invoke — this is only the *unattended* default (a curl-piped or scripted run, no TTY on
