@@ -143,6 +143,21 @@ whose `testpaths` named a `tests/unit/` the repo hadn't created yet sent pytest'
 into a second `tests/` tree and broke collection outright, exit 2 rather than the documented
 warning.
 
+**Two operations share these words and take opposite answers.** Everything above is about _pulling_
+a file from a source outside the repo, where the surprise is an upstream bump nobody chose.
+**Generating** a file from the repo's own code — a docs table rendered from a constant in `tasks/`,
+a schema emitted from a model — has no upstream and no bump: generator and output land in the same
+commit. That one belongs **in the quality gate, early**, ahead of the linters and formatters so they
+format what was just written, and the result is committed by whoever ran it. Neither is ever
+gitignored.
+
+**No CI job may commit a generated file back to a branch.** Not `main`/`master`, not a release,
+support, develop or feature branch — a throwaway branch is the only acceptable target. Auto-commit
+turns a reviewed change into an unreviewed one and rewrites the branch under whoever is working on
+it. If CI should care, it runs the generator and **fails on a diff** rather than committing one.
+Deleted from `power-user-linux-setup`'s `devcontainer.yml` 2026-09-01, where a
+`git-auto-commit-action` step pushed a regenerated docs block straight to `master`.
+
 ### Unexplained git/file state in a working tree
 
 This user runs parallel sessions on the same repos, so an unrecognized commit, diff, or untracked

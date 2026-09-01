@@ -867,6 +867,45 @@ The clause deliberately extends the existing section rather than opening one of 
 "Admitting a new rule" criterion 2 — the trigger (regenerating from a canonical source) is
 identical, and only the "tested" half of the existing sentence is being sharpened.
 
+### Pull versus generate, and the CI auto-commit prohibition
+
+Added 2026-09-01, from the user's own statement of the rule while reviewing this repo's
+`devcontainer.yml`: _"docs generation/regeneration must be a task, ideally invoke if possible, that
+may produce changes only on the dev machine, before ci. this task must be run as part of the
+precommit chain, ideally early to allow linters and formatters to do their work... we do NOT want
+anything to autocommit on our feature, release, support, develop, main/master or any other
+non-throwaway, non-source-code branch."_
+
+**It reads as a reversal of the section it sits in and is not one.** The existing rule says
+regeneration is "never auto-wired into routine `fix`/`check`/`precommit` runs"; this one says
+generation belongs in precommit. They are compatible because the words cover two different
+operations, which the section had not distinguished:
+
+|                | pull                                          | generate                            |
+| -------------- | --------------------------------------------- | ----------------------------------- |
+| source         | outside the repo (`repo-tasks`' `pytest.ini`) | this repo's own code                |
+| what can shift | an upstream bump nobody chose                 | nothing — same commit as its input  |
+| so             | deliberate, standalone, reviewed              | early in the gate, output committed |
+
+The existing rule's own evidence above is entirely a pull (`inv configs.pull` into `scaffoldapy`),
+and its stated rationale — "routine work silently pulling in an upstream bump" — has no referent
+when the generator's input is a constant three files away. Distinguishing them is what makes both
+admissible; leaving the section undistinguished would have left two rules giving opposite advice
+under one trigger, which the admission criteria call out as a measured driver of degraded adherence.
+
+The CI half came from finding the concrete case. `devcontainer.yml` had a `docs` job running
+`inv devcontainer.render-docs` followed by `stefanzweifel/git-auto-commit-action@v7` with
+`file_pattern: docs/dev-container.md`; `actions/checkout@v4` with no `ref:` plus the job's own
+`if: github.ref == 'refs/heads/master'` meant it committed and pushed to `master`. It had never run
+— the workflow is `workflow_dispatch`-only and `gh run list --workflow devcontainer.yml` returned
+`[]` — so this was caught before it ever fired. Deleted rather than converted, with the shared
+"generate early in precommit" mechanism filed for `repo-tasks`, which owns `quality.precommit`.
+
+Worth noting for anyone re-reading that workflow: the auto-commit targeted `master` precisely
+because the file is **source**, not build output. The repo's other publish path
+(`publish_on_push.yml`) builds the docs site and pushes it to the `gh-pages` branch, which is the
+correct shape and is untouched by this rule.
+
 ## About to commit
 
 Admitted 2026-08-25, from `plans/2026-08-23-git-hooks-for-quality-gate.md`'s measurement. A
