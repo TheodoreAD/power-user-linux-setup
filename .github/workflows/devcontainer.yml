@@ -13,8 +13,10 @@ on:
   # Intentionally disabled for now (workflow_dispatch-only) while this pipeline is still under
   # active development — repeated pushes to master would otherwise trigger a build/smoke-test on
   # every commit. Re-enable by uncommenting the block above once it's been exercised a few times
-  # via `gh workflow run devcontainer.yml` and is trusted to run unattended. See
-  # plans/2026-08-08-devcontainer-pipeline.md.
+  # via `gh workflow run devcontainer.yml` and is trusted to run unattended. Note what that costs
+  # consumers meanwhile: `publish-stable` below is the only thing that moves the `stable` tag, so
+  # dispatch-only means `stable` advances by hand and can lag `master` indefinitely — documented
+  # in docs/dev-container.md, "Why `stable`, not `master`/`HEAD`".
 
 permissions:
   contents: read
@@ -31,10 +33,41 @@ jobs:
           imageName: ghcr.io/theodoread/power-user-linux-setup-devcontainer
           push: never
           runCmd: |
-            inv --list
-            command -v rg
-            command -v fzf
-            command -v gh
+            set -eu
+            # `set -eu` is load-bearing: this block is handed to one `sh -c`, which reports only
+            # its LAST command's status, so without it every check but the final one could fail
+            # unnoticed — the repo's own "clean output is not proof, the exit code is" rule, in
+            # its own CI.
+            #
+            # `inv verify.all` already ran during the build, as the last step of `inv setup`'s
+            # packages phase, and invoked every package it installed. What it cannot check is
+            # this context: a shell that reads none of PULSE's config, which is what a
+            # postCreateCommand, a Docker RUN layer and this runCmd all are. So each block below
+            # names the shell it asserts about, mirroring docs/dev-container.md's "Which shell
+            # finds which tool" table — the promise that has had no test.
+
+            # 1. apt-installed binaries land in /usr/bin and need PATH from nobody.
+            for tool in rg fzf gh jq eza kubectl; do
+              command -v "$tool" >/dev/null || { echo "not on PATH: $tool" >&2; exit 1; }
+            done
+
+            # 2. Everything else reaches PATH through [packages.zsh-path]'s zshenv, which *every*
+            #    zsh reads — no login or interactive shell needed. `go` and `cargo` are executed
+            #    rather than located: go is a symlink into ~/.local/share/go and resolves GOROOT
+            #    from its own path (which setup.toml's verify_cmd cannot prove, since it calls the
+            #    absolute path), and rustup's shims exit 1 unless RUSTUP_HOME/CARGO_HOME are set.
+            zsh -c 'set -eu; for tool in inv uv dprint fd bat gofmt; do command -v "$tool" >/dev/null || { echo "not on PATH under zsh: $tool" >&2; exit 1; }; done'
+            zsh -c 'inv --list' >/dev/null
+            zsh -c 'go version'
+            zsh -c 'helm version'
+            zsh -c 'cargo --version'
+
+            # 3. node is reachable only once nvm.sh is sourced, which an interactive login shell
+            #    does through Oh My Zsh's nvm plugin and nothing else does. `skills` is the global
+            #    npm package whose bare call exited 127 ~90% of the way through an unattended bake
+            #    before node.nvm_command() existed; this is the assertion that would have caught it.
+            zsh -lic 'node --version'
+            zsh -lic 'command -v skills'
 
   publish-stable:
     needs: smoke-test
