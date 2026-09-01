@@ -2459,9 +2459,15 @@ then <code>inv setup</code> with <code>PULSE_EXCLUDE_TAGS</code> resolved from <
 <code>postCreateCommand</code> runs whatever&rsquo;s currently on <code>master</code>, including anything broken mid-commit.
 <code>stable</code> is a git tag that CI (<code>.github/workflows/devcontainer.yml</code>) only force-moves forward when a
 build/smoke-test against <code>.devcontainer/devcontainer.json</code> passes — &ldquo;up to date&rdquo; without ever
-running untested instructions. That workflow is currently <code>workflow_dispatch</code>-only while under
-active development (see the workflow file for the re-enable note); until it&rsquo;s live, pin <code>--ref</code> to a
-specific commit or branch you&rsquo;ve verified yourself, not <code>stable</code>.</p>
+running untested instructions.</p>
+<p>The tag exists as of 2026-09-01, on that workflow&rsquo;s first-ever run. It had never executed before
+then, so <code>stable</code> did not resolve at all and the snippet above returned 404 to anyone who copied it.
+The workflow stays <code>workflow_dispatch</code>-only for now (see the file for the re-enable note), which
+means <strong><code>stable</code> moves only when someone runs it by hand</strong> — it is a reviewed marker rather than a
+moving head, and it can lag <code>master</code> by however long nobody has dispatched it.</p>
+<p><strong>There is no image and no registry.</strong> Delivery is entirely git: one script fetched from
+<code>raw.githubusercontent.com</code> at a ref, and a shallow clone of this repo at the same ref. The
+<code>imageName</code> in the smoke-test job carries <code>push: never</code> and publishes nothing.</p>
 <p><strong>Constraint:</strong> this only works on apt-based (Debian/Ubuntu-family) images — <code>bootstrap.sh</code>&rsquo;s
 self-heal preamble and every <code>[packages.*]</code> <code>apt</code>/<code>apt-repo</code>/<code>deb-github</code>/<code>deb-url</code> method assume
 <code>apt</code>/<code>dpkg</code>. Not a bug, just the tradeoff for reusing the exact same tasks bare-metal installs do.</p>
