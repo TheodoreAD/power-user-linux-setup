@@ -109,7 +109,8 @@ Adjacent, outside `docs/`:
 - `mkdocs.yml`'s "figure out how CI works, implement, document" TODO and its dead
   `mkdocs-deploy-gh-pages` link were replaced by what CI actually does. The other ten TODOs are live
   intentions of the author's (theme tuning, extension research) and were left alone.
-- Verified with `inv docs.build` — `No issues found`, strict.
+- Verified with `inv docs.build` — `No issues found`, strict. (Weaker than it sounds; see the
+  version pitfall at the end of this plan.)
 
 [PITFALL: writing that list turned up a gap the docs were accurately describing: `deps_check` ran
 inside `quality.check` while `inv deps.check` did not exist here — `tasks/__init__.py` published
@@ -332,12 +333,33 @@ reading the files afterwards, and confirmed fixed in the built HTML rather than 
 mechanical edit across 38 files needs an eyes-on pass over the result; the gate does not have one
 for this.]
 
+[PITFALL: **a green `inv docs.build` did not mean a green deploy, and the Pages job proved it** on
+the very last push of this plan. `docs/tasks.md`'s `certs.install` row carries the text `[certs]`
+from its docstring; markdown reads a bare bracket as a link reference, and strict mode aborts on one
+it cannot resolve. It passed locally and failed CI because **one tool is declared twice**:
+`requirements-docs.txt` pins zensical 0.0.44 for CI, while `[packages.zensical]` installs it
+unpinned as a `uv-tool`, so this machine was building on 0.0.57. Fixed in the generator —
+`util.markdown_table` now escapes brackets alongside pipes, since a generated cell is text and never
+markup — and the mismatch itself is documented in `CONTRIBUTING.md` with the command that checks
+against CI's exact version without changing what is installed:
+`uvx zensical==$(cut -d= -f3 requirements-docs.txt) build --strict`. Both jobs green afterwards.
+
+Three of this plan's four landed sections claimed verification by a strict build. All three were
+true and none of them proved as much as the sentence implied — which is the same shape as the opener
+sweep above, a check that passes on a thing that is wrong.]
+
 ## Still open
 
 Nothing from the seven-step direction below. What the review named and this plan did not settle:
 problem 7 (search carrying all cross-cutting navigation, since zensical has no `tags` plugin), and
 the ten remaining `mkdocs.yml` TODOs, which are the author's own open intentions rather than
 defects.
+
+[DEFERRED: **pin zensical in one place.** The two declarations should not be able to drift — either
+`[packages.zensical]` carries the same pin as `requirements-docs.txt`, or CI installs the tool the
+way this machine does. Both are one-line changes and each has a cost (a downgrade on this machine,
+or an unpinned CI build), so it is a decision rather than a fix, and the documented `uvx` command
+closes the hole meanwhile.]
 
 ## Recommended direction
 
