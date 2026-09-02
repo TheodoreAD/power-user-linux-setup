@@ -43,19 +43,11 @@ def print_exclude_tags(c: Context):
 
 
 def _tag_table() -> str:
-    # Pre-padded to dprint's own GFM table style (column-aligned, `-`-padded separator row) so the
-    # generated block is already a fixed point of `inv quality.fix`'s dprint pass — otherwise
-    # dprint would re-pad it on every quality.fix run, which render-docs would then see as changed
-    # and "fix" back to unpadded, forever disagreeing with dprint about the "idempotent" output.
-    headers = ("Tag", "Excludes")
-    rows = [(f"`{tag}`", desc) for tag, desc in _TAG_DESCRIPTIONS]
-    widths = [max(len(headers[i]), *(len(row[i]) for row in rows)) for i in range(len(headers))]
-
-    def fmt_row(cells: tuple[str, ...]) -> str:
-        return "| " + " | ".join(cell.ljust(width) for cell, width in zip(cells, widths, strict=True)) + " |"
-
-    sep_row = "| " + " | ".join("-" * width for width in widths) + " |"
-    return "\n".join([fmt_row(headers), sep_row, *(fmt_row(row) for row in rows)])
+    # util.markdown_table pre-pads to dprint's own GFM style, which is what keeps this block a
+    # fixed point of `inv quality.fix` rather than something dprint and render-docs rewrite past
+    # each other forever. That padding logic used to live here and now has a second consumer
+    # (tasks/catalog.py), so it moved rather than being copied.
+    return util.markdown_table(("Tag", "Excludes"), [(f"`{tag}`", desc) for tag, desc in _TAG_DESCRIPTIONS])
 
 
 def _generated_content() -> str:

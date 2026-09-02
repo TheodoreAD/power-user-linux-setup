@@ -321,6 +321,27 @@ def ok_label(ok: bool) -> str:
     return "ok" if ok else "MISSING"
 
 
+def markdown_table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> str:
+    """A GFM table, pre-padded to dprint's own column-aligned style.
+
+    The padding is not cosmetic. Anything a render task writes into a committed `docs/*.md` is
+    reformatted by `inv quality.fix`'s dprint pass, and the render task then sees its own output as
+    changed and rewrites it — the two disagree forever about the "idempotent" result unless the
+    generator emits what dprint would. Emitting the padded form makes the block a fixed point of
+    both.
+
+    A `|` inside a cell is escaped, since it would otherwise open a column that isn't there.
+    """
+    escaped = [[cell.replace("|", "\\|") for cell in row] for row in rows]
+    widths = [max([len(header), *(len(row[i]) for row in escaped)]) for i, header in enumerate(headers)]
+
+    def fmt(cells: Sequence[str]) -> str:
+        return "| " + " | ".join(cell.ljust(width) for cell, width in zip(cells, widths, strict=True)) + " |"
+
+    separator = "| " + " | ".join("-" * width for width in widths) + " |"
+    return "\n".join([fmt(headers), separator, *(fmt(row) for row in escaped)])
+
+
 def is_wsl() -> bool:
     """True if running under any WSL version (1 or 2) — see tasks/wsl.py for version-specific
     checks and the rest of the WSL-aware tasks."""

@@ -68,6 +68,24 @@ def test_ensure_block_text_html_style_is_idempotent_when_unchanged():
     assert second == first
 
 
+def test_markdown_table_pads_columns_to_the_widest_cell():
+    # The padding is what makes a generated table a fixed point of dprint's own formatter; an
+    # unpadded table would be re-padded by `inv quality.fix` and rewritten by the next render.
+    table = util.markdown_table(("A", "Bee"), [("longer", "x")])
+    assert table == "| A      | Bee |\n| ------ | --- |\n| longer | x   |"
+
+
+def test_markdown_table_escapes_pipes_in_cells():
+    # An unescaped `|` opens a column that isn't there, silently shifting every later cell.
+    table = util.markdown_table(("Cmd",), [("a | b",)])
+    assert "a \\| b" in table
+    assert table.splitlines()[-1].count("|") == 3  # the two delimiters plus the escaped one
+
+
+def test_markdown_table_handles_no_rows():
+    assert util.markdown_table(("A", "B"), []) == "| A | B |\n| - | - |"
+
+
 def test_remove_block_text_takes_out_only_the_named_block():
     text, _ = util.ensure_block_text("hand-written line\n", "mine", "exported=1")
     text, _ = util.ensure_block_text(text, "theirs", "other=2")
