@@ -39,13 +39,22 @@ a player.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **which run is the recording of.** Three candidates, and they tell different
-stories. (a) `./bootstrap.sh` alone — 30 seconds, honest, and undersells the project. (b) The full
-`inv setup` under `CONTAINER_EXCLUDE_TAGS` — the real story, but ten-plus minutes of apt output that
-has to be compressed hard to be watchable. (c) `PULSE_DRY_RUN=1 inv setup` — fast, deterministic,
-shows the five-phase structure, and shows nothing actually being installed, which is either honest
-framing or a bait-and-switch depending on how it is labelled. Recommendation is (b), compressed,
-with (a) as a fallback if (b) cannot be got under about 90 seconds.]
+[DECISION: **the full `inv setup` under `CONTAINER_EXCLUDE_TAGS`, with the long waits skipped over,
+settled 2026-09-02.** The alternatives were `./bootstrap.sh` alone (30 seconds, honest, undersells
+the project) and `PULSE_DRY_RUN=1 inv setup` (fast and deterministic, but shows nothing actually
+installed, which needs labelling as a dry run or it is a bait-and-switch). The real run wins: it is
+the only one where what the viewer sees is what the command did.
+
+The compression is the whole engineering problem, and `asciinema rec --idle-time-limit <seconds>` is
+the mechanism — it caps any gap between output events, so a four-minute `apt` wait becomes a
+one-second pause **without altering a byte of what was recorded.** That is why this decision and the
+capture-real-output pitfall below are the same decision: no other tool can shorten a wait without
+re-authoring the frames.
+
+Two things to get right when it is built. The cap has to be tuned against a real run rather than
+guessed — too aggressive and the phase banners flash past unreadably, too loose and the recording is
+still minutes long; and a long wait collapsed to nothing can read as though the step were instant,
+so consider whether the compressed gaps want a visible cue rather than silently vanishing.]
 
 [NEEDS CLARIFICATION: **whether the front page gets one recording or one per use-case card.** The
 four cards — full workstation, headless, dev container, WSL2 — are the page's existing structure,
