@@ -14,13 +14,13 @@ not vendor material) and `tasks/allowlist.py` (`inv allowlist.*`).
 
 ```mermaid
 flowchart LR
-    tools["installed CLIs: setup.toml plus the base system"] --> extract
-    extract["extract, deterministic"] --> help[("captured --help text")]
-    help --> classify["classify, headless claude -p"]
-    classify --> rules[("read_only / write / dangerous, per node and per flag")]
-    rules --> review["review, the human gate"]
-    review --> apply["apply, deterministic"]
-    apply --> settings[("~/.claude/settings.json: read_only allowed, the rest ask")]
+    tools["installed CLIs<br/>setup.toml plus the base system"] --> extract
+    extract["<b>extract</b><br/>deterministic"] --> help[("captured --help text")]
+    help --> classify["<b>classify</b><br/>headless claude -p"]
+    classify --> rules[("read_only / write / dangerous<br/>per node and per flag")]
+    rules --> review["<b>review</b><br/>the human gate"]
+    review --> apply["<b>apply</b><br/>deterministic"]
+    apply --> settings[("~/.claude/settings.json<br/>read_only allowed, the rest ask")]
 ```
 
 `extract` is skipped for a tool whose `--version` has not changed, and `classify` for a node whose

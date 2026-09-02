@@ -31,15 +31,15 @@ What a single `[packages.<name>]` entry does to a shared file it writes into, on
 
 ```mermaid
 flowchart TD
-    run["inv zsh.configure"] --> applies{"package applies to this machine?"}
-    applies -- no --> present{"its block is present?"}
-    present -- yes --> remove["remove the block"]
+    run["inv zsh.configure"] --> applies{"package applies<br/>to this machine?"}
+    applies -- no --> present{"its block<br/>is present?"}
+    present -- yes --> remove["remove the block<br/>an excluded package leaves nothing behind"]
     present -- no --> nothing["nothing to do"]
-    applies -- yes --> found{"opening marker found?"}
-    found -- no --> append["append the block at the end"]
-    found -- yes --> same{"content already matches?"}
+    applies -- yes --> found{"opening marker<br/>found?"}
+    found -- no --> append["append the block<br/>at the end of the file"]
+    found -- yes --> same{"content already<br/>matches?"}
     same -- yes --> leave["leave it untouched"]
-    same -- no --> replace["replace between the markers"]
+    same -- no --> replace["replace between the markers<br/>everything outside them is untouched"]
 ```
 
 "Applies to this machine" is the tag question from the section above: a package excluded by
@@ -163,16 +163,16 @@ a path is sorted into them — `tasks/deploy.py`'s `classify()`, which only ever
 ```mermaid
 flowchart TD
     p["a managed path"] --> exists{"exists on disk?"}
-    exists -- no --> absent["absent: create it, no prompt"]
+    exists -- no --> absent["<b>absent</b><br/>create it, no prompt"]
     exists -- yes --> known{"in the manifest?"}
     known -- no --> match{"matches its repo source?"}
-    match -- yes --> clean["clean: already matches, write nothing"]
-    match -- no --> unknown["unknown: diff, then ask before writing"]
+    match -- yes --> clean["<b>clean</b><br/>already matches, write nothing"]
+    match -- no --> unknown["<b>unknown</b><br/>never assumed ours — diff, then ask"]
     known -- yes --> same{"still what PULSE wrote?"}
-    same -- no --> dirty["dirty: edited since, diff then ask"]
+    same -- no --> dirty["<b>dirty</b><br/>edited since — diff, then ask"]
     same -- yes --> current{"repo source moved on?"}
     current -- no --> clean
-    current -- yes --> stale["stale: safe redeploy, no prompt"]
+    current -- yes --> stale["<b>stale</b><br/>safe redeploy, no prompt"]
 ```
 
 The `unknown` branch is why a machine set up before the manifest existed does not prompt for
@@ -346,14 +346,14 @@ reboot — nothing depends on it being immediate.
 ```mermaid
 flowchart TD
     start(["inv setup"]) --> wsl{"util.is_wsl()"}
-    wsl -- yes --> delegate["inv wsl.install: its own tag exclusions and DNS handling"]
+    wsl -- yes --> delegate["inv wsl.install<br/>its own tag exclusions, DNS handling"]
     wsl -- no --> systemd{"util.has_systemd()"}
-    systemd -- yes --> p1["Phase 1, system: locale, curlrc, DNS"]
+    systemd -- yes --> p1["<b>Phase 1 — system</b><br/>locale, curlrc, DNS"]
     systemd -- no --> p2
-    p1 --> p2["Phase 2, packages: apt, Docker, debs, tools, AppArmor, Python, Node, skills, verify.all"]
-    p2 --> p3["Phase 3, shell: Oh My Zsh, zsh blocks, p10k baseline, default shell"]
+    p1 --> p2["<b>Phase 2 — packages</b><br/>apt, Docker, debs, tools, AppArmor,<br/>Python, Node, skills, verify.all"]
+    p2 --> p3["<b>Phase 3 — shell</b><br/>Oh My Zsh, zsh blocks, p10k baseline, default shell"]
     p3 --> desktop{"util.has_systemd()"}
-    desktop -- yes --> p4["Phase 4, desktop: Nerd Fonts, monospace font config"]
+    desktop -- yes --> p4["<b>Phase 4 — desktop</b><br/>Nerd Fonts, monospace font config"]
     desktop -- no --> done
     p4 --> done(["next steps"])
     delegate --> done
