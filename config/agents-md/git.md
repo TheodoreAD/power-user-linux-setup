@@ -124,6 +124,27 @@ implementing it; a bug fix found mid-implementation folds into the commit introd
 behavior, never broken-then-fixed. Granularity is settled — ask only _whether_ to commit, never how
 to split.
 
+**Every commit has a body, and the body says _why_.** The subject says what changed; the body says
+what it is for, what it beat, and what it cost. An agent reading `git log` months later has no other
+access to that — and on this machine it cannot go and look instead, because parallel sessions share
+one working tree and checking out an old commit moves a tree somebody else is working in. `git log`
+and `git show` are the only reads that are safe by construction, which makes the body the only
+channel rather than the convenient one. A doc or plan commit is not exempt, and is the case where
+"the file already says it" is not merely weak but backwards: `git log` does not show the file, and
+`plan-docs` retires a plan by **deleting** it, so the file is deliberately temporary while its
+commit message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone satisfies `%b`,
+which is exactly how two bare commits passed unnoticed in the session that prompted this rule.
+
+It is a floor, not a ceremony: a formatting fix's why is one clause, and demanding a paragraph for
+it teaches padding, which is worse than a bare subject because padding reads as reasoning. **Nothing
+enforces it** — a `commit-msg` hook is the first thing anybody reaches for and is refused for the
+same reason every other behind-the-agent's-back mechanism is (see "Proposing an enforcement
+mechanism"); that call was re-measured 2026-09-02 and the CI shape it would have caught has stopped
+occurring. **One exception, named so it is not discovered as an inconsistency:** a plan filed into
+the plans store commits as `<repo>: <what it is>` with no body, because a filed plan _is_ its own
+description and the commit is only its delivery. `gh pr create --body` and `gh issue comment` get
+the full rule, not the exception.
+
 When a quality gate run for unrelated work fixes formatting in a file you didn't mean to touch, keep
 the fix as its own tiny commit — reverting it just schedules the same CI failure for someone else to
 rediscover. Revert an incidental change only when the repo's CI would not enforce it (a stray
