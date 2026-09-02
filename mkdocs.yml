@@ -99,18 +99,25 @@ theme:
 # zensical.toml-only feature involved) by building a throwaway multi-section test site.
 nav:
   - Home: index.md
-  - How it works: configuration.md
+  # "How it works" is a group rather than a single page: configuration.md is the mechanism,
+  # packages.md is what that mechanism installs, and apt_packages.md is how each install method
+  # works. apt_packages.md sat in "Reference" until 2026-09-02, which filed core mechanism at the
+  # far right of the tab bar — see plans/2026-08-27-docs-site-usability.md.
+  - How it works:
+      - configuration.md
+      - packages.md
+      - apt_packages.md
   - Shell & desktop:
       - zsh.md
       - terminal.md
       - keybindings.md
       - shortcuts.md
-      - input_devices.md
       - screen_capture.md
       - chrome.md
       - gnome_extensions.md
       - fonts.md
       - ide.md
+      - locale.md
   - Languages & tooling:
       - python.md
       - golang.md
@@ -136,12 +143,15 @@ nav:
   - Environments:
       - wsl.md
       - dev-container.md
-  - Reference:
-      - apt_packages.md
+  # Last on purpose, and named for what the pages are about rather than for whose machine they
+  # came from: hardware this setup has been made to work with, and third-party apps with their own
+  # install quirks. Least general, so least visible — but on the site and indexed by search, which
+  # is how these get found (searching "kinesis" lands on input_devices' own section).
+  - Hardware & vendor apps:
+      - input_devices.md
+      - troubleshooting.md
       - citrix.md
       - webex.md
-      - locale.md
-      - troubleshooting.md
 
 markdown_extensions:
   # https://squidfunk.github.io/mkdocs-material/extensions/pymdown/
