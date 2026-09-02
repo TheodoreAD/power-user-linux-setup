@@ -1,226 +1,59 @@
 # AI tools
 
-Tools for running local LLMs, agentic coding, and getting more out of hosted assistants (Claude,
-Copilot).
+What PULSE does for coding agents. The short version: it installs one agent, and it writes the
+instructions and skills **every** agent reads, in the cross-tool locations they all look at — so
+whichever agent you choose, it starts on this machine already knowing how this machine works.
 
----
+You choose the tools. This repo's job is to make the machine good for whichever ones you choose.
 
-## Local model runner — Ollama
+## What PULSE installs
 
-<https://ollama.com>
+| Tool               | How                                                                                            |
+| ------------------ | ---------------------------------------------------------------------------------------------- |
+| Claude Code        | `[packages.claude-code]` — the native self-updating installer                                  |
+| Claude desktop app | `[packages.claude-desktop]` — a community Debian repackage, on machines with a desktop (`gui`) |
 
-The de-facto standard for running open-weight LLMs locally. MIT-licensed, exposes an
-OpenAI-compatible API on `localhost:11434`, and integrates with every tool in this doc.
+That is the whole list, and it is deliberately short: an agent is a personal choice, and installing
+one is a single command in every case. See [Package catalog](packages.md) for everything else this
+repo installs, and `contributing/ai-tooling.md` in the repo for install notes on the other agents,
+editor extensions and local model runners — Ollama, Aider, Goose, Gemini CLI, Continue.dev, Cline,
+Copilot, Cursor, Windsurf and Tabby.
 
-```shell
-curl -fsSL https://ollama.com/install.sh | sh
+## The part that is not Claude-specific
 
-ollama pull qwen2.5-coder:7b    # fast autocomplete / chat
-ollama pull qwen2.5-coder:32b   # stronger reasoning, needs ~20 GB VRAM
-ollama pull codestral            # Mistral's coding model, strong on completions
-ollama pull deepseek-coder-v2    # top open-weight coding model as of mid-2026
-ollama serve                     # starts the API server (auto-started on install)
-```
+Two conventions do the work, and neither belongs to any one vendor:
 
-**Recommended models by use case:**
+- **`AGENTS.md`** — the cross-tool instructions file. PULSE assembles `~/AGENTS.md` from the
+  fragments in `config/agents-md/` and deploys it once.
+- **`.agents/skills/`** — the cross-tool location for Agent Skills. PULSE installs every skill it
+  declares into `~/.agents/skills/`, once.
 
-| Use case            | Model                                          |
-| ------------------- | ---------------------------------------------- |
-| Autocomplete (fast) | `qwen2.5-coder:7b`                             |
-| Chat / refactoring  | `qwen2.5-coder:32b` or `deepseek-coder-v2`     |
-| Completions quality | `codestral` (Mistral, free for non-commercial) |
-| General assistant   | `llama3.3` or `mistral-small3.2`               |
+Each agent then reads that same content from wherever it happens to look:
 
----
+| Agent          | Reads the instructions from                          | Finds the skills                        |
+| -------------- | ---------------------------------------------------- | --------------------------------------- |
+| Claude Code    | `~/.claude/CLAUDE.md` → `~/AGENTS.md`                | `~/.claude/skills` → `~/.agents/skills` |
+| Codex          | `~/.codex/AGENTS.md` → `~/AGENTS.md`                 | —                                       |
+| GitHub Copilot | `~/.copilot/copilot-instructions.md` → `~/AGENTS.md` | via the `skills` CLI                    |
+| Gemini CLI     | `~/.gemini/GEMINI.md` → `~/AGENTS.md`                | —                                       |
 
-## CLI coding agents
+Every arrow is a symlink, so there is exactly one file to edit and no copies to keep in sync.
 
-### Aider
+**A link is only created when its agent's own directory already exists** — the absence of
+`~/.codex/` is how PULSE knows Codex is not installed here, so nothing is created for it. Install an
+agent later and `inv deploy.all --name agents-md` links it in; `inv verify.all` then checks each
+link resolves to the file this repo deploys, rather than to some stale hand-made copy.
 
-<https://aider.chat>
+!!! note
 
-Terminal-native, git-first coding agent. Maps the codebase, edits files across multiple paths, and
-auto-commits every accepted change with a conventional message. Works with any LLM provider or a
-local Ollama model.
+    Reading the file is not the same as PULSE installing or configuring the agent. Only Claude Code
+    gets all three today — installed, instructed, and skills wired natively. The others get the
+    instructions if they are present, which is the cheap and useful part.
 
-```shell
-pip install aider-install && aider-install   # installs aider into its own venv
+## Going further
 
-# With Claude (recommended for complex tasks)
-aider --model claude-sonnet-4-6
-
-# Fully local via Ollama
-aider --model ollama/qwen2.5-coder:32b
-
-# Add files to the context explicitly
-aider src/main.go src/handler.go
-```
-
-### Claude Code
-
-<https://claude.ai/code>
-
-Anthropic's official terminal agent. Strongest at large-scope refactors, architecture reasoning, and
-multi-file changes. Requires an Anthropic API key or Pro/Max subscription.
-
-```shell
-curl -fsSL https://claude.ai/install.sh | bash   # native installer, auto-updates itself
-claude
-```
-
-PULSE installs it this way too — `[packages.claude-code]` in `setup.toml`, via `inv tools.install` —
-so on this machine you generally don't need the command above at all.
-(`npm install -g @anthropic-ai/claude-code` still works but is the legacy path.)
-
-See the [Claude Code docs](https://docs.anthropic.com/en/docs/claude-code) for MCP server setup,
-hooks, and slash commands. For what this repo specifically does to make it work well on this machine
-(sudo/ssh without a TTY, the global `~/AGENTS.md` symlinked as `CLAUDE.md`,
-`AGENTS.md`/`.agents/skills` scaffolding for any project), see [claude-code.md](claude-code.md).
-
-### Goose
-
-<https://goose-docs.ai>
-
-Editor-agnostic autonomous agent (Apache-2.0, Linux Foundation AI). Goes beyond code: can run shell
-commands, manage files, call APIs, and execute test suites. Works offline with Ollama.
-
-```shell
-curl -fsSL https://github.com/block/goose/releases/latest/download/install.sh | sh
-# or: pip install goose-ai
-
-goose session start              # interactive REPL
-goose run --recipe my-recipe.yaml  # automated workflow
-```
-
-Connects to Zed, JetBrains, or VS Code as an ACP server. Choose Goose when you need an agent that
-works outside VS Code or need repeatable "recipes" for recurring workflows.
-
-### Gemini CLI
-
-<https://github.com/google-gemini/gemini-cli>
-
-Google's open-source terminal agent. Free tier is generous (1,500 requests/day with a personal
-Google account), making it useful for high-volume or exploratory tasks where you don't want to burn
-paid credits.
-
-```shell
-npm install -g @google/gemini-cli
-gemini
-```
-
----
-
-## IDE extensions
-
-### Continue.dev
-
-<https://continue.dev>
-
-The most editor-portable option: same config drives both VS Code and JetBrains extensions. Supports
-autocomplete, inline edit, and chat. Routes to any backend — Ollama, Claude, OpenAI, or a
-self-hosted Tabby server.
-
-```shell
-# VS Code
-code --install-extension Continue.continue
-
-# JetBrains: install "Continue" from the plugin marketplace
-```
-
-Config lives at `~/.continue/config.json`. Point at a local Ollama model:
-
-```json
-{
-  "models": [{
-    "title": "Qwen2.5-Coder 32B",
-    "provider": "ollama",
-    "model": "qwen2.5-coder:32b"
-  }],
-  "tabAutocompleteModel": {
-    "title": "Qwen2.5-Coder 7B",
-    "provider": "ollama",
-    "model": "qwen2.5-coder:7b"
-  }
-}
-```
-
-### Cline
-
-<https://github.com/cline/cline>
-
-VS Code extension that gives you an autonomous coding agent in a side panel. Bring-your-own-key:
-Claude, GPT-4o, local Ollama, or any OpenAI-compatible endpoint. Cline CLI 2.0 (2026) supports
-headless and parallel workflows.
-
-```shell
-code --install-extension saoudrizwan.claude-dev
-```
-
----
-
-## Hosted assistants
-
-### GitHub Copilot
-
-<https://github.com/features/copilot>
-
-The most widely-used paid assistant (~42% market share). Tight IDE integration and a free tier (50
-agent requests + 2,000 completions/month). Pro is $10/month. Available in VS Code, JetBrains,
-Neovim, and the terminal.
-
-```shell
-# VS Code
-code --install-extension GitHub.copilot
-code --install-extension GitHub.copilot-chat
-
-# Terminal (Copilot in the CLI)
-gh extension install github/gh-copilot
-gh copilot suggest "undo last git commit"
-```
-
-### Cursor
-
-<https://cursor.sh>
-
-VS Code fork with AI woven into every layer. Market leader in AI editors ($2B ARR). Best for
-developers who want deep autocomplete and Composer (multi-file agent) without leaving the editor.
-Linux `.deb` / AppImage available.
-
-### Windsurf
-
-<https://codeium.com/windsurf>
-
-Another VS Code fork from Codeium. Notable for "Cascade" — a flow-based multi-step agent that
-maintains a codemap. Free tier available. Linux `.deb` available.
-
----
-
-## Self-hosted inference server — Tabby
-
-<https://tabby.tabbyml.com>
-
-Self-hosted completion server. Runs on your own hardware, exposes an OpenAI-compatible API, and
-serves any GGUF model. Right choice when your org has data-residency requirements or you want
-team-wide shared inference.
-
-```shell
-docker run -it \
-  --gpus all \
-  -p 8080:8080 \
-  -v ~/.tabby:/data \
-  tabbyml/tabby serve \
-    --model TabbyML/DeepseekCoder-6.7B \
-    --device cuda
-```
-
----
-
-## Recommended combinations
-
-| Scenario                          | Stack                                                                     |
-| --------------------------------- | ------------------------------------------------------------------------- |
-| Daily coding, mixed local + cloud | Copilot Pro ($10/mo) for autocomplete + Claude Code for complex refactors |
-| Fully local / air-gapped          | Ollama + Continue.dev (autocomplete) + Aider (agent)                      |
-| Team, shared inference            | Tabby server + Continue.dev on each workstation                           |
-| Autonomous tasks, offline-capable | Ollama + Goose                                                            |
-| VS Code power user                | Cline + Ollama (local) with Claude fallback                               |
+- [claude-code.md](claude-code.md) — what this machine does specifically for Claude Code: the
+  statusline, the `AGENTS.md`-over-`CLAUDE.md` convention and why `CLAUDE.md` is a symlink rather
+  than an import, skills scaffolding for a project, and the permission settings.
+- [cli-allowlist.md](cli-allowlist.md) — generating agent permission rules from the real `--help`
+  output of every CLI installed on this machine, so read-only commands stop prompting.
