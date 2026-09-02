@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-09-02
 source_repo: github.com-personal/agent-skills
 source_session: 13aa58df-3551-49b7-ac0e-0c3693bf8221.jsonl
@@ -47,12 +47,41 @@ message, and that section already owns the message's mechanics.
 > hardest for the small commits — a six-line doc edit is where the reasoning is least recoverable
 > from the diff, and where the temptation to skip it is strongest.
 
-[NEEDS CLARIFICATION: does this deserve a stated shape (subject under ~72 chars, blank line, body
-wrapped) or only "there must be a body"? The observed failure was an absent body, not a malformed
-one, so the narrow rule is what the evidence supports. A format rule would also collide with the
-existing prohibition on backticks and `$` in a double-quoted `-m` argument, which is the part that
-actually breaks things.]
+## The two questions this opened with, answered
 
-[NEEDS CLARIFICATION: is there a genuine exception? A pure formatting commit from a gate run
-("dprint reflow") is the candidate — but the existing rules already ask that one to say _why_ an
-unrelated file was touched, which is a body. Probably no exception, stated as none.]
+Both were answered by the rule that landed, independently of this plan.
+
+**No stated shape.** The rule requires a body and says nothing about subject length, wrapping or
+layout — the narrow form the evidence supports, and the one that does not collide with the existing
+prohibition on backticks and `$` inside a double-quoted `-m` argument.
+
+**One exception, and it is not the formatting commit this plan guessed at.** A gate run's formatting
+fix still owes a why, exactly as reasoned here. The real exception is a plan filed into the plans
+store, which commits as `<repo>: <what it is>` with no body because the filed plan is its own
+description and the commit is only its delivery. It is named in the rule rather than left to be
+found as an inconsistency.
+
+## What happened instead: it landed from another plan the same day
+
+This plan was filed from `agent-skills` and reached this repo through the store. By the time it was
+absorbed (2026-09-02), the rule was already live — admitted hours earlier from
+`plans/2026-09-01-every-commit-carries-a-why.md`, on a different session's evidence, and worded
+almost exactly as proposed above. It extends "About to commit" rather than taking a heading, so
+`git.md` stayed at 8 rules.
+
+Two independent sessions producing the same refusal on the same day, in different repos, is the
+substance this plan contributed. The mechanisms were **not** the same, and that is what made it
+worth migrating rather than discarding as a duplicate: the other session rationalised the omission
+from the plan file already carrying the reasoning, while this one simply scaled the message to the
+size of the diff.
+
+## Migrated to
+
+- `contributing/global-agents-md.md`, "Every commit has a body" — the second occurrence, the user's
+  verbatim refusal, and the scaled-to-the-diff tell, recorded alongside the first session's
+  different rationalisation.
+- The rule itself is `config/agents-md/git.md`, "About to commit", deployed as `~/AGENTS.md`. Not
+  written by this plan.
+
+Deliberately not migrated: the proposed wording block above, since the deployed rule supersedes it,
+and the two answered questions, since the answers are in the rule itself.
