@@ -214,6 +214,16 @@ The same holds one step later: before pushing, `git log origin/<branch>..HEAD` â
 didn't make belongs to another live session, which may still mean to amend or reorder it. Say so and
 ask before your push publishes it.
 
+**And the inverse, which is the one nothing signals: a local commit is not a private holding
+state.** Your commit sits on a shared branch in a shared clone, so any other session's `git push`
+carries it to the remote regardless of whether you were holding it for approval â€” and an ahead-count
+falling to zero reads as "someone pushed, fine" rather than as work published without the decision
+that was being waited on. Verify with `git branch -r --contains <sha>` after a fetch, never from the
+count. "I will commit but not push, and ask first" is a stated intention, not a mechanism: work that
+genuinely must be withheld has to stay off the shared branch, and otherwise the user should be told
+before the commit that the commit itself is the publishing decision. This is where the
+confidentiality rule above is sharpest, since all of it turns on a push being irreversible.
+
 ### Pushing to a personal repo's default branch
 
 Direct pushes to `main`/`master` are the norm on the user's own personal repos

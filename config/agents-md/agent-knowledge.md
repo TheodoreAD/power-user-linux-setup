@@ -25,6 +25,19 @@ keybindings) and belongs to it; **anything describing the work is a plain file a
 An existing memory entry is migrated to one of the three destinations above and deleted, not kept in
 sync.
 
+### Choosing a mechanism for agent instructions, skills, or tools
+
+The artifact vocabulary is `AGENTS.md`, Agent Skills and MCP. Anything vendor-specific is admissible
+only as **harness plumbing** — something that makes one agent work better on this machine, like a
+`settings.json`, a hook or a keybinding — and never as a **carrier** for instructions or knowledge.
+That is the same line the memory-store rule above draws for one case; this is the general form, and
+it applies before a design exists rather than after.
+
+The miss is silent and expensive in the same way: a design built on a vendor mechanism reads as
+finished and works, right up until the harness changes or a second one is onboarded, and then the
+work inside it is thrown away rather than moved. Ask which of the two a mechanism is while choosing
+it.
+
 ### Installing agent instructions and skills on this machine [needs setup.toml]
 
 `inv ai.install-skills` sets up `~`'s `.agents/skills/` and its `.claude/skills` symlink, and

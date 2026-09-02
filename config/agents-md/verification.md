@@ -45,6 +45,13 @@ the outliers, not the representative-looking one. This includes a sample you cre
 truncating your own search output turns a complete set into a sample without saying so (see
 "Viewing, searching, or editing files").
 
+**A probe you write to test a library's behaviour is such a sample, and a passing probe reads as
+confirmation.** When the suspicion is about precision, width, or any limit, the input has to be one
+that can actually fail: a `Decimal` round-trip through SQLAlchemy's SQLite dialect passed on ten
+significant digits and silently lost the value on nineteen, no warning, and the ten-digit probe read
+as "`Numeric` is fine" — one step from being written into a shared doc where nobody re-derives it.
+Choose the input from what would break, not from what is convenient to type.
+
 ### Verifying behavior in a repo with test coverage
 
 Run the test suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in `/tmp`) —

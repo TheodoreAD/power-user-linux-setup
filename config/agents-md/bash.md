@@ -51,6 +51,14 @@ cwd already is it — but after a cross-repo chain, the next call that assumes t
 (`inv`, `pytest`, a bare `rg`) either takes an absolute path or is itself a
 `cd <session repo> && …`.
 
+**`git -C <the session's own repo>` is the same mistake wearing the recommended flag**, and it is
+the commoner of the two by a wide margin: agents comply with the `cd` ban and then aim the
+directory-scoping option this rule recommends back at the repo they are already in — six times as
+often as the banned `cd` ever occurred, and in one session at 23% of all calls while that session
+typed no `cd` at all. Inside the session's own repo, run the bare command. `git -C` is for a target
+that genuinely is another repo, and a caution that outlives the cross-repo step which justified it
+is not caution any more.
+
 Run a gate or test plain — `inv quality.precommit`, `pytest` — never `> log 2>&1; echo $?` with a
 Read of the log afterwards: that turns one call into two and adds nothing the tool does not already
 give you (see "Reading a command's result"). Redirect only when the log is genuinely needed later,

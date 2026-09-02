@@ -122,6 +122,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 ## Contents
 
 - [Bash & the CLI allowlist (cluster intro)](#bash--the-cli-allowlist-cluster-intro)
+- [What this setup provisions (cluster intro, retired 2026-08-30)](#what-this-setup-provisions-cluster-intro-retired-2026-08-30)
 - [Composing a Bash call](#composing-a-bash-call)
 - [Viewing, searching, or editing files](#viewing-searching-or-editing-files)
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
@@ -144,6 +145,10 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Committing to a repo that is or might become public](#committing-to-a-repo-that-is-or-might-become-public)
 - [The permission model in force](#the-permission-model-in-force)
 - [Where durable knowledge goes](#where-durable-knowledge-goes)
+- [Choosing a mechanism for agent instructions, skills, or tools](#choosing-a-mechanism-for-agent-instructions-skills-or-tools)
+- [Unexplained git/file state in a working tree](#unexplained-gitfile-state-in-a-working-tree)
+- [Regenerating a file from a canonical source](#regenerating-a-file-from-a-canonical-source)
+- [Verifying behavior in a repo with test coverage](#verifying-behavior-in-a-repo-with-test-coverage)
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
 - [About to commit](#about-to-commit)
 - [Committing multi-part work](#committing-multi-part-work)
@@ -272,6 +277,29 @@ harness **configuration** (`settings.json`, hooks, keybindings), which describes
 than the work. Stating the mechanism instead of the prohibition is what previously let a session
 reason its way to an exception, so the wording leads with the ban and names the three destinations
 that replace it.
+
+## Choosing a mechanism for agent instructions, skills, or tools
+
+Admitted 2026-09-02, from the leanness pass's parked list, where it had waited since 2026-08-26 for
+that pass to close. It is the **general form of the rule above**, which is why it took a heading
+rather than extending it: "never a harness's own memory store" is one instance of a constraint that
+has to fire before a design exists, and a rule filed under where knowledge goes cannot reach a
+session choosing a mechanism to build on.
+
+The vocabulary — `AGENTS.md`, Agent Skills, MCP — is not a preference among equals. Each is a
+cross-tool convention with more than one implementation, so work expressed in it survives a change
+of harness; a vendor mechanism does not, and the design built on it is thrown away rather than
+moved. The admissible use is **plumbing**: a `settings.json`, a hook, a keybinding, anything that
+makes one agent work better on this machine without carrying instructions or knowledge. Plumbing
+versus carrier is the same distinction the memory rule draws as configuration versus work, one level
+up.
+
+Tier 1 on the admission criteria: it can fire on any turn in any repo, and the miss is silent and
+expensive — the design reads as finished and works, right up until a second harness is onboarded. No
+topic-owning skill covers it, so there was nowhere else for it to go. The constraint was first
+stated by the user during the artifact-authoring work, after a design had nearly been built the
+other way; that near-miss is the evidence, and there is deliberately no measured rate behind this
+one.
 
 ## Fragments are subjects, dependency is a label
 
@@ -459,6 +487,31 @@ statement rather than the claim:
   one session on one build, and that rule says to assume neither. The confident half was the stale
   one and now reads "treat cwd as unknown". The practical consequence it existed to state — the next
   call assuming the session repo must re-establish it — is unchanged.
+
+### The `git -C <own repo>` clause
+
+Admitted 2026-09-02 from the leanness pass's parked list, as a clause rather than a rule: it is the
+existing `cd` ban failing in a way the ban itself causes, so it belongs where the ban is stated and
+the rule count is unchanged.
+
+**The rule was creating the behaviour it forbids.** Measured 2026-08-29 by `session-bash-audit` over
+two days and 2,077 calls, after the user corrected a session mid-task ("you don't need cd, you're in
+this repo"): `cd` into the session's own repo occurred **14** times — agents comply — while
+`git -C <own repo>` occurred **89**, up to 18% of one session's calls. The same rule that bans the
+`cd` recommends `git -C <path>` as the directory-scoping option for a cross-repo step, so agents
+reach for that flag against their own repo six times as often as they ever ran the banned form.
+
+Two later samples say the rate is a **per-session disposition rather than a machine-wide trend**:
+23% of one `agent-skills` session's calls (`cd-own-repo` 0% in the same session, so the habit the
+rule was written against was fully avoided and its replacement scored worse), against 0% in another
+session in the same repo, the same shape of work, the same day's rules. That does not weaken the
+clause — one session in five reaching 23% is worth a sentence — but it does mean no wording change
+should be judged by the aggregate.
+
+The mechanism named in the rule comes from the second of those sessions: it ran three cross-repo
+chains, saw the harness confirm `Shell cwd was reset` each time, and then wrote every later call
+defensively with an absolute `git -C`, including calls where cwd had never moved. So the clause ends
+on scope rather than on prohibition — a caution outliving the situation that justified it.
 
 ## Viewing, searching, or editing files
 
@@ -778,6 +831,25 @@ sample and stops being evidence about the set — and that is what the clause no
 the other rule for the mechanics. The two halves had been drifting toward being one rule written
 twice, in two clusters, which is the case criterion 2 exists to catch.
 
+### The constructed-probe clause
+
+Admitted 2026-09-02 from the leanness pass's parked list, as a paragraph on this rule rather than a
+heading. The rule already covered a sample you created yourself by truncating your own output; the
+new half is that a **probe input** is the same thing, and that a green result is the failure mode
+rather than an error.
+
+The instance, measured 2026-08-29 in `ingesta`: a `Decimal` round-trip through SQLAlchemy's SQLite
+dialect passed on ten significant digits and silently lost the value on nineteen
+(`1234567890123456789.000000001` came back `…768.0000000000`, no warning). The first probe used ten
+digits, so it read as "`Numeric` is fine" — a conclusion one step from being written into a shared
+skill doc where nobody re-derives it.
+
+What makes it worth stating rather than obvious: the probe's author chooses the input, and the
+convenient input is short. Every other sampling failure in these rules is about a sample you were
+handed; this is the one where the sample is constructed by the person asking the question, which is
+also what makes a pass feel like an answer. No topic-owning skill covers how to choose a probe
+input.
+
 ## Verifying behavior in a repo with test coverage
 
 Confirmed 2026-08-24 (`repo-tasks`): three commits were checked out in a worktree and their tests
@@ -909,6 +981,30 @@ different consequences. Replacing one with a pointer would cost a reader the pre
 they need it, to save less than a line. Checked at the same time and confirmed **not** a third site:
 "Running a command against a different repo than the session's project" — its "a commit in someone
 else's tree is silent by construction" is about repo ownership, not about the shared tree.
+
+### The local-commit-is-not-private clause
+
+Admitted 2026-09-02 from the leanness pass's parked list, as a paragraph on this rule. The section's
+last paragraph already covered the outward direction — a commit in your ahead-count may be another
+session's, so ask before your push publishes it. This is the inverse, and nothing stated it.
+
+Confirmed 2026-08-29 in `agent-skills`: a session committed two skill edits and deliberately did not
+push, because another session's commits sat under them and publishing was the user's call. Minutes
+later the ahead-count was zero — the other session had pushed the branch and carried both commits
+with it. Nothing signalled it, and an ahead-count falling to zero reads as "someone pushed, fine"
+rather than as work published without the decision that was being waited on. Verified after a fresh
+fetch with `git branch -r --contains <sha>`, not inferred from the count.
+
+Two things earn it the space. It is **silent by construction** — there is no error, no prompt, and
+the observable (a falling ahead-count) has an innocent reading that is usually correct. And it is
+where the confidentiality rule is sharpest, since all of that rule's force comes from a push being
+irreversible: a session that has decided something must not be published yet has, on this machine,
+already published it if it committed to the shared branch.
+
+The consequence the clause states is the useful half: "I will commit but not push, and ask first" is
+a stated intention, not a mechanism. Work that must genuinely be withheld has to stay off the shared
+branch, and if it cannot, the user is told before the commit that the commit is itself the
+publishing decision.
 
 ## Regenerating a file from a canonical source
 
