@@ -640,6 +640,21 @@ standing `[DECISION: adherence, not wording]` has never had a cleaner instance.
    harness's output ceiling specifically to establish that this filter buys nothing — and wrote that
    finding into two plans. Re-run bare; the verdict held.
 
+4. **cwd drift after a `cd … && …` chain**, hours later. A chain into the scratchpad to fetch
+   several files left cwd there, and a later `plans.py commit` — issued as a bare command on the
+   assumption it was running in the session repo — routed off the wrong directory. The rule states
+   this hazard exactly and prescribes the remedy (treat cwd as unknown after such a chain; the next
+   call takes an absolute path or re-establishes it).
+
+[PITFALL: **the fourth adds a tell the rule does not list.** "Running a command against a different
+repo" names two symptoms of a stuck cwd — `inv` reporting `Can't find any collection named 'tasks'`,
+and a path that "does not exist" which plainly does. This was neither: `plans.py` answered
+`verdict: needs-decision — <scratchpad> is not inside a git repository`, which reads as a
+configuration question about the plans store rather than as a location error, and would have sent a
+session to `plans.py config` rather than to `cd`. A tool that routes on cwd fails in the vocabulary
+of whatever it routes to, so the symptom list cannot be complete — the generalisable form is that
+any unexpected answer about _where something belongs_ is a cwd question first.]
+
 [PITFALL: **the third one is the sharpest instance the watch has, because the session had just
 removed the last argument in the filter's favour.** Sample 5's corpus entry had kept open the
 possibility that an unknown output size justified a filter; this session probed the ceiling, found
