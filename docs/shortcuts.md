@@ -1,72 +1,57 @@
-# Shortcuts
+# Keyboard shortcuts PULSE changes
 
-https://askubuntu.com/questions/597395/how-to-set-custom-keyboard-shortcuts-from-terminal
+Which keys behave differently on a machine this repo set up, and which are left exactly as Ubuntu
+shipped them. If a shortcut is not on this page, PULSE has not touched it — see
+[keybindings.md](keybindings.md) for the full map of what GNOME and the installed extensions bind,
+which is a much longer list and mostly not ours.
+
+## Screenshots — opt-in, and only two keys
+
+Nothing here happens during `inv setup`. Flameshot is installed, but the shortcuts are only rebound
+when you ask for it:
 
 ```shell
-# this is consistent with Ubuntu's default screenshot location
-flamehost_output_path=${HOME}/Pictures/Screenshots
-mkdir -p ${flamehost_output_path}
-# Array containing custom shortcut details: name, command, binding
-shortcuts=(
-  # Examples
-  #"Open Terminal" "gnome-terminal" "<Control><Alt>T"
-  #"Open File Manager" "nautilus" "<Control><Alt>E"
-  # Add more shortcuts here
-  # we don't override Ubuntu's Print, <Alt>Print, and <Shift>Print
-  # especially <Alt>Print for active windows, which flameshot is missing
-  "Flameshot - Capture current screen to file"
-    "flameshot screen --path ${flamehost_output_path}"
-    "<Control><Shift>Print"
-  #"Flameshot - Capture all screens to file"
-  #  "flameshot full --path ${flamehost_output_path}"
-  #  "<Control><Super><Shift>Print"
-  #"Flameshot - Capture region without GUI to file and clipboard"
-  #  "flameshot gui --accept-on-select --clipboard --path ${flamehost_output_path}"
-  #  "<Control>Print"
-  "Flameshot - Capture region with GUI to file and clipboard"
-    "flameshot gui --clipboard --path ${flamehost_output_path}"
-    "<Control>Print"
-)
-
-# Function to create a custom keyboard shortcut
-base_module="org.gnome.settings-daemon.plugins.media-keys"
-module="${base_module}.custom-keybinding"
-create_custom_shortcut() {
-  local index="$1"
-  local name="$2"
-  local command="$3"
-  local binding="$4"
-
-  loc="/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings/custom${index}/"
-  
-  # Add the custom shortcut to the list
-  existing_bindings=$(gsettings get ${base_module} custom-keybindings)
-  if [[ "${existing_bindings}" == "@as []" ]]; then
-    new_bindings="['${loc}']"
-  else
-    new_bindings="${existing_bindings::-1}, '${loc}']"
-  fi
-  gsettings set ${base_module} custom-keybindings "${new_bindings}"
-
-  # Define the custom shortcut details
-  gsettings set "${module}:${loc}" name "${name}"
-  gsettings set "${module}:${loc}" command "${command}"
-  gsettings set "${module}:${loc}" binding "${binding}"
-}
-
-# Loop through the shortcuts array
-index=1
-while [ $index -lt ${#shortcuts[@]} ]; do
-  shortcut_name="${shortcuts[$index]}"
-  shortcut_command="${shortcuts[$((index + 1))]}"
-  shortcut_binding="${shortcuts[$((index + 2))]}"
-  
-  create_custom_shortcut \
-    $((index / 3)) \
-    "${shortcut_name}" \
-    "${shortcut_command}" \
-    "${shortcut_binding}"
-
-  index=$((index + 3))
-done
+inv screenshot.status     # what your session has right now, read-only
+inv screenshot.enable     # take over the two keys below
+inv screenshot.disable    # give them back to GNOME
 ```
+
+<!-- PULSE::screenshot-shortcuts -->
+
+| Shortcut           | Ubuntu default                              | After `inv screenshot.enable`                                                                                |
+| ------------------ | ------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `Print`            | GNOME's own screenshot UI                   | Flameshot region select, with the annotation editor — saved and copied                                       |
+| `Shift+Print`      | GNOME full-screen capture, saved and copied | Flameshot whole screen, no dialog — saved and copied                                                         |
+| `Alt+Print`        | GNOME's own, unchanged                      | left alone — GNOME already saves it and copies it to the clipboard, and Flameshot has no window-capture mode |
+| `Ctrl+Shift+Alt+R` | GNOME's own, unchanged                      | left alone — screen recording, which Flameshot cannot do at all — the built-in recorder stays the tool       |
+
+<!-- /PULSE::screenshot-shortcuts -->
+
+The table is generated from `tasks/screenshot.py`, so it says what the task actually does rather
+than what someone once wrote down.
+
+**Why only two.** There is more shadowing here than there looks: GNOME's built-in screenshot UI,
+`gnome-screenshot`, and Flameshot all overlap, and none of them is a superset of the others.
+Flameshot has no window-capture mode and no recording at all, so `Alt+Print` and the screencast
+shortcut stay with GNOME — trading them for Flameshot would lose functionality, not add it. Nothing
+about this stack is an obvious choice, which is why the two keys that do change are the two where
+Flameshot's annotation editor is a clear win and nothing is lost.
+[screen_capture.md](screen_capture.md) compares the tools properly.
+
+**Recording is unchanged, deliberately.** `Ctrl+Shift+Alt+R` is still GNOME's own screen recorder.
+Flameshot cannot record, and no replacement is installed.
+
+## In the terminal
+
+WezTerm's key bindings are PULSE's too — the startup split layout, `ALT+1..4` to jump between panes,
+`CTRL+Tab` to cycle, `ALT+SHIFT+arrows` to resize. They are terminal-scoped, so they never collide
+with the GNOME bindings above, and they are documented with the layout they belong to in
+[terminal.md](terminal.md).
+
+## Everything else
+
+PULSE writes no other keyboard shortcuts. GNOME extensions installed by
+[gnome_extensions.md](gnome_extensions.md) bring their own — Tiling Shell's `Super+Arrow`, the
+Alt-Tab switcher's replacement of `Alt+Tab` — and those are the extension's defaults, not something
+this repo configures. [keybindings.md](keybindings.md) has the live map, including which
+`Super+<number>` bindings the extensions take over from the shell.

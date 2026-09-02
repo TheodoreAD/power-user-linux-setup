@@ -17,13 +17,36 @@ _MEDIA_KEYS_SCHEMA = "org.gnome.settings-daemon.plugins.media-keys"
 _CUSTOM_SCHEMA = f"{_MEDIA_KEYS_SCHEMA}.custom-keybinding"
 _CUSTOM_PATH_PREFIX = "/org/gnome/settings-daemon/plugins/media-keys/custom-keybindings"
 
-# Only these 2 are handed to Flameshot. `screenshot-window` (Alt+PrtSc) is deliberately left
-# alone: reading gnome-shell 46.0's js/ui/screenshot.js confirms it already saves to
-# ~/Pictures/Screenshots AND copies to the clipboard by default (_storeScreenshot() does both
-# unconditionally) — Flameshot has no window-capture mode to offer instead, and none is needed.
-# `show-screen-recording-ui` (Ctrl+Shift+Alt+R, screencast) is untouched for the same
-# no-equivalent reason — Flameshot has no video/recording capability at all.
+# Only these 2 are handed to Flameshot, and _UNTOUCHED_SHELL_KEYS below says what is left alone
+# and why. Both lists are data rather than only prose because docs/shortcuts.md's table — the
+# published answer to "what did PULSE change about my keyboard?" — is generated from them, and a
+# reason living only in a comment cannot be published.
 _MANAGED_SHELL_KEYS = ["show-screenshot-ui", "screenshot"]
+
+# The GNOME default each managed key is bound to before this task touches it. Needed for the docs
+# table, which has to say what the shortcut did *before* to be worth reading.
+_SHELL_KEY_DEFAULTS = {
+    "show-screenshot-ui": ("Print", "GNOME's own screenshot UI"),
+    "screenshot": ("<Shift>Print", "GNOME full-screen capture, saved and copied"),
+}
+
+# Deliberately not touched. `screenshot-window` (Alt+PrtSc): reading gnome-shell 46.0's
+# js/ui/screenshot.js confirms it already saves to ~/Pictures/Screenshots AND copies to the
+# clipboard by default (_storeScreenshot() does both unconditionally) — Flameshot has no
+# window-capture mode to offer instead, and none is needed. `show-screen-recording-ui`
+# (Ctrl+Shift+Alt+R, screencast) is untouched for the same no-equivalent reason.
+_UNTOUCHED_SHELL_KEYS = [
+    (
+        "screenshot-window",
+        "<Alt>Print",
+        "GNOME already saves it and copies it to the clipboard, and Flameshot has no window-capture mode",
+    ),
+    (
+        "show-screen-recording-ui",
+        "<Ctrl><Shift><Alt>R",
+        "screen recording, which Flameshot cannot do at all — the built-in recorder stays the tool",
+    ),
+]
 
 _SCREENSHOTS_DIR = Path.home() / "Pictures" / "Screenshots"
 FLAMESHOT_INI = Path.home() / ".config" / "flameshot" / "flameshot.ini"
@@ -254,3 +277,67 @@ def status(c: Context):
     else:
         ok = save_path == str(_SCREENSHOTS_DIR)
         print(f"[screenshot] flameshot savePath: {'ok' if ok else f'MISMATCH ({save_path})'}")
+
+
+_DOC_PATH = Path("docs/shortcuts.md")
+_DOC_BLOCK = "screenshot-shortcuts"
+
+
+def _human_binding(binding: str) -> str:
+    """A gsettings accelerator as a reader sees it: `<Shift>Print` -> `Shift+Print`."""
+    modifiers = re.findall(r"<([^>]+)>", binding)
+    return "+".join([*modifiers, re.sub(r"<[^>]+>", "", binding)])
+
+
+# What each Flameshot binding does, in the words a reader needs. Keyed by the `name` in
+# _bindings(), which is also the name gsettings stores, so the two cannot drift apart silently:
+# a renamed binding shows up here as a missing key rather than as a wrong sentence.
+_FLAMESHOT_ACTIONS = {
+    "Flameshot GUI": "Flameshot region select, with the annotation editor — saved and copied",
+    "Flameshot full": "Flameshot whole screen, no dialog — saved and copied",
+}
+
+
+def _shortcut_rows() -> list[tuple[str, str, str]]:
+    """(shortcut, what it does by default, what `inv screenshot.enable` makes it do).
+
+    Machine-independent on purpose: `_bindings()` resolves the flameshot binary and the Wayland
+    prefix for the machine it runs on, and neither belongs in a published table — the name and the
+    accelerator are the parts that are true everywhere.
+    """
+    flameshot = {b["binding"]: _FLAMESHOT_ACTIONS[b["name"]] for b in _bindings()}
+    managed = [
+        (
+            _human_binding(default_binding),
+            gnome_does,
+            flameshot[default_binding],
+        )
+        for key, (default_binding, gnome_does) in _SHELL_KEY_DEFAULTS.items()
+        if key in _MANAGED_SHELL_KEYS
+    ]
+    untouched = [
+        (_human_binding(binding), "GNOME's own, unchanged", f"left alone — {why}")
+        for _, binding, why in _UNTOUCHED_SHELL_KEYS
+    ]
+    return managed + untouched
+
+
+@task
+def render_docs(c: Context):
+    """Regenerate docs/shortcuts.md's table from this module's own keybinding data.
+
+    Reads nothing from the live session and writes nothing to it — the table describes what
+    `inv screenshot.enable` would do, not what this machine currently has (`inv screenshot.status`
+    answers that). Safe to run anywhere, unlike every other task in this module.
+    """
+    content = util.markdown_table(
+        ("Shortcut", "Ubuntu default", "After `inv screenshot.enable`"),
+        [(f"`{shortcut}`", default, after) for shortcut, default, after in _shortcut_rows()],
+    )
+    if util.DRY_RUN:
+        text = _DOC_PATH.read_text() if _DOC_PATH.exists() else ""
+        _, status_ = util.ensure_block_text(text, _DOC_BLOCK, content, style=util.MarkerStyle.HTML)
+        print(f"[screenshot] render-docs: {util.ok_label(status_ == util.BlockStatus.OK)}")
+        return
+    written = util.ensure_block(_DOC_PATH, _DOC_BLOCK, content, style=util.MarkerStyle.HTML)
+    print(f"[screenshot] render-docs: {written.value}")
