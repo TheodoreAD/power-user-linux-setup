@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-01
+updated: 2026-09-02
 ---
 
 # Do the compressed `~/AGENTS.md` rules actually fire? — the adherence watch
@@ -616,3 +616,34 @@ message that genuinely must carry a backtick. The companion clause landed in "Co
 call": a chain hides whatever the user needs to read inside a compound command, a reviewability cost
 that rule had never stated, having argued only from exit codes and output blobs. Evidence in
 `contributing/global-agents-md.md` under "Pull versus generate…" and the backtick section.]
+
+### Session 14 — `power-user-linux-setup`, 2026-09-02: three breaches by the session editing the rules
+
+The session that worked this plan's own cluster — round 3 of the leanness pass, the four parked
+admissions, and the output-ceiling measurement. Not a rate sample; three specific breaches, each of
+a rule the session had read, edited or measured within the hour. Recorded because the watch's
+standing `[DECISION: adherence, not wording]` has never had a cleaner instance.
+
+1. **`rg -rn`, the `--replace` trap.** Searching for where a task was documented. The results named
+   `inv ai.n` in four files that all say `inv ai.check-rule-prerequisites`. Caught only because
+   `ai.n` is not a plausible task name — the same accident that saved the first recorded occurrence,
+   not a method. Third occurrence machine-wide and the third `-rn` of three; recorded in
+   `plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md`, which now says the bundled form
+   is the shape to measure.
+2. **`git stash`, to prove a test failed without its fix.** `~/AGENTS.md` names this unsafe here
+   because parallel sessions share one working tree, and names the replacement — copy to the
+   scratchpad, edit down, restore. The stash was pathspec-scoped and popped immediately, so nothing
+   was lost, but a parallel session's edit to that same file would have been swept in and the
+   session would not have known. The pull is that `git stash push -- <path>` is one call and the
+   documented technique is four.
+3. **`inv quality.precommit 2>&1 | tail -6`**, roughly an hour after the same session measured the
+   harness's output ceiling specifically to establish that this filter buys nothing — and wrote that
+   finding into two plans. Re-run bare; the verdict held.
+
+[PITFALL: **the third one is the sharpest instance the watch has, because the session had just
+removed the last argument in the filter's favour.** Sample 5's corpus entry had kept open the
+possibility that an unknown output size justified a filter; this session probed the ceiling, found
+truncation keeps the head and saves the whole output to a file, wrote "there is no legitimate
+`head`/`tail` case left to carve out" as a `[DECISION:]`, committed it — and produced the shape
+about forty minutes later. So the count of things that make no difference now includes: reading the
+rule, authoring the rule, measuring the rule's premise, and publishing the conclusion.]
