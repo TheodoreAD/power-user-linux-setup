@@ -10,6 +10,12 @@ web/GitHub prior-art pass before finalizing). Within one tool, prefer its built-
 hand-rolled equivalent even when the built-in carries a documented trade-off — unless that trade-off
 is _verified_ risky (grep/test for concrete breakage), not just theoretically possible.
 
+**When the upstream tool falls short, verify its result rather than reimplement it.** The gap is
+usually narrower than it looks and the reimplementation is permanent: the `skills` CLI announces a
+Claude Code symlink it does not create, and PULSE covers exactly that gap instead of taking over
+skill installation. Check what the tool actually did, fill what it missed, and let it keep owning
+the rest.
+
 ### Choosing a tool or library
 
 For a real selection decision with trade-offs, go deeper than a single-pass web-search summary

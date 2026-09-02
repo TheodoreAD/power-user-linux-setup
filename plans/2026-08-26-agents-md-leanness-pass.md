@@ -358,33 +358,32 @@ with a topic-owning skill (`session-bash-audit`) that can both hold guidance and
 moving it made adherence worse. That makes it the safest place to try demotion, and the riskiest to
 get wrong, since its rules were rewritten specifically because they were being missed.]
 
-## Additions parked pending this pass — four admitted, one still open
+## Additions parked pending this pass — all five admitted
 
 Five accumulated here between 2026-08-26 and 2026-08-29, the first two from the harvest of the
 `agent-skills` scoping session. Parking them was `session-harvest`'s "destination mid-restructure →
 the plan reshaping it" filter: appending while the file's shape is being decided bypasses the
 admission gate this pass exists to apply, and risks the addition being restructured away unread.
 
-**Four were admitted at the close, 2026-09-02**, and the parking was worth it — the vendor-lock-in
-entry changed shape while parked, from "tier 1, silent and expensive" to the sharper argument that a
-constraint firing before a design exists cannot live inside a rule about where finished work goes. A
-month of sitting is what produced the second reading.
+**All five were admitted at the close, 2026-09-02** — four in one approval round and the fifth
+immediately after, since the round could carry only four options. The parking was worth it: the
+vendor-lock-in entry changed shape while parked, from "tier 1, silent and expensive" to the sharper
+argument that a constraint firing before a design exists cannot live inside a rule about where
+finished work goes. A month of sitting is what produced the second reading.
 
-The fifth is below and was not put to the user in that round. Decide it against
-`contributing/global-agents-md.md`'s "Admitting a new rule" criteria, the same as the others.
+Four of the five extend an existing section and leave the rule count alone; only vendor lock-in took
+a heading. Rule count 38 → 39.
 
 **Admitted and landed 2026-09-02** — "No vendor lock-in", as the new rule "Choosing a mechanism for
 agent instructions, skills, or tools" in `agent-knowledge.md`, the trigger this entry proposed.
 Evidence under the matching heading in `contributing/global-agents-md.md`.
 
-[DEFERRED: **"Prefer the mainstream community tool, and have PULSE verify its result rather than
-reimplement it."** A _variant_ of the existing "About to author content, config, or a workaround
-from scratch" rule rather than a new one — that rule already says reuse maintained upstream work;
-the new half is what to do afterwards, namely check the result rather than rebuild the mechanism.
-Per the admission criteria a variant extends its rule's existing section, so if admitted this is a
-sentence appended there, not a heading. Concrete instance to cite: the `skills` CLI announces a
-Claude Code symlink it does not create, and PULSE's own `_ensure_agents_skills` covers the gap
-instead of PULSE reimplementing skill installation.]
+**Admitted and landed 2026-09-02** — verify rather than reimplement, as a paragraph on "About to
+author content, config, or a workaround from scratch" in `research.md`. Asked separately from the
+other four because the approval round could carry only four options; taken on the same criteria.
+Evidence in `contributing/global-agents-md.md`, including the asymmetry that carries it — the gap is
+bounded and observable, the reimplementation is unbounded and permanent — and the observation that
+the parent rule reads as a yes/no gate, so a partial yes had no branch and fell through to "no".
 
 **Admitted and landed 2026-09-02** — the probe clause, as a paragraph on "Generalizing from a sample
 to a set" in `verification.md`. The `Decimal`/SQLite instance and the reason a constructed probe

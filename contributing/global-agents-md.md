@@ -668,6 +668,31 @@ distro-specific bindings — citing rule of least surprise, and that the tool's 
 by `uv python uninstall`/`--reinstall`/upgrades while a raw `ln -sf` is one more thing to
 hand-maintain.
 
+### The verify-rather-than-reimplement clause
+
+Admitted 2026-09-02, the last of the leanness pass's five parked additions, as a paragraph on this
+rule rather than a heading. This rule already said to reuse maintained upstream work; what it never
+said is what to do at the moment that work turns out to be **incomplete**, which is precisely where
+the temptation to take the whole job in-house arrives, and where it looks justified.
+
+The instance it is written from: the `skills` CLI announces a Claude Code symlink it does not
+create. PULSE's `_ensure_agents_skills` covers that one gap, and the CLI keeps owning skill
+installation. The alternative on the table was reimplementing installation here, which would have
+been a permanent maintenance obligation taken on to fix a missing `ln -s`.
+
+The asymmetry is what makes it worth a clause: **the gap is bounded and observable, the
+reimplementation is unbounded and permanent.** Verifying costs one check and leaves upstream
+responsible for everything it still does correctly; reimplementing means owning the behaviour
+forever, including the parts that were never broken, and inheriting every upstream fix as a merge
+rather than an upgrade. It also composes with the tool-native preference above — that rule says
+prefer the built-in despite a documented trade-off, and this one says the same answer holds when the
+built-in is not merely awkward but partly missing.
+
+Admitted on one instance, like the backtick and one-`-m` clauses, and for the same structural reason
+rather than a frequency one: the parent rule's own framing invites the wrong move. "Check whether an
+actively-maintained external project already provides it" reads as a yes/no gate, so a partial yes
+has no branch and falls through to "no".
+
 ## Choosing a tool or library
 
 Research depth, observed as a real pattern rather than a one-off: the user pushed for more depth
