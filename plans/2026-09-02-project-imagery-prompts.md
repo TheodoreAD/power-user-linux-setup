@@ -48,6 +48,37 @@ brief. Each prompt below carries a negative clause. Also excluded for the same r
 traces and glowing-blue-hologram-UI, which are the sci-fi equivalent — not asked against, but they
 are the generic default and will make every image look like stock art.]
 
+## The installed things have to be recognisable in the image
+
+Asked for 2026-09-02, after the first draft: the imagery should carry the symbols of the popular
+things this repo installs — Linux first, then Python, Claude Code, GNOME, Chrome, Rust, and the rest
+of what has a well-known graphical representation.
+
+That is the right instinct for the hero and the social card: "what do I actually get" is the front
+page's weakest answer (finding 1 of the docs review), and a wall of recognisable marks answers it
+before a word is read. The set, taken from `setup.toml` rather than from memory, in rough order of
+recognisability: **Ubuntu/Linux, Python, Docker, Chrome, GNOME, Rust, Go, Node, Git, GitHub,
+Kubernetes, Helm, Terraform, VS Code, JetBrains, Claude Code, tmux, zsh, WezTerm, gcloud.** Twenty
+is already more than a composition can hold; twelve is a grid that reads.
+
+[DECISION: **the marks are composited from official SVGs, not drawn by the generator.** Two
+independent reasons, and either alone settles it. **They come out wrong** — a model renders a known
+logo the way it renders small type, at approximately the right shape with the proportions and the
+wordmark mangled, which is the same failure the no-legible-text rule above already accounts for; a
+nearly-right Python logo is more jarring than no logo. **And they are other people's marks** — Tux,
+the Python logo, the GNOME foot, Chrome's circle, the Rust gear-ring, the Anthropic mark are each
+governed by their owner's usage guidelines. Showing them to say "this is what gets installed" is
+ordinary and expected; shipping a generated _approximation_ of someone's trademark is worse on every
+axis than shipping the real file, which is downloadable, versioned and correct. So: generate the
+scene with deliberate empty slots, composite the real SVGs in, and keep the attribution each licence
+asks for (Tux and the Go gopher both carry one) in a credits line.]
+
+This changes the prompts rather than replacing them: each direction below gets a **slot variant**
+whose whole job is to produce a scene with a legible, evenly-lit grid of empty recesses at a known
+position. A prompt that asks the model to draw the marks directly is given too, marked as such — not
+because it is recommended, but because comparing the two is the fastest way to see the failure above
+for yourself rather than taking it on trust.
+
 ## Direction A — sci-fi
 
 The metaphor that fits the project: a machine being **provisioned from a manifest**. Declarative,
@@ -84,6 +115,29 @@ repeatable, one file deciding what exists.
 > be placed later. No text, no numbers, no logos. Not steampunk, no brass, no rivets, no circuit
 > board.
 
+**A5 — slot variant of A1, the one to actually composite into.** The purpose of this prompt is a
+clean grid of empty, evenly-lit recesses; the scene is secondary and must not compete.
+
+> A vast dim hangar interior, low three-quarter angle, a dark machined bulkhead filling the centre
+> of the frame. Set into the bulkhead, a precise grid of twelve identical square recesses, four
+> across and three down, each one empty, each lit evenly from within by the same soft cold light,
+> all at the same depth and the same scale. The grid is unobstructed and square to the camera.
+> Around it the hangar falls away into deep near-black with one warm accent along a single
+> structural edge. Matte machined surfaces, hard-surface industrial design, no ornament, no clutter
+> in front of the grid. No text, no lettering, no symbols, no icons, no logos — the recesses must be
+> completely empty. Not steampunk, no brass, no gears, no circuit traces, no glowing blue
+> holographic UI, no lens flare.
+
+**A6 — direct variant, for comparison only, not recommended.** Expect mangled marks; the value is
+seeing how it fails.
+
+> A dark machined bulkhead filling the frame, into which are set twelve softly backlit emblems in a
+> four-by-three grid: a penguin, a two-coiled serpent, a whale carrying containers, a segmented
+> colour wheel, a bare human footprint, a crab, a gopher, a hexagon, a ship's helm, a branching
+> line, an angular monogram, a stylised terminal cursor. Each emblem is a flat single-colour inlay,
+> evenly lit, none overlapping. Precise industrial hard-surface rendering, near-black surround, one
+> warm accent. No text, no lettering, no wordmarks. Not steampunk, no gears, no circuit traces.
+
 **A4 — the four use-case cards** (workstation / headless / container / WSL), as a consistent set.
 
 > A set of four square icons in one consistent style: an isometric solid object on a plain
@@ -119,6 +173,18 @@ that reads it. High fantasy read as craft and old precision, not as swords and d
 > with one cold accent. No legible text, no letters, no numerals. Not steampunk, no gears, no
 > goggles, no cogs, no magic sparkles.
 
+**B5 — slot variant of B1, the one to actually composite into.** B1's tool-filled niches are the
+scene; this one empties them so real marks can go in.
+
+> A tall stone workshop wall at night, seen square-on and filling the frame. Cut into the stone, a
+> precise grid of twelve identical shallow niches, four across and three down, each one empty, each
+> lit by the same soft warm light from a source above and outside the frame. The stonework is fine
+> and deliberate, the niches perfectly regular and all at the same depth. Below and around the grid,
+> a plain worn workbench edge and deep shadow, no other objects. Painterly realism, muted cold grey
+> stone with one warm accent, precise draughtsmanship. No text, no carved letters, no runes, no
+> symbols, no icons — the niches must be completely empty. Not steampunk, no brass, no gears, no
+> clockwork, no glowing magic.
+
 **B3 — social / OG card, 1200×630.**
 
 > A dark stone wall filling the frame, into which a long horizontal row of small identical niches
@@ -138,10 +204,11 @@ that reads it. High fantasy read as craft and old precision, not as swords and d
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **sci-fi or high fantasy — one has to win.** The two directions are written to
-be comparable rather than combinable, and running both to completion doubles the work at every later
-step (variants, colour matching, the card set). Worth generating A1 and B1 only, choosing, then
-building the rest of that direction out.]
+[DECISION: **generate both directions, decided 2026-09-02.** The proposal was to run one hero from
+each and pick before building either out; the answer was to do both. So the comparison set is four
+images rather than two — A1 and B1 for the look, A5 and B5 for the slot grid that actually ships —
+and the choice is made with the compositing already visible rather than from the scene alone, which
+is the better comparison anyway since the grid is the part the front page depends on.]
 
 [NEEDS CLARIFICATION: **which model, and whether its licence permits this use.** The prompts are
 written model-agnostically, but wording that works well differs between them, and — more importantly
@@ -155,9 +222,18 @@ mermaid, deliberately. Assume framing only unless asked otherwise.]
 
 ## Recommended direction
 
-Generate A1 and B1 first, at the real palette, and pick a direction from those two alone. Then build
-that direction out in order of payoff: social card (every link to the repo renders it), hero,
-avatar, card set.
+Generate four comparison images first, at the real palette: A1 and B1 for the look, A5 and B5 for
+the slot grid. **Composite the twelve official SVGs into A5 and B5 before judging either** — an
+empty grid and a filled one are different pictures, and the filled one is what ships. Run A6 once
+alongside them, to see the direct-generation failure rather than to use it.
+
+Then build both directions out, in order of payoff: social card (every link to the repo renders it),
+hero, avatar, card set.
+
+**Collect the twelve SVGs and their licence terms as a first step, not a last one.** The mark set is
+what the grid geometry has to suit — twelve marks of wildly different aspect ratios do not sit in
+one square grid — and at least two (Tux, the Go gopher) carry attribution conditions that need a
+credits line somewhere before anything is published.
 
 Keep the chosen prompts in this repo once they are settled — a prompt that produced a committed
 image is the only way that image can be regenerated or varied consistently later, and it belongs
