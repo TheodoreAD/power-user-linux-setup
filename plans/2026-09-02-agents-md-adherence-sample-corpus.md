@@ -1,0 +1,297 @@
+---
+status: idea
+updated: 2026-09-02
+---
+
+# `~/AGENTS.md` adherence: the sample corpus
+
+Five sessions measured with `session-bash-audit`'s `audit.py` against the
+`2026-08-24-auto-mode.json` opus-5 baseline (n=1676), all taken with `--until <harvest boundary>` so
+the harvest's own sweep is excluded from the headline figure.
+
+Merged on 2026-09-02 from five plans filed separately by five sessions, each of which found the
+store dirty and added a file rather than editing one another session might have been holding:
+
+- `2026-09-02-adherence-sample-first-run-under-the-until-rule.md` (sample 1)
+- `2026-09-02-adherence-sample-a-verbose-gate-and-a-masked-exit.md` (sample 2)
+- `2026-09-02-adherence-sample-head-tail-high-git-c-gone.md` (samples 3 and 4)
+- `2026-09-02-adherence-sample-a-research-session-in-another-repo.md` (sample 5)
+
+Those names are what `plans.py archive --search` needs to read any of them back.
+
+Each sample carried its own `source_repo`/`source_session`/`source_moment` frontmatter, which one
+merged file cannot. Kept here instead, because a triage session re-reading the original turns is the
+whole point of recording them — and the harness keeps a transcript for 30 days by default, so these
+expire around 2026-10-02:
+
+| # | source repo              | transcript                                   | session start               |
+| - | ------------------------ | -------------------------------------------- | --------------------------- |
+| 1 | `agent-skills`           | `2312636b-3f89-4cb5-95e8-48f986fb9ecb.jsonl` | `2026-09-01T17:20:53.485Z`  |
+| 2 | `ingesta`                | `bf19d40e-bb8f-4341-a396-77194e946991.jsonl` | `2026-09-02T03:05:26+03:00` |
+| 3 | `agent-skills`           | `630e8ae3-ecce-4a23-90cf-934ab0698945.jsonl` | `2026-09-02T14:28:19+03:00` |
+| 4 | `power-user-linux-setup` | not recorded                                 | 2026-09-02                  |
+| 5 | `ingesta`                | `6be217e8…` (short form only)                | 2026-09-02                  |
+
+## Context
+
+### The corpus at a glance
+
+| # | session repo             | calls | shape                          | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
+| - | ------------------------ | ----: | ------------------------------ | ----------: | ------------: | ---------------: | ----- |
+| 1 | `agent-skills`           |   331 | code, one repo, ten hours      |         24% |           19% |          **23%** | 9/11  |
+| 2 | `ingesta`                |   137 | prose/gate-heavy, ten hours    |         45% |           28% |               0% | —     |
+| 3 | `agent-skills`           |   157 | prose, one repo, one day       |         38% |           27% |               0% | 9/11  |
+| 4 | `power-user-linux-setup` |   350 | documentation, whole day       |     **55%** |       **32%** |               0% | 7/11  |
+| 5 | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
+
+Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
+was domain research rather than work on the tooling itself.
+
+### Sample 1 — `agent-skills`, 331 calls, the first run under `--until`
+
+`audit.py --session … --until <harvest boundary> --compare 2026-08-24-auto-mode.json`, **9/11**:
+
+| tag                  | rate | vs baseline           |
+| -------------------- | ---: | --------------------- |
+| `chain`              |  34% | −33pp, OK             |
+| `head/tail`          |  24% | −6pp, OK              |
+| `heredoc`            |   6% | −10pp, OK             |
+| `sed-n`              |   2% | −6pp, OK              |
+| `cd-own-repo`        |   0% | −3pp, OK              |
+| **`git-C-own-repo`** |  23% | **+23pp, MISS**       |
+| **`git-C-mutating`** |  16% | **+13pp, MISS**       |
+| `exit-masked`        |  19% | (not in EXPECTATIONS) |
+
+**Only 6 calls were excluded by `--until`**, because the boundary is taken at step 0 and this
+harvest had barely started — so the figure here is essentially all working session. That is the flag
+behaving as intended rather than a null result: the exclusion is small when the harvest is young,
+and the point is that it is no longer unknown.
+
+**`git -C <own repo>` at 23% is this session's dominant miss**, and the mechanism is visible in the
+transcript rather than inferred: the session worked in one repo all day and reached for
+`git -C <that same repo>` as its default shape for every status, log, add and commit. The rule calls
+this "the ban on `cd` wearing the recommended flag", and the session never typed `cd` at all —
+`cd-own-repo` is 0%. So the habit the rule was written against was fully avoided, and its
+replacement scored worse. **Sample 3 answers what this sample could not** — see below; the rate is a
+per-session disposition, not a machine-wide trend.
+
+### Sample 2 — `ingesta`, 137 calls, a verbose gate and 28% of exits thrown away
+
+| tag                     |    rate | baseline | verdict         |
+| ----------------------- | ------: | -------: | --------------- |
+| `chain`                 |     61% |      66% | −5pp, OK        |
+| `chain5`                |      9% |      18% | −9pp, OK        |
+| **`head/tail`**         | **45%** |      31% | **+14pp, MISS** |
+| **`exit-masked`**       | **28%** |      11% | **+17pp, MISS** |
+| `heredoc`               |     19% |      16% | +3pp            |
+| `cd-own-repo`           |      0% |       3% | −3pp, OK        |
+| `git-C-own-repo`        |      0% |        — | OK              |
+| `git-mutating-in-chain` |      1% |       8% | −7pp, OK        |
+
+Including the sweep: `head/tail` 42%, `exit-masked` 25% — the sweep **lowered** both.
+
+Both misses come from **one shape, produced 15+ times: `inv quality.precommit 2>&1 | tail -N`.** The
+session knew the rule — it is in `~/AGENTS.md`, in context, and this session had read it — and
+produced the banned shape anyway, at nearly half of all calls.
+
+[PITFALL: **the flattering explanation was tested and is false.** The hypothesis was that
+`inv quality.precommit` emits more than the harness will show, that the harness truncates the middle
+and keeps the head, and that the filter therefore buys the one thing being looked for — on which
+reading the fix is a `--quiet` mode on the gate. `seq 1 4000` came back complete, all four thousand
+lines, no truncation and no elision, so a plain `inv quality.precommit` would have delivered its
+verdict, last, in full, every one of those fifteen times. The filter was buying **nothing** — not
+even trading the exit code for readability, but discarding it for free. What is left is worse and
+simpler: the pipe is a reflex, not a response to anything, typed while reasoning about the next edit
+on a command whose output nobody intends to read past the verdict. This plan asserted the
+verbose-gate mechanism before checking it, in the same run whose whole subject is a rule being
+missed, and was caught only by running the harness check the skill prescribes.]
+
+Two `git push 2>&1 | tail` calls are the same class on an outward-facing command — both pushes did
+succeed, confirmed independently by CI.
+
+### Sample 3 — `agent-skills`, 157 calls, `git -C` gone to zero
+
+`--compare 2026-08-24-auto-mode.json`, **9/11**:
+
+| tag                     | rate | vs baseline             |
+| ----------------------- | ---: | ----------------------- |
+| `chain`                 |  57% | −9pp, OK                |
+| **`head/tail`**         |  38% | **+8pp, MISS**          |
+| **`cat-view`**          |   2% | **+0pp, MISS**          |
+| `sed-n`                 |   3% | −5pp, OK                |
+| `heredoc`               |   4% | −12pp, OK               |
+| `cd-own-repo`           |   1% | −2pp, OK                |
+| `git-C-own-repo`        |   0% | +0pp, OK                |
+| `git-C-mutating`        |   1% | −2pp, OK                |
+| `git-mutating-in-chain` |   6% | −3pp, OK                |
+| `exit-masked`           |  27% | (not in `EXPECTATIONS`) |
+
+38% during the work, 36% including the sweep — so here too the sweep _lowered_ the rate.
+
+**`git -C <own repo>` at 0%, on a session with the same shape that produced sample 1's 23%.** One
+repo, one working day, 157 calls, never leaving `agent-skills` except for two read-only lookups,
+with `cd-own-repo` at 1% (two calls, both `cd <own repo> && rg` chains). So the 23% was **that
+session's habit, not the machine's** — two sessions, same repo shape, same rules in force, 23pp
+apart. That does not make the rate uninteresting; it makes it a per-session disposition, which is a
+different thing to fix than a wording problem.
+
+**`cat-view` is a `+0pp` MISS at 2%, which is a scoring shape worth knowing about.** The baseline
+was also 2%; a "down" expectation treats equal as failure, so an unchanged low rate scores as a miss
+indistinguishable in the output from a regression. Not a bug — `after < before` is the right test —
+but a 2% MISS and a 38% MISS read identically in the `n/m` line. Read the cells, not the score.
+
+`head/tail` at 38% was the highest of the first three samples, and the session that produced it
+spent its day writing, among other things, a `session-bash-audit` `[PITFALL:]` saying to run the
+audit unpiped in every mode — then piped 60 of its own 157 calls.
+
+### Sample 4 — `power-user-linux-setup`, 350 calls, a documentation day
+
+7/11 expectations met. The session spent its whole day on documentation: a generated package catalog
+and task index, four mermaid diagrams, an `ai.md` split, a 38-page opener/see-also sweep.
+
+| tag                         | rate | vs baseline     |
+| --------------------------- | ---: | --------------- |
+| `chain`                     |  64% | −3pp, OK        |
+| **`head/tail`**             |  55% | **+24pp, MISS** |
+| **`sed-n`**                 |  10% | **+2pp, MISS**  |
+| **`cat-view`**              |   2% | **+0pp, MISS**  |
+| **`git-mutating-in-chain`** |  10% | **+1pp, MISS**  |
+| `heredoc`                   |   5% | −11pp, OK       |
+| `cd-own-repo`               |   1% | −3pp, OK        |
+| `git-C-own-repo`            |   0% | +0pp, OK        |
+| `exit-masked`               |  32% | (unscored)      |
+
+This is the **largest sample in the corpus (350 calls, more than twice any other)** and the
+**highest `head/tail` rate (55%)**. The dominant shape is
+`inv quality.precommit 2>&1 | rg -n 'error|Error|FAIL|passed' | head -4`, run after nearly every
+edit — a gate whose output is long, whose answer is one line, and whose exit code the pipe discards.
+`sed-n` at 10% is the same instinct aimed at files: 36 calls reading a known line range to quote it,
+where `Read` with `offset`/`limit` is the tool.
+
+[PITFALL: the session was not merely piping a noisy gate — it piped the one command whose exit code
+was the entire question, and it did so while **writing documentation about that exact hazard**. The
+same run added a `CONTRIBUTING.md` warning that a green local `zensical` build does not imply a
+green deploy, then verified its own fix with `uvx … build --strict 2>&1 | tail -2`. **Authoring a
+rule is not evidence of following it** — three confirmed instances in this corpus (samples 3, 4, and
+the separate `rg -r` finding), and in sample 3 the rule authored and the rule broken were the same
+sentence.]
+
+### Sample 5 — `ingesta`, 84 calls, research in a repo the corpus had not sampled
+
+Session `6be217e8`, roughly three and a half hours: reading vendored reference clones, web research
+on clinical guidelines, and writing four plan files plus `AGENTS.md` and `contributing/` edits. Ten
+commits, no pushes. **10 of 11** expectations met.
+
+| counter                 | this session | baseline | verdict         |
+| ----------------------- | -----------: | -------: | --------------- |
+| `chain`                 |          37% |      66% | −29pp, OK       |
+| **`head/tail`**         |      **35%** |      31% | **+4pp, MISS**  |
+| `exit-masked`           |           8% |      11% | OK on the delta |
+| `sed-n`                 |           4% |       8% | OK              |
+| `cat-view`              |           1% |       2% | OK              |
+| `heredoc`               |           0% |      16% | OK              |
+| `cd-own-repo`           |           0% |       3% | OK              |
+| `git-C-own-repo`        |           0% |       0% | OK              |
+| `git-mutating-in-chain` |           0% |       8% | OK              |
+
+`git-mutating-in-chain` at 0% across ten commits, all made by pathspec in their own calls.
+
+**Including the sweep: `head/tail` 40%, `exit-masked` 12%** — the sweep _raised_ both, the opposite
+direction from samples 2 and 3.
+
+[DECISION: **"the harvest inflates its own number" is not a claim anyone should make.** Three
+directions observed across five samples — the sweep lowered the rate twice, raised it once, and
+moved it barely at all when the harvest was young. The sweep's effect is a property of the run, not
+a bias with a sign, which is why `--until` reports both figures rather than correcting one.]
+
+**`head/tail` (29 calls) splits into two populations that deserve different treatment.** Roughly
+half are `rg … | head -N` over vendored reference clones in `$RESEARCH_HOME` — searching an
+unfamiliar third-party codebase, where the honest alternative is `rg -c` first and the session did
+not reach for it. The other half are `inv quality.precommit 2>&1 | tail -N`, which is the gate case
+and is the one that matters. `exit-masked` (7 calls) is almost entirely that same gate.
+
+## What the corpus has settled
+
+**`head/tail` is worse in prose sessions than in code sessions.** Five samples: 24% code, then 45%,
+38%, 55% and 35% on sessions that spent most of their calls reading files to quote from and running
+gates to confirm markdown formatting. The one code-shaped session is the one low rate, and the
+largest and most purely prose-shaped session is the highest. That points the fix away from wording:
+`Read` with `offset`/`limit` is the tool for the quoting half, and the harness's own truncation
+handles the gate half — neither is what the rule currently opens on.
+
+**`git -C <own repo>` is a per-session disposition, not a machine-wide trend.** Sample 1's 23% and
+sample 3's 0% came from the same repo, the same shape, the same day's rules. Nothing further is owed
+on that question.
+
+**The `exit-masked` consequence check works, and has fired clean four times.** `session-harvest`'s
+rule — a non-zero `exit-masked` means the session's own green results are unverified, so re-run the
+gate unpiped and count how many times the session asserted a green on a masked call:
+
+| sample | `exit-masked` | assertions | unpiped re-run     |
+| ------ | ------------: | ---------: | ------------------ |
+| 1      |           19% |          — | exit 0             |
+| 2      |           28% |        ~15 | exit 0             |
+| 3      |           27% |          3 | exit 0             |
+| 4      |           32% |          5 | exit 0             |
+| 5      |            8% |          6 | exit 0, 643 passed |
+
+Every green held. **"No harm done" is the wrong lesson**: the claims were true and the method could
+not have distinguished them from false ones, and sample 2's session pushed five times on that basis.
+The count tracks how chatty a session is about its gate rather than how bad the piping is — 27% and
+28% produced 3 and ~15 assertions respectively.
+
+**`audit.py`'s `compare` scored absent baseline tags wrongly, and older rows are affected.** A tag
+**missing** from the baseline was treated as `0.0`, so a "down" expectation on a pattern added after
+the baseline was saved evaluated `0.0 < 0.0` and reported **MISS at a 0% rate**, while other absent
+tags collected an equally unearned **OK**. Sample 1 first printed 9/12 for that reason; the honest
+figure is 9/11. Fixed in `agent-skills` on 2026-09-02, with `"zero"` expectations still judged (they
+are absolute and need no baseline) and only `"down"` ones skipped as `(new)`. **Any adherence figure
+quoted from a run whose baseline predates the pattern is affected, in both directions** — re-read
+rather than re-trusted if an older sample's score is ever compared against a newer one.
+
+## Open questions
+
+[NEEDS CLARIFICATION: **the gate may be the fix rather than the discipline.**
+`inv quality.precommit` prints ~45 lines on success, of which the informative part is the last four,
+and it is the single biggest contributor to `head/tail` and `exit-masked` in samples 2, 4 and 5
+independently. Two levers that do not depend on anybody remembering: a quieter default that prints a
+summary on success and the whole thing on failure, or a documented
+`inv quality.precommit > log 2>&1` shape with a Read of the log — which the global rules already
+prefer and which the sessions demonstrably do not reach for. Sample 2's falsification kills the
+"output is truncated so the filter buys something" argument for a `--quiet` flag, but not the
+readability argument.]
+
+[NEEDS CLARIFICATION: **what the actual output ceiling is**, since 4000 lines is a floor rather than
+the limit. Sample 2's probe shows the gate's output is comfortably under whatever the limit is,
+which is enough to kill the verbose-gate story but not enough to say the filter is never justified.
+A one-line probe at 20k and 100k lines would establish where truncation begins and which end it
+keeps — worth knowing once, machine-wide, because every session reaches for this filter and none of
+them can currently say whether it is ever the right call.]
+
+[NEEDS CLARIFICATION: **whether reading unfamiliar third-party source is a legitimate `head` case
+the counter should distinguish.** Half of sample 5's `head/tail` calls were exploratory greps over
+vendored clones where the result set size was genuinely unknown. The rule's own answer is "count
+first with `rg -c`", which is two calls where one was wanted, and the counter cannot tell that
+population from the gate one. Worth knowing whether the rest of the corpus splits the same way,
+because the two have different fixes and only one of them is a discipline problem.]
+
+[NEEDS CLARIFICATION: **should `exit-masked` join `EXPECTATIONS`?** It is measured, reported and now
+has a documented consequence in `session-harvest`, but it is scored by nothing, so a run that halves
+it gets no credit and one that doubles it produces no MISS. Against: it is a symptom of `head/tail`
+rather than an independent habit, and scoring both double-counts one behaviour.]
+
+## Recommended direction
+
+**Nothing to change in `~/AGENTS.md` from these samples.** Two of the corpus's questions are now
+closed — the `git -C` rate is a disposition and not a trend, and the `exit-masked` consequence check
+works — and `head/tail`, the one persistent miss, is the rate that
+`2026-08-28-auto-mode-contradicts-bash-rules.md` exists to explain. These are rows for that plan,
+not new arguments.
+
+The one open lever with evidence behind it is the gate's own verbosity. Before building anything,
+settle the output ceiling (a one-line probe) and decide whether a quieter `inv quality.precommit`
+default is worth it, since three independent sessions reached the same command by the same route.
+
+`2026-09-02-rg-replace-flag-used-twice-in-one-session.md` is a separate finding of the same "simply
+not followed" kind and is deliberately not merged here — it is one flag with its own proposed
+counter, not a session-level rate.
