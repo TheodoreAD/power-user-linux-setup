@@ -10,13 +10,13 @@
         <meta name="author" content="Teodor Dumitrescu <teodor.dumitrescu@gmail.com>">
       
       
-        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/packages.html">
+        <link rel="canonical" href="https://TheodoreAD.github.io/power-user-linux-setup/tasks.html">
       
       
-        <link rel="prev" href="./configuration.html">
+        <link rel="prev" href="./packages.html">
       
       
-        <link rel="next" href="./tasks.html">
+        <link rel="next" href="./updating.html">
       
       
         
@@ -27,7 +27,7 @@
     
     
       
-        <title>Package catalog - Power User Linux Setup</title>
+        <title>Task index - Power User Linux Setup</title>
       
     
     
@@ -85,7 +85,7 @@
     <div data-md-component="skip">
       
         
-        <a href="#package-catalog" class="md-skip">
+        <a href="#task-index" class="md-skip">
           Skip to content
         </a>
       
@@ -119,7 +119,7 @@
         <div class="md-header__topic" data-md-component="header-topic">
           <span class="md-ellipsis">
             
-              Package catalog
+              Task index
             
           </span>
         </div>
@@ -618,6 +618,33 @@
                 
   
   
+  
+  
+    <li class="md-nav__item">
+      <a href="./packages.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Package catalog
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
     
   
   
@@ -637,7 +664,7 @@
   <span class="md-ellipsis">
     
   
-  Package catalog
+  Task index
 
     
   </span>
@@ -647,14 +674,14 @@
           <span class="md-nav__icon md-icon"></span>
         </label>
       
-      <a href="packages.html" class="md-nav__link md-nav__link--active">
+      <a href="tasks.html" class="md-nav__link md-nav__link--active">
         
   
   
   <span class="md-ellipsis">
     
   
-  Package catalog
+  Task index
 
     
   </span>
@@ -694,33 +721,6 @@
   
 </nav>
       
-    </li>
-  
-
-              
-            
-              
-                
-  
-  
-  
-  
-    <li class="md-nav__item">
-      <a href="./tasks.html" class="md-nav__link">
-        
-  
-  
-  <span class="md-ellipsis">
-    
-  
-  Task index
-
-    
-  </span>
-  
-  
-
-      </a>
     </li>
   
 
@@ -2290,634 +2290,576 @@
   
 
 
-<h1 id="package-catalog">Package catalog</h1>
-<p>Everything a full <code>inv setup</code> installs on a workstation, in one table. This is the answer to &ldquo;what
-do I actually get&rdquo; — <a href="configuration.html">How it works</a> is the answer to &ldquo;how&rdquo;, and
-<a href="apt_packages.html">apt_packages.md</a> explains the install <em>methods</em> the <code>Method</code> column names.</p>
-<p>The table is generated from <code>setup.toml</code>, which is the single declaration of what this repo
-installs. It is not hand-maintained: <code>inv catalog.render-packages</code> rewrites it, and a unit test
-fails if the committed table has drifted from <code>setup.toml</code>, so a package cannot be added without the
-catalog following. Each row&rsquo;s text is the first sentence of that entry&rsquo;s <code>description</code>; the rest of
-the description, and every install detail, stays in <code>setup.toml</code>.</p>
-<p><strong>Reading the columns:</strong></p>
-<ul>
-<li><strong>Tags</strong> decide what a given machine gets. Seven of them actually gate installation — <code>gui</code>,
-  <code>desktop</code>, <code>gnome</code>, <code>workstation</code>, <code>corporate</code>, <code>ide</code>, <code>windows-native</code> — and <code>PULSE_EXCLUDE_TAGS</code>
-  is how a headless server, a WSL distro or a dev container opts out of a whole class at once. See
-  <a href="configuration.html">How it works</a> for the rest, and <a href="dev-container.html">dev-container.md</a> for the
-  exclusion set a container uses.</li>
-<li><strong>Method</strong> is how the thing is installed, not what it is: <code>apt</code> from Ubuntu&rsquo;s own archive,
-  <code>apt-repo</code> from a third-party one, <code>deb-github</code>/<code>deb-url</code> from a release artifact, <code>uv-tool</code> for a
-  PyPI-distributed CLI, <code>archive</code>/<code>binary</code>/<code>script</code> for upstream tarballs and install scripts, <code>nvm</code>
-  for node, <code>gnome-extension</code>, and <code>zsh</code>/<code>wrapper-script</code> for entries that write config or a helper
-  rather than installing a program.</li>
-</ul>
-<p>Two kinds of <code>setup.toml</code> entry are deliberately absent: those disabled by default, since no machine
-installs them, and the one entry that installs nothing at all (it exists to carry a permission
-grant).</p>
-<!-- PULSE::package-catalog -->
+<h1 id="task-index">Task index</h1>
+<p>Every command this repo publishes, with what it does. <code>inv --list</code> prints the same thing on a
+machine that already has PULSE installed; this page is for the rest of the time — deciding whether
+something exists before you clone, or finding the name of the task you half-remember.</p>
+<p>The table is generated from the invoke namespace by <code>inv catalog.render-tasks</code> and guarded by a unit
+test, so a task cannot be added, renamed or re-described without this page following. Each row&rsquo;s
+text is the first sentence of the task&rsquo;s own docstring; <code>inv --help &lt;task&gt;</code> prints the whole thing,
+including its options.</p>
+<p><strong>How to read the names.</strong> <code>inv &lt;namespace&gt;.&lt;task&gt;</code> reads as an imperative: the namespace is the
+subject, the task is the action — <code>inv apt.install-base</code> is &ldquo;apt: install base&rdquo;. A few namespaces
+are themselves the action (<code>setup</code>, <code>verify</code>, <code>clean</code>, <code>deploy</code>, <code>test</code>), so their leaves name a
+scope instead: <code>verify.all</code>, <code>test.unit</code>. Names like <code>status</code>, <code>check</code>, <code>list</code> and <code>diff</code> never
+modify anything.</p>
+<p>Not every task is meant for everyday use. The ones a normal machine actually needs are in
+<a href="index.html">index.md</a>&rsquo;s quick start and maintenance sections; the rest exist for a specific situation
+— a corporate proxy, a WSL distro, a container build, a docs edit.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p>Tasks that write to a live GNOME session (<code>gnome.configure</code>, <code>gnome.install-extensions</code>,
+<code>screenshot.enable</code>/<code>disable</code>) need a real Wayland/X11 session and change your desktop
+immediately. Their read-only siblings (<code>gnome.status</code>, <code>screenshot.status</code>) are safe anywhere,
+and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would do.</p>
+</div>
+<!-- PULSE::task-index -->
 
 <table>
 <thead>
 <tr>
-<th>Package</th>
-<th>What it is</th>
-<th>Tags</th>
-<th>Method</th>
+<th>Task</th>
+<th>What it does</th>
 </tr>
 </thead>
 <tbody>
 <tr>
-<td><code>act</code></td>
-<td>Runs GitHub Actions workflows locally in Docker containers (nektos/act) — act-bin wraps the real binary</td>
-<td><code>dev</code>, <code>workstation</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv agents.wire-claude-hook</code></td>
+<td>Wire Claude Code&rsquo;s Bash tool to auto-activate this project&rsquo;s direnv environment on every call, by writing <dir>/.claude/settings.json with env.CLAUDE_ENV_FILE and a PreToolUse/Bash hook that…</td>
 </tr>
 <tr>
-<td><code>actionlint</code></td>
-<td>Static checker for GitHub Actions workflow files — same shellcheck-py pattern, wrapping the real actionlint binary</td>
-<td><code>dev</code>, <code>linting</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv ai.check-rule-prerequisites</code></td>
+<td>Report ~/AGENTS.md rules whose declared prerequisite is no longer installed.</td>
 </tr>
 <tr>
-<td><code>agent-skills</code></td>
-<td>Installs every Agent Skill this machine uses from github.com/TheodoreAD/agent-skills, where they are now authored.</td>
-<td><code>dev</code></td>
-<td><code>skill</code></td>
+<td><code>inv ai.install-skills</code></td>
+<td>Ensure .agents/skills exists with .claude/skills symlinked to it, then install every skill declared via a <code>skills</code> field anywhere in setup.toml</td>
 </tr>
 <tr>
-<td><code>agents-md</code></td>
-<td>Global ~/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/.claude/CLAUDE.md symlinks to it</td>
-<td><code>shell</code>, <code>ai</code></td>
-<td><code>wrapper-script</code></td>
+<td><code>inv allowlist.apply</code></td>
+<td>Merge the reviewed Bash allow/ask rules into ~/.claude/settings.json&rsquo;s <code>permissions</code> block — the only thing this task ever touches there.</td>
 </tr>
 <tr>
-<td><code>apparmor-jbr-cef</code></td>
-<td>AppArmor profiles for JetBrains IDEs — grants user namespace access so the embedded Chromium browser (JCEF) can run sandboxed.</td>
-<td><code>system</code>, <code>ide</code>, <code>gui</code></td>
-<td><code>apparmor-profile</code></td>
+<td><code>inv allowlist.check-coverage</code></td>
+<td>Does every child of a node-with-children actually have its own renderable rule?</td>
 </tr>
 <tr>
-<td><code>askpass-zenity</code></td>
-<td>Zenity GUI askpass helper — enables sudo and ssh-agent key unlocks without a terminal by showing a GUI password/passphrase dialog</td>
-<td><code>shell</code>, <code>system</code></td>
-<td><code>wrapper-script</code></td>
+<td><code>inv allowlist.check-man-deps</code></td>
+<td>Does any registered tool&rsquo;s &ndash;help invocation secretly depend on a separately-installed man-page-rendering package?</td>
 </tr>
 <tr>
-<td><code>bat</code></td>
-<td>Cat clone with syntax highlighting and git diff integration</td>
-<td><code>cli</code>, <code>modern</code></td>
-<td><code>apt</code></td>
+<td><code>inv allowlist.classify</code></td>
+<td>Classify each tool&rsquo;s extracted nodes (subcommands, and nested subcommands for any tool with max_depth &gt; 1) as read_only/write/dangerous via a headless <code>claude -p</code> call, isolated in a scratch cwd…</td>
 </tr>
 <tr>
-<td><code>btop</code></td>
-<td>Modern resource monitor with mouse support, themes, and detailed per-process stats</td>
-<td><code>monitor</code>, <code>cli</code>, <code>modern</code></td>
-<td><code>apt</code></td>
+<td><code>inv allowlist.extract</code></td>
+<td>Capture &ndash;help text per registered tool (tools.toml), recursing into the subcommand tree for any tool with max_depth &gt; 1.</td>
 </tr>
 <tr>
-<td><code>build-tools</code></td>
-<td>C/C++ build toolchain and POSIX developer man pages</td>
-<td><code>build</code>, <code>dev</code></td>
-<td><code>apt</code></td>
+<td><code>inv allowlist.reconfirm</code></td>
+<td>Second-pass LLM reclassification for everything currently sitting at <code>needs_review</code> (subcommands and flags alike)</td>
 </tr>
 <tr>
-<td><code>citrix-workspace-deps</code></td>
-<td>Runtime dependency for Citrix Workspace — provides libwoff2dec.so required by selfservice</td>
-<td><code>gui</code>, <code>corporate</code></td>
-<td><code>apt</code></td>
+<td><code>inv allowlist.render</code></td>
+<td>Print the reviewed subset of rules as Claude Bash(&hellip;) allow/ask rules or Copilot chat.tools.terminal.autoApprove regex rules.</td>
 </tr>
 <tr>
-<td><code>claude-code</code></td>
-<td>Claude Code CLI — Anthropic&rsquo;s terminal coding agent, via the native self-updating installer</td>
-<td><code>ai</code></td>
-<td><code>script</code></td>
+<td><code>inv allowlist.review</code></td>
+<td>Show tools with unreviewed classifications (new or changed since the last reviewed snapshot) and, on confirmation, mark them reviewed.</td>
 </tr>
 <tr>
-<td><code>claude-desktop</code></td>
-<td>Claude desktop app (community repackage — aaddrick/claude-desktop-debian)</td>
-<td><code>ai</code>, <code>desktop</code>, <code>gui</code>, <code>windows-native</code></td>
-<td><code>apt-repo</code></td>
+<td><code>inv allowlist.status</code></td>
+<td>Quick table: which registered tools are installed, stale (version changed since last classify), or still unreviewed.</td>
 </tr>
 <tr>
-<td><code>claude-statusline</code></td>
-<td>Custom Claude Code statusline — dir/git-status (p10k-style), python env, model tier, context-window fill, both 5h/7d rate-limit windows, and session cost, all color-coded by a shared muted &ldquo;weight&rdquo; palette.</td>
-<td><code>ai</code></td>
-<td><code>wrapper-script</code></td>
+<td><code>inv apt.audit-keys</code></td>
+<td>Audit apt key hygiene — report legacy keys, old-style trust, stale backups.</td>
 </tr>
 <tr>
-<td><code>clipboard</code></td>
-<td>Wayland clipboard CLI — wl-copy and wl-paste for scripts and terminal tools</td>
-<td><code>cli</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>apt</code></td>
+<td><code>inv apt.clean-cache</code></td>
+<td>Remove apt&rsquo;s downloaded .deb cache for packages no longer available at their cached version (<code>apt-get autoclean</code>) — conservative, keeps .debs for currently-installed versions cached for reinstall.</td>
 </tr>
 <tr>
-<td><code>copier</code></td>
-<td>Project scaffolding tool with in-place template updates — drives the scaffoldapy repo template</td>
-<td><code>dev</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv apt.clean-cache-full</code></td>
+<td>Remove apt&rsquo;s entire downloaded .deb cache (/var/cache/apt/archives), including .debs for currently-installed packages — apt just re-downloads them if reinstalled.</td>
 </tr>
 <tr>
-<td><code>curl</code></td>
-<td>Command-line tool for transferring data with URLs — HTTP, FTP, and more. wget is also available without installing (ubuntu-standard default) for simple downloads.</td>
-<td><code>network</code>, <code>cli</code></td>
-<td><code>apt</code></td>
+<td><code>inv apt.configure</code></td>
+<td>Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars.</td>
 </tr>
 <tr>
-<td><code>direnv</code></td>
-<td>Per-directory environment variable loading via .envrc files</td>
-<td><code>dev</code>, <code>environment</code></td>
-<td><code>apt</code></td>
+<td><code>inv apt.install-base</code></td>
+<td>Install base apt packages from config.</td>
 </tr>
 <tr>
-<td><code>dive</code></td>
-<td>Docker image layer inspector — visualise layer contents and size</td>
-<td></td>
-<td><code>deb-github</code></td>
+<td><code>inv apt.install-debs</code></td>
+<td>Install packages sourced from GitHub releases or direct deb URLs.</td>
 </tr>
 <tr>
-<td><code>docker</code></td>
-<td>Docker CE container runtime with Compose and Buildx plugins</td>
-<td><code>workstation</code></td>
-<td><code>apt-repo</code></td>
+<td><code>inv apt.install-repos</code></td>
+<td>Set up external apt repos and install their packages.</td>
 </tr>
 <tr>
-<td><code>dos2unix</code></td>
-<td>Convert CRLF line endings to LF — useful when receiving files from Windows</td>
-<td><code>cli</code>, <code>files</code></td>
-<td><code>apt</code></td>
+<td><code>inv apt.refresh-keys</code></td>
+<td>Re-download GPG keys for all enabled apt-repo sources.</td>
 </tr>
 <tr>
-<td><code>dprint</code></td>
-<td>Fast pluggable code formatter for JSON, TOML, Markdown and YAML</td>
-<td></td>
-<td><code>script</code></td>
+<td><code>inv apt.uninstall</code></td>
+<td>Purge the apt packages declared for a setup.toml section (any method), e.g. inv apt.uninstall citrix-workspace.</td>
 </tr>
 <tr>
-<td><code>edge</code></td>
-<td>Microsoft Edge browser (stable channel)</td>
-<td><code>browser</code>, <code>desktop</code>, <code>gui</code>, <code>windows-native</code></td>
-<td><code>apt-repo</code></td>
+<td><code>inv apt.upgrade-debs</code></td>
+<td>Upgrade all deb-github packages to their latest versions (re-downloads and reinstalls each).</td>
 </tr>
 <tr>
-<td><code>eza</code></td>
-<td>Modern replacement for ls with colour, icons, and git status</td>
-<td><code>files</code>, <code>modern</code></td>
-<td><code>apt</code></td>
+<td><code>inv catalog.render-packages</code></td>
+<td>Regenerate docs/packages.md&rsquo;s catalog table from setup.toml.</td>
 </tr>
 <tr>
-<td><code>fd</code></td>
-<td>Fast, user-friendly alternative to find — respects .gitignore</td>
-<td><code>files</code>, <code>search</code>, <code>modern</code></td>
-<td><code>apt</code></td>
+<td><code>inv catalog.render-tasks</code></td>
+<td>Regenerate docs/tasks.md&rsquo;s task index from the invoke namespace.</td>
 </tr>
 <tr>
-<td><code>fkill</code></td>
-<td>Interactive fuzzy process killer — fkill to pick from a list, fkill :PORT to kill by port.</td>
-<td><code>cli</code>, <code>interactive</code></td>
-<td><code>zsh</code></td>
+<td><code>inv certs.check</code></td>
+<td>Read-only diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts.</td>
 </tr>
 <tr>
-<td><code>flameshot</code></td>
-<td>Screenshot tool with built-in annotation editor — arrows, text, blur, crop.</td>
-<td><code>desktop</code>, <code>gui</code>, <code>gnome</code></td>
-<td><code>deb-github</code></td>
+<td><code>inv certs.install</code></td>
+<td>Install the corporate CA bundle into the OS trust store and export it for python/node/awscli. &ndash;bundle=path overrides the [certs] table in ~/.config/power-user-linux-setup/identity.toml.</td>
 </tr>
 <tr>
-<td><code>font-manager</code></td>
-<td>GUI for browsing, previewing, and toggling installed font families — useful alongside Nerd Fonts</td>
-<td><code>fonts</code>, <code>desktop</code>, <code>gui</code>, <code>windows-native</code></td>
-<td><code>apt</code></td>
+<td><code>inv chrome.fix-launchers</code></td>
+<td>Label every Chrome PWA launcher by profile and unhide the primary profile&rsquo;s.</td>
 </tr>
 <tr>
-<td><code>fontconfig</code></td>
-<td>Provides fc-cache — fonts.install rebuilds the font cache with it after installing any new font files</td>
-<td><code>apt</code>, <code>setup</code></td>
-<td><code>apt</code></td>
+<td><code>inv chrome.status</code></td>
+<td>Report who starts Chrome at login, then every PWA launcher&rsquo;s profile, visibility and flag.</td>
 </tr>
 <tr>
-<td><code>freelens</code></td>
-<td>Open-source Kubernetes IDE (community fork of Lens) — cluster explorer, log viewer, resource editor</td>
-<td><code>k8s</code>, <code>dev</code>, <code>gui</code>, <code>windows-native</code></td>
-<td><code>deb-github</code></td>
+<td><code>inv clean.all</code></td>
+<td>Everything reclaimable, conservatively: caches() plus Docker&rsquo;s conservative prune (stopped containers, dangling images — see <code>docker.clean</code>).</td>
 </tr>
 <tr>
-<td><code>fzf</code></td>
-<td>Interactive fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C directory jump, ** tab completion.</td>
-<td><code>search</code>, <code>interactive</code></td>
-<td><code>apt</code></td>
+<td><code>inv clean.all-full</code></td>
+<td>Everything reclaimable, fully wiped: caches_full() plus Docker&rsquo;s full prune (also removes unused-but-tagged images — see <code>docker.clean-full</code>).</td>
 </tr>
 <tr>
-<td><code>gh</code></td>
-<td>GitHub CLI — create PRs, manage issues, clone repos, and authenticate from the terminal</td>
-<td><code>dev</code>, <code>vcs</code></td>
-<td><code>apt-repo</code></td>
+<td><code>inv clean.caches</code></td>
+<td>Conservatively remove build/download caches left behind by apt, uv, npm, and cargo installs (each self-skips if that tool isn&rsquo;t installed)</td>
 </tr>
 <tr>
-<td><code>git</code></td>
-<td>Distributed version control system</td>
-<td><code>dev</code>, <code>vcs</code></td>
-<td><code>apt</code></td>
+<td><code>inv clean.caches-full</code></td>
+<td>Fully wipe apt/uv/npm/cargo caches (each self-skips if that tool isn&rsquo;t installed)</td>
 </tr>
 <tr>
-<td><code>glances</code></td>
-<td>Cross-platform system monitoring TUI — CPU, memory, disk, network at a glance</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv configs.diff</code></td>
+<td>Show what <code>configs.pull</code> would change, plus any repo-tasks-quality entry this project&rsquo;s dependency-groups.dev has fallen behind on, without writing anything.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-aatws</code></td>
-<td>Advanced Alt-Tab Window Switcher — replaces Alt+Tab/Super+Tab with a searchable, filterable switcher; type to find running windows by title; actively maintained for GNOME 46–50</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv configs.ensure-deps</code></td>
+<td>Ensure this project&rsquo;s pyproject.toml declares every quality-tooling dependency repo-tasks needs (sourced from repo-tasks&rsquo; own dependency-groups.quality</td>
 </tr>
 <tr>
-<td><code>gnome-ext-caffeine</code></td>
-<td>Caffeine — panel toggle to prevent screen lock and auto-suspend; auto-activates in fullscreen; zero config; 3M+ downloads</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv configs.pull</code></td>
+<td>Materialize ruff.toml/pyrightconfig.json/dprint.json/pytest.ini/zizmor.yml/.editorconfig from the canonical source into this repo&rsquo;s root, verbatim.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-clipboard-indicator</code></td>
-<td>Clipboard Indicator — clipboard history accessible from the top bar; keeps the last N entries for fast re-paste</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deploy.all</code></td>
+<td>Deploy every path this repo declares under ~ — or one package&rsquo;s with &ndash;name — never destroying content PULSE can&rsquo;t prove it wrote.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-dash-to-panel</code></td>
-<td>Dash to Panel — merges the top bar and dock into a single taskbar; Windows-style workflow with app icons, clock, and system tray in one strip</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deploy.status</code></td>
+<td>Report every path this repo deploys under ~, and whether it still matches its repo source.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-extension-list</code></td>
-<td>Extension List — manage and toggle installed GNOME extensions from a top-bar dropdown without opening Settings</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deps.audit</code></td>
+<td>Check the locked dependency set for known advisories (uv audit &ndash;locked).</td>
 </tr>
 <tr>
-<td><code>gnome-ext-just-perfection</code></td>
-<td>Just Perfection — single GUI to tweak all GNOME Shell UI details: hide/move Activities button, clock position, hot corners, animation speed, notification banners, panel sizing</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deps.check</code></td>
+<td>Check uv.lock is up-to-date with pyproject.toml, read-only, no .venv needed.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-lockkeys</code></td>
-<td>Lock Keys — shows CapsLock and NumLock state in the top bar so you always know what mode you&rsquo;re in</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deps.export</code></td>
+<td>Export uv.lock to a pinned requirements.txt (&ndash;locked, non-editable) for non-uv-aware consumers — SBOM/vulnerability scanners, plain-pip CI steps.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-smart-auto-move</code></td>
-<td>Smart Auto Move — learns and restores window positions and workspace assignments across sessions; Wayland-compatible; useful for repeatable multi-window dev layouts</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deps.list</code></td>
+<td>List what&rsquo;s actually installed in .venv (uv pip list).</td>
 </tr>
 <tr>
-<td><code>gnome-ext-space-bar</code></td>
-<td>Space Bar — replaces Activities/workspace indicator with an i3-style named workspace bar; click to switch, auto-name by running app; pairs well with dash-to-panel</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deps.lock</code></td>
+<td>Write/update uv.lock.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-tiling-shell</code></td>
-<td>Tiling Shell — snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native; inv gnome.install-extensions auto-disables <a href="&#109;&#97;&#105;&#108;&#116;&#111;&#58;&#116;&#105;&#108;&#105;&#110;&#103;&#45;&#97;&#115;&#115;&#105;&#115;&#116;&#97;&#110;&#116;&#64;&#117;&#98;&#117;&#110;&#116;&#117;&#46;&#99;&#111;&#109;">&#116;&#105;&#108;&#105;&#110;&#103;&#45;&#97;&#115;&#115;&#105;&#115;&#116;&#97;&#110;&#116;&#64;&#117;&#98;&#117;&#110;&#116;&#117;&#46;&#99;&#111;&#109;</a> (conflict)</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv deps.tree</code></td>
+<td>Show the full resolved dependency tree from uv.lock (uv tree).</td>
 </tr>
 <tr>
-<td><code>gnome-ext-tophat</code></td>
-<td>Top Hat — CPU, memory, disk I/O, and network sparklines in the top bar; modern TypeScript codebase, no extra deps</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv dev-env.setup</code></td>
+<td>Run once after cloning: create/refresh .venv, let direnv auto-activate it, and wire Claude Code&rsquo;s Bash tool to auto-activate it too.</td>
 </tr>
 <tr>
-<td><code>gnome-ext-vitals</code></td>
-<td>Vitals — hardware sensors: temps, fans, voltage, disk temps; show-processor/memory/network disabled (Top Hat handles usage metrics)</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code>, <code>workstation</code></td>
-<td><code>gnome-extension</code></td>
+<td><code>inv devcontainer.check</code></td>
+<td>Read-only dry run for the container distribution path: reports what <code>inv setup</code>&rsquo;s packages+shell phases would do under the recommended container tag profile, without running anything for real</td>
 </tr>
 <tr>
-<td><code>gnome-extensions-cli</code></td>
-<td>gext — CLI tool for installing, enabling, and updating GNOME Shell extensions from extensions.gnome.org.</td>
-<td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv devcontainer.print-exclude-tags</code></td>
+<td>Print CONTAINER_EXCLUDE_TAGS, comma-separated, no surrounding text.</td>
 </tr>
 <tr>
-<td><code>go</code></td>
-<td>Go programming language runtime — installs to ~/.local/share/go</td>
-<td><code>dev</code>, <code>language</code></td>
-<td><code>archive</code></td>
+<td><code>inv devcontainer.print-mounts</code></td>
+<td>Host-side interactive helper: discover credential-shaped directories/sockets on this machine (~/.ssh or $SSH_AUTH_SOCK, ~/.config/power-user-linux-setup, the corporate CA bundle from identity.toml,…</td>
 </tr>
 <tr>
-<td><code>google-chrome</code></td>
-<td>Google Chrome stable — install via deb; Chrome then self-manages its apt sources (google-chrome.sources)</td>
-<td><code>browser</code>, <code>desktop</code>, <code>gui</code></td>
-<td><code>deb-url</code></td>
+<td><code>inv devcontainer.render-docs</code></td>
+<td>Regenerate the tag-table + example block in docs/dev-container.md from CONTAINER_EXCLUDE_TAGS/_TAG_DESCRIPTIONS (HTML-comment-marked</td>
 </tr>
 <tr>
-<td><code>helm</code></td>
-<td>Kubernetes package manager — install and manage charts (application bundles) on a cluster</td>
-<td><code>k8s</code>, <code>cloud</code></td>
-<td><code>archive</code></td>
+<td><code>inv docker.clean</code></td>
+<td>Prune stopped containers, dangling images, and unused networks/build cache (<code>docker system prune -f</code>).</td>
 </tr>
 <tr>
-<td><code>htop</code></td>
-<td>Interactive process viewer — sortable columns, tree view, signal sending</td>
-<td><code>monitor</code>, <code>cli</code></td>
-<td><code>apt</code></td>
+<td><code>inv docker.clean-full</code></td>
+<td>Prune everything <code>docker.clean</code> does, plus all images not currently used by a container — tagged or not (<code>docker system prune -af</code>).</td>
 </tr>
 <tr>
-<td><code>hyperfine</code></td>
-<td>Command-line benchmarking tool with statistical analysis and warmup runs</td>
-<td><code>dev</code>, <code>benchmark</code>, <code>cli</code></td>
-<td><code>deb-github</code></td>
+<td><code>inv docker.configure</code></td>
+<td>Merge log limits and DNS into /etc/docker/daemon.json, add user to docker group.</td>
 </tr>
 <tr>
-<td><code>jetbrains-toolbox</code></td>
-<td>JetBrains Toolbox App — manages all JetBrains IDEs (PyCharm, IntelliJ, etc.) with automatic updates.</td>
-<td><code>dev</code>, <code>ide</code>, <code>gui</code></td>
-<td><code>archive</code></td>
+<td><code>inv docs.build</code></td>
+<td>Build the docs site with zensical in strict mode (fails on any warning).</td>
 </tr>
 <tr>
-<td><code>jq</code></td>
-<td>Command-line JSON processor — query, filter, and transform JSON</td>
-<td><code>cli</code>, <code>data</code></td>
-<td><code>apt</code></td>
+<td><code>inv docs.clean</code></td>
+<td>Remove the built docs site (site/).</td>
 </tr>
 <tr>
-<td><code>jq-aliases</code></td>
-<td>jq aliases and helpers — sort keys by default; ppjson, isjson, urlencode, urldecode</td>
-<td><code>cli</code>, <code>data</code></td>
-<td><code>zsh</code></td>
+<td><code>inv docs.link-check</code></td>
+<td>Check that every relative link in the repo&rsquo;s markdown resolves to a file that exists.</td>
 </tr>
 <tr>
-<td><code>k9s</code></td>
-<td>Terminal UI for Kubernetes — browse clusters, pods, logs, exec, port-forward</td>
-<td><code>k8s</code>, <code>dev</code></td>
-<td><code>deb-github</code></td>
+<td><code>inv docs.serve</code></td>
+<td>Serve the docs site locally with live reload (zensical serve).</td>
 </tr>
 <tr>
-<td><code>kind</code></td>
-<td>Kubernetes in Docker — spin up local clusters for dev and CI without a cloud provider</td>
-<td><code>k8s</code>, <code>dev</code></td>
-<td><code>binary</code></td>
+<td><code>inv fonts.check</code></td>
+<td>Report every place on this machine that names a font, and whether it agrees.</td>
 </tr>
 <tr>
-<td><code>kubectl</code></td>
-<td>Kubernetes CLI — interact with clusters, apply manifests, inspect resources.</td>
-<td><code>k8s</code>, <code>cloud</code></td>
-<td><code>apt-repo</code></td>
+<td><code>inv fonts.configure</code></td>
+<td>Set the configured monospace font as system default, GNOME Terminal, and VS Code font.</td>
 </tr>
 <tr>
-<td><code>lm-sensors</code></td>
-<td>Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command</td>
-<td><code>hardware</code>, <code>monitor</code>, <code>workstation</code></td>
-<td><code>apt</code></td>
+<td><code>inv fonts.install</code></td>
+<td>Download and install Nerd Font families to ~/.local/share/fonts.</td>
 </tr>
 <tr>
-<td><code>mkdocs-material</code></td>
-<td>Documentation site generator with Material Design theme and Mermaid diagram support</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv fonts.render-configs</code></td>
+<td>Rewrite the repo-side configs that name a font from <code>\[settings.fonts\]</code>.</td>
 </tr>
 <tr>
-<td><code>ncdu</code></td>
-<td>Ncurses disk usage analyser — interactively browse and identify space hogs</td>
-<td><code>disk</code>, <code>cli</code></td>
-<td><code>apt</code></td>
+<td><code>inv git.apply-settings</code></td>
+<td>Apply global git configuration (idempotent, no identity data required).</td>
 </tr>
 <tr>
-<td><code>node</code></td>
-<td>Node.js LTS via nvm — installs to ~/.local/share/nvm</td>
-<td></td>
-<td><code>nvm</code></td>
+<td><code>inv git.configure</code></td>
+<td>Set up per-directory git identities from ~/.config/power-user-linux-setup/identity.toml.</td>
 </tr>
 <tr>
-<td><code>nox</code></td>
-<td>Python session-based test automation, similar to tox</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv gnome.clean</code></td>
+<td>Remove user extensions not enabled in setup.toml (system/apt extensions are untouched).</td>
 </tr>
 <tr>
-<td><code>nuitka</code></td>
-<td>Python-to-C compiler — compiles Python scripts into standalone native executables</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv gnome.configure</code></td>
+<td>Apply dconf settings for all enabled extensions — re-run without reinstalling.</td>
 </tr>
 <tr>
-<td><code>nyancat</code></td>
-<td>NyanCat for the terminal — an absolute must</td>
-<td><code>terminal</code>, <code>fun</code></td>
-<td><code>apt</code></td>
+<td><code>inv gnome.enable</code></td>
+<td>Re-enable installed GNOME extensions from setup.toml without reinstalling missing ones.</td>
 </tr>
 <tr>
-<td><code>oh-my-zsh</code></td>
-<td>Oh My Zsh — zsh configuration framework with plugins and themes</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>script</code></td>
+<td><code>inv gnome.install-extensions</code></td>
+<td>Install and enable GNOME Shell extensions declared in setup.toml via gext.</td>
 </tr>
 <tr>
-<td><code>patchelf</code></td>
-<td>Modify ELF binaries — required by Nuitka to patch compiled executables</td>
-<td><code>build</code>, <code>dev</code></td>
-<td><code>apt</code></td>
+<td><code>inv gnome.status</code></td>
+<td>Show GNOME extension diagnostic: dconf flags, active state, and setup.toml alignment.</td>
 </tr>
 <tr>
-<td><code>plan-store</code></td>
-<td>The plans store at ~/plans — where the <code>plan-docs</code> skill files plans for repos that cannot hold their own.</td>
-<td><code>dev</code></td>
-<td><code>zsh</code></td>
+<td><code>inv gnome.update</code></td>
+<td>Update all gext-managed GNOME Shell extensions.</td>
 </tr>
 <tr>
-<td><code>powerlevel10k</code></td>
-<td>Powerlevel10k — fast, flexible zsh theme with instant prompt</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>git-clone</code></td>
+<td><code>inv home.list-claims</code></td>
+<td>List every path in ~ this repo has a claim on, classified by writer, authority and tier.</td>
 </tr>
 <tr>
-<td><code>pulse-proxy-start</code></td>
-<td>Devcontainer/no-systemd fallback starter for the Px proxy daemon (inv proxy.fix/install use this when systemd &ndash;user isn&rsquo;t available)</td>
-<td><code>corporate</code></td>
-<td><code>wrapper-script</code></td>
+<td><code>inv ide.configure-pycharm</code></td>
+<td>Copy font settings into the active PyCharm config directory.</td>
 </tr>
 <tr>
-<td><code>px-proxy</code></td>
-<td>Px — local unauthenticated proxy daemon that authenticates to a corporate HTTP(S) proxy on the client&rsquo;s behalf (NTLM/Kerberos/Basic), so apps never see the real credential.</td>
-<td><code>corporate</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv identity.init</code></td>
+<td>Interactive wizard for ~/.config/power-user-linux-setup/identity.toml: pick simple (one name/email, one projects directory</td>
 </tr>
 <tr>
-<td><code>python-keyring</code></td>
-<td>Python keyring library — CLI and API for storing/retrieving secrets in the OS-native credential store (Secret Service/GNOME Keyring, macOS Keychain, &hellip;)</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv net.check</code></td>
+<td>Diagnose this machine&rsquo;s network against what a PULSE run actually needs.</td>
 </tr>
 <tr>
-<td><code>research-library</code></td>
-<td>Shared, cross-project research library at ~/research — vendor repo clones, PDFs/epubs, and mirrored docs pages, kept outside every git repo.</td>
-<td><code>dev</code></td>
-<td><code>wrapper-script</code></td>
+<td><code>inv node.clean-cache</code></td>
+<td>Garbage-collect npm&rsquo;s package cache (~/.npm), removing invalid/unneeded entries while verifying the rest — conservative, npm&rsquo;s own recommended way to reclaim cache space.</td>
 </tr>
 <tr>
-<td><code>ripgrep</code></td>
-<td>Extremely fast recursive grep — respects .gitignore, supports regex</td>
-<td><code>search</code>, <code>modern</code></td>
-<td><code>apt</code></td>
+<td><code>inv node.clean-cache-full</code></td>
+<td>Wipe npm&rsquo;s entire package cache (~/.npm).</td>
 </tr>
 <tr>
-<td><code>rust</code></td>
-<td>Rust toolchain via rustup — rustc, cargo, rustfmt and clippy (the default rustup profile), plus the rust-analyzer component.</td>
-<td><code>dev</code>, <code>language</code></td>
-<td><code>script</code></td>
+<td><code>inv node.install</code></td>
+<td>Install nvm, Node.js, and global npm packages from config.</td>
 </tr>
 <tr>
-<td><code>shellcheck</code></td>
-<td>Static analysis and linting for shell scripts</td>
-<td><code>dev</code>, <code>linting</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv proxy.check</code></td>
+<td>Diagnose corporate-proxy state: environment, candidate address, auth scheme, Px/daemon status.</td>
 </tr>
 <tr>
-<td><code>shfmt</code></td>
-<td>Formatter for shell scripts — the shellcheck-py sibling package, wrapping the real shfmt binary</td>
-<td><code>dev</code>, <code>linting</code></td>
-<td><code>uv-tool</code></td>
+<td><code>inv proxy.fix</code></td>
+<td>Install px if missing and (re)write its config + daemon, without touching credentials.</td>
 </tr>
 <tr>
-<td><code>software-properties-common</code></td>
-<td>Provides add-apt-repository — prerequisite for all apt-repo setup tasks in this config</td>
-<td><code>apt</code>, <code>setup</code></td>
-<td><code>apt</code></td>
+<td><code>inv proxy.install</code></td>
+<td>Full flow: detect, capture a credential if the probe requires one, configure + start the daemon, then verify it actually authenticates before pointing every terminal at it.</td>
 </tr>
 <tr>
-<td><code>ssh</code></td>
-<td>SSH client, GPG, and keychain agent manager — keys and secure connections</td>
-<td><code>security</code>, <code>dev</code></td>
-<td><code>apt</code></td>
+<td><code>inv python.clean-cache</code></td>
+<td>Prune unreachable entries from uv&rsquo;s build/wheel cache (~/.cache/uv) — conservative, keeps entries still reachable from any installed environment.</td>
 </tr>
 <tr>
-<td><code>terminator</code></td>
-<td>Feature-rich terminal emulator with split panes and profiles</td>
-<td><code>terminal</code>, <code>gui</code>, <code>windows-native</code></td>
-<td><code>apt</code></td>
+<td><code>inv python.clean-cache-full</code></td>
+<td>Wipe uv&rsquo;s entire build/wheel cache (~/.cache/uv).</td>
 </tr>
 <tr>
-<td><code>terraform</code></td>
-<td>Hashicorp Terraform — infrastructure as code</td>
-<td></td>
-<td><code>apt-repo</code></td>
+<td><code>inv python.install-tools</code></td>
+<td>Install global Python CLI tools via uv tool install.</td>
 </tr>
 <tr>
-<td><code>tilt</code></td>
-<td>Live-update dev environment for Kubernetes — rebuilds and hot-reloads on file changes</td>
-<td><code>k8s</code>, <code>dev</code></td>
-<td><code>archive</code></td>
+<td><code>inv python.set-default</code></td>
+<td>Change settings.uv_python_default in setup.toml and re-point the live python/python3 shims at it (uv python install <version> &ndash;default, unless uv_python_set_default is false).</td>
 </tr>
 <tr>
-<td><code>tmux</code></td>
-<td>Terminal multiplexer — persistent sessions, split panes, detach/reattach</td>
-<td><code>terminal</code>, <code>multiplexer</code>, <code>workstation</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.check</code></td>
+<td>CI-style gate: every check, no changes written.</td>
 </tr>
 <tr>
-<td><code>tree</code></td>
-<td>Recursive directory listing formatted as a tree</td>
-<td><code>files</code>, <code>cli</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.dockerfile-check</code></td>
+<td>Run hadolint against every Dockerfile in the repo.</td>
 </tr>
 <tr>
-<td><code>twine</code></td>
-<td>Utility for publishing Python packages to PyPI</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv quality.fix</code></td>
+<td>Fix everything auto-fixable: ruff &ndash;fix, ruff format, dprint fmt, shfmt -w.</td>
 </tr>
 <tr>
-<td><code>unzip</code></td>
-<td>Prerequisite for dprint&rsquo;s install.sh (unzips its release archive) and deb-github assets that ship as a .zip wrapping a .deb (e.g. flameshot)</td>
-<td><code>apt</code>, <code>setup</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.format-apply</code></td>
+<td>Apply formatting: ruff format, then dprint fmt.</td>
 </tr>
 <tr>
-<td><code>uv-env</code></td>
-<td>UV_PYTHON shell default and completions — keep UV_PYTHON in sync with settings.uv_python_default</td>
-<td></td>
-<td><code>zsh</code></td>
+<td><code>inv quality.format-check</code></td>
+<td>Check formatting (ruff format, dprint) without writing changes.</td>
 </tr>
 <tr>
-<td><code>vim</code></td>
-<td>Full Vim editor (vim-tiny is the 24.04 default; this installs the complete version)</td>
-<td><code>editor</code>, <code>cli</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.lint-apply</code></td>
+<td>Run ruff&rsquo;s linter and apply auto-fixes.</td>
 </tr>
 <tr>
-<td><code>vscode</code></td>
-<td>Visual Studio Code — Microsoft official apt repo; auto-updates via apt.</td>
-<td><code>dev</code>, <code>editor</code>, <code>ide</code>, <code>gui</code></td>
-<td><code>apt-repo</code></td>
+<td><code>inv quality.lint-check</code></td>
+<td>Run ruff&rsquo;s linter (no fixes).</td>
 </tr>
 <tr>
-<td><code>wezterm</code></td>
-<td>WezTerm — GPU-accelerated terminal emulator with Lua config, split panes, tabs, and SSH multiplexing.</td>
-<td><code>gui</code>, <code>terminal</code>, <code>dev</code>, <code>windows-native</code></td>
-<td><code>deb-github</code></td>
+<td><code>inv quality.precommit</code></td>
+<td>Fix, then check — the one command to run before considering a change done, with no need to know or invoke the individual tools.</td>
 </tr>
 <tr>
-<td><code>xdg-desktop-portal-gnome</code></td>
-<td>GNOME backend for the xdg-desktop-portal Screenshot/ScreenCast D-Bus interfaces</td>
-<td><code>desktop</code>, <code>gnome</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.shell-check</code></td>
+<td>Run shellcheck against every *.sh file in the repo.</td>
 </tr>
 <tr>
-<td><code>zenity</code></td>
-<td>Runtime dependency of the askpass-zenity wrapper script (GUI password/passphrase dialog for sudo -A / SSH_ASKPASS)</td>
-<td><code>gui</code>, <code>shell</code>, <code>system</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.shell-format-apply</code></td>
+<td>Apply shell script formatting (shfmt).</td>
 </tr>
 <tr>
-<td><code>zensical</code></td>
-<td>Modern static site generator from the creators of Material for MkDocs — Rust core, Python API</td>
-<td></td>
-<td><code>uv-tool</code></td>
+<td><code>inv quality.shell-format-check</code></td>
+<td>Check shell script formatting (shfmt) without writing changes.</td>
 </tr>
 <tr>
-<td><code>zsh</code></td>
-<td>The zsh shell itself — Oh My Zsh and every zsh-method config entry need it installed first</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>apt</code></td>
+<td><code>inv quality.type-check</code></td>
+<td>Run basedpyright&rsquo;s type checker.</td>
 </tr>
 <tr>
-<td><code>zsh-autosuggestions</code></td>
-<td>Fish-style history-based command suggestions as you type</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>git-clone</code></td>
+<td><code>inv quality.verify-types</code></td>
+<td>Report basedpyright&rsquo;s type-completeness for each package under src/ — how much of the published API a consumer sees with a known type.</td>
 </tr>
 <tr>
-<td><code>zsh-history</code></td>
-<td>Zsh history tuning — large history, deduplication, timestamps, cross-session sharing</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>zsh</code></td>
+<td><code>inv quality.workflow-check</code></td>
+<td>Check every GitHub Actions workflow file (.github/workflows/*.yml): actionlint for correctness, zizmor for security.</td>
 </tr>
 <tr>
-<td><code>zsh-path</code></td>
-<td>User PATH entries — ~/.local/bin prepended so user tools shadow system tools</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>zsh</code></td>
+<td><code>inv screenshot.disable</code></td>
+<td>Remove the 2 Flameshot keybindings and restore GNOME&rsquo;s shipped screenshot defaults.</td>
 </tr>
 <tr>
-<td><code>zsh-syntax-highlighting</code></td>
-<td>Syntax highlighting for commands in the zsh prompt — must be last in plugins list</td>
-<td><code>shell</code>, <code>zsh</code></td>
-<td><code>git-clone</code></td>
+<td><code>inv screenshot.enable</code></td>
+<td>Bind PrtSc/Shift+PrtSc to Flameshot (save + clipboard, no dialog), disabling the matching GNOME defaults.</td>
+</tr>
+<tr>
+<td><code>inv screenshot.render-docs</code></td>
+<td>Regenerate docs/shortcuts.md&rsquo;s table from this module&rsquo;s own keybinding data.</td>
+</tr>
+<tr>
+<td><code>inv screenshot.status</code></td>
+<td>Show current screenshot shortcut state: GNOME defaults vs the Flameshot bindings.</td>
+</tr>
+<tr>
+<td><code>inv setup</code></td>
+<td>Run full machine setup, in phases (system, packages, shell, desktop) — delegates to wsl.install under WSL.</td>
+</tr>
+<tr>
+<td><code>inv ssh.add</code></td>
+<td>Add this machine&rsquo;s SSH keys to the agent, skipping any it already holds.</td>
+</tr>
+<tr>
+<td><code>inv ssh.check</code></td>
+<td>Diagnose which ssh-agent this shell talks to and whether it holds the declared keys.</td>
+</tr>
+<tr>
+<td><code>inv ssh.configure</code></td>
+<td>Write ~/.ssh/config from identity.toml (idempotent PULSE block).</td>
+</tr>
+<tr>
+<td><code>inv ssh.create-keys</code></td>
+<td>Create ed25519 SSH keys for each unique email in identity.toml (skips existing).</td>
+</tr>
+<tr>
+<td><code>inv ssh.forward</code></td>
+<td>Copy public keys to remote (non-git) server hosts from identity.toml.</td>
+</tr>
+<tr>
+<td><code>inv system.cap-journal-size</code></td>
+<td>Cap persistent journal size (default: 500M) and restart journald if changed.</td>
+</tr>
+<tr>
+<td><code>inv system.configure-dns</code></td>
+<td>Configure DNS via systemd-resolved drop-in (Cloudflare + Google fallback).</td>
+</tr>
+<tr>
+<td><code>inv system.disable-ipv6</code></td>
+<td>Ensure IPv6 is disabled in /etc/sysctl.conf and apply immediately.</td>
+</tr>
+<tr>
+<td><code>inv system.install-apparmor-profiles</code></td>
+<td>Install AppArmor profiles declared in setup.toml with method = &lsquo;apparmor-profile&rsquo;.</td>
+</tr>
+<tr>
+<td><code>inv system.set-initramfs-compression</code></td>
+<td>Set initramfs compression algorithm (default: xz) and rebuild if changed.</td>
+</tr>
+<tr>
+<td><code>inv system.set-locale</code></td>
+<td>Set the system locale via localectl, preserving every variable not named here.</td>
+</tr>
+<tr>
+<td><code>inv system.write-curlrc</code></td>
+<td>Write ~/.config/curlrc: silent, show errors, follow redirects.</td>
+</tr>
+<tr>
+<td><code>inv test.all</code></td>
+<td>Run every tier: the unit tests, then the whole integration tier.</td>
+</tr>
+<tr>
+<td><code>inv test.coverage</code></td>
+<td>Report line coverage for the unit tier (pytest &ndash;cov, needs pytest-cov from the repo-tasks-quality group).</td>
+</tr>
+<tr>
+<td><code>inv test.integration</code></td>
+<td>Run the whole integration tier against real local services (Docker, a package index).</td>
+</tr>
+<tr>
+<td><code>inv test.regression</code></td>
+<td>Run everything in the integration tier that isn&rsquo;t smoke (<code>-m "not smoke"</code>) — the broad, slower half.</td>
+</tr>
+<tr>
+<td><code>inv test.smoke</code></td>
+<td>Run the fast, happy-path slice of the integration tier (<code>-m smoke</code>) — enough to know the system is wired up at all.</td>
+</tr>
+<tr>
+<td><code>inv test.unit</code></td>
+<td>Run the unit tier — no Docker, no network, nothing outside tmp_path.</td>
+</tr>
+<tr>
+<td><code>inv test.untested-modules</code></td>
+<td>Check every module in a src-layout package has a tests/unit/test_<module>.py.</td>
+</tr>
+<tr>
+<td><code>inv test.workflows</code></td>
+<td>Run the repo&rsquo;s GitHub Actions workflows locally with act (nektos/act), in Docker containers standing in for the hosted runners.</td>
+</tr>
+<tr>
+<td><code>inv tools.clean-cache</code></td>
+<td>Remove cargo&rsquo;s compressed crate-download cache (~/.local/share/cargo/registry/cache), if rust is installed</td>
+</tr>
+<tr>
+<td><code>inv tools.clean-cache-full</code></td>
+<td>Remove cargo&rsquo;s entire registry cache (~/.local/share/cargo/registry) — compressed downloads, extracted sources, and index — if rust is installed.</td>
+</tr>
+<tr>
+<td><code>inv tools.install</code></td>
+<td>Install tools that use official installer scripts, direct binary downloads, or archives.</td>
+</tr>
+<tr>
+<td><code>inv verify.all</code></td>
+<td>Prove every package this run installed actually works, not just that it&rsquo;s present.</td>
+</tr>
+<tr>
+<td><code>inv wsl.check</code></td>
+<td>Diagnose WSL-specific risks before running PULSE tasks: systemd, DNS, Docker, WSLg.</td>
+</tr>
+<tr>
+<td><code>inv wsl.fix</code></td>
+<td>Fix common /etc/wsl.conf misconfigurations: systemd=true, generateResolvConf left at its safe default (true — WSL manages /etc/resolv.conf itself, mirroring whatever DNS server Windows itself uses).</td>
+</tr>
+<tr>
+<td><code>inv wsl.install</code></td>
+<td>Run the docs/wsl.md recommended install sequence in one shot, as named phases: wsl config, system config (locale/DNS, only if systemd/DNS are actually live yet), packages, then shell</td>
+</tr>
+<tr>
+<td><code>inv zsh.configure</code></td>
+<td>Add or update the zsh blocks declared in setup.toml, and take back the ones that no longer apply to this machine.</td>
+</tr>
+<tr>
+<td><code>inv zsh.configure-omz</code></td>
+<td>Update Oh My Zsh theme and plugins list in ~/.zshrc in-place.</td>
+</tr>
+<tr>
+<td><code>inv zsh.configure-p10k</code></td>
+<td>Seed ~/.p10k.zsh from the repo baseline, through tasks/deploy.py&rsquo;s writer.</td>
+</tr>
+<tr>
+<td><code>inv zsh.fix-history</code></td>
+<td>Recover a corrupt ~/.zsh_history using strings(1) to strip non-printable bytes.</td>
+</tr>
+<tr>
+<td><code>inv zsh.set-default-shell</code></td>
+<td>Set zsh as the login shell (usermod -s, not chsh — chsh&rsquo;s PAM password prompt doesn&rsquo;t work in a non-interactive/piped session the way sudo -A does).</td>
 </tr>
 </tbody>
 </table>
-<!-- /PULSE::package-catalog -->
+<!-- /PULSE::task-index -->
 
 <h2 id="see-also">See also</h2>
 <ul>
-<li><a href="apt_packages.html">Install methods</a> — what each value in the <code>Method</code> column does</li>
-<li><a href="configuration.html">How it works</a> — how tags decide which of these a machine gets</li>
-<li><a href="updating.html">Updating and removing</a> — how each method is updated and uninstalled</li>
+<li><a href="configuration.html">How it works</a> — what <code>inv setup</code> runs, in order</li>
+<li><a href="updating.html">Updating and removing</a> — the tasks worth running after setup</li>
+<li><a href="packages.html">Package catalog</a> — what the install tasks install</li>
 </ul>
 
 
@@ -2958,7 +2900,7 @@ grant).</p>
       <nav class="md-footer__inner md-grid" aria-label="Footer" >
         
           
-          <a href="./configuration.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: How it works">
+          <a href="./packages.html" class="md-footer__link md-footer__link--prev" aria-label="Previous: Package catalog">
             <div class="md-footer__button md-icon">
               
               <svg xmlns="http://www.w3.org/2000/svg" fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" class="lucide lucide-arrow-left" viewBox="0 0 24 24"><path d="m12 19-7-7 7-7M19 12H5"/></svg>
@@ -2968,20 +2910,20 @@ grant).</p>
                 Previous
               </span>
               <div class="md-ellipsis">
-                How it works
+                Package catalog
               </div>
             </div>
           </a>
         
         
           
-          <a href="./tasks.html" class="md-footer__link md-footer__link--next" aria-label="Next: Task index">
+          <a href="./updating.html" class="md-footer__link md-footer__link--next" aria-label="Next: Updating, reclaiming space, and removing things">
             <div class="md-footer__title">
               <span class="md-footer__direction">
                 Next
               </span>
               <div class="md-ellipsis">
-                Task index
+                Updating, reclaiming space, and removing things
               </div>
             </div>
             <div class="md-footer__button md-icon">

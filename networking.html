@@ -213,6 +213,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -531,6 +535,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -616,6 +624,60 @@
     
   
   Package catalog
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./tasks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Task index
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./updating.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Updating, reclaiming space, and removing things
 
     
   </span>
@@ -1653,6 +1715,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2333,6 +2406,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2425,6 +2509,7 @@
 
 
 <h1 id="networking">Networking</h1>
+<p>When something cannot be reached — where to start, and which page owns each cause.</p>
 <h2 id="when-something-cant-be-reached">When something can&rsquo;t be reached</h2>
 <p>Before reading any of this: <code>python3 tasks/netdoctor.py</code> (or <code>inv net.check</code>) reports which of the
 hosts a setup run needs are actually reachable from this machine, what is in the way, and the
@@ -2498,6 +2583,13 @@ ignoring the Cloudflare servers configured by <code>inv system.configure-dns</co
 <p>Without explicit config, Docker falls back to Google DNS (<code>8.8.8.8</code>) automatically — containers
 resolve fine, just not via Cloudflare. To make containers match the host DNS, set it explicitly in
 <code>/etc/docker/daemon.json</code> — see <a href="docker.html">docker.md</a>.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="net-doctor.html">Network doctor</a> — one command that reports which hosts are reachable, and why</li>
+<li><a href="corporate-proxy.html">Corporate proxy</a> — authenticating proxies</li>
+<li><a href="certs.html">Certificates</a> — TLS interception and the bundle it needs</li>
+<li><a href="wsl.html">WSL</a> — DNS and the Windows side of a distro</li>
+</ul>
 
 
 

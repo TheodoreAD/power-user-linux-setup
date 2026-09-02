@@ -213,6 +213,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -531,6 +535,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -616,6 +624,60 @@
     
   
   Package catalog
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./tasks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Task index
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./updating.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Updating, reclaiming space, and removing things
 
     
   </span>
@@ -1074,6 +1136,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Pitfalls
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
       </span>
     </span>
   </a>
@@ -2189,6 +2262,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2283,6 +2367,7 @@
 
 
 <h1 id="locale">Locale</h1>
+<p>Language and formats: what PULSE sets, why, and how to change it.</p>
 <h2 id="setup">Setup</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>system.set-locale
 </span></code></pre></div>
@@ -2302,6 +2387,11 @@ pre-generated on Ubuntu 24.04 — <code>locale-gen</code> is not needed.</p>
 <li><strong>Do not use <code>export LANG=...</code> in a shell profile</strong> — session-only, does not survive reboot</li>
 <li><strong>A <code>C</code> or <code>POSIX</code> locale will break things</strong> — Python throws Unicode errors, git and compiler
   output may be garbled</li>
+</ul>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="configuration.html">How it works</a> — the setup phase this runs in</li>
+<li><a href="index.html">Quick start</a> — where <code>inv system.set-locale</code> sits in a first run</li>
 </ul>
 
 

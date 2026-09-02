@@ -213,6 +213,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -531,6 +535,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -616,6 +624,60 @@
     
   
   Package catalog
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./tasks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Task index
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./updating.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Updating, reclaiming space, and removing things
 
     
   </span>
@@ -969,6 +1031,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         PATH
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
       </span>
     </span>
   </a>
@@ -2465,6 +2538,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2559,6 +2643,7 @@
 
 
 <h1 id="zsh">Zsh</h1>
+<p>The shell PULSE configures: Oh My Zsh, the Powerlevel10k prompt, and the blocks each package writes.</p>
 <h2 id="setup">Setup</h2>
 <p>All zsh configuration is declared in <code>setup.toml</code> and applied via invoke:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># installs OMZ, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting</span>
@@ -2983,6 +3068,12 @@ instances, including non-interactive scripts. <code>/usr/local/bin</code> is alr
 <p>When adding a new tool that needs a PATH entry, prefer creating a symlink in <code>~/.local/bin</code> over a
 new PATH manipulation. Only add a PATH entry when the tool writes multiple binaries to its own
 directory dynamically (like <code>go install</code> populating <code>$GOPATH/bin</code>).</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="terminal.html">Terminal</a> — the emulator this shell runs in, and its own key bindings</li>
+<li><a href="fonts.html">Fonts</a> — the Nerd Font the prompt&rsquo;s glyphs depend on</li>
+<li><a href="configuration.html">How it works</a> — how the blocks in your dotfiles are written and removed</li>
+</ul>
 
 
 

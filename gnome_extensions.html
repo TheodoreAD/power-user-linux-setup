@@ -213,6 +213,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -531,6 +535,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -616,6 +624,60 @@
     
   
   Package catalog
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./tasks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Task index
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./updating.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Updating, reclaiming space, and removing things
 
     
   </span>
@@ -1113,6 +1175,17 @@
         
       </ul>
     </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
   
 </li>
       
@@ -2423,6 +2496,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2517,6 +2601,8 @@
 
 
 <h1 id="gnome-extensions">GNOME extensions</h1>
+<p>The GNOME Shell extensions this repo installs, how they are managed, and what can silently disable
+all of them.</p>
 <blockquote>
 <p><strong>Citrix Workspace breaks all user extensions.</strong> <code>icaclient</code>&rsquo;s &ldquo;AppProtection&rdquo; module installs a
 <em>mandatory</em> dconf policy (<code>/etc/dconf/db/local.d/00-extensions</code> + a lock on
@@ -3094,6 +3180,12 @@ needed; <code>inv gnome.install-extensions</code> will install and activate.</p>
 <a href="https://chromewebstore.google.com/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep">https://chromewebstore.google.com/detail/gnome-shell-integration/gphhapmejobijbbhgpjhcjognlahblep</a></p>
 <p>Note: <code>gnome-browser-connector</code> is disabled in <code>setup.toml</code> by default since gext covers the same
 function without requiring a browser.</p>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="keybindings.html">Keybindings</a> — the bindings several of these extensions take over</li>
+<li><a href="citrix.html">Citrix</a> — the package that locks every extension off</li>
+<li><a href="updating.html">Updating and removing</a> — <code>inv gnome.update</code>, and why extensions update separately</li>
+</ul>
 
 
 

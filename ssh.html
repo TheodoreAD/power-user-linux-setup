@@ -213,6 +213,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -531,6 +535,10 @@
       
         
       
+        
+      
+        
+      
     
     
     
@@ -616,6 +624,60 @@
     
   
   Package catalog
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./tasks.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Task index
+
+    
+  </span>
+  
+  
+
+      </a>
+    </li>
+  
+
+              
+            
+              
+                
+  
+  
+  
+  
+    <li class="md-nav__item">
+      <a href="./updating.html" class="md-nav__link">
+        
+  
+  
+  <span class="md-ellipsis">
+    
+  
+  Updating, reclaiming space, and removing things
 
     
   </span>
@@ -1576,6 +1638,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2233,6 +2306,17 @@
   
 </li>
       
+        <li class="md-nav__item">
+  <a href="#see-also" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        See also
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
     </ul>
   
 </nav>
@@ -2325,6 +2409,8 @@
 
 
 <h1 id="ssh">SSH</h1>
+<p>SSH keys, the agent, and the askpass helper — how this machine authenticates with no terminal
+attached.</p>
 <h2 id="identity-setup">Identity setup</h2>
 <p>SSH keys and config are driven by <code>~/.config/power-user-linux-setup/identity.toml</code> — a personal file
 that is never committed to the repo.</p>
@@ -2463,6 +2549,12 @@ keys are already there.</p>
 <p>Change the comment on an existing key:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>ssh-keygen<span class="w"> </span>-f<span class="w"> </span>~/.ssh/&lt;keyfile&gt;<span class="w"> </span>-o<span class="w"> </span>-c<span class="w"> </span>-C<span class="w"> </span><span class="s2">"new comment"</span>
 </span></code></pre></div>
+<h2 id="see-also">See also</h2>
+<ul>
+<li><a href="git.html">Git</a> — the identity these keys belong to</li>
+<li><a href="github.html">GitHub</a> — adding a key and testing it</li>
+<li><a href="corporate-proxy.html">Corporate proxy</a> — reaching a host through one</li>
+</ul>
 
 
 
