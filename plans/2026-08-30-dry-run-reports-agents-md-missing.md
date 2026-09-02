@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-30
+status: landed
+updated: 2026-09-02
 ---
 
 # `PULSE_DRY_RUN=1 inv tools.install` reports `agents-md` MISSING when it is fine
@@ -35,26 +35,38 @@ is how an absent agent is detected, and it says so rather than skipping in silen
 for the same reason the installer skips creating them". The dry-run branch is the one place that
 doesn't, so it counts a correctly-absent link as a failure.
 
-## Open questions
+## Fixed 2026-09-02
 
-[NEEDS CLARIFICATION: is `MISSING` for the whole package the right shape even once the parent-less
-links are excluded? A wrapper-script package can be wrong in three separable ways — content not
-deployed, content stale, a link pointing somewhere else — and one `ok`/`MISSING` word for all of
-them is what made this ambiguous enough to need investigating. `deploy.status` already distinguishes
-the content states; the dry run may want to defer to it rather than compute its own.]
+The one-line change plus the test the recommendation below asked for: the dry-run branch now filters
+`links` on `link.parent.is_dir()`, matching `_ensure_symlink` and `verify._symlink_checks`. The test
+deploys the content for real, then dry-runs with one `symlink_dest` whose parent does not exist, and
+asserts the report is not `MISSING`; it was confirmed to fail with the production change reverted,
+so it is testing the fix rather than the fixture.
 
-[NEEDS CLARIFICATION: how many other dry-run branches compute their own version of a check that a
-real task does differently? This one drifted from `_ensure_symlink` and from `verify.py` at the same
-time, which suggests the pattern rather than the instance is the problem. Cheap to look for: every
-`if util.DRY_RUN:` block in `tasks/` that re-implements a condition instead of calling the same
-helper the write path uses.]
+Both questions this plan opened with survive the fix and are worth carrying, but neither blocks it —
+they are about the shape of dry-run reporting generally rather than this defect:
 
-## Recommended direction
+**Is one `ok`/`MISSING` word the right report at all?** A wrapper-script package can be wrong in
+three separable ways — content not deployed, content stale, a link pointing elsewhere — and
+collapsing them is what made this ambiguous enough to need investigating in the first place.
+`deploy.status` already distinguishes the content states, so the dry run could defer to it rather
+than compute its own verdict. Not done here: it changes an output `phases.py` greps for.
 
-Skip a `symlink_dest` whose parent directory is absent, exactly as `_ensure_symlink` and
-`verify._symlink_checks` already do — a one-line change in the dry-run branch, plus a test asserting
-that a package whose only unsatisfied link has no parent directory reports `ok`.
+**How many other dry-run branches re-derive a check the write path already owns?** This one drifted
+from two different implementations of the same rule at once, which points at the pattern rather than
+the instance. Cheap to look for — every `if util.DRY_RUN:` block in `tasks/` that re-implements a
+condition instead of calling the helper the writer uses.
 
-Low urgency: nothing is broken, and the failure mode is a false alarm rather than a silent pass. But
-a dry run that cries wolf on a healthy machine is the kind of output people learn to ignore, which
-is expensive later.
+Filed as a fresh idea rather than kept open here, since the defect is closed and those two are a
+different subject: `plans/2026-09-02-dry-run-branches-that-re-derive-their-own-checks.md`.
+
+## Migrated to
+
+- The fix and its reasoning are in `tasks/tools.py`'s dry-run branch (comment) and
+  `tests/unit/test_tools.py`'s `..._dry_run_ignores_a_link_whose_parent_doesnt_exist` docstring,
+  which carries the false-alarm argument.
+- The two open questions went to the new plan named above, which is where they can be worked on as
+  one subject.
+
+Deliberately not migrated: the diagnosis narrative (which line, which four `symlink_dest` entries),
+since the code and the test now state the rule directly and the entry points are one grep away.
