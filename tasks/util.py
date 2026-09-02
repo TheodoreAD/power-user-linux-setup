@@ -330,9 +330,14 @@ def markdown_table(headers: Sequence[str], rows: Sequence[Sequence[str]]) -> str
     generator emits what dprint would. Emitting the padded form makes the block a fixed point of
     both.
 
-    A `|` inside a cell is escaped, since it would otherwise open a column that isn't there.
+    Cell text is treated as literal, never as markup: `|` is escaped because it would otherwise
+    open a column that isn't there, and `[`/`]` because bare brackets are a markdown *link
+    reference*. A row saying "overrides the [certs] table" is not a link, but a strict docs build
+    reads it as one and aborts on the reference it cannot resolve — measured, in CI, on
+    `docs/tasks.md`'s `certs.install` row. No generator here emits a real link inside a cell (the
+    132 task rows and 97 package rows contain none), so escaping both is safe.
     """
-    escaped = [[cell.replace("|", "\\|") for cell in row] for row in rows]
+    escaped = [[cell.replace("|", "\\|").replace("[", "\\[").replace("]", "\\]") for cell in row] for row in rows]
     widths = [max([len(header), *(len(row[i]) for row in escaped)]) for i, header in enumerate(headers)]
 
     def fmt(cells: Sequence[str]) -> str:

@@ -79,13 +79,30 @@ which `.github/workflows/publish_on_push.yml` runs as `zensical build --strict` 
 
 ```shell
 inv docs.serve        # zensical serve — live reload while writing
-inv docs.build        # zensical build --strict, the same command CI runs (wipes site/ first)
+inv docs.build        # zensical build --strict, as CI runs it — but see the version warning below
 inv docs.clean        # remove the built site/
 ```
 
-`zensical` is not a dependency of `repo-tasks` and is not in this repo's `pyproject.toml` either —
-it is pinned on its own in [`requirements-docs.txt`](requirements-docs.txt), which is what CI
-installs and what a local `pip install -r` needs. The built `site/` is gitignored.
+`zensical` is not a dependency of `repo-tasks` and is not in this repo's `pyproject.toml` either. It
+is declared twice, for two different consumers, and **the two versions can differ**:
+
+- [`requirements-docs.txt`](requirements-docs.txt) pins the version CI installs.
+- `[packages.zensical]` in `setup.toml` installs it as a `uv-tool` on this machine, unpinned — so
+  `inv docs.build` runs whatever the latest release was when you last ran
+  `inv python.install-tools`.
+
+> [!WARNING]
+> That mismatch means a green local `inv docs.build` does not guarantee a green Pages deploy.
+> Measured 2026-09-02: a generated table cell containing `[certs]` — a bare bracket, which markdown
+> reads as a link reference — passed locally on zensical 0.0.57 and failed CI's pinned 0.0.44 with
+> `unresolved link reference`. To check against exactly what CI will run, without changing what is
+> installed:
+>
+> ```shell
+> uvx zensical==$(cut -d= -f3 requirements-docs.txt) build --strict
+> ```
+
+The built `site/` is gitignored.
 
 > [!WARNING]
 > `inv quality.precommit` does **not** build the site. `inv docs.link-check` runs in the gate, but
