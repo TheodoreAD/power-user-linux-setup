@@ -93,47 +93,44 @@ the repo's own equivalent) — every commit, including a markdown-only one. "Jus
 these repos, all of them pushed from commits that skipped the gate. The gate is what CI runs;
 skipping it schedules a red run that someone else reads.
 
-**Keep the message inline in `-m`, and write it without backticks or `$`.** Both are live inside a
-double-quoted shell argument: backticks are command substitution, so the shell _runs_ what they
-enclose before git sees it and stores the output in their place. A message describing an apt fix ran
-`apt-get install -f -y` and `dpkg -i && rm` on the machine and committed two empty strings where the
-quoted commands belonged; only the lack of privilege made it harmless. Commit messages are prose,
-not Markdown — name a command in plain words and nothing breaks.
+**Write the message without backticks or `$`.** Both are live inside a double-quoted shell argument:
+backticks are command substitution, so the shell _runs_ what they enclose before git sees it and
+stores the output in their place. A message describing an apt fix ran `apt-get install -f -y` and
+`dpkg -i && rm` on the machine and committed two empty strings where the quoted commands belonged;
+only the lack of privilege made it harmless. Commit messages are prose, not Markdown — name a
+command in plain words and nothing breaks. Same hazard in any other double-quoted body —
+`gh pr create --body`, `gh issue comment`.
 
-**Inline is the point, not a convenience.** `-m` puts the message in the approval prompt, which is
-what the user reads to decide. `git commit -F <file>` hides it behind a path, and so does burying
-the commit inside a chain — the prompt then shows a compound command with the message somewhere in
-the middle. Reach for `-F` only when a message genuinely must contain a backtick; pathspec works
-either way (`git commit -m "…" -- <path> <path>`).
-
-**One `-m` carrying real newlines — never a chain of `-m` flags.** Git joins each `-m` into its own
-paragraph, so the finished commit reads correctly and `git log` shows nothing wrong; the damage is
-confined to the approval prompt, which shows the _command_. Five `-m "…"` arguments run together
-into a single unbroken line there, which is the wall of text the inline rule above exists to prevent
-— the message is technically in the prompt and is unreadable in it. Put the blank lines inside one
-quoted argument and the prompt shows the message laid out the way it will be committed. Said by the
-user 2026-09-02, on a five-`-m` commit: _"it's hard to read a wall of text"_.
-
-Same hazard in any other double-quoted body — `gh pr create --body`, `gh issue comment`.
+**Then keep it where the user can read it: one inline `-m`, in its own call.** The approval prompt
+shows the _command_, and the message is what the user reads to decide, so anything displacing it
+from the prompt defeats the rule while looking like compliance. Three shapes do, and each has been
+corrected here in turn: `git commit -F <file>` hides it behind a path; a chain buries it mid-command
+(see "Composing a Bash call", which owns that cost); and a series of `-m` flags runs them together
+into one unbroken line, even though git joins each into its own paragraph so the finished commit and
+`git log` show nothing wrong. Put the blank lines inside one quoted argument instead. Said by the
+user 2026-09-02, on a five-`-m` commit: _"it's hard to read a wall of text"_. Reach for `-F` only
+when the message genuinely must contain a backtick; pathspec works either way (see "Committing
+multi-part work").
 
 ### Committing multi-part work
 
-Split it into small single-concern commits, even when the request was a single ask — git history is
-how future agents learn why a change happened. A doc update commits separately from the code
-implementing it; a bug fix found mid-implementation folds into the commit introducing the correct
-behavior, never broken-then-fixed. Granularity is settled — ask only _whether_ to commit, never how
-to split.
+**`git log` is how a future agent learns why a change happened, and here it cannot go and look
+instead**: parallel sessions share one working tree, so checking out an old commit moves a tree
+somebody else is working in. `git log` and `git show` are the only reads safe by construction, which
+makes the history the channel rather than the convenient record. Two things follow, and they are the
+whole of this rule.
 
-**Every commit has a body, and the body says _why_.** The subject says what changed; the body says
-what it is for, what it beat, and what it cost. An agent reading `git log` months later has no other
-access to that — and on this machine it cannot go and look instead, because parallel sessions share
-one working tree and checking out an old commit moves a tree somebody else is working in. `git log`
-and `git show` are the only reads that are safe by construction, which makes the body the only
-channel rather than the convenient one. A doc or plan commit is not exempt, and is the case where
-"the file already says it" is not merely weak but backwards: `git log` does not show the file, and
-`plan-docs` retires a plan by **deleting** it, so the file is deliberately temporary while its
-commit message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone satisfies `%b`,
-which is exactly how two bare commits passed unnoticed in the session that prompted this rule.
+**Split it into small single-concern commits**, even when the request was a single ask. A doc update
+commits separately from the code implementing it; a bug fix found mid-implementation folds into the
+commit introducing the correct behavior, never broken-then-fixed. Granularity is settled — ask only
+_whether_ to commit, never how to split.
+
+**And every commit has a body.** The subject says what changed; the body says what it is for, what
+it beat, and what it cost. A doc or plan commit is not exempt, and is the case where "the file
+already says it" is not merely weak but backwards: `git log` does not show the file, and `plan-docs`
+retires a plan by **deleting** it, so the file is deliberately temporary while its commit message is
+permanent. **A trailer is not a body** — `Co-Authored-By:` alone satisfies `%b`, which is exactly
+how two bare commits passed unnoticed in the session that prompted this rule.
 
 It is a floor, not a ceremony: a formatting fix's why is one clause, and demanding a paragraph for
 it teaches padding, which is worse than a bare subject because padding reads as reasoning. **Nothing
