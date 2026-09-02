@@ -107,3 +107,25 @@ version recommended; writing into another repo is out.]
 Nothing. The rule is written and deployed, the enforcement and store-exception questions are
 decided, and the one remaining question belongs to `scaffoldapy` and now has its own plan there.
 Retirable.
+
+## Migrated to
+
+- **The rule itself** → `config/agents-md/git.md`, `### Committing multi-part work`, deployed to
+  `~/AGENTS.md`. That is the artifact; read it there rather than the draft wording in "Recommended
+  direction" above, which it has moved past.
+- **Evidence and admission argument** → `contributing/global-agents-md.md`,
+  `## Committing multi-part work` → `### Every commit has a body`. Carries the 17-commit
+  measurement, the two-bare-bodies shape, the "the plan file already says it" rationalisation and
+  why it is backwards for a plan commit, and the three guards — plus one thing stated there and not
+  here, which of the two supporting arguments is machine-specific.
+- **The enforcement decision** → `contributing/global-agents-md.md`,
+  `## Proposing an enforcement mechanism for agent behavior`, where it joins the measurement that
+  now backs the principle.
+- **The open `scaffoldapy` question** → `2026-09-02-commit-bodies-in-generated-repos.md`, filed in
+  that repo's store mirror and committed there. It carries the trimmed-version recommendation and
+  names which clauses not to copy.
+
+**Deliberately not migrated:** the verification log (rule written, deployed, verified at a line
+number) — that is in git. The draft wording under "Recommended direction" is not migrated either:
+the shipped clause is longer and differs in its guards, so keeping the draft would leave two
+versions with only their dates to tell them apart.
