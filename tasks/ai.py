@@ -182,13 +182,22 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
 
 
 # The `skills` CLI reports usage to add-skill.vercel.sh unless one of these is set, and it is on by
-# default: CLI version, a CI flag, the detected agent's name, and the skill/package names of the
-# call. PULSE runs it unattended from `inv ai.install-skills`, so the choice is PULSE's to make
-# rather than something to inherit — pinned off deliberately, per ~/AGENTS.md's rule that a feature
-# which phones home by default is a decision, not a default. Both names are honoured by the CLI;
-# DO_NOT_TRACK is the cross-tool convention and DISABLE_TELEMETRY is its own, so setting both
-# survives either being dropped. Nothing else in the CLI is gated on them — the advisory audit
-# lookup it does for a skill package is a separate call and still runs.
+# default. Every event carries the CLI version, a CI flag and the name of the agent it detects
+# running it; an `install` adds the source repo, the skill names, the target agents and a JSON map
+# of skill name to its path within that repo. It has a gate of its own — an install is suppressed
+# when the source repo is private, or when that check fails — but PULSE installs a public repo, so
+# that gate never fires here and the names went out on every run.
+#
+# PULSE runs it unattended from `inv ai.install-skills`, so the choice is PULSE's to make rather
+# than something to inherit — pinned off deliberately, per ~/AGENTS.md's rule that a feature which
+# phones home by default is a decision, not a default. Both names are honoured; DO_NOT_TRACK is the
+# cross-tool convention and DISABLE_TELEMETRY is the CLI's own, so setting both survives either
+# being dropped upstream.
+#
+# This does not silence the CLI entirely, and the remainder is deliberate rather than overlooked:
+# `skills add` also GETs add-skill.vercel.sh/audit with the source repo and skill names to fetch
+# supply-chain risk labels, gated by neither variable nor by repo privacy. That is a security
+# feature being paid for with the same disclosure, which is a different trade from usage reporting.
 _SKILLS_ENV = {"DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1"}
 
 
