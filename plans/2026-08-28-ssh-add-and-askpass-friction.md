@@ -66,15 +66,24 @@ Twelve tests cover the pure helpers: exit-code labels, socket ordering, `Identit
 
 ## Migrated to
 
-Nothing needs a separate home. The behaviour is in `tasks/ssh.py`, `config/askpass-zenity.sh` and
-`[packages.ssh]`'s `zprofile` snippet, each carrying its reasoning in comments; the user-facing half
-is `docs/ssh.md`'s "Which agent a shell talks to", which holds the two-agent table, the symptom
-chain, the diagnosis and the dated incident.
+Retired 2026-09-02. Where each part went:
 
-The one thing worth keeping that has no natural code home is the `--inherit` finding below — it is a
-rejected alternative, and the next person reading keychain's man page will reach the same wrong
-conclusion. Left tagged here; it belongs in a `contributing/` page only if this file is ever deleted
-rather than kept as the record of a landed change.
+| content                                                         | destination                                                   |
+| --------------------------------------------------------------- | ------------------------------------------------------------- |
+| the behaviour of all three fixes                                | `tasks/ssh.py`, `config/askpass-zenity.sh`, `[packages.ssh]`  |
+| the user-facing half: two agents, symptom chain, what to run    | `docs/ssh.md`, "Which agent a shell talks to"                 |
+| rejected alternatives and the reasoning behind each choice      | `contributing/ssh-agent-selection.md` (new)                   |
+| "enumerate agents before asking a human for a secret"           | `~/AGENTS.md`'s ssh rule — already there, not copied again    |
+| the open item: `ssh.add` cannot tell whether anyone is watching | `plans/2026-09-02-ssh-add-prompts-a-user-who-is-not-there.md` |
+
+Each destination was checked to actually hold the thing before it was called migrated, rather than
+taken from this plan's own claim about it: `IdentityFile` parsing is in `tasks/ssh.py`, the dialog
+title in `config/askpass-zenity.sh`, the `zprofile` snippet in `[packages.ssh]` with its own
+comment, and `docs/ssh.md`'s section carries the table and the dated incident.
+
+**Not migrated, deliberately:** the commit-subject table under "What has landed" and the
+verification transcripts. Both are records of one landing rather than knowledge — the code is the
+contract now, and the subjects are findable in `git log`.
 
 ## Context
 
