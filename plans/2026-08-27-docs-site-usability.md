@@ -1,5 +1,5 @@
 ---
-status: done
+status: in-progress
 updated: 2026-09-02
 ---
 
@@ -303,6 +303,13 @@ not parse mermaid and no browser was available to open the page. A malformed dia
 an error box on the published site, not as a failed build. The syntax used is the same subset
 `docs/python.md`'s published diagram already uses, which is the strongest evidence available without
 looking.]
+
+**2026-09-02: this tag is why the plan is not `landed`.** The status field said `done`, which is not
+in the vocabulary — `set-status` refuses `landed` while an `UNVERIFIED` stands, and it is right to:
+all seven steps are implemented, and one claim about the result has never been checked. Closing it
+takes one look at the four diagram pages on the published site, which needs a browser and not a
+build. The `DEFERRED` below (pin zensical in one place) is live work of its own and would have to
+move to an open plan before this file could be retired.
 
 ## Steps 4 and 6 landed 2026-09-02 — all seven done
 
