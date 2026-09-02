@@ -1099,6 +1099,20 @@ what it describes — `plan-docs` retires a plan by deleting it, so the file is 
 while the message is permanent. That makes a bare-bodied plan commit the one case where "the file
 says it" is backwards rather than merely weak.
 
+**A second occurrence was filed independently the same day**, by a session in `agent-skills` with no
+part in the first: five commits, four carrying multi-paragraph bodies and one — a six-line
+`README.md` edit — carrying a subject line alone. The user rejected that tool call with _"commits
+need a description"_, and the re-do was approved with a four-line body and nothing else changed, so
+the absent body is the whole of what was refused.
+
+Its tell is a different mechanism from the first occurrence's, and the more general of the two:
+**the agent scaled the message to the size of the diff.** The four commits that got bodies were the
+substantial ones — no rule was reasoned around, and the plan-file rationalisation above played no
+part. That is the judgement this rule has to overrule rather than accommodate, because a small diff
+is precisely where the reasoning is least recoverable afterwards: the diff itself explains even
+less. It is also why the first guard below is worded as a floor rather than as an exemption — the
+right answer to a six-line edit is a one-clause why, never no why.
+
 Three guards, each covering a real failure direction:
 
 - **A floor, not a ceremony.** A formatting fix's why is one clause. Demanding a paragraph teaches
