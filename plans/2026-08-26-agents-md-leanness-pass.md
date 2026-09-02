@@ -24,34 +24,50 @@ This plan exists because that finding currently lives as a sentence in
 next one"), which is exactly the "don't stash future work in prose docs" failure the `plan-docs`
 convention names: prose future-work has no status field, so nothing ever prompts a return visit.
 
-## A hard ceiling, not just a reference point (measured 2026-08-29)
+## The Codex 32 KiB cut — corrected 2026-09-02, it never applied to this file
 
-The ≤200-line/≤15-rule numbers are review reference points and have never forced anything. There is
-also a **hard byte limit already being exceeded**, and it is silent.
+This section previously said Codex truncates `~/AGENTS.md` at 32 KiB and would silently drop the
+whole `## Collaboration & output` cluster, and that finding shaped the rest of the plan: it supplied
+the "get under 32,768 bytes first" ordering and a bound the leanness argument otherwise lacked. **It
+was wrong about which file the cap governs.** Read from `openai/codex` source rather than from the
+docs, which are stubs pointing at a site that does not state it:
 
-Codex CLI truncates an `AGENTS.md` at 32 KiB (`PROJECT_DOC_MAX_BYTES`, default), with no warning —
-instructions past the cut are simply dropped. The deployed file is **35,498 bytes**, 2,730 over.
-`~/.codex/AGENTS.md` is one of the four `symlink_dest` entries on `[packages.agents-md]`.
+- **The global file is read whole, uncapped.** `codex-rs/codex-home/src/instructions/mod.rs` tries
+  `<codex_home>/AGENTS.override.md` then `<codex_home>/AGENTS.md`, `tokio::fs::read`s whichever it
+  finds, trims it, and returns it. There is no length check anywhere in that path.
+- **`project_doc_max_bytes = 32768` governs _project_ docs** — `codex-rs/config/defaults.toml` for
+  the value, `codex-rs/core/src/agents_md.rs` for its use. It is a **shared budget** across every
+  `AGENTS.md` walked from the project root down to cwd, spent in order, and a file that overruns is
+  `data.truncate(remaining)`-ed.
+- **Nor is it silent.** That truncation emits
+  `tracing::warn!("project doc exceeds remaining budget;
+  truncating")`. The original claim of a
+  silent cut was wrong twice over.
 
-Where the cut lands, byte-exact: mid-word inside the `## Collaboration & output` heading. Codex
-would therefore lose that **entire cluster** — "A narrow check grows into design work", "Invited to
-push back", "Something the user wrote looks like a typo or mental slip", "Ending a turn with a next
-step", and "Caveman-style terse output". The user-facing output style and the rule about not handing
-the user a shell command to run are both past the cut.
+Two things follow, and the second is the one that survives:
 
-Latent today: `~/.codex` does not exist on this machine, so the symlink is correctly skipped and no
-agent currently reads a truncated copy. It arms itself the day Codex is installed, and it arms
-silently — nothing in `verify.all` compares a destination against a reader's size limit, because
-until now no limit was known.
+- **The bound this plan carried does not exist.** No byte target is owed on `~/AGENTS.md` for
+  Codex's sake, at 47 KB or at any size. That removes the one objectively-checkable deadline the
+  pass had, and leaves the ≤200-line/≤15-rule reference points as what they always were: review
+  prompts that have never forced anything.
+- **The cap is real for a repo's own `AGENTS.md`**, and for a monorepo the budget is shared across
+  the nested ones. That is a constraint on the family repos rather than on this file, and it is
+  worth carrying somewhere those repos' authors will meet it.
 
-Two consequences for this plan:
+[PITFALL: **the original finding was byte-exact and confidently wrong, which is what made it
+persuasive.** It named the constant, computed the overrun to the byte (35,498 against 32,768), and
+located where the cut would land — mid-word inside a named heading — and every one of those
+computations was correct about a cap that does not apply to the file being measured. Precision
+downstream of an unchecked premise reads as rigour. The check that settled it was one grep of the
+loader for the global path, available the whole time; what was actually read instead was the
+constant's name, which contains the word `project` and says so.]
 
-- The ordering question below acquires a bound. Getting under 32,768 bytes is a smaller ask than
-  getting to 200 lines, it is objectively checkable, and it is worth doing even if the rest of the
-  pass stalls.
-- Per-reader limits belong in `contributing/global-agents-md.md` alongside the review reference
-  points, and plausibly in a `verify.all` check. Other agents may have their own caps; only Codex's
-  has been confirmed.
+[PITFALL: **the docs could not have settled it.** `openai/codex`'s `docs/config.md` and
+`docs/agents_md.md` are three-line stubs redirecting to a docs site, and the config-reference page
+there describes `project_doc_max_bytes` as "maximum bytes read from `AGENTS.md`" without stating a
+default or distinguishing global from project. Two vendor-doc fetches returned that same
+under-specified sentence. The source was the only thing that could answer it, and reading it took
+one API call more than the fetches did.]
 
 ## Why it matters, not just "the number is over"
 
@@ -97,9 +113,10 @@ claim.]
 candidate rules a per-rule pass was judged impractical, and a single end-of-pass review would defer
 every "nothing is deleted without asking" judgement to one large read.]
 
-The Codex 32 KiB cut recorded above is **latent, not live** — `~/.codex` does not exist on this
-machine, so nothing is being truncated today. It is a reason to keep the file's growth visible, not
-a reason to cut, and treating it as a deadline is what the decision above rejects.
+These decisions were taken while the Codex cut above was still believed to bound the file, and the
+correction does not disturb them — the user had already declined a byte target outright, so the one
+lever the cut supplied was the one that had just been rejected. What the correction removes is the
+argument a later session could have used to reopen it.
 
 ## The merge inventory
 
@@ -447,11 +464,12 @@ expensive, or sharp-triggered and recoverable? Merge before demoting, demote bef
 re-measure after each cluster rather than at the end, so a pass that stops early still leaves the
 file better than it found it.
 
-Revised 2026-08-29, on the two measurements above: **get under 32,768 bytes first**, by merging and
-shortening only. That is 2,730 bytes, it removes a live latent defect, and it needs no decision
-about tiers. **Hold every demotion** until the trigger layer is measurably working — otherwise the
-pass trades a bloat problem for a silent-deletion problem, and the deletions will not be the rules
-anyone chose.
+Revised 2026-08-29 to "get under 32,768 bytes first", and **that revision is withdrawn**: the cut it
+was chasing governs project docs, not this file (see the correction above). Nothing replaces it as a
+numeric target, which is the honest position — the user declined one, and the only number that
+looked externally imposed turned out not to be. **Hold every demotion** until the trigger layer is
+measurably working, which is unaffected: otherwise the pass trades a bloat problem for a
+silent-deletion problem, and the deletions will not be the rules anyone chose.
 
 Do not treat the ≤200/≤15 numbers as a target to hit in one go. They are review reference points,
 and the discipline that actually keeps the file small lives upstream in the admission criteria — a
