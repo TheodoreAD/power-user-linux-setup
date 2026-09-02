@@ -1782,11 +1782,11 @@ zshrc = 'export NVM_DIR="${HOME}/.local/share/nvm"'
 
 [packages.rust]
 description = """
-Rust toolchain via rustup — installs rustc, cargo, rustfmt, and clippy (the default rustup
-profile), plus the rust-analyzer component, to ~/.local/share/cargo and
-~/.local/share/rustup, instead of the ~/.cargo / ~/.rustup dotdirs rustup creates by default.
-rust-analyzer is only needed for non-JetBrains editors (VS Code, Neovim, etc.) — PyCharm's
-Rust plugin uses its own analysis engine, see docs/ide.md.
+Rust toolchain via rustup — rustc, cargo, rustfmt and clippy (the default rustup profile),
+plus the rust-analyzer component. Installed to ~/.local/share/cargo and ~/.local/share/rustup
+rather than the ~/.cargo / ~/.rustup dotdirs rustup creates by default. rust-analyzer is only
+needed for non-JetBrains editors (VS Code, Neovim, etc.) — PyCharm's Rust plugin uses its own
+analysis engine, see docs/ide.md.
 """
 method = "script"
 tags = ["dev", "language"]
@@ -1814,8 +1814,8 @@ CARGO_HOME = "~/.local/share/cargo"
 [packages.research-library]
 description = """
 Shared, cross-project research library at ~/research — vendor repo clones, PDFs/epubs, and
-mirrored docs pages that live outside every git repo, so they're readable and updatable from
-any project without duplicating clones per-repo or exposing them to repo-scoped agent reads by
+mirrored docs pages, kept outside every git repo. They are readable and updatable from any
+project without duplicating clones per-repo, or exposing them to repo-scoped agent reads by
 default. Deploys the RESEARCH_HOME env var and a research-update script that refreshes every
 shallow clone under $RESEARCH_HOME/repos/.
 """
