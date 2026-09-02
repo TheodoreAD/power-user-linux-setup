@@ -186,6 +186,24 @@ def test_install_wrapper_script_links_the_installed_agents_and_skips_the_rest(tm
     assert not absent.parent.exists()
 
 
+def test_install_wrapper_script_dry_run_ignores_a_link_whose_parent_doesnt_exist(tmp_path, monkeypatch, capsys):
+    """The dry run must apply the same absent-agent rule the writer does.
+
+    It didn't, and reported `[agents-md] MISSING` on a machine where `deploy.status` said `ok` and
+    the deployed file was correct — because `~/.codex/` and `~/.gemini/` don't exist here and the
+    dry-run branch counted their unmade links as failures. A dry run that cries wolf on a healthy
+    machine is how a report teaches people to ignore it.
+    """
+    cfg = _cfg(tmp_path, symlink_dest=[str(tmp_path / "dot-codex" / "AGENTS.md")])
+    tools._install_wrapper_script(MockContext(), "test-tool", cfg)  # deploy the content for real
+    capsys.readouterr()
+    monkeypatch.setattr(util, "DRY_RUN", True)
+
+    tools._install_wrapper_script(MockContext(), "test-tool", cfg)
+
+    assert "MISSING" not in capsys.readouterr().out
+
+
 class _ShellContext(Context):
     """Runs the command strings _install_archive builds, for real, via subprocess.
 

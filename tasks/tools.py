@@ -112,7 +112,15 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
     links = symlink_dests(cfg)
 
     if util.DRY_RUN:
-        ok = deploy.classify(managed) == deploy.State.CLEAN and all(_link_ok(link, dest) for link in links)
+        # Links whose parent directory is absent are skipped, exactly as `_ensure_symlink` and
+        # `verify._symlink_checks` skip them: a missing `~/.codex/` means that agent isn't
+        # installed, which is a correct state and not a failure. Without this the dry run reported
+        # `agents-md` MISSING on a machine where `deploy.status` said `ok` and the deployed file was
+        # genuinely right — a false alarm on a healthy machine, which is how a report teaches people
+        # to ignore it.
+        ok = deploy.classify(managed) == deploy.State.CLEAN and all(
+            _link_ok(link, dest) for link in links if link.parent.is_dir()
+        )
         print(f"[{name}] {util.ok_label(ok)}")
         return
 
