@@ -106,6 +106,14 @@ the commit inside a chain — the prompt then shows a compound command with the 
 the middle. Reach for `-F` only when a message genuinely must contain a backtick; pathspec works
 either way (`git commit -m "…" -- <path> <path>`).
 
+**One `-m` carrying real newlines — never a chain of `-m` flags.** Git joins each `-m` into its own
+paragraph, so the finished commit reads correctly and `git log` shows nothing wrong; the damage is
+confined to the approval prompt, which shows the _command_. Five `-m "…"` arguments run together
+into a single unbroken line there, which is the wall of text the inline rule above exists to prevent
+— the message is technically in the prompt and is unreadable in it. Put the blank lines inside one
+quoted argument and the prompt shows the message laid out the way it will be committed. Said by the
+user 2026-09-02, on a five-`-m` commit: _"it's hard to read a wall of text"_.
+
 Same hazard in any other double-quoted body — `gh pr create --body`, `gh issue comment`.
 
 ### Committing multi-part work
