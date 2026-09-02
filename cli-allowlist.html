@@ -2246,7 +2246,7 @@
   
 
 
-<h1 id="cli-permission-allowlist">CLI permission allowlist<a class="headerlink" href="#cli-permission-allowlist" title="Permanent link">&para;</a></h1>
+<h1 id="cli-permission-allowlist">CLI permission allowlist</h1>
 <p>Claude Code (and similar agent harnesses) prompt for approval on most Bash commands. Most of what
 gets run in a typical session is safe — inspecting, listing, describing — and approving the same
 <code>kubectl get</code>/<code>git log</code>/<code>docker ps</code> shape of command over and over is pure friction. The fix isn&rsquo;t a
@@ -2255,15 +2255,15 @@ hand-written list of &ldquo;safe commands&rdquo; (stale the moment a tool update
 an LLM instead of guessing, and keeps a human in the loop before anything gets trusted.</p>
 <p>That pipeline lives in <code>cli-allowlist/</code> (tracked in git — this is original derived project config,
 not vendor material) and <code>tasks/allowlist.py</code> (<code>inv allowlist.*</code>).</p>
-<h2 id="architecture-extract-classify-review-apply">Architecture: extract → classify → review → apply<a class="headerlink" href="#architecture-extract-classify-review-apply" title="Permanent link">&para;</a></h2>
+<h2 id="architecture-extract-classify-review-apply">Architecture: extract → classify → review → apply</h2>
 <pre class="mermaid"><code>flowchart LR
-    tools["installed CLIs: setup.toml plus the base system"] --&gt; extract
-    extract["extract, deterministic"] --&gt; help[("captured --help text")]
-    help --&gt; classify["classify, headless claude -p"]
-    classify --&gt; rules[("read_only / write / dangerous, per node and per flag")]
-    rules --&gt; review["review, the human gate"]
-    review --&gt; apply["apply, deterministic"]
-    apply --&gt; settings[("~/.claude/settings.json: read_only allowed, the rest ask")]</code></pre>
+    tools["installed CLIs&lt;br/&gt;setup.toml plus the base system"] --&gt; extract
+    extract["&lt;b&gt;extract&lt;/b&gt;&lt;br/&gt;deterministic"] --&gt; help[("captured --help text")]
+    help --&gt; classify["&lt;b&gt;classify&lt;/b&gt;&lt;br/&gt;headless claude -p"]
+    classify --&gt; rules[("read_only / write / dangerous&lt;br/&gt;per node and per flag")]
+    rules --&gt; review["&lt;b&gt;review&lt;/b&gt;&lt;br/&gt;the human gate"]
+    review --&gt; apply["&lt;b&gt;apply&lt;/b&gt;&lt;br/&gt;deterministic"]
+    apply --&gt; settings[("~/.claude/settings.json&lt;br/&gt;read_only allowed, the rest ask")]</code></pre>
 <p><code>extract</code> is skipped for a tool whose <code>--version</code> has not changed, and <code>classify</code> for a node whose
 help text has not changed, which is what makes a routine re-run nearly free.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv allowlist.extract   deterministic, no LLM      captures --help text, recursing into the
@@ -2284,7 +2284,7 @@ covered just as much as anything PULSE explicitly installs.</p>
 <p>Both <code>write</code> and <code>dangerous</code> classifications render as <code>ask</code> rules, never <code>deny</code> — you always still
 get a real, interactively-approvable prompt for anything risky; only genuinely safe, read-only
 commands get pre-approved.</p>
-<h2 id="operating-it">Operating it<a class="headerlink" href="#operating-it" title="Permanent link">&para;</a></h2>
+<h2 id="operating-it">Operating it</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># after installing a new tool, or periodically (e.g. after apt upgrade):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>allowlist.extract
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>allowlist.classify

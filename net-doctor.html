@@ -2324,7 +2324,7 @@
   
 
 
-<h1 id="network-doctor">Network doctor<a class="headerlink" href="#network-doctor" title="Permanent link">&para;</a></h1>
+<h1 id="network-doctor">Network doctor</h1>
 <p>Answers one question: <strong>which of the hosts a PULSE run needs are reachable from here, by what route,
 and when one isn&rsquo;t — what do I type next.</strong></p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>python3<span class="w"> </span>tasks/netdoctor.py<span class="w">       </span><span class="c1"># nothing installed yet: runs on whatever python3 is on PATH</span>
@@ -2334,7 +2334,7 @@ and when one isn&rsquo;t — what do I type next.</strong></p>
 <p>It is read-only. It resolves names, opens connections and reads response headers; it never sends a
 credential — including when it asks a proxy what authentication it wants, which is a bare <code>CONNECT</code>
 with no <code>Proxy-Authorization</code> header.</p>
-<h2 id="why-it-isnt-just-is-the-internet-up">Why it isn&rsquo;t just &ldquo;is the internet up&rdquo;<a class="headerlink" href="#why-it-isnt-just-is-the-internet-up" title="Permanent link">&para;</a></h2>
+<h2 id="why-it-isnt-just-is-the-internet-up">Why it isn&rsquo;t just &ldquo;is the internet up&rdquo;</h2>
 <p>A corporate network that blocks <code>pypi.org</code> while allowing <code>github.com</code> is completely ordinary: the
 sanctioned path to Python packages is an internal Artifactory/Nexus mirror. Nothing about that is
 visible from the outside, though — <code>uv</code> cheerfully installs a managed Python (which comes from
@@ -2343,7 +2343,7 @@ TLS-inspecting proxy (every https download fails with a certificate error that l
 problem) and for a proxy that wants NTLM (a 407 nobody sees, buried in curl&rsquo;s exit code).</p>
 <p>Each of those has a different fix, and each is a one-line diagnosis if something actually asks the
 question per host.</p>
-<h2 id="what-it-checks">What it checks<a class="headerlink" href="#what-it-checks" title="Permanent link">&para;</a></h2>
+<h2 id="what-it-checks">What it checks</h2>
 <table>
 <thead>
 <tr>
@@ -2383,7 +2383,7 @@ question per host.</p>
 for apt, npm/nodejs/docker/microsoft for the rest. <code>--quick</code> probes only the ones that gate a
 bootstrap; <code>--full</code> also probes every URL declared in <code>setup.toml</code>, so a newly added apt repo or
 <code>.deb</code> URL is covered without anyone maintaining a second list.</p>
-<h2 id="what-it-tells-you-to-do">What it tells you to do<a class="headerlink" href="#what-it-tells-you-to-do" title="Permanent link">&para;</a></h2>
+<h2 id="what-it-tells-you-to-do">What it tells you to do</h2>
 <p>Every finding ends in commands. The ones it can produce:</p>
 <ul>
 <li><strong>PyPI blocked while GitHub answers</strong> → export <code>UV_DEFAULT_INDEX</code>/<code>PIP_INDEX_URL</code>, reusing an
@@ -2402,7 +2402,7 @@ bootstrap; <code>--full</code> also probes every URL declared in <code>setup.tom
 <li><strong>Public DNS is blocked but the local resolver works</strong> → the normal corporate shape, and a warning
   <em>not</em> to &ldquo;fix&rdquo; DNS by pointing it at 1.1.1.1, which would break internal names.</li>
 </ul>
-<h2 id="it-runs-before-anything-is-installed">It runs before anything is installed<a class="headerlink" href="#it-runs-before-anything-is-installed" title="Permanent link">&para;</a></h2>
+<h2 id="it-runs-before-anything-is-installed">It runs before anything is installed</h2>
 <p><code>bootstrap.sh</code> runs it (<code>--quick</code>) before its first download, so a blocked network is diagnosed up
 front rather than surfacing as a <code>curl: (7)</code> or a uv resolver error several screens later. That is
 advisory — it prints, waits five seconds and continues, because a probe is not authoritative about a
@@ -2415,7 +2415,7 @@ exist. Tests enforce all three, and CI runs it under a real 3.12.</p>
 machine is the run that has nothing else. Afterwards <code>python3</code> is usually uv&rsquo;s instead —
 <code>uv_python_set_default</code> puts <code>~/.local/bin/python3</code> ahead of <code>/usr/bin/python3</code> (see <code>setup.toml</code>) —
 which satisfies the floor comfortably. Only that first run constrains it.</p>
-<h2 id="limits">Limits<a class="headerlink" href="#limits" title="Permanent link">&para;</a></h2>
+<h2 id="limits">Limits</h2>
 <ul>
 <li>It probes; it doesn&rsquo;t authenticate. A proxy that would accept the run&rsquo;s real credentials still
   shows as 407 here — that is the finding, not a failure.</li>
