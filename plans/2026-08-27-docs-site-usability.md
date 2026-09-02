@@ -60,10 +60,11 @@ page ends and returns the reader to the sidebar.
 
 **6. Zero visual aids.** `docs/` contains no image files at all — no screenshots of the terminal
 layout, the p10k prompt, or the GNOME setup this repo produces. Mermaid is wired up and verified
-working (`contributing/zensical.md`) and entirely unused. Four mechanisms are pure prose-and-table
-today and are natural diagrams: the `inv setup` phase sequence, `deploy.all`'s five-state
-classifier, the allowlist extract → classify → review → apply pipeline, and sentinel-block file
-ownership.
+working (`contributing/zensical.md`) and used on exactly one page — `docs/python.md`'s interpreter
+diagram, which the original review missed and which is also the house style for these (corrected
+2026-09-02). Four more mechanisms are pure prose-and-table today and are natural diagrams: the
+`inv setup` phase sequence, `deploy.all`'s five-state classifier, the allowlist extract → classify →
+review → apply pipeline, and sentinel-block file ownership.
 
 **7. Search carries all cross-cutting navigation.** Zensical's native plugin allowlist has no `tags`
 plugin (`contributing/zensical.md`), so there is no way to surface "everything WSL touches" other
@@ -248,11 +249,10 @@ permission grant and installs nothing).
 `citrix`, `webex`), last in the bar; `locale.md` moved to `Shell & desktop`. Search was re-checked
 after the move: `kinesis` still resolves first to `input_devices.html#kinesis-advantage-360`.
 
-**3. Four mermaid diagrams**, the first use of a feature wired up and verified months ago: the setup
-phase sequence with its WSL and no-systemd branches, the deploy classifier, the allowlist pipeline,
-and what one package entry does to a shared config file on every run. The classifier diagram is
-drawn from `classify()` rather than from the four-row table beside it, which is missing the fifth
-state.
+**3. Four mermaid diagrams**, joining the one `docs/python.md` already had: the setup phase sequence
+with its WSL and no-systemd branches, the deploy classifier, the allowlist pipeline, and what one
+package entry does to a shared config file on every run. The classifier diagram is drawn from
+`classify()` rather than from the four-row table beside it, which is missing the fifth state.
 
 **5. `ai.md` split and `shortcuts.md` rebuilt.** The survey moved to `contributing/ai-tooling.md`
 minus every market-share, pricing and "leader in X" line; the site page is now what PULSE does for
@@ -276,17 +276,32 @@ first run. Fixed by keeping prose outside the block entirely: a sentence carryin
 would have re-wrapped the day the count changed width, so "wrap it the way dprint would" was not a
 durable fix either.]
 
-[PITFALL: mermaid's default `securityLevel` escapes HTML in node labels, and the theme's
-`mermaid.initialize` call does not override it (checked in the bundle: `startOnLoad`, `themeCSS` and
-`sequence` font sizes, nothing else). The first drafts used `<br/>`, `<b>` and `<small>` for layout,
-which would have rendered as literal text. With no browser available in that session the question
-could not be settled by looking, so every label was rewritten as plain text -- syntax whose
-correctness does not depend on the answer.]
+[PITFALL: **HTML in a mermaid label is fine, and the first pass wrongly stripped it out.** The claim
+was that mermaid's default `securityLevel: "strict"` escapes HTML in node labels, so `<br/>`, `<b>`
+and `<small>` would render as literal text; with no browser available the diagrams were rewritten as
+plain single-line labels to sidestep the question. The user pushed back — _"in mermaid diagrams i
+recall using `<br>` or `<br/>` a lot to split label and box text"_ — and they were right, twice
+over:
+
+- `docs/python.md` has carried a published diagram using `<br/>` in node **and** edge labels since
+  2026-08-24. The repo's own live site was the counter-example, and the same grep that found "one
+  mermaid mention" in that file was `rg -c`, counting the fence line, not a mention.
+- Reading the shipped bundle settles the mechanism. `sanitizeMore` branches on the level:
+  `strict`/`antiscript`/`sandbox` run `DOMPurify.sanitize`, which keeps `br`, `b` and `small`; only
+  a level outside that set _and_ not `loose` reaches the `replace(/</g,"&lt;")` path — and even that
+  one round-trips line breaks through a placeholder (`breakToPlaceholder` / `placeholderToBreak`,
+  `/<br\s*\/?>/gi` → `#br#`), which exists precisely so `<br>` survives sanitising.
+
+Restored, matching `python.md`'s style. The general lesson is not about mermaid: the safe-looking
+move was to avoid the uncertain construct, and it silently degraded four diagrams on a belief that
+one grep of the repo would have overturned.]
 
 [UNVERIFIED: the diagrams have not been seen rendered. `zensical build --strict` passes and all four
 land as `<pre class="mermaid">`, which is the element the theme's bundle mounts, but the build does
 not parse mermaid and no browser was available to open the page. A malformed diagram would show as
-an error box on the published site, not as a failed build.]
+an error box on the published site, not as a failed build. The syntax used is the same subset
+`docs/python.md`'s published diagram already uses, which is the strongest evidence available without
+looking.]
 
 ## Still open
 
