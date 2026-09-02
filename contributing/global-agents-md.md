@@ -302,8 +302,53 @@ earned itself immediately: `[needs plan-docs]` was written first, looked like a 
 a skill arriving through `[packages.agent-skills]`; a label whose form implies a check it does not
 pass is worse than no label.
 
-Design, the reframing behind it, and what remains open:
-`plans/2026-08-30-portable-fragment-names-one-harness.md`.
+**Which rules got a `[Claude Code]` label was a judgement, and the sweep that looks like it would
+answer it is wrong.** Seven of `portable.md`'s 29 rules named Claude Code tools, in three different
+ways, and the difference decides how the rule should read once labelled:
+
+- **Incidental** — the name swaps out for free ("a `Read` of the log", "copy to the scratchpad").
+- **Mechanism-named** — the action is portable and the tool is not; both `AskUserQuestion` rules.
+- **Harness-factual** — genericising makes the claim false or vague: "the Bash tool reports it
+  whenever it is non-zero", the whole of "Viewing, searching, or editing files", "don't reach for
+  plan mode".
+
+Three apparent hits were ordinary English and must not be "fixed" — "Write about that work by its
+shape", "Read the SHA", "Read-only `git -C` verbs". A mechanical pass over capitalised tool names
+flags all three, which is the standing argument against doing any of this as a sweep.
+
+**The prerequisite warning reads the labels, and that is why it was cheap.** `[needs <thing>]` gave
+`inv ai.check-rule-prerequisites` something to parse; before the labels there was nothing to read,
+which is why the check was deferred rather than designed up front. Two choices in it are worth
+keeping:
+
+- **Config-level, not presence-level.** It answers "is this package still declared and enabled",
+  using the same precedence `inv setup` does (`setup.toml` → `overrides.toml` →
+  `PULSE_EXCLUDE_TAGS`). Whether the binary is on disk is `inv verify.all`'s job. Keeping that out
+  is what lets the task invoke nothing — which matters, because the allowlist auto-approves
+  `<ns>.check-*` on the naming convention alone, so a `check` task that ran commands would run them
+  unprompted. The bar is "declared **and enabled**": 29 packages carry `enabled = false`, so
+  declaration alone was barely a check.
+- **The deterministic half is a unit test; the rest stays on demand.** "Does `setup.toml` declare
+  this, not disabled" depends only on committed content, so CI catches it on the breaking commit.
+  `verify.all` was rejected as the home: it aborts on first failure, and a container or WSL profile
+  excluding the `dev` tag makes `[needs direnv]` legitimately false, so gating there would break
+  `inv setup` on a correctly configured machine.
+
+**Verifying a re-cut that is supposed to change no content needs its own method.** All 38 rule
+bodies were snapshotted before the move and diffed against the assembled output afterwards: same 38
+headings, zero bodies differing. The first run of that diff reported **all 38 changed**, and the
+diff was what was wrong — the deployed format leaves a leading newline the fragments do not.
+"Everything changed" is nearly always a measurement bug rather than 38 real ones, and reading a
+single diff concretely settled it in one command.
+
+**The old fragments stayed tracked after being deleted from disk, and the gate caught it rather than
+the tests.** `repo-tasks`' `link_check` walks `git ls-files "*.md"`, so it tried to read a fragment
+that no longer existed and raised `FileNotFoundError`. Staging the deletions fixed it. Generalises
+past this repo: a "which files exist" check sourced from the index disagrees with the working tree
+for exactly as long as a deletion sits unstaged.
+
+Worked out in the now-retired `plans/2026-08-30-portable-fragment-names-one-harness.md`;
+`plans.py archive --search "the axis they leak across"` reads it back.
 
 ## What this setup provisions (cluster intro, retired 2026-08-30)
 
