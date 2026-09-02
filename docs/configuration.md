@@ -27,6 +27,30 @@ PULSE-managed entry own its own region of the file independently.
 **Idempotency:** on re-run the block is found by its opening marker and replaced in place if the
 content changed, or left untouched if it matches. New blocks are appended. No duplicates, no drift.
 
+What a single `[packages.<name>]` entry does to a shared file it writes into, on every run:
+
+```mermaid
+flowchart TD
+    run["inv zsh.configure"] --> applies{"package applies to this machine?"}
+    applies -- no --> present{"its block is present?"}
+    present -- yes --> remove["remove the block"]
+    present -- no --> nothing["nothing to do"]
+    applies -- yes --> found{"opening marker found?"}
+    found -- no --> append["append the block at the end"]
+    found -- yes --> same{"content already matches?"}
+    same -- yes --> leave["leave it untouched"]
+    same -- no --> replace["replace between the markers"]
+```
+
+"Applies to this machine" is the tag question from the section above: a package excluded by
+`PULSE_EXCLUDE_TAGS` takes the left branch, which is why an excluded package's block is removed
+rather than left sitting in the dotfile.
+
+Every line outside a marked region is never read and never rewritten — it is yours. Each region is
+owned by the entry it is named after and by nothing else, so two packages writing to the same file
+cannot collide, and a package that stops applying has its block taken back out rather than left
+behind.
+
 ### What PULSE claims in your home directory — `inv home.list-claims`
 
 Blocks are one of ten ways this repo puts something in `~`. To see all of them:
@@ -133,7 +157,27 @@ inv deploy.all --name wezterm          # just one package's
 inv deploy.all --name wezterm -y       # ...without the confirmation prompt
 ```
 
-Per path it does one of four things, based on a machine-local manifest of what PULSE last wrote:
+Per path it does one of four things, based on a machine-local manifest of what PULSE last wrote. How
+a path is sorted into them — `tasks/deploy.py`'s `classify()`, which only ever reads:
+
+```mermaid
+flowchart TD
+    p["a managed path"] --> exists{"exists on disk?"}
+    exists -- no --> absent["absent: create it, no prompt"]
+    exists -- yes --> known{"in the manifest?"}
+    known -- no --> match{"matches its repo source?"}
+    match -- yes --> clean["clean: already matches, write nothing"]
+    match -- no --> unknown["unknown: diff, then ask before writing"]
+    known -- yes --> same{"still what PULSE wrote?"}
+    same -- no --> dirty["dirty: edited since, diff then ask"]
+    same -- yes --> current{"repo source moved on?"}
+    current -- no --> clean
+    current -- yes --> stale["stale: safe redeploy, no prompt"]
+```
+
+The `unknown` branch is why a machine set up before the manifest existed does not prompt for
+everything: a file with no manifest entry that nonetheless matches its source byte-for-byte is
+`clean`, not `unknown`.
 
 | State                          | What happens                                                              |
 | ------------------------------ | ------------------------------------------------------------------------- |
@@ -298,6 +342,26 @@ version differently — via the GitHub releases API directly (`tag` field, or au
 What `inv setup` actually runs, in order. One interruption: a single logout at the end. An optional
 reboot can follow if GRUB or initramfs were changed, but it can also wait for the next natural
 reboot — nothing depends on it being immediate.
+
+```mermaid
+flowchart TD
+    start(["inv setup"]) --> wsl{"util.is_wsl()"}
+    wsl -- yes --> delegate["inv wsl.install: its own tag exclusions and DNS handling"]
+    wsl -- no --> systemd{"util.has_systemd()"}
+    systemd -- yes --> p1["Phase 1, system: locale, curlrc, DNS"]
+    systemd -- no --> p2
+    p1 --> p2["Phase 2, packages: apt, Docker, debs, tools, AppArmor, Python, Node, skills, verify.all"]
+    p2 --> p3["Phase 3, shell: Oh My Zsh, zsh blocks, p10k baseline, default shell"]
+    p3 --> desktop{"util.has_systemd()"}
+    desktop -- yes --> p4["Phase 4, desktop: Nerd Fonts, monospace font config"]
+    desktop -- no --> done
+    p4 --> done(["next steps"])
+    delegate --> done
+```
+
+Each phase asks before it repeats work it believes is already done — the probe below is what
+decides. `verify.all` is the last step of Phase 2 on purpose: it is a hard functional check of
+everything that phase just installed, and the first failure aborts the run.
 
 Under WSL, `inv setup` detects it (`util.is_wsl()`) and delegates straight to `inv wsl.install`
 instead of the phases below — different tag exclusions, DNS handling, and it skips
