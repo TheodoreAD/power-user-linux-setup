@@ -617,6 +617,26 @@ precommit hooks for devs. i see no reason to treat a dev differently from an age
 `session-harvest` the same day as the leanness pass's third candidate admission, because the
 principle is broader than that one plan and outlives its retirement.
 
+**Measured 2026-09-02, and the principle held.** The rejection came with a revisit trigger: if the
+docs-commit CI shape recurred at a real rate once the `~/AGENTS.md` "About to commit" rule had been
+live a while, the hook design would be reopened. The rule deployed 2026-08-25; the sweep eight days
+later across all three repos, reading every failed log rather than counting runs, found **zero
+dprint reflow failures** — against 11 in the single day before the skill-level fix and 4 in the ~30
+hours after it. So teaching the rule is not merely the preferred lever here, it is the one observed
+to work, and that is now the strongest support this principle has.
+
+Two things the sweep would have concluded wrongly if read carelessly, both worth carrying:
+
+- **Count instances, not runs.** Six `repo-tasks` failures looked like a worse post-rule rate than
+  the pre-rule one. They were one instance retried across a single evening — one plan file, one
+  cross-repo relative link — and the naive count would have reopened a closed question on an
+  artifact of retry behaviour.
+- **A failure in the same family is not the same shape.** That instance was a docs commit pushed
+  ungated, so it belongs to the broader problem, but it failed on `docs.link-check` rather than on a
+  formatter, and the researched hook's fast subset runs no link check. The one post-rule instance is
+  therefore not evidence for the mechanism that was rejected — a distinction only visible by reading
+  the log.
+
 ## Naming around a collision
 
 The originating incident: "pulse-setup" was proposed to disambiguate a `~/.config/pulse` clash with
@@ -922,9 +942,12 @@ the skills.
 
 The rule was chosen over a git hook deliberately: the user's standing position (recorded in that
 plan) is that agents should know what to run rather than be corrected behind their back, same as
-developers — see "Proposing an enforcement mechanism for agent behavior". If the shape recurs at a
-real rate after this rule has been deployed for a while, that plan holds the researched hook design
-as the next step.
+developers — see "Proposing an enforcement mechanism for agent behavior".
+
+**Re-measured 2026-09-02 and the rule worked:** eight days of CI across the three repos, every
+failed log read, zero occurrences of the shape. The hook design stays parked as research rather than
+as a queued next step. The full sweep and the two ways of miscounting it are recorded under
+"Proposing an enforcement mechanism for agent behavior".
 
 ### The backtick clause
 
@@ -976,6 +999,31 @@ tool-call blocks, all of which are about the agent's own accuracy rather than th
 approve. Worth noting that the rule was already in the file and already being followed for most of
 that session; what failed was applying it to the one call shape where it mattered most.
 
+### The one-`-m` clause
+
+Admitted 2026-09-02, and it is the third correction to this same rule — which is the interesting
+part of it. The rule had said "keep the message inline in `-m`", reasoning entirely from what the
+approval prompt shows the user. A session in this repo read that as licensing a **chain** of `-m`
+flags and shipped two commits written as four and six of them. Each `-m` becomes its own paragraph,
+so the finished commits are correct and `git log` shows nothing wrong; what breaks is the thing the
+rule exists to protect, because the prompt displays the _command_ and six quoted arguments run
+together into one unbroken line. The user's words: _"make sure the commit message command is not a
+series of -m, but the usual full text I can easily review before approving the commit, it's hard to
+read a wall of text."_
+
+Admitted on one occurrence, like the backtick clause and for the same structural reason rather than
+a frequency one: the wording actively invited it. A rule whose stated remedy is `-m` and whose
+stated enemy is `-F` and chaining gives a reader no reason to suspect that the number of `-m` flags
+is also load-bearing. The fix is one `-m` carrying real newlines, which renders in the prompt
+exactly as it will render in the log.
+
+Worth recording that the failure was invisible from inside the rule. The session had the rule in
+context, followed its letter, and produced the outcome it forbids — which is the same shape as the
+adherence corpus's "authoring a rule is not evidence of following it", one step earlier:
+**satisfying a rule's stated test is not evidence of meeting its purpose.** That is an argument for
+stating the purpose, which this section already did, and for naming the shapes that defeat it, which
+it now does three times over.
+
 ## Committing multi-part work
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general
@@ -1016,6 +1064,61 @@ state in a working tree" for why it moved here. The section had described the in
 failure in full and then offered only "stage late" against it, which is a discipline rather than a
 mechanism; `git commit -m "…" -- <path>` is the mechanism, and it had been sitting in a sibling rule
 under a heading a session splitting commits has no reason to consult.
+
+### Every commit has a body
+
+Admitted 2026-09-02, from the now-retired `plans/2026-09-01-every-commit-carries-a-why.md`, after
+the user named it directly: commits must say what and why, and for that they must always have a
+description, so agents can walk through history and understand the past without checkouts.
+
+**The gap was structural rather than newly discovered.** This section already opened on the premise
+— git history is how future agents learn why a change happened — and then constrained only
+_granularity_. The body of the message is the other half of that same claim and was stated nowhere,
+so a session could split its commits impeccably and still leave a log explaining nothing. That is
+why it extends this rule rather than getting a heading: a reader who meets granularity and body
+under one principle generalises better than one holding two adjacent rules, and `git.md` stays at 8
+rules.
+
+Two arguments carry it, and only one of them travels:
+
+- **Who reads it changed.** A commit body used to be a courtesy to a colleague who mostly remembered
+  the change anyway. An agent arriving at a commit has no memory of it at all, so the log is not a
+  supplement to its recollection but the whole of its access. True of any agent in any repo.
+- **On this machine it cannot go and look instead.** Parallel sessions share one working tree, so
+  checking out an old commit to understand it moves a tree somebody else is working in — which the
+  same file forbids elsewhere. `git log` and `git show` are the only reads safe by construction,
+  which makes the body the only channel rather than the convenient one. **Machine-specific**, and
+  the reason the `scaffoldapy` question below is a real question rather than a formality.
+
+The measured shape: the session that prompted it made 17 commits, 15 with real bodies and **2 with
+only the `Co-Authored-By:` trailer** — both doc commits landing right after the code commit they
+belonged to. The rationalisation is worth recording because it is specific and seductive: the
+reasoning had just been written into the plan file in that very commit, so restating it felt like
+duplication. It is not. `git log` does not show the file, and for a plan commit the body outlives
+what it describes — `plan-docs` retires a plan by deleting it, so the file is deliberately temporary
+while the message is permanent. That makes a bare-bodied plan commit the one case where "the file
+says it" is backwards rather than merely weak.
+
+Three guards, each covering a real failure direction:
+
+- **A floor, not a ceremony.** A formatting fix's why is one clause. Demanding a paragraph teaches
+  padding, which is worse than a bare subject because padding reads as reasoning.
+- **A trailer is not a body.** `Co-Authored-By:` alone satisfies `%b`, so any check written against
+  this rule — an audit, a `git log --format` sweep — has to strip trailers first. That is exactly
+  how the two commits above passed unnoticed in the session that made them.
+- **The plans store is the named exception.** A filed plan commits as `<repo>: <what it is>` with no
+  body, because the filed plan is its own description and the commit is only its delivery. Named in
+  the rule rather than left to be discovered as an inconsistency. `gh pr create --body` and
+  `gh issue comment` get the full rule.
+
+**Nothing enforces it**, per "Proposing an enforcement mechanism for agent behavior" — a
+`commit-msg` hook is the first thing anybody reaches for and is refused on the standing principle.
+What is new is that the principle now has a measurement under it; see that section.
+
+The one question this repo did not settle is whether `scaffoldapy` should stamp the rule into the
+`AGENTS.md` it generates. Filed there rather than decided here, because the premise transfers and
+the shared-working-tree argument does not, so a verbatim copy would ship reasoning that is false in
+a generated repo.
 
 ## Invoking a venv tool in the session's own project
 
