@@ -1,5 +1,7 @@
 # Git
 
+How this machine's git identity is configured, and what PULSE writes into your git config.
+
 ## Identity setup
 
 Git identity is driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file that is
@@ -103,3 +105,9 @@ git config --global mergetool.pycharm-professional.keepBackup false
 !!! WARNING
 
     The Toolbox path changes on IDE version upgrades — re-run when upgrading PyCharm.
+
+## See also
+
+- [SSH](ssh.md) — the keys this identity authenticates with
+- [GitHub](github.md) — the CLI and its auth
+- [GitLab](gitlab.md) — the same, for GitLab

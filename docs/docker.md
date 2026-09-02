@@ -101,3 +101,9 @@ Also relevant if this is being configured under WSL2 with Docker Desktop's WSL i
 `docker.configure` already detects that case (`docker` CLI present, no local `dockerd` —
 `tasks/docker.py`) and skips, since the daemon isn't running inside the WSL guest at all. None of
 the above applies there either — it goes in Docker Desktop's Windows-side settings instead.
+
+## See also
+
+- [Kubernetes](kubernetes.md) — the cluster tooling built on top of it
+- [Dev container](dev-container.md) — running this whole setup inside a container
+- [Updating and removing](updating.md) — pruning images and caches safely

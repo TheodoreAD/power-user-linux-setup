@@ -1,5 +1,7 @@
 # Kubernetes
 
+The Kubernetes CLIs this repo installs, and how each one is kept up to date.
+
 !!! WARNING
 
     Kubernetes may cause: headaches, fits of rage, binge eating, back pain and container orchestration.
@@ -55,3 +57,8 @@ release via `inv apt.install-debs`.
 
 Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual
 `kubectl apply`.
+
+## See also
+
+- [Docker](docker.md) — the runtime underneath
+- [Package catalog](packages.md) — how each of these CLIs is installed

@@ -1,5 +1,7 @@
 # IDEs
 
+VS Code and the JetBrains IDEs — how each is installed, and the settings this machine expects.
+
 ## VS Code
 
 ### Install method: apt deb (not snap)
@@ -203,3 +205,9 @@ Profile settings:
 - CaskaydiaCove Nerd Font Mono 12
 - Infinite scrollback
 - Purple title bar (`#613583`) — Adwaita-compatible accent, easy on the eyes
+
+## See also
+
+- [Python](python.md) — the interpreters and virtualenvs an IDE will find
+- [Rust](rust.md) — why rust-analyzer is installed for some editors and not others
+- [Fonts](fonts.md) — where each IDE's font is set

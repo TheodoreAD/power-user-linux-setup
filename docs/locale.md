@@ -1,5 +1,7 @@
 # Locale
 
+Language and formats: what PULSE sets, why, and how to change it.
+
 ## Setup
 
 ```shell
@@ -27,3 +29,8 @@ All categories should show `en_US.UTF-8`.
 - **Do not use `export LANG=...` in a shell profile** — session-only, does not survive reboot
 - **A `C` or `POSIX` locale will break things** — Python throws Unicode errors, git and compiler
   output may be garbled
+
+## See also
+
+- [How it works](configuration.md) — the setup phase this runs in
+- [Quick start](index.md) — where `inv system.set-locale` sits in a first run

@@ -1,5 +1,8 @@
 # Troubleshooting
 
+Fixes for this machine's own hardware quirks: sensors, GPU, and the workarounds that were not
+obvious.
+
 ## Hardware sensors — fan and voltage monitoring on Gigabyte Z390
 
 **Board:** Gigabyte Z390 GAMING X · **Chip:** ITE IT8628E at I/O port 0xa40
@@ -225,3 +228,8 @@ sudo systemctl enable --now nvidia-hdmi-audio-fix.service
 
 System details at time of writing: NVidia GA104 (RTX 3070 Ti), proprietary driver, `snd_hda_intel`
 on PCI `01:00.1`, PipeWire 1.0.5 with WirePlumber.
+
+## See also
+
+- [Input devices](input_devices.md) — peripheral-specific notes
+- [Networking](networking.md) — when the problem is connectivity rather than hardware

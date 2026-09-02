@@ -1,5 +1,7 @@
 # Networking
 
+When something cannot be reached — where to start, and which page owns each cause.
+
 ## When something can't be reached
 
 Before reading any of this: `python3 tasks/netdoctor.py` (or `inv net.check`) reports which of the
@@ -76,3 +78,10 @@ ignoring the Cloudflare servers configured by `inv system.configure-dns`.
 Without explicit config, Docker falls back to Google DNS (`8.8.8.8`) automatically — containers
 resolve fine, just not via Cloudflare. To make containers match the host DNS, set it explicitly in
 `/etc/docker/daemon.json` — see [docker.md](docker.md).
+
+## See also
+
+- [Network doctor](net-doctor.md) — one command that reports which hosts are reachable, and why
+- [Corporate proxy](corporate-proxy.md) — authenticating proxies
+- [Certificates](certs.md) — TLS interception and the bundle it needs
+- [WSL](wsl.md) — DNS and the Windows side of a distro

@@ -201,3 +201,9 @@ To add a family, append a `[[settings.fonts.families]]` entry to `setup.toml`.
 The default font and VS Code settings are also in `setup.toml` under `[settings.fonts]` — edit
 `monospace`, `terminal`, and `[settings.fonts.vscode]` to change the configured font without
 touching any Python.
+
+## See also
+
+- [Terminal](terminal.md) — one of the applications that reads this font setting
+- [Zsh](zsh.md) — the prompt whose glyphs need it
+- [Claude Code](claude-code.md) — the statusline that draws with the same glyph set

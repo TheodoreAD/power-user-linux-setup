@@ -1,5 +1,7 @@
 # Go
 
+The Go toolchain: where it installs, and what reaches `PATH` in a shell that reads no config.
+
 <https://go.dev/doc/install> <https://github.com/golang-standards/project-layout>
 
 Installed via `inv tools.install` (archive method — downloads the official tarball from go.dev and
@@ -40,3 +42,9 @@ inv tools.install
 ```shell
 go version
 ```
+
+## See also
+
+- [Dev container](dev-container.md) — which shells find `go`, and why a `RUN` layer may not
+- [IDEs](ide.md) — editor support for Go
+- [Package catalog](packages.md) — how the toolchain is declared

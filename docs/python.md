@@ -225,3 +225,9 @@ python -m nuitka --module mypackage --include-package=mypackage
 
     Nuitka uses the Python it was invoked with. Run it via `python3.14 -m nuitka` or
     activate the project's venv first to control which interpreter is used.
+
+## See also
+
+- [IDEs](ide.md) — pointing an editor at one of these interpreters
+- [Package catalog](packages.md) — the `uv-tool` packages installed globally
+- [Updating and removing](updating.md) — keeping those tools current

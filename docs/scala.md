@@ -35,3 +35,8 @@ Paste this path into VS Code settings under `metals.javaHome`.
 ```shell
 cs update
 ```
+
+## See also
+
+- [Package catalog](packages.md) — what is declared in `setup.toml`, and why Scala is not
+- [Updating and removing](updating.md) — `cs update` alongside the other self-managed tools

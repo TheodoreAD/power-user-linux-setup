@@ -50,10 +50,10 @@ link resolves to the file this repo deploys, rather than to some stale hand-made
     gets all three today — installed, instructed, and skills wired natively. The others get the
     instructions if they are present, which is the cheap and useful part.
 
-## Going further
+## See also
 
-- [claude-code.md](claude-code.md) — what this machine does specifically for Claude Code: the
-  statusline, the `AGENTS.md`-over-`CLAUDE.md` convention and why `CLAUDE.md` is a symlink rather
-  than an import, skills scaffolding for a project, and the permission settings.
-- [cli-allowlist.md](cli-allowlist.md) — generating agent permission rules from the real `--help`
-  output of every CLI installed on this machine, so read-only commands stop prompting.
+- [Claude Code](claude-code.md) — the statusline, the `AGENTS.md`-over-`CLAUDE.md` convention,
+  skills scaffolding for a project, and the permission settings
+- [CLI allowlist](cli-allowlist.md) — generating agent permission rules from the real `--help`
+  output of every CLI installed here, so read-only commands stop prompting
+- [Package catalog](packages.md) — everything else this repo installs

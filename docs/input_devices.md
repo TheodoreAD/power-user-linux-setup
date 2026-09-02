@@ -1,5 +1,8 @@
 # Input devices
 
+Notes for the peripherals on this machine: the Kinesis Advantage 360's layout, and the GNOME
+behaviour it runs into.
+
 ## Kinesis Advantage 360
 
 ### Current layout (Profile 6 / `layout6.txt`)
@@ -169,3 +172,8 @@ annotated copies placed next to the pasteable block above.
 - https://kinesis-ergo.com/wp-content/uploads/Advantage360-SmartSet-KB360-Users-Manual-v10-12-22.pdf
 - https://kinesis-ergo.com/wp-content/uploads/Adv360-SmartSet-Direct-Programming-Guide-v12-2-22.pdf
 - https://kinesis-ergo.com/wp-content/uploads/Adv360-SmartSet-Direct-Programming-Action-Tokens-v3-31-23.pdf
+
+## See also
+
+- [Keybindings](keybindings.md) — the GNOME bindings these keys reach
+- [Troubleshooting](troubleshooting.md) — the rest of this machine's hardware notes

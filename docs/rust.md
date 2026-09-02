@@ -1,5 +1,7 @@
 # Rust
 
+The Rust toolchain via rustup, installed to XDG paths instead of rustup's own dotdirs.
+
 <https://www.rust-lang.org/tools/install> <https://rust-lang.github.io/rustup/>
 
 Installed via `inv tools.install` (script method — pipes the official rustup installer, pointed at
@@ -63,3 +65,9 @@ rustc --version
 cargo --version
 rust-analyzer --version
 ```
+
+## See also
+
+- [Dev container](dev-container.md) — the two variables rustup's shims need outside zsh
+- [IDEs](ide.md) — which editors need rust-analyzer
+- [Updating and removing](updating.md) — `rustup update`, and what else updates itself

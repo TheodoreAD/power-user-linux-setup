@@ -1,5 +1,8 @@
 # Google Cloud CLI
 
+The Google Cloud CLI, installed from Google's own archive rather than apt — and what that difference
+buys.
+
 !!! NOTE
 
     Only needed for GCP work — large install (~1GB). Disabled by default in `setup.toml`.
@@ -66,3 +69,8 @@ gcloud components update
 rm -rf ~/.local/share/google-cloud-sdk
 # remove the block from ~/.zshrc added by inv zsh.configure
 ```
+
+## See also
+
+- [Package catalog](packages.md) — how this and the other cloud CLIs are declared
+- [Corporate proxy](corporate-proxy.md) — what to configure before it can reach anything

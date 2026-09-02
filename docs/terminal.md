@@ -125,3 +125,9 @@ inv deploy.all --name wezterm
 It shows a diff and asks before overwriting. Full details, including the
 edit-locally-vs-edit-in-repo workflows, are in
 [configuration.md](configuration.md#whole-file-configs-config_files).
+
+## See also
+
+- [Zsh](zsh.md) — the shell and prompt inside it
+- [Fonts](fonts.md) — where the terminal's font is set
+- [Shortcuts](shortcuts.md) — what PULSE changes outside the terminal

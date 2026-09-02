@@ -1,5 +1,8 @@
 # GNOME extensions
 
+The GNOME Shell extensions this repo installs, how they are managed, and what can silently disable
+all of them.
+
 > **Citrix Workspace breaks all user extensions.** `icaclient`'s "AppProtection" module installs a
 > _mandatory_ dconf policy (`/etc/dconf/db/local.d/00-extensions` + a lock on
 > `enabled-extensions`/`disable-user-extensions`) that hard-locks GNOME to only the
@@ -228,3 +231,9 @@ Then use the Chrome extension:
 
 Note: `gnome-browser-connector` is disabled in `setup.toml` by default since gext covers the same
 function without requiring a browser.
+
+## See also
+
+- [Keybindings](keybindings.md) — the bindings several of these extensions take over
+- [Citrix](citrix.md) — the package that locks every extension off
+- [Updating and removing](updating.md) — `inv gnome.update`, and why extensions update separately

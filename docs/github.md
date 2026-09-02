@@ -16,3 +16,9 @@ gh auth login
 gh config set pager "less --quit-if-one-screen"
 gh config set editor "code --wait"
 ```
+
+## See also
+
+- [Git](git.md) — identity and config
+- [SSH](ssh.md) — key setup for pushing
+- [GitLab](gitlab.md) — the equivalent CLI

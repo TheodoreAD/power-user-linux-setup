@@ -72,3 +72,9 @@ hand, there's no `apply` equivalent yet.
 
 Adding a custom tool to the pipeline (or extending recursion into a tool's subcommand tree) is done
 by editing `cli-allowlist/tools.toml`, then re-running `extract`/`classify`/`review`/`apply`.
+
+## See also
+
+- [Claude Code](claude-code.md) — the settings file these rules are merged into
+- [AI tools](ai.md) — what PULSE does for agents generally
+- [Task index](tasks.md) — the `allowlist.*` tasks in one place

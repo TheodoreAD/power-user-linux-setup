@@ -492,3 +492,10 @@ multiple directories/accounts, see [git.md](git.md) and [ssh.md](ssh.md).
 time, once identity.toml exists.
 
 For gcloud: see [gcloud.md](gcloud.md).
+
+## See also
+
+- [Package catalog](packages.md) — what the mechanism on this page actually installs
+- [Task index](tasks.md) — every command, with what it does
+- [Install methods](apt_packages.md) — how each `method` in `setup.toml` behaves
+- [Updating and removing](updating.md) — the operations that come after setup

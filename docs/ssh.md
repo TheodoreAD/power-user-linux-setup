@@ -1,5 +1,8 @@
 # SSH
 
+SSH keys, the agent, and the askpass helper — how this machine authenticates with no terminal
+attached.
+
 ## Identity setup
 
 SSH keys and config are driven by `~/.config/power-user-linux-setup/identity.toml` — a personal file
@@ -167,3 +170,9 @@ Change the comment on an existing key:
 ```shell
 ssh-keygen -f ~/.ssh/<keyfile> -o -c -C "new comment"
 ```
+
+## See also
+
+- [Git](git.md) — the identity these keys belong to
+- [GitHub](github.md) — adding a key and testing it
+- [Corporate proxy](corporate-proxy.md) — reaching a host through one

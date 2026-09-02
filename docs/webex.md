@@ -23,3 +23,8 @@ download, so there's no stable URL to pin a `deb-url` package entry against. Ins
    sudo apparmor_parser -r /etc/apparmor.d/local/opt.webex.bin.webex
    ```
 5. Verify: launch Webex, sign in, test audio/video.
+
+## See also
+
+- [Citrix](citrix.md) — the other manually-installed vendor client
+- [Package catalog](packages.md) — what is automated, and what is not

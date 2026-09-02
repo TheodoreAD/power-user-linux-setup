@@ -1,5 +1,7 @@
 # Zsh
 
+The shell PULSE configures: Oh My Zsh, the Powerlevel10k prompt, and the blocks each package writes.
+
 ## Setup
 
 All zsh configuration is declared in `setup.toml` and applied via invoke:
@@ -291,3 +293,9 @@ instances, including non-interactive scripts. `/usr/local/bin` is already in the
 When adding a new tool that needs a PATH entry, prefer creating a symlink in `~/.local/bin` over a
 new PATH manipulation. Only add a PATH entry when the tool writes multiple binaries to its own
 directory dynamically (like `go install` populating `$GOPATH/bin`).
+
+## See also
+
+- [Terminal](terminal.md) — the emulator this shell runs in, and its own key bindings
+- [Fonts](fonts.md) — the Nerd Font the prompt's glyphs depend on
+- [How it works](configuration.md) — how the blocks in your dotfiles are written and removed

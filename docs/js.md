@@ -1,5 +1,7 @@
 # Node.js
 
+Node.js through nvm: where it installs, and why a non-interactive shell cannot see it.
+
 <https://github.com/nvm-sh/nvm>
 
 Installed via `inv node.install` (nvm method — installs nvm to `~/.local/share/nvm`, then installs
@@ -55,3 +57,9 @@ manages Node versions and installs global tools in isolated shims, pinnable per 
 node --version
 npm --version
 ```
+
+## See also
+
+- [Dev container](dev-container.md) — why a non-interactive shell cannot see node
+- [Claude Code](claude-code.md) — the global npm package the skills installer needs
+- [Updating and removing](updating.md) — moving to a newer LTS

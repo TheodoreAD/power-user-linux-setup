@@ -376,3 +376,9 @@ by default, same `ui.ask` convention used elsewhere, auto-skipped non-interactiv
 Edit `config/statusline-command.sh` and re-run `inv tools.install` to change the script's behavior —
 its own header comment documents the color palette, icon sources (powerlevel10k's nerdfont icon
 table), and threshold rationale in full; this doc only covers how it's _deployed_.
+
+## See also
+
+- [AI tools](ai.md) — the agent-agnostic half: what every agent reads
+- [CLI allowlist](cli-allowlist.md) — the permission rules behind the prompts
+- [Fonts](fonts.md) — the glyphs the statusline draws with

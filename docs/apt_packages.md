@@ -101,3 +101,9 @@ This re-fetches the key from each `gpg_url` and overwrites the file at `gpg_path
 `apt-repo` entry — no need to look up per-repo commands.
 
 See [gcloud.md](gcloud.md) for Google Cloud CLI setup.
+
+## See also
+
+- [Package catalog](packages.md) — every package, with the method it uses
+- [How it works](configuration.md) — tags, `enabled`, and the phase each install task runs in
+- [Updating and removing](updating.md) — which methods apt upgrades and which need their own command

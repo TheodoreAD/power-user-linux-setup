@@ -495,3 +495,9 @@ inv zsh.set-default-shell   # usermod -s — takes a new terminal to actually ap
 
 `gnome.*` and `screenshot.*` tasks are never called by `inv setup` and have no meaning under WSL —
 just don't invoke them.
+
+## See also
+
+- [Network doctor](net-doctor.md) — diagnosing a distro's DNS and the Windows side of it
+- [Dev container](dev-container.md) — the other environment that skips the desktop phases
+- [How it works](configuration.md) — the tags and phases this run changes

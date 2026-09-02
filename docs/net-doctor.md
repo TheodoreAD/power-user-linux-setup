@@ -90,3 +90,9 @@ which satisfies the floor comfortably. Only that first run constrains it.
   asked of it.
 - A finding is a diagnosis, not a change: nothing here edits config, installs a CA, or exports a
   variable. The commands it prints are yours to run.
+
+## See also
+
+- [Networking](networking.md) — the wider set of connectivity notes
+- [Corporate proxy](corporate-proxy.md) — acting on a proxy finding
+- [Certificates](certs.md) — acting on a TLS-trust finding

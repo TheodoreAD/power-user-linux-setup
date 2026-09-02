@@ -55,3 +55,9 @@ PULSE writes no other keyboard shortcuts. GNOME extensions installed by
 Alt-Tab switcher's replacement of `Alt+Tab` — and those are the extension's defaults, not something
 this repo configures. [keybindings.md](keybindings.md) has the live map, including which
 `Super+<number>` bindings the extensions take over from the shell.
+
+## See also
+
+- [Keybindings](keybindings.md) — the full map of what GNOME and the extensions bind
+- [Screen capture](screen_capture.md) — the tools behind the screenshot keys
+- [Terminal](terminal.md) — WezTerm's own bindings

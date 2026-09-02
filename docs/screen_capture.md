@@ -1,5 +1,7 @@
 # Screen capture
 
+Three screenshot tools overlap on this desktop. What each does best, and which keys PULSE changes.
+
 ## Built-in GNOME tool (Ubuntu 24.04 default)
 
 Since GNOME 42 the screenshot/screencast UI is baked directly into GNOME Shell — no separate app is
@@ -131,3 +133,8 @@ annotation editor (arrows/text/blur/crop) also confirmed working on a `PrtSc` ca
   `-f` together do both), and it still works fine under Wayland since it captures via the same
   `org.gnome.Shell.Screenshot` D-Bus service the Shell UI itself uses — but the built-in `Alt+PrtSc`
   already covers everything it'd be used for here.
+
+## See also
+
+- [Shortcuts](shortcuts.md) — which keys PULSE rebinds, and which it deliberately leaves alone
+- [Keybindings](keybindings.md) — the surrounding GNOME bindings

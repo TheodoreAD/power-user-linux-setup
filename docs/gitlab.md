@@ -40,3 +40,9 @@ glab auth login --hostname gitlab.com
 glab ssh-key list
 glab ssh-key add ~/.ssh/<your_key>.pub --title "$(uname -n)"
 ```
+
+## See also
+
+- [Git](git.md) — identity and config
+- [SSH](ssh.md) — key setup for pushing
+- [GitHub](github.md) — the equivalent CLI

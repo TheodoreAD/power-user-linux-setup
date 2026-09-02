@@ -164,3 +164,9 @@ Not every task is meant for everyday use. The ones a normal machine actually nee
 | `inv zsh.set-default-shell`            | Set zsh as the login shell (usermod -s, not chsh — chsh's PAM password prompt doesn't work in a non-interactive/piped session the way sudo -A does).                                                   |
 
 <!-- /PULSE::task-index -->
+
+## See also
+
+- [How it works](configuration.md) — what `inv setup` runs, in order
+- [Updating and removing](updating.md) — the tasks worth running after setup
+- [Package catalog](packages.md) — what the install tasks install

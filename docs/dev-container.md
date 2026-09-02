@@ -493,3 +493,9 @@ host Docker installation directly.
 - The `deb-url` method for Citrix is excluded by the `corporate` tag; Webex is also excluded.
 - `kind` and `tilt` are included by default — remove `k8s` from tags or add your own exclusion if
   you don't need them in the container.
+
+## See also
+
+- [WSL](wsl.md) — the other cut-down environment
+- [How it works](configuration.md) — the tag exclusions a container uses
+- [Package catalog](packages.md) — what is left after those exclusions

@@ -130,3 +130,9 @@ grant).
 | `zsh-syntax-highlighting`       | Syntax highlighting for commands in the zsh prompt — must be last in plugins list                                                                                                                              | `shell`, `zsh`                                | `git-clone`        |
 
 <!-- /PULSE::package-catalog -->
+
+## See also
+
+- [Install methods](apt_packages.md) — what each value in the `Method` column does
+- [How it works](configuration.md) — how tags decide which of these a machine gets
+- [Updating and removing](updating.md) — how each method is updated and uninstalled

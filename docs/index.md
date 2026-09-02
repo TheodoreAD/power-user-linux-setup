@@ -131,3 +131,10 @@ inv apt.upgrade-debs   # the packages apt cannot upgrade, because they came from
 inv verify.all         # re-check that everything installed still actually runs
 inv clean.all          # reclaim cache space, conservatively
 ```
+
+## See also
+
+- [How it works](configuration.md) — phases, tags, and how config files are written without
+  clobbering yours
+- [Package catalog](packages.md) — everything a full run installs
+- [Updating and removing](updating.md) — what to run once the machine is set up

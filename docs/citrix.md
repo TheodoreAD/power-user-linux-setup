@@ -1,5 +1,8 @@
 # Citrix
 
+Citrix Workspace on Ubuntu: the install sequence, the EPA gateway bug, and why it is uninstalled
+here today.
+
 > **Paused, not abandoned — uninstalled 2026-08-08.** All three packages were on this machine and
 > working (VPN/EPA blocked only by the IT-side gateway bug below) up through 2026-06-12. They were
 > fully uninstalled on 2026-08-08 because Citrix Workspace's AppProtection module locks down all
@@ -194,3 +197,9 @@ Then configure the interface's DNS:
 sudo -A resolvectl dns <interface> <vpn-dns-server>
 sudo -A resolvectl domain <interface> ~<internal-domain>
 ```
+
+## See also
+
+- [GNOME extensions](gnome_extensions.md) — what its AppProtection module locks down
+- [Corporate proxy](corporate-proxy.md) — the network it usually sits behind
+- [Updating and removing](updating.md) — removing it, and why that needs a reboot

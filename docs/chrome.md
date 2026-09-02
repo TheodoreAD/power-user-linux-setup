@@ -108,3 +108,8 @@ Wayland, windows are matched per `.desktop` file and the ambiguity does not aris
 This matters because `[packages.google-chrome-x11]` exists to force Chrome onto XWayland (an
 NVIDIA + Wayland DRM-video bug). Taking that workaround costs per-profile pinning; an app installed
 in exactly one profile is unaffected either way.
+
+## See also
+
+- [GNOME extensions](gnome_extensions.md) — the rest of what shapes the app grid
+- [Task index](tasks.md) — `chrome.status` and its siblings

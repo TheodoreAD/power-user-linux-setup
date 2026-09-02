@@ -148,3 +148,9 @@ gsettings list-recursively org.gnome.shell.keybindings | grep -i super
 gsettings list-recursively org.gnome.mutter.keybindings | grep -i super
 dconf dump /org/gnome/shell/extensions/ | grep -B5 -i super
 ```
+
+## See also
+
+- [Shortcuts](shortcuts.md) — the shorter list: only what PULSE changes from the defaults
+- [GNOME extensions](gnome_extensions.md) — where several of these bindings come from
+- [Input devices](input_devices.md) — why a bare Super tap may not register at all
