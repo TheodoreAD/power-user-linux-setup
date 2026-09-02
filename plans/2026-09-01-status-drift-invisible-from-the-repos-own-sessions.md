@@ -104,3 +104,25 @@ still true before leaving it at `idea`: the note says the `~/AGENTS.md` rule was
 and should be re-measured "after it has run a while", and a week has passed. The re-measure it names
 is the `gh run list` sweep already written into the plan's Observation section, and its result may
 close this plan rather than park it again.
+
+## Migrated to
+
+- **The tooling finding, the synonym-drift pitfall and the not-a-third-data-point correction** →
+  `2026-09-02-status-drift-invisible-at-repo-scope.md`, filed in `agent-skills`' store mirror and
+  committed there. That is where they belong: `plan-docs` is authored in that repo, and the fix —
+  computing drift at repo scope, which needs no cross-repo comparison because the vocabulary is a
+  fixed enum — is a change to `plans.py`. Filed rather than made, since writing into another repo is
+  out.
+- **The two fixes themselves** → the plans they were about, both in this repo's history:
+  `2026-08-23-git-hooks-for-quality-gate.md` (note moved into the body, status set through the gate,
+  and the re-measure it was waiting on actually run) and `2026-08-27-docs-site-usability.md` (`done`
+  → `in-progress` → `landed` once its `UNVERIFIED` was resolved).
+
+**Deliberately not migrated:** the machine-wide count of 135 plans, and the verification that both
+drifts are gone. Both are measurements of a moment rather than durable facts — the count is stale
+the next time anyone writes a plan — and the useful half of the count, that these two were the whole
+population rather than a sample, is carried in the filed plan as evidence.
+
+Nothing goes to `contributing/`. This repo has no design-rationale home for plan hygiene and should
+not grow one for a finding that belongs to another repo's tool; the two fixes are ordinary plan
+maintenance and are fully described by their own commits.
