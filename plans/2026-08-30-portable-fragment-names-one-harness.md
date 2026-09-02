@@ -1,6 +1,6 @@
 ---
-status: in-progress
-updated: 2026-08-30
+status: landed
+updated: 2026-09-02
 ---
 
 # The fragment axis is wrong: PULSE vs machine, harness vs portable
@@ -285,3 +285,27 @@ re-cut, then the file rename that the re-cut may make moot anyway.
 Do not sweep, and do not genericise: the reframing above settles that Claude tool names stay, and
 several of these rules are worded the way they are because a shorter or vaguer version was measured
 being missed.
+
+## Migrated to
+
+Every step above landed on 2026-08-30 and both open questions closed the same day, so this retires
+as a whole rather than leaving a residue.
+
+- `contributing/global-agents-md.md`, "Fragments are subjects, dependency is a label" — the design
+  and why a dependency partition lost (already there since the re-cut), and now also the three ways
+  a rule can name a harness and why a mechanical sweep is the wrong instrument, the prerequisite
+  check's config-level and gate-split decisions, the method that proved no rule text was lost, and
+  the tracked-deletion pitfall.
+- `contributing/global-agents-md.md`, "What this setup provisions (cluster intro, retired
+  2026-08-30)" — the user's reframing in their own words, and the 5-of-7 measurement that made it
+  general rather than a one-off.
+- The result itself is `config/agents-md/` (seven fragments, one cluster each) and its `README.md`;
+  the label vocabulary is held by `tests/unit/test_agents_md.py` rather than by prose.
+- The locale rule's fate went to `plans/2026-08-30-english-iso-locale-defaults.md` while this plan
+  was open, and is not carried here.
+
+Deliberately not migrated: the two measurement tables (`this-setup.md`'s 7 rules against
+`setup.toml`, `portable.md`'s 7 harness-naming rules). Both describe a file layout that no longer
+exists, and the conclusions each supports are recorded above without them. The `[needs plan-docs]`
+pitfall is kept, since a label whose form implies a check it does not pass is a mistake available
+again tomorrow; the "all 38 bodies changed" one is kept for the same reason.
