@@ -84,9 +84,9 @@ this session did know.
 - The **chaining row is the one that matters**, because the note says nothing whatever about
   chaining — it is purely a `~/AGENTS.md` rule, unopposed, and it was still broken in 22% of calls.
   That separates two failure modes this plan had been treating together: the file-read divergence
-  has an external cause and the chaining divergence does not. Whatever sentence lands in
-  `config/agents-md/claude-code.md` about the note will not touch this one, and a session that fixes
-  its reads because the note is resolved will still be chaining.
+  has an external cause and the chaining divergence does not. Whatever sentence lands in `bash.md`
+  about the note will not touch this one, and a session that fixes its reads because the note is
+  resolved will still be chaining.
 
 **The second `ingesta` row is why the "under the note" column needs a third value.** Merged in from
 `plans/2026-09-01-bash-discipline-sample-ingesta-0901.md`, filed by that session because it could
@@ -148,8 +148,8 @@ sessions of rate-counting could not settle it:
   session makes is forced, and counting them as adherence failures — which the four-session table
   above implicitly does — measures the harness rather than the agent.
 - **Reading and editing: the conflict is real and the user's rule can win.** Read, Edit and Write
-  are all still there. This is the half a rule in `config/agents-md/claude-code.md` can actually
-  direct, and it is where the earlier sessions' 5–12% Bash-read rates are genuine choices.
+  are all still there. This is the half a rule in `config/agents-md/bash.md` can actually direct,
+  and it is where the earlier sessions' 5–12% Bash-read rates are genuine choices.
 
 [PITFALL: the note's own wording hides this. It says to fall back to a dedicated tool "only when
 Bash genuinely cannot do the job", which reads as a preference among available tools — so an agent
@@ -164,8 +164,8 @@ during the first session and not answered. The options are not symmetric — `~/
 user's own standing preference and is enforced in review, while the auto-mode note is harness
 guidance whose rationale is unstated. Following the note means producing work the user has already
 corrected; ignoring it means overriding a system turn. A one-line answer in
-`config/agents-md/claude-code.md` would settle it for every future session, which is the point of
-that fragment existing.]
+`config/agents-md/bash.md` would settle it for every future session, next to the permission-model
+rule that already describes auto mode.]
 
 [NEEDS CLARIFICATION: what actually triggers the mode switch — the user toggling it, the harness
 escalating on its own, or something about the task? It arrived attached to a plan-mode exit the
@@ -224,11 +224,13 @@ mechanism, not a confirmed one, and it should be checked before the note is dism
 
 ## Recommended direction
 
-Answer the first question and write one sentence into `config/agents-md/claude-code.md` — the
-fragment that already holds "Claude Code specifics", the cluster whose whole purpose is harness
-behaviour that is not a general convention. It costs one sentence in a file already carrying the
-permission-model rules, and it removes a contradiction that otherwise gets re-litigated by every
-session that hits it.
+Answer the first question and write one sentence into `config/agents-md/bash.md`, next to "The
+permission model in force" — which already describes what auto mode does to the toolset and carries
+the `[Claude Code]` label this claim needs. (Written before the 2026-08-30 re-cut, this plan named
+`claude-code.md`, the harness fragment; fragments are keyed to subject now and that file is gone, so
+the destination is the Bash cluster rather than a harness one.) It costs one sentence in a rule
+already carrying the permission model, and it removes a contradiction that otherwise gets
+re-litigated by every session that hits it.
 
 If the answer is "the user's rules win", the sentence should say **what to do when the note
 appears** rather than only which side wins — acknowledge it, keep using the dedicated tools, and say

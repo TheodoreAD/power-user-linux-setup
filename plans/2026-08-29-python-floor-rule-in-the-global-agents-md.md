@@ -50,10 +50,19 @@ the floor is actually chosen. Revisit if the always-loaded file comes under size
 admission criteria's own reference points are ≤200 lines and ≤15 rules, and moving a rule out later
 needs per-rule user approval anyway.]
 
-Fragment ownership per `config/agents-md/README.md`: this is a convention that holds on any machine
-with any agent, so `portable.md` (order 30), not `this-setup.md`. It should be worded without naming
-this user's specific repos — "a project other people install" rather than a list — since
-`portable.md`'s stated direction is away from rules that name this setup.
+Fragment ownership: **this section is out of date and the destination has changed.** It named
+`portable.md` (order 30) against `this-setup.md`, on the axis of what a rule depends on. Neither
+file exists — the fragments were re-cut by subject on 2026-08-30, and what a rule assumes is now a
+label on its heading rather than a choice of file (`contributing/global-agents-md.md`, "Fragments
+are subjects, dependency is a label"). So the question is no longer "portable or not" but **which
+subject cluster owns a Python version floor**, and the honest answer is that none of the seven is a
+clean fit: `research.md` holds "Choosing a tool or library" and "Installing a tool on this machine",
+which is the nearest neighbourhood, but a version floor is a project-shape decision rather than a
+tool choice.
+
+The wording guidance survives the change and still applies: state it without naming this user's
+specific repos — "a project other people install" rather than a list — since the admission criteria
+push away from rules that name this setup.
 
 ## Evidence for `contributing/global-agents-md.md`
 
@@ -126,8 +135,9 @@ stable", and each project records the number it was generated with.]
 
 ## Recommended direction
 
-1. Add one trigger-named rule to `config/agents-md/portable.md`, trigger + rule + one clause of why,
-   per that file's shape.
+1. Add one trigger-named rule to whichever `config/agents-md/` fragment ends up owning it — trigger
+   - rule + one clause of why, per those files' shape. Settle the cluster question above first; it
+     is a real question now rather than the lookup it was when this plan was written.
 2. Put the three measurements above in `contributing/global-agents-md.md` under a matching heading.
 3. `inv deploy.all --name agents-md`, then confirm the deployed `~/AGENTS.md` carries it.
 4. The mechanism that makes a project _declare_ its tier is not this repo's — it belongs to

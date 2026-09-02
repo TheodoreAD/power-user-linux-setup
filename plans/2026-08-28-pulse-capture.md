@@ -42,11 +42,13 @@ What changed with the skills move: the rule can no longer say "these are owned b
 PULSE-mechanism problem to here — which is one more sentence, and it is the sentence that makes the
 tool's destination argument meaningful.
 
-Which fragment it joins is a real question. `portable.md` reaches every agent everywhere but names
-two specific repos, which is exactly the machine-specific content that fragment exists to keep out;
-`this-setup.md` is the honest home and is only true for this machine. See
-`plans/2026-08-26-agent-artifact-authoring-decoupling.md` D9 for the portable/machine split this has
-to respect.
+Which fragment it joins was a real question when this was written, and the 2026-08-30 re-cut changed
+its shape rather than answering it. Fragments are keyed to **subject** now, and what a rule assumes
+is a label on its heading — so there is no longer a portable fragment to be kept clean of
+machine-specific content, and no `this-setup.md` to exile the rule to. The routing rule is about
+where knowledge goes, so `agent-knowledge.md` owns it; the cost that used to be "which fragment" is
+now "does naming two specific repos survive the admission criteria at all". See
+`contributing/global-agents-md.md`, "Fragments are subjects, dependency is a label".
 
 ## `pulse-capture` — the artifact
 
@@ -118,9 +120,12 @@ routing decision where the routing rule already states it; inference means the s
 a judgment the `~/AGENTS.md` rule just made. Lean argument, with the rule telling the agent which
 value to pass. Either way it can no longer default to `power-user-linux-setup`.]
 
-[NEEDS CLARIFICATION: which `config/agents-md/` fragment carries the routing rule, given it names
-two specific repos? See "The routing rule" above — `this-setup.md` is the honest answer and costs
-reach; `portable.md` has the reach and would be the first machine-specific content admitted to it.]
+[NEEDS CLARIFICATION: can the routing rule name two specific repos and still be admitted? The
+fragment half of this question dissolved in the 2026-08-30 re-cut — `agent-knowledge.md` owns the
+subject and every fragment reaches every agent — but the substance did not: the admission criteria
+push away from rules naming this user's particular repos, and a routing rule that cannot name a
+destination is not much of a routing rule. Candidate escape: state the routing _test_ rather than
+the repos, the way "Where durable knowledge goes" already names three destinations by role.]
 
 ## Recommended direction
 

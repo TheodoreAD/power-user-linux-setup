@@ -5,10 +5,10 @@ updated: 2026-08-29
 
 ## Context
 
-`config/agents-md/portable.md`'s "Viewing, searching, or editing files" rule ends with a tool-
-preference clause: `rg` over `grep -r`, `fd` over `find`, with plain `grep`/`find` kept legitimate
-for non-recursive lookups, `find -exec`/`-delete`, and portability. The user's standing impression,
-stated 2026-08-29, is that agents do not respect it.
+`~/AGENTS.md`'s "Viewing, searching, or editing files" rule ends with a tool- preference clause:
+`rg` over `grep -r`, `fd` over `find`, with plain `grep`/`find` kept legitimate for non-recursive
+lookups, `find -exec`/`-delete`, and portability. The user's standing impression, stated 2026-08-29,
+is that agents do not respect it.
 
 Measured over **15,171 Bash calls in 415 transcripts** under `~/.claude/projects/`:
 

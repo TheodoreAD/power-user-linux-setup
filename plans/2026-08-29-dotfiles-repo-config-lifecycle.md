@@ -392,9 +392,11 @@ Per file, with what the audit found:
 - **The font** stays, and is a PULSE feature to advertise. It is not taste in the sense this plan
   meant: PULSE installs the Nerd Font, so pointing its terminals at it is coherence, not preference.
 - **`statusline-command.sh`** stays and should be showcased.
-- **The `agents-md/` fragments** stay, all four. `this-setup.md` looked like the problem — it is
-  literally "this machine" — but every rule in it is true of _any_ machine PULSE sets up, because
-  PULSE is what creates that shape. A public consequence of a public repo.
+- **The `agents-md/` fragments** stay, all of them. `this-setup.md` looked like the problem — it was
+  literally "this machine" — but every rule in it was true of _any_ machine PULSE sets up, because
+  PULSE is what creates that shape. A public consequence of a public repo. (That file no longer
+  exists: the 2026-08-30 re-cut split the fragments by subject and made the dependency a label. The
+  finding stands and is what the re-cut acted on.)
 - The remaining eight files were never candidates: `actrc`, `askpass-zenity.sh`,
   `pulse-proxy-start.sh`, `pulse-proxy.service`, `research-update.sh`, both
   `google-chrome-x11*.desktop` (already `enabled = false` by default) and the two `.example`

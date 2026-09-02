@@ -44,13 +44,15 @@ were wrong with it at once, and only the fourth is about git at all:
 
 ## Open questions
 
-[NEEDS CLARIFICATION: Whether this is admitted at all, given the file's size. `portable.md` stands
-at 29 rules / 390 lines against reference points of ≤15 rules / ≤200 lines, so admission is a real
-cost. The argument for it is the tier test in `contributing/global-agents-md.md`: the miss is silent
-(a stash that absorbs another session's work surfaces as that session's edits vanishing, attributed
-to anything but this) and expensive (unrecoverable, unlike a bad commit). The argument against is
-that three of the four errors above are already covered by rules the session had loaded and did not
-apply — which would make this an adherence problem rather than a missing rule.]
+[NEEDS CLARIFICATION: Whether this is admitted at all, given the file's size. The assembled
+`~/AGENTS.md` stands at 39 rules / 700 lines against reference points of ≤15 rules / ≤200 lines, so
+admission is a real cost. (The 29-rule figure this entry was written against was `portable.md`'s,
+before the 2026-08-30 re-cut split the fragments by subject; the rule would land in `git.md`.) The
+argument for it is the tier test in `contributing/global-agents-md.md`: the miss is silent (a stash
+that absorbs another session's work surfaces as that session's edits vanishing, attributed to
+anything but this) and expensive (unrecoverable, unlike a bad commit). The argument against is that
+three of the four errors above are already covered by rules the session had loaded and did not apply
+— which would make this an adherence problem rather than a missing rule.]
 
 [NEEDS CLARIFICATION: Whether the "don't rewrite history to tidy a small commit" half belongs with
 "Committing multi-part work" instead, since that is the rule whose fold-into guidance was being
