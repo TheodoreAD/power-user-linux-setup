@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-30
+updated: 2026-09-02
 ---
 
 ## Context
@@ -179,6 +179,56 @@ because round 2 went looking for the heading to write under. The `## Contents` l
 also incomplete by several sections, so it cannot be used to answer "does this rule have evidence?"
 either.]
 
+## Round 3 — Git & commits (landed 2026-09-02)
+
+Taken because the Git cluster had become **36% of the file**: 16,180 bytes across 8 rules, against
+`bash.md`'s 9,649 across the same count. It had roughly doubled since round 2, entirely through
+additions (the commit-body rule, the `-F` reversal, the one-`-m` clause, regenerate-from-canonical).
+
+Two merges, both of a premise stated more than once:
+
+- **The approval prompt is what the user reads** was argued three times inside "About to commit" —
+  once per correction the rule has taken, since each correction re-derived the premise before naming
+  its new shape. The premise now leads and the three defeating shapes hang off it: `-F` behind a
+  path, a chain burying it mid-command, a series of `-m` flags running together. The chaining half
+  points at "Composing a Bash call", which owns that cost and carries the user's own words for it —
+  the same cross-fragment duplication round 1 found between Bash and Verification.
+- **`git log` is a future agent's only access** opened "Committing multi-part work" and was derived
+  again fifteen lines later under the body rule. Stated once now, with granularity and body as its
+  two consequences.
+
+Measured: **16,180 → 15,870 bytes** (−310), 226 → 223 lines, 8 rules unchanged.
+
+[PITFALL: **the yield is the finding, not the saving.** Round 1 removed 360 bytes, round 3 removed
+310, and between them the file gained 5,161. Merging returns roughly 2% per cluster because the
+duplication left is premise-shaped — eight to thirty words restated where a pointer would cost
+nearly as much — while growth arrives as whole new claims that no merge can touch. The lever is not
+failing; it is finished. Any future reduction has to come from the intake gate or from a lever this
+pass has ruled out, and a fourth round would be work whose result is already known.]
+
+## The parked additions, decided (2026-09-02)
+
+The pass's close. All five were put to the user in one round, per the "one approval round" decision;
+four were admitted and landed the same day, one was not asked and is still parked below.
+
+| addition                           | shape                         | destination                          |
+| ---------------------------------- | ----------------------------- | ------------------------------------ |
+| `git -C` at the session's own repo | clause on an existing rule    | `bash.md`, Composing a Bash call     |
+| a local commit is not private      | paragraph on an existing rule | `git.md`, Unexplained git/file state |
+| a probe is a sample of one         | paragraph on an existing rule | `verification.md`, Generalizing…     |
+| no vendor lock-in                  | **new rule**                  | `agent-knowledge.md`                 |
+
+Rule count 38 → 39, the first change since the fragments were re-cut. Evidence for each is in
+`contributing/global-agents-md.md` under the section its rule keys to, three of them as `###`
+subsections since a variant extends a section rather than taking one.
+
+[DECISION: **the vendor-lock-in rule took a heading, and the reason generalises.** It is the general
+form of "never a harness's own memory store", which is filed under where knowledge goes — a rule a
+session consults when it already has something to file, not when it is choosing what to build on. A
+constraint that has to fire _before_ a design exists cannot live inside a rule about where finished
+work goes, however closely the two are related. That is a different admission argument from "it is
+tier 1", and it is the one that made a 39th rule worth its bytes.]
+
 ## Open questions
 
 ## Rules with no evidence section (measured 2026-08-30)
@@ -270,11 +320,36 @@ file for each incident split them 1–3: one was already documented there and th
 nowhere else, which inverts what "move it to the evidence file" costs in each case. Sorting by how a
 passage _looks_ grouped a duplicate with three uniques.]
 
-[NEEDS CLARIFICATION: does merging alone reach a shape worth stopping at? Six merges is the whole
-inventory, and round 1's three yielded 360 bytes. If D–F land in the same range the file finishes
-this pass around 38 KB with 38 rules — every rule kept, which is what was asked for, but still ~2×
-the review reference points and still over the latent Codex cut. Decide at the close whether that is
-the intended resting state or whether a further lever gets reopened.]
+### Does merging alone reach a shape worth stopping at? — answered, no (2026-09-02)
+
+Three rounds of data now say it does not, and the reason is not that the merges were done badly.
+
+| moment                          | assembled bytes | rules |
+| ------------------------------- | --------------: | ----- |
+| pass opened (2026-08-26)        |          ~35.5k | 37    |
+| after round 1 (2026-08-30)      |          39,176 | 38    |
+| **before round 3 (2026-09-02)** |      **44,337** | 38    |
+| after round 3 + admissions      |          46,911 | 39    |
+
+Merging returned 670 bytes across three rounds. The file gained **5,161 in the three days between
+rounds 2 and 3**, from four admissions nobody would want back, and 2,574 more from the four this
+pass had itself parked. So the pass's premise — that a leanness problem is a duplication problem —
+was true of the file it opened on and is not true of the file now. Every remaining claim is stated
+once.
+
+That leaves the resting state as a real choice rather than an outcome, and the honest options are
+narrower than they were:
+
+- **the intake gate**, which is where the pass's own closing sentence already pointed and the only
+  lever that acts on the cause;
+- **shortening claims**, explicitly rejected by the user at this pass's opening and not reopened
+  here;
+- **demotion**, still blocked on the trigger layer below.
+
+[DECISION: **stop merging.** The inventory is exhausted, the yield is ~2% per cluster, and a fourth
+round is work whose result is known. The pass closes as a merging pass; what it does not do is
+declare the file finished at 46.9 KB, which is 1.4× the latent Codex cut and 3.5× the ≤200-line
+review reference point. Those numbers are now the intake gate's problem, not this pass's.]
 
 [NEEDS CLARIFICATION: which rules are demotion candidates under the tier test — sharp statable
 trigger, cheap and recoverable miss? Deferred rather than answered by the decisions above, and worth
@@ -283,26 +358,24 @@ with a topic-owning skill (`session-bash-audit`) that can both hold guidance and
 moving it made adherence worse. That makes it the safest place to try demotion, and the riskiest to
 get wrong, since its rules were rewritten specifically because they were being missed.]
 
-## Additions parked pending this pass
+## Additions parked pending this pass — four admitted, one still open
 
-Two cross-repo preferences surfaced 2026-08-26 (harvest of the `agent-skills` scoping session) that
-would otherwise be appended to `portable.md` right now. Parked here instead, per `session-harvest`'s
-"destination mid-restructure → the plan reshaping it" filter: appending while the file's shape is
-being decided bypasses the admission gate this pass exists to apply, and risks the addition being
-restructured away unread. Both are recorded today only as `[DECISION:]` tags inside
-`plans/2026-08-26-agent-artifact-authoring-decoupling.md`, which means that on that plan's
-retirement they land in a PULSE `contributing/` page — and a page in this repo never fires in
-`repo-tasks`, `scaffoldapy`, or a `*-polite-mcp` repo. That reach gap is the argument for admitting
-them; the file's size is the argument against. Decide both at this pass's close, against
-`contributing/global-agents-md.md`'s "Admitting a new rule" criteria, not before.
+Five accumulated here between 2026-08-26 and 2026-08-29, the first two from the harvest of the
+`agent-skills` scoping session. Parking them was `session-harvest`'s "destination mid-restructure →
+the plan reshaping it" filter: appending while the file's shape is being decided bypasses the
+admission gate this pass exists to apply, and risks the addition being restructured away unread.
 
-[DEFERRED: **"No vendor lock-in — the artifact vocabulary is `AGENTS.md`, Agent Skills and MCP;
-anything vendor-specific is admissible only as harness plumbing that makes an agent work better,
-never as a carrier for instructions or knowledge."** Tier-1 shaped on the face of it: it can fire on
-any turn in any repo, and its miss is silent and expensive — a session designs against a vendor
-mechanism and the work is thrown away, which is exactly what nearly happened before the constraint
-was stated. No topic-owning skill covers it. Trigger for the heading, if admitted: "Choosing a
-mechanism for agent instructions, skills, or tools".]
+**Four were admitted at the close, 2026-09-02**, and the parking was worth it — the vendor-lock-in
+entry changed shape while parked, from "tier 1, silent and expensive" to the sharper argument that a
+constraint firing before a design exists cannot live inside a rule about where finished work goes. A
+month of sitting is what produced the second reading.
+
+The fifth is below and was not put to the user in that round. Decide it against
+`contributing/global-agents-md.md`'s "Admitting a new rule" criteria, the same as the others.
+
+**Admitted and landed 2026-09-02** — "No vendor lock-in", as the new rule "Choosing a mechanism for
+agent instructions, skills, or tools" in `agent-knowledge.md`, the trigger this entry proposed.
+Evidence under the matching heading in `contributing/global-agents-md.md`.
 
 [DEFERRED: **"Prefer the mainstream community tool, and have PULSE verify its result rather than
 reimplement it."** A _variant_ of the existing "About to author content, config, or a workaround
@@ -313,55 +386,17 @@ sentence appended there, not a heading. Concrete instance to cite: the `skills` 
 Claude Code symlink it does not create, and PULSE's own `_ensure_agents_skills` covers the gap
 instead of PULSE reimplementing skill installation.]
 
-[DEFERRED: **"A probe you write to test a library's behaviour is a sample of one, and a passing
-probe reads as confirmation — when the suspicion is about precision, width or a limit, the input has
-to be one that can actually fail."** A _variant_ of the existing "Generalizing from a sample to a
-set" rule, which already covers samples you created yourself; the new half is that a deliberately
-constructed _probe input_ is such a sample, and that a green result is the failure mode rather than
-an error. Per the admission criteria a variant extends its rule's existing section, so if admitted
-this is a short paragraph appended there, not a heading — rule count unchanged.
+**Admitted and landed 2026-09-02** — the probe clause, as a paragraph on "Generalizing from a sample
+to a set" in `verification.md`. The `Decimal`/SQLite instance and the reason a constructed probe
+differs from a handed sample are in `contributing/global-agents-md.md`.
 
-Concrete instance to cite, measured 2026-08-29 in `ingesta`: a `Decimal` round-trip through
-SQLAlchemy's SQLite dialect passed on ten significant digits and silently lost the value on nineteen
-(`1234567890123456789.000000001` → `…768.0000000000`, no warning). The first probe used ten, so it
-read as "`Numeric` is fine", and that conclusion was one step from being written into a shared skill
-doc where nobody re-derives it. Silent and expensive miss; no topic-owning skill covers how to
-choose a probe input.]
+**Admitted and landed 2026-09-02** — the `git -C <own repo>` clause, on "Composing a Bash call" in
+`bash.md`. The 89-against-14 measurement went to the evidence file, along with two later samples
+showing the rate is a per-session disposition (23% and 0% in the same repo) rather than a trend.
 
-[DEFERRED: **The existing "never `cd` into the session's own repo" rule causes the behaviour it
-bans, and needs a clause rather than a new rule.** Measured 2026-08-29 by `session-bash-audit` after
-the user corrected a session mid-task ("you don't need cd, you're in this repo"): over two days and
-2,077 calls, `cd` into the session's own repo occurred **14** times — agents comply — while
-`git -C <own repo>` occurred **89** times, up to 18% of one session's calls. The same rule that bans
-the `cd` recommends `git -C <path>` as the directory-scoping option for a cross-repo step, so agents
-reach for that flag against their own repo six times as often as they ever ran the banned form. The
-fix is one clause on the existing "Composing a Bash call" rule — `git -C` at the session's own repo
-is the same mistake — so rule count is unchanged and only the line count moves. Parked here rather
-than appended because this pass owns the file's shape and its admission criteria; the measurement
-and its method are permanent in that skill's `references/research.md` either way, so nothing is lost
-by deciding it at this pass's close.]
-
-[DEFERRED: **On this machine a local commit is not a private holding state — a parallel session's
-push publishes it.** A _variant_ of the existing "Unexplained git/file state in a working tree"
-rule, whose last paragraph already covers the outward direction: a commit in your ahead-count may be
-another session's, so ask before your push publishes it. The missing half is the inverse. Your own
-commit sits on a shared branch in a shared clone, so any other session's `git push` carries it to
-the remote regardless of whether you were holding it for approval. Per the admission criteria a
-variant extends its rule's existing section, so if admitted this is a short paragraph appended
-there, not a heading — rule count unchanged.
-
-Concrete instance, 2026-08-29 in `agent-skills`: a session committed two skill edits and
-deliberately did not push, because another session's commits sat under them and publishing was the
-user's call. Minutes later the ahead-count was zero — the other session had pushed the branch and
-carried both commits with it. Nothing signalled it, and an ahead-count falling to zero reads as
-"someone pushed, fine" rather than as work published without the decision that was being waited on.
-Verified after a fresh fetch with `git branch -r --contains <sha>`, not inferred from the count.
-
-Silent by construction, and it meets the confidentiality rule at its sharpest point, since that rule
-turns entirely on a push being irreversible. The consequence for whatever gets written: "I will
-commit but not push, and ask first" is a stated intention, not a mechanism. A session that genuinely
-must withhold work has to keep it off the shared branch — or tell the user before committing that
-the commit itself is the publishing decision.]
+**Admitted and landed 2026-09-02** — the local-commit clause, as a paragraph on "Unexplained
+git/file state in a working tree" in `git.md`. The `agent-skills` incident and the argument that it
+is where the confidentiality rule is sharpest are in the evidence file.
 
 ## Demotion is not relocation at current trigger rates (measured 2026-08-29)
 
