@@ -119,40 +119,15 @@ These cannot be automated — they require hardware knowledge, a browser, or int
 
 ## Maintenance
 
-### Updating deb-github packages
+Day-two operations live on their own page: [Updating and removing](updating.md) covers what apt
+upgrades for you and what needs its own command (`deb-github` packages, GNOME extensions, rustup,
+nvm, uv tools), how to reclaim cache space, and how to remove a package including the files a plain
+`apt purge` leaves behind.
 
-Packages installed via `deb-github` (e.g. wezterm nightly) are not updated by `apt upgrade`. To
-upgrade all of them to the latest release:
-
-```shell
-inv apt.upgrade-debs
-```
-
-This re-downloads and reinstalls each `deb-github` package. `dpkg` handles version comparison —
-reinstalling the same version is safe. For packages using `tag = "nightly"`, this always fetches the
-latest nightly build.
-
-### Checking installed tools actually work
+The three worth knowing without reading it:
 
 ```shell
-inv verify.all
+inv apt.upgrade-debs   # the packages apt cannot upgrade, because they came from a release artifact
+inv verify.all         # re-check that everything installed still actually runs
+inv clean.all          # reclaim cache space, conservatively
 ```
-
-Runs automatically as the last step of `inv setup`'s `packages` phase, so this is mainly useful
-standalone — a quick health check any time, or after manually installing/removing something. See
-[dev-container.md](dev-container.md#automated-functional-verification-inv-verifyall) for how it
-decides what to check and why.
-
-### Reclaiming disk space (apt/uv/npm/cargo/Docker caches)
-
-```shell
-inv clean.all          # conservative: keeps caches that speed up your next install
-inv clean.all-full     # full wipe: reclaims more, next install of each is slower
-```
-
-Opt-in only — neither runs as part of `inv setup`, since a persistent workstation usually wants to
-_keep_ these caches. Each covers apt's `.deb` archive cache, uv's build/wheel cache, npm's package
-cache, cargo's registry cache (if rust is installed), and Docker images/containers/build cache (if
-Docker is installed) — see [dev-container.md](dev-container.md#cleanup-reclaiming-image-layer-space)
-for the full breakdown and the reasoning behind the conservative/full split. `inv clean.caches`/
-`inv clean.caches-full` run the same set minus Docker, if you just want the package-manager caches.

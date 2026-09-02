@@ -107,6 +107,7 @@ nav:
       - configuration.md
       - packages.md
       - tasks.md
+      - updating.md
       - apt_packages.md
   - Shell & desktop:
       - zsh.md
