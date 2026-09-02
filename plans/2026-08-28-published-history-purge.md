@@ -14,7 +14,7 @@ does.
 Found 2026-08-28 by an audit run from `agent-skills`, and reproducible with the scanner that audit
 produced (`skills/plan-docs/scripts/plans.py scan --mode history --path <this repo>`):
 
-1. **Four work email addresses**, in a committed listing of SSH key filenames —
+1. **Four work email addresses**, in a committed listing of SSH key filenames — the now-retired
    `plans/2026-08-28-ssh-add-and-askpass-friction.md`, added in `3c0b606` and reshaped in `660b202`,
    both on `master`. The most identifying content in either repo. The working tree is redacted as of
    `05e8a8f`; history is not.
@@ -58,14 +58,15 @@ so that session's commits come out with new IDs and unchanged content.
 
 [PITFALL: **the rewrite also dangles every SHA cited _inside_ a committed document, and nothing
 checks.** Measured 2026-08-29, after the force-push: **16 commit citations across 5 tracked files no
-longer resolve** — 5 in `plans/2026-08-28-ssh-add-and-askpass-friction.md`'s "What has landed"
-table, 7 in this plan, 3 in `contributing/global-agents-md.md`, 1 in
-`plans/2026-08-23-github-issues-plan-lifecycle.md`. `plan-docs`' retirement procedure already says
-to grep inbound references before deleting a file, and its finishing grep is about dangling _paths_;
-a purge breaks dangling _commits_ instead, en masse, and no gate catches it — `git cat-file -e` per
-citation is the check, and nothing runs it. Worst placed is this file: a plan documenting the purge
-cites seven SHAs the purge itself invalidated. Prefer commit **subjects** over SHAs in any document
-expected to outlive a rewrite; a subject survives, an ID does not. One-liner:
+longer resolve** — 5 in `plans/2026-08-28-ssh-add-and-askpass-friction.md`'s "What has landed" table
+(that plan has since been retired, so those five are gone from the tree), 7 in this plan, 3 in
+`contributing/global-agents-md.md`, 1 in `plans/2026-08-23-github-issues-plan-lifecycle.md`.
+`plan-docs`' retirement procedure already says to grep inbound references before deleting a file,
+and its finishing grep is about dangling _paths_; a purge breaks dangling _commits_ instead, en
+masse, and no gate catches it — `git cat-file -e` per citation is the check, and nothing runs it.
+Worst placed is this file: a plan documenting the purge cites seven SHAs the purge itself
+invalidated. Prefer commit **subjects** over SHAs in any document expected to outlive a rewrite; a
+subject survives, an ID does not. One-liner:
 `rg -o '`[0-9a-f]{7,40}`' plans/ contributing/ docs/ | tr -d '\`' | while IFS=: read -r f s; do git
 cat-file -e "$s^{commit}" 2>/dev/null || echo "$f $s"; done`— note it also matches`ed25519`, so
 eyeball the hits.]
@@ -192,7 +193,8 @@ to 2 hits. Writing _about_ a private term reintroduces it; describe the shape he
 ## Files touched
 
 - `plans/2026-08-28-ssh-add-and-askpass-friction.md` — already redacted at `05e8a8f`; history still
-  carries the addresses.
+  carries the addresses. Retired 2026-09-02; `plans.py archive` reads it back, and the redaction
+  means what it reads back is the redacted form.
 - `docs/` sentence — already gone from the tip; history only.
 - `setup.toml` — `[packages.git-filter-repo]` still unwritten; the fallback carried this round.
 
