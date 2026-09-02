@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-09-02
 ---
 
@@ -297,19 +297,31 @@ Restored, matching `python.md`'s style. The general lesson is not about mermaid:
 move was to avoid the uncertain construct, and it silently degraded four diagrams on a belief that
 one grep of the repo would have overturned.]
 
-[UNVERIFIED: the diagrams have not been seen rendered. `zensical build --strict` passes and all four
-land as `<pre class="mermaid">`, which is the element the theme's bundle mounts, but the build does
-not parse mermaid and no browser was available to open the page. A malformed diagram would show as
-an error box on the published site, not as a failed build. The syntax used is the same subset
-`docs/python.md`'s published diagram already uses, which is the strongest evidence available without
-looking.]
+~~[UNVERIFIED: the diagrams have not been seen rendered.]~~ **Verified 2026-09-02, and the "no
+browser was available" premise was wrong.** `google-chrome` is installed on this machine, so the
+check needed no human looking at the published site:
 
-**2026-09-02: this tag is why the plan is not `landed`.** The status field said `done`, which is not
-in the vocabulary — `set-status` refuses `landed` while an `UNVERIFIED` stands, and it is right to:
-all seven steps are implemented, and one claim about the result has never been checked. Closing it
-takes one look at the four diagram pages on the published site, which needs a browser and not a
-build. The `DEFERRED` below (pin zensical in one place) is live work of its own and would have to
-move to an open plan before this file could be retired.
+- **Rendered in situ.** `inv docs.build`, then
+  `google-chrome --headless=new --screenshot --virtual-time-budget=20000` over
+  `file://…/site/configuration.html`. The first diagram draws as a real flowchart — nodes, edges,
+  yes/no edge labels — proving the theme's bundle mounts `<pre class="mermaid">` for real and not
+  merely that the element is present.
+- **All five parsed.** A harness page holding every `mermaid` block extracted from `docs/*.md`,
+  rendered with the same `mermaid@11` the theme loads. Five blocks — `cli-allowlist.md:15`,
+  `configuration.md:32`, `configuration.md:163`, `configuration.md:346` and `python.md:135` — and
+  **every one drew a diagram, none an error box.** `python.md`'s pre-existing diagram was the
+  control: it was already published and known good, so its rendering alongside the others confirms
+  the harness would have shown a failure rather than hidden one.
+
+[PITFALL: **the site fetches mermaid from a CDN at view time, which the build never exercises.** The
+theme bundle carries no mermaid; it lazy-loads `https://unpkg.com/mermaid@11/dist/mermaid.min.js` on
+finding a `pre.mermaid`. So `zensical build --strict` passing says nothing about diagrams, and a
+reader behind a proxy that blocks unpkg — the corporate case this repo has a whole page about — sees
+the diagram source as plain text. Not a defect of this work, but it is the reason the build could
+never have closed the tag, and it is worth knowing before adding more diagrams.]
+
+**The `DEFERRED` below (pin zensical in one place) is now the only thing outstanding**, and it is
+live work rather than a note: it has to move to an open plan before this file can be retired.
 
 ## Steps 4 and 6 landed 2026-09-02 — all seven done
 
