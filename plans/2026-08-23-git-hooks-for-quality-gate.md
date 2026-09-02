@@ -1,10 +1,16 @@
 ---
-status: idea — hooks still unadopted; `~/AGENTS.md` "About to commit" rule deployed 2026-08-25 as the next step, re-measure after it has run a while
-updated: 2026-08-25
+status: idea
+updated: 2026-09-02
 depends_on: [repo-tasks, scaffoldapy]
 ---
 
 # Git hooks for the quality gate — considered, deliberately not adopted (for now)
+
+Hooks remain unadopted. The `~/AGENTS.md` "About to commit" rule was deployed 2026-08-25 as the
+cheaper next step, and the re-measure it called for has now run — see "Observation 2026-09-02"
+below. This paragraph was the plan's `status:` field until 2026-09-02, where it had been written as
+free prose in a slot `plan-docs` treats as an enum; it is body content and now lives as body
+content.
 
 ## Context
 
@@ -102,11 +108,49 @@ added to `config/global-AGENTS.md` (Git & commits), evidence in `contributing/gl
 under the same heading. Next re-measure: repeat the `gh run list` sweep above after the rule has
 been live for a while; recurrence at a real rate reopens this plan at "Researched hook design".]
 
+## Observation 2026-09-02 — the re-measure, and the shape did not recur
+
+The `~/AGENTS.md` rule went live 2026-08-25. Eight days later, the same sweep across all three repos
+(`gh run list --created '>=2026-08-25'`, every non-success run, each failed log read):
+
+| repo                   | non-success runs | shape                                                                          |
+| ---------------------- | ---------------: | ------------------------------------------------------------------------------ |
+| power-user-linux-setup |                1 | zensical strict docs build, a bare bracket in a generated table cell (448c58e) |
+| repo-tasks             |                6 | all one plan file's one cross-repo relative link, caught by `docs.link-check`  |
+| scaffoldapy            |                3 | one integration test, two e2e runs of generated repos failing their own check  |
+
+**Zero dprint exit-20 reflow failures in eight days**, against 11 in the single day before the
+skill-level fix and 4 in the ~30 hours after it. The shape this plan exists for has stopped
+occurring, and the `~/AGENTS.md`-level rule is what changed between the two measurements.
+
+[DECISION: **the revisit trigger has fired negative — do not reopen the hook design.** The trigger
+was "dprint-shaped CI failures recurring at a rate after the rule has been live a while"; the rate
+is zero. The user's position that agents should know what to run rather than be corrected behind
+their back now has a measurement behind it rather than only a principle.]
+
+[PITFALL: **the repo-tasks six are one instance, not six.** All six ran on the evening of
+2026-08-26, all on `plans/2026-08-26-quality-tool-gaps.md`, all on the same
+`../../power-user-linux-setup/…` relative link, as one session retried. Counting runs rather than
+instances would have reported a worse post-rule rate than the pre-rule one and reopened this plan on
+an artifact of retry behaviour.]
+
+[PITFALL: **that instance is the shape's cousin, and the researched hook would have missed it.** It
+is a docs commit pushed without the gate — the local gate runs `docs.link-check` and would have
+failed — but it is not a formatter reflow, and the hook subset designed above
+(`lint_check + format_check + shell_check + shell_format_check`) does not include link checking. So
+the one post-rule instance of the broader shape is not evidence for the mechanism this plan
+designed.]
+
 ## Open questions
 
-- [NEEDS CLARIFICATION: revisit trigger — what observation would reopen this? e.g. dprint-shaped CI
-  failures recurring at some rate after the skill-level fix has been deployed for a while, or a
-  non-Claude agent harness (which never loads these skills) starting to commit in these repos.]
+- ~~[NEEDS CLARIFICATION: revisit trigger — what observation would reopen this?]~~ **Answered
+  2026-09-02** by the sweep above: the trigger was defined as dprint-shaped failures recurring at a
+  rate, and the rate is zero. The second half of the original question stands on its own and is kept
+  below.
+- [NEEDS CLARIFICATION: whether a non-Claude agent harness starting to commit in these repos reopens
+  this. Such a harness never loads these skills, and `~/AGENTS.md` reaches it only if it reads
+  `AGENTS.md` at all — which is the convention's whole premise but is not measured here. Nothing has
+  committed from another harness yet, so this is untested rather than unanswered.]
 - [NEEDS CLARIFICATION: if revisited, pre-commit vs pre-push — user leans pre-commit as safer; the
   research above leaned pre-push (mirrors CI's per-push-tip granularity, runs once per push under
   the granular-commits practice). Also whether tests belong in the hook's gate: "usually run tests
@@ -119,8 +163,13 @@ been live for a while; recurrence at a real rate reopens this plan at "Researche
 
 ## Recommended direction
 
-Leave unadopted. Let the skill-level fix run for a while; check CI failure shape across the three
-repos afterwards (`gh run list` per repo, filter non-success, look for dprint exit-20 runs). If the
-docs-commit failure shape recurs despite skills, reopen this plan with the design above as the
-starting point — pre-commit placement, check-only, fast subset, degrade-gracefully, implemented in
-repo-tasks and stamped by scaffoldapy.
+**Leave unadopted, now on evidence rather than on expectation.** The re-measure the previous
+direction asked for has run and the shape is gone, so the hook design stays parked as research
+rather than as a queued piece of work.
+
+What would still reopen it: a non-Claude harness committing in these repos, or the reflow shape
+returning at a rate after another sweep. Repeat the sweep the same way — `gh run list` per repo,
+filter non-success, read each failed log, and count instances rather than runs. If it does reopen,
+the design above is the starting point: pre-commit placement, check-only, fast subset,
+degrade-gracefully, implemented in repo-tasks and stamped by scaffoldapy — and widen the subset past
+the formatters, since the one post-rule instance was a link check.
