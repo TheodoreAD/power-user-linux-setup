@@ -347,8 +347,8 @@ that no longer existed and raised `FileNotFoundError`. Staging the deletions fix
 past this repo: a "which files exist" check sourced from the index disagrees with the working tree
 for exactly as long as a deletion sits unstaged.
 
-Worked out in the now-retired `plans/2026-08-30-portable-fragment-names-one-harness.md`;
-`plans.py archive --search "the axis they leak across"` reads it back.
+Worked out in a plan retired 2026-09-02; `plans.py archive --search "the axis they leak across"`
+reads it back.
 
 ## What this setup provisions (cluster intro, retired 2026-08-30)
 

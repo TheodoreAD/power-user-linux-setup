@@ -7,9 +7,9 @@ updated: 2026-08-30
 
 ## Context
 
-Split out of `plans/2026-08-30-portable-fragment-names-one-harness.md`, where the locale rule was
-the one `~/AGENTS.md` rule that fit neither category: not PULSE-provisioned, not portable. Asked
-whether PULSE should set the locale, the user named the actual goal:
+Split out of the now-retired `plans/2026-08-30-portable-fragment-names-one-harness.md`, where the
+locale rule was the one `~/AGENTS.md` rule that fit neither category: not PULSE-provisioned, not
+portable. Asked whether PULSE should set the locale, the user named the actual goal:
 
 > what i'm trying to do is to have a way to keep everything in english for weekdays, 24h times. if
 > someone doesn't want this and prefers another locale, that's something they should be able to

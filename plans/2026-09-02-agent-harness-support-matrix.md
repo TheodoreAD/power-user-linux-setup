@@ -19,10 +19,11 @@ already works for, without anyone doing anything else**, and what the gap is for
 
 It has been visited before, in pieces, and none of the pieces is a matrix:
 
-- `plans/2026-08-30-portable-fragment-names-one-harness.md` (in-progress) settled that the Claude
-  Code rules in `~/AGENTS.md` stay and get **labelled** rather than genericised, and that the
-  anticipated future is _adding_ a second harness's instructions. That plan owns the fragment axis;
-  this one owns the harness inventory. They cite each other rather than merging.
+- The fragment axis was settled and its plan retired 2026-09-02:
+  `contributing/global-agents-md.md`'s "Fragments are subjects, dependency is a label" holds the
+  result. The Claude Code rules in `~/AGENTS.md` stay and are **labelled** rather than genericised,
+  and the anticipated future is _adding_ a second harness's instructions — which is this plan's
+  half. Nothing there decides the harness inventory.
 - `plans/2026-08-26-agent-artifact-authoring-decoupling.md` owns why `~/AGENTS.md` is assembled from
   fragments at all.
 - `docs/claude-code.md` documents the convention itself — `AGENTS.md` as the cross-tool file, why
@@ -85,5 +86,6 @@ worth a sentence in whatever documents the matrix.]
    "supported".
 3. **Add `symlink_dest` entries for the agents that read a file we already produce** — the cheapest
    real support there is, and the mechanism already skips what is not installed.
-4. Leave the fragment-labelling question to `2026-08-30-portable-fragment-names-one-harness.md`;
-   this plan does not decide what goes in `~/AGENTS.md`, only who reads it.
+4. Leave the fragment-labelling question alone — it is settled and documented in
+   `contributing/global-agents-md.md`. This plan does not decide what goes in `~/AGENTS.md`, only
+   who reads it.
