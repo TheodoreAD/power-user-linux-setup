@@ -106,6 +106,7 @@ nav:
   - How it works:
       - configuration.md
       - packages.md
+      - tasks.md
       - apt_packages.md
   - Shell & desktop:
       - zsh.md

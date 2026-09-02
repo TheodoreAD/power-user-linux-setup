@@ -5,10 +5,10 @@ do I actually get" — [How it works](configuration.md) is the answer to "how", 
 [apt_packages.md](apt_packages.md) explains the install _methods_ the `Method` column names.
 
 The table is generated from `setup.toml`, which is the single declaration of what this repo
-installs. It is not hand-maintained: `inv catalog.render` rewrites it, and a unit test fails if the
-committed table has drifted from `setup.toml`, so a package cannot be added without the catalog
-following. Each row's text is the first sentence of that entry's `description`; the rest of the
-description, and every install detail, stays in `setup.toml`.
+installs. It is not hand-maintained: `inv catalog.render-packages` rewrites it, and a unit test
+fails if the committed table has drifted from `setup.toml`, so a package cannot be added without the
+catalog following. Each row's text is the first sentence of that entry's `description`; the rest of
+the description, and every install detail, stays in `setup.toml`.
 
 **Reading the columns:**
 
