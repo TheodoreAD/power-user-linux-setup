@@ -181,6 +181,17 @@ def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -
     deploy.deploy(managed, assume_yes=True)
 
 
+# The `skills` CLI reports usage to add-skill.vercel.sh unless one of these is set, and it is on by
+# default: CLI version, a CI flag, the detected agent's name, and the skill/package names of the
+# call. PULSE runs it unattended from `inv ai.install-skills`, so the choice is PULSE's to make
+# rather than something to inherit — pinned off deliberately, per ~/AGENTS.md's rule that a feature
+# which phones home by default is a decision, not a default. Both names are honoured by the CLI;
+# DO_NOT_TRACK is the cross-tool convention and DISABLE_TELEMETRY is its own, so setting both
+# survives either being dropped. Nothing else in the CLI is gated on them — the advisory audit
+# lookup it does for a skill package is a separate call and still runs.
+_SKILLS_ENV = {"DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1"}
+
+
 def _skills_command(command: str) -> str | None:
     """`command` as something actually runnable here, or None if the `skills` CLI is nowhere.
 
@@ -236,7 +247,7 @@ def _install_remote_skill(c: Context, entry: util.SkillEntry, *, label: str, yes
             "`inv node.install` has run. Re-run `inv ai.install-skills` afterwards."
         )
         return
-    c.run(command)
+    c.run(command, env=_SKILLS_ENV)
     print(f"[{label}] installed {desc}")
 
 

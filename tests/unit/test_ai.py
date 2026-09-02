@@ -50,10 +50,12 @@ class _FakeContext(Context):
     def __init__(self) -> None:
         super().__init__()
         self.commands: list[str] = []
+        self.envs: list[object] = []
 
     @override
     def run(self, command: str, **kwargs: object) -> Result:
         self.commands.append(command)
+        self.envs.append(kwargs.get("env"))
         return Result()
 
 
@@ -405,6 +407,22 @@ def test_install_remote_skill_asks_before_running_skills_add(monkeypatch):
 
     assert "Does foo things." in asked["question"]
     assert c.commands == ["skills add owner/repo --global --yes --agent claude-code --skill foo"]
+
+
+def test_install_remote_skill_pins_the_cli_telemetry_off(monkeypatch):
+    """The `skills` CLI reports to add-skill.vercel.sh unless told not to, and it is on by default.
+
+    PULSE runs it unattended, so the choice is PULSE's rather than something to inherit — the rule
+    being that a feature which phones home by default is a decision, not a default. Asserted on
+    both names because the CLI honours either and dropping one upstream must not silently re-enable
+    it.
+    """
+    c = _FakeContext()
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._install_remote_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+
+    assert c.envs == [{"DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1"}]
 
 
 def test_install_remote_skill_declining_prompt_skips_command(monkeypatch, capsys):
