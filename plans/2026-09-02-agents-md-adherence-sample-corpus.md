@@ -261,19 +261,44 @@ prefer and which the sessions demonstrably do not reach for. Sample 2's falsific
 "output is truncated so the filter buys something" argument for a `--quiet` flag, but not the
 readability argument.]
 
-[NEEDS CLARIFICATION: **what the actual output ceiling is**, since 4000 lines is a floor rather than
-the limit. Sample 2's probe shows the gate's output is comfortably under whatever the limit is,
-which is enough to kill the verbose-gate story but not enough to say the filter is never justified.
-A one-line probe at 20k and 100k lines would establish where truncation begins and which end it
-keeps — worth knowing once, machine-wide, because every session reaches for this filter and none of
-them can currently say whether it is ever the right call.]
+### The output ceiling, measured 2026-09-02 — and it is size, not lines
 
-[NEEDS CLARIFICATION: **whether reading unfamiliar third-party source is a legitimate `head` case
-the counter should distinguish.** Half of sample 5's `head/tail` calls were exploratory greps over
-vendored clones where the result set size was genuinely unknown. The rule's own answer is "count
-first with `rg -c`", which is two calls where one was wanted, and the counter cannot tell that
-population from the gate one. Worth knowing whether the rest of the corpus splits the same way,
-because the two have different fixes and only one of them is a discipline problem.]
+Four probes, `claude-opus-5` under auto mode:
+
+| probe                   | bytes   | result        |
+| ----------------------- | ------- | ------------- |
+| `seq 1 4000` (sample 2) | ~19 KB  | complete      |
+| 365 padded lines        | 25.5 KB | complete      |
+| 500 padded lines        | 34.2 KB | **truncated** |
+| `seq 1 20000`           | 106 KB  | **truncated** |
+
+So the ceiling is **between 25.5 KB and 34.2 KB and is measured in bytes, not lines** — the 20,000
+line probe and the 500 line probe were treated the same way. Not bisected further; the band is
+enough for every question this corpus was asking, and the exact constant is the harness's to change.
+
+**What truncation does is the part that settles the argument: it keeps the _first_ 2 KB and writes
+the whole output to a file it names.** Two consequences, both against the filter:
+
+- For the gate, which is ~3 KB, the filter buys nothing — confirmed twice now, once by sample 2's
+  falsification and once by this band.
+- For an output that genuinely _is_ oversized, `| tail -N` is the worst available move rather than a
+  defensible trade. It discards the exit code to obtain a tail, while the harness has already put
+  the complete text — tail included — in a file that a `Read` or `Grep` can reach at full fidelity.
+  The reflex is aimed at a truncation that keeps the head, and it responds by throwing away the half
+  the harness kept for free.
+
+[DECISION: **there is no legitimate `| head`/`| tail` case left to carve out.** The corpus opened
+this question because half of sample 5's piping was exploratory `rg` over unfamiliar vendored source
+where the result-set size was genuinely unknown — the strongest candidate for a justified filter.
+The ceiling behaviour answers it: an oversized `rg` is saved whole to a file, so the exploratory
+case has the same remedy as the gate case. `rg -c` first remains the cheaper first call, not the
+only correct one.]
+
+**Whether unfamiliar third-party source is a legitimate `head` case — answered, no**, by the ceiling
+measurement above: an oversized `rg` is saved whole to a named file, so the exploratory population
+has the same remedy as the gate population. The two still differ in what a session is _doing_ when
+it reaches for the filter, which is worth knowing for wording, but they no longer differ in what the
+correct call is.
 
 [NEEDS CLARIFICATION: **should `exit-masked` join `EXPECTATIONS`?** It is measured, reported and now
 has a documented consequence in `session-harvest`, but it is scored by nothing, so a run that halves
@@ -288,9 +313,18 @@ works — and `head/tail`, the one persistent miss, is the rate that
 `2026-08-28-auto-mode-contradicts-bash-rules.md` exists to explain. These are rows for that plan,
 not new arguments.
 
-The one open lever with evidence behind it is the gate's own verbosity. Before building anything,
-settle the output ceiling (a one-line probe) and decide whether a quieter `inv quality.precommit`
-default is worth it, since three independent sessions reached the same command by the same route.
+**Revised 2026-09-02, after the ceiling was measured.** The gate's verbosity is no longer the open
+lever it looked like: the filter buys nothing at 3 KB, and above the ceiling the harness keeps the
+head and saves the whole output to a file, so the filter is wrong there too. A quieter
+`inv quality.precommit` would still be pleasanter to read, but it can no longer be justified as the
+fix for this rate — it would be a convenience change, and three sessions reaching the same command
+by the same route is evidence about the habit rather than about the gate.
+
+What the ceiling measurement does open is a candidate clause, deliberately **not** written here
+because admitting one is the user's call and the leanness pass has just closed a round:
+`~/AGENTS.md` tells sessions the harness truncates and saves the full text to a file, and does not
+tell them it keeps the **head**. A reader who knows only "it truncates" has no way to see that
+`tail` is aimed at the wrong end. One clause on "Viewing, searching, or editing files".
 
 `2026-09-02-rg-replace-flag-used-twice-in-one-session.md` is a separate finding of the same "simply
 not followed" kind and is deliberately not merged here — it is one flag with its own proposed

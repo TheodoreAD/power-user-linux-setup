@@ -3,7 +3,10 @@ status: idea
 updated: 2026-09-02
 ---
 
-# `rg -r` was used twice in one session, by a session that had already caught it
+# `rg -r`: three occurrences, two sessions, every one of them the bundled `-rn`
+
+Opened on two occurrences in one `ingesta` session; a third arrived from a different repo the same
+day and is recorded below. Filename kept, since plan-docs promotes in place.
 
 ## Context
 
@@ -36,7 +39,24 @@ It returned nothing. That is consistent with "no matches" and also with a mangle
 session could not tell which without re-running — which it did, correctly, getting the same empty
 result.
 
-## Why this is worth a plan rather than a shrug
+**Third occurrence, 2026-09-02, this repo**, in a session working through the `~/AGENTS.md` plan
+cluster — so a session that had the rule in context, was reading plans _about_ the rule, and had
+this very file open minutes earlier:
+
+```shell
+rg -rn 'check-rule-prerequisites' --glob '!plans/**' . 2>/dev/null | head -20
+```
+
+The output came back naming `inv ai.n` in four files, where every one of them says
+`inv ai.check-rule-prerequisites`. It was caught immediately, because `ai.n` is not a plausible task
+name and the searched string was conspicuously absent from its own results — the same accident that
+saved the first occurrence, not a method. Had the pattern been anything the eye did not expect
+echoed back, the corrupted output would have been read as fact, and it was being used to decide
+whether a rule's rationale had a documented home.
+
+Two things it adds. It is the **third `-rn`** out of three, which is now the whole sample and
+supports the keystroke hypothesis over the belief one. And it happened in a different repo and a
+different session from the first two, so this is no longer one session's tic.
 
 **The wording is not the problem.** The rule states the constraint, names the mechanism, and gives
 the failure mode. It was read, understood, and cited out loud by the very session that then repeated
@@ -55,10 +75,11 @@ which is the conclusion it was being used to draw.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **Whether `-rn` specifically is the shape to measure**, rather than `-r` in
-general. Both occurrences here were `-rn`, and the hypothesis worth testing is that it is a typo for
-`-n` with `r` reaching for `grep -r`'s recursion — which would make it a keystroke habit rather than
-a belief about the flag, and would predict `-rn`/`-rin` dominating over a bare `-r`.]
+**`-rn` is the shape to measure, not `-r` in general** — three occurrences, three `-rn`, across two
+sessions and two repos. That supports the keystroke hypothesis (a typo for `-n` with `r` reaching
+for `grep -r`'s recursion) over a belief about what the flag does, and it predicts `-rn`/`-rin`
+dominating a bare `-r` in any corpus-wide count. Still worth confirming against the corpus rather
+than treated as settled at n=3, but the counter should report the bundled forms separately.
 
 [NEEDS CLARIFICATION: **Whether `session-bash-audit` should count it.** It has counters for
 `find-not-fd` and `sed-n`, so an `rg-replace` counter is the same kind of thing and would answer
