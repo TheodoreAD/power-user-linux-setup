@@ -259,10 +259,26 @@ an agent reads the file, but it could prove the _filename_ still matches what th
 same claim written twice, so it may not be worth it. Worth deciding once rather than rediscovering
 the asymmetry each time an agent is added.]
 
+## Step 1 landed 2026-09-04
+
+Published, in three commits:
+
+- `docs/ai.md` — the four-agent table now names a real skills path for all four rather than `—` for
+  Codex and Gemini CLI, and the page states the rung-(b) sentence: the only agent needing a symlink
+  for skills is the one PULSE installs. The 19 is on the page as an explicitly **project-level**
+  count, in its own subsection, with a pointer to the rationale.
+- `contributing/ai-tooling.md` — the registry's two fields, the CLI's internal contradiction, the
+  three vendor sources, the rule never to quote `globalSkillsDir` as where an agent looks, and the
+  six entries still unchecked. The Gemini CLI and Copilot sections were corrected in the same pass.
+- `setup.toml` — `[packages.agent-skills]` now says the `github-copilot` element is a no-op and why,
+  so nobody "fixes" the list by adding `codex` and `gemini-cli` to it.
+
+Steps 2–4 below are untouched.
+
 ## Recommended direction
 
-The survey is done and the numbers are above; what is left is publishing them and deciding whether
-to widen rung (a).
+The survey is done and the numbers are above; step 1 has landed. What is left is deciding whether to
+widen rung (a).
 
 1. **Publish the matrix**, naming the rungs rather than collapsing them into "supported". Revised
    2026-09-04: the lead is the rung-(b) fact, because it is both the strongest and the one a reader
