@@ -1881,6 +1881,13 @@ global scope and writes one real copy to ~/.agents/skills, which Claude Code rea
 ~/.claude/skills symlink that `inv ai.install-skills` maintains — measured 2026-08-27, the CLI
 announces that symlink and does not create it, so `_ensure_agents_skills` is load-bearing, not
 redundant.
+
+The github-copilot element is a no-op, kept for accuracy rather than effect: verified 2026-09-04
+against GitHub's own docs source, Copilot accepts ~/.agents/skills as a personal-skills location
+itself, so it finds these whether or not it is named. Codex and Gemini CLI likewise, which is why
+neither is listed. Do not read the CLI's per-agent `globalSkillsDir` as "where that agent looks" —
+it named a deprecated or secondary path in all three cases checked; the reasoning and the sources
+are in contributing/ai-tooling.md.
 """
 method = "skill"
 tags = ["dev"]
