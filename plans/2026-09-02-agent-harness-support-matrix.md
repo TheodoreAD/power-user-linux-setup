@@ -112,15 +112,49 @@ supports** at user level. What it supports:
   them independently record that same path as where they look. Three more record the XDG spelling of
   it. The remaining 9, plus Claude Code, record a vendor directory.
 
-Rung (b) is therefore **7 verified at user level** (the 6, plus Claude Code through PULSE's
-symlink), not 20 — and the other 12 are a per-vendor question, exactly like rung (a). The rungs
-table below is corrected accordingly.
+Rung (b) is therefore not 20 at user level; on the registry alone it is 7 (the 6, plus Claude Code
+through PULSE's symlink), with the other 12 a per-vendor question exactly like rung (a). **Three of
+those 12 were then resolved — see immediately below, which takes it to 10.**
 
-[NEEDS CLARIFICATION: **which field is the truth for a given vendor — `skillsDir` or
-`globalSkillsDir`?** Same shape as the Copilot near-miss recorded further down, and with the same
-answer available: check the vendor's own docs or source. Nine agents are affected, and the cheapest
-order is the ones this repo already has a reason to care about — `codex` and `gemini-cli` are two of
-the four that already receive `~/AGENTS.md`, so they are rung (a) and rung (b) in the same lookup.]
+### Answered 2026-09-04 — `globalSkillsDir` is not where the vendor looks
+
+Three of the nine vendor-directory entries are agents this repo already sends `~/AGENTS.md` to, so
+they were the cheapest to settle. All three were checked against the vendor's own source or docs
+source, never a summary, and **all three read `~/.agents/skills` at user level**:
+
+| agent            | the registry says   | the vendor's own source says                                                                                                              |
+| ---------------- | ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex`          | `~/.codex/skills`   | `~/.agents/skills` **and** `$CODEX_HOME/skills`, the latter commented "Deprecated user skills location … kept for backward compatibility" |
+| `gemini-cli`     | `~/.gemini/skills`  | `~/.gemini/skills` **and** `~/.agents/skills`, loaded as the "user agent skills alias"                                                    |
+| `github-copilot` | `~/.copilot/skills` | "For **personal skills**, shared across projects, create a `~/.copilot/skills` or `~/.agents/skills` directory"                           |
+
+- Codex: `codex-rs/ext/skills/src/host_roots.rs`, `roots_from_layer_stack`'s
+  `ConfigLayerSource::User` arm pushes both roots. The deprecation comment is in the file.
+- Gemini CLI: `packages/core/src/skills/skillManager.ts` step 3.1 loads
+  `Storage.getUserAgentSkillsDir()`, which `packages/core/src/config/storage.ts` defines as
+  `join(homedir(), ".agents", "skills")`.
+- Copilot: `github/docs`, `data/reusables/copilot/creating-adding-skills.md` — the docs source, not
+  the rendered page or a search result.
+
+[DECISION: **`globalSkillsDir` is the `skills` CLI's own preferred write target, not a claim about
+where that agent reads.** Three for three, it named a path the vendor supports but does not prefer —
+one of them explicitly deprecated by its own maintainers. So the `isUniversalAgent` short-circuit
+that ignores the field and writes to `~/.agents/skills` is not the CLI taking a shortcut; it is the
+CLI being right, and the field is what is stale. This reverses the reading in the PITFALL above,
+which guessed the field was authoritative because a vendor would know its own path. Keep the
+PITFALL: the internal contradiction is real and the next reader will hit it, and "the obvious
+reading of the two fields is backwards" is the useful half.]
+
+**So rung (b) at user level is 10, verified**: the 6 that record the path themselves, Claude Code
+through PULSE's symlink, plus `codex`, `gemini-cli` and `github-copilot` from their own sources. Not
+20, and no longer 7.
+
+[NEEDS CLARIFICATION: the remaining **6 of the 9** — `antigravity`, `antigravity-cli`, `cursor`,
+`deepagents`, `firebender`, `opencode` — are unchecked. None is installed here and none receives
+`~/AGENTS.md`, so the lookup buys a bigger number on the page and nothing else. Worth doing before
+the page claims a total; not worth doing to unblock anything. Given three for three above, the prior
+is that most of them also read `~/.agents/skills` and the registry field is simply stale across the
+board.]
 
 [PITFALL: **the CLI reports usage on every invocation unless told not to, and PULSE was not telling
 it.** `TELEMETRY_URL = "https://add-skill.vercel.sh/t"`, gated only on `DISABLE_TELEMETRY` /
@@ -162,25 +196,34 @@ Three findings worth carrying:
 
 ## The three rungs, answered
 
-Corrected 2026-09-04, per the re-measurement above.
+Corrected 2026-09-04, per the re-measurement and the vendor lookups above.
 
-| rung                         | how many                                 | cost per additional agent                  |
-| ---------------------------- | ---------------------------------------- | ------------------------------------------ |
-| (a) reads `~/AGENTS.md`      | 4, each a hand-verified path             | one `symlink_dest` entry + verify          |
-| (b) finds the skills in `~`  | 7 verified (6 native + Claude via shim)  | a per-vendor lookup, then likely a symlink |
-| (b′) finds them in a repo    | 20 (19 native + Claude via project shim) | **zero** for anything on the 19            |
-| (c) PULSE installs the agent | 1 (`claude-code`)                        | a full `[packages.*]` entry                |
+| rung                         | how many                                 | cost per additional agent                            |
+| ---------------------------- | ---------------------------------------- | ---------------------------------------------------- |
+| (a) reads `~/AGENTS.md`      | 4, each a hand-verified path             | one `symlink_dest` entry + verify                    |
+| (b) finds the skills in `~`  | **10 verified**, 6 unchecked             | a per-vendor lookup; so far always "it already does" |
+| (b′) finds them in a repo    | 20 (19 native + Claude via project shim) | **zero** for anything on the 19                      |
+| (c) PULSE installs the agent | 1 (`claude-code`)                        | a full `[packages.*]` entry                          |
 
-The 19 is real and is the strongest thing here, but it is rung (b′) — a **project** `.agents/skills`
-directory. PULSE writes at user level, which is rung (b), and there the verified number is 7 with 12
-unresolved. Rung (a) is four agents and is where the per-agent work already is; rung (c) is one.
+The 19 is real, but it is rung (b′) — a **project** `.agents/skills` directory. PULSE writes at user
+level, which is rung (b): 6 agents record that path in the CLI's registry, three more were confirmed
+from their own source or docs (`codex`, `gemini-cli`, `github-copilot`), and Claude Code reaches it
+through PULSE's symlink. Six remain unchecked and none of them is installed here. Rung (a) is four
+agents and is where the per-agent work already is; rung (c) is one.
+
+**Every one of the four rung-(a) agents is also rung (b)** — Claude Code by symlink, the other three
+by their own published behaviour. That is the sentence the page has been looking for, and unlike the
+"19 agents" one it survives contact with the source.
 
 [PITFALL: **the two rungs were one number until the fields were read separately, and the merged
 number was the flattering one.** Nothing failed — the plan's own count was correct and its list of
 nineteen names is unchanged — but a single `skillsDir` reading answered a user-level question with a
 project-level fact, and the sentence it produced was the one earmarked to lead the public page. This
 is the third time in this plan that the failure mode is a confident, specific, wrong claim about
-_which path an agent reads_, after the Copilot near-miss and the wrong-filename-is-silent finding.]
+_which path an agent reads_, after the Copilot near-miss and the wrong-filename-is-silent finding.
+Worth noting how it ended: the follow-up lookups moved the number **up**, from 7 to 10, so the
+correction was not pessimism winning — it was the difference between a number that was asserted and
+one that was checked.]
 
 ## Open questions
 
@@ -195,10 +238,11 @@ Copilot, Cursor, Continue.dev and Ollama — and by the docs decision its _insta
 particularities_ half is moving to `contributing/`, which is the same material this matrix needs.
 Doing both passes at once avoids reading the same release notes twice.]
 
-**Answered above** — the rungs are 4 / 7 / 20 / 1, and they are different promises. The site should
-name the rung rather than say "supported". Revised 2026-09-04: the strongest sentence is still a
-rung-(b′) one and is still stronger than the framing this plan opened with, but it is a claim about
-a **repo's** `.agents/skills`, and the page must not let a reader carry it across to `~`.
+**Answered above** — the rungs are 4 / 10 / 20 / 1, and they are different promises. The site should
+name the rung rather than say "supported". Revised 2026-09-04: the strongest _verified_ sentence is
+the rung-(b) one, that all four agents PULSE hands `~/AGENTS.md` to also read the skills it installs
+into `~/.agents/skills`. The 19 stays on the page as the project-level fact it is, and the page must
+not let a reader carry it across to `~`.
 
 **Confirmed, and it nearly bit during this survey.** A wrong filename is silent: the link lands, the
 agent ignores it, and `verify.all` still passes, because the check proves the link resolves to a
@@ -221,11 +265,14 @@ The survey is done and the numbers are above; what is left is publishing them an
 to widen rung (a).
 
 1. **Publish the matrix**, naming the rungs rather than collapsing them into "supported". Revised
-   2026-09-04: the lead is the rung-(b′) fact — `.agents/skills` is the directory 19 of the CLI's 71
-   agents read **in a repo** — with the user-level claim stated separately and honestly at 7. The
+   2026-09-04: the lead is the rung-(b) fact, because it is both the strongest and the one a reader
+   can act on — every agent PULSE hands `~/AGENTS.md` to also reads the skills it installs, verified
+   per vendor. The 19 goes on the page as what it is, a **project** `.agents/skills` count, and the
    page must not blur the two, which is exactly what this plan did until the fields were read apart.
-   Keep it out of `docs/ai.md`'s survey half, per the docs plan's decision, and put the installation
-   particularities and the `globalSkillsDir` contradiction in `contributing/ai-tooling.md`.
+   `docs/ai.md`'s current table is wrong in the safe direction and needs fixing either way: it shows
+   `—` under skills for Codex and Gemini CLI, both of which read `~/.agents/skills`. Keep it out of
+   that page's survey half, per the docs plan's decision, and put the installation particularities
+   and the `globalSkillsDir` contradiction in `contributing/ai-tooling.md`.
 2. **Decide rung (a) per candidate, and expect most answers to be no.** The specification is
    repo-root only, so an agent qualifies only if its vendor documents a user-level file. That is a
    per-vendor lookup with no shortcut, and the four we have may be most of what exists. Verify each
