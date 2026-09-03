@@ -10,6 +10,64 @@ survives contact with a date, and none of it helps someone install a thing. What
 affects a developer who has already chosen a tool: how it installs, where its config lives, what it
 talks to.
 
+## Where each agent looks for skills, and why the registry cannot be trusted for it
+
+Measured 2026-09-04 against the installed `skills` CLI (v1.5.10,
+[vercel-labs/skills](https://github.com/vercel-labs/skills)), reading its bundle rather than its
+README. Read this before adding an agent to `[packages.agent-skills]`'s `agents` list or claiming on
+the site that some agent "finds the skills".
+
+Its registry holds **71 agents**, each with two path fields:
+
+- **`skillsDir`** — the per-repository directory. 19 entries set it to `.agents/skills`: amp,
+  antigravity, antigravity-cli, cline, codex, cursor, deepagents, dexto, firebender, gemini-cli,
+  github-copilot, kimi-code-cli, loaf, opencode, promptscript, replit, universal, warp, zed. Claude
+  Code is not among them — its `skillsDir` is `.claude/skills`, which is the whole reason
+  `inv ai.install-skills` maintains the `~/.claude/skills` symlink.
+- **`globalSkillsDir`** — the home-directory one, and **it is not where the agent looks.** Of those
+  19, only 6 name `~/.agents/skills`; 3 name the XDG spelling `~/.config/agents/skills`, 9 name a
+  vendor directory, and 1 names nothing.
+
+The two fields disagree and the CLI disagrees with itself about which to use: `isUniversalAgent()`
+is defined as `skillsDir === ".agents/skills"`, and `getAgentBaseDir()` short-circuits on it and
+returns `~/.agents/skills` for all 19 without consulting `globalSkillsDir` — while the `list` scope
+builder and the cleanup scanner read `globalSkillsDir` directly.
+
+**The short-circuit is the correct half.** Three of the nine vendor-directory entries are agents
+this repo already sends `~/AGENTS.md` to, and all three were checked against the vendor's own
+source:
+
+| agent            | registry's `globalSkillsDir` | what the vendor's own source says                                                                                                               |
+| ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
+| `codex`          | `~/.codex/skills`            | reads `~/.agents/skills` **and** `$CODEX_HOME/skills` — the latter commented "Deprecated user skills location, kept for backward compatibility" |
+| `gemini-cli`     | `~/.gemini/skills`           | reads `~/.gemini/skills` **and** `~/.agents/skills`, the latter as the "user agent skills alias"                                                |
+| `github-copilot` | `~/.copilot/skills`          | "For **personal skills**, shared across projects, create a `~/.copilot/skills` or `~/.agents/skills` directory"                                 |
+
+Sources, each read directly rather than through a search summary:
+
+- Codex — `codex-rs/ext/skills/src/host_roots.rs`, the `ConfigLayerSource::User` arm of
+  `roots_from_layer_stack`, which pushes both roots and carries the deprecation comment.
+- Gemini CLI — `packages/core/src/skills/skillManager.ts` step 3.1 loads
+  `Storage.getUserAgentSkillsDir()`; `packages/core/src/config/storage.ts` defines it as
+  `join(homedir(), ".agents", "skills")`.
+- Copilot — `github/docs`, `data/reusables/copilot/creating-adding-skills.md`.
+
+So `globalSkillsDir` is best read as the CLI's own preferred write target, not as a statement about
+the agent, and it was stale or secondary in three out of three checks. Two consequences:
+
+- **Never quote that field as "where agent X reads skills."** Check the vendor. The one time this
+  repo took a path claim from a summary instead, it nearly deleted a working Copilot entry.
+- **The `agents = ["claude-code", "github-copilot"]` list is harmless but does no work.** At
+  `--global` scope every universal agent resolves to the same `~/.agents/skills`, so the second
+  element adds no second copy — verified on this machine: one real directory, and no
+  `~/.copilot/skills` was created. Adding `codex` or `gemini-cli` to the list would be an equally
+  exact no-op.
+
+Six of the nine vendor-directory entries are still unchecked — antigravity, antigravity-cli, cursor,
+deepagents, firebender, opencode. None is installed here. Given three for three above, the
+expectation is that most of them also read `~/.agents/skills`, but the site must not say so until
+somebody looks.
+
 ## Local model runner — Ollama
 
 <https://ollama.com> — MIT, exposes an OpenAI-compatible API on `localhost:11434`, which is what
@@ -75,7 +133,9 @@ the same trap `[packages.node]`'s own `verify_cmd` documents, and the reason `no
 exists.
 
 It reads `~/.gemini/GEMINI.md`, which is one of the four paths `[packages.agents-md]` symlinks to
-`~/AGENTS.md` — so installing it is enough to have it pick up this machine's instructions.
+`~/AGENTS.md` — so installing it is enough to have it pick up this machine's instructions. It also
+reads `~/.agents/skills` directly, alongside its own `~/.gemini/skills`, so it picks up the skills
+too with nothing added to `[packages.agent-skills]` — see the skills-directory section above.
 
 ## IDE extensions
 
@@ -119,8 +179,10 @@ gh copilot suggest "undo last git commit"
 ```
 
 Two PULSE-relevant details: it reads `~/.copilot/copilot-instructions.md`, which is symlinked to
-`~/AGENTS.md`, and it is the second agent named in `[packages.agent-skills]`'s `agents` list, so the
-`skills` CLI installs for it as well as for Claude Code. `inv ai.install-skills` checks for a
+`~/AGENTS.md`, and it accepts `~/.agents/skills` as a personal-skills location in its own right, so
+it finds the installed skills whether or not it is named anywhere. It **is** the second agent in
+`[packages.agent-skills]`'s `agents` list, but that entry is a no-op rather than what makes the
+skills reach it — see the skills-directory section above. `inv ai.install-skills` checks for a
 Copilot install but never writes its settings — see `docs/claude-code.md`.
 
 ### Cursor / Windsurf
