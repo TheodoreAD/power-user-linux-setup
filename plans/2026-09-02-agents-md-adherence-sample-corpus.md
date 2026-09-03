@@ -1,21 +1,25 @@
 ---
 status: idea
-updated: 2026-09-02
+updated: 2026-09-03
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Five sessions measured with `session-bash-audit`'s `audit.py` against the
-`2026-08-24-auto-mode.json` opus-5 baseline (n=1676), all taken with `--until <harvest boundary>` so
-the harvest's own sweep is excluded from the headline figure.
+Seven sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+`--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
+were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
+without `--compare`**, so it has rates and per-tag verdicts but no baseline deltas.
 
 Merged on 2026-09-02 from five plans filed separately by five sessions, each of which found the
-store dirty and added a file rather than editing one another session might have been holding:
+store dirty and added a file rather than editing one another session might have been holding, and
+again on 2026-09-03 from two more filed the same way from sessions in other repos:
 
 - `2026-09-02-adherence-sample-first-run-under-the-until-rule.md` (sample 1)
 - `2026-09-02-adherence-sample-a-verbose-gate-and-a-masked-exit.md` (sample 2)
 - `2026-09-02-adherence-sample-head-tail-high-git-c-gone.md` (samples 3 and 4)
 - `2026-09-02-adherence-sample-a-research-session-in-another-repo.md` (sample 5)
+- `2026-09-02-adherence-sample-the-session-that-wrote-the-rule.md` (sample 6)
+- `2026-09-03-adherence-sample-the-masked-calls-were-the-gate.md` (sample 7)
 
 Those names are what `plans.py archive --search` needs to read any of them back.
 
@@ -31,6 +35,12 @@ expire around 2026-10-02:
 | 3 | `agent-skills`           | `630e8ae3-ecce-4a23-90cf-934ab0698945.jsonl` | `2026-09-02T14:28:19+03:00` |
 | 4 | `power-user-linux-setup` | not recorded                                 | 2026-09-02                  |
 | 5 | `ingesta`                | `6be217e8…` (short form only)                | 2026-09-02                  |
+| 6 | `agent-skills`           | `13aa58df-3551-49b7-ac0e-0c3693bf8221.jsonl` | `2026-09-02T20:32:51+03:00` |
+| 7 | `ingesta`                | `7dab6dae-7c67-454f-bba1-981fe3845089.jsonl` | `2026-09-03T13:47:32+03:00` |
+
+Rows 6 and 7 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
+than the session start — the two are different ends of the same session, and only the boundary is
+needed to reproduce the figures.
 
 ## Context
 
@@ -43,9 +53,12 @@ expire around 2026-10-02:
 | 3 | `agent-skills`           |   157 | prose, one repo, one day       |         38% |           27% |               0% | 9/11  |
 | 4 | `power-user-linux-setup` |   350 | documentation, whole day       |     **55%** |       **32%** |               0% | 7/11  |
 | 5 | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
+| 6 | `agent-skills`           |   216 | tooling, the rule itself       |         36% |           27% |               0% | 6/11  |
+| 7 | `ingesta`                |   129 | code + plans, fourteen hours   |         32% |           22% |               0% | —     |
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
-was domain research rather than work on the tooling itself.
+was domain research rather than work on the tooling itself. Sample 7 has no score because it was run
+without `--compare`.
 
 ### Sample 1 — `agent-skills`, 331 calls, the first run under `--until`
 
@@ -172,9 +185,9 @@ where `Read` with `offset`/`limit` is the tool.
 was the entire question, and it did so while **writing documentation about that exact hazard**. The
 same run added a `CONTRIBUTING.md` warning that a green local `zensical` build does not imply a
 green deploy, then verified its own fix with `uvx … build --strict 2>&1 | tail -2`. **Authoring a
-rule is not evidence of following it** — three confirmed instances in this corpus (samples 3, 4, and
-the separate `rg -r` finding), and in sample 3 the rule authored and the rule broken were the same
-sentence.]
+rule is not evidence of following it** — four confirmed instances in this corpus (samples 3, 4, 6,
+and the separate `rg -r` finding). In sample 3 the rule authored and the rule broken were the same
+sentence; in sample 6 the rule was the session's entire deliverable.]
 
 ### Sample 5 — `ingesta`, 84 calls, research in a repo the corpus had not sampled
 
@@ -210,35 +223,134 @@ unfamiliar third-party codebase, where the honest alternative is `rg -c` first a
 not reach for it. The other half are `inv quality.precommit 2>&1 | tail -N`, which is the gate case
 and is the one that matters. `exit-masked` (7 calls) is almost entirely that same gate.
 
+### Sample 6 — `agent-skills`, 216 calls, the session that spent the day writing this rule
+
+`--compare 2026-08-24-auto-mode.json`, **6/11** — the lowest score in the corpus. 216 calls before
+the harvest's own sweep, 226 including it.
+
+| tag                    | rate | vs baseline    |
+| ---------------------- | ---: | -------------- |
+| `chain`                |  50% | −17pp, OK      |
+| **`head/tail`**        |  36% | **+6pp, MISS** |
+| **`heredoc`**          |  17% | **+1pp, MISS** |
+| **`sed-n`**            |  11% | **+3pp, MISS** |
+| **`cat-view`**         |   2% | **+1pp, MISS** |
+| **`git-C-mutating`**   |   2% | **−0pp, MISS** |
+| `cd-own-repo`          |   1% | −3pp, OK       |
+| `redirect-then-filter` |   0% | OK             |
+| `git-C-own-repo`       |   0% | OK             |
+| `exit-masked`          |  27% | (unscored)     |
+
+36% during the work, 35% including the sweep — the direction that run happened to lean, and the
+reason the rule says to report both rather than to claim the sweep inflates anything.
+
+**The session's entire subject was this rule.** It shipped `harvest.py` with "nothing runs through a
+shell, so no pipe can eat an exit code" as a design principle, wrote the `exit-masked` consequence
+rule into `session-harvest`, added `fitness.py derivable` to audit skills for exactly this class of
+hand-composed command — and produced `2>&1 | head` in **36%** of its own calls, with 27% masking an
+exit code. That is the third independent confirmation of the corpus's sharpest claim: **authoring a
+rule is not evidence of following it, and may not even correlate.** Samples 3 and 4 were sessions
+that had the rule in context; this one had the rule as its deliverable.
+
+**The mitigating half, stated so the row is not read as worse than it is:** almost every masked call
+was a read-only listing (`plans.py list 2>&1 | head -60`, `--help | head -30`) where the exit code
+carried nothing. The repo's gate was run unpiped throughout, and the harvest's own re-run of it
+exited 0 — so no green claim in that session stands on filtered evidence. The rate is high; the
+damage from it was nil. Both facts belong here, because a corpus of only the alarming half argues
+for a rule nobody can follow.
+
+That mitigation is what sample 7 was filed to test, and it does not survive contact with it.
+
+### Sample 7 — `ingesta`, 129 calls, the masked calls _were_ the gate
+
+`audit.py --session 7dab6dae --until 2026-09-03T13:47:32+03:00`, no `--compare`, so verdicts only
+where the expectation is absolute. 129 calls before the harvest's own sweep, 142 including it. A
+fourteen-hour session: four plan steps built, one plan retired, twelve commits.
+
+| tag                         | rate | verdict |
+| --------------------------- | ---: | ------- |
+| `chain`                     |  49% | —       |
+| **`head/tail`**             |  32% | MISS    |
+| **`heredoc`**               |  19% | MISS    |
+| **`git-mutating-in-chain`** |   8% | MISS    |
+| `chain5`                    |   3% | —       |
+| **`cat-view`**              |   1% | MISS    |
+| `sed-n`                     |   0% | OK      |
+| `cd-own-repo`               |   0% | OK      |
+| `git-C-own-repo`            |   0% | OK      |
+| `redirect-then-filter`      |   0% | OK      |
+| `exit-masked`               |  22% | —       |
+
+**Sample 6's mitigation does not apply here, and that is the finding.** This session masked **the
+gate itself**: `inv quality.precommit 2>&1 | tail -N` was the house shape for the whole run, along
+with every `pytest … 2>&1 | tail -N`. The masked set is not listings with no possible victim; it is
+the exact command whose exit code decides whether the work is sound.
+
+**Seven green claims were made to the user on that evidence**, counted by `harvest.py claims`:
+
+| when              | what was said                                   |
+| ----------------- | ----------------------------------------------- |
+| 2026-09-02T21:13Z | "Gate green (712 passed)"                       |
+| 2026-09-02T21:45Z | "Gate green (712 passed, 1 skipped)"            |
+| 2026-09-02T22:04Z | "Gate green (742 passed, 1 skipped)"            |
+| 2026-09-03T07:16Z | "Gate green (761 passed, 1 skipped)"            |
+| 2026-09-03T09:53Z | "Gate green (821 passed, 1 skipped)"            |
+| 2026-09-03T10:15Z | "Gate green (821 passed)"                       |
+| 2026-09-03T10:47Z | "Gate green throughout (821 passed, 1 skipped)" |
+
+**The harvest's unpiped re-run exited 0, so all seven hold.** Nothing was published wrongly and
+nothing needs correcting. That benign outcome is the reason this row is worth recording rather than
+a reason to skip it — see the gate-versus-listing question below, which these two samples together
+are what makes answerable.
+
+Its `head/tail` half is unmitigated and adds nothing new: 32%, against a rule that is unambiguous
+and was in context the whole time, one more point at the low end of the 24–55% band.
+
 ## What the corpus has settled
 
-**`head/tail` is worse in prose sessions than in code sessions.** Five samples: 24% code, then 45%,
-38%, 55% and 35% on sessions that spent most of their calls reading files to quote from and running
-gates to confirm markdown formatting. The one code-shaped session is the one low rate, and the
-largest and most purely prose-shaped session is the highest. That points the fix away from wording:
-`Read` with `offset`/`limit` is the tool for the quoting half, and the harness's own truncation
-handles the gate half — neither is what the rule currently opens on.
+**`head/tail` is worse in prose sessions than in code sessions.** Seven samples: 24% code, then 45%,
+38%, 55%, 35% and 36% on sessions that spent most of their calls reading files to quote from and
+running gates to confirm markdown formatting. The one purely code-shaped session is the one low
+rate, and the largest and most purely prose-shaped session is the highest. Sample 7, the one mixed
+shape — code and plans in the same run — sits between them at 32%, which is what the split predicts
+rather than a counter-example. That points the fix away from wording: `Read` with `offset`/`limit`
+is the tool for the quoting half, and the harness's own truncation handles the gate half — neither
+is what the rule currently opens on.
 
 **`git -C <own repo>` is a per-session disposition, not a machine-wide trend.** Sample 1's 23% and
 sample 3's 0% came from the same repo, the same shape, the same day's rules. Nothing further is owed
 on that question.
 
-**The `exit-masked` consequence check works, and has fired clean four times.** `session-harvest`'s
+**The `exit-masked` consequence check works, and has fired clean five times.** `session-harvest`'s
 rule — a non-zero `exit-masked` means the session's own green results are unverified, so re-run the
 gate unpiped and count how many times the session asserted a green on a masked call:
 
-| sample | `exit-masked` | assertions | unpiped re-run     |
-| ------ | ------------: | ---------: | ------------------ |
-| 1      |           19% |          — | exit 0             |
-| 2      |           28% |        ~15 | exit 0             |
-| 3      |           27% |          3 | exit 0             |
-| 4      |           32% |          5 | exit 0             |
-| 5      |            8% |          6 | exit 0, 643 passed |
+| sample | `exit-masked` | assertions | what was masked | unpiped re-run     |
+| ------ | ------------: | ---------: | --------------- | ------------------ |
+| 1      |           19% |          — | not recorded    | exit 0             |
+| 2      |           28% |        ~15 | the gate        | exit 0             |
+| 3      |           27% |          3 | not recorded    | exit 0             |
+| 4      |           32% |          5 | the gate        | exit 0             |
+| 5      |            8% |          6 | mostly the gate | exit 0, 643 passed |
+| 6      |           27% |          — | listings        | exit 0             |
+| 7      |           22% |          7 | the gate        | exit 0             |
 
 Every green held. **"No harm done" is the wrong lesson**: the claims were true and the method could
 not have distinguished them from false ones, and sample 2's session pushed five times on that basis.
 The count tracks how chatty a session is about its gate rather than how bad the piping is — 27% and
 28% produced 3 and ~15 assertions respectively.
+
+**The headline rate cannot tell the three consequences apart, and samples 6 and 7 are the pair that
+proves it.** Both are high-rate rows a week apart, and they sit at opposite ends of the distinction:
+
+- **sample 6** — 27%, masked set was read-only listings, damage structurally impossible;
+- **sample 2** — 28%, masked gate, and that session **pushed five times** on evidence it could not
+  distinguish from false;
+- **sample 7** — 22%, masked gate, seven assertions to the user, re-run clean.
+
+Three samples, three different consequences, one number that separates none of them — the lowest of
+the three is the one with the most claims riding on it. The `what was masked` column above is
+recorded by hand; whether `audit.py` should derive it is the open question below.
 
 **`audit.py`'s `compare` scored absent baseline tags wrongly, and older rows are affected.** A tag
 **missing** from the baseline was treated as `0.0`, so a "down" expectation on a pattern added after
@@ -260,6 +372,19 @@ summary on success and the whole thing on failure, or a documented
 prefer and which the sessions demonstrably do not reach for. Sample 2's falsification kills the
 "output is truncated so the filter buys something" argument for a `--quiet` flag, but not the
 readability argument.]
+
+[NEEDS CLARIFICATION: **should the corpus carry a second column for _what_ was masked — and should
+it count calls or assertions?** Sample 6 asked the first half: seven samples in, the headline number
+is stable at 8–32% and does not distinguish a masked gate from a masked `--help`, which have
+completely different consequences — a masked gate is a wrong answer published, a masked listing is a
+style violation with no possible victim. A `--gate-only` mode in `audit.py` would have separated
+sample 6 from samples 2 and 7 on the first pass. Sample 7 sharpens it into the second half: it
+masked 22% of calls but made **seven** green claims, and it is the claims that reach the user — a
+run that masks forty listings and asserts nothing has no reader, while one that masks a single gate
+and says "green" once does. `harvest.py claims` already counts assertions, so the number exists; the
+question is whether the corpus wants it as a column or whether it belongs only in the harvest
+report. Either way this is an `audit.py` change and **belongs in `agent-skills`**, filed there
+rather than decided here.]
 
 ### The output ceiling, measured 2026-09-02 — and it is size, not lines
 
@@ -325,6 +450,12 @@ because admitting one is the user's call and the leanness pass has just closed a
 `~/AGENTS.md` tells sessions the harness truncates and saves the full text to a file, and does not
 tell them it keeps the **head**. A reader who knows only "it truncates" has no way to see that
 `tail` is aimed at the wrong end. One clause on "Viewing, searching, or editing files".
+
+**Unchanged by samples 6 and 7, 2026-09-03.** Neither adds an argument for a wording change — sample
+6 is another `head/tail`/`exit-masked` row and sample 7 is the counterweight that turns sample 6's
+mitigation into a distinction worth measuring. The single action they generate is a plan filed in
+`agent-skills` for the `audit.py` column, per the open question above; nothing here is owed to
+`~/AGENTS.md`.
 
 `2026-09-02-rg-replace-flag-used-twice-in-one-session.md` is a separate finding of the same "simply
 not followed" kind and is deliberately not merged here — it is one flag with its own proposed
