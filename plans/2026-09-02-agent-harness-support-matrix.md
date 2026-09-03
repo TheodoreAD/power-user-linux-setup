@@ -170,6 +170,12 @@ describes nested files for monorepos; it says nothing about a user-level file. S
 instruction path is a **vendor-specific** claim, which is exactly why `symlink_dest` is a list of
 four hand-verified paths rather than a convention that could be derived.
 
+**Corrected 2026-09-04 — the second sentence does not follow from the first.** The specification is
+still repo-root only, but a user-level cross-tool path has emerged in its absence and four agents
+implement it: `~/.agents/AGENTS.md`. See "Step 2, done 2026-09-04" below. The four paths in
+`symlink_dest` today are still vendor-specific and still hand-verified; what changed is that they
+are no longer the only kind of entry available.
+
 Each of the four verified against the vendor's own source or docs, not a search summary:
 
 | link                                 | verified                                                        |
@@ -259,6 +265,75 @@ an agent reads the file, but it could prove the _filename_ still matches what th
 same claim written twice, so it may not be worth it. Worth deciding once rather than rediscovering
 the asymmetry each time an agent is added.]
 
+## Step 2, done 2026-09-04 — and the premise it was built on is wrong
+
+Step 2 expected a per-vendor hunt with mostly "no" answers, because "the `AGENTS.md` specification
+is repo-root only, so every global instruction path is a **vendor-specific** claim." **That last
+clause is false.** Eight agents were checked against their own source or docs source, and a
+cross-tool user-level path exists and is being adopted:
+
+### `~/.agents/AGENTS.md` — a home-directory path that is nobody's vendor directory
+
+| agent         | verified in                                                                                                                                                                                       |
+| ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Goose**     | `crates/goose/src/config/paths.rs` — `DirType::AgentsHome` is `home_dir().join(".agents")`; `crates/goose/src/hints/load_hints.rs` pushes `in_agents_home_dir("AGENTS.md")` onto its global hints |
+| **Warp**      | `crates/ai/src/project_context/global_rules.rs` — `enum GlobalRuleSource` has exactly **one** variant, `Agents`, documented as ``​`~/.agents/AGENTS.md`​``                                          |
+| **Cline**     | `docs/customization/cline-rules.mdx` — "Cline also reads cross-tool global AGENTS instructions from `~/.agents/AGENTS.md`"                                                                        |
+| **Kimi Code** | `docs/en/customization/agents.md` — "Generic cross-tool instructions can still live under `~/.agents/AGENTS.md` in the real OS home"                                                              |
+
+Warp is the strongest signal: it is not a fallback there, it is the only global rule location the
+enum can express. Kimi's wording is the clearest statement of intent — the Kimi-specific file moves
+with `KIMI_CODE_HOME` while the generic one "stays under the real OS home so it can be shared across
+tools", which is the same reasoning that put PULSE's skills in `~/.agents/skills/`.
+
+**All four are also in the universal 19 for skills.** So `~/.agents/` is turning into the cross-tool
+home-directory root for both halves, not just the skills half — and the agents adopting it are
+adopting both at once.
+
+### The vendor-specific user-level files that do exist
+
+| agent        | path                                                    | source                                                                                                              |
+| ------------ | ------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
+| **opencode** | `~/.config/opencode/AGENTS.md`                          | `packages/core/src/instruction-context.ts` joins `global.config` with `AGENTS.md`; `docs/rules.mdx` states the path |
+| **Amp**      | `~/.config/amp/AGENTS.md` **and** `~/.config/AGENTS.md` | its own manual's AGENTS.md page                                                                                     |
+| **Zed**      | `~/.config/zed/AGENTS.md`                               | `docs/src/ai/rules.md`, the Skills migration section                                                                |
+
+Amp's second path is a third spelling of "generic": XDG config root rather than `~/.agents/`. One
+vendor so far, so it is a curiosity rather than a convention.
+
+Zed's page is worth reading for a second reason: its rules migration writes non-default rules into
+**`~/.agents/skills/`**, which independently confirms the registry's entry for `zed` from the vendor
+side rather than from the CLI.
+
+### The one "no"
+
+**Cursor** has no user-level instructions file. Its "User Rules" are global preferences edited in
+Customize → Rules and live in the app's settings, not on disk; its file-based rules are all
+project-scoped (`.cursor/rules/*.mdc`, `AGENTS.md` at the project root and in subdirectories). So
+nothing can be symlinked for it, and it is the shape step 2 expected to find everywhere.
+
+[DECISION: **the next rung-(a) entry should be `~/.agents/AGENTS.md`, not another vendor path.** It
+serves four verified agents in one `symlink_dest` line instead of four, none of them installed here
+yet — and unlike a vendor path it gets _better_ over time, because it is what a new agent adopting
+the convention will read. The per-vendor entries stay: they are what the four installed-here agents
+actually read, and three of the four have no `~/.agents/AGENTS.md` support at all.]
+
+[NEEDS CLARIFICATION: **the "only link when the agent's directory exists" rule does not work for
+this one.** `~/.agents/` is PULSE's own directory — `_ensure_agents_skills` creates it — so the
+absence-means-not-installed test that keeps `~/.codex/AGENTS.md` from being created on a machine
+without Codex can never fire here. The link would always be created. That is arguably correct for a
+path no vendor owns, but it is a deliberate exception to a rule `docs/ai.md` states plainly, and
+`inv verify.all`'s `_symlink_checks()` builds its checks off the same parent-exists test. Decide
+whether the exception is stated or whether `symlink_dest` grows a way to say "unconditional".]
+
+[NEEDS CLARIFICATION: does anything already read `~/AGENTS.md` itself — the path PULSE actually
+deploys to? Every agent checked reads either a vendor path or `~/.agents/AGENTS.md`; none reads the
+bare `~/AGENTS.md`. It works here only because four symlinks point at it. That is fine, and the file
+has to live somewhere, but it means the deploy target is a PULSE choice rather than a convention,
+and `~/.agents/AGENTS.md` has a better claim to being the canonical location than `~/AGENTS.md`
+does. Worth deciding before more links accumulate, since inverting it later means moving the real
+file.]
+
 ## Step 1 landed 2026-09-04
 
 Published, in three commits:
@@ -289,10 +364,12 @@ widen rung (a).
    `—` under skills for Codex and Gemini CLI, both of which read `~/.agents/skills`. Keep it out of
    that page's survey half, per the docs plan's decision, and put the installation particularities
    and the `globalSkillsDir` contradiction in `contributing/ai-tooling.md`.
-2. **Decide rung (a) per candidate, and expect most answers to be no.** The specification is
-   repo-root only, so an agent qualifies only if its vendor documents a user-level file. That is a
-   per-vendor lookup with no shortcut, and the four we have may be most of what exists. Verify each
-   against the vendor's source or docs — a summary got Copilot backwards during this pass.
+2. ~~**Decide rung (a) per candidate, and expect most answers to be no.**~~ **Done 2026-09-04**, and
+   the expectation was wrong: eight agents checked, seven have a user-level file and four share one
+   cross-tool path. What is left of this step is an implementation decision, not a survey — add
+   `~/.agents/AGENTS.md` to `[packages.agents-md]`'s `symlink_dest`, after settling the two open
+   questions the finding raised (the unconditional-link exception, and whether `~/AGENTS.md` should
+   stay the deploy target at all).
 3. **Weigh the Gemini `context.fileName` alternative** against its `GEMINI.md` symlink. Pointing it
    at `AGENTS.md` is arguably the more honest wiring, but it means PULSE editing an app-owned
    `settings.json`, which `inv home.list-claims` already treats as its own class of write. A symlink
