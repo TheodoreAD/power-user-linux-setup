@@ -334,6 +334,39 @@ and `~/.agents/AGENTS.md` has a better claim to being the canonical location tha
 does. Worth deciding before more links accumulate, since inverting it later means moving the real
 file.]
 
+## The move is built but not migrated — `deploy.all` cannot create a symlink
+
+Landed 2026-09-04: `symlink_dest` takes `{ path, always }`, `agents-md`'s `dest` is
+`~/.agents/AGENTS.md`, `~/AGENTS.md` is declared as an `always` link back to it, and
+`_ensure_symlink` now replaces a stale link or a clean stale copy left behind by a moved `dest`
+instead of refusing it as a hand-edit. 547 tests green.
+
+**This machine is not migrated, deliberately.** `inv deploy.status` says
+`~/.agents/AGENTS.md — not deployed yet`, and running the redeploy would not finish the job:
+
+[PITFALL: **`inv deploy.all` never creates a symlink, and `docs/ai.md` says it does.** Grepped
+2026-09-04: `_ensure_symlink` is reached from exactly one caller, `tools._install_wrapper_script`,
+so the only command that writes a `symlink_dest` is `inv tools.install` — which takes no `--name`
+and re-runs every installer for every package, which is the precise cost `deploy.all` was created to
+avoid (`contributing/deploy.md`, and this repo's own `CLAUDE.md` records the rejection of a one-off
+call into a private writer). `deploy.all --name agents-md` would write the new file and leave every
+link pointing at the old one. The sentence "Install an agent later and
+`inv deploy.all --name
+agents-md` links it in" was already on the published page before this change;
+the move is what makes it load-bearing rather than merely inaccurate.]
+
+So the repair path documented for this exact situation does not cover the situation. Migrating by
+hand — `rm ~/AGENTS.md`, re-run, fix the four vendor links — is available and is exactly the ad-hoc
+copy this repo exists to refuse.
+
+[NEEDS CLARIFICATION: **where does the symlink writer belong?** Moving `symlink_dests` and
+`_ensure_symlink` into `deploy.py` is the shape that makes the documented command true: the links
+are home-directory paths PULSE owns, which is that module's whole subject, and `home.py` and
+`verify.py` already import both modules. `tools.py` would call deploy's rather than owning them. The
+alternative — a local import of `tools` inside `deploy.all_` — works and is one line, but leaves the
+writer in the module whose task nobody is supposed to run for this. `tools` already imports
+`deploy`, so the dependency only goes the wrong way in the second option.]
+
 ## Step 1 landed 2026-09-04
 
 Published, in three commits:
