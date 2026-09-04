@@ -1,5 +1,5 @@
 ---
-status: planned
+status: blocked on the repo-tasks change filed as 2026-09-04-docs-build-in-the-quality-gate
 updated: 2026-09-04
 ---
 
@@ -86,6 +86,17 @@ it, and `build` cleans on _entry_ rather than on exit — the `docs.clean` adjac
 already exists, on the side that matters. It leaves 3.3 MB of ignored output behind, and nothing
 accumulates across runs.
 
+**But `--strict` only covers `docs_dir`, so this buys less than the whole repo.** `mkdocs.yml` sets
+`docs_dir: docs`, and zensical never renders `AGENTS.md`, `CONTRIBUTING.md`, `contributing/*.md` or
+`plans/*.md` — so an anchor written in one of those is checked by nothing, before or after step 2.
+Measured 2026-09-04: three such links exist, all of them pointing _into_ `docs/` (`AGENTS.md:154`
+and `contributing/verify.md:5` at `dev-container.md`'s functional-verification heading,
+`contributing/zensical.md:6` at `python.md#system-wide-tools`). All three resolve today, checked by
+hand because there is no other way to check them. Three is small enough that the answer is "know
+about it", not "build a second checker" — and small enough that a fourth should be weighed against
+just naming the section in prose, which is what `CONTRIBUTING.md` now does when pointing at the
+zensical page.
+
 **The real obstacle is the dependency, not the runtime.** `repo_tasks/docs.py`'s module docstring is
 explicit that this was a deliberate line: zensical "isn't a dependency of this package", and
 `link_check` is "the exception: it needs no zensical, no dependency at all, and runs in the gate."
@@ -97,8 +108,9 @@ and has landed.
 
 ## Recommended direction
 
-Two changes, in two repos. The first has landed; the second is the one that actually closes the gap,
-and it cannot be made from here.
+Steps 1 and 3 have landed here. Step 2 is the one that actually closes the gap, it is in another
+repo, and until it lands the manual grep-plus-`docs.build` after a heading rename is the whole
+defence.
 
 1. ~~**This repo: make zensical resolvable from its own venv.**~~ **Landed 2026-09-04.**
    `pyproject.toml` gained a `docs = ["zensical==0.0.44"]` group — the shape `repo_tasks/docs.py`
@@ -119,6 +131,13 @@ and it cannot be made from here.
    already uses for a repo with zero `.sh` files, per this repo's cross-repo family convention.
    **Filed as `plans/2026-09-04-docs-build-in-the-quality-gate.md` in the plans store's `repo-tasks`
    mirror** rather than implemented, since writing into another repo's tree is out.
-3. Note in `contributing/zensical.md` that a heading rename is an anchor change — the direction this
-   repo has already documented is the opposite one (a green local build not implying a green
-   deploy), and this is the same hazard from the other end.
+3. ~~Note in `contributing/zensical.md` that a heading rename is an anchor change.~~ **Landed
+   2026-09-04**, as a subsection under `--strict is aggressive, in a good way` — the two red
+   deploys, why `link-check`/`dprint`/`pytest`/a reviewer each structurally miss it, and the manual
+   grep-plus-`docs.build` step that stands in until step 2. `CONTRIBUTING.md`'s existing gate
+   warning points at it.
+
+   The framing this step was written with is stale, and worth saying so: it expected to contrast
+   with a documented "green local build does not imply a green deploy", which was the _version
+   drift_ warning step 1 deleted. What is left to contrast with is the gate warning — a green
+   `precommit` not implying a green deploy — which is the same hazard and a narrower one.
