@@ -2,8 +2,9 @@
 `content_file` packages such as ~/AGENTS.md. Since it delegates the content write to
 tasks/deploy.py, what's tested here is the contract at this call site: a fresh destination is
 created, a hand-edited one is never silently overwritten (the exact loss this conversion exists to
-close), PULSE_ASSUME_YES restores the unattended overwrite, and the symlink handling that stays in
-tools.py still works. See tests/README.md.
+close), and PULSE_ASSUME_YES restores the unattended overwrite. The symlink writer itself moved to
+tasks/deploy.py on 2026-09-04; the tests exercising it through this installer stayed here, since
+this call site is what has to keep wiring it correctly. See tests/README.md.
 
 Also covers _install_archive's compression handling, which is the one part of that installer with
 a format it cannot declare: the archive is fetched to a file and read with `tar -xf` so tar sniffs
@@ -219,7 +220,7 @@ def test_an_always_symlink_does_not_make_its_siblings_unconditional(tmp_path):
 
 def test_symlink_dests_defaults_always_to_false_for_a_bare_string(tmp_path):
     """A plain string must stay conditional — the flag is opt-in, never inferred."""
-    dests = tools.symlink_dests(_cfg(tmp_path, symlink_dest=[str(tmp_path / "a"), {"path": str(tmp_path / "b")}]))
+    dests = deploy.symlink_dests(_cfg(tmp_path, symlink_dest=[str(tmp_path / "a"), {"path": str(tmp_path / "b")}]))
 
     assert [d.always for d in dests] == [False, False]
 
@@ -227,7 +228,7 @@ def test_symlink_dests_defaults_always_to_false_for_a_bare_string(tmp_path):
 def test_symlink_dests_rejects_a_table_without_a_path(tmp_path):
     """A typo'd key must fail loudly rather than silently declaring nothing."""
     with pytest.raises(TypeError, match="string `path`"):
-        tools.symlink_dests(_cfg(tmp_path, symlink_dest=[{"always": True}]))
+        deploy.symlink_dests(_cfg(tmp_path, symlink_dest=[{"always": True}]))
 
 
 def test_a_dest_change_converts_the_old_real_file_into_a_link(tmp_path, capsys):

@@ -2,7 +2,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import deploy, tools, util
+from . import deploy, util
 
 # Hard ceiling on any single check, via coreutils `timeout` — not a fallback/retry, just a bound
 # on the one attempt. Necessary in practice, not just in theory: auditing this task against a real
@@ -160,14 +160,14 @@ def _symlink_checks() -> list[tuple[str, str, str]]:
     without the rules. Links whose parent directory doesn't exist are skipped for the same reason
     the installer skips creating them: that agent isn't installed, so its missing link is correct.
 
-    An `always` destination is never skipped, matching `tools._ensure_symlink`: the installer
+    An `always` destination is never skipped, matching `deploy.ensure_symlink`: the installer
     creates that parent rather than reading its absence as a verdict, so a missing link there is a
     real failure and not a machine without that agent.
     """
     return [
         (name, "symlink", str(link.path))
         for name, cfg in util.enabled_packages().items()
-        for link in tools.symlink_dests(cfg)
+        for link in deploy.symlink_dests(cfg)
         if link.always or link.path.parent.is_dir()
     ]
 

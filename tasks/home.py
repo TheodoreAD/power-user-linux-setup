@@ -41,7 +41,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import certs, chrome, deploy, fonts, gnome, ide, proxy, screenshot, ssh, system, tools, util
+from . import certs, chrome, deploy, fonts, gnome, ide, proxy, screenshot, ssh, system, util
 
 _HOME = Path.home()
 
@@ -227,11 +227,11 @@ def _symlink_claims() -> Iterator[Claim]:
         dest = cfg.get("dest")
         if not dest:
             continue
-        # Via tools.symlink_dests rather than re-normalising here: `symlink_dest` takes a string, a
+        # Via deploy.symlink_dests rather than re-normalising here: `symlink_dest` takes a string, a
         # list, or a `{ path, always }` table, and a second copy of that parsing is a second place
         # to forget a shape. It was one before the table existed, and a dict would have reached
         # `Path()` as a mapping.
-        for link in tools.symlink_dests(cfg):
+        for link in deploy.symlink_dests(cfg):
             path = link.path
             yield Claim(
                 target=_rel(path),

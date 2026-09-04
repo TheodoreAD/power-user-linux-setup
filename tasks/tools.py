@@ -1,12 +1,10 @@
 import shutil
-from dataclasses import replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
-from typing import NamedTuple
 
 from invoke import Context, task
 
-from . import deploy, ui, util
+from . import deploy, util
 
 
 def _expand(value: str) -> str:
@@ -111,7 +109,7 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
         )
     else:
         raise util.missing_fields(name, "content_file (or assembled_from)")
-    links = symlink_dests(cfg)
+    links = deploy.symlink_dests(cfg)
 
     if util.DRY_RUN:
         # Links whose parent directory is absent are skipped, exactly as `_ensure_symlink` and
@@ -121,118 +119,14 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
         # genuinely right — a false alarm on a healthy machine, which is how a report teaches people
         # to ignore it.
         ok = deploy.classify(managed) == deploy.State.CLEAN and all(
-            _link_ok(link.path, dest) for link in links if link.always or link.path.parent.is_dir()
+            deploy.link_ok(link.path, dest) for link in links if link.always or link.path.parent.is_dir()
         )
         print(f"[{name}] {util.ok_label(ok)}")
         return
 
     deploy.deploy(managed)
     for link in links:
-        _ensure_symlink(name, link, dest, managed)
-
-
-class SymlinkDest(NamedTuple):
-    """One declared link, and whether a missing parent directory means "skip" or "create"."""
-
-    path: Path
-    always: bool
-
-
-def symlink_dests(cfg: util.PackageConfig) -> list[SymlinkDest]:
-    """`symlink_dest`, as absolute paths each carrying its parent-directory rule.
-
-    Accepts a bare string as well as a list: one destination is still the common case (a single
-    wrapper script aliased under another name), and a list is what a file several agents each read
-    from their own path needs — the instructions file is linked into every installed agent's own
-    instruction path. Same string-or-list shape as `omz_plugin`.
-
-    A **string** is a vendor path and is conditional: an absent `~/.codex/` means Codex isn't
-    installed, so the link is skipped rather than created (see `_ensure_symlink`). A
-    **`{ path = ..., always = true }`** table opts out of that test, for a destination no vendor
-    owns. Those two cases need distinguishing rather than leaving it to whether the parent happens
-    to exist: `~/AGENTS.md`'s parent is the home directory, so the conditional test passes
-    vacuously and would create the link for the right reason by accident, recording nothing about
-    why. Verified 2026-09-04, four agents read the cross-tool `~/.agents/AGENTS.md` and none of them
-    owns that directory — PULSE does.
-    """
-    declared = cfg.get("symlink_dest")
-    if not declared:
-        return []
-    entries = [declared] if isinstance(declared, str) else declared
-    return [_symlink_dest(e) for e in entries]
-
-
-def _symlink_dest(entry: str | dict[str, str | bool]) -> SymlinkDest:
-    if isinstance(entry, str):
-        return SymlinkDest(Path(entry).expanduser(), always=False)
-    path = entry.get("path")
-    if not isinstance(path, str):
-        # Covers the missing key and the wrong-typed value with one message: both mean the TOML
-        # author wrote a table that declares no destination, and both would otherwise reach `Path()`
-        # as a `None` or a mapping.
-        raise TypeError(f"symlink_dest table needs a string `path`, got {entry!r}")
-    return SymlinkDest(Path(path).expanduser(), always=bool(entry.get("always")))
-
-
-def _link_ok(link: Path, dest: Path) -> bool:
-    return link.is_symlink() and link.resolve() == dest.resolve()
-
-
-def _replaceable(managed: deploy.Managed, link: Path) -> bool:
-    """Is what sits at `link` something this repo can prove it put there, unmodified?
-
-    Two shapes, and both arise the moment a package's `dest` changes — which is not hypothetical:
-    `agents-md` moved from `~/AGENTS.md` to `~/.agents/AGENTS.md` on 2026-09-04, and without this
-    every existing machine would have ended up with two real files and every link still aimed at the
-    old one. A stale link is not a hand-edit and must not be treated as one.
-
-    - **a symlink into a path this repo has deployed** — a link PULSE made, now aimed at a previous
-      destination. The manifest is the proof: a hand-made link to some file of the user's own is not
-      in it.
-    - **a regular file this repo wrote and nobody has touched since** — `classify` against the same
-      source says CLEAN or STALE. DIRTY or UNKNOWN keeps the existing refusal, because those are
-      exactly the hand-edit this repo promises never to silently discard.
-    """
-    if link.is_symlink():
-        target = link.resolve()
-        return str(target) in deploy.load_manifest() or deploy.lookup(target) is not None
-    return deploy.classify(replace(managed, path=link)) in (deploy.State.CLEAN, deploy.State.STALE)
-
-
-def _ensure_symlink(name: str, dest_entry: SymlinkDest, dest: Path, managed: deploy.Managed) -> None:
-    """Point the declared link at `dest`, unless something else already lives there.
-
-    **Never creates the parent directory of a vendor path.** A missing `~/.codex/` means Codex isn't
-    installed, and creating it to hold an instruction file would leave a directory that makes an
-    absent agent look present — the same detection rule the `skills` CLI uses when it picks which
-    agents to install to. Says so rather than skipping silently, since "my rules didn't reach agent
-    X" is otherwise a very quiet failure; installing that agent and re-running picks the link up.
-
-    An `always` destination is the exception and does create its parent, because that test asks a
-    question about a *vendor's* directory and there is no vendor to ask about — nobody owns
-    `~/.agents/`, PULSE creates it, so "is it there?" would only ever be answering about this repo's
-    own earlier run.
-    """
-    link = dest_entry.path
-    if _link_ok(link, dest):
-        return
-    if link.exists() or link.is_symlink():
-        if not _replaceable(managed, link):
-            ui.warn(
-                f"{link} already exists and isn't a symlink to {dest}.",
-                "Leaving it alone — move its content into the file above yourself, then re-run.",
-            )
-            return
-        was = "link" if link.is_symlink() else "copy"
-        link.unlink()
-        print(f"[{name}] {link}: replaced a stale {was} of this file with a link to {dest}")
-    if not link.parent.is_dir():
-        if not dest_entry.always:
-            print(f"[{name}] {link}: skipped — {link.parent} doesn't exist (that agent isn't installed here)")
-            return
-        link.parent.mkdir(parents=True, exist_ok=True)
-    link.symlink_to(dest)
-    print(f"[{name}] symlinked {link} -> {dest}")
+        deploy.ensure_symlink(name, link, dest, managed)
 
 
 def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  # noqa: C901

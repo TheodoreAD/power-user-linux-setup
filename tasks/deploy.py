@@ -22,12 +22,12 @@ import hashlib
 import json
 import shutil
 from collections.abc import Iterator
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from datetime import UTC, datetime
 from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
-from typing import TypedDict, cast
+from typing import NamedTuple, TypedDict, cast
 
 from invoke import Context, Exit, task
 
@@ -646,10 +646,150 @@ def all_(c: Context, name: str | None = None, yes: bool = False):
     unless --yes. `PULSE_DRY_RUN=1` reports without writing.
     """
     manifest = load_manifest()
-    actions = [deploy(m, assume_yes=yes, manifest=manifest) for m in _scoped(name)]
+    entries = _scoped(name)
+    actions = [deploy(m, assume_yes=yes, manifest=manifest) for m in entries]
     counts = {a: actions.count(a) for a in Action if actions.count(a)}
     summary = ", ".join(f"{n} {a}" for a, n in counts.items())
     print(f"[deploy] {len(actions)} path(s): {summary}")
+    _deploy_symlinks(entries)
+
+
+def _deploy_symlinks(entries: list[Managed]) -> None:
+    """Create each deployed package's `symlink_dest` links, after its content is in place.
+
+    This is why `symlink_dests`/`ensure_symlink` live in this module. Until 2026-09-04 they were
+    reachable only from `tools._install_wrapper_script`, so `inv deploy.all` — the command
+    `docs/ai.md` tells you to run to link a newly-installed agent in — wrote content and no links,
+    and the only thing that did write them re-ran every installer for every package.
+
+    Ordered after the content deploy for the same reason the installer does it that way: a link
+    should never point at a path that has not been written yet.
+    """
+    if util.DRY_RUN:
+        return
+    packages = util.enabled_packages()
+    seen: set[str] = set()
+    for m in entries:
+        if m.package in seen or m.mechanism not in (Mechanism.WRAPPER_SCRIPT, Mechanism.ASSEMBLED):
+            continue
+        seen.add(m.package)
+        for link in symlink_dests(packages.get(m.package, {})):
+            ensure_symlink(m.package, link, m.path, m)
+
+
+# ---------------------------------------------------------------------------
+# Symlinked destinations
+#
+# A `symlink_dest` is a home-directory path this repo creates and owns, which is this module's
+# subject — it lived in tools.py only because the wrapper-script installer was its one caller.
+# That made `inv deploy.all` unable to create a link, while docs/ai.md told people it could, and
+# the only command that did was `inv tools.install`, which re-runs every installer for every
+# package. Moved here 2026-09-04 so the documented repair path is the real one.
+# ---------------------------------------------------------------------------
+
+
+class SymlinkDest(NamedTuple):
+    """One declared link, and whether a missing parent directory means "skip" or "create"."""
+
+    path: Path
+    always: bool
+
+
+def symlink_dests(cfg: util.PackageConfig) -> list[SymlinkDest]:
+    """`symlink_dest`, as absolute paths each carrying its parent-directory rule.
+
+    Accepts a bare string as well as a list: one destination is still the common case (a single
+    wrapper script aliased under another name), and a list is what a file several agents each read
+    from their own path needs — the instructions file is linked into every installed agent's own
+    instruction path. Same string-or-list shape as `omz_plugin`.
+
+    A **string** is a vendor path and is conditional: an absent `~/.codex/` means Codex isn't
+    installed, so the link is skipped rather than created (see `ensure_symlink`). A
+    **`{ path = ..., always = true }`** table opts out of that test, for a destination no vendor
+    owns. Those two cases need distinguishing rather than leaving it to whether the parent happens
+    to exist: `~/AGENTS.md`'s parent is the home directory, so the conditional test passes
+    vacuously and would create the link for the right reason by accident, recording nothing about
+    why. Verified 2026-09-04, four agents read the cross-tool `~/.agents/AGENTS.md` and none of them
+    owns that directory — PULSE does.
+    """
+    declared = cfg.get("symlink_dest")
+    if not declared:
+        return []
+    entries = [declared] if isinstance(declared, str) else declared
+    return [_symlink_dest(e) for e in entries]
+
+
+def _symlink_dest(entry: str | dict[str, str | bool]) -> SymlinkDest:
+    if isinstance(entry, str):
+        return SymlinkDest(Path(entry).expanduser(), always=False)
+    path = entry.get("path")
+    if not isinstance(path, str):
+        # Covers the missing key and the wrong-typed value with one message: both mean the TOML
+        # author wrote a table that declares no destination, and both would otherwise reach `Path()`
+        # as a `None` or a mapping.
+        raise TypeError(f"symlink_dest table needs a string `path`, got {entry!r}")
+    return SymlinkDest(Path(path).expanduser(), always=bool(entry.get("always")))
+
+
+def link_ok(link: Path, dest: Path) -> bool:
+    return link.is_symlink() and link.resolve() == dest.resolve()
+
+
+def _replaceable(managed: Managed, link: Path) -> bool:
+    """Is what sits at `link` something this repo can prove it put there, unmodified?
+
+    Two shapes, and both arise the moment a package's `dest` changes — which is not hypothetical:
+    `agents-md` moved from `~/AGENTS.md` to `~/.agents/AGENTS.md` on 2026-09-04, and without this
+    every existing machine would have ended up with two real files and every link still aimed at the
+    old one. A stale link is not a hand-edit and must not be treated as one.
+
+    - **a symlink into a path this repo has deployed** — a link PULSE made, now aimed at a previous
+      destination. The manifest is the proof: a hand-made link to some file of the user's own is not
+      in it.
+    - **a regular file this repo wrote and nobody has touched since** — `classify` against the same
+      source says CLEAN or STALE. DIRTY or UNKNOWN keeps the existing refusal, because those are
+      exactly the hand-edit this repo promises never to silently discard.
+    """
+    if link.is_symlink():
+        target = link.resolve()
+        return str(target) in load_manifest() or lookup(target) is not None
+    return classify(replace(managed, path=link)) in (State.CLEAN, State.STALE)
+
+
+def ensure_symlink(name: str, dest_entry: SymlinkDest, dest: Path, managed: Managed) -> None:
+    """Point the declared link at `dest`, unless something else already lives there.
+
+    **Never creates the parent directory of a vendor path.** A missing `~/.codex/` means Codex isn't
+    installed, and creating it to hold an instruction file would leave a directory that makes an
+    absent agent look present — the same detection rule the `skills` CLI uses when it picks which
+    agents to install to. Says so rather than skipping silently, since "my rules didn't reach agent
+    X" is otherwise a very quiet failure; installing that agent and re-running picks the link up.
+
+    An `always` destination is the exception and does create its parent, because that test asks a
+    question about a *vendor's* directory and there is no vendor to ask about — nobody owns
+    `~/.agents/`, PULSE creates it, so "is it there?" would only ever be answering about this repo's
+    own earlier run.
+    """
+    link = dest_entry.path
+    if link_ok(link, dest):
+        return
+    if link.exists() or link.is_symlink():
+        if not _replaceable(managed, link):
+            ui.warn(
+                f"{link} already exists and isn't a symlink to {dest}.",
+                "Leaving it alone — move its content into the file above yourself, then re-run.",
+            )
+            return
+        was = "link" if link.is_symlink() else "copy"
+        link.unlink()
+        print(f"[{name}] {link}: replaced a stale {was} of this file with a link to {dest}")
+    if not link.parent.is_dir():
+        if not dest_entry.always:
+            print(f"[{name}] {link}: skipped — {link.parent} doesn't exist (that agent isn't installed here)")
+            return
+        link.parent.mkdir(parents=True, exist_ok=True)
+    link.symlink_to(dest)
+    print(f"[{name}] symlinked {link} -> {dest}")
 
 
 def _has_pulse_block(target: Path) -> bool:

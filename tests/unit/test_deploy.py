@@ -952,3 +952,88 @@ def test_a_customized_seeded_destination_is_still_left_alone_without_yes(tmp_pat
 
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
     assert dest.read_text() == "customized by the user\n"
+
+
+# ---------------------------------------------------------------------------
+# symlink_dest, deployed by deploy.all rather than only by tools.install
+# ---------------------------------------------------------------------------
+
+
+def test_deploy_all_creates_a_packages_symlink_dests(tmp_path, monkeypatch, capsys):
+    """`inv deploy.all` is the documented way to link a newly-installed agent in, and until
+    2026-09-04 it wrote content and no links at all — the only writer was `tools.install`, which
+    re-runs every installer for every package."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
+    vendor.parent.mkdir(parents=True)
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "content_file": "config/agents.md",
+                "symlink_dest": [str(vendor)],
+            }
+        },
+    )
+
+    deploy.all_(MockContext(), name="agents-md", yes=True)
+
+    assert dest.read_text() == "rules\n"
+    assert vendor.is_symlink()
+    assert vendor.resolve() == dest.resolve()
+
+
+def test_deploy_all_creates_an_always_link_whose_parent_is_missing(tmp_path, monkeypatch):
+    """The `~/AGENTS.md` compatibility link: no vendor owns it, so its parent is created."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    compat = tmp_path / "home" / "AGENTS.md"
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "content_file": "config/agents.md",
+                "symlink_dest": [{"path": str(compat), "always": True}],
+            }
+        },
+    )
+
+    deploy.all_(MockContext(), name="agents-md", yes=True)
+
+    assert compat.is_symlink()
+    assert compat.resolve() == dest.resolve()
+
+
+def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch):
+    """`PULSE_DRY_RUN=1` reports without writing — the link half has to honour that too."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    compat = tmp_path / "home" / "AGENTS.md"
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(util, "DRY_RUN", True)
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "content_file": "config/agents.md",
+                "symlink_dest": [{"path": str(compat), "always": True}],
+            }
+        },
+    )
+
+    deploy.all_(MockContext(), name="agents-md", yes=True)
+
+    assert not compat.exists()
+    assert not compat.is_symlink()
