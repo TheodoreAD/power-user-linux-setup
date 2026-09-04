@@ -23,31 +23,40 @@ Copilot, Cursor, Windsurf and Tabby.
 
 Two conventions do the work, and neither belongs to any one vendor:
 
-- **`AGENTS.md`** — the cross-tool instructions file. PULSE assembles `~/AGENTS.md` from the
+- **`AGENTS.md`** — the cross-tool instructions file. PULSE assembles `~/.agents/AGENTS.md` from the
   fragments in `config/agents-md/` and deploys it once.
 - **`.agents/skills/`** — the cross-tool location for Agent Skills. PULSE installs every skill it
   declares into `~/.agents/skills/`, once.
 
+Both halves live under `~/.agents/`, which is nobody's vendor directory — Goose, Warp, Cline and
+Kimi Code each read `~/.agents/AGENTS.md` on their own, and `~/AGENTS.md` is kept as a link to it so
+anything pointing at the older location still works.
+
 Each agent then reads that same content from wherever it happens to look:
 
-| Agent          | Reads the instructions from                          | Finds the skills in                     |
-| -------------- | ---------------------------------------------------- | --------------------------------------- |
-| Claude Code    | `~/.claude/CLAUDE.md` → `~/AGENTS.md`                | `~/.claude/skills` → `~/.agents/skills` |
-| Codex          | `~/.codex/AGENTS.md` → `~/AGENTS.md`                 | `~/.agents/skills`, natively            |
-| GitHub Copilot | `~/.copilot/copilot-instructions.md` → `~/AGENTS.md` | `~/.agents/skills`, natively            |
-| Gemini CLI     | `~/.gemini/GEMINI.md` → `~/AGENTS.md`                | `~/.agents/skills`, natively            |
+| Agent                         | Reads the instructions from                                  | Finds the skills in                     |
+| ----------------------------- | ------------------------------------------------------------ | --------------------------------------- |
+| Claude Code                   | `~/.claude/CLAUDE.md` → `~/.agents/AGENTS.md`                | `~/.claude/skills` → `~/.agents/skills` |
+| Codex                         | `~/.codex/AGENTS.md` → `~/.agents/AGENTS.md`                 | `~/.agents/skills`, natively            |
+| GitHub Copilot                | `~/.copilot/copilot-instructions.md` → `~/.agents/AGENTS.md` | `~/.agents/skills`, natively            |
+| Gemini CLI                    | `~/.gemini/GEMINI.md` → `~/.agents/AGENTS.md`                | `~/.agents/skills`, natively            |
+| Goose, Warp, Cline, Kimi Code | `~/.agents/AGENTS.md`, natively                              | `~/.agents/skills`, natively            |
 
-Every arrow is a symlink, so there is exactly one file to edit and no copies to keep in sync. Only
-Claude Code needs one for the skills: the other three read `~/.agents/skills` themselves, as their
-own source and documentation say — Codex and Gemini CLI alongside a vendor directory of their own,
-Copilot as one of the two places it accepts. So **every agent PULSE hands the instructions to also
-picks up the skills**, and the one that does not read the cross-tool location is the one PULSE
-installs.
+Every arrow is a symlink, so there is exactly one file to edit and no copies to keep in sync. The
+bottom row needs no arrow at all in either column: those four agents already read both cross-tool
+paths. Of the top four, only Claude Code needs a link for the skills — Codex and Gemini CLI read
+`~/.agents/skills` alongside a vendor directory of their own, and Copilot accepts it as one of two
+places. So **every agent PULSE hands the instructions to also picks up the skills**, and the one
+that does not read the cross-tool location for either is the one PULSE installs.
 
-**A link is only created when its agent's own directory already exists** — the absence of
+**A vendor link is only created when that agent's own directory already exists** — the absence of
 `~/.codex/` is how PULSE knows Codex is not installed here, so nothing is created for it. Install an
 agent later and `inv deploy.all --name agents-md` links it in; `inv verify.all` then checks each
 link resolves to the file this repo deploys, rather than to some stale hand-made copy.
+
+`~/AGENTS.md` is the exception, declared as `always` in `setup.toml`: it is not a vendor path, its
+parent is your home directory, and it is created unconditionally so that anything still pointing at
+the old location keeps working.
 
 ### It goes wider than the four, in a repo
 
@@ -57,10 +66,11 @@ CLI, which is what installs these, carries a registry of 71 agents, and **19 of 
 GitHub Copilot, opencode, Warp, Zed and ten more. Claude Code is not one of them, which is why the
 `~/.claude/skills` symlink exists.
 
-That is a claim about a **project** directory you commit alongside the code, not about `~`. The four
-agents above are the ones confirmed to read the home-directory copy PULSE writes; for the rest,
-check the vendor's own docs before assuming, because the registry's own record of where each agent
-looks in `~` is stale in every case we have checked — details in `contributing/ai-tooling.md`.
+That is a claim about a **project** directory you commit alongside the code, not about `~`. The
+agents in the table above are the ones confirmed to read the home-directory copies PULSE writes; for
+the rest, check the vendor's own docs before assuming, because the registry's own record of where
+each agent looks in `~` is stale in every case we have checked — details in
+`contributing/ai-tooling.md`.
 
 !!! note
 

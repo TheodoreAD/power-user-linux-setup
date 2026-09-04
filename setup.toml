@@ -1039,17 +1039,29 @@ claude_default_mode = "acceptEdits"
 claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]
 
 [packages.agents-md]
-description = "Global ~/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/.claude/CLAUDE.md symlinks to it"
+description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/AGENTS.md and ~/.claude/CLAUDE.md symlink to it"
 method = "wrapper-script"
 tags = ["shell", "ai"]
-dest = "~/AGENTS.md"
-# One real file, linked into every agent's own instruction path. A link is only created when that
-# agent's config directory already exists — an absent ~/.codex means Codex isn't installed here, and
-# creating it would make it look like it is. Install the agent, re-run, and the link appears. Paths
-# confirmed against each vendor's own docs; Codex's AGENTS.override.md is deliberately not touched,
-# it's the documented per-user escape hatch. Gemini can instead be pointed at AGENTS.md directly via
-# `context.fileName` in its settings.json — not done yet, see the plan.
+# The real file sits at the cross-tool path, not at ~/AGENTS.md, because that is the one four
+# verified agents read on their own: Goose, Warp, Cline and Kimi Code (sources and the reasoning are
+# in contributing/ai-tooling.md). ~/AGENTS.md is now a link back to it, so nothing that already
+# points at the old location breaks. Moved 2026-09-04; before that the real file was ~/AGENTS.md and
+# no agent read it directly — it worked only because every link pointed there.
+dest = "~/.agents/AGENTS.md"
+# One real file, linked into every agent's own instruction path. A bare string is a vendor path and
+# is only linked when that agent's config directory already exists — an absent ~/.codex means Codex
+# isn't installed here, and creating it would make it look like it is. Install the agent, re-run,
+# and the link appears. Paths confirmed against each vendor's own docs; Codex's AGENTS.override.md
+# is deliberately not touched, it's the documented per-user escape hatch. Gemini can instead be
+# pointed at AGENTS.md directly via `context.fileName` in its settings.json — not done yet, see the
+# plan.
+#
+# `always = true` opts a destination out of that test, for a path no vendor owns. ~/AGENTS.md is
+# one: its parent is the home directory, so the conditional test would pass vacuously and record
+# nothing about why, and the flag is what makes "this is not an agent-installed check" explicit to
+# deploy, verify and home.list-claims alike.
 symlink_dest = [
+  { path = "~/AGENTS.md", always = true },
   "~/.claude/CLAUDE.md",
   "~/.codex/AGENTS.md",
   "~/.copilot/copilot-instructions.md",
