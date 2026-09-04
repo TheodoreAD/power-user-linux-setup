@@ -60,14 +60,11 @@ that genuinely is another repo, and a caution that outlives the cross-repo step 
 is not caution any more.
 
 Run a gate or test plain — `inv quality.precommit`, `pytest` — never `2>&1 | tail -N`, never
-`> log 2>&1; echo $?` with a Read of the log afterwards: both turn one call into two or throw the
-exit code away, and add nothing the tool does not already give you (see "Reading a command's
-result"). Redirect only when the log is genuinely needed later, then Grep/Read it as a second call.
-
-**The `| tail` half is the most reproducible miss on record**: three consecutively sampled sessions
-each told the user a gate had passed on the strength of a `tail`-ed run — whose exit status was
-`tail`'s — and each was right only because the run happened to pass. Reporting a gate green is
-therefore the moment to check what you actually ran, not the moment to trust a clean-looking tail.
+`> log 2>&1; echo $?` with a Read of the log afterwards. The cost is now the output rather than the
+exit code, since `PIPE_FAIL` carries a failing gate's status through the pipe (see "Reading a
+command's result"): a `tail -N` throws away the lines naming what failed, so the call that told you
+something is wrong is the one call that cannot tell you what. Redirect only when the log is
+genuinely needed later, then Grep/Read it as a second call.
 
 ### Viewing, searching, or editing files [Claude Code]
 

@@ -523,12 +523,14 @@ result" — so the mechanism is still a pointer here, and what was added is one 
 shape plus the measurement, which is new evidence rather than a second statement of an existing
 claim.
 
-[UNVERIFIED: whether naming the shape at this trigger moves the rate at all. Every prior wording
-change in this cluster was measured afterwards; this one has a baseline to be measured against for
-the first time (`~/.local/state/session-bash-audit/2026-09-04.json`), so the next sample can use
-`--compare` rather than reporting an unanchored figure. The watch's own position is that wording is
-not the lever, and this change is the cheapest available test of that position rather than a bet
-against it.]
+That `[UNVERIFIED:]` was answered on 2026-09-05 and the answer was no: four sessions after `bba2ed9`
+measured 50%, 6%, 15% and 25%, inside the spread sessions already showed. So this paragraph is now
+the fifth wording that did not move a rate, and the clause it carried has shrunk accordingly — see
+"The pipe half stopped being true" below. **What is left here is the output cost, not the exit
+code**: under `PIPE_FAIL` a `tail`-ed gate reports its real status, so the remaining harm is that
+`tail -N` discards the lines naming what failed, leaving the one call that says something is wrong
+unable to say what. The three sampled sessions stay recorded above as the measurement that retired
+wording as the lever; they are no longer the reason the shape is banned.
 
 ### The `git -C <own repo>` clause
 
@@ -877,6 +879,66 @@ the opposite conclusion immediately — a hard error, exit 4. Two properties mak
 than merely wrong: the contaminated run passes, and AnyIO ships a `pytest11` entry point, so mere
 presence on the path registers it with nothing in the project naming it. The wrong answer had
 already been written into a plan before the user questioned the stated cause.
+
+### The pipe half stopped being true, 2026-09-05
+
+**The rule's premise was removed rather than restated.** Every version of this section since it was
+written gave the same reason not to pipe — `tail`/`grep` return their own exit code, so `$?` after a
+pipeline never reflects an upstream failure. `[packages.claude-code]` now carries a `zshenv` snippet
+setting `PIPE_FAIL` in the agent's shell, so that sentence is false on this machine and the section
+says so explicitly, because a stale rule an agent half-remembers is worse than no rule.
+
+Why a shell option and not a fifth wording. The `head`/`tail` rule had been reworded four times
+since 2026-08-24 and each version was measured afterwards; the newest, `bba2ed9` on 2026-09-04, had
+four sessions after it at 50%, 6%, 15% and 25% — inside the spread sessions already showed before
+it. Over the seven days to 2026-09-05, across 60 main sessions and 14,611 Bash calls, 2,109 calls
+ended in `| tail` and **812 of the 1,396 `inv quality.*` runs were piped**, 58% machine-wide and 41%
+in this repo's own sessions. Every one of those returned `tail`'s status. The adherence watch's
+standing `[DECISION: adherence, not wording]` is what this implements: the mechanism replaces the
+sentence instead of shouting it.
+
+It passes "Proposing an enforcement mechanism for agent behavior", which is the rule that would
+otherwise refuse it. Nothing fires behind the agent's back: no command is rewritten, corrected or
+blocked, and the agent is told the option is on and how to check it. The shell reports what
+happened, which is what `shellcheck` and every shell style guide already ask of a script — the
+developers' own scripts get the same treatment.
+
+Delivery, read from the live harness 2026-09-05 rather than assumed. Each Bash call is
+`/usr/bin/zsh -c 'source ~/.claude/shell-snapshots/<snapshot>.sh … && setopt NO_EXTENDED_GLOB … &&
+eval '<cmd>''`
+— no `-f`, `norcs` unset — and `~/.zshenv` is the one rc file zsh reads for a non-interactive shell,
+so it runs first on every call. The snapshot that follows appends one `setopt <name>` per option
+captured from the interactive shell and unsets nothing, so the option survives it. `CLAUDECODE=1` is
+exported into every call, which is what the guard keys on, and the guard is why cron, IDE task
+runners and every other `zsh -c` on the machine keep default statuses. It is written
+`if [ … ]; then … fi` rather than `[ … ] && setopt` so `~/.zshenv` does not end on a non-zero status
+in every non-agent shell.
+
+Verified live in the deploying session, no restart needed, which is itself the point — `.zshenv` is
+re-read per call, so the change took effect in a session whose snapshot predated it:
+
+| probe                                   | before | after                   |
+| --------------------------------------- | ------ | ----------------------- |
+| `setopt \| rg pipefail`                 | unset  | `pipefail`              |
+| `(exit 3) \| tail -1`                   | 0      | 3                       |
+| `pytest <no such test> 2>&1 \| tail -2` | 0      | 4                       |
+| `git log --oneline \| head -1`          | 0      | 141 (SIGPIPE)           |
+| `rg -n "" setup.toml \| head -1`        | 0      | 1 (truncated)           |
+| `rg <no match> \| tail -1`              | 0      | 1 (rg's own "no match") |
+| `ls \| tail -1`                         | 0      | 0 (nothing truncated)   |
+
+The bottom four are the cost, and they are why the rewrite is a fact rather than a prohibition: a
+`| head` now exits non-zero **exactly when it cut something off**, which is the data-loss event the
+rule has been describing in prose since it was written. A session that reads 141 as a broken command
+and retries is the failure this evidence page exists to prevent, so the replacement text names all
+three codes (141, 1, 120) and what each means.
+
+[UNVERIFIED: whether the piped-gate rate itself moves, and by how much. The mechanism makes a piped
+gate truthful, which is the goal; whether agents also pipe less because a truncated `| head` now
+reports failure is a separate question. Baseline saved as `pipefail live` in
+`~/.local/state/session-bash-audit/`, to be read with `audit.py --compare` after a week — the same
+instrument the four prior rewordings were measured with, so this is comparable to them rather than a
+fresh scale.]
 
 ## Generalizing from a sample to a set
 

@@ -4,10 +4,23 @@
 
 Clean-looking stdout is not proof of success — the exit code is. The Bash tool reports it whenever
 it is non-zero, so a plain unpiped command already gives you the real answer; `echo $?` and
-redirect-to-a-log add nothing. What loses it is a pipe: `tail`/`grep` return _their own_ exit code,
-so `$?` after a pipeline never reflects the upstream failure, and the tool's exit report is the
-filter's too. Assume a CLI's clean summary text and its exit code can disagree until verified
-otherwise.
+redirect-to-a-log add nothing. Assume a CLI's clean summary text and its exit code can disagree
+until verified otherwise.
+
+**A pipe used to lose that, and no longer does** — so anything you remember about `tail` masking an
+upstream failure is out of date. `[packages.claude-code]`'s `zshenv` snippet sets `PIPE_FAIL` in
+every shell the Bash tool runs, guarded on `CLAUDECODE` so nothing else on the machine changes, and
+a pipeline now reports the rightmost non-zero status rather than its last stage's:
+`inv quality.precommit 2>&1 | tail -3` fails when the gate fails. `setopt | rg pipefail` confirms it
+in any session that seems to behave otherwise. What replaces the old rule is a fact rather than a
+composition rule:
+
+- **A non-zero exit after `| head` means `head` cut something off**, not that the command failed —
+  141 for a `git log` killed by SIGPIPE, 1 for an `rg` with more matches than shown, 120 for a
+  Python script cut mid-write. That is the data loss the `head`/`tail` rule has been describing in
+  prose, now reported rather than argued. Count first (`rg -c`, `wc -l`) or run it whole.
+- **`| rg` or `| grep` as the last stage returns 1 when nothing matched**, which is an answer and
+  not a failure.
 
 Same shape when probing whether a dependency is **absent**: `uv run --with …` layers an ephemeral
 overlay _over_ the active environment, so from a directory with a venv active the probe measures a
