@@ -414,3 +414,37 @@ order above.
 
 Steps 1–2 are the ones that change how the site reads. Steps 3–4 are what make it attractive
 informationally. Nothing here requires touching the theme, the palette, or `extra.css`.
+
+## Migrated to
+
+Retired 2026-09-05. Where each kind of content went:
+
+- **Live open work** → `plans/2026-09-05-docs-site-navigation-and-mkdocs-todos.md`: problem 7
+  (search as the only cross-cutting route) and the ten `mkdocs.yml` TODOs. The one `DEFERRED` here
+  (pin zensical once) was closed 2026-09-04 by `2026-09-04-precommit-does-not-build-the-docs.md` and
+  needs no home.
+- **Mermaid decisions and pitfalls** → `contributing/zensical.md`, four new subsections under
+  "Mermaid": diagrams are mermaid and nothing else; HTML in labels works and the sanitiser evidence;
+  the CDN load is a view-time dependency the build never exercises; and the headless-Chrome render
+  check, added to that page's version-bump checklist. The screenshot answer is also written into
+  `2026-08-30-showcase-the-defaults-in-the-docs.md`, which still asked the question.
+- **Page shape and the mechanical-sweep pitfall** → `CONTRIBUTING.md`, "Docs site": the one-line
+  opener, the `## See also` footer, and the warning that a scripted edit across many pages needs an
+  eyes-on pass because the gate and the strict build both stay green.
+- **The nav decision** (topical groups, no "this machine" group, no miscellaneous pool, search must
+  keep resolving every page) → the comments on `mkdocs.yml`'s `nav:` tree, replacing the pointer to
+  this file.
+- **Catalog decisions** (flat table with tags as a column, the two exclusions, prose outside the
+  generated block, clipped task summaries) were already in `tasks/catalog.py`'s docstrings and are
+  not duplicated.
+- **The `ai.md` split and its filter** are already stated in `contributing/ai-tooling.md`'s opening
+  and `docs/ai.md`; **the shortcuts decision** in `docs/shortcuts.md`'s "Why only two"; **the
+  zensical version-drift pitfall** and **the gate-does-not-build-the-docs pitfall** in
+  `CONTRIBUTING.md`'s "Docs site" notes and `2026-09-04-precommit-does-not-build-the-docs.md`; **the
+  anchor-checker false positives** in the `repo-tasks` plan filed in the store
+  (`2026-09-02-anchor-checking-in-link-check.md`).
+
+Deliberately not migrated: the review's problem list and accuracy findings (all fixed, the code and
+pages are the record), the withdrawn `CONTRIBUTING.md` test-tier finding (its explanation is at
+`tests/README.md`), the `deps_check` publication gap (fixed in `tasks/__init__.py`, nothing left to
+explain), and the verification transcripts.
