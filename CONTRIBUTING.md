@@ -104,7 +104,11 @@ The built `site/` is gitignored.
 > `inv quality.precommit` does **not** build the site. `inv docs.link-check` runs in the gate, but
 > it checks that a link's _file_ exists and stops at the fragment — so renaming a heading that
 > another page links to (`configuration.md#some-heading`) passes every local check and fails the
-> Pages deploy. After renaming a heading, grep for inbound links to it and run `inv docs.build`.
+> Pages deploy. After renaming a heading, grep for inbound links to it and run `inv docs.build`. Why
+> nothing else can see it, and the two pushes it has already cost, are under "Renaming a heading is
+> an anchor change" in [`contributing/zensical.md`](contributing/zensical.md) — linked without a
+> fragment on purpose, since `docs_dir` is `docs/` and `--strict` never builds this file or that
+> one, so nothing here would catch the very anchor break both are about.
 
 ## Naming a task
 

@@ -148,6 +148,28 @@ unused link reference definitions. This is stricter than it sounds: it caught a 
 in `docs/kubernetes.md` during the original mkdocs → zensical migration. Keep it in CI
 (`.github/workflows/publish_on_push.yml` already does).
 
+### Renaming a heading is an anchor change
+
+The `unresolved heading anchor` half of that list is the one worth knowing about, because
+`zensical build --strict` is the **only** check in this repo that catches it. A link written as
+`claude-code.md#some-heading` keeps a correct path when the heading it points at gets renamed — only
+the fragment goes stale — and:
+
+- `inv docs.link-check` passes. It resolves the file and stops at the `#` on purpose;
+  `repo_tasks/docs.py`'s `_broken_link` says so in its own docstring.
+- `dprint` formats markdown without reading it as a document, `pytest` never renders a page, and a
+  reviewer reads the link as fine because it _is_ fine, at the path.
+- The rename lands in a different file from the link, usually in a commit about something else.
+
+It has shipped a red deploy here twice, on `2a4de19` and `ae59318`: `docs/claude-code.md`'s
+global-instructions heading was renamed in `e7b481e` while `docs/index.md` kept linking to the old
+anchor, `CI` stayed green both times, and the published site quietly served the last good build.
+
+**After renaming any heading in `docs/`, grep for inbound links to the old anchor and run
+`inv docs.build`.** The `--strict` mode is not just a CI nicety; until `docs.build` joins the gate
+(`plans/2026-09-04-precommit-does-not-build-the-docs.md`, whose remaining step is a `repo-tasks`
+change) it is a manual step, and the only one that exists.
+
 ## Checklist for next time (re-verifying after a version bump)
 
 Re-run `zensical build --strict` at the repo root and re-check each of the above still holds,
