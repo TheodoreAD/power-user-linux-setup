@@ -100,6 +100,22 @@ deploy.
 
 The built `site/` is gitignored.
 
+**Shape of a page.** Every `docs/*.md` page opens with one line naming what the page is for, before
+any heading, admonition or URL, and ends with a `## See also` of two to four links chosen for what a
+reader of that page wants next. Diagrams are mermaid fences, never image files — the rationale and
+the render check are in [`contributing/zensical.md`](contributing/zensical.md). The nav in
+`mkdocs.yml` groups pages by topic, not by audience or by whose machine they came from; the comments
+on the `nav:` tree say why each group is where it is. A page that describes one machine's hardware
+or a vendor app still lives in `docs/`, categorised, because search is how those pages get found.
+
+> [!WARNING]
+> A scripted edit across many pages needs an eyes-on pass over the result. The 2026-09-02 sweep that
+> added the opener line to 38 pages dropped the blank line after it, so dprint folded the next block
+> into the paragraph — inlining the admonition on `kubernetes.md`/`gcloud.md` and the autolinks on
+> `golang.md`/`rust.md`/`js.md`. `inv quality.precommit` and `zensical build --strict` both stayed
+> green; the admonition warning above already says why. It was caught by reading the files, and
+> confirmed fixed in the built HTML rather than in the source.
+
 > [!WARNING]
 > `inv quality.precommit` does **not** build the site — not yet; it is meant to, and the change is a
 > `repo-tasks` one (`plans/2026-09-04-precommit-does-not-build-the-docs.md`). It will join

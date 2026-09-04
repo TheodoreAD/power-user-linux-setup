@@ -122,6 +122,50 @@ wrong-theme (light-on-dark) with the old div-based config, correctly dark-themed
 change `fence_div_format` → `fence_code_format`, or diagrams silently don't render and the build
 gives no indication why.**
 
+### Diagrams are mermaid, and nothing else
+
+Decided 2026-09-02, when the docs-site usability pass added four diagrams to the one
+`docs/python.md` already had: **no screenshots, no image files.** `docs/` contains none and that is
+deliberate — an image goes stale silently while a mermaid block is text in the repo, reviewed and
+diffed like everything else. The same answer closed the question of whether the statusline and the
+prompt deserve a screenshot. The five diagrams as of that date are `cli-allowlist.md`'s pipeline,
+`configuration.md`'s setup phase sequence, deploy classifier and shared-config-file walkthrough, and
+`python.md`'s interpreter map; that last one is the house style for new ones.
+
+### HTML in labels works, and stripping it was a mistake once
+
+`<br/>`, `<b>` and `<small>` inside node and edge labels render under the theme's default
+`securityLevel: "strict"`. A first pass believed strict mode escapes HTML and rewrote four diagrams
+to plain single-line labels rather than check; the user pushed back and was right twice over:
+`docs/python.md` had carried a published diagram using `<br/>` in both label kinds since 2026-08-24,
+and the shipped bundle settles the mechanism — `sanitizeMore` runs `DOMPurify.sanitize` for
+`strict`/`antiscript`/`sandbox`, which keeps those three tags, and even the escaping path
+round-trips line breaks through a `#br#` placeholder precisely so `<br>` survives. The lesson is not
+about mermaid: the safe-looking move was to avoid the uncertain construct, and it silently degraded
+four diagrams on a belief one grep of the repo would have overturned.
+
+### The CDN load is a view-time dependency the build never exercises
+
+The theme bundle carries no mermaid; it fetches `https://unpkg.com/mermaid@11/dist/mermaid.min.js`
+on finding a `pre.mermaid`. Two consequences. `zensical build --strict` passing says **nothing**
+about whether a diagram renders — it can only tell you the fence was emitted. And a reader behind a
+proxy that blocks unpkg — the corporate case this repo has a whole page about — sees the diagram
+source as plain text. Not a defect of the diagrams, but the reason not to add a second such
+dependency (an asciinema player from a CDN, say) and the reason the verification below exists.
+
+### Verifying a diagram renders, without a human looking at the site
+
+`google-chrome` is installed on this machine, so this needs no published site and no eyes:
+
+- **In situ:** `inv docs.build`, then
+  `google-chrome --headless=new --screenshot --virtual-time-budget=20000 file://…/site/<page>.html`.
+  A real flowchart in the screenshot — nodes, edges, edge labels — proves the theme mounts
+  `<pre class="mermaid">` for real, not merely that the element is present.
+- **All blocks at once:** a throwaway harness page holding every `mermaid` fence extracted from
+  `docs/*.md`, rendered with the same `mermaid@11` the theme loads. Every block should draw a
+  diagram and none an error box. Keep a known-good diagram (`python.md`'s) in the set as the
+  control: if the harness would hide a failure, the control cannot prove it would show one.
+
 ## No native math (MathJax/KaTeX) support
 
 Unlike mermaid, there is no equivalent lazy-loader for `pymdownx.arithmatex` in the theme bundle —
@@ -181,6 +225,8 @@ particularly:
 - [ ] Does an explicit `markdown_extensions:` still fully replace the defaults instead of merging?
 - [ ] Does the mermaid auto-mount still require `<pre class="mermaid">` specifically, or does it now
       also pick up `<div class="mermaid">`?
+- [ ] Do the diagrams still render, and do HTML labels still survive? Re-run the headless-Chrome
+      check above rather than trusting a green `--strict` build, which cannot see either.
 - [ ] Has native math (MathJax/KaTeX) support been added to the bundle?
 - [ ] Has `zensical.toml` stabilized enough to be worth migrating to from the `mkdocs.yml` compat
       path?

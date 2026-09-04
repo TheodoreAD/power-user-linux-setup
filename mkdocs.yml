@@ -102,7 +102,11 @@ nav:
   # "How it works" is a group rather than a single page: configuration.md is the mechanism,
   # packages.md is what that mechanism installs, and apt_packages.md is how each install method
   # works. apt_packages.md sat in "Reference" until 2026-09-02, which filed core mechanism at the
-  # far right of the tab bar — see plans/2026-08-27-docs-site-usability.md.
+  # far right of the tab bar. That re-cut settled the shape of this tree: groups are topical, no
+  # page leaves docs/, there is no "this machine" group (meaningless — it varies by observer) and no
+  # miscellaneous pool; whatever fits no real category goes in the last, least visible group below.
+  # Any change here has to keep every page reachable by search, which is the cross-cutting route on
+  # a zensical site (no tags plugin) — check site/search.json after moving anything.
   - How it works:
       - configuration.md
       - packages.md
