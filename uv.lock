@@ -829,8 +829,8 @@ wheels = [
 
 [[package]]
 name = "repo-tasks"
-version = "0.1.0"
-source = { git = "https://github.com/TheodoreAD/repo-tasks#b2d309768d241c425c1fe5b80642b1db5b628228" }
+version = "0.2.0"
+source = { git = "https://github.com/TheodoreAD/repo-tasks#cef6894e81c8c89f395d1ef7a0c750770d82055f" }
 dependencies = [
     { name = "bump-my-version" },
     { name = "dunamai" },
