@@ -59,10 +59,15 @@ typed no `cd` at all. Inside the session's own repo, run the bare command. `git 
 that genuinely is another repo, and a caution that outlives the cross-repo step which justified it
 is not caution any more.
 
-Run a gate or test plain — `inv quality.precommit`, `pytest` — never `> log 2>&1; echo $?` with a
-Read of the log afterwards: that turns one call into two and adds nothing the tool does not already
-give you (see "Reading a command's result"). Redirect only when the log is genuinely needed later,
-then Grep/Read it as a second call.
+Run a gate or test plain — `inv quality.precommit`, `pytest` — never `2>&1 | tail -N`, never
+`> log 2>&1; echo $?` with a Read of the log afterwards: both turn one call into two or throw the
+exit code away, and add nothing the tool does not already give you (see "Reading a command's
+result"). Redirect only when the log is genuinely needed later, then Grep/Read it as a second call.
+
+**The `| tail` half is the most reproducible miss on record**: three consecutively sampled sessions
+each told the user a gate had passed on the strength of a `tail`-ed run — whose exit status was
+`tail`'s — and each was right only because the run happened to pass. Reporting a gate green is
+therefore the moment to check what you actually ran, not the moment to trust a clean-looking tail.
 
 ### Viewing, searching, or editing files [Claude Code]
 

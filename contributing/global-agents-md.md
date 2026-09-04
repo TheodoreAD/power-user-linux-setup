@@ -495,6 +495,41 @@ statement rather than the claim:
   one and now reads "treat cwd as unknown". The practical consequence it existed to state — the next
   call assuming the session repo must re-establish it — is unchanged.
 
+### The `| tail` half of the gate clause
+
+Added 2026-09-04, and structural rather than emphatic — which matters, because the adherence watch's
+standing `[DECISION: adherence, not wording]` rules out saying an already-concrete rule louder.
+
+The gap was that **one hazard was split across two triggers, and neither was the one a session reads
+while about to run a gate.** This paragraph named only the redirect shape (`> log 2>&1; echo $?`);
+the `| head`/`| tail` ban lived in "Viewing, searching, or editing files", whose trigger is viewing
+a file and whose stated cost is losing data the harness would have kept; and the exit-code mechanism
+lived a cluster away in "Reading a command's result". A session running
+`inv quality.precommit 2>&1 | tail -6` matches the third trigger only, believes it is discarding
+pytest progress rather than losing data, and never reaches the sentence that says `tail` returns its
+own exit status. So the shape is now named here, at the trigger where it happens.
+
+Evidence: three consecutively sampled sessions in
+`plans/2026-08-23-global-agents-md-adherence-watch.md` (15, 16, 17) each reported a gate green off a
+`tail`-ed run, and each re-ran bare afterwards and held — right by luck of the run rather than by
+evidence at the time. Sample 17 measured `exit-masked` at 22% against a 20% corpus average over
+7,580 calls, so this is not a tail-end behaviour. Session 14 above is the same shape one step
+sharper: that session had measured the harness's output ceiling, written "there is no legitimate
+`head`/`tail` case left to carve out", committed it, and produced the shape forty minutes later.
+
+Kept to the leanness pass's shape deliberately. That pass removed this paragraph's own restatement
+of what the Bash tool already reports, keeping the imperative and pointing at "Reading a command's
+result" — so the mechanism is still a pointer here, and what was added is one imperative naming the
+shape plus the measurement, which is new evidence rather than a second statement of an existing
+claim.
+
+[UNVERIFIED: whether naming the shape at this trigger moves the rate at all. Every prior wording
+change in this cluster was measured afterwards; this one has a baseline to be measured against for
+the first time (`~/.local/state/session-bash-audit/2026-09-04.json`), so the next sample can use
+`--compare` rather than reporting an unanchored figure. The watch's own position is that wording is
+not the lever, and this change is the cheapest available test of that position rather than a bet
+against it.]
+
 ### The `git -C <own repo>` clause
 
 Admitted 2026-09-02 from the leanness pass's parked list, as a clause rather than a rule: it is the
