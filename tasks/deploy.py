@@ -654,29 +654,6 @@ def all_(c: Context, name: str | None = None, yes: bool = False):
     _deploy_symlinks(entries)
 
 
-def _deploy_symlinks(entries: list[Managed]) -> None:
-    """Create each deployed package's `symlink_dest` links, after its content is in place.
-
-    This is why `symlink_dests`/`ensure_symlink` live in this module. Until 2026-09-04 they were
-    reachable only from `tools._install_wrapper_script`, so `inv deploy.all` — the command
-    `docs/ai.md` tells you to run to link a newly-installed agent in — wrote content and no links,
-    and the only thing that did write them re-ran every installer for every package.
-
-    Ordered after the content deploy for the same reason the installer does it that way: a link
-    should never point at a path that has not been written yet.
-    """
-    if util.DRY_RUN:
-        return
-    packages = util.enabled_packages()
-    seen: set[str] = set()
-    for m in entries:
-        if m.package in seen or m.mechanism not in (Mechanism.WRAPPER_SCRIPT, Mechanism.ASSEMBLED):
-            continue
-        seen.add(m.package)
-        for link in symlink_dests(packages.get(m.package, {})):
-            ensure_symlink(m.package, link, m.path, m)
-
-
 # ---------------------------------------------------------------------------
 # Symlinked destinations
 #
@@ -790,6 +767,56 @@ def ensure_symlink(name: str, dest_entry: SymlinkDest, dest: Path, managed: Mana
         link.parent.mkdir(parents=True, exist_ok=True)
     link.symlink_to(dest)
     print(f"[{name}] symlinked {link} -> {dest}")
+
+
+def _deploy_symlinks(entries: list[Managed]) -> None:
+    """Create each deployed package's `symlink_dest` links, after its content is in place.
+
+    This is why `symlink_dests`/`ensure_symlink` live in this module. Until 2026-09-04 they were
+    reachable only from `tools._install_wrapper_script`, so `inv deploy.all` — the command
+    `docs/ai.md` tells you to run to link a newly-installed agent in — wrote content and no links,
+    and the only thing that did write them re-ran every installer for every package.
+
+    Ordered after the content deploy for the same reason the installer does it that way: a link
+    should never point at a path that has not been written yet.
+
+    Under `PULSE_DRY_RUN` this reports instead of writing. Reporting rather than staying silent is
+    the point: the first version returned early, so a machine that would gain three links printed
+    `1 path(s): 1 created` and nothing else — a dry run that understates what the real run does is
+    worse than no dry run, because it is the output someone checks *before* deciding to trust it.
+    """
+    packages = util.enabled_packages()
+    seen: set[str] = set()
+    for m in entries:
+        if m.package in seen or m.mechanism not in (Mechanism.WRAPPER_SCRIPT, Mechanism.ASSEMBLED):
+            continue
+        seen.add(m.package)
+        for link in symlink_dests(packages.get(m.package, {})):
+            if util.DRY_RUN:
+                print(f"[{m.package}] {_symlink_plan(dest_entry=link, dest=m.path, managed=m)}")
+            else:
+                ensure_symlink(m.package, link, m.path, m)
+
+
+def _symlink_plan(*, dest_entry: SymlinkDest, dest: Path, managed: Managed) -> str:
+    """One line saying what `ensure_symlink` would do, without doing it.
+
+    Mirrors that function's branches in the same order rather than summarising, so a dry run
+    distinguishes the outcomes that actually differ: already correct, would be created, would be
+    skipped because that agent isn't installed, would replace something this repo can prove it
+    wrote, and would refuse to touch something it can't.
+    """
+    link = dest_entry.path
+    if link_ok(link, dest):
+        return f"{link}: ok"
+    if link.exists() or link.is_symlink():
+        if not _replaceable(managed, link):
+            return f"{link}: would leave alone — not a symlink to {dest}"
+        was = "link" if link.is_symlink() else "copy"
+        return f"{link}: would replace a stale {was} of this file with a link to {dest}"
+    if not link.parent.is_dir() and not dest_entry.always:
+        return f"{link}: would skip — {link.parent} doesn't exist (that agent isn't installed here)"
+    return f"{link}: would symlink -> {dest}"
 
 
 def _has_pulse_block(target: Path) -> bool:

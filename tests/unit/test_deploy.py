@@ -1013,8 +1013,11 @@ def test_deploy_all_creates_an_always_link_whose_parent_is_missing(tmp_path, mon
     assert compat.resolve() == dest.resolve()
 
 
-def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch):
-    """`PULSE_DRY_RUN=1` reports without writing — the link half has to honour that too."""
+def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch, capsys):
+    """`PULSE_DRY_RUN=1` reports without writing — the link half has to honour that too, and it
+    has to *report*: returning early made a machine that would gain three links print
+    `1 path(s): 1 created` and nothing else, which understates the real run in the one output
+    someone reads before deciding to trust it."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     compat = tmp_path / "home" / "AGENTS.md"
     (tmp_path / "config").mkdir(exist_ok=True)
@@ -1037,3 +1040,30 @@ def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch):
 
     assert not compat.exists()
     assert not compat.is_symlink()
+    assert f"{compat}: would symlink -> {dest}" in capsys.readouterr().out
+
+
+def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
+    """The uninstalled-agent case is the one a reader most needs distinguished from a failure."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    vendor = tmp_path / "home" / ".codex" / "AGENTS.md"
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(util, "DRY_RUN", True)
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "content_file": "config/agents.md",
+                "symlink_dest": [str(vendor)],
+            }
+        },
+    )
+
+    deploy.all_(MockContext(), name="agents-md", yes=True)
+
+    assert "would skip" in capsys.readouterr().out
+    assert not vendor.parent.exists()
