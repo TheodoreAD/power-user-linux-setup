@@ -61,7 +61,11 @@ more precisely because a private helper's name is the least stable thing to hang
 says `_broken_link`** and is in that repo's tree rather than this one, so correcting it belongs to a
 session working there.]
 
-## Decision, 2026-09-04: it joins `check`, and `precommit` gets it for free
+## Decision, 2026-09-04: it joins `check`, and `precommit` gets it for free — SUPERSEDED
+
+**Read the revision below before acting on this section.** Its placement conclusion is overturned;
+its measurements, its coverage bound and its dependency finding all still stand, which is why it is
+kept rather than rewritten.
 
 **Timed first, as asked.** On this repo (41 pages under `docs/`, warm venv):
 
@@ -115,6 +119,89 @@ in no dependency group, so `.github/ci-bootstrap.sh`'s `uv run inv dev-env.setup
 CI's `quality` job failing on a missing command rather than on the anchor. Step 1 below fixes that
 and has landed.
 
+## Revision, 2026-09-04: `check` must not mutate, so it goes in `precommit` instead
+
+**Raised by the user, and it overturns the decision above.** The earlier reasoning dismissed the
+`site/` write because `.gitignore` covers it — that is the weak form of the objection. The strong
+form is that `check` is the CI-style, read-only half by construction: it should be safe to run
+concurrently, on a read-only checkout, twice with the same answer. "Nothing _tracked_ moves" is not
+the same property, and building 3.3 MB into the working tree from a task documented as "no changes
+written" is a category error whatever git thinks of the output.
+
+### What the community does
+
+The user's instinct is the mainstream design, not a purist preference. Three of the major static
+site generators ship a parse-and-validate mode that is explicitly distinct from build:
+
+| tool   | mode                      | what it does                                                                                                   |
+| ------ | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Zola   | `zola check`              | "build all pages just like the build command would, but without writing any of the results to disk"            |
+| Sphinx | `sphinx-build -b dummy`   | "produces no output. The input is only parsed and checked for consistency" — documented as the linting builder |
+| Hugo   | `--renderToMemory` / `-M` | renders without writing; `-d/--destination` redirects output when it does write                                |
+
+So "the checker validates, the builder writes" is a shape these tools converged on independently.
+
+### Except that our tool cannot do it, measured rather than assumed
+
+**MkDocs has no check or dry-run mode at all** — its only lever is `-d`/`--site-dir` to redirect
+output elsewhere. **Zensical 0.0.44 has neither.** `zensical build` takes exactly
+`-f/--config-file`, `-c/--clean` and `-s/--strict`; there is no output-directory flag. Probed on
+2026-09-04:
+
+- `site_dir` is an `mkdocs.yml` key, and `config.py` rejects only a `..` in it — an absolute path
+  passes validation. **It then panics**: `invariant: Format(Path(RootDir))` at
+  `crates/zensical/src/workflow.rs:238`, a Rust invariant violation rather than a clean error. Worth
+  reporting upstream on its own account.
+- A _relative_ alternate `site_dir` works fine (built clean into `.zensical-check`), but that is
+  still a write inside the repo.
+- The alternate config file has to sit in the repo root regardless: `project_root` is
+  `os.path.dirname(config_path)`, so a config in `/tmp` makes `docs_dir` resolve under `/tmp` too
+  and the build fails on a missing docs directory.
+
+**So there is no way to make this check non-mutating with zensical today.** The achievable property
+is "leaves no net change", not "writes nothing".
+
+### The comparison shape does not transfer here
+
+The user's own framing — "not sure how we can do check without comparison" — names the pattern this
+repo already uses for `catalog.render-tasks` and `devcontainer.render-docs`: `fix` regenerates,
+`check` re-renders and fails on a diff. **That works only because those outputs are committed.**
+`site/` is deliberately gitignored, so there is nothing to compare a fresh build against, and
+committing a 3.3 MB build output to get a comparison target would be a far worse trade than the one
+being avoided.
+
+### What actually changed the answer: CI already catches it, and can now be seen doing so
+
+The original argument for `check` was that it "fails the run people already watch". That was
+under-weighted twice over. **`Deploy docs to GitHub Pages` already runs `zensical build --strict` on
+every push to `master`** — CI has always caught this; the complaint was only that a workflow
+conclusion nobody reads is a poor signal. And as of this same day `inv ci.status` is wired into this
+repo (`633be03`), which prints the latest run's **annotations and failures across every workflow** —
+so the Pages failure is now visible from the terminal, which is the gap that made moving the build
+into the gate look necessary.
+
+[DECISION: **`docs.build` joins `quality.precommit`'s pre-chain, not `quality.check`'s.**
+`precommit` is `pre=[fix, check]` and already mutates by construction, so a build there is
+consistent; `check` stays read-only and CI's `quality` job stays clean. The local pre-commit catch —
+the one that would have prevented both red deploys — is fully preserved, since nobody pushes without
+running `precommit`. This reverses the "it goes in `check`" decision above, which was made on the
+gitignore argument before the read-only principle was raised.]
+
+[PITFALL: **the cost is pull requests.** `Deploy docs to GitHub Pages` triggers on push to
+`master`/`main` only, so a PR gets no docs build from either side once `check` is out of the
+picture. Low impact here — this repo pushes direct to `master` by its own stated convention — but it
+is a real hole for any consumer that reviews by PR, and it is the one thing the `check` placement
+would have covered. A consumer that wants it adds `pull_request` to its Pages workflow's triggers,
+or runs `inv docs.build` as its own CI step, rather than putting a mutating task in the shared
+gate.]
+
+[UNVERIFIED: whether a later zensical grows a real check mode, which would retire all of this. None
+was found in its issue tracker on 2026-09-04, and the pin here is 0.0.44 against a current 0.0.59 —
+so the probes above should be re-run at the next version bump before the workaround is treated as
+permanent. `invalid_link_anchors` is on by default and is the check that catches the dangling
+anchor, per zensical's validation docs, so the behaviour being relied on is documented rather than
+incidental.]
+
 ## Recommended direction
 
 Steps 1 and 3 have landed here. Step 2 is the one that actually closes the gap, it is in another
@@ -134,12 +221,19 @@ defence.
    the whole machine) or an unpinned CI, and a dependency group pays neither cost.
    `[packages.zensical]` stays for other repos and for the human at the shell; inside this repo
    direnv's `.venv/bin` shadows it.
-2. **`repo-tasks`: add `docs.build` to `quality.check`'s pre-chain**, guarded so it no-ops on a
-   consumer with no `mkdocs.yml` (`scaffoldapy`'s template makes the docs site conditional on
-   `with_docs`, so the docs-less consumer is real) — the graceful-degradation shape `shell_check`
-   already uses for a repo with zero `.sh` files, per this repo's cross-repo family convention.
-   **Filed as `plans/2026-09-04-docs-build-in-the-quality-gate.md` in the plans store's `repo-tasks`
-   mirror** rather than implemented, since writing into another repo's tree is out.
+2. **`repo-tasks`: add `docs.build` to `quality.precommit`'s pre-chain — _not_ `check`'s** (see the
+   revision above; `check` must stay read-only and zensical offers no way to build without writing).
+   Guarded so it no-ops on a consumer with no `mkdocs.yml` (`scaffoldapy`'s template makes the docs
+   site conditional on `with_docs`, so the docs-less consumer is real) — the graceful-degradation
+   shape `shell_check` already uses for a repo with zero `.sh` files, per this repo's cross-repo
+   family convention. Concretely `pre=[fix, check, docs_build_if_configured]` rather than a new
+   member of `check`'s list.
+
+   **Filed as `plans/2026-09-04-docs-build-in-the-quality-gate.md`, now absorbed into `repo-tasks`'
+   own `plans/`** rather than implemented here, since writing into another repo's tree is out.
+   **That filed copy still says `check`** — it was written before this revision — so it needs the
+   correction along with its stale `_broken_link` citation, and both belong to a session working
+   there.
 3. ~~Note in `contributing/zensical.md` that a heading rename is an anchor change.~~ **Landed
    2026-09-04**, as a subsection under `--strict is aggressive, in a good way` — the two red
    deploys, why `link-check`/`dprint`/`pytest`/a reviewer each structurally miss it, and the manual
