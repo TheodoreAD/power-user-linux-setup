@@ -58,9 +58,9 @@ prompt. None of it needs a wizard, and all of it is yours to change.
   actually works. [The statusline](claude-code.md#the-statusline)
 - **Nerd Fonts, installed and wired up** — every icon in the three items above comes from here.
   [Fonts](fonts.md)
-- **Agent instructions that come with the machine** — `~/AGENTS.md`, assembled from reviewed
+- **Agent instructions that come with the machine** — `~/.agents/AGENTS.md`, assembled from reviewed
   fragments and read by every agent tool that follows the convention.
-  [Global instructions](claude-code.md#agentsmd-global-instructions-declaratively-managed)
+  [Global instructions](claude-code.md#agentsagentsmd-global-instructions-declaratively-managed)
 
 ## Quick start
 
