@@ -50,15 +50,15 @@ def _import_repo_tasks_modules(simulate_missing: bool = False):
     directly and testably instead, with no need to fake an import failure via sys.modules
     patching."""
     if simulate_missing:
-        return None, None, None, None, None, None, None
+        return None, None, None, None, None, None, None, None
     try:
-        from repo_tasks import agents, configs, deps, dev_env, docs, quality, testing  # noqa: PLC0415
+        from repo_tasks import agents, ci, configs, deps, dev_env, docs, quality, testing  # noqa: PLC0415
     except ImportError:
-        return None, None, None, None, None, None, None
-    return agents, configs, deps, dev_env, docs, quality, testing
+        return None, None, None, None, None, None, None, None
+    return agents, ci, configs, deps, dev_env, docs, quality, testing
 
 
-agents, configs, deps, dev_env, docs, quality, testing = _import_repo_tasks_modules()
+agents, ci, configs, deps, dev_env, docs, quality, testing = _import_repo_tasks_modules()
 
 namespace = Collection(
     setup.setup,
@@ -108,6 +108,16 @@ if agents is not None:
     namespace.add_collection(Collection.from_module(agents))
 if docs is not None:
     namespace.add_collection(Collection.from_module(docs))
+if ci is not None:
+    # `inv ci.status` before a push, `inv ci.check-actions` when a workflow is edited. Both are
+    # network+`gh` tasks and neither is in `quality.check`, which stays offline.
+    #
+    # Wired 2026-09-04, after doing a whole CI sweep with raw `gh api` calls because the namespace
+    # was not published here. `ci.status` is the one that matters: it prints the latest run's
+    # warning annotations, and an annotation on a *green* run is the only signal for a deprecation
+    # — `actions/checkout@v4` carried one for eleven months while every run passed. `--branch
+    # master`, since its default is `main` and this repo is not.
+    namespace.add_collection(Collection.from_module(ci))
 if deps is not None:
     # `deps.check` (lock drift) is a member of `quality.check`'s pre-chain, so the gate ran it
     # while `inv deps.check` did not exist here — a failing check nobody could re-run on its own

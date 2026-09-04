@@ -54,12 +54,22 @@ def test_namespace_publishes_repo_tasks_deps_namespace():
     assert {"check", "lock", "audit"} <= set(deps_collection.task_names)
 
 
+def test_namespace_publishes_repo_tasks_ci_namespace():
+    """`ci.status` is the only thing here that reads a run's *annotations*, and an annotation on a
+    green run is the sole signal for a deprecation — `actions/checkout@v4` carried one for eleven
+    months while CI passed. The namespace went unpublished long enough that a whole CI sweep was
+    done with raw `gh api` calls instead."""
+    ci_collection = tasks.namespace.collections.get("ci")
+    assert ci_collection is not None
+    assert {"status", "check-actions"} <= set(ci_collection.task_names)
+
+
 def test_import_repo_tasks_modules_returns_real_modules_when_available():
     modules = tasks._import_repo_tasks_modules()
-    assert len(modules) == 7
+    assert len(modules) == 8
     assert all(module is not None for module in modules)
 
 
 def test_import_repo_tasks_modules_degrades_to_all_none_when_missing():
     result = tasks._import_repo_tasks_modules(simulate_missing=True)
-    assert result == (None,) * 7
+    assert result == (None,) * 8
