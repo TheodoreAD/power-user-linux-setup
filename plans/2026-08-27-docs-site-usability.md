@@ -378,7 +378,15 @@ defects.
 `[packages.zensical]` carries the same pin as `requirements-docs.txt`, or CI installs the tool the
 way this machine does. Both are one-line changes and each has a cost (a downgrade on this machine,
 or an unpinned CI build), so it is a decision rather than a fix, and the documented `uvx` command
-closes the hole meanwhile.]
+closes the hole meanwhile.
+
+**Closed 2026-09-04, by a third option neither of these named:** a `docs` dependency group in
+`pyproject.toml`, made a `[tool.uv] default-groups` member so an ordinary `uv sync` installs it and
+direnv's `.venv/bin` shadows the machine-wide tool. `requirements-docs.txt` is deleted and the Pages
+workflow resolves the same pin from `uv.lock`. Neither cost is paid: this machine keeps its unpinned
+`[packages.zensical]` for other repos, and CI stays pinned. It came out of
+`2026-09-04-precommit-does-not-build-the-docs.md`, where it is the prerequisite for putting
+`docs.build` in the gate at all — CI cannot run a build with no zensical to run it with.]
 
 ## Recommended direction
 

@@ -56,15 +56,20 @@ gate's blindness here is documented behaviour, not an oversight to report upstre
 
 **Timed first, as asked.** On this repo (41 pages under `docs/`, warm venv):
 
-| command                 | wall              | note                                   |
-| ----------------------- | ----------------- | -------------------------------------- |
-| `inv docs.build`        | 1.54 s and 1.59 s | zensical's own figure: 1.20 s / 1.25 s |
-| `inv quality.precommit` | 6.76 s            | 551 tests, all green                   |
+| command                 | wall              | note                                           |
+| ----------------------- | ----------------- | ---------------------------------------------- |
+| `inv docs.build`        | 1.54 s and 1.59 s | on the machine-wide unpinned zensical 0.0.57   |
+| `inv docs.build`        | 2.00 s, twice     | on the pinned 0.0.44 — the version that counts |
+| `inv quality.precommit` | 6.76 s            | 551 tests, all green                           |
 
-So +23% on the gate, ~1.5 s absolute. That is under the threshold the question was really about —
-nobody reaches for `| tail` over a second and a half. **There is also no cold tree to measure:**
-`docs.build` carries `pre=[clean]`, so every run is already a full rebuild and the cold and warm
-numbers above are the same number twice.
+So +30% on the gate, 2 s absolute. That is under the threshold the question was really about —
+nobody reaches for `| tail` over two seconds. **There is also no cold tree to measure:**
+`docs.build` carries `pre=[clean]`, so every run is already a full rebuild and each pair of numbers
+above is the same number twice.
+
+The two `docs.build` rows are the point of step 1 below, and were not separable until it landed: the
+first measures a version CI never runs, and 0.0.44 is ~30% slower than 0.0.57, so timing the
+machine-wide tool would have under-reported the gate's real cost.
 
 **`precommit`-vs-`check` turned out to be a false choice.** `precommit` is `pre=[fix, check]`, so
 anything in `check` is in `precommit` already; the only thing "in `precommit` only" would buy is
@@ -73,8 +78,8 @@ _exempting CI_, which is the opposite of what the second open question wanted. I
 **Which answers the second open question at no extra cost.** CI's `quality` job runs
 `inv quality.check` on every push to `master` and every PR, so a broken anchor fails the run people
 already watch, with no new workflow and no `push`-triggered duplicate job. The price is building the
-docs twice on a `master` push — once in `check`, once in `Deploy docs to GitHub Pages` — which is
-1.5 s of runner time against a failure mode that has already shipped twice.
+docs twice on a `master` push — once in `check`, once in `Deploy docs to GitHub Pages` — which is 2
+s of runner time against a failure mode that has already shipped twice.
 
 **The `site/` objection dissolves.** `.gitignore:123` has `/site`, so no `git status` ever reports
 it, and `build` cleans on _entry_ rather than on exit — the `docs.clean` adjacency recommended below
@@ -84,21 +89,30 @@ accumulates across runs.
 **The real obstacle is the dependency, not the runtime.** `repo_tasks/docs.py`'s module docstring is
 explicit that this was a deliberate line: zensical "isn't a dependency of this package", and
 `link_check` is "the exception: it needs no zensical, no dependency at all, and runs in the gate."
-Here, zensical is a machine-wide `uv tool` install (`[packages.zensical]` in `setup.toml`,
-`~/.local/bin/zensical`) plus a `requirements-docs.txt` the Pages workflow `pip install`s. It is in
-no dependency group, so `.github/ci-bootstrap.sh`'s `uv run inv dev-env.setup` would leave CI's
-`quality` job failing on a missing command rather than on the anchor.
+Here, zensical **was** a machine-wide `uv tool` install (`[packages.zensical]` in `setup.toml`,
+`~/.local/bin/zensical`) plus a `requirements-docs.txt` the Pages workflow `pip install`ed. It was
+in no dependency group, so `.github/ci-bootstrap.sh`'s `uv run inv dev-env.setup` would have left
+CI's `quality` job failing on a missing command rather than on the anchor. Step 1 below fixes that
+and has landed.
 
 ## Recommended direction
 
-Two changes, in two repos — the second is the one that actually closes the gap, and it cannot be
-made from here.
+Two changes, in two repos. The first has landed; the second is the one that actually closes the gap,
+and it cannot be made from here.
 
-1. **This repo: make zensical resolvable from its own venv.** A `docs` dependency group in
-   `pyproject.toml` (the shape `repo_tasks/docs.py` already assumes, `uv sync --group docs`), which
-   also retires `requirements-docs.txt` as a second place the pin lives — the Pages workflow can
-   sync the group instead of `pip install`ing a parallel file. Correct on its own merits whether or
-   not the upstream change lands.
+1. ~~**This repo: make zensical resolvable from its own venv.**~~ **Landed 2026-09-04.**
+   `pyproject.toml` gained a `docs = ["zensical==0.0.44"]` group — the shape `repo_tasks/docs.py`
+   already assumes — and `[tool.uv] default-groups = ["dev", "docs"]`, since `inv dev-env.setup`
+   (and `ci-bootstrap.sh`, which is only `uv run inv dev-env.setup`) is the one thing that populates
+   the venv, so an opt-in group is a group CI never gets. `requirements-docs.txt` is deleted and the
+   Pages workflow resolves the same pin from `uv.lock` via
+   `uv run --only-group docs --frozen zensical build --strict`, verified on a scratch copy.
+
+   This closed a `DEFERRED` item in `2026-08-27-docs-site-usability.md` with a third option neither
+   of the two it weighed had named: it wanted either a pinned `[packages.zensical]` (a downgrade for
+   the whole machine) or an unpinned CI, and a dependency group pays neither cost.
+   `[packages.zensical]` stays for other repos and for the human at the shell; inside this repo
+   direnv's `.venv/bin` shadows it.
 2. **`repo-tasks`: add `docs.build` to `quality.check`'s pre-chain**, guarded so it no-ops on a
    consumer with no `mkdocs.yml` (`scaffoldapy`'s template makes the docs site conditional on
    `with_docs`, so the docs-less consumer is real) — the graceful-degradation shape `shell_check`
