@@ -662,3 +662,121 @@ truncation keeps the head and saves the whole output to a file, wrote "there is 
 `head`/`tail` case left to carve out" as a `[DECISION:]`, committed it — and produced the shape
 about forty minutes later. So the count of things that make no difference now includes: reading the
 rule, authoring the rule, measuring the rule's premise, and publishing the conclusion.]
+
+### Session 15 — `ingesta`, 2026-09-04: the rule's own justification proved itself mid-violation
+
+Session `179f0c44-e084-4cd3-918e-77568655e419`, 189 Bash calls bounded at the harvest boundary. Two
+misses, both in clusters this watch already names as highest-value, and **both caught by the user
+rather than by the session.**
+
+1. **Ad-hoc verification instead of the test suite.** After adding a new surface module to a repo
+   with an 896-test suite and shared fixtures, the session verified its behaviour with two
+   `uv run python -c "..."` one-liners — an exploratory print, then a debug print when the output
+   looked wrong. The user interrupted the second: _"why not use pytest, fixtures, hypothesis, all
+   that, instead of hand rolling bash commands?"_ The rule names the exact shape ("Run the test
+   suite, not a one-off ad-hoc script (`python3 -c "..."`, a manual re-render in `/tmp`)") and was
+   in context throughout — the watch's third shape, **not followed**, wording fine.
+2. **`uv run pytest` where the bare command resolves.** Corrected mid-turn: _"you don't need to do
+   uv run pytest, that messes with the allowlist, just to pytest"_. The repo uses direnv exactly as
+   the rule assumes. Cost: a permission prompt on every run.
+
+| pattern     | rate | note                                     |
+| ----------- | ---- | ---------------------------------------- |
+| chain       | 41%  |                                          |
+| head/tail   | 38%  | mostly the gate through `tail -N`        |
+| exit-masked | 23%  | 43 calls                                 |
+| sed-n       | 4%   | 7 calls, all reading source Read handles |
+
+[PITFALL: **the first miss's own justification demonstrated itself inside the session that broke
+it.** The tests, once written, immediately surfaced three facts the ad-hoc scripts had not: that
+`missed_after` is a strict threshold (at exactly four hours a dose is still `LATE`), that a horizon
+bound must never hide an overdue dose, and that an intake matches a slot by `regimen_id`. Two were
+wrong assumptions the session was about to build on. That is the strongest available argument that
+the rule is right and the weakest possible evidence that stating it is sufficient.]
+
+### Session 16 — `ingesta`, 2026-09-04: same repo, same day, same model, lower on everything
+
+Session `54d36cb9-ba1c-4a48-8316-6f35ab58f452`, 08:50–14:03, 134 Bash calls bounded at the harvest
+boundary. Filed alongside session 15 deliberately rather than separately, because the gap between
+two sessions matched on repo, day and model is the comparison, not each rate on its own.
+
+| pattern        | this | session 15 |
+| -------------- | ---- | ---------- |
+| chain          | 32%  | 41%        |
+| head/tail      | 25%  | 38%        |
+| exit-masked    | 17%  | 23%        |
+| sed-n          | 0%   | 4%         |
+| cd-own-repo    | 1%   | 1%         |
+| git-C-own-repo | 0%   | 0%         |
+
+Including the harvest's own inspections the figures are 30% / 24% / 16% — the sweep moved them
+_down_, which the harvest-inflates-its-own-number story does not predict, and a second reason to
+print both.
+
+**One miss, and the user caught it.** The session needed a state the simulator would not produce and
+reached past `inv` to `uv run python tasks/drive_browser.py`, because the `inv` task regenerates the
+fixture first and would have wiped the hand-edit. The repo's `AGENTS.md` says `inv` is how `tasks/`
+is run and there is no second mechanism — the watch's **second** shape, a rule reasoned around with
+a real justification rather than forgotten. The user's question was three words: _"why uv python run
+tasks instead of invoke?"_
+
+[PITFALL: **the bypass was the visible half of an error that had already happened.** The proposed
+remedies were a new `--no-export` flag or dropping the check; both were wrong, because the premise
+was — the simulator _does_ produce the state, and the right move was scanning seeds for one, needing
+no new mechanism. The rule violation and the bad remedies came from the same unchecked assumption,
+so a rule breach is worth reading as a symptom rather than only as a lapse.]
+
+[PITFALL: **the head/tail rule was broken inside the harvest that measures it** — the
+`session-bash-audit` run was itself piped through `tail -40`, truncating its own summary line. The
+cheapest possible demonstration that the rule is not lost, misworded or unavailable at the moment it
+is broken.]
+
+### Session 17 — `power-user-linux-setup`, 2026-09-04: the first corpus baseline, and an auto-mode confound
+
+This session, `bc30285c-145c-494d-b2d1-be6b37cd37f1`, 145 Bash calls bounded before its own sweep.
+Docs-gate and Node-20 work; measured because sessions 15 and 16 recommended saving a baseline and
+four samples had by then reported rates against nothing.
+
+**The baseline now exists**: `~/.local/state/session-bash-audit/2026-09-04.json`, from `--days 4` —
+7,580 Bash calls, 25 main sessions, all `claude-opus-5`. Corpus rates: `chain=46%`, `head/tail=31%`,
+`exit-masked=20%`, `heredoc=13%`, `sed-n=5%`, `cat-view=1%`, `git-C-own-repo=2%`. Every rate this
+watch has recorded since session 4 can now be read as above or below something.
+
+| pattern        | this session | corpus | reading                                    |
+| -------------- | ------------ | ------ | ------------------------------------------ |
+| chain          | 43%          | 46%    | marginally better, still the worst pattern |
+| head/tail      | 25%          | 31%    | better                                     |
+| exit-masked    | 22%          | 20%    | **worse**                                  |
+| heredoc        | 0%           | 13%    | much better — Write/Edit throughout        |
+| sed-n          | 6%           | 5%     | worse                                      |
+| cat-view       | 6%           | 1%     | **six times the corpus rate**              |
+| git-C-own-repo | 1%           | 2%     | one call, self-caught in the same turn     |
+
+[PITFALL: **this session ran in auto mode, whose system note asks for `cat`/`sed -n` over `Read` and
+withdraws `Grep` — so three of these columns are measuring compliance with a system instruction, not
+a lapse.** `~/AGENTS.md`'s own auto-mode rule says to keep using Read/Edit/Write anyway and to say
+so once; this session did say so, then produced `cat-view` at six times the corpus rate regardless.
+The confound is real and the miss is real, and the numbers alone cannot tell them apart. **The
+baseline is therefore mode-blind and must not be read as a like-for-like comparison** — the note
+stored with it says which patterns are affected (`cat-view`, `sed-n`, `grep/find`) and which are not
+(`chain`, `head/tail`, `exit-masked`). A future sample should record its permission mode.]
+
+[PITFALL: **`exit-masked` at 22% is this watch's own shape, produced by a session that quoted the
+rule to the user.** Roughly eight `inv quality.precommit 2>&1 | tail -N` calls, each followed by
+telling the user the gate was green. Re-run bare at the end: 551 passed, exit 0, so every claim
+holds — true by luck of the run rather than by evidence at the time, which is exactly how sessions
+15 and 16 described their own. Three consecutive samples have now self-reported this identical
+pattern, which makes it the most reproducible finding the watch has.]
+
+The corpus also puts two of this plan's older claims on a footing:
+
+- **`git -C` against the session's own repo really does spike per-session.** `~/AGENTS.md` cites
+  "23% in one session"; the corpus has `agent-skills/2312636b` at **20%** and `ingesta/fc50032f` at
+  **11%**, against a 2% model average. The rule's framing — a caution outliving the cross-repo step
+  that justified it — matches a per-session lock-in better than a diffuse habit.
+- **The `head`/`tail` cost is now counted, not argued.** 140 re-runs across the corpus followed a
+  truncated first run. That is the concrete price of a filter whose only claimed benefit was saving
+  context the harness was not spending.
+- **Twelve denied calls in four days, and the shapes are the ones the rules name**: `git commit -F`,
+  a four-step `git add && scan && git commit` chain, and gate runs piped through `tail`. The rules
+  were written from these rejections, so a denial is the user re-stating a rule the session had.
