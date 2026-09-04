@@ -24,7 +24,7 @@ jobs:
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
-      - uses: astral-sh/setup-uv@v9.0.0
+      - uses: astral-sh/setup-uv@v10.0.1
       # The pin comes from pyproject.toml's `docs` dependency group via uv.lock, the same one
       # `inv docs.build` resolves locally — a requirements-docs.txt read only here is what let the
       # two drift and fail a deploy that passed locally. `--only-group` skips dev entirely (this
