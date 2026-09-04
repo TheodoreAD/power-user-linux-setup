@@ -48,9 +48,18 @@ the dangling anchor — it resolves files, not fragments — while `docs.build` 
 `anchor does not exist`. So there is no overlap and no cheaper substitute: `docs.build` is the task
 to add, and adding `link-check` instead would produce a gate that passes on exactly this bug.
 
-Since answered in `repo_tasks/docs.py` itself, which says it out loud: `_broken_link`'s docstring is
-"`file.md#heading` verifies the file, never the heading, so a renamed heading still passes." The
-gate's blindness here is documented behaviour, not an oversight to report upstream.
+Since answered in `repo_tasks/docs.py` itself, which says it out loud: the fragment-stripping
+helper's docstring is "`file.md#heading` verifies the file, never the heading, so a renamed heading
+still passes." The gate's blindness here is documented behaviour, not an oversight to report
+upstream.
+
+[PITFALL: that helper was read as `_broken_link` and is `_bad_link` on `repo-tasks` `main` — the
+pinned revision here was 119 commits behind at the time, and the rename is inside that gap. The
+behaviour and the docstring are identical, so nothing above changes; the name is not cited here any
+more precisely because a private helper's name is the least stable thing to hang a citation on.
+**The copy of `2026-09-04-docs-build-in-the-quality-gate.md` now absorbed into `repo-tasks` still
+says `_broken_link`** and is in that repo's tree rather than this one, so correcting it belongs to a
+session working there.]
 
 ## Decision, 2026-09-04: it joins `check`, and `precommit` gets it for free
 
