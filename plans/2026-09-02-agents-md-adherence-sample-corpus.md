@@ -1,14 +1,25 @@
 ---
 status: idea
-updated: 2026-09-03
+updated: 2026-09-04
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Seven sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Eight sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
-without `--compare`**, so it has rates and per-tag verdicts but no baseline deltas.
+without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
+
+[PITFALL: **the baseline moved out of the skill on 2026-09-04, so the command in every row above is
+stale.** `session-bash-audit` now expects `--compare ~/.local/state/session-bash-audit/<name>.json`
+— a baseline **you** saved with `--save-baseline` — and tells a reader with none saved to skip the
+comparison rather than reach for the shipped file, on the grounds that a baseline measured on
+somebody else's machine reports how your session differs from their setup. The shipped
+`references/baselines/2026-08-24-auto-mode.json` still exists in both the install and the checkout,
+and for this corpus it was measured on this machine, so rows 1–6 remain valid as recorded. But
+nothing has been saved to the XDG path yet, so a new sample either re-uses the shipped file against
+current guidance or, like sample 8 below, runs uncompared. Save the existing baseline to
+`~/.local/state/session-bash-audit/` before the next sample if the deltas are to stay comparable.]
 
 Merged on 2026-09-02 from five plans filed separately by five sessions, each of which found the
 store dirty and added a file rather than editing one another session might have been holding, and
@@ -37,6 +48,7 @@ expire around 2026-10-02:
 | 5 | `ingesta`                | `6be217e8…` (short form only)                | 2026-09-02                  |
 | 6 | `agent-skills`           | `13aa58df-3551-49b7-ac0e-0c3693bf8221.jsonl` | `2026-09-02T20:32:51+03:00` |
 | 7 | `ingesta`                | `7dab6dae-7c67-454f-bba1-981fe3845089.jsonl` | `2026-09-03T13:47:32+03:00` |
+| 8 | `power-user-linux-setup` | `92f54986-8a19-49a4-b792-8ebb1d5fcf1a.jsonl` | `2026-09-03T20:45:51.765Z`  |
 
 Rows 6 and 7 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
@@ -55,10 +67,11 @@ needed to reproduce the figures.
 | 5 | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
 | 6 | `agent-skills`           |   216 | tooling, the rule itself       |         36% |           27% |               0% | 6/11  |
 | 7 | `ingesta`                |   129 | code + plans, fourteen hours   |         32% |           22% |               0% | —     |
+| 8 | `power-user-linux-setup` |   220 | code + docs + vendor research  |         27% |           17% |               0% | —     |
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
-was domain research rather than work on the tooling itself. Sample 7 has no score because it was run
-without `--compare`.
+was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
+they were run without `--compare`.
 
 ### Sample 1 — `agent-skills`, 331 calls, the first run under `--until`
 
@@ -305,6 +318,44 @@ are what makes answerable.
 
 Its `head/tail` half is unmitigated and adds nothing new: 32%, against a rule that is unambiguous
 and was in context the whole time, one more point at the low end of the 24–55% band.
+
+### Sample 8 — `power-user-linux-setup`, 220 calls, the first mixed masked set
+
+`audit.py --session 92f54986 --until 2026-09-04T11:57:51+03:00`, **no `--compare`** (see the
+baseline PITFALL above), so rates without deltas or a score. 220 calls before the harvest's own
+sweep, 228 including it. Roughly sixteen hours: a plan corpus merge, a vendor-source survey across
+four agents' repos, a deploy-mechanism change with tests, and a home-directory migration.
+
+| tag                     | rate | note                            |
+| ----------------------- | ---: | ------------------------------- |
+| `chain`                 |  34% | lowest in the corpus            |
+| **`head/tail`**         |  27% | MISS                            |
+| `exit-masked`           |  17% | lowest of the high-rate rows    |
+| `heredoc`               |   8% |                                 |
+| `git-mutating-in-chain` |   1% | 3 calls, all `git add && scan`  |
+| `cd-own-repo`           |   1% | 2 calls, both cross-repo chains |
+| `sed-n`                 |   0% | 1 call                          |
+| `cat-view`              |   0% |                                 |
+| `git-C-own-repo`        |   0% |                                 |
+| `redirect-then-filter`  |   0% |                                 |
+
+**This is the corpus's first row where the masked set is genuinely both**, which is what makes it
+worth recording at an unremarkable rate. Sample 6 masked only listings and sample 2, 4 and 7 masked
+the gate; this session did both — `inv quality.precommit 2>&1 | tail -N` several times **and** a
+long tail of `gh api … | head -N` calls from the vendor-source survey, which was most of the 27%.
+
+**Ten green claims, and the unpiped re-run exits 0 (551 passed), so all ten hold.** The count is the
+second-highest in the corpus after sample 7's seven, on a rate lower than any other row that made
+claims at all — which is the corpus's own point restated: the headline number does not predict how
+much is riding on it.
+
+[PITFALL: **the one `sed -n` call is the most interesting cell, because it rounds to 0% and is a
+straight rule violation.** `sed -n '136,240p'` was used to read a block of `tasks/tools.py` before
+moving it, where `Read` with `offset`/`limit` is the tool and the session had been using `Read`
+correctly all day. A single call cannot move a rate, so nothing in the scored output distinguishes
+"never did this" from "did it once, deliberately, having reasoned about it" — and this instance was
+the latter. Read the samples, not only the rates, is the same lesson sample 3's `+0pp` MISS taught
+from the opposite direction.]
 
 ## What the corpus has settled
 
