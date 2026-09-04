@@ -357,10 +357,14 @@ The old `~/AGENTS.md` was executable because `wrapper-script` chmods 0755; `agen
 to be executable — but note that the digest is content-only, so a mode change is invisible to
 `classify` and nothing would have reported it either way.]
 
-[NEEDS CLARIFICATION: the dry run reports the content path and says nothing about links —
-`_deploy_symlinks` returns early under `PULSE_DRY_RUN`. Correct as behaviour, thin as a report: a
-machine that would gain three links shows `1 path(s): 1 created`. Worth a "would link" line, and it
-is a small change now that the writer is in one place.]
+**Done same day.** The dry run now mirrors `ensure_symlink`'s branches in order rather than
+summarising, so the outcomes that differ stay distinguishable — and the skip line is the one that
+earns it, since a reader would otherwise take it for a failure:
+
+```
+[agents-md] /home/tdumitrescu/AGENTS.md: ok
+[agents-md] /home/tdumitrescu/.codex/AGENTS.md: would skip — … doesn't exist (that agent isn't installed here)
+```
 
 ## The blocker this replaced — `deploy.all` could not create a symlink
 
