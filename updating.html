@@ -2356,10 +2356,10 @@
   
 
 
-<h1 id="updating-reclaiming-space-and-removing-things">Updating, reclaiming space, and removing things<a class="headerlink" href="#updating-reclaiming-space-and-removing-things" title="Permanent link">&para;</a></h1>
+<h1 id="updating-reclaiming-space-and-removing-things">Updating, reclaiming space, and removing things</h1>
 <p>What to run after the machine has been set up for a while. Nothing here is part of <code>inv setup</code> —
 these are the operations that come later, and they were previously scattered across a page per tool.</p>
-<h2 id="updating">Updating<a class="headerlink" href="#updating" title="Permanent link">&para;</a></h2>
+<h2 id="updating">Updating</h2>
 <p><strong>Most things update themselves through apt.</strong> Everything installed by <code>apt</code>, <code>apt-repo</code>, <code>deb-url</code>
 and the repositories PULSE registered is covered by the system&rsquo;s own upgrade:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>sudo<span class="w"> </span>-A<span class="w"> </span>apt<span class="w"> </span>update<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>sudo<span class="w"> </span>-A<span class="w"> </span>apt<span class="w"> </span>upgrade
@@ -2425,7 +2425,7 @@ window.</p>
 <code>inv deploy.status</code> shows which deployed files have drifted before you change anything, with
 <code>inv deploy.all</code> to push repo-side changes back out. See
 <a href="configuration.html#install-never-clobbers-redeploy-is-a-separate-deliberate-command">How it works</a>.</p>
-<h2 id="reclaiming-space">Reclaiming space<a class="headerlink" href="#reclaiming-space" title="Permanent link">&para;</a></h2>
+<h2 id="reclaiming-space">Reclaiming space</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>inv<span class="w"> </span>clean.caches<span class="w">        </span><span class="c1"># apt, uv, npm and cargo download caches — conservative</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>clean.all<span class="w">           </span><span class="c1"># the above plus a conservative Docker prune</span>
 </span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>inv<span class="w"> </span>clean.caches-full<span class="w">   </span><span class="c1"># wipe those caches entirely</span>
@@ -2438,7 +2438,7 @@ machine that has only some of them. <strong>No Docker volume is ever touched</st
 since they are what makes the next install fast. The conservative/full split, and exactly which
 cache each task covers, is broken down in
 <a href="dev-container.html#cleanup-reclaiming-image-layer-space">dev-container.md</a>.</p>
-<h2 id="removing-a-package">Removing a package<a class="headerlink" href="#removing-a-package" title="Permanent link">&para;</a></h2>
+<h2 id="removing-a-package">Removing a package</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>apt.uninstall<span class="w"> </span>&lt;section-name&gt;<span class="w">     </span><span class="c1"># the [packages.&lt;name&gt;] key, not the apt package name</span>
 </span></code></pre></div>
 <p>It purges every apt package that section declares <strong>and</strong> the <code>cleanup_paths</code> it lists — vendor
@@ -2457,7 +2457,7 @@ section, or exclude a tag with <code>PULSE_EXCLUDE_TAGS</code>. Neither uninstal
 <code>enabled = false</code> only means future runs skip it — but a <code>zsh</code>-method package whose block was
 already written <strong>is</strong> taken back out on the next <code>inv zsh.configure</code>, since a shell block that no
 longer applies would otherwise sit in your dotfile forever.</p>
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — phases, tags, and what <code>inv setup</code> does on a re-run.</li>
 <li><a href="packages.html">Package catalog</a> — what is installed and by which method, which decides how it
