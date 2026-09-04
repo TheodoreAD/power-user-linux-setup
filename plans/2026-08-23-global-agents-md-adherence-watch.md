@@ -780,3 +780,21 @@ The corpus also puts two of this plan's older claims on a footing:
 - **Twelve denied calls in four days, and the shapes are the ones the rules name**: `git commit -F`,
   a four-step `git add && scan && git commit` chain, and gate runs piped through `tail`. The rules
   were written from these rejections, so a denial is the user re-stating a rule the session had.
+
+[DECISION: **`bash.md`'s gate paragraph now names `2>&1 | tail -N`, 2026-09-04, deployed.** Taken at
+the user's direction, and against this watch's standing `[DECISION: adherence, not wording]` — so it
+was made structural rather than emphatic, which is the only form that decision leaves open. The
+finding that justifies it is not "the rule needs to be louder" but that **one hazard sat across
+three rules and none of them was the one a session reads while about to run a gate**: this paragraph
+named only the redirect shape, the `head`/`tail` ban sits under "Viewing, searching, or editing
+files" with a data-loss cost that a gate run does not feel, and the exit-code mechanism sits a
+cluster away in "Reading a command's result". The change is one imperative at the right trigger plus
+the measurement; the mechanism stays a pointer, per the leanness pass's shape for this paragraph.
+Evidence written up in `contributing/global-agents-md.md`, "The `| tail` half of the gate clause".]
+
+[UNVERIFIED: whether it moves the rate. Every prior wording change in this cluster was measured
+after the fact against nothing; this one has `~/.local/state/session-bash-audit/2026-09-04.json` to
+compare with, so the next sample should run `--compare` and report a verdict rather than another
+unanchored figure. If the rate holds at ~20%, that is the fourth independent confirmation that
+wording is not the lever here, and the watch should say so as a finding rather than keep testing
+it.]
