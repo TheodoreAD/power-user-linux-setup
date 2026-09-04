@@ -49,8 +49,8 @@ Individually, in the `quality` namespace: `lint-check`, `lint-apply`, `format-ch
 `format-apply`, `type-check`, `verify-types`, `shell-check`, `shell-format-check`,
 `shell-format-apply`, `workflow-check`, `dockerfile-check`. Four members of the `check` chain live
 in other namespaces and are invocable there: `inv docs.link-check`, `inv test.untested-modules`,
-`inv test.unit`, and `repo-tasks`' own `deps.check` — which this repo runs through the chain but
-does not publish as a task of its own, since `tasks/__init__.py` adds no `deps` collection.
+`inv test.unit`, and `inv deps.check` — published here like every other `repo-tasks` namespace, so a
+gate failure on lock drift can be re-run on its own to see what it objected to.
 
 > [!NOTE]
 > `dprint fmt`/`dprint check` need `--config-discovery=ignore-descendants` (already baked into the
