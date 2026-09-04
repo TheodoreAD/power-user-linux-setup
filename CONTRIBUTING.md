@@ -79,28 +79,24 @@ which `.github/workflows/publish_on_push.yml` runs as `zensical build --strict` 
 
 ```shell
 inv docs.serve        # zensical serve — live reload while writing
-inv docs.build        # zensical build --strict, as CI runs it — but see the version warning below
+inv docs.build        # zensical build --strict, the exact version and command CI runs
 inv docs.clean        # remove the built site/
 ```
 
-`zensical` is not a dependency of `repo-tasks` and is not in this repo's `pyproject.toml` either. It
-is declared twice, for two different consumers, and **the two versions can differ**:
+`zensical` is not a dependency of `repo-tasks`. It is pinned once, in this repo's `pyproject.toml` —
+the `docs` dependency group, which `[tool.uv] default-groups` makes part of an ordinary `uv sync`,
+so `inv dev-env.setup` installs it and direnv's `.venv/bin` puts it ahead of anything on `PATH`. The
+Pages workflow resolves the same pin from `uv.lock`
+(`uv run --only-group docs --frozen zensical build --strict`), so a green local build is a green
+deploy.
 
-- [`requirements-docs.txt`](requirements-docs.txt) pins the version CI installs.
-- `[packages.zensical]` in `setup.toml` installs it as a `uv-tool` on this machine, unpinned — so
-  `inv docs.build` runs whatever the latest release was when you last ran
-  `inv python.install-tools`.
-
-> [!WARNING]
-> That mismatch means a green local `inv docs.build` does not guarantee a green Pages deploy.
+> [!NOTE]
+> Until 2026-09-04 the pin was declared twice — a `requirements-docs.txt` only CI read, against
+> `[packages.zensical]` in `setup.toml` installing it unpinned machine-wide — and the two drifted.
 > Measured 2026-09-02: a generated table cell containing `[certs]` — a bare bracket, which markdown
 > reads as a link reference — passed locally on zensical 0.0.57 and failed CI's pinned 0.0.44 with
-> `unresolved link reference`. To check against exactly what CI will run, without changing what is
-> installed:
->
-> ```shell
-> uvx zensical==$(cut -d= -f3 requirements-docs.txt) build --strict
-> ```
+> `unresolved link reference`. `setup.toml`'s entry stays, for other repos and for the human at the
+> shell; inside this repo the venv's copy wins, which is the point.
 
 The built `site/` is gitignored.
 

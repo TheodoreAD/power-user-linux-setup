@@ -1,7 +1,7 @@
 # Zensical (docs site engine)
 
-This site is built with [zensical](https://zensical.org/) (`requirements-docs.txt` pins
-`zensical==0.0.44`), not `mkdocs` + `mkdocs-material` anymore (migrated 2026-08-08).
+This site is built with [zensical](https://zensical.org/) (`pyproject.toml`'s `docs` dependency
+group pins `zensical==0.0.44`), not `mkdocs` + `mkdocs-material` anymore (migrated 2026-08-08).
 `mkdocs`/`mkdocs-material` is still installed machine-wide as a `uv tool` (`setup.toml`, see
 [docs/python.md](../docs/python.md#system-wide-tools)) for other projects that still use it — it's
 just not what builds _this_ repo's docs anymore. Same author as Material for MkDocs, Rust core,
