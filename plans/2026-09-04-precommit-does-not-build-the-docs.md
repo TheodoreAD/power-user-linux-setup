@@ -195,6 +195,33 @@ would have covered. A consumer that wants it adds `pull_request` to its Pages wo
 or runs `inv docs.build` as its own CI step, rather than putting a mutating task in the shared
 gate.]
 
+**Closed the same day, at the user's direction: "we should gate push to master the same way as pr to
+master."** The asymmetry was never really about placement — `CI` triggers on `push: [master]` _and_
+`pull_request`, while the docs build existed only in `Deploy docs to GitHub Pages`, which triggers
+on push to `master`/`main`. A PR was gated differently from the push that immediately follows it,
+which is a thing to fix rather than to price.
+
+`ci.yml` gains a **`docs` job** running `uv run --only-group docs --frozen zensical build --strict`
+— the same command against the same `uv.lock` pin as the Pages workflow. Both triggers now cover it,
+confirmed with `act --list -W .github/workflows/ci.yml` rather than read off the YAML:
+
+```
+0      quality                 quality                 CI  ci.yml  push,pull_request
+0      docs                    docs                    CI  ci.yml  push,pull_request
+```
+
+[DECISION: **a job, not a step inside `quality`.** A step would save one runner, but a docs failure
+would then be reported as `quality` failing — and the entire defect this plan exists for is a true
+signal nobody reads. A distinctly named job costs ~20 s and says "docs" in the runs list.
+`--only-group docs` needs no dev sync either, so the job is cheaper than reusing `ci-bootstrap.sh`
+would have been.]
+
+**Build is a check; deploy is a deploy**, and the split falls out of that: `ci.yml` builds on every
+push and every PR and publishes nothing, `publish_on_push.yml` keeps building and deploying on a
+`master` push. The duplicate build on a master push is ~2 s of runner time, deliberately preferred
+over passing an artifact between workflows — that needs `workflow_run`, which `checkout@v7` now
+restricts, for a saving smaller than the plumbing.
+
 [UNVERIFIED: whether a later zensical grows a real check mode, which would retire all of this. None
 was found in its issue tracker on 2026-09-04, and the pin here is 0.0.44 against a current 0.0.59 —
 so the probes above should be re-run at the next version bump before the workaround is treated as
