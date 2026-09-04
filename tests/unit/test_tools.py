@@ -230,6 +230,86 @@ def test_symlink_dests_rejects_a_table_without_a_path(tmp_path):
         tools.symlink_dests(_cfg(tmp_path, symlink_dest=[{"always": True}]))
 
 
+def test_a_dest_change_converts_the_old_real_file_into_a_link(tmp_path, capsys):
+    """Moving a package's `dest` must not leave two real files with the links on the old one.
+
+    This is the `agents-md` move of 2026-09-04 in miniature: deploy to path A, repoint `dest` at
+    path B, declare A as a link. A holds exactly what PULSE wrote, so converting it loses nothing —
+    and refusing would strand every existing machine in the split-brain state.
+    """
+    old = tmp_path / "AGENTS.md"
+    new = tmp_path / "dot-agents" / "AGENTS.md"
+    tools._install_wrapper_script(MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh"})
+    assert old.is_file()
+    assert not old.is_symlink()
+
+    moved: util.PackageConfig = {
+        "dest": str(new),
+        "content_file": "config.sh",
+        "symlink_dest": [{"path": str(old), "always": True}],
+    }
+    tools._install_wrapper_script(MockContext(), "agents-md", moved)
+
+    assert new.is_file()
+    assert old.is_symlink()
+    assert old.resolve() == new.resolve()
+    assert "replaced a stale copy" in capsys.readouterr().out
+
+
+def test_a_dest_change_repoints_a_link_that_aimed_at_the_old_dest(tmp_path, capsys):
+    """A vendor link left pointing at the previous destination is stale, not a hand-edit.
+
+    Without this the four `~/.claude`, `~/.codex`, ... links keep resolving to the old file after a
+    move — the agent reads a copy that no longer gets updated, and nothing says so.
+    """
+    old = tmp_path / "AGENTS.md"
+    new = tmp_path / "dot-agents" / "AGENTS.md"
+    vendor = tmp_path / "dot-claude" / "CLAUDE.md"
+    vendor.parent.mkdir()
+    tools._install_wrapper_script(
+        MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh", "symlink_dest": [str(vendor)]}
+    )
+    assert vendor.resolve() == old.resolve()
+
+    moved: util.PackageConfig = {"dest": str(new), "content_file": "config.sh", "symlink_dest": [str(vendor)]}
+    tools._install_wrapper_script(MockContext(), "agents-md", moved)
+
+    assert vendor.resolve() == new.resolve()
+    assert "replaced a stale link" in capsys.readouterr().out
+
+
+def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path, capsys):
+    """The never-clobber promise outranks the migration: a DIRTY old file is still someone's work."""
+    old = tmp_path / "AGENTS.md"
+    new = tmp_path / "dot-agents" / "AGENTS.md"
+    tools._install_wrapper_script(MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh"})
+    old.write_text("edited by hand after the deploy\n")
+
+    moved: util.PackageConfig = {
+        "dest": str(new),
+        "content_file": "config.sh",
+        "symlink_dest": [{"path": str(old), "always": True}],
+    }
+    tools._install_wrapper_script(MockContext(), "agents-md", moved)
+
+    assert old.read_text() == "edited by hand after the deploy\n"
+    assert not old.is_symlink()
+    assert "Leaving it alone" in capsys.readouterr().out
+
+
+def test_a_hand_made_symlink_to_an_unmanaged_file_is_left_alone(tmp_path, capsys):
+    """Only a link into something this repo deployed is replaceable — the manifest is the proof."""
+    someone_elses = tmp_path / "notes.md"
+    someone_elses.write_text("my own file\n")
+    link = tmp_path / "CLAUDE.md"
+    link.symlink_to(someone_elses)
+
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
+
+    assert link.resolve() == someone_elses.resolve()
+    assert "Leaving it alone" in capsys.readouterr().out
+
+
 def test_install_wrapper_script_dry_run_ignores_a_link_whose_parent_doesnt_exist(tmp_path, monkeypatch, capsys):
     """The dry run must apply the same absent-agent rule the writer does.
 

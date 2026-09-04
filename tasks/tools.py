@@ -1,4 +1,5 @@
 import shutil
+from dataclasses import replace
 from pathlib import Path
 from tempfile import TemporaryDirectory
 from typing import NamedTuple
@@ -127,7 +128,7 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
 
     deploy.deploy(managed)
     for link in links:
-        _ensure_symlink(name, link, dest)
+        _ensure_symlink(name, link, dest, managed)
 
 
 class SymlinkDest(NamedTuple):
@@ -177,7 +178,28 @@ def _link_ok(link: Path, dest: Path) -> bool:
     return link.is_symlink() and link.resolve() == dest.resolve()
 
 
-def _ensure_symlink(name: str, dest_entry: SymlinkDest, dest: Path) -> None:
+def _replaceable(managed: deploy.Managed, link: Path) -> bool:
+    """Is what sits at `link` something this repo can prove it put there, unmodified?
+
+    Two shapes, and both arise the moment a package's `dest` changes — which is not hypothetical:
+    `agents-md` moved from `~/AGENTS.md` to `~/.agents/AGENTS.md` on 2026-09-04, and without this
+    every existing machine would have ended up with two real files and every link still aimed at the
+    old one. A stale link is not a hand-edit and must not be treated as one.
+
+    - **a symlink into a path this repo has deployed** — a link PULSE made, now aimed at a previous
+      destination. The manifest is the proof: a hand-made link to some file of the user's own is not
+      in it.
+    - **a regular file this repo wrote and nobody has touched since** — `classify` against the same
+      source says CLEAN or STALE. DIRTY or UNKNOWN keeps the existing refusal, because those are
+      exactly the hand-edit this repo promises never to silently discard.
+    """
+    if link.is_symlink():
+        target = link.resolve()
+        return str(target) in deploy.load_manifest() or deploy.lookup(target) is not None
+    return deploy.classify(replace(managed, path=link)) in (deploy.State.CLEAN, deploy.State.STALE)
+
+
+def _ensure_symlink(name: str, dest_entry: SymlinkDest, dest: Path, managed: deploy.Managed) -> None:
     """Point the declared link at `dest`, unless something else already lives there.
 
     **Never creates the parent directory of a vendor path.** A missing `~/.codex/` means Codex isn't
@@ -195,11 +217,15 @@ def _ensure_symlink(name: str, dest_entry: SymlinkDest, dest: Path) -> None:
     if _link_ok(link, dest):
         return
     if link.exists() or link.is_symlink():
-        ui.warn(
-            f"{link} already exists and isn't a symlink to {dest}.",
-            "Leaving it alone — move its content into the file above yourself, then re-run.",
-        )
-        return
+        if not _replaceable(managed, link):
+            ui.warn(
+                f"{link} already exists and isn't a symlink to {dest}.",
+                "Leaving it alone — move its content into the file above yourself, then re-run.",
+            )
+            return
+        was = "link" if link.is_symlink() else "copy"
+        link.unlink()
+        print(f"[{name}] {link}: replaced a stale {was} of this file with a link to {dest}")
     if not link.parent.is_dir():
         if not dest_entry.always:
             print(f"[{name}] {link}: skipped — {link.parent} doesn't exist (that agent isn't installed here)")
