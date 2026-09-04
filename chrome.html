@@ -2422,7 +2422,7 @@ profile signed in, those generated files make the app grid worse rather than bet
   profile&rsquo;s copies are the ones on offer.</li>
 </ul>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>chrome.status<span class="w">          </span><span class="c1"># read-only: autostart entries, then every launcher and what has drifted</span>
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>chrome.fix-launchers<span class="w">   </span><span class="c1"># label by profile, unhide the primary profile's</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>chrome.fix-launchers<span class="w">   </span><span class="c1"># label by profile, unhide the primary profile&#39;s</span>
 </span></code></pre></div>
 <p><code>inv chrome.fix-launchers</code> takes <code>--yes</code> to skip the confirmation and <code>--profile "Profile 2"</code> to
 treat a profile other than Chrome&rsquo;s <code>last_used</code> as the primary one. <code>PULSE_DRY_RUN=1</code> prints the
@@ -2471,7 +2471,7 @@ and are left exactly as found.</p>
 <code>profile.last_active_profiles</code> in <code>~/.config/google-chrome/Local State</code>, and any launcher passing an
 explicit <code>--profile-directory</code> overrides that — which is what every PWA launcher does.</p>
 <p>So the way to make launches deterministic is on the launcher, not in Chrome:</p>
-<div class="language-ini highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="na">Exec=/usr/bin/google-chrome-stable --profile-directory</span><span class="o">=</span><span class="s">"Profile 2"</span><span class="w"> </span><span class="na">%U</span>
+<div class="language-ini highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="na">Exec=/usr/bin/google-chrome-stable --profile-directory</span><span class="o">=</span><span class="s">&quot;Profile 2&quot;</span><span class="w"> </span><span class="na">%U</span>
 </span></code></pre></div>
 <p><code>inv chrome.status</code> prints the mapping between profile directories and their display names, which is
 what you need to know which <code>Profile N</code> is which account.</p>

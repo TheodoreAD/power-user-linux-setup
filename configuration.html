@@ -2786,11 +2786,11 @@ complete, generated answer.</p>
 <h3 id="adding-a-new-block">Adding a new block<a class="headerlink" href="#adding-a-new-block" title="Permanent link">&para;</a></h3>
 <p>Declare <code>zshrc</code>, <code>zshenv</code>, or <code>zprofile</code> on any package entry in <code>setup.toml</code>:</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="k">[packages.mytool]</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"apt"</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">zshrc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"""</span>
-</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">export MYTOOL_HOME="${HOME}/.local/share/mytool"</span>
-</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s2">eval "$(mytool init zsh)"</span>
-</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s2">"""</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;apt&quot;</span>
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a><span class="n">zshrc</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;&quot;&quot;</span>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="s2">export MYTOOL_HOME=&quot;${HOME}/.local/share/mytool&quot;</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="s2">eval &quot;$(mytool init zsh)&quot;</span>
+</span><span id="__span-2-6"><a id="__codelineno-2-6" name="__codelineno-2-6" href="#__codelineno-2-6"></a><span class="s2">&quot;&quot;&quot;</span>
 </span></code></pre></div>
 <p>Run <code>inv zsh.configure</code> — the block is written on first run and updated in place on subsequent runs.
 For non-shell config files, call <code>util.ensure_block(path, name, content)</code> or
@@ -2806,8 +2806,8 @@ region&rdquo; of it.</p>
 <p>For those, a package declares <code>config_files</code>: a list of <code>{ src, dst }</code> mappings copying a file from
 this repo into place.</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="k">[packages.wezterm]</span>
-</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">"deb-github"</span>
-</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">config_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"config/wezterm.lua"</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">"~/.config/wezterm/wezterm.lua"</span><span class="w"> </span><span class="p">}]</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="n">method</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;deb-github&quot;</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a><span class="n">config_files</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[{</span><span class="w"> </span><span class="n">src</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;config/wezterm.lua&quot;</span><span class="p">,</span><span class="w"> </span><span class="n">dst</span><span class="w"> </span><span class="p">=</span><span class="w"> </span><span class="s2">&quot;~/.config/wezterm/wezterm.lua&quot;</span><span class="w"> </span><span class="p">}]</span>
 </span></code></pre></div>
 <p><code>src</code> is relative to the repo root, <code>dst</code> expands <code>~</code>. Any method can declare it.</p>
 <h3 id="install-never-clobbers-redeploy-is-a-separate-deliberate-command">Install never clobbers; redeploy is a separate, deliberate command<a class="headerlink" href="#install-never-clobbers-redeploy-is-a-separate-deliberate-command" title="Permanent link">&para;</a></h3>
@@ -2822,7 +2822,7 @@ deployed copy.</strong> Re-running the install task won&rsquo;t do it either. Th
 read-only twin:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>inv<span class="w"> </span>deploy.status<span class="w">                      </span><span class="c1"># what has drifted, with diffs; never writes</span>
 </span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>inv<span class="w"> </span>deploy.all<span class="w">                         </span><span class="c1"># redeploy every declared path</span>
-</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w">          </span><span class="c1"># just one package's</span>
+</span><span id="__span-4-3"><a id="__codelineno-4-3" name="__codelineno-4-3" href="#__codelineno-4-3"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w">          </span><span class="c1"># just one package&#39;s</span>
 </span><span id="__span-4-4"><a id="__codelineno-4-4" name="__codelineno-4-4" href="#__codelineno-4-4"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>wezterm<span class="w"> </span>-y<span class="w">       </span><span class="c1"># ...without the confirmation prompt</span>
 </span></code></pre></div>
 <p>Per path it does one of four things, based on a machine-local manifest of what PULSE last wrote. How
@@ -2888,7 +2888,7 @@ than silently leaving a base-image file in place.</p>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a><span class="go">  --- /home/you/.config/wezterm/wezterm.lua</span>
 </span><span id="__span-5-6"><a id="__codelineno-5-6" name="__codelineno-5-6" href="#__codelineno-5-6"></a><span class="go">  +++ config/wezterm.lua</span>
 </span><span id="__span-5-7"><a id="__codelineno-5-7" name="__codelineno-5-7" href="#__codelineno-5-7"></a><span class="go">  @@ -1,16 +1,43 @@</span>
-</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="go">   local wezterm = require "wezterm"</span>
+</span><span id="__span-5-8"><a id="__codelineno-5-8" name="__codelineno-5-8" href="#__codelineno-5-8"></a><span class="go">   local wezterm = require &quot;wezterm&quot;</span>
 </span><span id="__span-5-9"><a id="__codelineno-5-9" name="__codelineno-5-9" href="#__codelineno-5-9"></a><span class="go">  +local act = wezterm.action</span>
 </span><span id="__span-5-10"><a id="__codelineno-5-10" name="__codelineno-5-10" href="#__codelineno-5-10"></a><span class="go">   local mux = wezterm.mux</span>
 </span><span id="__span-5-11"><a id="__codelineno-5-11" name="__codelineno-5-11" href="#__codelineno-5-11"></a><span class="go">  ...</span>
@@ -3123,7 +3123,7 @@ terminal prompt.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>inv<span class="w"> </span>zsh.configure-omz
 </span><span id="__span-9-2"><a id="__codelineno-9-2" name="__codelineno-9-2" href="#__codelineno-9-2"></a>inv<span class="w"> </span>zsh.configure
 </span><span id="__span-9-3"><a id="__codelineno-9-3" name="__codelineno-9-3" href="#__codelineno-9-3"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w">       </span><span class="c1"># seeds config/p10k.zsh to ~/.p10k.zsh (yours once it exists)</span>
-</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">    </span><span class="c1"># usermod -s — takes a new terminal to actually apply, doesn't chsh</span>
+</span><span id="__span-9-4"><a id="__codelineno-9-4" name="__codelineno-9-4" href="#__codelineno-9-4"></a>inv<span class="w"> </span>zsh.set-default-shell<span class="w">    </span><span class="c1"># usermod -s — takes a new terminal to actually apply, doesn&#39;t chsh</span>
 </span></code></pre></div>
 <p><code>zsh.configure-p10k</code> installs the repo&rsquo;s opinionated baseline (lean style, Nerd Fonts icons,
 transient prompt, instant prompt). It is a <code>config_files</code> mapping on <code>[packages.powerlevel10k]</code>, so
@@ -3162,7 +3162,7 @@ font cache. If GRUB or initramfs were changed, reboot instead of logout — one 
 </span><span id="__span-10-2"><a id="__codelineno-10-2" name="__codelineno-10-2" href="#__codelineno-10-2"></a>inv<span class="w"> </span>git.configure<span class="w"> </span>git.apply-settings<span class="w">   </span><span class="c1"># per-directory git identity + global settings from identity.toml</span>
 </span><span id="__span-10-3"><a id="__codelineno-10-3" name="__codelineno-10-3" href="#__codelineno-10-3"></a>inv<span class="w"> </span>ssh.create-keys<span class="w">                     </span><span class="c1"># one ed25519 key per unique email — prompts for a passphrase each</span>
 </span><span id="__span-10-4"><a id="__codelineno-10-4" name="__codelineno-10-4" href="#__codelineno-10-4"></a>inv<span class="w"> </span>ssh.configure<span class="w">                </span><span class="c1"># write ~/.ssh/config</span>
-</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>inv<span class="w"> </span>ssh.add<span class="w">                      </span><span class="c1"># load this node's keys into ssh-agent</span>
+</span><span id="__span-10-5"><a id="__codelineno-10-5" name="__codelineno-10-5" href="#__codelineno-10-5"></a>inv<span class="w"> </span>ssh.add<span class="w">                      </span><span class="c1"># load this node&#39;s keys into ssh-agent</span>
 </span><span id="__span-10-6"><a id="__codelineno-10-6" name="__codelineno-10-6" href="#__codelineno-10-6"></a>gh<span class="w"> </span>auth<span class="w"> </span>login<span class="w">                    </span><span class="c1"># GitHub CLI — opens browser, not automatable</span>
 </span></code></pre></div>
 <p>Everything after <code>inv identity.init</code> (except <code>gh auth login</code>) needs
