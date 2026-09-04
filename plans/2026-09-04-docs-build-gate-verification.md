@@ -1,7 +1,6 @@
 ---
-status: idea
+status: blocked on the placement decision filed as 2026-09-04-docs-build-placement-was-superseded
 updated: 2026-09-04
-repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 source_repo: github.com-personal/repo-tasks
 source_session: 1f762304-ee1a-4bfb-a78f-52da747d29e3.jsonl
 source_moment: 2026-09-04T23:48:52+03:00
@@ -48,21 +47,59 @@ What landed in `repo-tasks`, 2026-09-04, and matters for how this is checked her
 
 ## Open questions
 
-[NEEDS CLARIFICATION: does this repo's CI actually have zensical when it runs `inv quality.check`?
-`.github/ci-bootstrap.sh` runs `uv run inv dev-env.setup`, and the question is whether that syncs
-the `docs` group or only `dev`. If it syncs only `dev`, the new gate step will fail in CI on this
-repo with the preflight message — correct behaviour, wrong moment, and the fix is a one-line change
-to what CI syncs. **Check this before pushing anything**, because the failure lands on `master`.]
+~~[NEEDS CLARIFICATION: does this repo's CI actually have zensical when it runs
+`inv quality.check`?]~~ **Answered — it does, and the one-line change this anticipated was already
+made.** `1df8fed` (2026-09-04, before this plan was filed) put the pin in a `docs` dependency group
+_and_ added `[tool.uv] default-groups = ["dev", "docs"]`, precisely because an opt-in group is one
+`inv dev-env.setup` — and therefore `ci-bootstrap.sh`, which is only `uv run inv dev-env.setup` —
+never installs. So the preflight cannot fire here, and CI has zensical whichever chain reaches it.
 
 [NEEDS CLARIFICATION: is the `zensical==0.0.44` pin still the right one to gate on? The pin exists
 because a local 0.0.57 and CI's 0.0.44 disagreed about a `[certs]` table cell and shipped a red
 deploy on 2026-09-02. Now that the same build runs in the gate, local and CI run the same command —
 so the pin is doing more work than before and is worth a deliberate look rather than inheriting.]
 
+## The placement it verifies is not the placement that was decided
+
+**Read this before step 1 — it may make the whole verification moot.** This plan, and the
+`repo-tasks` change it verifies, put `docs.build` in **`quality.check`**. That was the original
+decision here, and it was **superseded in this repo on 2026-09-04** —
+`plans/2026-09-04-precommit-does-not-build-the-docs.md`, "Revision" — at the user's own direction:
+_"in theory, docs.build should be in apply, check shouldn't mutate"_, then _"i agree with docs build
+in precommit"_.
+
+The two sessions diverged on a stale artefact, and the chain is worth stating because nothing in
+either repo shows it:
+
+1. This repo filed `2026-09-04-docs-build-in-the-quality-gate.md` for `repo-tasks`, saying `check`.
+2. This repo then revised that to `precommit` and flagged, twice, that the filed copy was now stale.
+3. The `repo-tasks` session implemented the filed copy faithfully and retired it (`c296ad8`).
+
+So what shipped carries the superseded reasoning verbatim — `check`'s docstring now argues "it is in
+`check` rather than in `precommit` because only `check` reaches CI", which is the exact argument the
+revision answered: `check` is the read-only half by construction, and zensical offers **no** way to
+build without writing (probed 2026-09-04 — no output flag, and an out-of-tree `site_dir` panics on a
+Rust invariant). CI coverage was solved differently here, by giving `ci.yml` its own `docs` job on
+both `push` and `pull_request`.
+
+[PITFALL: **the CI argument is genuinely stronger for other consumers, and that is why this needs a
+decision rather than a revert.** A `scaffoldapy`-generated repo with a docs site and no docs CI job
+gets its only CI coverage from `check`. The counter is that a consumer adds a `docs` job the way
+this repo just did, and that `check` mutating breaks its contract for _every_ consumer including the
+ones with no docs at all. Both readings are defensible; what is not defensible is the two repos
+holding opposite answers while each believes the question settled.]
+
+[NEEDS CLARIFICATION: which placement stands? Filed to `repo-tasks` as
+`2026-09-04-docs-build-placement-was-superseded.md`. **Until it is answered, this repo is
+deliberately pinned at `cef6894`, which predates the change** — so `inv quality.check` here does not
+build docs and does not mutate. Step 1 below would take the newer pin and adopt the placement in the
+same move, which is why it must not run first.]
+
 ## Recommended direction
 
 1. **Update the `repo_tasks` this repo resolves** — `configs.pull` and whatever moves the installed
-   package — then check `inv -l` shows the gate step and `inv quality.check` runs it.
+   package — then check `inv -l` shows the gate step and `inv quality.check` runs it. **Blocked on
+   the placement question above**; taking the pin is what adopts `check`.
 2. **Reproduce the original failure and watch it fail.** Re-break the anchor the way `e7b481e` did —
    rename a heading and leave an inbound link pointing at the old fragment — and confirm
    `inv quality.check` now exits non-zero naming the anchor, where it previously passed. That is the
