@@ -106,6 +106,34 @@ def test_a_symlink_dest_is_its_own_claim(fake_home, monkeypatch):
     assert claims[0].writer == home.Writer.SYMLINK
 
 
+def test_an_always_symlink_dest_is_claimed_like_any_other(fake_home, monkeypatch):
+    """The registry must see a `{ path, always }` table, not choke on it or drop it.
+
+    It parsed `symlink_dest` itself before the table shape existed, which would have handed a
+    mapping straight to `Path()` — a claim silently missing from the one command that answers "is
+    this path PULSE-managed?".
+    """
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(fake_home / ".agents" / "AGENTS.md"),
+                "content_file": "config/statusline-command.sh",
+                "symlink_dest": [
+                    {"path": str(fake_home / "AGENTS.md"), "always": True},
+                    str(fake_home / ".claude" / "CLAUDE.md"),
+                ],
+            }
+        },
+    )
+
+    claims = list(home._symlink_claims())
+
+    assert [c.path for c in claims] == [fake_home / "AGENTS.md", fake_home / ".claude" / "CLAUDE.md"]
+    assert {c.source for c in claims} == {str(fake_home / ".agents" / "AGENTS.md")}
+
+
 # ---------------------------------------------------------------------------
 # blocks, merges and key surgery
 # ---------------------------------------------------------------------------

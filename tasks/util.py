@@ -168,7 +168,10 @@ class PackageConfig(TypedDict, total=False):
     depth: int
     content_file: str
     assembled_from: str
-    symlink_dest: str | list[str]
+    # A bare string is a vendor path, linked only when its parent directory already exists (that
+    # agent is installed). A `{ path = ..., always = true }` table is a path no vendor owns — the
+    # cross-tool `~/.agents/AGENTS.md` shape — which is linked unconditionally, parent created.
+    symlink_dest: str | list[str | dict[str, str | bool]]
     # gnome-extension
     uuid: str
     ego_id: int

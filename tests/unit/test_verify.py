@@ -241,3 +241,17 @@ def test_symlink_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch)
     checks = verify._symlink_checks()
 
     assert [t for _, _, t in checks] == [str(present / "CLAUDE.md")]
+
+
+def test_symlink_checks_never_skip_an_always_destination(tmp_path, monkeypatch):
+    """`always = true` has no agent to be absent, so a missing link there is a real failure.
+
+    The installer creates that parent rather than reading its absence as "not installed", so
+    skipping the check would hide exactly the case the flag exists to make verifiable.
+    """
+    packages = {"agents-md": {"symlink_dest": [{"path": str(tmp_path / "absent" / "AGENTS.md"), "always": True}]}}
+    monkeypatch.setattr(util, "enabled_packages", lambda: packages)
+
+    checks = verify._symlink_checks()
+
+    assert [t for _, _, t in checks] == [str(tmp_path / "absent" / "AGENTS.md")]

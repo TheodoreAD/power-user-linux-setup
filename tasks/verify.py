@@ -155,16 +155,20 @@ def _all_checks() -> list[tuple[str, str, str]]:
 def _symlink_checks() -> list[tuple[str, str, str]]:
     """One check per `symlink_dest` whose agent is actually installed here.
 
-    A deploy check proves `~/AGENTS.md` holds the right bytes; it says nothing about whether each
-    agent can *see* it, and a missing or misdirected link is silent — the agent simply runs without
-    the rules. Links whose parent directory doesn't exist are skipped for the same reason the
-    installer skips creating them: that agent isn't installed, so its missing link is correct.
+    A deploy check proves the instructions file holds the right bytes; it says nothing about whether
+    each agent can *see* it, and a missing or misdirected link is silent — the agent simply runs
+    without the rules. Links whose parent directory doesn't exist are skipped for the same reason
+    the installer skips creating them: that agent isn't installed, so its missing link is correct.
+
+    An `always` destination is never skipped, matching `tools._ensure_symlink`: the installer
+    creates that parent rather than reading its absence as a verdict, so a missing link there is a
+    real failure and not a machine without that agent.
     """
     return [
-        (name, "symlink", str(link))
+        (name, "symlink", str(link.path))
         for name, cfg in util.enabled_packages().items()
         for link in tools.symlink_dests(cfg)
-        if link.parent.is_dir()
+        if link.always or link.path.parent.is_dir()
     ]
 
 

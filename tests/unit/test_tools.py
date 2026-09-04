@@ -31,7 +31,7 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config.sh").write_text("echo hi\n")
 
 
-def _cfg(tmp_path, *, symlink_dest: str | list[str] | None = None) -> util.PackageConfig:
+def _cfg(tmp_path, *, symlink_dest: str | list[str | dict[str, str | bool]] | None = None) -> util.PackageConfig:
     cfg: util.PackageConfig = {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh"}
     if symlink_dest is not None:
         cfg["symlink_dest"] = symlink_dest
@@ -184,6 +184,50 @@ def test_install_wrapper_script_links_the_installed_agents_and_skips_the_rest(tm
 
     assert present.is_symlink()
     assert not absent.parent.exists()
+
+
+def test_install_wrapper_script_creates_the_parent_of_an_always_symlink(tmp_path):
+    """`always = true` is for a path no vendor owns, so a missing parent is not a verdict.
+
+    `~/.agents/` is created by this repo, so asking "does it exist?" only ever answers a question
+    about PULSE's own earlier run — the absent-agent rule has nothing to detect there.
+    """
+    link = tmp_path / "dot-agents" / "AGENTS.md"
+
+    tools._install_wrapper_script(
+        MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[{"path": str(link), "always": True}])
+    )
+
+    assert link.is_symlink()
+    assert link.resolve() == (tmp_path / "deployed.sh").resolve()
+
+
+def test_an_always_symlink_does_not_make_its_siblings_unconditional(tmp_path):
+    """The flag is per-destination: a vendor path in the same list keeps the absent-agent rule."""
+    always = tmp_path / "dot-agents" / "AGENTS.md"
+    vendor = tmp_path / "dot-codex" / "AGENTS.md"
+
+    tools._install_wrapper_script(
+        MockContext(),
+        "test-tool",
+        _cfg(tmp_path, symlink_dest=[{"path": str(always), "always": True}, str(vendor)]),
+    )
+
+    assert always.is_symlink()
+    assert not vendor.parent.exists()
+
+
+def test_symlink_dests_defaults_always_to_false_for_a_bare_string(tmp_path):
+    """A plain string must stay conditional — the flag is opt-in, never inferred."""
+    dests = tools.symlink_dests(_cfg(tmp_path, symlink_dest=[str(tmp_path / "a"), {"path": str(tmp_path / "b")}]))
+
+    assert [d.always for d in dests] == [False, False]
+
+
+def test_symlink_dests_rejects_a_table_without_a_path(tmp_path):
+    """A typo'd key must fail loudly rather than silently declaring nothing."""
+    with pytest.raises(TypeError, match="string `path`"):
+        tools.symlink_dests(_cfg(tmp_path, symlink_dest=[{"always": True}]))
 
 
 def test_install_wrapper_script_dry_run_ignores_a_link_whose_parent_doesnt_exist(tmp_path, monkeypatch, capsys):
