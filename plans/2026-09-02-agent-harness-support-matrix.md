@@ -334,7 +334,35 @@ and `~/.agents/AGENTS.md` has a better claim to being the canonical location tha
 does. Worth deciding before more links accumulate, since inverting it later means moving the real
 file.]
 
-## The move is built but not migrated — `deploy.all` cannot create a symlink
+## Resolved and migrated 2026-09-04
+
+The symlink writer moved into `deploy.py` and `deploy.all` grew the link pass, so the command the
+docs already named is the command that does the job. This machine is migrated:
+
+```
+[deploy] agents-md: created /home/tdumitrescu/.agents/AGENTS.md
+[agents-md] /home/tdumitrescu/AGENTS.md: replaced a stale copy of this file with a link to …
+[agents-md] /home/tdumitrescu/.codex/AGENTS.md: skipped — … doesn't exist (that agent isn't installed here)
+```
+
+`deploy.status` says `ok`; `home.list-claims` lists the real file plus four symlink claims; the
+three `verify._symlink_check` calls for this package all pass, with `~/.claude/CLAUDE.md` and
+`~/.copilot/copilot-instructions.md` resolving through the compatibility link to the new path. Byte
+count unchanged at 47313. `~/.codex/` and `~/.gemini/` are correctly skipped — neither agent is
+installed here, which is also why neither could be tested end to end.
+
+[PITFALL: **the file's mode changed, 0755 → 0664, and that is the fix rather than a regression.**
+The old `~/AGENTS.md` was executable because `wrapper-script` chmods 0755; `agents-md` is
+`assembled_from` so its mechanism is ASSEMBLED, which does not. An instructions file was never meant
+to be executable — but note that the digest is content-only, so a mode change is invisible to
+`classify` and nothing would have reported it either way.]
+
+[NEEDS CLARIFICATION: the dry run reports the content path and says nothing about links —
+`_deploy_symlinks` returns early under `PULSE_DRY_RUN`. Correct as behaviour, thin as a report: a
+machine that would gain three links shows `1 path(s): 1 created`. Worth a "would link" line, and it
+is a small change now that the writer is in one place.]
+
+## The blocker this replaced — `deploy.all` could not create a symlink
 
 Landed 2026-09-04: `symlink_dest` takes `{ path, always }`, `agents-md`'s `dest` is
 `~/.agents/AGENTS.md`, `~/AGENTS.md` is declared as an `always` link back to it, and
