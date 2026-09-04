@@ -81,10 +81,13 @@ a stranger reads first and currently sells the repo on breadth (what it installs
 particular is a better hook than any package list. Unclear how much of the site's content should be
 duplicated there versus linked.]
 
-[NEEDS CLARIFICATION: is a screenshot or an ANSI capture worth it for the statusline and the prompt?
-Both are visual, and describing colour semantics in prose is exactly where a picture wins. Against:
-an image in a docs site is a maintenance burden that goes stale silently, and this repo has none
-today — adopting the first one is a decision beyond this plan.]
+~~[NEEDS CLARIFICATION: is a screenshot or an ANSI capture worth it for the statusline and the
+prompt? Both are visual, and describing colour semantics in prose is exactly where a picture wins.
+Against: an image in a docs site is a maintenance burden that goes stale silently, and this repo has
+none today — adopting the first one is a decision beyond this plan.]~~ **Answered 2026-09-02, by the
+docs-site usability pass:** _"we keep mermaid. period."_ No screenshots and no image files on the
+site, for exactly the against-reason above; the decision is recorded under "Diagrams are mermaid,
+and nothing else" in `contributing/zensical.md`.
 
 ## What landed (2026-08-30)
 
@@ -134,6 +137,6 @@ but an internal-anchor check needs no network and no such dependency — the thr
 above is about fifteen lines. Worth adding to the gate the next time a dangling anchor is found,
 rather than on the strength of this one.]
 
-[DEFERRED: the two remaining open questions stay open — whether any of this belongs in `README.md`,
-and whether the statusline and prompt deserve a screenshot. Neither blocked the writing, and both
-are better answered by someone looking at the rendered site.]
+[DEFERRED: the remaining open question stays open — whether any of this belongs in `README.md`. It
+did not block the writing, and it is better answered by someone looking at the rendered site. The
+screenshot question that stood beside it here was answered 2026-09-02 (see above): no.]
