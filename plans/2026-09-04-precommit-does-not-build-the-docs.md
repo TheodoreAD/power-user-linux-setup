@@ -243,11 +243,11 @@ defence.
    Pages workflow resolves the same pin from `uv.lock` via
    `uv run --only-group docs --frozen zensical build --strict`, verified on a scratch copy.
 
-   This closed a `DEFERRED` item in `2026-08-27-docs-site-usability.md` with a third option neither
-   of the two it weighed had named: it wanted either a pinned `[packages.zensical]` (a downgrade for
-   the whole machine) or an unpinned CI, and a dependency group pays neither cost.
-   `[packages.zensical]` stays for other repos and for the human at the shell; inside this repo
-   direnv's `.venv/bin` shadows it.
+   This closed a `DEFERRED` item in the since-retired `2026-08-27-docs-site-usability.md` with a
+   third option neither of the two it weighed had named: it wanted either a pinned
+   `[packages.zensical]` (a downgrade for the whole machine) or an unpinned CI, and a dependency
+   group pays neither cost. `[packages.zensical]` stays for other repos and for the human at the
+   shell; inside this repo direnv's `.venv/bin` shadows it.
 2. **`repo-tasks`: add `docs.build` to `quality.precommit`'s pre-chain — _not_ `check`'s** (see the
    revision above; `check` must stay read-only and zensical offers no way to build without writing).
    Guarded so it no-ops on a consumer with no `mkdocs.yml` (`scaffoldapy`'s template makes the docs

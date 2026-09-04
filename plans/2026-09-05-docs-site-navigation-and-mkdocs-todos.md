@@ -7,10 +7,11 @@ updated: 2026-09-05
 
 ## Context
 
-Split out of `2026-08-27-docs-site-usability.md` on 2026-09-05 so that plan can retire. That pass
-landed its seven-step direction; these are the two things it named and deliberately did not settle,
-and they had no home outside a `landed` plan — which is exactly the content a retirement would have
-dropped.
+Split out of `2026-08-27-docs-site-usability.md` on 2026-09-05 so that plan could retire, which it
+did the same day (its `## Migrated to` names where the rest went; `plans.py archive` reads it back).
+That pass landed its seven-step direction; these are the two things it named and deliberately did
+not settle, and they had no home outside a `landed` plan — which is exactly the content a retirement
+would have dropped.
 
 Its third open item, the doubly-declared zensical pin, **was** closed on 2026-09-04 (a `docs`
 dependency group in `pyproject.toml`, `requirements-docs.txt` deleted) and needs no home here.

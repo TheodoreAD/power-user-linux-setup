@@ -7,10 +7,10 @@ updated: 2026-09-04
 
 ## Context
 
-Asked 2026-09-02, out of the docs review's decision about `docs/ai.md`
-(`plans/2026-08-27-docs-site-usability.md`): _"we should clarify that we offer the agnostic
-structure that works for not just claude. actually, you should make a plan to see what we can
-support with the current .agents structure. i'm sure we've visited this before."_
+Asked 2026-09-02, out of the docs review's decision about `docs/ai.md` (the now-retired
+`plans/2026-08-27-docs-site-usability.md`): _"we should clarify that we offer the agnostic structure
+that works for not just claude. actually, you should make a plan to see what we can support with the
+current .agents structure. i'm sure we've visited this before."_
 
 The framing that makes it worth answering, from the same message: _"we don't choose the tools, devs
 do, and it's our job to show we give them better experiences for whichever tools we can."_ So the

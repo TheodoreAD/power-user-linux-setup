@@ -101,9 +101,10 @@ answer that must be looked up rather than assumed.
 [PITFALL: **the docs theme's existing diagram support is a CDN dependency, and copying that pattern
 would repeat a fault this repo just measured.** The built bundle carries no mermaid — it lazy-loads
 `https://unpkg.com/mermaid@11/dist/mermaid.min.js` when it finds a diagram. Confirmed 2026-09-02
-while verifying the diagrams render (`2026-08-27-docs-site-usability.md`). So a reader behind a
-proxy that blocks unpkg sees diagram source as plain text — on a site with a whole page about
-corporate proxies. Do not add a second such dependency by pulling the asciinema player from a CDN.]
+while verifying the diagrams render — see "The CDN load is a view-time dependency the build never
+exercises" in `contributing/zensical.md`. So a reader behind a proxy that blocks unpkg sees diagram
+source as plain text — on a site with a whole page about corporate proxies. Do not add a second such
+dependency by pulling the asciinema player from a CDN.]
 
 So either vendor the player's JS and CSS into `docs/extra/` and reference them from `mkdocs.yml`, or
 render to an artifact that needs no JavaScript at all. The second is cheaper and degrades better;
