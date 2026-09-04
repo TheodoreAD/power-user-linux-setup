@@ -1803,6 +1803,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="The part that is not Claude-specific">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#it-goes-wider-than-the-four-in-a-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        It goes wider than the four, in a repo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2238,6 +2255,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="The part that is not Claude-specific">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#it-goes-wider-than-the-four-in-a-repo" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        It goes wider than the four, in a repo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2362,53 +2396,80 @@ Copilot, Cursor, Windsurf and Tabby.</p>
 <h2 id="the-part-that-is-not-claude-specific">The part that is not Claude-specific<a class="headerlink" href="#the-part-that-is-not-claude-specific" title="Permanent link">&para;</a></h2>
 <p>Two conventions do the work, and neither belongs to any one vendor:</p>
 <ul>
-<li><strong><code>AGENTS.md</code></strong> — the cross-tool instructions file. PULSE assembles <code>~/AGENTS.md</code> from the
+<li><strong><code>AGENTS.md</code></strong> — the cross-tool instructions file. PULSE assembles <code>~/.agents/AGENTS.md</code> from the
   fragments in <code>config/agents-md/</code> and deploys it once.</li>
 <li><strong><code>.agents/skills/</code></strong> — the cross-tool location for Agent Skills. PULSE installs every skill it
   declares into <code>~/.agents/skills/</code>, once.</li>
 </ul>
+<p>Both halves live under <code>~/.agents/</code>, which is nobody&rsquo;s vendor directory — Goose, Warp, Cline and
+Kimi Code each read <code>~/.agents/AGENTS.md</code> on their own, and <code>~/AGENTS.md</code> is kept as a link to it so
+anything pointing at the older location still works.</p>
 <p>Each agent then reads that same content from wherever it happens to look:</p>
 <table>
 <thead>
 <tr>
 <th>Agent</th>
 <th>Reads the instructions from</th>
-<th>Finds the skills</th>
+<th>Finds the skills in</th>
 </tr>
 </thead>
 <tbody>
 <tr>
 <td>Claude Code</td>
-<td><code>~/.claude/CLAUDE.md</code> → <code>~/AGENTS.md</code></td>
+<td><code>~/.claude/CLAUDE.md</code> → <code>~/.agents/AGENTS.md</code></td>
 <td><code>~/.claude/skills</code> → <code>~/.agents/skills</code></td>
 </tr>
 <tr>
 <td>Codex</td>
-<td><code>~/.codex/AGENTS.md</code> → <code>~/AGENTS.md</code></td>
-<td>—</td>
+<td><code>~/.codex/AGENTS.md</code> → <code>~/.agents/AGENTS.md</code></td>
+<td><code>~/.agents/skills</code>, natively</td>
 </tr>
 <tr>
 <td>GitHub Copilot</td>
-<td><code>~/.copilot/copilot-instructions.md</code> → <code>~/AGENTS.md</code></td>
-<td>via the <code>skills</code> CLI</td>
+<td><code>~/.copilot/copilot-instructions.md</code> → <code>~/.agents/AGENTS.md</code></td>
+<td><code>~/.agents/skills</code>, natively</td>
 </tr>
 <tr>
 <td>Gemini CLI</td>
-<td><code>~/.gemini/GEMINI.md</code> → <code>~/AGENTS.md</code></td>
-<td>—</td>
+<td><code>~/.gemini/GEMINI.md</code> → <code>~/.agents/AGENTS.md</code></td>
+<td><code>~/.agents/skills</code>, natively</td>
+</tr>
+<tr>
+<td>Goose, Warp, Cline, Kimi Code</td>
+<td><code>~/.agents/AGENTS.md</code>, natively</td>
+<td><code>~/.agents/skills</code>, natively</td>
 </tr>
 </tbody>
 </table>
-<p>Every arrow is a symlink, so there is exactly one file to edit and no copies to keep in sync.</p>
-<p><strong>A link is only created when its agent&rsquo;s own directory already exists</strong> — the absence of
+<p>Every arrow is a symlink, so there is exactly one file to edit and no copies to keep in sync. The
+bottom row needs no arrow at all in either column: those four agents already read both cross-tool
+paths. Of the top four, only Claude Code needs a link for the skills — Codex and Gemini CLI read
+<code>~/.agents/skills</code> alongside a vendor directory of their own, and Copilot accepts it as one of two
+places. So <strong>every agent PULSE hands the instructions to also picks up the skills</strong>, and the one
+that does not read the cross-tool location for either is the one PULSE installs.</p>
+<p><strong>A vendor link is only created when that agent&rsquo;s own directory already exists</strong> — the absence of
 <code>~/.codex/</code> is how PULSE knows Codex is not installed here, so nothing is created for it. Install an
 agent later and <code>inv deploy.all --name agents-md</code> links it in; <code>inv verify.all</code> then checks each
 link resolves to the file this repo deploys, rather than to some stale hand-made copy.</p>
+<p><code>~/AGENTS.md</code> is the exception, declared as <code>always</code> in <code>setup.toml</code>: it is not a vendor path, its
+parent is your home directory, and it is created unconditionally so that anything still pointing at
+the old location keeps working.</p>
+<h3 id="it-goes-wider-than-the-four-in-a-repo">It goes wider than the four, in a repo<a class="headerlink" href="#it-goes-wider-than-the-four-in-a-repo" title="Permanent link">&para;</a></h3>
+<p><code>.agents/skills</code> is not a PULSE invention. The <a href="https://github.com/vercel-labs/skills"><code>skills</code></a>
+CLI, which is what installs these, carries a registry of 71 agents, and <strong>19 of them read
+<code>.agents/skills</code> in a repository</strong> with no configuration — amp, Cline, Codex, Cursor, Gemini CLI,
+GitHub Copilot, opencode, Warp, Zed and ten more. Claude Code is not one of them, which is why the
+<code>~/.claude/skills</code> symlink exists.</p>
+<p>That is a claim about a <strong>project</strong> directory you commit alongside the code, not about <code>~</code>. The
+agents in the table above are the ones confirmed to read the home-directory copies PULSE writes; for
+the rest, check the vendor&rsquo;s own docs before assuming, because the registry&rsquo;s own record of where
+each agent looks in <code>~</code> is stale in every case we have checked — details in
+<code>contributing/ai-tooling.md</code>.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Reading the file is not the same as PULSE installing or configuring the agent. Only Claude Code
-gets all three today — installed, instructed, and skills wired natively. The others get the
-instructions if they are present, which is the cheap and useful part.</p>
+gets all three today — installed, instructed, and skills found. The others get the instructions
+and the skills if they are present, which is the cheap and useful part.</p>
 </div>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>

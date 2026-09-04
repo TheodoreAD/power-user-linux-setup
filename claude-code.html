@@ -1855,10 +1855,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agentsmd-global-instructions-declaratively-managed" class="md-nav__link">
+  <a href="#agentsagentsmd-global-instructions-declaratively-managed" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        <code>~/AGENTS.md</code> — global instructions, declaratively managed
+        <code>~/.agents/AGENTS.md</code> — global instructions, declaratively managed
       </span>
     </span>
   </a>
@@ -2390,10 +2390,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#agentsmd-global-instructions-declaratively-managed" class="md-nav__link">
+  <a href="#agentsagentsmd-global-instructions-declaratively-managed" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        <code>~/AGENTS.md</code> — global instructions, declaratively managed
+        <code>~/.agents/AGENTS.md</code> — global instructions, declaratively managed
       </span>
     </span>
   </a>
@@ -2684,14 +2684,19 @@ symlinked into <code>~/.local/share/claude/versions/</code>). Don&rsquo;t use
 <code>npm install -g @anthropic-ai/claude-code</code> for a fresh install on this machine — it still works but
 is the legacy path; PULSE only needs to <code>curl</code>-install once and then leaves auto-update to Claude
 Code itself.</p>
-<h2 id="agentsmd-global-instructions-declaratively-managed"><code>~/AGENTS.md</code> — global instructions, declaratively managed<a class="headerlink" href="#agentsmd-global-instructions-declaratively-managed" title="Permanent link">&para;</a></h2>
-<p><code>[packages.agents-md]</code> writes <code>~/AGENTS.md</code> (the cross-tool, cross-project instructions file every
-agent CLI on this machine can read) from <code>setup.toml</code>, and symlinks
-<code>~/.claude/CLAUDE.md -&gt; ~/AGENTS.md</code> via the <code>wrapper-script</code> method&rsquo;s <code>symlink_dest</code> field — the
-exact same real-content-plus-symlink pattern this repo&rsquo;s own root uses for its <code>AGENTS.md</code>/
+<h2 id="agentsagentsmd-global-instructions-declaratively-managed"><code>~/.agents/AGENTS.md</code> — global instructions, declaratively managed<a class="headerlink" href="#agentsagentsmd-global-instructions-declaratively-managed" title="Permanent link">&para;</a></h2>
+<p><code>[packages.agents-md]</code> writes <code>~/.agents/AGENTS.md</code> (the cross-tool, cross-project instructions file
+every agent CLI on this machine can read) from <code>setup.toml</code>, and symlinks
+<code>~/.claude/CLAUDE.md -&gt; ~/.agents/AGENTS.md</code> via the <code>wrapper-script</code> method&rsquo;s <code>symlink_dest</code> field
+— the exact same real-content-plus-symlink pattern this repo&rsquo;s own root uses for its <code>AGENTS.md</code>/
 <code>CLAUDE.md</code> pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
 agent-readable form, so every session on this machine picks it up automatically without needing to
 rediscover it.</p>
+<p><strong>The real file moved there on 2026-09-04</strong>; it used to be <code>~/AGENTS.md</code>, which is now a symlink to
+it. The reason is that <code>~/.agents/AGENTS.md</code> is a path several agents read on their own — Goose,
+Warp, Cline and Kimi Code, each verified against its own source or documentation — while nothing
+verified reads a bare <code>~/AGENTS.md</code>; that path worked only because every symlink pointed at it. See
+<code>docs/ai.md</code> and <code>contributing/ai-tooling.md</code>. Either path still works for reading or editing.</p>
 <p><strong>The file is assembled, not copied.</strong> <code>[packages.agents-md]</code> sets <code>assembled_from = "agents_md"</code>,
 and every package declaring an <code>agents_md</code> fragment contributes whole <code>##</code> sections to the result,
 ordered by a sparse <code>order</code> — the same any-section pattern as <code>zshrc</code>/<code>zshenv</code>, for a file where
@@ -2702,15 +2707,15 @@ label on its heading instead of a file it lives in: <code>[Claude Code]</code> f
 harness, <code>[needs &lt;thing&gt;]</code> for one that holds because PULSE installed that thing. Which fragment
 owns what, and why dependency is a label rather than a directory, is <code>config/agents-md/README.md</code>.</p>
 <p>Edit the fragment that owns the rule, then <code>inv deploy.all --name agents-md</code>, rather than
-hand-editing <code>~/AGENTS.md</code> directly — the file is fully PULSE-owned (same as any
+hand-editing the deployed file directly — it is fully PULSE-owned (same as any
 <code>wrapper-script</code>-method entry) and regenerated end to end, so the <code>&lt;!-- PULSE::agents-md/… --&gt;</code>
 markers in it are provenance, not an ownership boundary: nothing outside a block survives either.
 Both <code>deploy.all</code> and the install-time writer in <code>inv tools.install</code> go through the same deploy
-writer, so an edit made to <code>~/AGENTS.md</code> directly is shown as a diff and asked about (default: keep
-it) rather than silently overwritten — but it still only lives on this machine until it&rsquo;s ported
-into a fragment. <code>~/.claude/CLAUDE.md</code> itself is never touched once it&rsquo;s a correct symlink; if
-something other than that symlink already lives there, <code>inv tools.install</code> warns and leaves it alone
-rather than overwriting it.</p>
+writer, so an edit made to the deployed file directly is shown as a diff and asked about (default:
+keep it) rather than silently overwritten — but it still only lives on this machine until it&rsquo;s
+ported into a fragment. <code>~/.claude/CLAUDE.md</code> itself is never touched once it&rsquo;s a correct symlink;
+if something other than that symlink already lives there, <code>inv tools.install</code> warns and leaves it
+alone rather than overwriting it.</p>
 <p>Several conventions live there too, deliberately global rather than repeated per-repo — see
 <code>config/agents-md/agent-knowledge.md</code> for the exact wording:</p>
 <ul>
@@ -2722,8 +2727,8 @@ rather than overwriting it.</p>
   can be appended below a symlink&rsquo;s target, so a genuinely Claude-specific addendum belongs in
   <code>AGENTS.md</code> itself instead. Both this repo&rsquo;s own root (<code>AGENTS.md</code> real,
   <code>CLAUDE.md -&gt;
-  AGENTS.md</code>) and <code>~</code> itself (<code>AGENTS.md</code> real,
-  <code>~/.claude/CLAUDE.md -&gt; ~/AGENTS.md</code>) follow it.</li>
+  AGENTS.md</code>) and <code>~</code> itself (<code>~/.agents/AGENTS.md</code> real,
+  <code>~/.claude/CLAUDE.md -&gt; ~/.agents/AGENTS.md</code>) follow it.</li>
 <li><strong>Cross-session memory policy.</strong> Durable, repo-specific knowledge belongs in that repo&rsquo;s
   <code>AGENTS.md</code>, not Claude Code&rsquo;s auto-memory system (<code>~/.claude/projects/.../memory/</code>) — memory is
   invisible to every other contributor, every other agent tool, and every code review; <code>AGENTS.md</code>
