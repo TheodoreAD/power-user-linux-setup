@@ -101,12 +101,20 @@ deploy.
 The built `site/` is gitignored.
 
 > [!WARNING]
-> `inv quality.precommit` does **not** build the site. `inv docs.link-check` runs in the gate, but
-> it checks that a link's _file_ exists and stops at the fragment — so renaming a heading that
-> another page links to (`configuration.md#some-heading`) passes every local check and fails the
-> Pages deploy. After renaming a heading, grep for inbound links to it and run `inv docs.build`. Why
-> nothing else can see it, and the two pushes it has already cost, are under "Renaming a heading is
-> an anchor change" in [`contributing/zensical.md`](contributing/zensical.md) — linked without a
+> `inv quality.precommit` does **not** build the site — not yet; it is meant to, and the change is a
+> `repo-tasks` one (`plans/2026-09-04-precommit-does-not-build-the-docs.md`). It will join
+> `precommit` and not `quality.check`, because a build writes `site/` and `check` is the read-only
+> half. `inv docs.link-check` does run in the gate, but it checks that a link's _file_ exists and
+> stops at the fragment — so renaming a heading that another page links to
+> (`configuration.md#some-heading`) passes every local check today. **After renaming a heading, grep
+> for inbound links to it and run `inv docs.build`.**
+>
+> CI is already covered: `ci.yml`'s `docs` job builds with `--strict` on every push _and_ every pull
+> request, so this can no longer reach `master` through a PR, and `publish_on_push.yml` catches a
+> direct push. The manual step above is what stands in locally until the gate change lands.
+>
+> Why nothing else can see it, and the two pushes it has already cost, are under "Renaming a heading
+> is an anchor change" in [`contributing/zensical.md`](contributing/zensical.md) — linked without a
 > fragment on purpose, since `docs_dir` is `docs/` and `--strict` never builds this file or that
 > one, so nothing here would catch the very anchor break both are about.
 
