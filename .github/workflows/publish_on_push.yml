@@ -24,11 +24,13 @@ jobs:
       - uses: actions/checkout@v4
         with:
           persist-credentials: false
-      - uses: actions/setup-python@v5
-        with:
-          python-version: "3.12"
-      - run: pip install -r requirements-docs.txt
-      - run: zensical build --strict
+      - uses: astral-sh/setup-uv@v9.0.0
+      # The pin comes from pyproject.toml's `docs` dependency group via uv.lock, the same one
+      # `inv docs.build` resolves locally — a requirements-docs.txt read only here is what let the
+      # two drift and fail a deploy that passed locally. `--only-group` skips dev entirely (this
+      # job needs zensical, not basedpyright), and `--frozen` makes a stale lock an error rather
+      # than a silent re-resolve to some other version.
+      - run: uv run --only-group docs --frozen zensical build --strict
       - uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}

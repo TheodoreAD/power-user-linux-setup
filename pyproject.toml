@@ -24,6 +24,13 @@ dev = [
   "zizmor",
   "hadolint-py",
 ]
+# The docs-site engine, pinned, in the group repo_tasks' docs.py already assumes
+# (`uv sync --group docs`). It used to live in a requirements-docs.txt that only CI's Pages
+# workflow read, while `inv docs.build` locally picked up setup.toml's unpinned machine-wide
+# `uv tool` install — two declarations that drifted apart and shipped a red deploy (a `[certs]`
+# table cell passed on a local 0.0.57 and failed CI's 0.0.44 with `unresolved link reference`,
+# 2026-09-02). One pin, resolved from .venv/bin, which direnv puts ahead of ~/.local/bin.
+docs = ["zensical==0.0.44"]
 
 [build-system]
 requires = ["hatchling"]
@@ -31,6 +38,12 @@ build-backend = "hatchling.build"
 
 [tool.hatch.build.targets.wheel]
 packages = ["tasks"]
+
+[tool.uv]
+# `docs` is a default group, not an opt-in one: `inv dev-env.setup` (and CI's ci-bootstrap.sh,
+# which is just `uv run inv dev-env.setup`) is the only thing that populates the venv, so a group
+# it skips is a group `inv docs.build` cannot use — here or on a runner.
+default-groups = ["dev", "docs"]
 
 [tool.uv.sources]
 repo-tasks = { git = "https://github.com/TheodoreAD/repo-tasks" }
