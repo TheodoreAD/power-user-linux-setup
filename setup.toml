@@ -1037,6 +1037,19 @@ claude_default_mode = "acceptEdits"
 # scratchpad`) and background-job tmp (`~/.claude/jobs/<id>/tmp`). Outside every repo, so without
 # this every scratch write prompts under acceptEdits. File access only — nothing loads from here.
 claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]
+# Each Bash call is a non-interactive `zsh -c` (no -f, norcs unset), so ~/.zshenv is read on every
+# one of them, before the shell snapshot — which only ever appends `setopt <name>` and unsets
+# nothing, so the option survives it. Without pipefail a pipeline reports its LAST stage's status,
+# so `inv quality.precommit | tail -3` returns tail's 0 whatever the gate did: 812 of 1,396 gate
+# runs in the week to 2026-09-05 were piped that way. Four rewordings of the ~/AGENTS.md rule since
+# 2026-08-24 each measured flat afterwards, which is why this is a shell option and not a fifth.
+# Guarded on CLAUDECODE so cron, IDE task runners and every other `zsh -c` keep default statuses; a
+# second guard is added per harness as harnesses are. Not an enforcement mechanism under
+# "Proposing an enforcement mechanism" — it rewrites and blocks nothing, it only makes the shell
+# report what happened, which is what shellcheck asks of any script.
+# `if` rather than `[ … ] && setopt`, which would leave ~/.zshenv's last status non-zero in every
+# shell that is not an agent's.
+zshenv = 'if [ -n "${CLAUDECODE:-}" ]; then setopt PIPE_FAIL; fi'
 
 [packages.agents-md]
 description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/AGENTS.md and ~/.claude/CLAUDE.md symlink to it"
