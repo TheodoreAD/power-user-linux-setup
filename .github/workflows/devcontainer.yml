@@ -25,7 +25,7 @@ jobs:
   smoke-test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: devcontainers/ci@v0.3
@@ -78,8 +78,12 @@ jobs:
     steps:
       # The one place the checkout's own credentials are the point: the next step force-pushes the
       # `stable` tag with them. zizmor's artipacked is declined here rather than "fixed" — setting
-      # persist-credentials: false would break the job it is flagging.
-      - uses: actions/checkout@v4 # zizmor: ignore[artipacked]
+      # persist-credentials: false would break the job it is flagging. Re-tested on checkout v7
+      # (2026-09-04): v6 moved credential persistence into a separate file rather than .git/config,
+      # which looked like it might retire this, but zizmor audits the input and not the action's
+      # storage, so it flags v7 identically. Dropping the suppression only makes a known, accepted
+      # finding permanent output, which is how a real one later goes unread.
+      - uses: actions/checkout@v7 # zizmor: ignore[artipacked]
         with:
           fetch-depth: 0
       - run: |

@@ -21,7 +21,7 @@ jobs:
       # persist-credentials: false is safe even though this job publishes — actions-gh-pages pushes
       # with the token handed to it below, never with the credentials the checkout would leave in
       # .git/config.
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v9.0.0
