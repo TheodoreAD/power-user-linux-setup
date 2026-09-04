@@ -19,8 +19,9 @@ jobs:
       contents: write
     steps:
       # persist-credentials: false is safe even though this job publishes — actions-gh-pages pushes
-      # with the token handed to it below, never with the credentials the checkout would leave in
-      # .git/config.
+      # with the token handed to it below, never with the credentials the checkout would otherwise
+      # leave behind. (Where "behind" is depends on the version: through v5 that meant .git/config,
+      # v6 moved it to a separate file. The input, and this reasoning, are unaffected either way.)
       - uses: actions/checkout@v7
         with:
           persist-credentials: false
