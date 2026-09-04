@@ -6,8 +6,8 @@ on:
   pull_request:
 
 # Least privilege: nothing here writes anything back to the repo, and the default token grant is
-# broader than that. persist-credentials: false on each checkout for the same reason — neither job
-# pushes, and the default leaves the token in .git/config for every later step to read.
+# broader than that. persist-credentials: false on each checkout for the same reason — no job here
+# pushes, and the default would otherwise leave the token where every later step can read it.
 permissions:
   contents: read
 
@@ -21,6 +21,26 @@ jobs:
       - uses: astral-sh/setup-uv@v10.0.1
       - run: ./.github/ci-bootstrap.sh
       - run: inv quality.check
+
+  # The docs build is a check, and it lives here rather than in `quality.check` because it writes
+  # `site/` and that gate is the read-only half by construction — see
+  # plans/2026-09-04-precommit-does-not-build-the-docs.md. It is the only thing in this repo that
+  # catches a link aimed at a renamed heading: `docs.link-check` resolves the file and stops at the
+  # `#`, dprint never reads markdown as a document, and a reviewer sees a path that is genuinely
+  # correct. Two red Pages deploys, on 2a4de19 and ae59318, are what it is here to prevent.
+  #
+  # A job rather than a step in `quality`, so a docs failure is named "docs" in the runs list
+  # instead of reading as a lint failure — the whole problem this addresses is a signal nobody
+  # looks at. `--only-group docs` needs no dev sync, so it is cheaper than reusing ci-bootstrap.sh,
+  # and it is the same command publish_on_push.yml runs, resolving the same pin from uv.lock.
+  docs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.0.1
+      - run: uv run --only-group docs --frozen zensical build --strict
 
   # Mirrors bootstrap.sh's actual invocation shape for the *default-declined* --invoke-only path
   # (never `uv sync`, never touches this project's own dependency groups) — the invariant this
