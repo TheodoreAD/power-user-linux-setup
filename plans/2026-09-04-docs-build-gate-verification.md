@@ -89,8 +89,21 @@ this repo just did, and that `check` mutating breaks its contract for _every_ co
 ones with no docs at all. Both readings are defensible; what is not defensible is the two repos
 holding opposite answers while each believes the question settled.]
 
+[PITFALL: **a third answer landed in `repo-tasks` while this was being written, and it may retire
+the question rather than settle it.** `7fc0b23`/`31cbf44` — committed, **not yet pushed**, in
+another session's tree, so hands-off and not to be built on — give `link_check` real anchor
+resolution, against the union of python-markdown's `toc` slugger and github.com's. If that holds up,
+the anchor class is caught by a check that needs no zensical, writes nothing, already sits in
+`check` legitimately, and **covers the files zensical never builds** — which closes this repo's own
+recorded coverage bound, the three `AGENTS.md`/`contributing/` anchors that had to be verified by
+hand because `--strict` only walks `docs_dir`. The docs build would then be defence in depth rather
+than the only detector, and where it sits matters much less. Do not treat this as settled: it is
+unpushed work in progress, and the two sluggers agreeing on the common case is exactly where a
+union-of-two-sluggers check earns its keep or does not.]
+
 [NEEDS CLARIFICATION: which placement stands? Filed to `repo-tasks` as
-`2026-09-04-docs-build-placement-was-superseded.md`. **Until it is answered, this repo is
+`2026-09-04-docs-build-placement-was-superseded.md` — **confirmed absorbed there** minutes after
+filing, so the question has reached the repo that owns it. **Until it is answered, this repo is
 deliberately pinned at `cef6894`, which predates the change** — so `inv quality.check` here does not
 build docs and does not mutate. Step 1 below would take the newer pin and adopt the placement in the
 same move, which is why it must not run first.]
