@@ -5,7 +5,7 @@ updated: 2026-09-04
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Eight sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Ten sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
@@ -19,7 +19,14 @@ somebody else's machine reports how your session differs from their setup. The s
 and for this corpus it was measured on this machine, so rows 1–6 remain valid as recorded. But
 nothing has been saved to the XDG path yet, so a new sample either re-uses the shipped file against
 current guidance or, like sample 8 below, runs uncompared. Save the existing baseline to
-`~/.local/state/session-bash-audit/` before the next sample if the deltas are to stay comparable.]
+`~/.local/state/session-bash-audit/` before the next sample if the deltas are to stay comparable.
+
+**Done 2026-09-04**: `~/.local/state/session-bash-audit/2026-09-04.json`, 7,580 calls over 25 main
+sessions from 2026-09-01..04, all `claude-opus-5`. **Rows 9 and 10 are the first measured against
+it**, so their scores are not comparable with rows 1–6's — a different baseline, on a different
+window. Its stored note records the one confound worth knowing: at least one session in the window
+ran in auto mode, whose system reminder asks for `cat`/`sed -n` over `Read`, so `cat-view`, `sed-n`
+and `grep/find` are mode-mixed in it while `chain`, `head/tail` and `exit-masked` are not.]
 
 Merged on 2026-09-02 from five plans filed separately by five sessions, each of which found the
 store dirty and added a file rather than editing one another session might have been holding, and
@@ -39,16 +46,18 @@ merged file cannot. Kept here instead, because a triage session re-reading the o
 whole point of recording them — and the harness keeps a transcript for 30 days by default, so these
 expire around 2026-10-02:
 
-| # | source repo              | transcript                                   | session start               |
-| - | ------------------------ | -------------------------------------------- | --------------------------- |
-| 1 | `agent-skills`           | `2312636b-3f89-4cb5-95e8-48f986fb9ecb.jsonl` | `2026-09-01T17:20:53.485Z`  |
-| 2 | `ingesta`                | `bf19d40e-bb8f-4341-a396-77194e946991.jsonl` | `2026-09-02T03:05:26+03:00` |
-| 3 | `agent-skills`           | `630e8ae3-ecce-4a23-90cf-934ab0698945.jsonl` | `2026-09-02T14:28:19+03:00` |
-| 4 | `power-user-linux-setup` | not recorded                                 | 2026-09-02                  |
-| 5 | `ingesta`                | `6be217e8…` (short form only)                | 2026-09-02                  |
-| 6 | `agent-skills`           | `13aa58df-3551-49b7-ac0e-0c3693bf8221.jsonl` | `2026-09-02T20:32:51+03:00` |
-| 7 | `ingesta`                | `7dab6dae-7c67-454f-bba1-981fe3845089.jsonl` | `2026-09-03T13:47:32+03:00` |
-| 8 | `power-user-linux-setup` | `92f54986-8a19-49a4-b792-8ebb1d5fcf1a.jsonl` | `2026-09-03T20:45:51.765Z`  |
+| #  | source repo              | transcript                                   | session start               |
+| -- | ------------------------ | -------------------------------------------- | --------------------------- |
+| 1  | `agent-skills`           | `2312636b-3f89-4cb5-95e8-48f986fb9ecb.jsonl` | `2026-09-01T17:20:53.485Z`  |
+| 2  | `ingesta`                | `bf19d40e-bb8f-4341-a396-77194e946991.jsonl` | `2026-09-02T03:05:26+03:00` |
+| 3  | `agent-skills`           | `630e8ae3-ecce-4a23-90cf-934ab0698945.jsonl` | `2026-09-02T14:28:19+03:00` |
+| 4  | `power-user-linux-setup` | not recorded                                 | 2026-09-02                  |
+| 5  | `ingesta`                | `6be217e8…` (short form only)                | 2026-09-02                  |
+| 6  | `agent-skills`           | `13aa58df-3551-49b7-ac0e-0c3693bf8221.jsonl` | `2026-09-02T20:32:51+03:00` |
+| 7  | `ingesta`                | `7dab6dae-7c67-454f-bba1-981fe3845089.jsonl` | `2026-09-03T13:47:32+03:00` |
+| 8  | `power-user-linux-setup` | `92f54986-8a19-49a4-b792-8ebb1d5fcf1a.jsonl` | `2026-09-03T20:45:51.765Z`  |
+| 9  | `repo-tasks`             | `1f762304-ee1a-4bfb-a78f-52da747d29e3.jsonl` | `2026-09-04T12:25:24.475Z`  |
+| 10 | `power-user-linux-setup` | `bc30285c-145c-494d-b2d1-be6b37cd37f1.jsonl` | `2026-09-04T10:01:32.556Z`  |
 
 Rows 6 and 7 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
@@ -58,20 +67,38 @@ needed to reproduce the figures.
 
 ### The corpus at a glance
 
-| # | session repo             | calls | shape                          | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
-| - | ------------------------ | ----: | ------------------------------ | ----------: | ------------: | ---------------: | ----- |
-| 1 | `agent-skills`           |   331 | code, one repo, ten hours      |         24% |           19% |          **23%** | 9/11  |
-| 2 | `ingesta`                |   137 | prose/gate-heavy, ten hours    |         45% |           28% |               0% | —     |
-| 3 | `agent-skills`           |   157 | prose, one repo, one day       |         38% |           27% |               0% | 9/11  |
-| 4 | `power-user-linux-setup` |   350 | documentation, whole day       |     **55%** |       **32%** |               0% | 7/11  |
-| 5 | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
-| 6 | `agent-skills`           |   216 | tooling, the rule itself       |         36% |           27% |               0% | 6/11  |
-| 7 | `ingesta`                |   129 | code + plans, fourteen hours   |         32% |           22% |               0% | —     |
-| 8 | `power-user-linux-setup` |   220 | code + docs + vendor research  |         27% |           17% |               0% | —     |
+| #  | session repo             | calls | shape                          | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
+| -- | ------------------------ | ----: | ------------------------------ | ----------: | ------------: | ---------------: | ----- |
+| 1  | `agent-skills`           |   331 | code, one repo, ten hours      |         24% |           19% |          **23%** | 9/11  |
+| 2  | `ingesta`                |   137 | prose/gate-heavy, ten hours    |         45% |           28% |               0% | —     |
+| 3  | `agent-skills`           |   157 | prose, one repo, one day       |         38% |           27% |               0% | 9/11  |
+| 4  | `power-user-linux-setup` |   350 | documentation, whole day       |     **55%** |       **32%** |               0% | 7/11  |
+| 5  | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
+| 6  | `agent-skills`           |   216 | tooling, the rule itself       |         36% |           27% |               0% | 6/11  |
+| 7  | `ingesta`                |   129 | code + plans, fourteen hours   |         32% |           22% |               0% | —     |
+| 8  | `power-user-linux-setup` |   220 | code + docs + vendor research  |         27% |           17% |               0% | —     |
+| 9  | `repo-tasks`             |   202 | shared gate, plans, ~12h       |     **15%** |       **10%** |               0% | 10/11 |
+| 10 | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h      |         23% |           20% |               1% | 8/11  |
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
 was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
 they were run without `--compare`.
+
+**Sample 9 is the best row the corpus has** — `head/tail` at 15% against a previous best of 24%, on
+a twelve-hour gate-heavy day, and the second consecutive clean `chain`. **Sample 10 is the
+counterweight, from the same day and the same baseline**, and is the more useful of the pair for
+what the corpus is actually asking: it is the session that _authored_ the `| tail` rule change, and
+it still finished at 23%.
+
+[PITFALL: **sample 10 is the first row measured twice in one session, and the rate got worse between
+them.** A harvest at 00:15 read `chain` 45% / `head/tail` 20% / `exit-masked` 22% over 283 calls; a
+second at 00:40 read 50% / 23% / 20% over 355. The 72 calls in between were the verification work —
+re-breaking an anchor, running the gate against it, checking placements across three repos — and
+they are chain-heavier than the session's average, which moved `chain` from OK to a MISS against
+baseline. The lesson is not about that session: **a single end-of-session figure is one sample of a
+rate that drifts with what the session is doing**, so a row here describes a whole session's mixture
+rather than a disposition. Two of the eight rows above were taken at their session's end and none
+was taken twice, so nothing in the corpus can currently say how much of the spread is task shape.]
 
 ### Sample 1 — `agent-skills`, 331 calls, the first run under `--until`
 
