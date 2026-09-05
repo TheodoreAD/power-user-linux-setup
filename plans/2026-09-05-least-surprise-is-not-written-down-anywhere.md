@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-09-05
 source_repo: github.com-personal/repo-tasks
 source_session: 86b6d25d-eb68-4751-b989-ad45931ef62a.jsonl
@@ -73,16 +73,42 @@ already has. The tier test still says always-loaded rather than a skill: the mis
 the surprising design passes its gate, passes CI, and reads as finished — and it is **expensive**, a
 full redesign of pushed work here.]
 
-[NEEDS CLARIFICATION: whether "Adding a CLI flag" should be retitled now that it would cover more
-than flags — something like "Adding a flag, or changing what a tool does by default". Against:
-renaming a section breaks any citation of it elsewhere in the corpus, and `contributing/` pages do
-cite these by name. For: the current title is what would stop a reader finding the general rule,
-which is the entire defect being fixed. Check inbound citations before deciding.]
+~~Should the section be retitled?~~ **Yes — "Adding a flag, or changing what a tool does by
+default", done 2026-09-05.** The citations were checked first, as this question asked: exactly two,
+both in `contributing/global-agents-md.md` (its table of contents and its own evidence heading),
+both in this repo and both updated in the same commit. With the cost that small, the argument for
+wins outright — the old title is precisely what would stop a reader finding the general rule, which
+is the defect being fixed.
 
-[DEFERRED: whether the same principle wants a line in `contributing/global-agents-md.md`'s own
-admission criteria — "a rule the user believes is already recorded" is arguably direct evidence for
-admission, and the criteria do not currently name that signal. Filed as an observation, not a
-proposal; it is that document's call.]
+Whether the same principle wants a line in `contributing/global-agents-md.md`'s own admission
+criteria — "a rule the user believes is already recorded" is arguably direct evidence for admission,
+and the criteria do not currently name that signal — is **moved to
+[`2026-08-26-agents-md-leanness-pass.md`](2026-08-26-agents-md-leanness-pass.md)**, the open plan
+whose subject is that intake gate. It stays an observation rather than a proposal; it is that
+document's call.
+
+## Landed 2026-09-05
+
+The paragraph went into `config/agents-md/research.md`'s renamed section, the evidence and the
+admission reasoning into `contributing/global-agents-md.md` under the matching heading, and
+`inv deploy.all --name agents-md` regenerated `~/.agents/AGENTS.md`.
+
+One wording change against the draft above, and it is the point rather than a polish: **the rule now
+opens on the words the user searched for.** The draft began "The same principle beyond flags", which
+would have left `rg -in 'least surprise'` returning nothing — the exact grep whose emptiness is this
+plan's finding. Caught by re-running that grep against the deployed file after the first deploy, so
+the fix is one the plan's own evidence demanded rather than a preference. A rule nobody can grep for
+is the failure being fixed.
+
+## Migrated to
+
+- The rule itself: `config/agents-md/research.md`, "Adding a flag, or changing what a tool does by
+  default" — deployed to `~/.agents/AGENTS.md`.
+- The evidence, the cost, the reconciliation, and why this extended a section rather than becoming a
+  40th rule: `contributing/global-agents-md.md`, under the matching heading.
+- Not migrated: the `repo-tasks` incident's own design and commit range. That belongs to
+  `repo-tasks` and is documented there, in `contributing/quality-gate.md` and its run-reporting
+  plan; a second copy here would diverge.
 
 ## Evidence
 

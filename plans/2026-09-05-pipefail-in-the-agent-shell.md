@@ -161,14 +161,34 @@ The change is one line beside the `PIPE_FAIL` one, under the same `CLAUDECODE` g
 export REPO_TASKS_RUN_REPORT=1
 ```
 
-### Verification for that half
+### Landed and verified, 2026-09-05
 
-- `env | rg REPO_TASKS_RUN_REPORT` in a fresh agent Bash call returns it set; unset in an
-  interactive human shell.
-- `inv quality.precommit` here then prints report lines and a verdict for an agent, and invoke's own
-  streaming output for the human.
-- End to end with layer 1: `inv quality.check 2>&1 | tail -3` on a failing gate ends with
-  `FAIL | <command> | exit=<n> (output above)` **and** the Bash tool reports a non-zero exit.
+The export went in beside `PIPE_FAIL` under the same guard, `inv zsh.configure` wrote the block, and
+`env | rg REPO_TASKS_RUN_REPORT` in the next Bash call returned it set — no restart, since
+`~/.zshenv` is re-read per call.
+
+**And that was not enough, which is the finding.** The gate still printed stock invoke output, and
+nothing said so: `repo_tasks` swaps the runner on its own `ns`, this repo never uses that
+Collection, and there is no way to tell "variable unset" from "variable set and unreachable" by
+looking at the output. One line on this repo's own namespace fixed it —
+`namespace.configure({"runners": {"local": runner.ReportingLocal}})`, wrapped in a small function
+because reading two attributes off the module the optional-import helper returns widens to `Any`
+under `basedpyright`. Three tests cover the on, off and repo_tasks-absent branches.
+
+Then both layers together, which is the property the pair exists for:
+
+```
+inv quality.check                             -> quality.check | PASS | 11 steps | 6.1s
+inv quality.type-check --python-version 3.6 2>&1 | tail -3
+  -> exit 1, last line: FAIL | basedpyright --pythonversion 3.6 | exit=1 (output above)
+```
+
+Layer 1 makes the piped red run exit non-zero; report mode makes its last line name the command that
+failed. Neither alone gives that.
+
+**Every other consumer with its own namespace is in the state this repo was in**, `scaffoldapy`'s
+template most of all, since every repo it generates would be born that way. Filed for `repo-tasks`
+as `2026-09-05-report-mode-reaches-no-consumer-by-itself.md` rather than fixed from here.
 
 [NEEDS CLARIFICATION: whether the guard stays `CLAUDECODE` or widens. The variable is useful to any
 agent harness, `CLAUDECODE` is the only such marker this machine sets, and inventing a broader
@@ -180,9 +200,10 @@ already makes for `PIPE_FAIL`.]
 log is scrolled by a human reading a failure, and full streaming is what belongs there. Recorded
 because it will be asked.]
 
-[DEFERRED: this repo pins `repo-tasks`, so report mode does nothing here until that bump lands.
-`repo-tasks`' `contributing/consumer-sweep.md` owns that sequence, and the batched sweep is
-`repo-tasks`' `plans/2026-08-25-consumer-transitions.md`.]
+The pin was the prerequisite and it is no longer outstanding: this repo's `repo-tasks` pin moved
+`9d57d464` -> `7bb880b0` in the same session, as the `power-user-linux-setup` half of the batched
+consumer sweep `repo-tasks`' `plans/2026-08-25-consumer-transitions.md` had deferred. That sweep's
+result is filed there as `2026-09-05-power-user-linux-setup-swept.md`.
 
 ## Remaining
 

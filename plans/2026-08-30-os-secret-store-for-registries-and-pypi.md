@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-30
+status: in-progress
+updated: 2026-09-05
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
 
@@ -84,12 +84,19 @@ verification below is a hard failure rather than a warning.]
 Service one. With it set, `docker login` stores through the helper and every later docker command
 reads back through it.
 
-[NEEDS CLARIFICATION: which install method. Ubuntu noble ships `golang-docker-credential-helpers`
-**0.6.4** (`apt-cache policy`, checked 2026-08-30) against upstream's 0.9.x line — years behind,
-which `~/AGENTS.md`'s "judge from its own release cadence" rule says to weigh rather than wave
-through. In its favour: a distro package with a security pocket, and `secretservice` is a thin shim
-over libsecret whose surface barely moves. The alternative is an upstream release binary, which is
-the one-off manual install that same rule forbids without a `setup.toml` entry.]
+~~Which install method?~~ **Upstream's release binary, decided with the user 2026-09-05.** Noble is
+still on `golang-docker-credential-helpers` 0.6.4 (`0.6.4+ds1-1ubuntu0.24.04.3`, re-checked the same
+day) against an upstream `v0.9.9` that shipped 2026-08-26 — three minor versions and years apart,
+which is too far to wave through for the one component `oras` fails hard on rather than degrading
+from. No PyPI wrapper exists (checked directly: `docker-credential-helpers`,
+`docker-credential-secretservice`, `dockercredentialhelpers` all 404), so the `uv-tool` route the
+rule prefers was not available and `binary` is the next mechanism down.
+
+It is a declared `[packages.docker-credential-secretservice]` entry, not a one-off install. The one
+cost paid for it: the `binary` method only accepted a static `url`, and upstream names the version
+in the asset filename, so a static URL would freeze at 0.9.9 forever — on a method that skips when
+the command exists and would therefore never revisit it. `{version}` + `version_cmd` now works there
+the way it already did for `archive` and `deb-url`.
 
 ### 2. helm — nothing to install, and one host-scoped caveat
 
@@ -140,11 +147,13 @@ completes all of this or fails saying so:
    exactly the machine where the confusing failure happens: helper installed, Secret Service locked
    or absent, every push failing as though the credentials were wrong.
 
-[NEEDS CLARIFICATION: what a headless or CI-like machine should do at step 5. Failing loudly is
-right for this workstation and wrong for a machine with no Secret Service at all, where the honest
-outcome is "credentials stay in a file, and you were told". Whether that is a separate profile, a
-detected condition, or an explicit opt-out flag is undecided — but silently degrading is not an
-option, because that is the state this plan exists to end.]
+~~What should a headless or CI-like machine do at step 5?~~ **Answered 2026-09-05, and it needed
+neither a profile nor a flag.** The condition to detect is whether the helper is installed, and that
+already follows the tag system: the package is `workstation`-tagged, so a headless or container
+machine simply has none, and the task says "credentials stay in `~/.docker/config.json`" and
+returns. Failing loudly is reserved for the case that actually warrants it — the helper is present
+and the store does not answer, which is the confusing failure the round trip exists to catch. Silent
+degradation happens in neither branch, which was the requirement.
 
 ## Migrating the credential that is already there
 
@@ -161,16 +170,37 @@ this plan, a commit message, or any other file in a repo that is or may become p
 `scan --mode staged` is the mechanical check, and this plan deliberately refers to it only by
 shape.]
 
+## Landed 2026-09-05: item 1, the whole security change
+
+`docker-credential-secretservice` v0.9.9 installed through the declared package; `credsStore`
+written explicitly into `~/.docker/config.json` with `HttpHeaders` and the existing `auths` entry
+preserved and the file still `0600`; the round trip run first and hard-failing before anything is
+written. `inv docker.configure-credential-store`, wired into `inv setup`'s packages phase after
+`tools.install` — it has to be after, because `tools.install` is what puts the helper on `PATH`.
+
+The round trip was proven against the live Secret Service by hand before the task existed (`store` →
+`get` → `erase`, secret compared) and the task's own branches are unit-tested with the config
+redirected under `tmp_path`: the merge keeps every other key, a new file is created `0600`, and a
+store that answers with a _different_ secret is treated exactly like one that refuses — which is the
+failure a `which` check cannot see.
+
+The claim is registered in `inv home.list-claims` as a `merge`/`co-owned` writer on one key. Only
+the key is claimed; the rest of the document is docker's, and holds real credentials.
+
 ## Recommended direction
 
 In dependency order, because the first item unblocks everything else.
 
-1. **The helper package and the explicit `credsStore`**, plus the round-trip verification. This is
-   the whole security change; the rest is configuration.
+1. ~~**The helper package and the explicit `credsStore`**, plus the round-trip verification~~ —
+   landed 2026-09-05, see above.
 2. **`uv.toml` at user level.** Independent of the other two and the cheapest — it changes nothing
-   until a URL carries a username, so it is safe to land first if convenient.
-3. **The migration**, with the user.
-4. **Then unblock `repo-tasks`' verification** —
+   until a URL carries a username, so it is safe to land first if convenient. **Still open**, and
+   the `[PITFALL:]` above about per-user placement is the thing not to get wrong.
+3. **The migration**, with the user. **Still open** — one plaintext `auths` entry remains, reported
+   by the task on every run and deliberately never deleted by it.
+4. ~~**Then unblock `repo-tasks`' verification**~~ — unblocked; filed there as
+   `2026-09-05-credential-helper-installed-logins-verifiable.md`, which carries the machine state
+   its check needs and the warning that the un-migrated host would measure the wrong path —
    `plans/2026-08-30-registry-credentials-in-the-os-store.md` cannot prove its login tasks do
    anything secure until a helper exists, and its check is deliberately designed to run helm against
    a host that is _not_ an image registry, so the docker fallback cannot mask a helm-side failure.
