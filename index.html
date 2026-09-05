@@ -2348,7 +2348,7 @@
   
 
 
-<h1 id="pulse-power-user-linux-setup">PULSE — Power User Linux Setup</h1>
+<h1 id="pulse-power-user-linux-setup">PULSE — Power User Linux Setup<a class="headerlink" href="#pulse-power-user-linux-setup" title="Permanent link">&para;</a></h1>
 <p><strong>PULSE</strong> (Power User Linux Setup) is an opinionated, reproducible workstation setup for Ubuntu
 24.04, driven by a single <code>setup.toml</code> and <a href="https://www.pyinvoke.org/"><code>invoke</code></a> tasks. Clone, run
 <code>bootstrap.sh</code>, run <code>inv setup</code> — no step-by-step walkthrough required for the golden path.</p>
@@ -2379,7 +2379,7 @@
 <p>A read-only diagnostic task plus a documented tag profile for Windows/WSL2 setups.</p>
 <p><a href="wsl.html"><span class="twemoji"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24"><path d="M13.22 19.03a.75.75 0 0 1 0-1.06L18.19 13H3.75a.75.75 0 0 1 0-1.5h14.44l-4.97-4.97a.749.749 0 0 1 .326-1.275.75.75 0 0 1 .734.215l6.25 6.25a.75.75 0 0 1 0 1.06l-6.25 6.25a.75.75 0 0 1-1.06 0"/></svg></span> WSL guide</a></p>
 </div>
-<h2 id="what-you-get-out-of-the-box">What you get, out of the box</h2>
+<h2 id="what-you-get-out-of-the-box">What you get, out of the box<a class="headerlink" href="#what-you-get-out-of-the-box" title="Permanent link">&para;</a></h2>
 <p>Everything below is configured by <code>inv setup</code> and works together on purpose — the font is what the
 prompt icons and the statusline glyphs are drawn from, and the statusline is laid out to match the
 prompt. None of it needs a wizard, and all of it is yours to change.</p>
@@ -2399,7 +2399,7 @@ prompt. None of it needs a wizard, and all of it is yours to change.</p>
   fragments and read by every agent tool that follows the convention.
   <a href="claude-code.html#agentsagentsmd-global-instructions-declaratively-managed">Global instructions</a></li>
 </ul>
-<h2 id="quick-start">Quick start</h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>~
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>projects
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>projects
@@ -2414,7 +2414,7 @@ input.</p>
 download and prints which of the hosts a setup run needs are reachable and what to do about each one
 that isn&rsquo;t — the same report as <code>inv net.check</code>, available with nothing installed as
 <code>python3 tasks/netdoctor.py</code>. See <a href="net-doctor.html">net-doctor.md</a>.</p>
-<h3 id="environment-variables">Environment variables</h3>
+<h3 id="environment-variables">Environment variables<a class="headerlink" href="#environment-variables" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -2449,7 +2449,7 @@ that isn&rsquo;t — the same report as <code>inv net.check</code>, available wi
 </span></code></pre></div>
 <p>Curious what <code>inv setup</code> actually runs, phase by phase, or how config files and tags work under the
 hood? See <a href="configuration.html">How it works</a>.</p>
-<h2 id="manual-steps">Manual steps</h2>
+<h2 id="manual-steps">Manual steps<a class="headerlink" href="#manual-steps" title="Permanent link">&para;</a></h2>
 <p>These cannot be automated — they require hardware knowledge, a browser, or interactive auth:</p>
 <table>
 <thead>
@@ -2493,7 +2493,7 @@ hood? See <a href="configuration.html">How it works</a>.</p>
 </tr>
 </tbody>
 </table>
-<h2 id="maintenance">Maintenance</h2>
+<h2 id="maintenance">Maintenance<a class="headerlink" href="#maintenance" title="Permanent link">&para;</a></h2>
 <p>Day-two operations live on their own page: <a href="updating.html">Updating and removing</a> covers what apt
 upgrades for you and what needs its own command (<code>deb-github</code> packages, GNOME extensions, rustup,
 nvm, uv tools), how to reclaim cache space, and how to remove a package including the files a plain
@@ -2503,7 +2503,7 @@ nvm, uv tools), how to reclaim cache space, and how to remove a package includin
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>verify.all<span class="w">         </span><span class="c1"># re-check that everything installed still actually runs</span>
 </span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>inv<span class="w"> </span>clean.all<span class="w">          </span><span class="c1"># reclaim cache space, conservatively</span>
 </span></code></pre></div>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — phases, tags, and how config files are written without
   clobbering yours</li>
