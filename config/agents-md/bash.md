@@ -165,13 +165,27 @@ user's repos put `.venv/bin` on `PATH` via direnv (`.envrc`), so the bare comman
 into the venv and a wrapper or absolute path only adds prompt friction. If a repo's `AGENTS.md`
 Build & test section is empty or stale, fix it rather than silently working around it.
 
-### Editing `~/.claude/settings.json` (or similar) in auto mode [Claude Code]
+### Changing `~/.claude/settings.json` [needs setup.toml]
 
-Use the Edit tool, not a Bash-invoked script: auto mode's background classifier reviews every Bash
-call with no interactive prompt for a user approval to land on, and denies edits to
-self-referential/sensitive files outright even when the user has approved them — Edit goes through a
-separate permission path that isn't blocked. If Edit is also blocked, stop and ask the user rather
-than hunting for another scripted workaround.
+**Don't edit it — declare the change and run the task.** That file is PULSE-managed, by the same
+logic as every other deployed dotfile: `claude_permissions_allow` / `_deny` / `_ask`,
+`claude_additional_directories`, `claude_default_mode` and `claude_statusline` are declared on a
+`setup.toml` package and applied by `inv ai.install-skills`, and the `cli-allowlist` pipeline writes
+its own Bash rules through `inv allowlist.apply`. Each mechanism tracks a manifest of the rules it
+wrote, so they never disturb each other or anything added by hand — but a hand edit still exists
+only on this machine, never reaches the repo, and is exactly the drift the manifests are there to
+make visible. A skill that offers to edit the file directly (`update-config` does) is the wrong tool
+here; declare it instead.
+
+A rule added this way takes effect **in the running session**, with no restart, so there is no
+reason to reach for the file. Two spellings to know, because the wrong one fails silently rather
+than erroring — a bare `Read(**/.env)` anchors to the _current directory_, so in user settings it
+covers only whichever repo the session is in; `//` is an absolute path from the filesystem root and
+`~/` is home-relative, and those are what a user-level rule needs.
+
+The harness writing the file itself is fine and is the exception: "Yes, and don't ask again" saves a
+rule to the **project's** `.claude/settings.local.json`, which is the harness asking first and
+recording the answer where it belongs.
 
 ### Formatting a date or decimal in a shell script
 

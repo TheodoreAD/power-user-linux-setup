@@ -133,7 +133,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Composing a Bash call](#composing-a-bash-call)
 - [Viewing, searching, or editing files](#viewing-searching-or-editing-files)
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
-- [Editing `~/.claude/settings.json` (or similar) in auto mode](#editing-claudesettingsjson-or-similar-in-auto-mode)
+- [Changing `~/.claude/settings.json`](#changing-claudesettingsjson)
 - [git fetch/push needing an SSH key](#git-fetchpush-needing-an-ssh-key)
 - [A narrow check grows into design work](#a-narrow-check-grows-into-design-work)
 - [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
@@ -163,13 +163,40 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Something the user wrote looks like a typo or mental slip](#something-the-user-wrote-looks-like-a-typo-or-mental-slip)
 - [Ending a turn with a next step](#ending-a-turn-with-a-next-step)
 
-## Editing `~/.claude/settings.json` (or similar) in auto mode
+## Changing `~/.claude/settings.json`
 
 Confirmed directly 2026-08-23: a `python3 -c "..."` one-liner making a temporary, explicitly
 user-approved edit to `~/.claude/settings.json` was denied outright by auto mode's background
 classifier both before and after the user said "I will approve it" — auto mode has no per-call
 interactive step for that approval to land on. The Edit tool, which goes through a separate
 permission path, was not blocked for the identical change.
+
+**Rewritten 2026-09-05, because that rule answered the wrong question.** It taught agents _how_ to
+edit the file, when on this machine they should not be editing it at all: `~/.claude/settings.json`
+is PULSE-managed, exactly like every other deployed dotfile, and the repo's own doctrine — "never
+edit `~/<file>` directly" — already covered it. The user put it plainly: _"~/.claude/settings.json
+should be modified by pulse normally, why do skills need to modify that? at the worst, shouldn't the
+harness modify after a permission from the user?"_ Both halves are right, and the second names the
+one legitimate writer: the harness's own "Yes, and don't ask again" saves to the **project's**
+`.claude/settings.local.json`, which is a permission asked and an answer recorded where it belongs.
+
+[DECISION: **the classifier finding stays as the reason a hand edit is also awkward, but it is no
+longer the rule.** Keeping "use Edit, not Bash" as the instruction would have left an agent
+confidently hand-editing a generated file by the recommended tool — the failure the deployed-dotfile
+rule exists to prevent, arrived at through a rule meant to help. What replaced it names the declared
+fields (`claude_permissions_allow`/`_deny`/`_ask`, `claude_additional_directories`,
+`claude_default_mode`, `claude_statusline`) and the two tasks that apply them, so the reader has
+somewhere to go rather than only something not to do.]
+
+[PITFALL: **a wrong path pattern in a permission rule fails silently rather than erroring**, which
+is why the rewritten rule names the spellings. Confirmed 2026-09-05: a deny declared as
+`Read(**/.env)` read a decoy `.env` straight through, because a bare pattern anchors to the _current
+directory_ and so covers only whichever repo the session happens to be in. Re-declared as
+`Read(//**/.env)` — `//` being an absolute path from the filesystem root — it refused the same file
+through the Read tool and through Bash `cat`, while a Python subprocess still read it, which is the
+documented boundary rather than a gap. Also confirmed the same day: a rule applied by
+`inv ai.install-skills` takes effect in the **running** session, no restart, which removes the last
+practical excuse for touching the file by hand.]
 
 ## Committing to a repo that is or might become public
 
