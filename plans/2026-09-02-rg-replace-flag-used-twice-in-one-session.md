@@ -1,12 +1,14 @@
 ---
 status: idea
-updated: 2026-09-02
+updated: 2026-09-05
 ---
 
-# `rg -r`: three occurrences, two sessions, every one of them the bundled `-rn`
+# `rg -r`: 32 defective calls a week, and never once the bare flag
 
 Opened on two occurrences in one `ingesta` session; a third arrived from a different repo the same
-day and is recorded below. Filename kept, since plan-docs promotes in place.
+day. The corpus-wide count that resolved it is in "Measured, 2026-09-05" below — the filename and
+the three-occurrence framing above it are kept as written, since plan-docs promotes in place and the
+original hypothesis is worth reading beside the number that confirmed it.
 
 ## Context
 
@@ -73,29 +75,73 @@ plausible output — the first plausible-but-wrong, the second plausible-and-emp
 neither warns, and an empty result is exactly what a session reads as "nothing owns this finding",
 which is the conclusion it was being used to draw.
 
+## Measured, 2026-09-05 — it is a rate, and the keystroke hypothesis is confirmed outright
+
+`session-bash-audit` grew the `rg-replace` counter, so the first open question below is answered by
+its existence. Seven days of transcripts, 13,754 Bash calls: **39 tagged, of which 32 are real
+defective invocations** — spread across **21 distinct sessions and 4 repos** (`ingesta` 14,
+`repo-tasks` 7, this repo 6, `agent-skills` 5). Not one session's tic. Against ~2,590 `rg`
+invocations in the same window it is **1.2%** — low-rate, persistent, and machine-wide.
+
+[DECISION: **it is a typing accident, not a belief, and the corpus is unanimous.** The prediction
+was that `-rn` would dominate a bare `-r`. It did better than that: **there is not one bare `-r`
+misuse in the whole week.** Every single defective call is a bundle in which `-r` swallowed the
+letters of the flag actually wanted — `-rn` × 27, `-ril` × 3, `-rln` × 1, `-rl` × 1. Nobody on this
+machine thinks `-r` means recursive; the finger types `r` ahead of the flag it meant. That closes
+the belief hypothesis, and with it every fix that works by explaining the flag.]
+
+[PITFALL: **the cost is bigger than "the matched text is rewritten", which is all the rule says.**
+`-r` consumes the rest of the bundle as its replacement string, so **the flags the caller asked for
+never take effect at all** — and that is invisible in the output:
+
+| as typed | replacement | what was silently dropped | what the caller gets                              |
+| -------- | ----------- | ------------------------- | ------------------------------------------------- |
+| `-rn`    | `n`         | `-n`                      | matches rewritten to `n`, **and no line numbers** |
+| `-rl`    | `l`         | `-l`                      | rewritten lines instead of a file list            |
+| `-rln`   | `ln`        | `-l`, `-n`                | same, no line numbers either                      |
+| `-ril`   | `il`        | `-i`, `-l`                | case-**sensitive** search, lines not filenames    |
+
+Measured live on the corpus's own `-ril` call —
+`rg -ril "head/tail|exit-masked|exit code|piping a gate"` over three `plans/` directories returns
+**116 rewritten lines**, where the intended `rg -il` returns **13 filenames**. The session that ran
+it wanted "which files mention this", got lines, and piped them through `head -20`. Nothing about
+116 plausible lines says the search was mangled.
+
+The `-rn` row is the one that matters most by volume: a search whose whole purpose is a `file:line`
+citation comes back with no line numbers, so either the citation is dropped or it is invented.]
+
+[PITFALL: **the counter over-reports by ~8%, all in one direction.** 3 of the 39 are not
+invocations: two `git commit -m` messages and one `plans.py commit -m` whose text quotes `rg -rn` or
+names this very plan file. The regex anchors on `\brg\b` anywhere in the command rather than at a
+command-segment boundary, so a corpus that writes _about_ this trap inflates its own count of it.
+Filed against the skill, which owns the script; the 32 above is the corrected figure.]
+
 ## Open questions
 
-**`-rn` is the shape to measure, not `-r` in general** — three occurrences, three `-rn`, across two
-sessions and two repos. That supports the keystroke hypothesis (a typo for `-n` with `r` reaching
-for `grep -r`'s recursion) over a belief about what the flag does, and it predicts `-rn`/`-rin`
-dominating a bare `-r` in any corpus-wide count. Still worth confirming against the corpus rather
-than treated as settled at n=3, but the counter should report the bundled forms separately.
+[NEEDS CLARIFICATION: **which mechanism, now that wording is ruled out.** Three candidates, and the
+choice is a real trade-off rather than an obvious pick:
 
-[NEEDS CLARIFICATION: **Whether `session-bash-audit` should count it.** It has counters for
-`find-not-fd` and `sed-n`, so an `rg-replace` counter is the same kind of thing and would answer
-whether this is one session's tic or a machine-wide rate. That skill invites newly noticed
-anti-patterns explicitly, so the addition belongs there; this plan is the evidence for it. Note the
-counter has to match the flag _as parsed_ — `-r`, `-rn`, `-rin`, `--replace` — rather than the
-literal string `-r`.]
-
-[NEEDS CLARIFICATION: **Whether an alias or a wrapper is the honest fix**, given the machine's own
-standing preference for teaching over silent correction. `~/AGENTS.md` says to prefer teaching the
-agent what to run over a mechanism that fires behind its back — and this is a case where the
-teaching demonstrably did not take, twice, in three hours. That is an argument for measuring first
-rather than for reaching straight for the wrapper.]
+- **An `ask` rule on the `rg -r` prefix**, generated by `cli-allowlist/`. It has a property that
+  makes it fit unusually well: `rg -r` is a literal prefix of every defective bundle (`-rn`, `-ril`,
+  …) and is **not** a prefix of `rg --replace`, so the accident prompts and the deliberate long-form
+  spelling stays free. It is not a mechanism firing behind the agent's back either — the agent sees
+  a prompt and the user sees the command, which `~/AGENTS.md` calls friction rather than
+  prohibition. Against it: that pipeline classifies tools by _capability_ (read_only / write /
+  dangerous), and `rg` is read-only however it is spelled. An ask-rule for a correctness trap would
+  be the first entry that classifies by hazard-of-misreading instead, which is a new meaning for the
+  file.
+- **A shell function wrapping `rg`.** Rejected on the standing rule unless something changes: it
+  corrects or refuses what the agent typed, which is the shape "Proposing an enforcement mechanism"
+  exists to refuse. Worth noting the pipefail precedent does _not_ transfer — that made the shell
+  report truthfully about a command it ran unaltered; there is no equivalent here, because `rg`
+  genuinely did what the flags said.
+- **Nothing, and accept 1.2%.** Defensible for `-rn`, whose output is conspicuously wrong (the
+  searched string absent, `n` in its place) and which has been caught by eye all three times it was
+  written up. Not defensible for `-ril`, whose output is 116 plausible lines.]
 
 ## Recommended direction
 
-Measure before changing anything. Add the counter to `session-bash-audit`, run it over the existing
-transcript corpus, and see whether this is one session or a rate. If it is a rate, the interesting
-question is which of the two hypotheses above it fits, because they have different fixes.
+The measurement asked for is done and points one way: no wording change can help, because nobody
+holds the wrong belief the wording would correct. Put the three mechanisms above to the user and
+take the answer; the `ask`-rule option is the only one that does not need a rule bent to allow it,
+and its cost is one prompt on a shape that occurs about four times a week.
