@@ -2366,19 +2366,19 @@
   
 
 
-<h1 id="locale">Locale<a class="headerlink" href="#locale" title="Permanent link">&para;</a></h1>
+<h1 id="locale">Locale</h1>
 <p>Language and formats: what PULSE sets, why, and how to change it.</p>
-<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<h2 id="setup">Setup</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>system.set-locale
 </span></code></pre></div>
 <p>Runs <code>sudo localectl set-locale LANG=en_US.UTF-8</code>, writes to <code>/etc/locale.conf</code> (systemd-integrated,
 persists across reboots), and is idempotent. Also runs as part of <code>inv setup</code>. <code>en_US.UTF-8</code> is
 pre-generated on Ubuntu 24.04 — <code>locale-gen</code> is not needed.</p>
-<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<h2 id="verify">Verify</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>locale
 </span></code></pre></div>
 <p>All categories should show <code>en_US.UTF-8</code>.</p>
-<h2 id="pitfalls">Pitfalls<a class="headerlink" href="#pitfalls" title="Permanent link">&para;</a></h2>
+<h2 id="pitfalls">Pitfalls</h2>
 <ul>
 <li><strong>Do not set <code>LC_ALL</code></strong> — it overrides all individual <code>LC_*</code> categories with no escape hatch,
   breaking intentional per-category overrides</li>
@@ -2388,7 +2388,7 @@ pre-generated on Ubuntu 24.04 — <code>locale-gen</code> is not needed.</p>
 <li><strong>A <code>C</code> or <code>POSIX</code> locale will break things</strong> — Python throws Unicode errors, git and compiler
   output may be garbled</li>
 </ul>
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — the setup phase this runs in</li>
 <li><a href="index.html">Quick start</a> — where <code>inv system.set-locale</code> sits in a first run</li>
