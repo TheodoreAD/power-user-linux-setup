@@ -2,6 +2,18 @@
   // "recommended", not "strict" — see power-user-linux-setup's pyrightconfig.json (the origin repo
   // this package was extracted from) for the full profile rationale.
   "typeCheckingMode": "recommended",
+  // Derived per consumer by `configs.pull` from that project's own `requires-python`, and omitted
+  // entirely when it declares none — so the value below is repo-tasks' own floor, not a default
+  // imposed on anyone. Without it basedpyright validates against whichever interpreter it happens
+  // to find, which is the developer's venv rather than the version the project claims to support:
+  // the same class of error as testing against a database you do not deploy, and silent, because
+  // the tool reports success. It goes in this file rather than on the command line so an editor's
+  // language server reads the same answer CI does; `[tool.basedpyright]` in pyproject.toml is not
+  // an option, since a pyrightconfig.json existing at all makes basedpyright ignore it outright.
+  // A repo wanting a second version checked (a CI matrix) passes `inv quality.type-check
+  // --python-version=X.Y`, which overrides this. See
+  // plans/2026-08-29-python-floor-in-the-shipped-configs.md.
+  "pythonVersion": "3.11",
   // `include`, not `exclude`: scopes basedpyright to this project's own code by construction,
   // instead of an ever-growing "don't check this" blocklist that has to be kept in sync by hand as
   // new non-source content (docs, generated caches, example snippets, ...) gets added — the
@@ -19,8 +31,19 @@
   // (`src*` means ./src, never any directory named src, so it can never wander into a .venv and
   // consequently needs no `exclude` at all), and is recursive below itself once it matches. The
   // widening is only to top-level siblings sharing the prefix, and no repo in the family has one.
-  // See plans/2026-08-19-gitignore-tool-alignment.md.
+  // See repo-tasks' contributing/file-discovery.md.
   "include": ["src*", "tests*", "tasks*"],
+  // Packaged tests: `tests/` and its tiers carry `__init__.py`, which is pytest's own documented
+  // recommendation for the `prepend` import mode this family uses, and which removes the
+  // globally-unique-test-basename requirement the unpackaged layout imposes. basedpyright then
+  // needs the repo root on its search path to resolve `from tests.support import ...`, which is
+  // what this line is for. See repo-tasks' contributing/type-checking.md.
+  //
+  // It has one side effect, and it is guarded rather than accepted: it also makes `from src.<pkg>
+  // import ...` resolve, a second import route producing different module objects with separate
+  // state. ruff's flake8-tidy-imports `banned-api` entry for `src` in the shipped ruff.toml is what
+  // enforces this once the type checker no longer can.
+  "extraPaths": ["."],
   // A warning fails the run. Flipped 2026-08-25 once every repo in the family was at zero: with
   // thousands of warnings the count was output nobody read; at zero, this is what keeps it there.
   // A warning that is structural rather than a defect is suppressed at its one site with a

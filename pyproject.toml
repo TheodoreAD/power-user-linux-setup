@@ -23,6 +23,8 @@ dev = [
   "pytest-cov",
   "zizmor",
   "hadolint-py",
+  "pytest-socket",
+  "pytest-timeout",
 ]
 # The docs-site engine, pinned, in the group repo_tasks' docs.py already assumes
 # (`uv sync --group docs`). It used to live in a requirements-docs.txt that only CI's Pages

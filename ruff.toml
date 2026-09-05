@@ -1,4 +1,9 @@
-target-version = "py311"
+# No target-version: ruff reads the floor from the consumer's own `requires-python`, so one
+# byte-identical file serves a 3.11 library and a 3.14 application without either declaring its
+# tier twice. Measured 2026-08-29 on ruff 0.16.3 — PEP 695 `def f[T](x)` is a syntax error under
+# `>=3.11` and clean under `>=3.12`, same config. A project with no `requires-python` at all is the
+# one case that changes: the linter then targets no version (newest syntax passes) while the
+# formatter falls back to 3.10, so declare the field rather than re-adding a pin here.
 line-length = 120
 
 [lint]
@@ -47,6 +52,20 @@ ignore = [
   # hierarchies across this family (skills/python-conventions/references/rationale.md §3); Home
   # Assistant's own config drops this same code for being too opinionated for exactly this reason
 ]
+
+[lint.flake8-tidy-imports.banned-api]
+# The guard that pays for `extraPaths: ["."]` in pyrightconfig.json. That setting exists so a
+# packaged `tests/` can import a shared helper as `tests.support`, and it has one side effect: it
+# also makes `from src.<pkg> import ...` resolve clean, which is a *second* import route to the same
+# code. `import src.pkg.mod` and `import pkg.mod` produce different module objects with separate
+# state at runtime, and `src` resolves as a PEP 420 namespace package, so no `src/__init__.py` is
+# needed for the hazard to exist. The type checker stopped objecting, so a linter does instead.
+#
+# Deliberately generic: this file ships byte-identical to every consumer, and a message naming one
+# package would be wrong in all the others. In a flat-layout consumer with no `src/` directory at
+# all the rule is simply inert — never triggered rather than wrong. `TID` is already in `select`
+# above, so this adds no rule family and no dependency.
+"src" = { msg = "import the installed package, not the src/ path to it — they are two different modules at runtime" }
 
 [lint.isort]
 # No known-first-party: ruff auto-detects first-party imports from the project's own layout
