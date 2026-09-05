@@ -1,6 +1,6 @@
 ---
-status: blocked on the repo-tasks change filed as 2026-09-04-docs-build-in-the-quality-gate
-updated: 2026-09-04
+status: landed
+updated: 2026-09-06
 ---
 
 # `inv quality.precommit` does not build the docs, so a heading rename ships a red deploy
@@ -222,18 +222,23 @@ push and every PR and publishes nothing, `publish_on_push.yml` keeps building an
 over passing an artifact between workflows — that needs `workflow_run`, which `checkout@v7` now
 restricts, for a saving smaller than the plumbing.
 
-[UNVERIFIED: whether a later zensical grows a real check mode, which would retire all of this. None
-was found in its issue tracker on 2026-09-04, and the pin here is 0.0.44 against a current 0.0.59 —
-so the probes above should be re-run at the next version bump before the workaround is treated as
-permanent. `invalid_link_anchors` is on by default and is the check that catches the dangling
-anchor, per zensical's validation docs, so the behaviour being relied on is documented rather than
-incidental.]
+~~[UNVERIFIED: whether a later zensical grows a real check mode, which would retire all of this.]~~
+**Re-probed 2026-09-06 against 0.0.59, the current release, and it has not.** Three commands
+(`build`, `new`, `serve`), and `build` takes exactly `-f/--config-file`, `-c/--clean` and
+`-s/--strict` — no check mode, no dry run, no output directory, identical to 0.0.44. So the
+workaround is not provisional pending a bump; the standing question moves to
+`contributing/zensical.md`'s bump checklist with its answer and date, which is where the rest of
+that page keeps this kind of question. `invalid_link_anchors` is on by default per zensical's
+validation docs, so the behaviour being relied on is documented rather than incidental.
 
 ## Recommended direction
 
-Steps 1 and 3 have landed here. Step 2 is the one that actually closes the gap, it is in another
-repo, and until it lands the manual grep-plus-`docs.build` after a heading rename is the whole
-defence.
+**All three have landed.** Step 2 was the one that closed the gap and it was in another repo; it was
+absorbed, implemented and retired in `repo-tasks` within about half an hour of being filed
+(`7a41c1e`, in `precommit` rather than `check` per the revision above), this repo took it in
+`02975ab`, and the result was verified here against the original repro. The manual
+grep-plus-`docs.build` that stood in meanwhile is no longer the defence: the gate runs both the docs
+build and an anchor-resolving `docs.link-check` on every commit.
 
 1. ~~**This repo: make zensical resolvable from its own venv.**~~ **Landed 2026-09-04.**
    `pyproject.toml` gained a `docs = ["zensical==0.0.44"]` group — the shape `repo_tasks/docs.py`
@@ -248,13 +253,13 @@ defence.
    `[packages.zensical]` (a downgrade for the whole machine) or an unpinned CI, and a dependency
    group pays neither cost. `[packages.zensical]` stays for other repos and for the human at the
    shell; inside this repo direnv's `.venv/bin` shadows it.
-2. **`repo-tasks`: add `docs.build` to `quality.precommit`'s pre-chain — _not_ `check`'s** (see the
-   revision above; `check` must stay read-only and zensical offers no way to build without writing).
-   Guarded so it no-ops on a consumer with no `mkdocs.yml` (`scaffoldapy`'s template makes the docs
-   site conditional on `with_docs`, so the docs-less consumer is real) — the graceful-degradation
-   shape `shell_check` already uses for a repo with zero `.sh` files, per this repo's cross-repo
-   family convention. Concretely `pre=[fix, check, docs_build_if_configured]` rather than a new
-   member of `check`'s list.
+2. ~~**`repo-tasks`: add `docs.build` to `quality.precommit`'s pre-chain — _not_ `check`'s**~~
+   **Landed 2026-09-04** (see the revision above; `check` must stay read-only and zensical offers no
+   way to build without writing). Guarded so it no-ops on a consumer with no `mkdocs.yml`
+   (`scaffoldapy`'s template makes the docs site conditional on `with_docs`, so the docs-less
+   consumer is real) — the graceful-degradation shape `shell_check` already uses for a repo with
+   zero `.sh` files, per this repo's cross-repo family convention. Concretely
+   `pre=[fix, check, docs_build_if_configured]` rather than a new member of `check`'s list.
 
    **Filed as `plans/2026-09-04-docs-build-in-the-quality-gate.md`, now absorbed into `repo-tasks`'
    own `plans/`** rather than implemented here, since writing into another repo's tree is out.
