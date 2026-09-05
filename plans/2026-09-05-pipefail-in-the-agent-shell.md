@@ -96,6 +96,44 @@ success. The `| head` side behaves as the child-zsh probe predicted — 141 for 
 `…-pipefail-live.json` this plan originally named. Truthfulness is the goal and is already achieved;
 a rate change would be a bonus, not the test.]
 
+### Samples against that question
+
+Merged in 2026-09-05 from `2026-09-05-piped-gate-rate-after-pipefail-one-session.md`, filed for this
+repo from an `ingesta` session (`51a36fd5-b684-4cfb-8848-a1a5937b294c.jsonl`,
+`--until
+2026-09-05T20:02:32+03:00`) — that file is gone, and `plans.py archive --file` on its name
+reads it back. It asked to be merged here rather than kept: one plan per topic, and this one owns
+the topic.
+
+**Sample 1 — `ingesta`, 233 calls, nine and a half hours, entirely post-deploy. 7/11 against the
+rescored baseline.**
+
+| counter                 | this session | vs rescored baseline |
+| ----------------------- | ------------ | -------------------- |
+| `head/tail`             | 28%          | **+1pp, MISS**       |
+| `chain`                 | 50%          | +5pp, MISS           |
+| `sed-n`                 | 9%           | +4pp, MISS           |
+| `git-mutating-in-chain` | 8%           | +2pp, MISS           |
+| `exit-masked`           | 21%          | —                    |
+| `redirect-then-filter`  | 0%           | −0pp, OK             |
+| `git-C-own-repo`        | 0% (1 call)  | −1pp, OK             |
+
+**The rate did not move**, and `head/tail` came out a point _above_ the post-deploy baseline. On
+this evidence `PIPE_FAIL` changed what a pipe reports and changed nothing about how often one is
+typed — which is the shape this plan predicted rather than a disappointment. The shell setting fixes
+the consequence; the habit is an instruction-side question the adherence watch owns. One session is
+a sample, not a verdict.
+
+[PITFALL: **`exit-masked` now measures a style rather than a risk, and both its name and the
+instruction it feeds still describe the risk.** That sample masked 21% of its calls and told the
+user a gate or suite was green ten times, every one from a piped run — the combination that was
+genuinely dangerous under the old shell. The unpiped re-run exited 0 and all ten held. But
+`session-harvest`'s step 5 still reads a non-zero `exit-masked` as "this session's own green results
+are unverified", so on this machine it costs a full gate re-run per harvest to confirm something
+`PIPE_FAIL` already guarantees. **That question belongs to `agent-skills`**, which owns both the
+counter and the harvest step; filed there as
+`2026-09-05-exit-masked-measures-a-risk-pipefail-removed.md` rather than decided here.]
+
 [PITFALL: **the original baseline was written by a superseded instrument, and nothing in the file
 says so.** It was saved at 02:14 local from the _installed_ `audit.py`, whose mtime shows the
 re-install carrying `0165577` ("a pipe inside quotes is not a pipe") did not land until 18:44 the
