@@ -602,6 +602,41 @@ the flag to be carried across — criterion 2, a variant extends its rule. Consi
 clause at the exact point of confusion, and a single occurrence is not yet evidence of a rate worth
 a row ("rows with no stated cost teach nothing"). Worth adding there if it recurs.
 
+### The `fd` clause, and an exemption list that cost more than it protected, 2026-09-05
+
+Same sentence, same paragraph, two halves that never adhered alike: `rg`-over-`grep -r` measured 92%
+on 2026-08-29 and 94.5% a week later, while `fd`-over-`find` measured 57% and then 60%. Nothing was
+changed in between, so the second reading is the control — the gap is a property of the clause, not
+noise.
+
+[DECISION: **the difference the numbers point at is the exemption list, and it was cut on its own
+hit rate.** The `rg` half carries none; the `fd` half carried "plain `grep`/`find` stay fine for
+non-recursive lookups, `find -exec`/`-delete`, or portability". Of **37** real `find` calls in the
+measured week, **2** qualified for it — one `-printf`, one inside a `docker run` on an image with no
+`fd`. So it was covering 5% of calls while sitting next to the preference the other 95% read past.
+It is restated rather than deleted, because `find -exec` genuinely is outside `fd`'s remit and a
+rule that is wrong loses more than a rule that is over-broad — but as a bar with **its own hit rate
+inside it** ("2 of 37 `find` calls qualified"), which is the difference between a list that reads as
+permission and one that reads as a threshold.]
+
+The `fd` half also became a translation — `find <dir> -name '*.py'` → `fd -e py . <dir>` — for the
+same reason as the `rg -r` clause rewritten the same day: a substitution is exercised whenever the
+tool is reached for, a preference only at the moment of doubt. And the `rg` half lost its passenger,
+shrinking to one clause, which is what a 94.5% rule should cost in a file this size.
+
+[PITFALL: **`fd` returns nothing rather than erroring for a gitignored or dot-directory target, and
+the clause had sold `.gitignore`-awareness as pure upside.** Probed in this repo: `fd activate`
+returns **0** where `find -name 'activate*'` returns 7 — `.venv/` is both hidden and ignored — and
+`fd -I` alone is still 0, `fd -HI` is 10. One encounter with that teaches an agent that `fd` does
+not find things, which is a durable reason to stay on `find`; naming `-H`/`-I` in the rule is a
+credibility fix. It accounts for only about 5 of the 37 calls, so it is not the cause.]
+
+[PITFALL: **29% of this rule's apparent miss rate belongs to a different skill.** 10 of the 35
+avoidable `find` calls are `find ~/plans …`, which route to `plans.py list` and `archive --search`
+rather than to `fd` — the `plan-docs` skill says so explicitly. A re-measurement that reads all 35
+as an `fd` question will attribute another skill's adherence to this clause's wording, in whichever
+direction the number happens to move.]
+
 ### The `rg -r` clause rewritten as a translation, 2026-09-05
 
 It recurred, the row was added, and the row's first full read says the clause above was addressing

@@ -76,8 +76,21 @@ pre-truncating only loses data and forces a second run; if size is the worry, co
 `wc -l`). That includes a log you did redirect to: Grep/Read _on the log_ as a second call — never
 `; rg … log | head` tacked onto the same one. And never append `; echo "EXIT=$?"` — it adds a chain
 for information the tool already reports. When shelling out to search anyway, use `rg` over
-`grep -r` and `fd` over `find` (faster, `.gitignore`-aware); plain `grep`/`find` stay fine for
-non-recursive lookups, `find -exec`/`-delete`, or portability.
+`grep -r`; a non-recursive `grep` stays fine.
+
+**Look files up with `fd`, and translate rather than reaching for `find`:**
+`find <dir> -name '*.py'` is `fd -e py . <dir>`, `find <dir> -iname '*plan*'` is `fd plan <dir>`.
+The `-not -path '*/.git/*'` and `-not -path '*/.venv/*'` exclusions come free, because `fd` reads
+`.gitignore` — which is also the one thing to know about it: **`fd` prints nothing rather than
+erroring for a target that is gitignored or under a dot-directory.** `fd activate <this repo>`
+returns 0 hits where `find` returns 7, because `.venv/` is both. `-H` for hidden, `-I` to ignore
+ignore-files, `-HI` for a target that is both. A `fd` that comes back empty on a file you are sure
+exists wants those flags, not `find`.
+
+`find` earns the call only when it is doing something `fd` cannot: acting on matches (`-exec`,
+`-delete`), selecting by time, size or permission, `-printf`, or running somewhere `fd` is not
+installed — inside a container, say. Measured over a week, **2 of 37 `find` calls qualified**, so
+the exemption almost certainly does not cover yours.
 
 **Translating a `grep` invocation to `rg` is one edit: delete the `r`, keep every other letter.**
 `rg` is recursive by default and its `-r` is `--replace`, which takes the next thing as a

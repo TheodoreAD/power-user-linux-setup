@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-29
+updated: 2026-09-05
 ---
 
 ## Context
@@ -50,50 +50,120 @@ Two candidate causes, both in this repo's control:
    distinguishes the preferred spelling from the discouraged one, so the rule is the only signal and
    it is competing with a 35 KB instruction file for attention.
 
+## Re-measured 2026-09-05, with the rows step 1 asked for
+
+The `agent-skills` change filed as step 1 landed: `session-bash-audit` now has separate
+`grep-r-not-rg`, `find-not-fd` and `find-exempt` rows, so this is the first reading that is not a
+hand-count. Seven days, 13,754 Bash calls:
+
+| shape                    | calls | share of that pair |
+| ------------------------ | ----- | ------------------ |
+| `rg`                     | 2597  | —                  |
+| `grep -r` / `grep -R`    | 150   | **5.5%**           |
+| `fd`                     | 53    | —                  |
+| `find`, avoidable        | 35    | **40%**            |
+| `find`, genuinely exempt | 2     | —                  |
+
+**Both halves held their position and neither moved.** `rg` 92% → 94.5%; `fd` 57% → **60%**. Nothing
+was done to either clause in between — step 2 below was never executed — so this is stability under
+an unchanged rule rather than an effect, and it is the control the sequencing was designed to
+produce.
+
+[DECISION: **the exemption list goes, replaced by a bar with the measurement in it.** The open
+question below asked whether it should stay at all; the count answers it. Of 37 real `find` calls in
+the week, **2** qualify — one `-printf`, one inside a `docker run` on an image with no `fd`. So the
+carve-out protects 5% of calls while sitting adjacent to the preference for the other 95% to read as
+permission, which is exactly the mechanism this plan hypothesised. It is not deleted outright,
+because `find -exec`/`-delete` really is something `fd` does differently and a rule that is wrong
+loses more than it gains. It is restated as a test — "acting on matches, selecting by time/size/
+permission, `-printf`, or somewhere `fd` is not installed" — with **"2 of 37 qualified" in the rule
+itself**, which converts a list that reads as an invitation into a bar that says your case probably
+is not one.]
+
+[DECISION: **`fd` gets its own sentence, in the translation form the neighbouring `rg -r` clause was
+rewritten into the same day.** `find <dir> -name '*.py'` → `fd -e py . <dir>`. Same reasoning as
+there: a substitution is exercised every time the tool is reached for, where a preference is only
+consulted at the moment of doubt. The `rg` half loses its `fd` passenger and shrinks to one clause,
+which is what a 94.5% rule should cost.]
+
+[PITFALL: **`fd` prints nothing rather than erroring for a gitignored or dot-directory target**, and
+the rule had advertised `.gitignore`-awareness purely as a benefit. Probed 2026-09-05 in this repo:
+`fd activate` returns **0** hits and `find -name 'activate*'` returns 7, because `.venv/` is both
+hidden and ignored; `fd -I` alone still returns 0 and `fd -HI` returns 10. An agent that hits this
+once has been taught that `fd` "doesn't find things", which is a durable reason to go back to
+`find`. The flags are now named in the rule for that reason. It explains only ~5 of the 37 calls, so
+it is a credibility fix rather than the cause.]
+
+[PITFALL: **10 of the 35 avoidable calls — 29% — are `find ~/plans …`, and none of them route to
+`fd` at all.** They route to `plans.py`: `list` answers "what plans exist", `archive --search`
+answers "which plan said this", and the `plan-docs` skill says outright to use them rather than
+opening plan files. So nearly a third of this rule's apparent miss rate is a different skill's
+adherence problem wearing `find`'s clothes, and any re-measurement that treats the whole 35 as an
+`fd` question will misread the effect of the reword.]
+
+[PITFALL: **the counter over-reports by 10%, the second instance of one bug.** 4 of the 41 tagged
+calls are not `find` invocations: three are `audit.py … | rg 'find-not-fd|grep-r-not-rg|…'` — a
+session grepping the audit's own output for these very row names — and one is a commit message. The
+`rg-replace` row was found to have the identical defect the same day, from prose quoting `rg -rn`.
+Both anchor the command name anywhere in the string rather than at a command-segment boundary, so
+**every one of these rows inflates precisely when someone is working on the audit**. Filed against
+the skill as `2026-09-05-rg-replace-counter-matches-its-own-prose.md`, now covering both. A related
+miss in the other direction: the `-printf` call above was tagged `find-not-fd` rather than
+`find-exempt`, so the exempt row undercounts too.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: does the allowlist lever survive its own bluntness? Dropping `Bash(find:*)`
 prices `find` and leaves `fd` free, which is a legitimate use of the permission model rather than a
 mechanism firing behind the agent's back — a prompt is in front of the agent, and `~/AGENTS.md`'s
 own rule on enforcement mechanisms objects to the covert kind, not to this. But rules match on
-literal command prefix, so it cannot spare the 62 genuinely-exempt `-exec`/`-delete` calls: those
-would prompt too. Roughly 237 prompts over two days of transcript, of which 62 are unfair. Is that
-an acceptable price for retiring a 43% miss rate, or does it just teach sessions to route around
-`find` in ways nobody predicted?]
+literal command prefix, so it cannot spare the genuinely-exempt `-exec`/`-delete` calls: those would
+prompt too. **The 2026-09-05 figures make this much cheaper than it looked**: 37 `find` calls a
+week, not 237 over two days, and 2 of them exempt — so the price is roughly five prompts a week of
+which one is unfair, against a 40% miss rate. The question is no longer whether the cost is
+acceptable but whether a prompt that rare registers as a signal at all.]
 
-[NEEDS CLARIFICATION: reword the clause, price it, or both — and in which order? Doing both at once
-makes the re-measurement uninterpretable, since neither cause can be attributed. Doing the reword
-first is cheaper and reversible; doing the pricing first is the stronger signal. There is a real
-argument for reword-only, on the grounds that if teaching works, the allowlist change is not needed
-at all — which is what `~/AGENTS.md` says to prefer.]
+Answered by the 2026-09-05 measurement and the reword it produced, kept here because the reasoning
+is what the next reading is judged against:
 
-[NEEDS CLARIFICATION: should the exemption list stay at all? Its purpose is to stop the rule being
-wrong about `find -exec`, which `fd` genuinely handles differently. But it is doing measurable
-damage as a permission signal. Alternative shape: state the preference without exemptions and let
-the rule be slightly over-broad, on the grounds that an agent reaching for `find -delete` will not
-be stopped by a missing carve-out — it will just pay a prompt.]
+- **Reword, price, or both, and in which order** — reword first and alone, as the plan already
+  argued; done 2026-09-05 with no accompanying allowlist change, so the next reading attributes to
+  one cause.
+- **Should the exemption list stay** — no, not in list form. See the `[DECISION:]` above: it covered
+  2 of 37 calls, and is now a bar carrying its own hit rate rather than a carve-out sitting next to
+  a preference.
 
 ## Recommended direction
 
-Rough, and deliberately sequenced so the result is measurable.
+Rough, and deliberately sequenced so the result is measurable. Steps 1 and 2 are **done**, on
+2026-08-29 and 2026-09-05 respectively; 3 is the live one.
 
-1. **Nothing here is actionable without the audit change**, which belongs to `agent-skills`:
-   `session-bash-audit`'s `PATTERNS` has one `grep/find` row covering all four commands, so it
-   measures "shelled out instead of using Grep/Glob" and is blind to which CLI was used. Filed there
-   2026-08-29 as `2026-08-29-bash-audit-cannot-see-grep-vs-rg.md`. The numbers above were taken by
-   hand and are the baseline; the rows are what makes the next reading comparable rather than
-   another hand-count.
-2. **Reword the clause first, alone.** Give `fd` its own sentence rather than a subordinate one, and
-   decide the exemption-list question above while doing it. Re-measure after a week of real
-   sessions.
-3. **Only then consider the allowlist**, if the miss rate has not moved. That order also matches
-   `~/AGENTS.md`'s own preference for teaching over mechanism, and it keeps the two changes
-   attributable.
-4. **Leave `rg` alone.** At 92% it is evidence the rule shape works when the preference is stated
-   plainly, which is itself the argument for step 2.
+1. ~~**Nothing here is actionable without the audit change**~~ — landed. `session-bash-audit` now
+   carries `grep-r-not-rg`, `find-not-fd` and `find-exempt` as separate rows, so the table above is
+   the first machine-read figure and the next one is comparable to it rather than to a hand-count.
+2. ~~**Reword the clause first, alone.**~~ — landed 2026-09-05, and deliberately alone: no allowlist
+   change accompanies it, so the next reading attributes cleanly. `fd` has its own sentence in
+   translation form, the exemption list became a bar carrying its own hit rate, and the `-H`/`-I`
+   silent-zero caveat is stated.
+3. **Only then consider the allowlist**, if the miss rate has not moved — still the next step, and
+   now with a clean before/after either side of a single change. Re-measure after a week of real
+   sessions with `audit.py --days 7`, correcting for the 10% prose over-report until the counter is
+   fixed, and **read the `~/plans` cluster out separately**: 29% of the misses are a `plan-docs`
+   adherence problem that no wording of this rule can move.
+4. **Leave `rg` alone.** At 94.5% it is evidence the rule shape works when the preference is stated
+   plainly, which is the argument step 2 acted on.
+
+[UNVERIFIED: whether the reword moves it. Two consecutive readings a week apart under an unchanged
+rule gave 57% and 60%, so the baseline is stable enough that a real change should be visible. If the
+next reading is inside that band, teaching is spent for this clause and step 3 is owed — which is
+the same crossroads the `head`/`tail` cluster reached after four attempts, arrived at here after
+one.]
 
 [DEFERRED: the general finding, which outlives this rule — a preference clause with an adjacent
 exemption list adheres worse than one without. Two spellings of the same preference in one file, one
-with carve-outs and one without, measured 92% and 57%. That is a single observation and not yet a
-rule, but it is the kind of thing `contributing/global-agents-md.md` exists to accumulate, and it
-would be worth a second instance before anything is written down.]
+with carve-outs and one without, measured 92% and 57%, and re-measured 2026-09-05 at 94.5% and 60%.
+**The second reading is not a second instance** — it is the same pair a week later, so it says the
+observation is stable, not that it generalises. What it did buy is a stronger version of the
+hypothesis: the carve-out covers 2 of 37 calls, so it cannot be doing much work as an exemption and
+is left doing work as a signal. Cutting it is now a deliberate test of the finding rather than only
+a fix to this clause, and the reading after it is the evidence to write down or discard.]
