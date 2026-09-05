@@ -1,6 +1,6 @@
 ---
-status: in-progress
-updated: 2026-08-30
+status: landed
+updated: 2026-09-06
 ---
 
 # English weekdays, 24h times, ISO dates — as a PULSE default
@@ -107,19 +107,23 @@ one.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: does the `~/AGENTS.md` rule survive, and in what form? If `LC_TIME` becomes
-PULSE-set, the rule's premise ("this machine's `LC_TIME` defaults to `ro_RO`") stops being true and
-it becomes labellable like its neighbours. But forcing `LC_TIME=C` for output a script _parses_
-stays correct regardless of what the ambient locale is — the instruction is portable even when the
-hazard is not. Likely outcome: the rule keeps the imperative, loses the machine fact, and gains
-nothing else.]
+~~[NEEDS CLARIFICATION: does the `~/AGENTS.md` rule survive, and in what form?]~~ **Answered
+2026-08-30, by the rewrite itself, and this plan simply was not updated to say so.** The predicted
+outcome is what happened: `config/agents-md/bash.md`'s "Formatting a date or decimal in a shell
+script" now leads with the imperative and carries no machine fact, keeping the two concrete tells
+(`Mi` for `Wed`, `1,23` for `1.23`) because they are what makes the hazard recognisable. The
+incident that produced them lives in `contributing/global-agents-md.md` under the matching heading.
 
-[DEFERRED: **making it configurable rather than hard-coded.** The user, explicitly: _"if someone
-doesn't want this and prefers another locale, that's something they should be able to choose when
-they install with pulse, or configure later, somehow, but this complexity cand live in a plan until
-the first user actually wants this."_ So the first implementation pins the values that serve this
-machine, and the `[packages.*]`-style knob waits for a real second user. Recorded so that when one
-appears, nobody re-derives the requirement.]
+**And it takes no dependency label**, which was the other half of the question. The rule depends on
+nothing PULSE installs and is not a rule about this machine — forcing the C locale for output a
+script parses is correct wherever it runs, and merely unnecessary on a machine whose locale is
+already pinned. What changed is which half leads, not whether the rule applies.
+
+~~[DEFERRED: **making it configurable rather than hard-coded.**]~~ **Moved 2026-09-06** to
+`plans/2026-08-24-machine-local-setup-toml-overrides.md`, onto its standing question about whether
+an override may carry anything beyond `enabled` — with the user's own wording, and with the mismatch
+noted: an override flips a package, a locale needs a value, and `system.set-locale` has no
+`[packages.*]` section to key on. Still waiting on a real second user, as instructed.
 
 ## What the desktop actually does with this (verified 2026-08-30)
 
@@ -135,6 +139,35 @@ out not to be a surface at all.
   full `LANG`/`LC_*` set, so the systemd user session is what propagates `/etc/locale.conf` — it is
   re-read at login. Shells and applications already running keep the old values until restarted,
   which is the usual caveat rather than a special one here.
+
+## Migrated to
+
+Retired 2026-09-06. Everything landed on 2026-08-30; the open question was answered by that same
+change and never written back here, and the deferred item is re-filed.
+
+- **`tasks/system.py`'s `set_locale` docstring** — already carried the choice and its reasons before
+  this retirement: why `en_DK`, why `en_CA` and `en_GB` each fail one half, the Monday-first trap,
+  why `LC_NUMERIC` is separate, and why the task is read-modify-write. Verified rather than assumed,
+  and the plan citation in it is repointed as part of this retirement.
+- **`docs/locale.md`** — rewritten, because it still described a task that set only `LANG` and told
+  readers every category should be `en_US.UTF-8`. It now carries the user-facing half: the three
+  variables and the seven preserved, the six-locale comparison table, the `first_weekday` trap, that
+  a logout suffices, and that the GNOME clock never followed `LC_TIME` at all. Two of its pitfalls
+  contradicted the implementation and are restated.
+- **`tests/unit/test_system.py`** — the `parse_system_locale` indentation pitfall is the test, using
+  an indented fixture, which is where a parser bug belongs.
+- **`config/agents-md/bash.md` and `contributing/global-agents-md.md`** — the `~/AGENTS.md` rule's
+  rewrite and the incident behind it, both landed 2026-08-30.
+- **`plans/2026-08-24-machine-local-setup-toml-overrides.md`** — the configurability question, with
+  the user's wording and the mismatch that makes it a candidate rather than a fit.
+
+Deliberately not migrated:
+
+- **The pre-change machine state.** Nine `LC_*` on `ro_RO` was the starting point, not a fact about
+  the machine now; `test_system.py`'s fixture keeps a real sample of that output for the parser's
+  sake, which is the only reason it is still worth having.
+- **The `localectl`-replaces-rather-than-merges pitfall.** In the task docstring and in the test
+  module's own opening paragraph, checked rather than assumed.
 
 [PITFALL: **`en_US` for `LC_TIME` would silently flip the calendar's week start.**
 `locale
