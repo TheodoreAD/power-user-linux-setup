@@ -14,10 +14,10 @@ being guarded is a tar invocation, so mocking the run would test nothing.
 
 import subprocess
 from pathlib import Path
-from typing import override
 
 import pytest
 from invoke import Context, MockContext, Result
+from typing_extensions import override  # typing.override is 3.12+; this repo's floor is 3.11
 
 from tasks import deploy, tools, util
 
