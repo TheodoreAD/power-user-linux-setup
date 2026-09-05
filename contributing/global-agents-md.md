@@ -935,10 +935,23 @@ three codes (141, 1, 120) and what each means.
 
 [UNVERIFIED: whether the piped-gate rate itself moves, and by how much. The mechanism makes a piped
 gate truthful, which is the goal; whether agents also pipe less because a truncated `| head` now
-reports failure is a separate question. Baseline saved as `pipefail live` in
-`~/.local/state/session-bash-audit/`, to be read with `audit.py --compare` after a week — the same
-instrument the four prior rewordings were measured with, so this is comparable to them rather than a
-fresh scale.]
+reports failure is a separate question. Baseline saved as
+`~/.local/state/session-bash-audit/2026-09-05-pipefail-live.json`, to be read with
+`audit.py --compare` after a week — the same instrument the four prior rewordings were measured
+with, so this is comparable to them rather than a fresh scale.]
+
+[PITFALL: **`--save-baseline` with no path silently overwrote the baseline it was meant to be
+compared against.** The default filename is a **UTC** date, and this machine runs at `+03:00`, so a
+run at 02:13 local on 2026-09-05 wrote `2026-09-04.json` — the name the pre-`bba2ed9` baseline
+already had, saved at 14:09 the previous afternoon. No prompt, no backup, and the report scrolls
+past `baseline written to …` at the end of several hundred lines. It was reconstructed from the
+transcripts with `--days 4.5 --until 2026-09-04T14:27:46+03:00` (the deploy commit's own timestamp)
+and is labelled as a reconstruction in its own `note`, because `--days` counts back from _now_
+rather than from `--until`, so the window approximates the original rather than reproducing it. The
+loss was survivable only because the question that baseline existed to answer had already been
+answered and written down above. Filed against the skill as
+`agent-skills/2026-09-05-save-baseline-overwrites-silently.md`; until it is fixed, pass an explicit
+path to `--save-baseline`.]
 
 ## Generalizing from a sample to a set
 

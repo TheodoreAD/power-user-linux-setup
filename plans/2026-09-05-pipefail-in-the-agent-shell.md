@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-05
 source_repo: github.com-personal/agent-skills
 source_session: 4e6fc3cc-eebb-4ea1-b035-ca0112dc9982.jsonl
@@ -77,16 +77,32 @@ get the same treatment in their scripts.
   `~/.local/state/session-bash-audit/2026-09-04.json`; the four post-deploy sessions above are that
   answer at n=4, and a week of them should be reported before the wording is judged.
 
-## Open questions
+## Verification, 2026-09-05
 
-[UNVERIFIED: that the option survives into a live session end to end — the invocation line and the
-snapshot's additive `setopt` list both say it does, and the probe ran under a bare `setopt` in a
-child zsh, but no session has run with the snippet deployed. First check after `inv deploy`: a Bash
-call's `setopt` lists `pipefail`, then `(exit 3) | tail -1` reports exit 3 in the tool result. Then
-`audit.py --save-baseline --note "pipefail live"` so layer 2 is measured on its own.]
+Landed in three commits: the snippet on `[packages.claude-code]`, the rule rewrite across
+`config/agents-md/bash.md` and `verification.md`, and the evidence into
+`contributing/global-agents-md.md` under both headings. `inv zsh.configure` wrote the block,
+`inv deploy.all --name agents-md` regenerated `~/.agents/AGENTS.md`.
 
-## Recommended direction
+The end-to-end `[UNVERIFIED:]` is **answered**, and in the deploying session itself — `~/.zshenv` is
+re-read on every Bash call, so no restart was needed and a snapshot captured before the change made
+no difference. `setopt | rg pipefail` returns `pipefail`; `(exit 3) | tail -1` reports 3;
+`pytest <no such test> 2>&1 | tail -2` surfaced exit 4 where it would previously have read as
+success. The `| head` side behaves as the child-zsh probe predicted — 141 for a SIGPIPE'd `git log`,
+1 for a truncated `rg`, 0 for an untruncated `ls`.
 
-Land the snippet, verify as above, rewrite the two rules with the evidence page, deploy `agents-md`,
-save the baseline. Order across repos is 1 (this), 3 (`agent-skills` scripts), 2 (`repo-tasks` quiet
-gate) — decided 2026-09-05.
+[UNVERIFIED: whether the piped-gate _rate_ moves. Baseline saved as
+`~/.local/state/session-bash-audit/2026-09-05-pipefail-live.json`, to be read with
+`audit.py --compare` after a week. Truthfulness is the goal and is already achieved; a rate change
+would be a bonus, not the test.]
+
+[PITFALL: `audit.py --save-baseline` with no path silently destroyed the pre-`bba2ed9` baseline —
+its default filename is a UTC date, and at 02:13 local (+03:00) that is the previous day's name.
+Reconstructed from the transcripts and filed against the skill as
+`agent-skills/2026-09-05-save-baseline-overwrites-silently.md`; pass an explicit path meanwhile.]
+
+## Remaining
+
+Layers 2 and 3 are other repos' work and are not this plan's to do: 3 is `agent-skills`' own
+scripts, 2 is the `repo-tasks` quiet gate. Order across repos was decided 2026-09-05 as 1 (this),
+3, 2.
