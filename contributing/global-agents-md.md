@@ -142,7 +142,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Choosing a tool or library](#choosing-a-tool-or-library)
 - [About to ask the user something factual](#about-to-ask-the-user-something-factual)
 - [Writing conventions into a shareable skill or template](#writing-conventions-into-a-shareable-skill-or-template)
-- [Adding a CLI flag](#adding-a-cli-flag)
+- [Adding a flag, or changing what a tool does by default](#adding-a-flag-or-changing-what-a-tool-does-by-default)
 - [Proposing an enforcement mechanism for agent behavior](#proposing-an-enforcement-mechanism-for-agent-behavior)
 - [Naming around a collision](#naming-around-a-collision)
 - [Reading a command's result](#reading-a-commands-result)
@@ -869,7 +869,7 @@ config-file footguns that would have silently misconfigured every repo copying t
 A skill built straight from research, with no pilot step, would have shipped all of these to every
 consumer.
 
-## Adding a CLI flag
+## Adding a flag, or changing what a tool does by default
 
 The bypass-flag clause's originating incident (2026-08-23): a `--force` on `inv ai.install-skills`
 that would have overwritten foreign content was rejected because the `.pulse-source` marker _is_ the
@@ -877,6 +877,37 @@ ownership model — a flag overriding it would make ownership mean one thing wit
 without. Stated by the user as "we shouldn't have hacks that make the mental model difficult, unless
 something is utterly impractical." Folded into this rule (which previously covered only flag
 _shape_) during the leanness pass, as the second §11 candidate admission.
+
+**The general form was admitted 2026-09-05, on a miss the flag half could not reach.** Correcting a
+design in `repo-tasks`, the user wrote: _"the point is the rule of least surprise for users. i'm
+sure i've mentioned this is important in our projects."_ It was not in the file —
+`rg -in 'least surprise|principle of least|surprising'` returned nothing — and the belief was
+reasonable, because the principle was _applied_ here for one case and stated nowhere as a rule.
+**The user having to say it is the evidence**: this is exactly what the always-loaded file exists
+for, and the session had already shipped and pushed the surprising design with a green gate and a
+green CI, where nothing else would have surfaced it.
+
+What it cost: agent-friendly folded output was added to that repo's quality gate, and it was wrong
+in three ways, all the same way — it changed the default for every consumer on upgrade, none of whom
+asked; it reached eleven of roughly ninety `c.run` call sites, so two output shapes coexisted in one
+tool; and it converted invoke's `UnexpectedExit` into `Exit` unconditionally. The redesign inverted
+the switch to opt-in, and a new module, a switchover, a docs rewrite and three commits were the
+price of the missing rule.
+
+The reconciliation is what makes the rule cheap to follow rather than a tax, and belongs beside it:
+the measurement arguing for changing the default — 58% of gate runs piped through `head`/`tail` —
+was entirely **agent** sessions, and agent shells already get a `CLAUDECODE`-guarded profile, so the
+departure was switched on for exactly the population that needed it without touching anyone else's
+default. "Flip the default" and "reach the population" looked like the same lever and were not.
+
+**Extended rather than admitted as a 40th rule**, on this document's own criteria: the file stands
+at 39 rules and well over its own ≤15/≤200 reference points, so a new heading costs context in every
+session in every repo, while extending leaves the rule count unchanged and puts the general form
+next to the instance a reader already has. The tier test still says always-loaded rather than a
+skill — the miss is **silent** (the surprising design passes its gate, passes CI, reads as finished)
+and **expensive** (a full redesign of pushed work). **The section was retitled** in the same change:
+the old "Adding a CLI flag" is precisely what would stop a reader finding the general rule, which is
+the defect being fixed, and the only citations of the old title were this file's own two lines.
 
 ## Proposing an enforcement mechanism for agent behavior
 

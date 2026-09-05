@@ -49,7 +49,7 @@ And `dependency-groups` (PEP 735) are per-project, never inherited through a reg
 shared package that wants consumers to pick up its tool list needs an explicit mechanism (a task
 editing the consumer's own `pyproject.toml`, or an optional-dependencies extra).
 
-### Adding a CLI flag
+### Adding a flag, or changing what a tool does by default
 
 Match the surrounding ecosystem's shape (check the wrapped CLI's own flags too) rather than
 inventing a bespoke one. For confirmation prompts that means apt/dnf's: prompt on by default,
@@ -57,6 +57,14 @@ inventing a bespoke one. For confirmation prompts that means apt/dnf's: prompt o
 genuinely destructive-by-default. And don't add a bypass flag that overrides a marker/manifest the
 tool uses to decide what it owns — that gives ownership two meanings, one with the flag and one
 without; no hacks that complicate the mental model unless the alternative is utterly impractical.
+
+Least surprise, in the form that bites beyond flag shape: **when you change what a tool already
+does, the documented behaviour stays the default and the departure is opt-in** — most sharply when
+the tool is a shared dependency, where "default" means every consumer's next upgrade. A change that
+only some call sites get is worse than either choice made whole, because the tool then has two
+behaviours and no rule saying which applies. If the departure has an audience that genuinely needs
+it by default, reach that audience through their environment rather than by moving the default under
+everyone else.
 
 ### Naming around a collision
 
