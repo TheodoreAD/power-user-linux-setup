@@ -371,6 +371,35 @@ def _report_deb_result(name: str, accepted: bool) -> None:
     print(f"[{name}] installed" if accepted else f"[{name}] unconfigured — deferred to `apt-get install -f`")
 
 
+def _install_manual_deb(c: Context, name: str, page: str) -> None:
+    """Ask for the path to a hand-downloaded .deb — but only where someone can answer.
+
+    The three `download_page` packages are the ones with no scriptable URL at all (Citrix), so a
+    prompt is the whole mechanism rather than a fallback. What it must not do is prompt where
+    nobody is sitting: this is the repo's "nothing run through invoke may wait for typed input"
+    invariant, and it is the one read that is Python's own rather than a child process's — which is
+    how it survived the pass that fixed every `c.run` case (contributing/interactive-input.md). In a
+    container bake or an unattended `inv wsl.install` the old `input()` raised EOFError with stdin
+    closed and blocked forever with stdin an open pipe, the second being indistinguishable from a
+    slow download.
+    """
+    if not util.interactive():
+        print(f"[{name}] skipped — needs a .deb fetched by hand from {page}")
+        print(f"[{name}] next: re-run this task from a terminal, or install that .deb yourself")
+        return
+    print(f"\n[{name}] Manual download required.")
+    print(f"  Download the .deb from: {page}")
+    # prompt_text over a bare input(): it carries the same non-interactive gate, so the skip above
+    # decides the message rather than being the only thing standing between an unattended run and a
+    # hang. The "" default is what keeps Enter meaning skip — without it the helper re-prompts on an
+    # empty answer.
+    path = (util.prompt_text("  Path to downloaded .deb (or Enter to skip):", default="")).strip()
+    if not path:
+        print(f"[{name}] skipped")
+        return
+    _report_deb_result(name, c.run(util.dpkg_command(f"-i {path}"), warn=True).ok)
+
+
 def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
@@ -385,13 +414,7 @@ def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
         if not page:
             print(f"[{name}] skipped — no url or download_page set")
             return
-        print(f"\n[{name}] Manual download required.")
-        print(f"  Download the .deb from: {page}")
-        path = input("  Path to downloaded .deb (or Enter to skip): ").strip()
-        if not path:
-            print(f"[{name}] skipped")
-            return
-        _report_deb_result(name, c.run(util.dpkg_command(f"-i {path}"), warn=True).ok)
+        _install_manual_deb(c, name, page)
         return
     if "{version}" in url:
         if "version_cmd" not in cfg:

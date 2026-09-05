@@ -13,6 +13,8 @@ missing `warn=True` fail these tests instead of passing them — it was a missin
 caused the abort in the first place. See tests/README.md.
 """
 
+import io
+import sys
 from collections.abc import Sequence
 
 import pytest
@@ -204,3 +206,82 @@ def test_install_repos_skips_packages_of_a_repo_that_never_registered(monkeypatc
 
     assert c.installs() == []
     assert "[broken] broken" in str(excinfo.value)
+
+
+# ---------------------------------------------------------------------------
+# _install_deb_url's manual-download branch — the one read that is Python's own
+# ---------------------------------------------------------------------------
+
+
+class _NoTty(io.StringIO):
+    """Stdin as an unattended run has it: readable, and not a terminal."""
+
+
+class _Tty(io.StringIO):
+    @override
+    def isatty(self) -> bool:
+        return True
+
+
+@pytest.fixture
+def _needs_manual_download(monkeypatch):
+    """A download_page package that is not installed yet, with any prompt made fatal.
+
+    Patching input() to raise is the oracle: this branch's whole defect was that it prompted where
+    nobody could answer, and a test that only asserts the output would still pass against a version
+    that hangs. Under pytest a stray input() raises anyway, but with a message about captured
+    output rather than about this rule.
+    """
+    monkeypatch.setattr(util, "command_exists", lambda _cmd: False)
+
+    def _no_prompting(*_args: object, **_kwargs: object) -> str:
+        raise AssertionError("prompted for typed input")
+
+    monkeypatch.setattr("builtins.input", _no_prompting)
+
+
+_MANUAL: util.PackageConfig = {"download_page": "https://example.invalid/downloads/"}
+
+
+@pytest.mark.usefixtures("_needs_manual_download")
+def test_install_deb_url_skips_a_manual_download_when_there_is_no_terminal(monkeypatch, capsys):
+    """The deferred item from plans/2026-08-31-wsl-and-container-first-run-experience.md: a
+    container bake or an unattended `inv wsl.install` reaching this branch used to stop on an
+    input() — EOFError with stdin closed, and a silent forever-block with stdin an open pipe, which
+    is indistinguishable from a slow download.
+    """
+    monkeypatch.setattr(sys, "stdin", _NoTty())
+    c = _FakeContext()
+
+    apt._install_deb_url(c, "manual", _MANUAL)
+
+    assert c.commands == []
+    out = capsys.readouterr().out
+    assert "https://example.invalid/downloads/" in out, "the page has to be named, or the skip is a dead end"
+    assert "next:" in out
+
+
+@pytest.mark.usefixtures("_needs_manual_download")
+def test_install_deb_url_still_prompts_and_installs_at_a_terminal(monkeypatch):
+    """The non-interactive skip must not cost the interactive case, which is the only reason this
+    branch exists."""
+    monkeypatch.setattr(sys, "stdin", _Tty())
+    monkeypatch.setattr("builtins.input", lambda _q: "  /tmp/hand-downloaded.deb  ")
+    c = _FakeContext()
+
+    apt._install_deb_url(c, "manual", _MANUAL)
+
+    assert c.commands == [util.dpkg_command("-i /tmp/hand-downloaded.deb")]
+
+
+@pytest.mark.usefixtures("_needs_manual_download")
+def test_install_deb_url_treats_an_empty_answer_as_skip(monkeypatch):
+    """Enter means skip, and `prompt_text` re-prompts on an empty answer unless a default is given
+    — so the "" default is load-bearing, not decoration. Without it this test hangs."""
+    monkeypatch.setattr(sys, "stdin", _Tty())
+    monkeypatch.setattr("builtins.input", lambda _q: "")
+    c = _FakeContext()
+
+    apt._install_deb_url(c, "manual", _MANUAL)
+
+    assert c.commands == []
