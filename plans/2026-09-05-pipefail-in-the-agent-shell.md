@@ -254,3 +254,37 @@ result is filed there as `2026-09-05-power-user-linux-setup-swept.md`.
 Layers 2 and 3 are other repos' work and are not this plan's to do: 3 is `agent-skills`' own
 scripts, 2 is the `repo-tasks` quiet gate. Order across repos was decided 2026-09-05 as 1 (this),
 3, 2.
+
+## Migrated to
+
+Retired 2026-09-06. Layer 1 is landed, verified live and deployed; the two open questions are
+answered above; the rate question was never this plan's and now sits with the plan that owns it.
+
+Most of this plan was already migrated as it was built, which is why the list is short:
+
+- **The mechanism itself** — `setup.toml`'s `[packages.claude-code]` zshenv snippet, with the
+  reasoning in its own comments, and `tasks/__init__.py`'s `_configure_report_mode` docstring for
+  the half nothing else would explain: exporting `REPO_TASKS_RUN_REPORT` is not sufficient, because
+  `repo_tasks` swaps the runner on its own `Collection` and every consumer with its own namespace
+  has to repeat one line or silently stay on stock invoke.
+- **The rule it rewrote** — `config/agents-md/verification.md` and `bash.md`, deployed.
+- **`contributing/global-agents-md.md`, "The pipe half stopped being true"** — the design argument,
+  the delivery mechanics read from the live harness, the before/after probe table, why it passes
+  "Proposing an enforcement mechanism", and now the rate result and the superseded-baseline trap.
+- **`plans/2026-08-23-global-agents-md-adherence-watch.md`, session 18** — the 233-call post-deploy
+  sample, the `exit-masked`-measures-a-style finding, and the instrument caveat, because the habit
+  was always that plan's question rather than this one's.
+
+Deliberately not migrated:
+
+- **The `--save-baseline` overwrite pitfall.** Belongs to the tool, filed as
+  `agent-skills/2026-09-05-save-baseline-overwrites-silently.md`, and already summarised on the
+  evidence page where a reader of the baselines will meet it.
+- **The design and the week's measurements.** `agent-skills`'
+  `plans/2026-09-05-a-piped-gate-that-cannot-lie.md` owns them; this was layer 1 of that.
+
+**Three foreign citations will dangle and cannot be fixed from here.** `agent-skills` and
+`repo-tasks` plans cite this file by name — which is why its name was kept rather than widened when
+two plans merged into it — and writing into those repos is out. They resolve to a deleted file whose
+content is reachable with `plans.py archive --file`, and the destinations above are where the
+content actually went.
