@@ -77,10 +77,32 @@ pre-truncating only loses data and forces a second run; if size is the worry, co
 `; rg … log | head` tacked onto the same one. And never append `; echo "EXIT=$?"` — it adds a chain
 for information the tool already reports. When shelling out to search anyway, use `rg` over
 `grep -r` and `fd` over `find` (faster, `.gitignore`-aware); plain `grep`/`find` stay fine for
-non-recursive lookups, `find -exec`/`-delete`, or portability. Do not carry `grep -r`'s flag across
-with the habit: `rg` is recursive by default and its `-r` is `--replace`, so `rg -r <pat> <path>`
-silently prints matches with the matched text _rewritten_ — plausible-looking output that is not
-what the file says.
+non-recursive lookups, `find -exec`/`-delete`, or portability.
+
+**Translating a `grep` invocation to `rg` is one edit: delete the `r`, keep every other letter.**
+`rg` is recursive by default and its `-r` is `--replace`, which takes the next thing as a
+replacement string — so the `r` you carried over eats whatever follows it and the flags you asked
+for never apply. Every form below exits 0 and none of them warns:
+
+| you type    | you meant | `-r` eats | what you actually get                                      |
+| ----------- | --------- | --------- | ---------------------------------------------------------- |
+| `rg -rn`    | `rg -n`   | `n`       | matches rewritten to `n`, **and no line numbers**          |
+| `rg -rl`    | `rg -l`   | `l`       | rewritten lines, **not** the file list you asked for       |
+| `rg -rln`   | `rg -ln`  | `ln`      | same, and no line numbers either                           |
+| `rg -ril`   | `rg -il`  | `il`      | **case-sensitive** search, and lines instead of files      |
+| `rg -rlF`   | `rg -lF`  | `lF`      | regex, not fixed-string; lines, not files                  |
+| `rg -r p f` | `rg p f`  | `p`       | **`f` becomes the pattern and the whole tree is searched** |
+
+That last row is the one to know, because it is the reason the habit survives: a bare `-r` makes rg
+search for _the path you named_ across the entire working directory, print hits from files you never
+named, and write your pattern over each match — which reads exactly like the recursive search you
+wanted. Deliberate replacement is unaffected: spell it `--replace`, which no `grep` bundle can turn
+into.
+
+**The detection signature, since all three occurrences on record were caught by luck:** your own
+flag letters appearing where the matched text should be (`inv ai.n` for `inv ai.check-…`), line
+numbers missing after you asked for `-n`, a `-l` that printed lines, or hits from a path you did not
+name. Any of those means `-r` ate the bundle — re-run without it rather than reading the output.
 
 ### Running a command against a different repo than the session's project
 

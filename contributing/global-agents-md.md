@@ -602,6 +602,47 @@ the flag to be carried across — criterion 2, a variant extends its rule. Consi
 clause at the exact point of confusion, and a single occurrence is not yet evidence of a rate worth
 a row ("rows with no stated cost teach nothing"). Worth adding there if it recurs.
 
+### The `rg -r` clause rewritten as a translation, 2026-09-05
+
+It recurred, the row was added, and the row's first full read says the clause above was addressing
+the wrong shape. Seven days, 13,754 Bash calls: **32 real defective invocations across 21 sessions
+and 4 repos**, 1.2% of `rg` calls — `-rn` × 27, `-ril` × 3, `-rln` × 1, `-rl` × 1, and **not one
+bare `-r`**, which is the form the clause used as its worked example.
+
+[PITFALL: **"no bare `-r`" was first read here as proving the slip is a keystroke rather than a
+belief. That inference is wrong**, and it is worth recording because it was written into a plan and
+committed before it was caught. A `grep` user rarely wants recursion _alone_, so a believer bundles
+too — the absence of the bare form is what the belief hypothesis predicts, not evidence against it.
+The check that actually settles it is what `grep` is typed as in the same corpus: `grep -rn`
+118×/week, `grep -rln` 12×, `grep -rlF` 11×. Every defective `rg` bundle is a `grep` bundle in daily
+use, so this is one flag string carried over whole — a translation error, and translations are
+something wording can carry.]
+
+So the clause became **one edit — delete the `r`, keep every other letter** — with a table of the
+six real forms and what each silently drops, and a detection signature. Three defects it fixes, each
+identified rather than assumed: the worked example named a form that never occurs; it was a
+prohibition where this page's own `gh run watch` finding says the strongest rule is the command that
+replaces the habit; and it gave no way to recognise a mangled result, which is why all three
+occurrences on record were caught by the accident of the searched string being absent from its own
+output.
+
+[PITFALL: **bare `rg -r <pat> <path>` produces output that confirms the wrong belief instead of
+contradicting it**, which is probably why the habit is stable. `-r` takes `<pat>` as the
+replacement, so `<path>` becomes the pattern and — no path argument being left — rg searches the
+whole working directory. Probed 2026-09-05 in a directory holding the named file: fourteen hits
+**from a different file entirely**, each with the search term written over the match. Recursive,
+non-empty, containing the string searched for, exit 0. The corpus contains no instance of this form,
+so the rewritten clause covers a shape nobody has yet been caught by; it is included precisely
+because its output would be believed.]
+
+[UNVERIFIED: whether this moves the rate, and it is the first wording change in this file with a
+same-instrument baseline taken the same day (`2026-09-05-pipefail-live.json`). The argument for
+trying wording at all, after the `head`/`tail` cluster spent four attempts proving it inert, is that
+those four restated one prohibition at four triggers while this one changes what is typed in the
+**success** case — a `grep`→`rg` translation happens ~150 times a week, so the rule is exercised
+constantly rather than only at the moment of the slip. If the next count holds at ~32, that argument
+is refuted and the `ask`-rule on the `rg -r` prefix is the fallback; the plan carries it.]
+
 ## Running a command against a different repo than the session's project
 
 The hard no-writing clause was added 2026-08-30, on the user's instruction: "we don't act on other

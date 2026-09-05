@@ -83,12 +83,23 @@ defective invocations** — spread across **21 distinct sessions and 4 repos** (
 `repo-tasks` 7, this repo 6, `agent-skills` 5). Not one session's tic. Against ~2,590 `rg`
 invocations in the same window it is **1.2%** — low-rate, persistent, and machine-wide.
 
-[DECISION: **it is a typing accident, not a belief, and the corpus is unanimous.** The prediction
-was that `-rn` would dominate a bare `-r`. It did better than that: **there is not one bare `-r`
-misuse in the whole week.** Every single defective call is a bundle in which `-r` swallowed the
-letters of the flag actually wanted — `-rn` × 27, `-ril` × 3, `-rln` × 1, `-rl` × 1. Nobody on this
-machine thinks `-r` means recursive; the finger types `r` ahead of the flag it meant. That closes
-the belief hypothesis, and with it every fix that works by explaining the flag.]
+[DECISION: **it is `grep`'s flag string carried over whole, which is the belief hypothesis rather
+than the keystroke one.** The distribution is `-rn` × 27, `-ril` × 3, `-rln` × 1, `-rl` × 1, and not
+one bare `-r`. That was first read here as closing the belief hypothesis — **wrongly**, and the
+correction is the useful part: a `grep` user rarely wants recursion _alone_, so a believer bundles
+too, and the absence of bare `-r` is what belief predicts rather than evidence against it. The check
+that settles it is what `grep` itself is typed as in the same corpus — `grep -rn` 118×/week,
+`grep -rln` 12×, `grep -rlF` 11×. **Every defective `rg` bundle is a `grep` bundle in daily use on
+this machine.** So the fix is a translation, and wording can carry a translation.]
+
+[PITFALL: **bare `rg -r <pat> <path>` does not look broken — it looks like the recursive search the
+user wanted, which is why the belief survives contact with the output.** `-r` takes `<pat>` as the
+replacement, so `<path>` becomes the pattern and, with no path argument left, rg searches the whole
+working directory. Probed 2026-09-05: `rg -r config_path sample.txt` in a directory containing
+`sample.txt` returned fourteen hits **from a different file entirely**, each with the search term
+written over the match. Recursive, non-empty, and containing the string searched for. Exit 0. This
+row is absent from the week's corpus, so the rule now covers a form nobody has yet been caught by —
+included deliberately, because it is the form whose output would be believed.]
 
 [PITFALL: **the cost is bigger than "the matched text is rewritten", which is all the rule says.**
 `-r` consumes the rest of the bundle as its replacement string, so **the flags the caller asked for
@@ -116,10 +127,38 @@ names this very plan file. The regex anchors on `\brg\b` anywhere in the command
 command-segment boundary, so a corpus that writes _about_ this trap inflates its own count of it.
 Filed against the skill, which owns the script; the 32 above is the corrected figure.]
 
+## The wording attempt, 2026-09-05
+
+The clause in `config/agents-md/bash.md` was rewritten rather than the mechanism reached for,
+because the measurement above says the habit is a translation error and the old wording never
+addressed the shape that occurs.
+
+[DECISION: **the old clause failed on three specific things, not on volume.** Its worked example was
+`rg -r <pat> <path>` — the one form that does not appear in the corpus at all — so a reader
+pattern-matching on the example was warned about a shape nobody types and told nothing about `-rn`.
+It was a prohibition rather than a substitution, against this corpus's own finding that the
+strongest form of a rule is the command replacing the habit (the `gh run watch` case in
+`contributing/global-agents-md.md`). And it gave no detection signature, which is why all three
+occurrences on record were caught by the accident of the searched string being conspicuously absent
+from its own results.]
+
+[DECISION: **the replacement is one edit — delete the `r`, keep every other letter — plus a table of
+the six real forms and a detection signature.** Stated as an edit it is exercised on every
+`grep`→`rg` translation, which is ~150 a week, rather than firing only at the moment of the
+accident; that is the structural difference from the four `head`/`tail` rewordings, each of which
+restated the same prohibition at a different trigger. Whether that difference matters is exactly
+what the next count tests.]
+
+[UNVERIFIED: whether this moves the rate. Baseline is
+`~/.local/state/session-bash-audit/2026-09-05-pipefail-live.json` (32 real defective calls, 21
+sessions, 1.2% of `rg` invocations); re-count with `audit.py --days 7 --compare` after a week, and
+correct for the counter's ~8% prose over-report until that is fixed. If it has not moved, the
+`ask`-rule below is the fallback and the wording lever is spent for this rule too.]
+
 ## Open questions
 
-[NEEDS CLARIFICATION: **which mechanism, now that wording is ruled out.** Three candidates, and the
-choice is a real trade-off rather than an obvious pick:
+[NEEDS CLARIFICATION: **which mechanism, if the wording attempt above does not move the rate.**
+Three candidates, and the choice is a real trade-off rather than an obvious pick:
 
 - **An `ask` rule on the `rg -r` prefix**, generated by `cli-allowlist/`. It has a property that
   makes it fit unusually well: `rg -r` is a literal prefix of every defective bundle (`-rn`, `-ril`,
@@ -141,7 +180,8 @@ choice is a real trade-off rather than an obvious pick:
 
 ## Recommended direction
 
-The measurement asked for is done and points one way: no wording change can help, because nobody
-holds the wrong belief the wording would correct. Put the three mechanisms above to the user and
-take the answer; the `ask`-rule option is the only one that does not need a rule bent to allow it,
-and its cost is one prompt on a shape that occurs about four times a week.
+The measurement asked for is done, and it named a translation habit rather than a stray keystroke —
+so the wording lever was not spent after all, and the rewritten clause is the cheap, reversible test
+of it. Re-count in a week against the baseline named above. If the rate holds, the `ask`-rule is the
+fallback: it is the only one of the three mechanisms that needs no standing rule bent to allow it,
+and its cost is one prompt on a shape occurring about four times a week.
