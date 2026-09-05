@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-31
+updated: 2026-09-06
 source_repo: github.com-personal/agent-skills
 source_session: 7e9e213d-6989-4534-a4c2-cf22bbab93ea.jsonl
 source_moment: 2026-08-31T17:59:03Z
@@ -190,12 +190,48 @@ tight.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: is the subagent tier meant to see skills at all? Two of this machine's own
-rules point the other way — `~/AGENTS.md` records that built-in `Plan`/`Explore` agents never load
-`AGENTS.md`, and asks for the Bash rules to be pasted into their prompts instead. If skills are
-deliberately not part of the subagent contract, the right fix is not budget at all; it is to stop
-paying 8,000 characters per subagent turn for a listing nobody uses, which argues the opposite
-direction and is worth an hour of measurement before the fraction is raised.]
+~~[NEEDS CLARIFICATION: is the subagent tier meant to see skills at all? … worth an hour of
+measurement before the fraction is raised.]~~ **Measured 2026-09-06, and the route is closed rather
+than expensive: the transcript store carries no marker that identifies a subagent.**
+
+What was checked, and what it returned:
+
+- `isSidechain` appears on **187,235 records and is `False` on every one**. No `agentType`, no
+  `subagentType`, no `parentSessionId` anywhere.
+- `entrypoint` has three values — `cli` (168 sessions, 65,863 assistant turns, 141 `Skill` calls),
+  `claude-vscode` (228 / 17,636 / 11) and `sdk-cli` (686 / **83** / 1). `userType` is `external`
+  throughout. The `sdk-cli` population averages 0.12 assistant turns per session, which is
+  probe-shaped, not subagent-shaped.
+- Splitting every `tool_use` block on `isSidechain` gives 423 sessions, 83,521 assistant turns,
+  50,580 tool calls and 153 `Skill` calls on the main side, and **nothing at all on the other**.
+- `skill-fitness`'s own `fitness.py` reads the same store and has no subagent concept either; its
+  only split is real-session versus transient-directory probe.
+
+So nothing here can locate the "71 subagent sessions, 2,342 assistant messages" this plan's own
+table reports — that classification came from somewhere other than a field, and the table should be
+read with the same caution as the sampling error recorded below it.
+
+[PITFALL: **this plan's "zero `Skill` calls across 84 `agent-*` transcripts" therefore cannot be
+reproduced, and its counter-evidence needs a fourth candidate cause beside its three: the population
+may not be identifiable in the store at all.** The zero was read as "no subagent has ever been
+observed picking a skill" — true in the narrow sense, and a fact about the store rather than about
+subagents whenever the store cannot name the population. The plan already called this "the
+zero-is-not-a-verdict shape `skill-fitness` warns about", which was the right instinct applied one
+level too shallow: the check that would have caught it is asking what field makes a row a subagent
+row _before_ counting rows.]
+
+**What can still be said**, from the harness rather than the store: most subagent types do carry the
+`Skill` tool (`general-purpose` and `claude` are `*`; `Plan` and `Explore` exclude a list that does
+not name it), while `claude-code-guide` and `statusline-setup` genuinely lack it. And the harness
+does send them a listing — that is how the truncation was found. So the tier is not scoped away from
+skills by construction; whether it uses them is simply not observable here.
+
+**Which leaves the decision on cost alone, not on this question.** Current state, re-measured
+2026-09-06 with `fitness.py budget`: 11 truncated listings ever, **2 of them from a real session**,
+and **none since 2026-08-31** — a week of nothing. Every model in real use fits; the overflow is
+`haiku-4-5`, which on this machine is almost entirely headless probe traffic. The change stays what
+the plan called it, insurance against a latent failure, and the opposite direction it worried about
+cannot be argued for without usage data that does not exist.
 
 [NEEDS CLARIFICATION: does the fraction interact with `/context`'s accounting or with autocompact
 thresholds in any way worth knowing? The listing is an attachment, not a tool definition, and it is
