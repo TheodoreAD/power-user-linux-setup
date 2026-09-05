@@ -1,6 +1,6 @@
 ---
-status: in-progress
-updated: 2026-09-05
+status: landed
+updated: 2026-09-06
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
 
@@ -198,9 +198,16 @@ In dependency order, because the first item unblocks everything else.
 
 1. ~~**The helper package and the explicit `credsStore`**, plus the round-trip verification~~ —
    landed 2026-09-05, see above.
-2. **`uv.toml` at user level.** Independent of the other two and the cheapest — it changes nothing
-   until a URL carries a username, so it is safe to land first if convenient. **Still open**, and
-   the `[PITFALL:]` above about per-user placement is the thing not to get wrong.
+2. ~~**`uv.toml` at user level.**~~ **Landed 2026-09-05 (`f697908`), and this list simply was not
+   updated.** `config/uv.toml` carrying `keyring-provider = "subprocess"`, declared as a
+   `config_files` mapping on `[packages.python-keyring]` rather than on a uv package — the setting
+   is only meaningful where the `keyring` CLI it shells out to exists, so a machine without that
+   package does not get the setting either. Deployed and confirmed by `inv deploy.status`.
+
+   Both `[PITFALL:]`s above are written into the file's own comments rather than left in this plan,
+   which is the point of putting them there: the per-user-only rule is a paragraph a reader meets
+   when they open the file to edit it, and the inertness caveat (uv consults keyring only when a URL
+   carries a username, `__token__` for PyPI) is next to the line it qualifies.
 3. ~~**The migration**, with the user~~ — **done 2026-09-05, and it took the simpler branch.** The
    one plaintext entry was a work registry the user confirmed obsolete: the only images published
    from this machine go to GHCR, and that happens in a CI workflow rather than locally, so nothing
