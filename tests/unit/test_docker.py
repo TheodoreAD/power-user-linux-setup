@@ -127,7 +127,11 @@ def test_plaintext_auth_count_counts_only_entries_that_carry_a_secret():
     assert docker._plaintext_auth_count({}) == 0
 
 
-def test_purge_strips_the_secret_and_keeps_docker_s_own_bookkeeping(docker_config):
+def test_purge_keeps_an_email_entry_and_drops_an_empty_one(docker_config):
+    """Both halves are read from docker/cli rather than assumed. `nativeStore.Store` blanks the
+    secret and saves the remainder to keep the email, so a secretless entry with an email is a live
+    helper-backed login's own bookkeeping. An entry holding nothing is residue with no secret, no
+    email and no purpose."""
     docker_config.write_text(
         json.dumps(
             {
@@ -138,20 +142,30 @@ def test_purge_strips_the_secret_and_keeps_docker_s_own_bookkeeping(docker_confi
         )
     )
 
-    assert docker._purge_plaintext_auths() == 1
+    assert docker._purge_plaintext_auths() == (1, 1)
 
     written = cast(util.JsonObject, json.loads(docker_config.read_text()))
     auths = cast(util.JsonObject, written["auths"])
-    # The host stays, minus the secret — the state `docker logout` itself leaves under a credsStore.
     assert auths["a.example"] == {"email": "x@y"}
-    assert auths["b.example"] == {}
+    assert "b.example" not in auths
     assert written["credsStore"] == docker.CREDS_STORE
     assert written["HttpHeaders"] == {"a": "b"}
 
 
-def test_purge_is_a_no_op_when_nothing_carries_a_secret(docker_config):
-    docker_config.write_text(json.dumps({"auths": {"a.example": {}}}))
-    assert docker._purge_plaintext_auths() == 0
+def test_purge_removes_an_entry_it_emptied_itself(docker_config):
+    """`docker logout` deletes the entry — `nativeStore.Erase` erases from the helper and then
+    delegates to `fileStore.Erase`, which is a `delete()` on the map. An entry stripped of its secret
+    and left in place is a state docker never produces."""
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+
+    assert docker._purge_plaintext_auths() == (1, 1)
+
+    assert cast(util.JsonObject, json.loads(docker_config.read_text()))["auths"] == {}
+
+
+def test_purge_is_a_no_op_when_there_is_nothing_to_remove(docker_config):
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"email": "x@y"}}}))
+    assert docker._purge_plaintext_auths() == (0, 0)
 
 
 def test_configure_credential_store_leaves_plaintext_alone_by_default(docker_config, monkeypatch):

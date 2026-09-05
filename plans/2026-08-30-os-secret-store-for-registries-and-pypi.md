@@ -218,8 +218,24 @@ In dependency order, because the first item unblocks everything else.
      `{"<host>": {}}` behind, and an entry can carry its secret in `identitytoken` or `password`
      rather than `auth`. Counting the mapping would report a credential that is not there and go on
      reporting one forever after a successful migration, which is how a warning stops being read.
-   - **The purge strips the secret fields and keeps the entry**, which is the state docker itself
-     produces on logout rather than one only this task knows how to make.
+   - **The purge strips the secret fields and then deletes any entry left holding nothing**, which
+     is what docker's own logout does to this file.
+
+   [PITFALL: **the first version kept the emptied entry, on a justification that was exactly
+   backwards, and the wrong claim was written into a docstring, a test name, a commit message and
+   two plans before anything checked it.** The claim was that `{"<host>": {}}` is "what
+   `docker logout` leaves under a `credsStore`". Read from `docker/cli` afterwards, it is neither
+   half of that: `nativeStore.Erase` erases from the helper and then delegates to `fileStore.Erase`,
+   which is a `delete()` on the `auths` map — a logout **removes** the entry. And
+   `nativeStore.Store` is what produces a secretless entry, blanking `Username`/`Password`/
+   `IdentityToken` and saving the remainder to keep the email — so such an entry means a live
+   helper-backed **login**, the opposite state. The emptied entry mimicked neither operation.
+
+   What makes it worth recording is that the reasoning read as careful — it invoked docker's own
+   behaviour rather than inventing a rule, which is the right instinct — and the clone was in
+   `$RESEARCH_HOME` the whole time. Two source reads settled it, and only the user asking for the
+   entry to go as well prompted them. The current rule keeps an entry carrying an `email`, since
+   that is genuinely docker's bookkeeping for a working login.]
 4. ~~**Then unblock `repo-tasks`' verification**~~ — unblocked; filed there as
    `2026-09-05-credential-helper-installed-logins-verifiable.md`, which carries the machine state
    its check needs and the warning that the un-migrated host would measure the wrong path —

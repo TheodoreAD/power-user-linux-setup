@@ -156,23 +156,36 @@ def _plaintext_auth_count(config: util.JsonObject) -> int:
     return len(_plaintext_secret_hosts(config))
 
 
-def _purge_plaintext_auths() -> int:
-    """Strip the secret fields from every `auths` entry that has them, leaving the entry itself.
+def _purge_plaintext_auths() -> tuple[int, int]:
+    """Strip the secret fields from every `auths` entry that has them, then drop any entry left
+    holding nothing at all. Returns (hosts whose secret was removed, entries removed outright).
 
-    That is what `docker logout` leaves behind under a `credsStore`, so the result is a state docker
-    produces itself rather than one only this task knows how to make. Returns how many hosts changed.
+    Both halves match what docker's own code does, read from `docker/cli` rather than assumed:
+
+    - **A logout deletes the entry.** `nativeStore.Erase` erases from the helper and then delegates
+      to `fileStore.Erase`, which is a `delete()` on the `auths` map — so an entry stripped of its
+      secret and left in place is not "what docker leaves", it is a state docker never produces.
+    - **An entry with no secret is a *login* artifact.** `nativeStore.Store` writes the credential to
+      the helper, blanks `Username`/`Password`/`IdentityToken`, and saves the remainder to the file
+      to keep the email. So a secretless entry means a live helper-backed login, and one holding an
+      email is docker's own bookkeeping — left alone. One holding nothing is residue with no secret,
+      no email and no purpose, and it goes.
     """
     config = _read_docker_config()
+    auths = config.get("auths")
+    if not isinstance(auths, dict):
+        return 0, 0
     hosts = _plaintext_secret_hosts(config)
-    if not hosts:
-        return 0
-    auths = cast(util.JsonObject, config["auths"])
     for host in hosts:
         entry = cast(util.JsonObject, auths[host])
         for field in _SECRET_FIELDS:
             entry.pop(field, None)
-    DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
-    return len(hosts)
+    emptied = [host for host, entry in auths.items() if isinstance(entry, dict) and not entry]
+    for host in emptied:
+        del auths[host]
+    if hosts or emptied:
+        DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
+    return len(hosts), len(emptied)
 
 
 def _credential_round_trip(c: Context) -> str | None:
@@ -214,9 +227,10 @@ def _write_creds_store() -> bool:
 @task(
     help={
         "purge_plaintext": (
-            "Also strip the secret out of every `auths` entry that still has one. Destructive: the "
-            "credential is gone from this machine unless it is also in the keyring or you can log in "
-            "again."
+            "Also strip the secret out of every `auths` entry that has one, and delete any entry "
+            "left holding nothing — the same two effects `docker logout` has on this file. "
+            "Destructive: the credential is gone from this machine unless it is also in the keyring "
+            "or you can log in again."
         )
     }
 )
@@ -271,17 +285,25 @@ def configure_credential_store(c: Context, purge_plaintext: bool = False):
         print(f"[docker-credentials] credsStore={CREDS_STORE} written to {DOCKER_CONFIG}")
     else:
         print(f"[docker-credentials] credsStore={CREDS_STORE} already set — nothing to do")
-    if not plaintext:
-        return
     if not purge_plaintext:
-        print(
-            f"[docker-credentials] {plaintext} registry credential(s) still stored as plaintext in that file.\n"
-            "  Migrate each deliberately: `docker login <host>` to re-store it through the helper,\n"
-            "  then `inv docker.configure-credential-store --purge-plaintext` to strip what is left.\n"
-            "  docker reads the plaintext entry until you do, so nothing looks wrong until it is gone."
-        )
+        if plaintext:
+            print(
+                f"[docker-credentials] {plaintext} registry credential(s) still stored as plaintext in that file.\n"
+                "  Migrate each deliberately: `docker login <host>` to re-store it through the helper,\n"
+                "  then `inv docker.configure-credential-store --purge-plaintext` to strip what is left.\n"
+                "  docker reads the plaintext entry until you do, so nothing looks wrong until it is gone."
+            )
         return
-    print(f"[docker-credentials] purged the secret from {_purge_plaintext_auths()} plaintext entr(ies)")
+
+    # Runs whether or not a secret was found: the second half of the purge removes entries left
+    # holding nothing, which is precisely the residue an earlier run of the first half creates.
+    secrets, emptied = _purge_plaintext_auths()
+    if secrets:
+        print(f"[docker-credentials] purged the secret from {secrets} plaintext entr(ies)")
+    if emptied:
+        print(f"[docker-credentials] removed {emptied} empty `auths` entr(ies) — a logout deletes these too")
+    if not secrets and not emptied:
+        print("[docker-credentials] no plaintext secret and no empty entry — nothing to purge")
 
 
 def _prune(c: Context, label: str, flags: str, desc: str) -> None:
