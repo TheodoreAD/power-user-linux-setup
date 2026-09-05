@@ -81,42 +81,117 @@ the honest conclusion is not "use `acceptEdits`" — it is that **prompt volume 
 enough for the remaining prompts to be read**, which is a security improvement rather than a
 convenience.]
 
+## Checked against the primary source, which killed half the first proposal
+
+Read from `code.claude.com/docs/en/permissions` and `/sandboxing` 2026-09-05, not from a search
+summary.
+
+[DECISION: **`github.com` and `raw.githubusercontent.com` must NOT be allowlisted, and the reason is
+that path scoping does not exist.** The user's instinct — _"github.com and githubusercontent.com
+seem risky for prompt injection, the rule should be paths there should be safe based on the
+author/org"_ — is right about the risk and unavailable as a mechanism. `WebFetch` rules match **the
+hostname only**, and the docs say so twice: _"WebFetch rules use a `domain:` prefix and match
+against the hostname of the requested URL"_, and, in the list of fields that cannot be matched as
+input parameters, _"`url` for WebFetch"_. So `WebFetch(domain:github.com)` allows **every repository
+on GitHub**, including one an attacker creates specifically to be fetched. Multi-tenant hosts are
+out.]
+
+[DECISION: **the criterion that replaces "reputable organisation" is single-tenancy.** The user's
+general rule — keep adding reputable organisations' sites — is right in spirit but does not survive
+domain-granularity on its own: GitHub is a reputable organisation and `github.com` is the single
+worst entry available. The workable form is **allow a domain only when one organisation controls
+every byte served from it.** `docs.python.org`, `docs.astral.sh`, `docs.pytest.org`, `pypi.org` and
+`code.claude.com` pass. `github.com`, `raw.githubusercontent.com`, `*.github.io`,
+`*.readthedocs.io`, `medium.com` and every package-registry page that renders user-supplied README
+content fail. Note `api.github.com` is a genuine borderline: the API serves attacker-authored
+content too, just as JSON.]
+
+[DECISION: **no curated "safe to fetch" list exists to borrow, and the published advice is against
+the idea.** Searched 2026-09-05; the agent-security material converges on the opposite of a global
+list — allowlist only what the agent's job needs and deny the rest, because a domain on the
+allowlist is trusted _under prompt-injection conditions_. Popularity rankings (Tranco, Umbrella)
+measure traffic, not safety, which is the same flaw the user's own instinct rejected for GitHub. So
+the list is hand-maintained and short, and the measured distribution only chooses its first
+entries.]
+
+[PITFALL: **a `WebFetch` allowlist is not a network boundary while Bash can fetch, and today nothing
+is a network boundary.** The docs state it plainly: _"using WebFetch alone doesn't prevent network
+access. If Bash is allowed, Claude can still use `curl`, `wget`, or other tools to reach any URL."_
+On this machine `Bash(curl:*)` is `ask` and `wget` matches no rule — but **96% of Bash calls run
+under auto**, where a classifier decides rather than the allow/ask table. So the exfiltration
+channel the `WebFetch` allowlist is meant to narrow is wide open beside it, and tightening
+`WebFetch` alone buys prompt reduction rather than security.]
+
+## The actual answer is the Bash sandbox, and every prerequisite is already installed
+
+`sandbox.network.allowedDomains` is an **OS-enforced** egress allowlist covering every Bash command
+and its children — the boundary `WebFetch` rules cannot be. And `sandbox.autoAllowBashIfSandboxed`
+**defaults to `true`**, so sandboxed commands run _without prompting_. That inverts the trade the
+whole question assumed: it reduces friction and adds enforcement at the same time.
+
+Verified on this machine 2026-09-05:
+
+- `bwrap` at `/usr/bin/bwrap` and `socat` at `/usr/bin/socat` — **both already present**.
+- `kernel.apparmor_restrict_unprivileged_userns` is `1`, which is the Ubuntu 24.04 blocker the docs
+  warn about — **and it is already worked around.** `/etc/apparmor.d/claude-desktop-bwrap` attaches
+  to `/usr/bin/bwrap` (the path, not one application) and grants `userns`, so Claude Code's sandbox
+  inherits it. Confirmed by running
+  `bwrap --unshare-user --unshare-net --ro-bind / / --dev /dev
+  /bin/echo`, exit 0.
+- `settings.json` has no `sandbox` key at all. **It is simply not switched on.**
+
+[PITFALL: **the AppArmor workaround belongs to another package and says so.** The profile's own
+header reads _"managed by the claude-desktop package (postinst); direct edits will be overwritten on
+upgrade"_. So the thing making the sandbox usable here can disappear on a `claude-desktop` upgrade,
+silently — and the failure mode is sandboxed commands breaking with `Operation not permitted`, not a
+warning. This repo already has an `apparmor-profile` install method (used for the JetBrains IDE
+profiles), so it can own an equivalent profile rather than depending on another package's
+side-effect.]
+
 ## What to do
 
 1. **Allow `WebSearch` outright.** 858 of 1,562 prompts — 55% — for a tool with no agent-chosen
-   destination to give away. This is the user's own conclusion and the structural argument above
-   agrees with it.
-2. **Allow `WebFetch(domain:…)` for a small set of high-volume, low-risk hosts** and leave the rest
-   prompting: `github.com`, `raw.githubusercontent.com`, `api.github.com`, `pypi.org`,
-   `code.claude.com`, `docs.python.org`, `docs.astral.sh`, `docs.pytest.org` ≈ 40% of fetches.
-3. **Keep the long tail prompting on purpose.** `WebFetch` hit **239 distinct hosts in 30 days, 153
-   of them exactly once**, and the top 18 hosts are only 50% of calls. A novel destination is
-   precisely where a human look is worth having, so the tail is not a gap in the design — it is the
-   design.
-
-Net effect: `acceptEdits` web prompts fall from ~1,562 to ~420 a month, and those 420 are the ones
-worth reading. That removes the reason the machine runs auto, without asking anyone to accept more
-risk.
+   destination to give away. Interactive approval saves it "permanently per repository", which is
+   why it keeps recurring; a rule at **user scope** covers every repo at once, which is the actual
+   fix.
+2. **Allow `WebFetch(domain:…)` only for single-tenant hosts.** Starting set: `code.claude.com`,
+   `docs.python.org`, `docs.astral.sh`, `docs.pytest.org`, `pypi.org`. That is ~7% of fetches, far
+   less than the 40% first proposed, because the two GitHub hosts carrying 20% are exactly the ones
+   that must be excluded.
+3. **Keep the long tail prompting on purpose.** 239 distinct hosts in 30 days, 153 seen exactly
+   once. A novel destination is where a human look earns its place; the tail is the design, not a
+   gap in it.
+4. **Enable the Bash sandbox**, which is the only item here that is actually a security improvement
+   rather than a friction reduction, and which is free on this machine because everything it needs
+   is installed.
 
 [PITFALL: **the `cli-allowlist` pipeline cannot express any of this.** `tasks/allowlist.py` emits
 only `Bash(...)` patterns — `_render` has no concept of a non-Bash tool — so the highest-value
 permission change available to this machine has no home in the repo that owns its permissions.
 `inv allowlist.apply` would not clobber a hand-added rule (it tracks a manifest of rules it wrote
 and touches nothing else), so a hand edit survives — but it would exist only on this machine, which
-is the divergence PULSE exists to prevent.]
+is the divergence PULSE exists to prevent. Settled 2026-09-05: the declaration goes on
+`[packages.claude-code]` in `setup.toml`, beside `claude_default_mode`, since that is already where
+harness configuration lives.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: where non-Bash tool rules should be declared. Candidates: a new table in
-`cli-allowlist/tools.toml` that `_render` reads alongside the Bash rules; a `claude_permissions`
-field on `[packages.claude-code]` beside `claude_default_mode`; or a separate small file the same
-task applies. The first keeps one pipeline; the second keeps harness config with the harness
-package, which is where `claude_default_mode` and `claude_additional_directories` already live.]
+[NEEDS CLARIFICATION: whether `WebFetch` should be allowlisted at all before the sandbox is on.
+Given that Bash-based fetching is unbounded under auto, a `WebFetch` domain list is prompt reduction
+wearing security's clothes. The sequencing that makes each step honest is: sandbox first, so there
+is a real egress boundary; `WebSearch` allow, which needs no boundary; and `WebFetch` domains last,
+against the sandbox's `allowedDomains` rather than instead of them.]
 
-[NEEDS CLARIFICATION: whether the `WebFetch` domain list is maintained by hand or derived. Deriving
-it from transcript frequency is tempting and wrong for the same reason the tail is kept prompting —
-a host becomes allowed by being used often, which is not a security property. Hand-maintained and
-short is probably right, with the measured distribution used only to choose the first entries.]
+[NEEDS CLARIFICATION: what the built-in preapproved documentation domains already cover. The
+permissions page says `WebFetch` prompts _"except a built-in set of preapproved documentation
+domains"_ and points at `tools-reference#webfetch-tool-behavior`, which has not been read. Some of
+the five proposed hosts may already be free, which would shrink the list further — and a rule
+duplicating a built-in is a rule to maintain for nothing.]
+
+[NEEDS CLARIFICATION: whether `api.github.com` is in or out. It is the one borderline case in the
+single-tenancy criterion: GitHub operates it, but what it serves is user-authored content rendered
+as JSON, so an injection payload reaches the model just as readily as through the HTML site. Out on
+a strict reading, and it is 17 of 704 fetches, so the cost of excluding it is small.]
 
 [NEEDS CLARIFICATION: whether anything should be done about internal HTTPS reachability. The
 HTTP→HTTPS upgrade covers plaintext services by accident. A `deny` rule for private address literals
@@ -125,7 +200,14 @@ whether a deny can express a CIDR range are both unverified.]
 
 ## Recommended direction
 
-Land 1 and 2 through whichever declaration mechanism the first open question settles, measure the
-prompt count after a week, and only then revisit whether `claude_default_mode` should stay
-`acceptEdits` — the mode question is downstream of this one and cannot be answered while the
-friction is what decides it.
+In order, because each step makes the next one honest:
+
+1. **Enable the Bash sandbox** and set `network.allowedDomains`. Free on this machine, and the only
+   step that adds a boundary rather than removing a prompt. Take the AppArmor profile into
+   `setup.toml` at the same time so it stops depending on another package's postinst.
+2. **Allow `WebSearch`** at user scope on `[packages.claude-code]`. Needs no boundary, removes 55%
+   of the friction.
+3. **Then `WebFetch` domains**, single-tenant only, checked against the built-in preapproved set
+   first, and aligned with the sandbox's `allowedDomains` rather than substituting for them.
+4. **Only then revisit `claude_default_mode`.** The mode question is downstream of all of this and
+   cannot be answered while the friction is what decides it.
