@@ -1118,6 +1118,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-en_dk-for-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why <code>en_DK</code> for time
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1125,6 +1142,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#changing-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Changing it
       </span>
     </span>
   </a>
@@ -2238,6 +2266,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Setup">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#why-en_dk-for-time" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Why <code>en_DK</code> for time
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2245,6 +2290,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         Verify
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#changing-it" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Changing it
       </span>
     </span>
   </a>
@@ -2366,29 +2422,145 @@
   
 
 
-<h1 id="locale">Locale</h1>
+<h1 id="locale">Locale<a class="headerlink" href="#locale" title="Permanent link">&para;</a></h1>
 <p>Language and formats: what PULSE sets, why, and how to change it.</p>
-<h2 id="setup">Setup</h2>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>system.set-locale
 </span></code></pre></div>
-<p>Runs <code>sudo localectl set-locale LANG=en_US.UTF-8</code>, writes to <code>/etc/locale.conf</code> (systemd-integrated,
-persists across reboots), and is idempotent. Also runs as part of <code>inv setup</code>. <code>en_US.UTF-8</code> is
-pre-generated on Ubuntu 24.04 — <code>locale-gen</code> is not needed.</p>
-<h2 id="verify">Verify</h2>
+<p>Writes <code>/etc/locale.conf</code> through <code>localectl</code> (systemd-integrated, persists across reboots),
+idempotent, and also runs as part of <code>inv setup</code>. It sets <strong>three</strong> variables and leaves every other
+one alone:</p>
+<table>
+<thead>
+<tr>
+<th>variable</th>
+<th>value</th>
+<th>why</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>LANG</code></td>
+<td><code>en_US.UTF-8</code></td>
+<td>English messages, and a sane UTF-8 base for everything</td>
+</tr>
+<tr>
+<td><code>LC_TIME</code></td>
+<td><code>en_DK.UTF-8</code></td>
+<td>English weekday/month names, 24-hour clock, ISO dates</td>
+</tr>
+<tr>
+<td><code>LC_NUMERIC</code></td>
+<td><code>C.UTF-8</code></td>
+<td>dot-decimal, so <code>awk</code>/<code>printf</code> emit <code>1.50</code> not <code>1,50</code></td>
+</tr>
+</tbody>
+</table>
+<p><strong>The result is a mixed locale, deliberately.</strong> A machine wants English formatting for anything a
+person or a script reads, and its own regional facts for currency, paper size and measurement units.
+No single locale expresses that, which is why an ordinary &ldquo;Language: English, Region: elsewhere&rdquo;
+install already produces a mix. <code>LC_MONETARY</code>, <code>LC_PAPER</code>, <code>LC_MEASUREMENT</code>, <code>LC_ADDRESS</code>,
+<code>LC_NAME</code>, <code>LC_TELEPHONE</code> and <code>LC_IDENTIFICATION</code> are read back and passed through untouched.</p>
+<h3 id="why-en_dk-for-time">Why <code>en_DK</code> for time<a class="headerlink" href="#why-en_dk-for-time" title="Permanent link">&para;</a></h3>
+<p>Measured across every candidate installed on a real machine — one <code>date</code> call each:</p>
+<table>
+<thead>
+<tr>
+<th>locale</th>
+<th><code>%x</code> date</th>
+<th><code>%X</code> time</th>
+<th><code>%a</code></th>
+<th>decimal</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>C.utf8</code></td>
+<td><code>03/04/26</code></td>
+<td><code>14:05:00</code></td>
+<td>Wed</td>
+<td><code>1.50</code></td>
+</tr>
+<tr>
+<td><code>en_US.UTF-8</code></td>
+<td><code>03/04/2026</code></td>
+<td><code>02:05:00 PM</code></td>
+<td>Wed</td>
+<td><code>1.50</code></td>
+</tr>
+<tr>
+<td><code>en_GB.utf8</code></td>
+<td><code>04/03/26</code></td>
+<td><code>14:05:00</code></td>
+<td>Wed</td>
+<td><code>1.50</code></td>
+</tr>
+<tr>
+<td><code>en_CA.utf8</code></td>
+<td><code>2026-03-04</code></td>
+<td><code>02:05:00 PM</code></td>
+<td>Wed</td>
+<td><code>1.50</code></td>
+</tr>
+<tr>
+<td><code>en_DK.utf8</code></td>
+<td><code>2026-03-04</code></td>
+<td><code>14:05:00</code></td>
+<td>Wed</td>
+<td><code>1,50</code></td>
+</tr>
+<tr>
+<td><code>ro_RO.UTF-8</code></td>
+<td><code>04.03.2026</code></td>
+<td><code>14:05:00</code></td>
+<td>Mi</td>
+<td><code>1,50</code></td>
+</tr>
+</tbody>
+</table>
+<p><code>en_DK.UTF-8</code> is the only one hitting English names, a 24-hour clock and <code>YYYY-MM-DD</code> at once, and
+its <code>%c</code> is full ISO-8601. &ldquo;Canada-like <code>yyyy-mm-dd</code>&rdquo; resolves here rather than to <code>en_CA</code>, which
+gets the date right and the clock wrong.</p>
+<p><code>LC_NUMERIC</code> is set separately because <strong><code>en_DK</code> is comma-decimal</strong>, like the European locale it is.
+Setting <code>LC_TIME</code> alone would fix weekdays, clock and dates while leaving <code>awk</code>/<code>printf</code> emitting
+<code>1,50</code> — half the problem, silently.</p>
+<div class="admonition warning">
+<p class="admonition-title">Warning</p>
+<p><code>en_US</code> is the wrong &ldquo;obvious English&rdquo; choice for <code>LC_TIME</code>: <code>locale first_weekday</code> is 2 (Monday)
+under <code>en_DK</code> and 1 (Sunday) under <code>en_US</code>, so it silently flips the first day of the week in the
+GNOME calendar. Easy to notice and hard to attribute.</p>
+</div>
+<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>locale
 </span></code></pre></div>
-<p>All categories should show <code>en_US.UTF-8</code>.</p>
-<h2 id="pitfalls">Pitfalls</h2>
+<p><code>LANG=en_US.UTF-8</code>, <code>LC_TIME=en_DK.UTF-8</code>, <code>LC_NUMERIC=C.UTF-8</code>, and the regional categories on
+whatever your install chose. <strong>A logout is enough; a reboot is not needed</strong> — the systemd user
+session carries the full set (<code>systemctl --user show-environment</code>) and re-reads <code>/etc/locale.conf</code>
+at login. Shells and applications already running keep the old values until restarted.</p>
+<p>The GNOME panel clock does <strong>not</strong> follow <code>LC_TIME</code> for 12h-vs-24h — that is
+<code>org.gnome.desktop.interface clock-format</code>, independent of the locale. What the locale drives in the
+panel and calendar is weekday and month <em>names</em>.</p>
+<h2 id="changing-it">Changing it<a class="headerlink" href="#changing-it" title="Permanent link">&para;</a></h2>
+<p>The task takes all three as parameters, so a one-off is:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>system.set-locale<span class="w"> </span>--lc-time<span class="o">=</span>en_GB.UTF-8<span class="w"> </span>--lc-numeric<span class="o">=</span>en_US.UTF-8
+</span></code></pre></div>
+<p>That is not persistent: the next <code>inv setup</code> applies the defaults again. Making the choice stick is
+an open design question, tracked with the machine-local overrides mechanism — nobody has needed it
+yet, and the values above are the ones this machine wanted.</p>
+<h2 id="pitfalls">Pitfalls<a class="headerlink" href="#pitfalls" title="Permanent link">&para;</a></h2>
 <ul>
-<li><strong>Do not set <code>LC_ALL</code></strong> — it overrides all individual <code>LC_*</code> categories with no escape hatch,
-  breaking intentional per-category overrides</li>
-<li><strong>Do not set every <code>LC_*</code> individually</strong> — they all inherit from <code>LANG</code>; over-specifying creates
-  maintenance burden with no benefit</li>
-<li><strong>Do not use <code>export LANG=...</code> in a shell profile</strong> — session-only, does not survive reboot</li>
-<li><strong>A <code>C</code> or <code>POSIX</code> locale will break things</strong> — Python throws Unicode errors, git and compiler
-  output may be garbled</li>
+<li><strong>Do not set <code>LC_ALL</code></strong> — it overrides every individual <code>LC_*</code> category with no escape hatch,
+  which would defeat exactly the split above.</li>
+<li><strong>Do not set <code>LANG</code> to <code>C</code> or <code>POSIX</code></strong> — Python throws Unicode errors, and git and compiler
+  output may be garbled. This is not in tension with <code>LC_NUMERIC=C.UTF-8</code>: one category asking for
+  dot-decimal is not the same as a whole session with no locale, and <code>C.UTF-8</code> is UTF-8 either way.
+  (<code>C</code> alone is not in <code>localectl list-locales</code>; the accepted spelling is <code>C.UTF-8</code>.)</li>
+<li><strong>Do not <code>export LANG=...</code> in a shell profile</strong> — session-only, and it does not survive a reboot.</li>
+<li><strong>Do not hand-edit <code>/etc/locale.conf</code></strong> — <code>localectl set-locale</code> replaces the whole configuration
+  rather than merging into it, so anything not passed on the command line is dropped. That is why
+  the task reads the current set back and passes all of it.</li>
 </ul>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — the setup phase this runs in</li>
 <li><a href="index.html">Quick start</a> — where <code>inv system.set-locale</code> sits in a first run</li>
