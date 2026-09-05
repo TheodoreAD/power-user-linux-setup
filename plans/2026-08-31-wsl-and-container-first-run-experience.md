@@ -333,13 +333,45 @@ existence sweep, which is what `verify.all` performs one phase later, so doing i
 slightly earlier failure for a second copy of the same list. Recorded in `install_debs`' own
 docstring so the gap is visible where someone would look for it, rather than only here.]
 
-[DEFERRED: **the tag-blindness fixed in `zsh.py` may not be the only instance.** `deploy.py:310`,
-`home.py:571`, `ai.py:255`/`296`/`348` and `gnome.py:222` all read sections with a manual `enabled`
-check rather than `util.enabled_packages()`. Some are certainly deliberate — `deploy.py`'s registry
-has to cover everything declared so `deploy.status` can report drift on a package this profile
-excludes — so this is an audit, not a sweep, and each one needs its own answer. The reason to do it
-at all is that the zsh instance was found by its symptom on a real machine rather than by reading
-the code, and the same symptom elsewhere would be just as quiet.]
+~~[DEFERRED: **the tag-blindness fixed in `zsh.py` may not be the only instance.**]~~ **Audited
+2026-09-06. Seven sites, five moved, two stay, and the framing was too narrow.**
+
+`util.enabled_packages()` applies setup.toml's `enabled`, then `overrides.toml`, then
+`PULSE_EXCLUDE_TAGS`. A hand-rolled `cfg.get("enabled", True)` therefore misses **two** things, not
+one — and the override half needs no tag change to bite. A machine that switched a package off in
+its own `overrides.toml` still had that package's skills installed and its Claude permission rules
+written, today, on this machine's own mechanism.
+
+| site                                       | verdict                                                     |
+| ------------------------------------------ | ----------------------------------------------------------- |
+| `ai.py` `_install_declared_skills`         | moved — skills of a locally-disabled package were installed |
+| `ai.py` `_apply_static_claude_permissions` | moved — same, for `permissions.allow`/`deny`/`ask`          |
+| `ai.py` `_apply_additional_directories`    | moved — same, for `additionalDirectories`                   |
+| `deploy.py` `_skill_entries`               | moved — exists to mirror the installer, and says so         |
+| `home.py`'s skills claim                   | moved — same mirror                                         |
+| `catalog.py` `catalog_rows`                | **stays, and the call would be a bug**                      |
+| `verify.py`'s `zsh` block                  | stays — skip rows only                                      |
+
+`catalog.py` is the useful half of the answer: it renders a **committed** file, so reading this
+machine's overrides and excluded tags would make generated output vary by whoever ran the generator
+and show up as a spurious diff. The plan's guess that `deploy.py` was the deliberate one was wrong —
+its `_config_file_entries` was already tag-aware, so the registry was internally inconsistent rather
+than deliberately exhaustive.
+
+Removal was already handled where it matters: `_static_perm_merge` treats only rules this mechanism
+wrote last time as eligible for removal, so a package leaving the declared set has its rules taken
+back on the next run — the property `zsh.configure` had to grow. Skills already on disk are left
+alone; the change is only that a disabled package stops having them reinstalled.
+
+`gnome.status` keeps listing every declared extension, which is what "all declared" means, but takes
+`want` from the overrides the rest of the repo honours and names the file that disabled it.
+
+[PITFALL: **a test double was asserting something untrue about the function it stood in for.**
+`test_deploy.py`'s `_stub_config` faked `enabled_packages()` as _every_ package, filtering nothing.
+That was invisible while nothing under test called it for a disabled package, and
+`test_a_disabled_package_declares_no_skills` failed the moment `_skill_entries` started using it —
+so the fake was caught by the change it would otherwise have hidden. Worth remembering when stubbing
+a filter: a double that returns everything passes today and lies about what the code relies on.]
 
 ## The consumer dev-container path was broken, and it failed silently
 
