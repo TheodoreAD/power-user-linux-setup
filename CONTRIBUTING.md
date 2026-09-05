@@ -182,6 +182,9 @@ live in [`contributing/`](contributing/) instead, one file per topic, never publ
 - [`contributing/chrome-ozone.md`](contributing/chrome-ozone.md) — every measured dead end in
   forcing Chrome onto X11, and why `inv chrome.status` reports rather than repairs (companion to
   [`docs/chrome.md`](docs/chrome.md)).
+- [`contributing/credential-storage.md`](contributing/credential-storage.md) — the survey behind
+  `inv docker.configure-credential-store`, why helm needs no package of its own, and why an existing
+  plaintext entry silently suppresses every tool's secure default.
 
 If you're about to write a "why this is built this way" section in `docs/`, it probably belongs in
 `contributing/` instead — add a new per-topic file there and list it above. Exception: if the
