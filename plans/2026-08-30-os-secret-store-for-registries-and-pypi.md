@@ -252,3 +252,41 @@ In dependency order, because the first item unblocks everything else.
 
 CI is explicitly out of scope here and belongs to no machine: no keyring, no netrc, no credential
 file on a runner. `repo-tasks`' `plans/2026-08-30-ci-secrets-for-non-oidc-registries.md` owns it.
+
+## Migrated to
+
+Retired 2026-09-06. All four items are done — the helper package and explicit `credsStore` with the
+round trip, the user-level `uv.toml`, the migration of the one plaintext entry, and the `repo-tasks`
+unblock — and the deletion gate is clean: no open `DEFERRED` or `UNVERIFIED`, no inbound references.
+
+Most of this plan was already migrated as it was implemented, which is the good case and is why the
+list of destinations is short:
+
+- **`tasks/docker.py`** — the explicit-`credsStore` design and the `ContainsAuth()`/
+  `IsAuthConfigured()` gating that forces it, the round trip and why presence is not the question,
+  the oras-has-no-existence-check reason for failing loudly, the `--purge-plaintext` flag shape, and
+  the `docker/cli` source reads behind what the purge treats as a credential. Unit-tested with the
+  config redirected under `tmp_path`.
+- **`config/uv.toml`** — the per-user-placement rule and the Trusted Publishing failure it prevents,
+  and the inertness caveat, in comments a reader meets while editing the file.
+- **`setup.toml`** — `[packages.docker-credential-secretservice]` and the `binary` method's
+  `{version}` + `version_cmd`, documented in that file's own header alongside `archive` and
+  `deb-url`.
+- **`inv home.list-claims`** — the `merge`/`co-owned` claim on the one `credsStore` key, and only
+  that key: the rest of `~/.docker/config.json` is docker's and holds real credentials.
+- **`contributing/credential-storage.md`** — new, because this repo had no home for credential
+  rationale. Carries what the code cannot: the four-consumer survey, `gh` being already compliant
+  and what that proves, helm needing no package and the host-scoped fallback that explains why, the
+  distro-versus-upstream helper decision, and the two pitfalls.
+
+Deliberately not migrated:
+
+- **The migration procedure for a credential still in use.** The four steps were written for a case
+  that did not occur — the one entry was obsolete, so it was a removal. Keeping a procedure nobody
+  has run would be documentation of a guess.
+- **The `[NEEDS CLARIFICATION:]` about a headless machine's behaviour at step 5.** Answered by the
+  tag system rather than by a flag: the package is `workstation`-tagged, so a headless or container
+  machine simply has no helper and the task says so and returns. That branch is in the code.
+- **Measured versions and the round-trip transcript.** A log of one machine on one day; the property
+  is now asserted by the task on every run.
+- **CI secrets.** Never this plan's, and `repo-tasks` owns it.
