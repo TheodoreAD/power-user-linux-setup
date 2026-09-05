@@ -304,16 +304,34 @@ Three tests in `tests/unit/test_apt.py`, with a patched `input()` that raises as
 than an assertion on the printed text — a test that only read the output would pass against a
 version that still hangs. Confirmed by reverting the production change and watching them fail.
 
-[DEFERRED: **`install_debs` still cannot fail.** Both deb installers report their failures and
-return, so a run where every `deb-github` download 404'd exits 0. The apt paths got a failure
-summary; this one did not, because the honest verdict is not available at the point of failure:
-`dpkg -i` exits non-zero for a package whose dependencies aren't in place yet, and the closing
-`apt-get install -f -y` is what repairs precisely that — so its exit code is not evidence, and
-treating it as such would fail runs that are about to succeed (google-chrome-stable on a fresh
-machine is the named case). The answerable form is a `check_cmd` existence sweep _after_ the `-f`
-pass, which is what `verify.all` already does for these packages one phase later. Deciding whether
-that duplication is worth it, and how it distinguishes a genuine failure from a package the user
-deliberately skipped at the manual-download prompt, is the open part.]
+~~[DEFERRED: **`install_debs` still cannot fail.**]~~ **Fixed 2026-09-06, and the framing above was
+the thing blocking it.** "The honest verdict is not available at the point of failure" is true of
+_one_ outcome, not of all of them: `dpkg -i` going non-zero is genuinely ambiguous until
+`apt-get install -f -y` has run, but a release lookup that returned nothing, a 404, and an archive
+with no `.deb` in it leave dpkg nothing to repair and were always reportable on the spot. Splitting
+the installer's boolean into a three-way `DebOutcome` (`INSTALLED`/`UNCONFIGURED`/`FAILED`) is what
+makes that sayable, and the run now ends in `_report_failures` like the apt paths do.
+
+So the `check_cmd` sweep this item proposed is not needed for the common case, and the duplication
+question it posed does not arise. The skip question does not either: a `download_page` package
+passed over for want of a terminal returns from its own branch without a reason, so it is a skip
+rather than a failure by construction.
+
+Two defects surfaced from the split rather than from the goal:
+
+- **A failed download printed `unconfigured — deferred to apt-get install -f`**, promising a repair
+  that cannot apply — `-f` fixes a package dpkg has, and a 404 left dpkg nothing.
+- **The repair pass's own exit code was discarded.** Unlike dpkg's it is evidence: nothing comes
+  after `-f` to make a failure there provisional.
+
+`upgrade_debs` reports the same way now, since one of the pair staying silent would read as an
+oversight rather than a decision. Five tests, each verified against the unfixed code.
+
+[DEFERRED: **the one case still uncovered — a package that downloaded, dpkg left unconfigured, and
+`apt-get install -f -y` then failed to repair.** That genuinely does need the post-`-f` `check_cmd`
+existence sweep, which is what `verify.all` performs one phase later, so doing it here buys a
+slightly earlier failure for a second copy of the same list. Recorded in `install_debs`' own
+docstring so the gap is visible where someone would look for it, rather than only here.]
 
 [DEFERRED: **the tag-blindness fixed in `zsh.py` may not be the only instance.** `deploy.py:310`,
 `home.py:571`, `ai.py:255`/`296`/`348` and `gnome.py:222` all read sections with a manual `enabled`
