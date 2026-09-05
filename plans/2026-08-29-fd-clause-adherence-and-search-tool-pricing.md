@@ -45,11 +45,10 @@ Two candidate causes, both in this repo's control:
    after a long paragraph about the `rg -r`/`--replace` trap, and then hands out an exemption list
    ("`find -exec`/`-delete`, or portability") that 175 of 237 `find` calls do not qualify for. An
    exemption list adjacent to a preference reads as permission.
-2. ~~**There is no price difference.**~~ **This was false when written, and the correction inverts
-   the plan's conclusion — see "The pricing lever was already pulled" below.** The claim was that
-   `~/.claude/settings.json` allows all four equally, so nothing in the permission layer
-   distinguishes the preferred spelling from the discouraged one. It does not: `find` renders as
-   **`ask`**.
+2. ~~**There is no price difference.**~~ **False when written, though not in the way first corrected
+   here — see "The pricing lever" below.** The claim was that `~/.claude/settings.json` allows all
+   four equally, so nothing in the permission layer distinguishes the preferred spelling from the
+   discouraged one. It does not: `find` renders as **`ask`**.
 
 ## Re-measured 2026-09-05, with the rows step 1 asked for
 
@@ -112,7 +111,7 @@ the skill as `2026-09-05-rg-replace-counter-matches-its-own-prose.md`, now cover
 miss in the other direction: the `-printf` call above was tagged `find-not-fd` rather than
 `find-exempt`, so the exempt row undercounts too.]
 
-## The pricing lever was already pulled, and the rate survived it — 2026-09-05
+## The pricing lever: looks pulled, mostly is not — 2026-09-05
 
 **`find` has rendered as `ask` since 2026-08-09**, three weeks before this plan proposed pricing it
 as the untried strong lever. `cli-allowlist/rules/find.json` classifies it `dangerous` —
@@ -121,22 +120,28 @@ as the untried strong lever. `cli-allowlist/rules/find.json` classifies it `dang
 above was therefore wrong on the day it was written, and it was **repeated in this session** before
 anyone checked `~/.claude/settings.json`.
 
-[DECISION: **step 3 is void as written, and the finding replaces it.** The proposal was to price
-`find` and see whether the miss rate moved. It has been priced the whole time. So the measurement
-already exists and its answer is negative: **37 `find` calls a week, every one of them paid for with
-an approval prompt**, for lookups `fd` does free and unprompted. The user approved 36 of them and
-declined one — `find …/plan-docs -type f | sort`, in the audit's denial list, which is independent
-confirmation that these calls really do surface as prompts rather than being shadowed by some other
-rule.]
+[DECISION: **step 3 is void as written — but not for the reason first given here, and the first
+reason was wrong.** This section originally concluded that the pricing experiment had already run
+for three weeks and come back negative: 37 `find` calls a week each paid for with a prompt. That
+required the `ask` rule to be what decided, and it mostly was not. **43 of 46 `find` calls in the
+week ran under auto mode**, where a classifier decides rather than the allow/ask table; the rule
+governed at most the 3 that did not. Pricing is therefore closer to untried than to spent — untried
+_in the mode this machine actually runs_. The full correction, and the 96%-auto measurement behind
+it, is in `plans/2026-09-05-grep-glob-preference-is-inoperative.md`.]
 
-[PITFALL: **this is a live counter-example to "a prompt is friction, so pricing is a lever", and it
-lands on a recommendation made earlier the same day.** The `rg -r` plan's fallback mechanism is an
-`ask` rule on the `rg -r` prefix, argued for on exactly that reasoning. `find` shows an `ask` rule
-sustaining a 40% miss rate for three weeks with the cost visibly paid each time — so an ask-rule is
-not the safe default this corpus had assumed, and the `rg -r` fallback needs re-arguing rather than
-inheriting the assumption. It is not refuted outright: `find`'s prompt is unavoidable-looking
-(nothing suggests the alternative at the moment of the prompt), while an `rg -r` prompt would fire
-on a shape that is nearly always a mistake. But the difference has to be argued now, not assumed.]
+[PITFALL: **two wrong conclusions in one afternoon, from the same missing fact, and each looked
+sound on its own evidence.** First: "there is no price difference" (the plan's, 2026-08-29) —
+refuted by reading `settings.json`, where `find` is `ask`. Second: "so pricing already ran and
+failed" (this session) — refuted by reading `permissionMode`, which says the table barely applies.
+Both readings were correct about the artefact in front of them and wrong about which artefact
+governed. The lesson worth keeping is narrow and checkable: **on this machine, a claim about
+permission behaviour is not established by reading `settings.json`; it needs the mode the calls
+actually ran in.**]
+
+[PITFALL: **the "an ask rule is friction, therefore a lever" reasoning is now untested rather than
+refuted**, which matters because the `rg -r` plan's fallback mechanism rests on it. This section
+briefly claimed `find` was a live counter-example to it. It is not evidence either way: the rule
+that would have made it one was not deciding those calls.]
 
 [PITFALL: **an `ask` classification derived from a tool's most dangerous flag prices every use of
 it.** `find` is `ask` because of `-delete`/`-exec`, which 2 of 37 calls used; the other 35 were
@@ -177,13 +182,15 @@ Rough, and deliberately sequenced so the result is measurable. Steps 1 and 2 are
    change accompanies it, so the next reading attributes cleanly. `fd` has its own sentence in
    translation form, the exemption list became a bar carrying its own hit rate, and the `-H`/`-I`
    silent-zero caveat is stated.
-3. ~~**Only then consider the allowlist**~~ — **void: it was already in force.** `find` has been
-   `ask` since 2026-08-09, so the pricing experiment ran for three weeks without anyone noticing and
-   came back negative. What remains is to re-measure the reword after a week with
-   `audit.py --days 7`, correcting for the 10% prose over-report until the counter is fixed, and to
-   **read the `~/plans` cluster out separately**: 29% of the misses are a `plan-docs` adherence
-   problem that no wording of this rule can move. If the reword also fails, both available levers
-   are spent for this clause and the open question above — a flag-level tier — is what is left.
+3. **The allowlist step needs restating, not executing.** `find` has rendered as `ask` since
+   2026-08-09, so the lever looks pulled — but 43 of the week's 46 `find` calls ran under auto mode,
+   where a classifier decides and the allow/ask table mostly does not. Pricing is untried in the
+   mode that runs, and "price it" is not a well-formed step until that is settled. What remains is
+   to re-measure the reword after a week with `audit.py --days 7`, correcting for the 10% prose
+   over-report until the counter is fixed, and to **read the `~/plans` cluster out separately**: 29%
+   of the misses are a `plan-docs` adherence problem that no wording of this rule can move. If the
+   reword also fails, both available levers are spent for this clause and the open question above —
+   a flag-level tier — is what is left.
 4. **Leave `rg` alone.** At 94.5% it is evidence the rule shape works when the preference is stated
    plainly, which is the argument step 2 acted on.
 

@@ -3,80 +3,93 @@ status: idea
 updated: 2026-09-05
 ---
 
-# Sessions shell out to search at the same rate whether or not Grep exists
+# RETRACTED, and replaced: this machine runs auto mode, so there was never a control group
 
-## Context
+The filename and the original claim are kept because both were committed and pushed before the error
+was found, and a retraction that hides what it retracts is worse than the error.
 
-`~/AGENTS.md`'s "Viewing, searching, or editing files" opens with `Grep`/`Glob` over `grep`/`find`,
-reasoned as _"dedicated tools have their own permission gate and keep the whole result"_. Auto mode
-supplies a natural experiment for it, and nobody had run it: **auto mode withdraws `Grep` and
-`Glob`** — confirmed again 2026-09-05, they are absent from an auto-mode session's tool list — so
-every search there **must** go through Bash, while a normal session has the choice.
+## What was claimed, and why it was wrong
 
-Seven days, 13,754 Bash calls, 747 transcripts. Auto mode is detectable in a transcript by its own
-system note, `"While auto mode is active"`:
+The claim, committed 2026-09-05 as `64757d7`: auto mode withdraws `Grep`/`Glob`, so comparing
+auto-mode sessions against normal ones is a natural experiment for the `Grep`-over-`grep`
+preference; standalone Bash searches came out at 19% in auto and 18% in normal, so the preference
+was inoperative.
 
-|               | sessions | Bash calls | search via Bash | standalone searches |
-| ------------- | -------- | ---------- | --------------- | ------------------- |
-| normal        | 52       | 11,929     | 2,791 (**23%**) | 2,158 (**18%**)     |
-| auto (forced) | 9        | 1,825      | 429 (**24%**)   | 342 (**19%**)       |
+**There was no normal group.** Auto-mode sessions were detected by grepping transcripts for the
+system note `"While auto mode is active"`, which is present in only a fraction of them — 11 of 64.
+The remaining ~53 auto sessions fell into the "normal" bucket, so the comparison was auto against
+auto and the matching rates are exactly what that predicts. The user said so directly on reading the
+result: _"i've been running auto mode almost all the time"_.
 
-Per-session, sessions with ≥40 calls: auto ranges **18–29%**, normal **9–40%**. The auto
-distribution sits entirely inside the normal one — no separation at any point.
+[PITFALL: **the transcript records `permissionMode` on its own records, and that is the field to
+use.** Attributing each Bash call to the mode in force at its timestamp — bisect the session's
+`permissionMode` timeline, since the mode changes mid-session — gives the real picture for the seven
+days to 2026-09-05:
 
-"Standalone" excludes the two legitimate shapes: a `grep` used as a filter inside a pipeline (20% of
-the tagged calls), and `rg -c`/`--count`/`--files` used for counting, which the rules explicitly
-recommend (3%).
+| mode in force | Bash calls | share   |
+| ------------- | ---------- | ------- |
+| `auto`        | 13,193     | **96%** |
+| `acceptEdits` | 547        | 4%      |
+| unknown       | 14         | 0%      |
 
-[DECISION: **the preference is inoperative, and this is as clean a test of it as the corpus can
-offer.** In auto mode the 342 standalone searches are compelled — there is no `Grep` to reach for,
-and `~/AGENTS.md` itself tells auto-mode sessions to search with `rg`. In normal mode the 2,158 are
-chosen, with `Grep` and `Glob` sitting available. **Sessions behave identically whether the
-dedicated tool exists or not**, which is what "the rule is not reaching the decision" looks like
-when it is measured rather than argued.]
+By session: **51 of 61 purely auto**, 7 mixed, 2 purely `acceptEdits`. A prose grep for a system
+note is not a mode detector, and the failure is silent — it produces a plausible minority rather
+than an error.]
 
-[PITFALL: **half the rule's stated reason is void on this machine, and that is a candidate cause
-rather than a detail.** "Their own permission gate" buys nothing for `rg`, `grep` or `fd`: all three
-classify `read_only` and render as `Bash(rg:*)` etc. in `allow`, so a Bash search prompts exactly as
-often as `Grep` does — never. It is true only for `find`, which is `ask`. So an agent weighing the
-rule finds one reason that does not apply and one — "keeps the whole result" — that applies to Bash
-output too, since the harness truncates and persists both. A rule whose reason does not survive
-inspection is the shape "Reading a command's result" was in before `PIPE_FAIL`, and it got rewritten
-rather than restated.]
+## What the corrected number actually means, which is bigger than the retracted claim
+
+[DECISION: **`setup.toml` declares a default mode that governs 4% of this machine's Bash calls.**
+`claude_default_mode = "acceptEdits"`, with a comment naming it as _"the model the cli-allowlist
+pipeline, `mode_covered`, and the scratch directories below are designed around"_ and recording that
+`auto` _"was dropped 2026-08-24 after a 4-day transcript audit"_. `~/.claude/settings.json` agrees:
+`defaultMode: acceptEdits`. The machine has nonetheless run auto for 96% of its Bash calls since.
+The declared configuration and the operating reality have diverged, and every design that rests on
+the declared one needs re-reading against the real one.]
+
+[PITFALL: **the `cli-allowlist` allow/ask table is largely not what decides.** In auto mode a
+classifier decides instead. Measured: **43 of 46 `find` calls ran under auto**, so `Bash(find:*)` —
+which classifies `dangerous` for `-delete`/`-exec` and renders as `ask` — governed at most the 3
+that did not. This corrects a claim made earlier the same day in
+`plans/2026-08-29-fd-clause-adherence-and-search-tool-pricing.md`, that the pricing lever had
+already been pulled and failed. It has not been pulled in the mode that actually runs. What the
+pipeline still buys under auto, and whether that justifies its size, is now an open question rather
+than an assumption.]
+
+[PITFALL: **every Bash-versus-tool rate in this corpus was measured under a system reminder asking
+for the opposite.** Auto mode's note asks the agent to read with `cat`/`head`/`sed -n`, search with
+`grep`/`find`, and edit with `sed`/heredocs rather than Read/Edit/Write. At 96% that is not a
+confound to correct for, it is the condition the whole corpus was measured in. `sed-n` (754),
+`cat-view` (203), `heredoc` (1,641) and `grep/find` (3,220) are therefore **not** clean adherence
+figures against `~/AGENTS.md`; they are the sum of a rule and a live instruction pulling opposite
+ways, and no split of that sum has been measured.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **what the rule's reason should be, if it is kept.** The strongest one
-available is new and comes from this same week's measurements rather than from the tool's design:
-**a Bash search has a flag string to get wrong and `Grep`/`Glob` do not.** Every silently-wrong
-search measured this week was only possible through a shell — 32 `rg -r` calls where the bundle ate
-the flags and the matched text came back rewritten, plus `fd`'s silent zero on gitignored or
-dot-directory targets. `Grep` takes typed parameters; there is no `-rn` to mistype and no ignore
-default to forget. Whether that is worth stating, or whether it merely adds a third clause to a
-paragraph already carrying two rewrites from today, is the question.]
+[NEEDS CLARIFICATION: **whether the `fd` reword landed earlier today is fighting a live system
+reminder**, which `session-bash-audit`'s own routing table says not to do — "the harness itself
+instructs the opposite (auto mode's 'prefer Bash' reminder) → the mode, not the wording". Auto mode
+names `find` explicitly. `~/AGENTS.md` already anticipates this and says the `rg`/`fd` preferences
+still govern how a search is spelled, so the reword is not straightforwardly void — but it is now a
+rule competing with a reminder in 96% of calls rather than in a minority, and the 2026-09-12 reading
+has to be interpreted in that light.]
 
-[NEEDS CLARIFICATION: **whether the rule should be narrowed instead of re-reasoned.** A defensible
-reading of the data is that agents are right and the rule is over-broad: a Bash search composes into
-a pipeline, takes flags `Grep` does not expose, and — decisively — **works in both permission
-modes**, where `Grep` disappears in one of them. A behaviour that is correct under every mode
-beating one that is correct under a subset is not a discipline failure. If that is accepted, the
-rule should say `Grep`/`Glob` where they are genuinely better and stop implying a general
-preference. What it must not stay is a general preference nobody follows, which costs credibility
-across the whole cluster.]
+[NEEDS CLARIFICATION: **whether the declared default should change, or the practice.** Setting
+`claude_default_mode = "auto"` would make the declaration honest and let the allowlist pipeline be
+re-scoped to what it actually governs. Leaving it and changing the practice keeps the pipeline's
+design intact. The 2026-08-24 audit that dropped `auto` reached its conclusion for reasons that are
+written down in `session-bash-audit`'s `references/research.md`; those reasons need re-reading
+before either answer, because they were about the same Bash-versus-tool behaviour this note has just
+shown was never cleanly measured.]
 
-[NEEDS CLARIFICATION: **whether 9 auto-mode sessions are enough.** They are 1% of transcripts but
-13% of calls — auto sessions average 203 calls against 229 for normal, so they are not atypical in
-size, but they are few and may be self-selected by task. The per-session spread is the reassurance:
-9 sessions spanning 18–29% against 48 normal sessions spanning 9–40% is not a subtle difference
-being missed, it is no difference at all. Worth re-running when the auto-mode session count grows.]
+[NEEDS CLARIFICATION: **the user's stated reason for staying in auto — web search and retrieval
+going through the classifier — has not been characterised.** Stated 2026-09-05: _"i don't know how
+to solve the web searches and retrievals, which now go through the model classifier in auto"_. Until
+it is known whether that is denials, latency, or prompts, no recommendation about the mode is worth
+making, because the mode is being chosen to work around it.]
 
 ## Recommended direction
 
-**Do not change the rule in this session.** Two clauses of the same paragraph were rewritten today —
-`rg -r` as a translation, and `fd` with its exemption list cut — and both carry `[UNVERIFIED:]` tags
-whose whole point is a clean reading in a week. A third edit to the same paragraph makes all three
-uninterpretable, which is the mistake the `head`/`tail` cluster made four times before anyone
-noticed the readings could not be attributed.
-
-So: bank the finding, take the answer to the two questions above, and land whichever change is
-chosen **after** the 2026-09-12 reading, not before it.
+Re-run every adherence figure in this cluster with per-call mode attribution before drawing anything
+further from it, and treat the `2026-09-12` readings promised by today's two rule changes as
+auto-mode readings rather than machine-wide ones. Then characterise the web-search friction, because
+the mode question cannot be answered underneath it.
