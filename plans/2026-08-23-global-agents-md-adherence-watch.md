@@ -792,9 +792,48 @@ cluster away in "Reading a command's result". The change is one imperative at th
 the measurement; the mechanism stays a pointer, per the leanness pass's shape for this paragraph.
 Evidence written up in `contributing/global-agents-md.md`, "The `| tail` half of the gate clause".]
 
-[UNVERIFIED: whether it moves the rate. Every prior wording change in this cluster was measured
-after the fact against nothing; this one has `~/.local/state/session-bash-audit/2026-09-04.json` to
-compare with, so the next sample should run `--compare` and report a verdict rather than another
-unanchored figure. If the rate holds at ~20%, that is the fourth independent confirmation that
-wording is not the lever here, and the watch should say so as a finding rather than keep testing
-it.]
+~~[UNVERIFIED: whether it moves the rate.]~~ **Answered by session 18 below: it did not.** That is
+the fourth independent confirmation, and the watch now says it as a finding rather than testing it
+again — see the entry for the shape of the evidence.
+
+### Session 18 — `ingesta`, 2026-09-05: the shell option landed and the rate did not move
+
+`51a36fd5-b684-4cfb-8848-a1a5937b294c`, 233 Bash calls over nine and a half hours, **entirely after
+the `PIPE_FAIL` deploy** — so it measures the mechanism rather than a wording change, which is the
+first time this watch has had one to measure. 7/11 against the rescored baseline.
+
+| counter                 | this session | vs rescored baseline |
+| ----------------------- | ------------ | -------------------- |
+| `head/tail`             | 28%          | **+1pp, MISS**       |
+| `chain`                 | 50%          | +5pp, MISS           |
+| `sed-n`                 | 9%           | +4pp, MISS           |
+| `git-mutating-in-chain` | 8%           | +2pp, MISS           |
+| `exit-masked`           | 21%          | —                    |
+| `redirect-then-filter`  | 0%           | −0pp, OK             |
+| `git-C-own-repo`        | 0% (1 call)  | −1pp, OK             |
+
+**`PIPE_FAIL` changed what a pipe reports and changed nothing about how often one is typed**, with
+`head/tail` a point _above_ the post-deploy baseline. That is the shape
+`plans/2026-09-05-pipefail-in-the-agent-shell.md` predicted rather than a disappointment: the shell
+setting fixes the consequence, and the habit was always this watch's question. One session is a
+sample, not a verdict — but it is consistent with the four wording attempts, and the standing
+`[DECISION: adherence, not wording]` now has a mechanism-side data point as well as four
+wording-side ones.
+
+[PITFALL: **compare against `2026-09-05-pipefail-live-rescored.json`, never
+`2026-09-05-pipefail-live.json`.** The latter was saved by a superseded instrument: its 02:14 write
+predates the 18:44 re-install carrying `0165577` ("a pipe inside quotes is not a pipe"), which is
+the commit that changes what counts as a pipe — the entire subject being measured. Re-scoring the
+same seven-day window under current code moved `exit-masked` down (2,383 → 2,323) and left
+`head/tail` flat (3,765 → 3,767) while the call count rose by 577, the quote fix removing false
+positives. A `--compare` straddling that commit credits the instrument's own change to `PIPE_FAIL`,
+in the direction that flatters it. Both baselines are kept.]
+
+[PITFALL: **`exit-masked` now measures a style rather than a risk, and its name still describes the
+risk.** Session 18 masked 21% of its calls and told the user a gate was green ten times, every one
+from a piped run — the genuinely dangerous combination under the old shell. The unpiped re-run
+exited 0 and all ten held, as `PIPE_FAIL` now guarantees they must. Reading a non-zero `exit-masked`
+as "this session's green results are unverified" therefore costs a full gate re-run to confirm
+something the shell already settled. The counter and the harvest step that reads it belong to
+`agent-skills`, filed there as `2026-09-05-exit-masked-measures-a-risk-pipefail-removed.md`; what
+this watch has to do meanwhile is not read its own `exit-masked` column as a risk figure.]
