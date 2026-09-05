@@ -2408,10 +2408,10 @@
   
 
 
-<h1 id="ssh">SSH</h1>
+<h1 id="ssh">SSH<a class="headerlink" href="#ssh" title="Permanent link">&para;</a></h1>
 <p>SSH keys, the agent, and the askpass helper — how this machine authenticates with no terminal
 attached.</p>
-<h2 id="identity-setup">Identity setup</h2>
+<h2 id="identity-setup">Identity setup<a class="headerlink" href="#identity-setup" title="Permanent link">&para;</a></h2>
 <p>SSH keys and config are driven by <code>~/.config/power-user-linux-setup/identity.toml</code> — a personal file
 that is never committed to the repo.</p>
 <p><strong>Quick start</strong> — one email, one key per host you pick (GitHub/GitLab):</p>
@@ -2448,7 +2448,7 @@ alias collides with an existing hand-written <code>Host</code> entry (e.g. both 
 block wins, since SSH config resolution is first-match-wins per keyword. Check the <code>ssh_hosts</code> alias
 list against the existing config&rsquo;s <code>Host</code> entries for collisions before running this on a machine
 with years of accumulated manual SSH config.</p>
-<h2 id="what-gets-created">What gets created</h2>
+<h2 id="what-gets-created">What gets created<a class="headerlink" href="#what-gets-created" title="Permanent link">&para;</a></h2>
 <p><strong>Keys</strong> — one per unique email across your <code>ssh_hosts</code> entries, named:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub
@@ -2473,7 +2473,7 @@ plus a <code>Host *</code> default section:</p>
 </span><span id="__span-4-16"><a id="__codelineno-4-16" name="__codelineno-4-16" href="#__codelineno-4-16"></a>  ServerAliveInterval 300
 </span><span id="__span-4-17"><a id="__codelineno-4-17" name="__codelineno-4-17" href="#__codelineno-4-17"></a>  ServerAliveCountMax 3
 </span></code></pre></div>
-<h2 id="add-keys-to-github-gitlab">Add keys to GitHub / GitLab</h2>
+<h2 id="add-keys-to-github-gitlab">Add keys to GitHub / GitLab<a class="headerlink" href="#add-keys-to-github-gitlab" title="Permanent link">&para;</a></h2>
 <p>After creating keys, upload each public key to the relevant platform:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a><span class="c1"># GitHub</span>
 </span><span id="__span-5-2"><a id="__codelineno-5-2" name="__codelineno-5-2" href="#__codelineno-5-2"></a>gh<span class="w"> </span>ssh-key<span class="w"> </span>add<span class="w"> </span>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub<span class="w"> </span>--title<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>uname<span class="w"> </span>-n<span class="k">)</span><span class="s2">&quot;</span>
@@ -2481,7 +2481,7 @@ plus a <code>Host *</code> default section:</p>
 </span><span id="__span-5-4"><a id="__codelineno-5-4" name="__codelineno-5-4" href="#__codelineno-5-4"></a><span class="c1"># GitLab</span>
 </span><span id="__span-5-5"><a id="__codelineno-5-5" name="__codelineno-5-5" href="#__codelineno-5-5"></a>glab<span class="w"> </span>ssh-key<span class="w"> </span>add<span class="w"> </span>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub<span class="w"> </span>--title<span class="w"> </span><span class="s2">&quot;</span><span class="k">$(</span>uname<span class="w"> </span>-n<span class="k">)</span><span class="s2">&quot;</span>
 </span></code></pre></div>
-<h2 id="which-agent-a-shell-talks-to">Which agent a shell talks to</h2>
+<h2 id="which-agent-a-shell-talks-to">Which agent a shell talks to<a class="headerlink" href="#which-agent-a-shell-talks-to" title="Permanent link">&para;</a></h2>
 <p>A desktop session normally runs <strong>two</strong> SSH agents, and picking the wrong one is the failure mode
 this section exists to prevent:</p>
 <table>
@@ -2541,7 +2541,7 @@ Wayland session — the socket survives from login through the full session, and
 login is expected on that path (keys load lazily on first connection, not eagerly at login) and is
 not itself a sign of breakage — but on a desktop session you should be on GNOME&rsquo;s agent, where the
 keys are already there.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <p>Fix key permissions if needed:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-8-1"><a id="__codelineno-8-1" name="__codelineno-8-1" href="#__codelineno-8-1"></a>chmod<span class="w"> </span><span class="m">600</span><span class="w"> </span>~/.ssh/&lt;keyfile&gt;
 </span><span id="__span-8-2"><a id="__codelineno-8-2" name="__codelineno-8-2" href="#__codelineno-8-2"></a>chmod<span class="w"> </span><span class="m">644</span><span class="w"> </span>~/.ssh/&lt;keyfile&gt;.pub
@@ -2549,7 +2549,7 @@ keys are already there.</p>
 <p>Change the comment on an existing key:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-9-1"><a id="__codelineno-9-1" name="__codelineno-9-1" href="#__codelineno-9-1"></a>ssh-keygen<span class="w"> </span>-f<span class="w"> </span>~/.ssh/&lt;keyfile&gt;<span class="w"> </span>-o<span class="w"> </span>-c<span class="w"> </span>-C<span class="w"> </span><span class="s2">&quot;new comment&quot;</span>
 </span></code></pre></div>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="git.html">Git</a> — the identity these keys belong to</li>
 <li><a href="github.html">GitHub</a> — adding a key and testing it</li>

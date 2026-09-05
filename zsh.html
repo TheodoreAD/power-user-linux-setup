@@ -2642,9 +2642,9 @@
   
 
 
-<h1 id="zsh">Zsh</h1>
+<h1 id="zsh">Zsh<a class="headerlink" href="#zsh" title="Permanent link">&para;</a></h1>
 <p>The shell PULSE configures: Oh My Zsh, the Powerlevel10k prompt, and the blocks each package writes.</p>
-<h2 id="setup">Setup</h2>
+<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
 <p>All zsh configuration is declared in <code>setup.toml</code> and applied via invoke:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>tools.install<span class="w">      </span><span class="c1"># installs OMZ, Powerlevel10k, zsh-autosuggestions, zsh-syntax-highlighting</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>zsh.configure-omz<span class="w">  </span><span class="c1"># updates plugins=() and ZSH_THEME in ~/.zshrc</span>
@@ -2652,7 +2652,7 @@
 </span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>inv<span class="w"> </span>zsh.configure-p10k<span class="w"> </span><span class="c1"># seeds ~/.p10k.zsh from the repo baseline</span>
 </span></code></pre></div>
 <p>Or all at once via <code>inv setup</code>.</p>
-<h2 id="the-prompt">The prompt</h2>
+<h2 id="the-prompt">The prompt<a class="headerlink" href="#the-prompt" title="Permanent link">&para;</a></h2>
 <p><strong>There is no first-run wizard to sit through.</strong> PULSE ships a Powerlevel10k configuration that
 already matches everything else it installs — the Nerd Font, its icon set, and the
 <a href="claude-code.html#the-statusline">Claude Code statusline</a> — and <code>inv zsh.configure-p10k</code> seeds it to
@@ -2680,7 +2680,7 @@ this repo deploys, so a customized <code>~/.p10k.zsh</code> is never overwritten
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>deploy.all<span class="w"> </span>--name<span class="w"> </span>powerlevel10k<span class="w"> </span>--yes<span class="w"> </span><span class="c1"># deliberate way back to the baseline</span>
 </span></code></pre></div>
 <p>To keep your version as the baseline instead, copy it over <code>config/p10k.zsh</code> and commit.</p>
-<h2 id="what-gets-installed">What gets installed</h2>
+<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
 <table>
 <thead>
 <tr>
@@ -2712,7 +2712,7 @@ this repo deploys, so a customized <code>~/.p10k.zsh</code> is never overwritten
 </tr>
 </tbody>
 </table>
-<h2 id="plugins">Plugins</h2>
+<h2 id="plugins">Plugins<a class="headerlink" href="#plugins" title="Permanent link">&para;</a></h2>
 <p>Applied by <code>inv zsh.configure-omz</code>, which rewrites the <code>plugins=(...)</code> block in <code>~/.zshrc</code> in-place.
 <code>zsh-syntax-highlighting</code> is always kept last — it post-processes already-parsed input.</p>
 <p>The final plugins list is assembled from two sources:</p>
@@ -2804,7 +2804,7 @@ drops it.</p>
 conflict.</p>
 <p>The <code>jsontools</code> plugin was removed — <code>ppjson</code>, <code>isjson</code>, <code>urlencode</code>, and <code>urldecode</code> are
 re-implemented in <code>[packages.jq-aliases]</code> (see Aliases).</p>
-<h2 id="keybindings">Keybindings</h2>
+<h2 id="keybindings">Keybindings<a class="headerlink" href="#keybindings" title="Permanent link">&para;</a></h2>
 <p>No custom bindings — OMZ uses emacs mode (<code>bindkey -e</code>) which covers everything via <code>Alt</code> (or <code>Esc</code>)
 combinations:</p>
 <table>
@@ -2861,7 +2861,7 @@ combinations:</p>
 </tr>
 </tbody>
 </table>
-<h2 id="aliases">Aliases</h2>
+<h2 id="aliases">Aliases<a class="headerlink" href="#aliases" title="Permanent link">&para;</a></h2>
 <ul>
 <li><code>jq='jq -S'</code>: sort keys by default — declared in <code>[packages.jq-aliases]</code>; alias scope means
   scripts calling <code>jq</code> directly are unaffected (jq has no config file or <code>JQ_FLAGS</code> env var)</li>
@@ -2874,7 +2874,7 @@ combinations:</p>
 <li><code>curl</code> defaults: <code>--silent --show-error --location</code> written to <code>~/.config/curlrc</code> by
   <code>inv system.write-curlrc</code> — no alias needed</li>
 </ul>
-<h2 id="clipboard">Clipboard</h2>
+<h2 id="clipboard">Clipboard<a class="headerlink" href="#clipboard" title="Permanent link">&para;</a></h2>
 <p>Declared in <code>[packages.clipboard]</code> in <code>setup.toml</code>. Requires <code>wl-clipboard</code> (apt). <strong>Wayland only —
 does not work over SSH or in X11-only sessions.</strong></p>
 <table>
@@ -2899,7 +2899,7 @@ does not work over SSH or in X11-only sessions.</strong></p>
 </tr>
 </tbody>
 </table>
-<h2 id="completions">Completions</h2>
+<h2 id="completions">Completions<a class="headerlink" href="#completions" title="Permanent link">&para;</a></h2>
 <p>Sourced as sentinel blocks in <code>~/.zshrc</code> after <code>source $ZSH/oh-my-zsh.sh</code>:</p>
 <table>
 <thead>
@@ -2928,7 +2928,7 @@ does not work over SSH or in X11-only sessions.</strong></p>
 </tbody>
 </table>
 <p>OMZ calls <code>compinit</code> internally — no manual <code>autoload -Uz compinit &amp;&amp; compinit</code> needed.</p>
-<h2 id="history">History</h2>
+<h2 id="history">History<a class="headerlink" href="#history" title="Permanent link">&para;</a></h2>
 <p>Declared in <code>[packages.zsh-history]</code>:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a><span class="nv">HISTSIZE</span><span class="o">=</span><span class="m">1000000</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a><span class="nv">SAVEHIST</span><span class="o">=</span><span class="m">1000000</span>
@@ -2954,11 +2954,11 @@ evaluated and deliberately deferred — fzf&rsquo;s Ctrl+R over the native histo
 now and adds no daemon or separate data store. <code>[packages.atuin]</code> exists in <code>setup.toml</code> with
 <code>enabled = false</code> for whenever it&rsquo;s worth revisiting; see the fzf section below for what changes
 when switching.</p>
-<h2 id="fzf">fzf</h2>
+<h2 id="fzf">fzf<a class="headerlink" href="#fzf" title="Permanent link">&para;</a></h2>
 <p>fzf is wired to <code>fd</code> (fast file finder) and <code>bat</code> (syntax-highlighted preview) via env vars in
 <code>[packages.fzf]</code>. All bindings open an interactive fuzzy picker — type to filter, <code>Enter</code> to accept,
 <code>Esc</code> to cancel.</p>
-<h3 id="key-bindings">Key bindings</h3>
+<h3 id="key-bindings">Key bindings<a class="headerlink" href="#key-bindings" title="Permanent link">&para;</a></h3>
 <p><strong><code>Ctrl+R</code> — history search</strong></p>
 <p>Opens a picker over your full shell history. Type any fragment of the command. Results are sorted by
 recency. Press <code>Ctrl+/</code> to toggle a preview pane showing the full command text (useful for long
@@ -2976,7 +2976,7 @@ lines).</p>
 <p><strong><code>Alt+C</code> — directory jump</strong></p>
 <p>Searches subdirectories recursively and <code>cd</code>s into the selected one immediately. Preview shows
 <code>ls -la</code> of the directory.</p>
-<h3 id="fuzzy-tab-completion"><code>**</code> fuzzy tab completion</h3>
+<h3 id="fuzzy-tab-completion"><code>**</code> fuzzy tab completion<a class="headerlink" href="#fuzzy-tab-completion" title="Permanent link">&para;</a></h3>
 <p>Type a command, then <code>**</code> and press <code>Tab</code> to get a fuzzy picker for what comes next:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a>vim **&lt;Tab&gt;           # pick any file under current dir
 </span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a>cd **&lt;Tab&gt;            # pick a subdirectory to cd into
@@ -2987,7 +2987,7 @@ lines).</p>
 </span></code></pre></div>
 <p>The picker for each context is context-aware — <code>kill **&lt;Tab&gt;</code> shows processes, <code>ssh **&lt;Tab&gt;</code> shows
 hosts from your SSH config, etc.</p>
-<h3 id="in-scripts-and-pipelines">In scripts and pipelines</h3>
+<h3 id="in-scripts-and-pipelines">In scripts and pipelines<a class="headerlink" href="#in-scripts-and-pipelines" title="Permanent link">&para;</a></h3>
 <p>fzf can be used directly in scripts as a generic picker — pipe any list to it and it returns the
 selected line:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-7-1"><a id="__codelineno-7-1" name="__codelineno-7-1" href="#__codelineno-7-1"></a><span class="c1"># pick a git branch to check out</span>
@@ -2999,7 +2999,7 @@ selected line:</p>
 </span><span id="__span-7-7"><a id="__codelineno-7-7" name="__codelineno-7-7" href="#__codelineno-7-7"></a><span class="c1"># pick a file to edit from ripgrep results</span>
 </span><span id="__span-7-8"><a id="__codelineno-7-8" name="__codelineno-7-8" href="#__codelineno-7-8"></a>vim<span class="w"> </span><span class="k">$(</span>rg<span class="w"> </span>--files<span class="w"> </span><span class="p">|</span><span class="w"> </span>fzf<span class="k">)</span>
 </span></code></pre></div>
-<h3 id="navigation-inside-fzf">Navigation inside fzf</h3>
+<h3 id="navigation-inside-fzf">Navigation inside fzf<a class="headerlink" href="#navigation-inside-fzf" title="Permanent link">&para;</a></h3>
 <table>
 <thead>
 <tr>
@@ -3037,7 +3037,7 @@ selected line:</p>
 <p><strong>When enabling Atuin:</strong> remove the <code>key-bindings.zsh</code> source from <code>[packages.fzf]</code> in <code>setup.toml</code>
 (keep <code>completion.zsh</code>) to avoid the <code>Ctrl+R</code> conflict. <code>Ctrl+T</code>, <code>Alt+C</code>, and <code>**</code> completion are
 unaffected.</p>
-<h2 id="path">PATH</h2>
+<h2 id="path">PATH<a class="headerlink" href="#path" title="Permanent link">&para;</a></h2>
 <p>PATH is controlled entirely through <code>setup.toml</code> sentinel blocks written to <code>~/.zshenv</code> (loaded for
 all zsh instances):</p>
 <table>
@@ -3068,7 +3068,7 @@ instances, including non-interactive scripts. <code>/usr/local/bin</code> is alr
 <p>When adding a new tool that needs a PATH entry, prefer creating a symlink in <code>~/.local/bin</code> over a
 new PATH manipulation. Only add a PATH entry when the tool writes multiple binaries to its own
 directory dynamically (like <code>go install</code> populating <code>$GOPATH/bin</code>).</p>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="terminal.html">Terminal</a> — the emulator this shell runs in, and its own key bindings</li>
 <li><a href="fonts.html">Fonts</a> — the Nerd Font the prompt&rsquo;s glyphs depend on</li>
