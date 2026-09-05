@@ -813,10 +813,11 @@ first time this watch has had one to measure. 7/11 against the rescored baseline
 | `git-C-own-repo`        | 0% (1 call)  | −1pp, OK             |
 
 **`PIPE_FAIL` changed what a pipe reports and changed nothing about how often one is typed**, with
-`head/tail` a point _above_ the post-deploy baseline. That is the shape
-`plans/2026-09-05-pipefail-in-the-agent-shell.md` predicted rather than a disappointment: the shell
-setting fixes the consequence, and the habit was always this watch's question. One session is a
-sample, not a verdict — but it is consistent with the four wording attempts, and the standing
+`head/tail` a point _above_ the post-deploy baseline. That is the shape the change itself predicted
+rather than a disappointment — its design is in `contributing/global-agents-md.md`, "The pipe half
+stopped being true", the plan that delivered it having since been retired: the shell setting fixes
+the consequence, and the habit was always this watch's question. One session is a sample, not a
+verdict — but it is consistent with the four wording attempts, and the standing
 `[DECISION: adherence, not wording]` now has a mechanism-side data point as well as four
 wording-side ones.
 

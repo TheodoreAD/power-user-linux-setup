@@ -152,9 +152,10 @@ what the next count tests.]
 [UNVERIFIED: whether this moves the rate. Baseline is
 **`~/.local/state/session-bash-audit/2026-09-05-pipefail-live-rescored.json`** — not the
 `…-pipefail-live.json` first named here, which was written by a superseded `audit.py` (see
-`plans/2026-09-05-pipefail-in-the-agent-shell.md`). Re-count with `audit.py --days 7 --compare`
-after a week, and correct for the counter's ~8% prose over-report until that is fixed. If it has not
-moved, the `ask`-rule below is the fallback and the wording lever is spent for this rule too.]
+`contributing/global-agents-md.md`, "The pipe half stopped being true"). Re-count with
+`audit.py --days 7 --compare` after a week, and correct for the counter's ~8% prose over-report
+until that is fixed. If it has not moved, the `ask`-rule below is the fallback and the wording lever
+is spent for this rule too.]
 
 [PITFALL: **the 39/32 split above is a pre-`0165577` figure; the row now reads 46.** The tagged
 count rose from 39 to 46 when the same window was re-scored under the current instrument, part

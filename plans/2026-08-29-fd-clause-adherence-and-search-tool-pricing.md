@@ -207,8 +207,8 @@ Re-scored over the same window: `find-not-fd` **41 → 44**, `find-exempt` 5 →
 → 151, total calls 13,754 → 14,331 (the window also slid ~10h, so part of that is real growth). The
 `fd`-versus-`find` conclusion is unaffected — the ratio barely moves — but **the next reading must
 be taken with the same instrument as the one it is compared against**, or a pattern change will be
-read as an adherence change. Same caveat, and the same fix, as
-`plans/2026-09-05-pipefail-in-the-agent-shell.md` records for its own baseline.]
+read as an adherence change. Same caveat, and the same fix, as `contributing/global-agents-md.md`'s
+"The pipe half stopped being true" records for the pipefail baseline.]
 
 [DEFERRED: the general finding, which outlives this rule — a preference clause with an adjacent
 exemption list adheres worse than one without. Two spellings of the same preference in one file, one
