@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-01
+updated: 2026-09-06
 ---
 
 # WSL and container first-run experience
@@ -286,15 +286,23 @@ if a real failure argues for it.]
 
 ### Turned up while fixing those, not acted on
 
-[DEFERRED: **`apt._install_deb_url` calls `input()`, which hangs an unattended run** — a container
-bake or an `inv wsl.install` on a machine nobody is sitting at. It is reached by the three
-`download_page` packages (`corporate`-tagged Citrix ones) that have no direct URL and ask for a
-hand-downloaded `.deb` by path. This does not hit the invoke-stdin bug documented in
-`contributing/interactive-input.md`, because the read is Python's rather than a child process's —
-which is exactly why it slipped past that pass. The repo's stated invariant is that nothing run
-through invoke may wait for typed input, and this waits. The fix is probably to skip with a message
-when stdin is not a tty rather than to prompt, but that is a behaviour change for the interactive
-case and wants its own decision.]
+~~[DEFERRED: **`apt._install_deb_url` calls `input()`, which hangs an unattended run.**]~~ **Fixed
+2026-09-06**, and the decision it was waiting on turned out not to be a trade-off: the interactive
+case is unchanged, because the guard only decides which of two branches runs. Non-interactive skips
+with the download page and a next step; interactive prompts exactly as before.
+
+It needed no new mechanism either. `util.interactive()` is the documented gate and
+`util.confirm()`/`util.prompt_text()` already carry it internally — the branch was simply the one
+place still calling `input()` directly, which is also the honest reason it was missed: the pass that
+fixed this class grepped for `c.run` and `pty=True`. The branch moved to its own
+`_install_manual_deb` (the guard pushed the caller past the complexity limit, and the two halves
+share nothing but a config key), and `contributing/interactive-input.md` now states the invariant as
+a property of the read rather than of the runner, so the next reader checking their own prompt gets
+the right answer.
+
+Three tests in `tests/unit/test_apt.py`, with a patched `input()` that raises as the oracle rather
+than an assertion on the printed text — a test that only read the output would pass against a
+version that still hangs. Confirmed by reverting the production change and watching them fail.
 
 [DEFERRED: **`install_debs` still cannot fail.** Both deb installers report their failures and
 return, so a run where every `deb-github` download 404'd exits 0. The apt paths got a failure
