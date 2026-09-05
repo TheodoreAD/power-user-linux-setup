@@ -303,12 +303,11 @@ def _config_file_entries() -> Iterator[Managed]:
 
 
 def _skill_entries(base: Path) -> Iterator[Managed]:
-    # Mirrors ai.py:_install_declared_skills' own scan deliberately: it reads load_config()
-    # directly and honours `enabled` but not tags, so going through enabled_packages() here would
-    # make the registry disagree with the installer about which skills exist on a tag-excluded run.
-    for name, cfg in util.load_config()["packages"].items():
-        if not cfg.get("enabled", True):
-            continue
+    # Mirrors ai.py:_install_declared_skills deliberately, so the registry and the installer never
+    # disagree about which skills exist. Both went through enabled_packages() on 2026-09-06; before
+    # that both read load_config() and checked only `enabled`, which agreed with each other and with
+    # neither overrides.toml nor tags. If one of them changes, change the other in the same commit.
+    for name, cfg in util.enabled_packages().items():
         for entry in cfg.get("skills", []):
             if entry.get("source") != "local":
                 continue  # npx-sourced skills are installed by the `skills` CLI, not by this repo

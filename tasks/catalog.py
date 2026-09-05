@@ -71,6 +71,14 @@ def catalog_rows() -> list[tuple[str, str, str, str]]:
     nothing at all — `[packages.repo-tasks]` exists only to carry a `claude_permissions_allow`
     grant — and a catalog answering "what do I get" is the wrong place to explain that.
 
+    **load_config() rather than enabled_packages(), and that is required rather than tolerated.**
+    This renders a committed file (`docs/packages.md`), so its content has to be a property of the
+    repo and not of whoever ran the generator: enabled_packages() also applies this machine's
+    overrides.toml and its PULSE_EXCLUDE_TAGS, which would make the table shrink or grow with the
+    contributor's environment and show up as a spurious diff. The `enabled` flag read here is
+    setup.toml's own, which every clone shares. Audited 2026-09-06 alongside the writers that did
+    need enabled_packages(); this one is the case where the same call would be a bug.
+
     Tags are shown rather than grouped on: a package carries several, and any grouping either
     invents a primary tag or lists the package once per tag.
     """

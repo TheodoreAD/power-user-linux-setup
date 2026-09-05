@@ -210,21 +210,27 @@ def status(c: Context):
     print(f"disable-user-extensions: {flag}")
 
     active = _enabled_uuids(c)
+    # load_config(), not enabled_packages(): this listing says "all declared" and means it, so a
+    # disabled extension is shown with its state rather than hidden. Only `want` needs the machine's
+    # own answer, and it takes it from the same overrides.toml enabled_packages() reads — otherwise
+    # an extension switched off on this machine reports as merely not installed.
     all_configs = {
         name: cfg
         for name, cfg in util.load_config()["packages"].items()
         if cfg.get("method") == util.PackageMethod.GNOME_EXTENSION
     }
+    overrides = util.load_overrides()
 
     print("\nPULSE extensions (all declared):")
     for name, cfg in all_configs.items():
         uuid = cfg.get("uuid", "")
-        want = cfg.get("enabled", True)
+        want = overrides.get(name, cfg.get("enabled", True))
         installed = ((USER_EXT_DIR / uuid).is_dir()) if uuid else False
         is_active = uuid in active
 
         if not want:
-            state = "skip (disabled in setup.toml)"
+            where = "overrides.toml" if name in overrides else "setup.toml"
+            state = f"skip (disabled in {where})"
         elif disabled_globally:
             state = "blocked (disable-user-extensions=true)"
         elif is_active:

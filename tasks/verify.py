@@ -131,9 +131,12 @@ def _all_checks() -> list[tuple[str, str, str]]:
     ]
     # method = "zsh" entries are config-only (zshrc/zshenv/zprofile snippets) and invisible to
     # packages_by_method() by design (no "zsh" PackageMethod member) — accounted for here
-    # explicitly so nothing silently has zero coverage. Tag-blind, unlike zsh.configure itself,
-    # which stopped being so; harmless because every row this produces is a "skip" with nothing to
-    # verify, so the only effect is that an excluded package is still named as skipped.
+    # explicitly so nothing silently has zero coverage. Tag- and overrides.toml-blind, unlike
+    # zsh.configure itself; harmless because every row this produces is a "skip" with nothing to
+    # verify, so the only effect is that an excluded package is still named as skipped. Re-checked
+    # 2026-09-06 in the audit that moved ai.py, deploy.py and home.py onto enabled_packages(): this
+    # one stays as it is, because naming a skipped package costs a line and hiding one costs the
+    # coverage guarantee the block exists for.
     checks += [
         (name, "skip", "config-only, no command to verify")
         for name, cfg in util.load_config()["packages"].items()

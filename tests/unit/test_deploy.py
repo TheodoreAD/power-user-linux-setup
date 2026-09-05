@@ -322,8 +322,15 @@ def test_forget_drops_one_entry(tmp_path, src):
 
 
 def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
+    """Fake the three config readers deploy.py uses.
+
+    `enabled_packages` filters, because the real one does — it returned every package here until
+    2026-09-06, which was a double asserting something untrue about the function it stood in for.
+    Harmless only while nothing under test called it for a disabled package, and
+    test_a_disabled_package_declares_no_skills started failing the moment `_skill_entries` did.
+    """
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
-    monkeypatch.setattr(util, "enabled_packages", lambda: packages)
+    monkeypatch.setattr(util, "enabled_packages", lambda: {n: c for n, c in packages.items() if c.get("enabled", True)})
     monkeypatch.setattr(
         util,
         "packages_by_method",

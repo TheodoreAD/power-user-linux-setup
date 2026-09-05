@@ -581,9 +581,10 @@ def _external_claims() -> Iterator[Claim]:
     the directory rather than one row per skill: an inventory that needs a network call to be
     complete is not one you can trust offline.
     """
-    for name, cfg in util.load_config()["packages"].items():
-        if not cfg.get("enabled", True):
-            continue
+    # enabled_packages(), matching ai.py's installer and deploy.py's registry — all three moved off
+    # a bare `enabled` check on 2026-09-06, which honoured setup.toml and neither overrides.toml nor
+    # tags. A claims listing that names what a disabled package would have written is not a claim.
+    for name, cfg in util.enabled_packages().items():
         for entry in cfg.get("skills", []):
             if entry.get("source") != "npx":
                 continue

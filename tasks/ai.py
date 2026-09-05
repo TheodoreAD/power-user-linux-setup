@@ -279,13 +279,18 @@ def _install_declared_skills(c: Context, base: Path, *, yes: bool, selected: set
     `selected` (from `--skill`) narrows this to named skills only; None processes everything.
     A selection that matches nothing raises rather than exiting quietly — a typo'd `--skill` that
     silently did no work would look exactly like a successful refresh.
+
+    enabled_packages(), not a hand-rolled `enabled` check: that check honoured setup.toml and
+    nothing else, so a package switched off in this machine's own overrides.toml still had its
+    skills installed — and a tagged one would be installed on a profile that excludes it. Same
+    blindness as zsh.configure's, which was found by its symptom on a real machine rather than by
+    reading the code. Already-installed skills are left alone; this stops them being re-installed,
+    and removing a skill directory is not something to do behind the user's back.
     """
     known: set[str] = set()
     matched = False
 
-    for name, cfg in util.load_config()["packages"].items():
-        if not cfg.get("enabled", True):
-            continue
+    for name, cfg in util.enabled_packages().items():
         for entry in cfg.get("skills", []):
             known.update(_entry_skill_names(entry) or [])
             chosen = _select_entry(entry, selected)
@@ -355,7 +360,11 @@ def _apply_static_claude_permissions() -> None:
     All three tiers are written in one pass so a run produces a single settings write and a single
     backup, rather than three.
     """
-    cfgs = [cfg for cfg in util.load_config()["packages"].values() if cfg.get("enabled", True)]
+    # enabled_packages(): a package this machine turned off in overrides.toml, or one its profile
+    # excludes by tag, should not be granting permissions here. The manifest makes that complete
+    # rather than half-done — a rule that stops being declared is removed on the next run, because
+    # only rules this mechanism wrote last time are eligible for removal.
+    cfgs = list(util.enabled_packages().values())
     # The setup.toml field name is a variable here, not a literal, so the package TypedDict's `.get`
     # degrades to Any — hence the explicit cast rather than the literal-key form the single-tier
     # version used. Same reason for reading the settings lists below.
@@ -413,8 +422,7 @@ def _apply_additional_directories() -> None:
     declared = sorted(
         {
             str(Path(d).expanduser())
-            for cfg in util.load_config()["packages"].values()
-            if cfg.get("enabled", True)
+            for cfg in util.enabled_packages().values()
             for d in cfg.get("claude_additional_directories", [])
         }
     )
