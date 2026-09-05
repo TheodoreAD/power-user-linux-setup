@@ -14,6 +14,18 @@ from . import deploy, node, ui, util
 # rule strings we previously wrote are ever removed), different manifest, so the two mechanisms
 # can never step on each other's rules even though they touch the same settings.json file.
 _STATIC_PERMS_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-applied.json"
+# deny and ask get their own manifests rather than sharing the allow one, for the reason the allow
+# manifest exists at all: a manifest is the record of "rules this mechanism wrote", and one file
+# covering three tiers could not say which tier a removed rule came from. The allow manifest keeps
+# its original filename so an existing machine's record stays valid across this change.
+_STATIC_PERMS_DENY_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-deny-applied.json"
+_STATIC_PERMS_ASK_MANIFEST = util.PULSE_STATE_DIR / "claude-static-permissions-ask-applied.json"
+# (permissions key in settings.json, setup.toml field, manifest). Order matters only for output.
+_STATIC_PERM_TIERS = (
+    ("allow", "claude_permissions_allow", _STATIC_PERMS_MANIFEST),
+    ("deny", "claude_permissions_deny", _STATIC_PERMS_DENY_MANIFEST),
+    ("ask", "claude_permissions_ask", _STATIC_PERMS_ASK_MANIFEST),
+)
 # Same shape again for `claude_additional_directories` (permissions.additionalDirectories): its own
 # manifest, so a directory the user added by hand is never removed by this mechanism.
 _STATIC_DIRS_MANIFEST = util.PULSE_STATE_DIR / "claude-additional-directories-applied.json"
@@ -297,55 +309,92 @@ def _install_declared_skills(c: Context, base: Path, *, yes: bool, selected: set
         )
 
 
+def _perm_lists(perms: util.ClaudePermissions) -> dict[str, list[str]]:
+    """The permissions block viewed as plain lists keyed by tier name.
+
+    `ClaudePermissions` is a TypedDict, so a tier name held in a variable cannot index it — and the
+    three tiers here are driven by a table, not written out one by one. This is the single place
+    that gap is bridged, via the `object` hop basedpyright asks for. The returned dict is the same
+    object, so writing through it updates the settings being saved.
+    """
+    return cast(dict[str, list[str]], cast(object, perms))
+
+
+def _static_perm_merge(existing: list[str], declared: list[str], manifest: Path) -> list[str] | None:
+    """The merged rule list for one permissions tier, or None when it would not change.
+
+    Only rule strings this mechanism wrote last time (per `manifest`) are eligible for removal, so
+    a rule added by hand — or by tasks/allowlist.py, which keeps its own separate manifest — is
+    never dropped. Pure apart from reading the manifest, so the merge itself is unit-testable.
+    """
+    previous: set[str] = set(cast(list[str], json.loads(manifest.read_text()))) if manifest.exists() else set()
+    kept = [r for r in existing if r not in previous]
+    merged = kept + [r for r in declared if r not in kept]
+    return None if set(merged) == set(existing) else merged
+
+
 def _apply_static_claude_permissions() -> None:
-    """Merge every setup.toml-declared `claude_permissions_allow` rule (checked on any package
-    entry, any method — same any-section pattern as `skills`/`zshenv`) into
-    ~/.claude/settings.json's permissions.allow.
+    """Merge every setup.toml-declared `claude_permissions_allow` / `claude_permissions_deny` /
+    `claude_permissions_ask` rule (checked on any package entry, any method — same any-section
+    pattern as `skills`/`zshenv`) into the matching list in ~/.claude/settings.json's
+    `permissions`.
 
     Same safe-merge shape as tasks/allowlist.py's `apply` — every other key in the file untouched,
     a backup written before any real change, and only rule strings *this* mechanism wrote last
-    time are eligible for removal (tracked in `_STATIC_PERMS_MANIFEST`, not allowlist.py's own
-    manifest) — but deliberately not that module's code path: these are static, hand-declared
-    rules, not CLI-classification output, and keeping the two mechanisms' manifests separate means
-    neither can ever remove a rule the other one owns.
+    time are eligible for removal — but deliberately not that module's code path: these are
+    static, hand-declared rules, not CLI-classification output, and keeping the two mechanisms'
+    manifests separate means neither can ever remove a rule the other one owns.
+
+    **`deny` and `ask` are what let a permission decision survive `auto` mode.** In `auto` a
+    classifier decides, so an `allow` rule is mostly moot there — but Claude Code evaluates rules
+    deny-then-ask-then-allow and applies both to every subcommand, "including a command nested
+    inside a subshell, a command substitution, or a control-flow body ... even in auto mode"
+    (docs/en/permissions). So a declared deny is the one permission control this machine's usual
+    mode cannot loosen, which is why it is worth declaring here rather than left to a session.
+
+    All three tiers are written in one pass so a run produces a single settings write and a single
+    backup, rather than three.
     """
-    declared = sorted(
-        {
-            rule
-            for cfg in util.load_config()["packages"].values()
-            if cfg.get("enabled", True)
-            for rule in cfg.get("claude_permissions_allow", [])
-        }
-    )
+    cfgs = [cfg for cfg in util.load_config()["packages"].values() if cfg.get("enabled", True)]
+    # The setup.toml field name is a variable here, not a literal, so the package TypedDict's `.get`
+    # degrades to Any — hence the explicit cast rather than the literal-key form the single-tier
+    # version used. Same reason for reading the settings lists below.
+    declared: dict[str, list[str]] = {}
+    for key, field, _ in _STATIC_PERM_TIERS:
+        rules: set[str] = set()
+        for cfg in cfgs:
+            rules.update(cast(list[str], cfg.get(field, [])))
+        declared[key] = sorted(rules)
 
     settings = util.load_claude_settings()
-    existing_allow = settings.get("permissions", {}).get("allow", [])
+    perms_now = _perm_lists(settings.get("permissions", {}))
 
     if util.DRY_RUN:
-        missing = [r for r in declared if r not in existing_allow]
-        print(f"[ai.install-skills] static Claude permissions: {'ok' if not missing else f'MISSING {len(missing)}'}")
+        for key, _, _ in _STATIC_PERM_TIERS:
+            missing = [r for r in declared[key] if r not in perms_now.get(key, [])]
+            state = "ok" if not missing else f"MISSING {len(missing)}"
+            print(f"[ai.install-skills] static Claude permissions ({key}): {state}")
         return
 
-    previous: set[str] = (
-        set(cast(list[str], json.loads(_STATIC_PERMS_MANIFEST.read_text())))
-        if _STATIC_PERMS_MANIFEST.exists()
-        else set()
-    )
-    kept = [r for r in existing_allow if r not in previous]
-    merged = kept + [r for r in declared if r not in kept]
+    changed = {
+        key: merged
+        for key, _, manifest in _STATIC_PERM_TIERS
+        if (merged := _static_perm_merge(perms_now.get(key, []), declared[key], manifest)) is not None
+    }
 
-    if set(merged) == set(existing_allow):
-        print(f"[ai.install-skills] static Claude permissions: already up to date ({len(declared)} rule(s))")
+    if not changed:
+        total = sum(len(v) for v in declared.values())
+        print(f"[ai.install-skills] static Claude permissions: already up to date ({total} rule(s))")
         return
 
-    perms = settings.setdefault("permissions", {})
-    perms["allow"] = merged
-
+    _perm_lists(settings.setdefault("permissions", {})).update(changed)
     util.write_claude_settings(settings)
 
-    _STATIC_PERMS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    _STATIC_PERMS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n")
-    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: static permissions updated ({len(declared)} rule(s))")
+    for key, _, manifest in _STATIC_PERM_TIERS:
+        manifest.parent.mkdir(parents=True, exist_ok=True)
+        manifest.write_text(json.dumps(declared[key], indent=2) + "\n")
+    summary = ", ".join(f"{key} {len(declared[key])}" for key, _, _ in _STATIC_PERM_TIERS if key in changed)
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: static permissions updated ({summary})")
 
 
 def _apply_additional_directories() -> None:

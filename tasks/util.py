@@ -281,6 +281,7 @@ class ClaudePermissions(TypedDict, total=False):
     """The `permissions` block of ~/.claude/settings.json — only the keys this repo writes."""
 
     allow: list[str]
+    deny: list[str]
     ask: list[str]
     additionalDirectories: list[str]
     defaultMode: str

@@ -1037,6 +1037,48 @@ claude_default_mode = "acceptEdits"
 # scratchpad`) and background-job tmp (`~/.claude/jobs/<id>/tmp`). Outside every repo, so without
 # this every scratch write prompts under acceptEdits. File access only — nothing loads from here.
 claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]
+# Rules evaluate deny -> ask -> allow, and deny/ask apply to every subcommand "including a command
+# nested inside a subshell, a command substitution, or a control-flow body ... even in auto mode"
+# (docs/en/permissions). That is why these are declared rather than left to a session: `auto` is
+# what this machine actually runs (96% of Bash calls over the week to 2026-09-05), and a classifier
+# decides there, so a deny is the one permission control that mode cannot loosen.
+#
+# Threat model is an everyday one: prompt injection reaching the model from a compromised repo, a
+# malicious package page or a booby-trapped article. No gate stops injected text landing in context
+# — the permission decision is made on the URL or command string, before any content exists — so
+# these limit what an injection can *do* rather than whether it arrives.
+claude_permissions_deny = [
+  # Credentials. A Read deny also blocks Edit/Write on the same path, so one rule covers both.
+  # These never fire in ordinary development, and they remove what an exfiltration payload wants.
+  "Read(~/.ssh/**)",
+  "Read(~/.aws/**)",
+  "Read(~/.gnupg/**)",
+  "Read(~/.config/gh/**)",
+  "Read(~/.netrc)",
+  # `//` is an absolute path from the filesystem root, and it is required here: a bare `**/.env`
+  # anchors to the *current directory*, so in user settings it covers whatever repo the session
+  # happens to be in and nothing else. Verified 2026-09-05 — a decoy `.env` in the session
+  # scratchpad was read straight through under the bare pattern and refused under this one.
+  # Read/Edit denies reach Claude's file tools and the Bash file commands the harness recognises
+  # (cat/head/tail/sed) plus redirections, but NOT an arbitrary subprocess — so a program that
+  # legitimately loads .env keeps working, while the agent cannot pull it into context where an
+  # injection could act on it.
+  "Read(//**/.env)",
+  "Read(//**/.env.*)",
+]
+# Inert until the Bash sandbox is enabled, and declared now so that enabling it is safe by default:
+# when the sandbox blocks a command, Claude may retry it with dangerouslyDisableSandbox, which runs
+# outside the boundary through the normal permission flow — i.e. the classifier, under auto. This
+# makes the one moment the boundary is stepped over visible. It fires rarely by construction.
+claude_permissions_ask = ["Bash(dangerouslyDisableSandbox:true)"]
+# WebSearch's destination is fixed: the query is chosen, the endpoint is not, so there is no
+# attacker-aimable channel and no SSRF — unlike WebFetch, whose URL is agent-chosen and is
+# therefore both an outbound data channel and an inbound one. 858 searches in the 30 days to
+# 2026-09-05 drew 0 classifier denials and 1 user decline. WebFetch is deliberately NOT allowlisted
+# here: its rules match hostname only (`url` cannot be matched as an input parameter), so
+# `domain:github.com` would trust every repository on GitHub, and the prompt is the only place the
+# per-repo judgement can actually happen.
+claude_permissions_allow = ["WebSearch"]
 # Each Bash call is a non-interactive `zsh -c` (no -f, norcs unset), so ~/.zshenv is read on every
 # one of them, before the shell snapshot — which only ever appends `setopt <name>` and unsets
 # nothing, so the option survives it. Without pipefail a pipeline reports its LAST stage's status,

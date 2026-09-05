@@ -898,6 +898,90 @@ def test_apply_declared_default_mode_noop_when_nothing_declared(monkeypatch):
     ai._apply_declared_default_mode()
 
 
+# --- static Claude permissions (allow / deny / ask) --------------------------------------------
+#
+# deny and ask matter more than allow here: in `auto` mode a classifier decides, so an allow rule
+# is largely moot, while deny and ask still apply. These cover the merge itself — which is what
+# guarantees a rule PULSE never wrote is not removed — and that all three tiers reach settings.json
+# in one write.
+
+
+def _stub_permission_packages(monkeypatch, **fields: list[str]) -> None:
+    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"claude-code": {"enabled": True, **fields}}})
+
+
+def test_static_perm_merge_leaves_a_rule_this_mechanism_never_wrote(tmp_path):
+    manifest = tmp_path / "applied.json"
+    manifest.write_text(json.dumps(["Bash(ours:*)"]))
+
+    merged = ai._static_perm_merge(["Bash(ours:*)", "Read(./hand-added)"], ["Bash(new:*)"], manifest)
+
+    # The hand-added rule survives; only the rule the manifest claims is dropped.
+    assert merged == ["Read(./hand-added)", "Bash(new:*)"]
+
+
+def test_static_perm_merge_returns_none_when_nothing_changes(tmp_path):
+    manifest = tmp_path / "applied.json"
+    manifest.write_text(json.dumps(["Bash(ours:*)"]))
+
+    assert ai._static_perm_merge(["Bash(ours:*)"], ["Bash(ours:*)"], manifest) is None
+
+
+def test_static_perm_merge_with_no_manifest_removes_nothing(tmp_path):
+    # First run on a machine: nothing is ours yet, so every existing rule is kept.
+    merged = ai._static_perm_merge(["Read(./theirs)"], ["WebSearch"], tmp_path / "absent.json")
+
+    assert merged == ["Read(./theirs)", "WebSearch"]
+
+
+def test_apply_static_permissions_writes_all_three_tiers_once(monkeypatch, tmp_path, capsys):
+    _stub_permission_packages(
+        monkeypatch,
+        claude_permissions_allow=["WebSearch"],
+        claude_permissions_deny=["Read(./.env)"],
+        claude_permissions_ask=["Bash(dangerouslyDisableSandbox:true)"],
+    )
+    monkeypatch.setattr(
+        ai,
+        "_STATIC_PERM_TIERS",
+        tuple((key, field, tmp_path / f"{key}.json") for key, field, _ in ai._STATIC_PERM_TIERS),
+    )
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"theme": "dark"})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+
+    ai._apply_static_claude_permissions()
+
+    assert len(written) == 1, "three tiers must produce one settings write, not three"
+    assert written[0] == {
+        "theme": "dark",
+        "permissions": {
+            "allow": ["WebSearch"],
+            "deny": ["Read(./.env)"],
+            "ask": ["Bash(dangerouslyDisableSandbox:true)"],
+        },
+    }
+    assert "static permissions updated" in capsys.readouterr().out
+
+
+def test_apply_static_permissions_dry_run_reports_each_tier_and_never_writes(monkeypatch, tmp_path, capsys):
+    _stub_permission_packages(monkeypatch, claude_permissions_deny=["Read(./.env)"])
+    monkeypatch.setattr(
+        ai,
+        "_STATIC_PERM_TIERS",
+        tuple((key, field, tmp_path / f"{key}.json") for key, field, _ in ai._STATIC_PERM_TIERS),
+    )
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("dry run must never write"))
+    monkeypatch.setattr(util, "DRY_RUN", True)
+
+    ai._apply_static_claude_permissions()
+
+    out = capsys.readouterr().out
+    assert "(deny): MISSING 1" in out
+    assert "(allow): ok" in out
+
+
 # --- ai.check-rule-prerequisites -------------------------------------------------------------
 #
 # A `[needs direnv]` label on a ~/AGENTS.md rule is a claim that direnv is there. These cover the
