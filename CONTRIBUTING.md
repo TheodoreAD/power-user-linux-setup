@@ -31,12 +31,12 @@ in required flags (see the note below) and keep the tools' invocation in one pla
 scattered across every contributor's/agent's memory of the right command line.
 
 ```shell
-inv quality.precommit   # fix, then check — the one command to run before considering a change done
+inv quality.precommit   # fix, check, build the docs — the one command before calling a change done
 ```
 
-That's `fix` (fix everything auto-fixable) followed by `check` (verify clean), each in turn a
-`pre=`-chain of the individual `<category>_check` / `<category>_apply` tasks (`_check` never writes,
-`_apply` fixes what's auto-fixable):
+That's `fix` (fix everything auto-fixable), then `check` (verify clean), then `docs.build` — each of
+the first two in turn a `pre=`-chain of the individual `<category>_check` / `<category>_apply` tasks
+(`_check` never writes, `_apply` fixes what's auto-fixable):
 
 ```shell
 inv quality.check   # lint_check + format_check + type_check + shell_check + shell_format_check +
@@ -116,23 +116,22 @@ or a vendor app still lives in `docs/`, categorised, because search is how those
 > green; the admonition warning above already says why. It was caught by reading the files, and
 > confirmed fixed in the built HTML rather than in the source.
 
-> [!WARNING]
-> `inv quality.precommit` does **not** build the site — not yet; it is meant to, and the change is a
-> `repo-tasks` one (`plans/2026-09-04-precommit-does-not-build-the-docs.md`). It will join
-> `precommit` and not `quality.check`, because a build writes `site/` and `check` is the read-only
-> half. `inv docs.link-check` does run in the gate, but it checks that a link's _file_ exists and
-> stops at the fragment — so renaming a heading that another page links to
-> (`configuration.md#some-heading`) passes every local check today. **After renaming a heading, grep
-> for inbound links to it and run `inv docs.build`.**
+> [!NOTE]
+> **Renaming a heading is an anchor change, and the gate catches it now** — as of 2026-09-04 there
+> is no manual step. `inv quality.precommit` runs `inv docs.link-check`, which resolves the fragment
+> as well as the file against the union of what python-markdown and github.com would emit as a slug,
+> and then builds the site with `zensical build --strict` behind it. The build is in `precommit` and
+> not in `quality.check`, because it writes `site/` and `check` is the read-only half.
 >
-> CI is already covered: `ci.yml`'s `docs` job builds with `--strict` on every push _and_ every pull
-> request, so this can no longer reach `master` through a PR, and `publish_on_push.yml` catches a
-> direct push. The manual step above is what stands in locally until the gate change lands.
+> The two checks have different reach and the difference matters here: `--strict` only walks
+> `docs_dir`, so an anchor written in this file, `AGENTS.md`, `contributing/*.md` or `plans/*.md` is
+> covered by `link-check` alone. CI runs both — `ci.yml`'s `docs` job on every push _and_ pull
+> request, `publish_on_push.yml` on a direct push to `master`.
 >
-> Why nothing else can see it, and the two pushes it has already cost, are under "Renaming a heading
-> is an anchor change" in [`contributing/zensical.md`](contributing/zensical.md) — linked without a
-> fragment on purpose, since `docs_dir` is `docs/` and `--strict` never builds this file or that
-> one, so nothing here would catch the very anchor break both are about.
+> Why nothing else can see this class of break, and the two red deploys it cost before either check
+> existed, are under "Renaming a heading is an anchor change" in
+> [`contributing/zensical.md`](contributing/zensical.md) — linked without a fragment on purpose,
+> since `docs_dir` is `docs/` and `--strict` never builds this file or that one.
 
 ## Naming a task
 
