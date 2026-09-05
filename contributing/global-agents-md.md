@@ -698,10 +698,11 @@ so the rewritten clause covers a shape nobody has yet been caught by; it is incl
 because its output would be believed.]
 
 [UNVERIFIED: whether this moves the rate, and it is the first wording change in this file with a
-same-instrument baseline taken the same day (`2026-09-05-pipefail-live.json`). The argument for
-trying wording at all, after the `head`/`tail` cluster spent four attempts proving it inert, is that
-those four restated one prohibition at four triggers while this one changes what is typed in the
-**success** case — a `grep`→`rg` translation happens ~150 times a week, so the rule is exercised
+same-instrument baseline taken the same day (`2026-09-05-pipefail-live-rescored.json` — the
+_rescored_ one, for the reason given under "The pipe half stopped being true" below). The argument
+for trying wording at all, after the `head`/`tail` cluster spent four attempts proving it inert, is
+that those four restated one prohibition at four triggers while this one changes what is typed in
+the **success** case — a `grep`→`rg` translation happens ~150 times a week, so the rule is exercised
 constantly rather than only at the moment of the slip. If the next count holds at ~32, that argument
 is refuted and the `ask`-rule on the `rg -r` prefix is the fallback; the plan carries it.]
 
@@ -1067,12 +1068,26 @@ rule has been describing in prose since it was written. A session that reads 141
 and retries is the failure this evidence page exists to prevent, so the replacement text names all
 three codes (141, 1, 120) and what each means.
 
-[UNVERIFIED: whether the piped-gate rate itself moves, and by how much. The mechanism makes a piped
-gate truthful, which is the goal; whether agents also pipe less because a truncated `| head` now
-reports failure is a separate question. Baseline saved as
-`~/.local/state/session-bash-audit/2026-09-05-pipefail-live.json`, to be read with
-`audit.py --compare` after a week — the same instrument the four prior rewordings were measured
-with, so this is comparable to them rather than a fresh scale.]
+**The rate did not move, first sample 2026-09-05.** A 233-call session running entirely after the
+deploy scored `head/tail` at 28%, a point _above_ the post-deploy baseline, and missed on `chain`,
+`sed-n` and `git-mutating-in-chain` too. `PIPE_FAIL` changed what a pipe reports and changed nothing
+about how often one is typed — the outcome this change predicted, since truthfulness was the goal
+and a rate move would have been a bonus. It is also the fourth independent confirmation that wording
+is not the lever for this cluster. The sample is session 18 of
+`plans/2026-08-23-global-agents-md-adherence-watch.md`, which owns the habit question; one session
+is a sample rather than a verdict, and a week of them is still worth reporting.
+
+[PITFALL: **compare against
+`~/.local/state/session-bash-audit/2026-09-05-pipefail-live-rescored.json`, never the
+`…-pipefail-live.json` originally named here.** That baseline was written by a superseded
+instrument: it was saved at 02:14 and the re-install carrying `0165577` ("a pipe inside quotes is
+not a pipe") did not land until 18:44 the same day — so it predates the commit that changes what
+counts as a pipe, which is the whole subject of this measurement. Re-scoring the same window under
+current code moved `exit-masked` down (2,383 → 2,323) and left `head/tail` flat (3,765 → 3,767)
+while the call count rose by 577, which is the quote fix removing false positives. A `--compare`
+straddling that commit credits the instrument's own change to `PIPE_FAIL`, in the direction that
+flatters it. Both baselines are kept; the general problem is `agent-skills`'
+`plans/2026-09-05-quiet-gate-changes-what-the-instruments-see.md`.]
 
 [PITFALL: **`--save-baseline` with no path silently overwrote the baseline it was meant to be
 compared against.** The default filename is a **UTC** date, and this machine runs at `+03:00`, so a
