@@ -174,6 +174,99 @@ is the divergence PULSE exists to prevent. Settled 2026-09-05: the declaration g
 `[packages.claude-code]` in `setup.toml`, beside `claude_default_mode`, since that is already where
 harness configuration lives.]
 
+## The sandbox block, drafted 2026-09-05 — for review, not applied
+
+Everyday posture, not a hardened one. Two choices carry that:
+
+[DECISION: **`strictAllowlist` stays OFF.** With it on, a host outside the list is denied outright;
+with it off, it **prompts**. That single flag is the difference between "an incomplete allowlist
+breaks your work" and "an incomplete allowlist asks you once" — and since `autoAllowBashIfSandboxed`
+defaults to `true`, sandboxed commands otherwise run with no prompt at all. Net friction goes down
+against today's `acceptEdits` while a real boundary appears, which is the opposite of the trade the
+question assumed. The list below therefore does not need to be exhaustive to be safe to try; a gap
+costs one prompt.]
+
+[DECISION: **`~/.claude` and `~/.agents` are deliberately NOT in `allowWrite`.** They are the
+persistence targets an injection wants — settings, skills, the instructions file itself. PULSE's own
+deploy tasks do write there, so they will hit the sandbox and fall back to the unsandboxed retry,
+which the `Bash(dangerouslyDisableSandbox:true)` ask rule already declared turns into a visible
+prompt. That is the correct trade: a deploy is rare and deliberate, and it is exactly the operation
+worth seeing.]
+
+```json
+{
+  "sandbox": {
+    "enabled": true,
+    "network": {
+      "allowedDomains": [
+        "archive.ubuntu.com",
+        "security.ubuntu.com",
+        "pypi.org",
+        "files.pythonhosted.org",
+        "astral.sh",
+        "*.astral.sh",
+        "registry.npmjs.org",
+        "crates.io",
+        "static.crates.io",
+        "proxy.golang.org",
+        "sum.golang.org",
+        "github.com",
+        "api.github.com",
+        "codeload.github.com",
+        "raw.githubusercontent.com",
+        "objects.githubusercontent.com",
+        "cli.github.com",
+        "gitlab.com",
+        "dl.google.com",
+        "packages.microsoft.com",
+        "download.docker.com",
+        "apt.releases.hashicorp.com",
+        "pkgs.k8s.io",
+        "pkg.claude-desktop-debian.dev",
+        "api.anthropic.com",
+        "claude.ai",
+        "code.claude.com"
+      ]
+    },
+    "filesystem": {
+      "allowWrite": [
+        "~/plans",
+        "~/plans-sensitive",
+        "~/.cache",
+        "~/.local/state/power-user-linux-setup",
+        "~/.local/state/session-bash-audit"
+      ]
+    }
+  }
+}
+```
+
+The domain list is derived, not invented: every `https?://` host in `setup.toml`, plus the apt
+repositories actually configured in `/etc/apt/sources.list.d/`, plus the package registries the
+toolchain reaches (`uv` → pypi + pythonhosted, `npm`, `cargo`, `go`). `allowWrite` covers the four
+places daily work writes outside a repo — the plan store, which `plans.py` touches constantly, and
+the caches and manifests without which `uv` and the audit baselines fail.
+
+[NEEDS CLARIFICATION: **does the sandbox proxy carry SSH, and therefore `git push`?** This is the
+single biggest unknown and the one most likely to make the sandbox feel like a slog. Every remote
+here is `git@github.com`, and the proxy is described in terms of hostnames and HTTPS, with the
+optional seccomp filter governing Unix sockets — nothing in the page says what happens to an
+outbound TCP connection on port 22. If SSH does not traverse it, every push falls back to the
+unsandboxed retry and prompts. Testable in one command once the sandbox is on: `git fetch` in any
+repo. Answer this before deciding whether the block is worth applying.]
+
+[NEEDS CLARIFICATION: **`sandbox` is a top-level settings key, so no existing mechanism carries
+it.** `claude_permissions_*` merge into `permissions`, and `claude_default_mode` /
+`claude_statusline` set one scalar each. A `claude_sandbox` field holding this object needs a new
+`_apply_declared_sandbox()` in `tasks/ai.py`, shaped like `_apply_declared_statusline` — absent, set
+it; matches, no-op; set to something else, ask before replacing. Worth writing only once the SSH
+question is answered, since the answer may change the block.]
+
+[NEEDS CLARIFICATION: whether `~/.cache` is too broad. It is there because `uv` fails without it and
+`uv` runs in every gate. Narrowing to `~/.cache/uv` plus whatever else turns out to be needed is
+better, but the list can only be found by running with the broad entry first and watching what a
+narrower one breaks.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: whether `WebFetch` should be allowlisted at all before the sandbox is on.
