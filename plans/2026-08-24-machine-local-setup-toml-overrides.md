@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-25
+updated: 2026-09-06
 ---
 
 # Machine-local overrides for `setup.toml`
@@ -129,7 +129,22 @@ plan owns the change now that the drift-guard plan has retired.]
 
 [DEFERRED: Whether an override may carry anything beyond `enabled` — `tags` is the only other field
 `enabled_packages()` consults. Not needed by any real use case yet; recorded so the question is not
-re-derived. Widening is additive, so there is no cost to waiting.]
+re-derived. Widening is additive, so there is no cost to waiting.
+
+**One candidate use case arrived 2026-09-06**, inherited from the retired
+`plans/2026-08-30-english-iso-locale-defaults.md`: making the machine's locale choice persistent.
+`inv system.set-locale` hard-codes `LANG=en_US.UTF-8 LC_TIME=en_DK.UTF-8 LC_NUMERIC=C.UTF-8`, and
+the user's requirement was explicit — _"if someone doesn't want this and prefers another locale,
+that's something they should be able to choose when they install with pulse, or configure later,
+somehow, but this complexity cand live in a plan until the first user actually wants this."_
+
+It is a **candidate** rather than a fit, and the mismatch is the useful part: an override flips a
+package on or off, while a locale needs a _value_ per variable, and `system.set-locale` is a task
+rather than a `[packages.*]` entry — it has no section for an override to key on. So this either
+widens the file beyond package sections, or wants its own mechanism, and that is the decision. The
+one-off already works (`inv system.set-locale --lc-time=…`, all three are parameters); what is
+missing is only persistence across the next `inv setup`. Still waiting on a real second user, per
+the user's own instruction, so nothing here is owed until one appears.]
 
 [DEFERRED: Whether an override may _define_ a package absent from `setup.toml`. Currently it cannot,
 and `load_overrides()` warns on the attempt. The argument against allowing it stands — it would make
