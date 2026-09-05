@@ -157,6 +157,11 @@ degradation happens in neither branch, which was the requirement.
 
 ## Migrating the credential that is already there
 
+**Done 2026-09-05 — see item 3 under "Recommended direction". It needed no login**: the user
+confirmed the one entry obsolete, since the only images published from this machine go to GHCR and
+that happens in CI rather than locally. The four steps below stay as the procedure for a credential
+still in use, which is the case this section was written for and is not the case that occurred.
+
 Deliberate, and to be done with the user present — it needs that registry's credentials to hand:
 
 1. Install the helper and set `credsStore` (steps 1–2 above).
@@ -196,8 +201,25 @@ In dependency order, because the first item unblocks everything else.
 2. **`uv.toml` at user level.** Independent of the other two and the cheapest — it changes nothing
    until a URL carries a username, so it is safe to land first if convenient. **Still open**, and
    the `[PITFALL:]` above about per-user placement is the thing not to get wrong.
-3. **The migration**, with the user. **Still open** — one plaintext `auths` entry remains, reported
-   by the task on every run and deliberately never deleted by it.
+3. ~~**The migration**, with the user~~ — **done 2026-09-05, and it took the simpler branch.** The
+   one plaintext entry was a work registry the user confirmed obsolete: the only images published
+   from this machine go to GHCR, and that happens in a CI workflow rather than locally, so nothing
+   needed re-storing through the helper first. The four-step migration in the section above is the
+   procedure for a credential still in use; this one was a removal.
+
+   It went through the task rather than by hand, on the rule that a file with a PULSE writer is not
+   hand-edited: `inv docker.configure-credential-store --purge-plaintext`. Opt-in rather than a
+   default, and `rm -i`'s shape rather than apt's `-y`, because this is the genuinely-destructive
+   case `~/AGENTS.md` reserves that shape for — and it runs only after the round trip passes, so a
+   machine whose keyring is locked cannot lose the one copy of a credential to it.
+
+   Two things the implementation learned that the plan had not:
+   - **Not every `auths` entry is a credential.** `docker logout` under a `credsStore` leaves
+     `{"<host>": {}}` behind, and an entry can carry its secret in `identitytoken` or `password`
+     rather than `auth`. Counting the mapping would report a credential that is not there and go on
+     reporting one forever after a successful migration, which is how a warning stops being read.
+   - **The purge strips the secret fields and keeps the entry**, which is the state docker itself
+     produces on logout rather than one only this task knows how to make.
 4. ~~**Then unblock `repo-tasks`' verification**~~ — unblocked; filed there as
    `2026-09-05-credential-helper-installed-logins-verifiable.md`, which carries the machine state
    its check needs and the warning that the un-migrated host would measure the wrong path —

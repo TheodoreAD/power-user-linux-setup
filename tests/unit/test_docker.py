@@ -4,8 +4,8 @@ that doesn't shell out to docker/systemctl or touch /etc/docker/daemon.json. See
 Plus the credential-store task, which is testable without a keyring because the two things that can
 go wrong are both observable at this level: the config merge must not lose the credentials and
 settings docker owns in the same file, and the round-trip probe must treat a store that answers
-wrongly exactly like one that fails. DOCKER_CONFIG is redirected under tmp_path throughout — the
-real one holds a live registry credential.
+wrongly exactly like one that fails. DOCKER_CONFIG is redirected under tmp_path throughout, because
+the real one is the developer's own registry auth and a test has no business writing to it.
 """
 
 import json
@@ -67,7 +67,8 @@ def test_merge_does_not_mutate_inputs():
 
 @pytest.fixture
 def docker_config(tmp_path, monkeypatch):
-    """Never the real ~/.docker/config.json — it holds a live registry credential."""
+    """Never the real ~/.docker/config.json — it is the developer's own registry auth, and one of
+    these tests exercises a purge."""
     path = tmp_path / "config.json"
     monkeypatch.setattr(docker, "DOCKER_CONFIG", path)
     monkeypatch.setattr(util, "DRY_RUN", False)
@@ -115,9 +116,74 @@ def test_write_creds_store_reports_no_change_when_already_set(docker_config):
     assert docker._write_creds_store() is False
 
 
-def test_plaintext_auth_count_counts_but_never_names():
-    assert docker._plaintext_auth_count({"auths": {"a.example": {}, "b.example": {}}}) == 2
+def test_plaintext_auth_count_counts_only_entries_that_carry_a_secret():
+    """An empty `auths` entry is what docker leaves after a logout under a credsStore, so counting
+    the whole mapping would report a credential that is not there — and would go on reporting one
+    forever after a successful migration, which is how a warning stops being read."""
+    config: util.JsonObject = {
+        "auths": {"a.example": {"auth": "eA=="}, "b.example": {}, "c.example": {"identitytoken": "t"}}
+    }
+    assert docker._plaintext_auth_count(config) == 2
     assert docker._plaintext_auth_count({}) == 0
+
+
+def test_purge_strips_the_secret_and_keeps_docker_s_own_bookkeeping(docker_config):
+    docker_config.write_text(
+        json.dumps(
+            {
+                "credsStore": docker.CREDS_STORE,
+                "auths": {"a.example": {"auth": "eA==", "email": "x@y"}, "b.example": {}},
+                "HttpHeaders": {"a": "b"},
+            }
+        )
+    )
+
+    assert docker._purge_plaintext_auths() == 1
+
+    written = cast(util.JsonObject, json.loads(docker_config.read_text()))
+    auths = cast(util.JsonObject, written["auths"])
+    # The host stays, minus the secret — the state `docker logout` itself leaves under a credsStore.
+    assert auths["a.example"] == {"email": "x@y"}
+    assert auths["b.example"] == {}
+    assert written["credsStore"] == docker.CREDS_STORE
+    assert written["HttpHeaders"] == {"a": "b"}
+
+
+def test_purge_is_a_no_op_when_nothing_carries_a_secret(docker_config):
+    docker_config.write_text(json.dumps({"auths": {"a.example": {}}}))
+    assert docker._purge_plaintext_auths() == 0
+
+
+def test_configure_credential_store_leaves_plaintext_alone_by_default(docker_config, monkeypatch):
+    """Removing a credential takes away access the user may not be able to get back, so the default
+    reports and stops. `~/AGENTS.md` reserves the opt-in flag shape for exactly this case."""
+    monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+
+    docker.configure_credential_store(_round_trip_context())
+
+    assert docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text()))) == 1
+
+
+def test_configure_credential_store_purges_only_when_asked(docker_config, monkeypatch):
+    monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+
+    docker.configure_credential_store(_round_trip_context(), purge_plaintext=True)
+
+    assert docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text()))) == 0
+
+
+def test_purge_cannot_run_when_the_store_did_not_answer(docker_config, monkeypatch):
+    """The ordering that matters: a machine whose keyring is locked must not lose the one copy of a
+    credential to a flag that was meant to tidy up after a working migration."""
+    monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+
+    with pytest.raises(Exit):
+        docker.configure_credential_store(_round_trip_context(store_ok=False), purge_plaintext=True)
+
+    assert docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text()))) == 1
 
 
 def test_round_trip_passes_when_the_store_returns_what_was_stored():

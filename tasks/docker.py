@@ -18,6 +18,10 @@ CREDENTIAL_HELPER = f"docker-credential-{CREDS_STORE}"
 _PROBE_SERVER = "https://pulse-credential-store-check.invalid"
 _PROBE_USERNAME = "pulse-check"
 _PROBE_SECRET = "pulse-round-trip"
+# The fields an `auths` entry can carry a secret in. `auth` is the base64 user:password pair docker
+# writes without a helper; `identitytoken` is what a registry's OAuth flow leaves; `password` appears
+# in hand-written and third-party-generated configs. Everything else in an entry is bookkeeping.
+_SECRET_FIELDS = ("auth", "identitytoken", "password")
 
 _DEFAULTS: util.JsonObject = {
     "log-driver": "json-file",
@@ -127,12 +131,48 @@ def _read_docker_config() -> util.JsonObject:
     return cast(util.JsonObject, util.parse_json(DOCKER_CONFIG.read_text()))
 
 
-def _plaintext_auth_count(config: util.JsonObject) -> int:
-    """How many registries still have a base64 `auths` entry. Counted, never named: a registry
-    hostname here is likely to be work infrastructure, and this output goes into a public repo's
-    CI logs and an agent's transcript."""
+def _plaintext_secret_hosts(config: util.JsonObject) -> list[str]:
+    """The `auths` hosts whose entry still carries a secret in the file itself.
+
+    Not every `auths` entry is a credential: docker leaves `{"<host>": {}}` behind after a logout, and
+    an entry pointing at a helper carries no secret either. Counting the whole mapping would report a
+    credential that is not there — and would keep reporting one forever after a successful migration,
+    which is how a warning stops being read.
+    """
     auths = config.get("auths")
-    return len(auths) if isinstance(auths, dict) else 0
+    if not isinstance(auths, dict):
+        return []
+    return [
+        host
+        for host, entry in auths.items()
+        if isinstance(entry, dict) and any(entry.get(field) for field in _SECRET_FIELDS)
+    ]
+
+
+def _plaintext_auth_count(config: util.JsonObject) -> int:
+    """How many registries still hold a secret in the file. Counted, never named: a registry hostname
+    here is likely to be work infrastructure, and this output goes into a public repo's CI logs and an
+    agent's transcript."""
+    return len(_plaintext_secret_hosts(config))
+
+
+def _purge_plaintext_auths() -> int:
+    """Strip the secret fields from every `auths` entry that has them, leaving the entry itself.
+
+    That is what `docker logout` leaves behind under a `credsStore`, so the result is a state docker
+    produces itself rather than one only this task knows how to make. Returns how many hosts changed.
+    """
+    config = _read_docker_config()
+    hosts = _plaintext_secret_hosts(config)
+    if not hosts:
+        return 0
+    auths = cast(util.JsonObject, config["auths"])
+    for host in hosts:
+        entry = cast(util.JsonObject, auths[host])
+        for field in _SECRET_FIELDS:
+            entry.pop(field, None)
+    DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
+    return len(hosts)
 
 
 def _credential_round_trip(c: Context) -> str | None:
@@ -171,8 +211,16 @@ def _write_creds_store() -> bool:
     return True
 
 
-@task
-def configure_credential_store(c: Context):
+@task(
+    help={
+        "purge_plaintext": (
+            "Also strip the secret out of every `auths` entry that still has one. Destructive: the "
+            "credential is gone from this machine unless it is also in the keyring or you can log in "
+            "again."
+        )
+    }
+)
+def configure_credential_store(c: Context, purge_plaintext: bool = False):
     """Point docker (and, through oras, helm) at the OS secret store instead of a plaintext file.
 
     `credsStore` is written explicitly rather than left to auto-detection, and that is the whole
@@ -188,10 +236,13 @@ def configure_credential_store(c: Context):
     registry config and a missing or unresponsive store is exactly the broken, hard-to-understand
     auth failure this exists to prevent.
 
-    Existing plaintext `auths` entries are reported, never deleted: migrating one needs that
-    registry's credentials to hand, so it is a deliberate step with the user rather than something a
-    setup run does behind them. Setting `credsStore` does not migrate them either — docker keeps
-    reading the plaintext entry and it keeps working, which is the quiet half of the failure.
+    Existing plaintext `auths` entries are reported and, by default, left alone: setting `credsStore`
+    does not migrate them — docker keeps reading the plaintext entry and it keeps working, which is
+    the quiet half of the failure — and removing one without the user's say-so takes away access they
+    may not be able to get back. `--purge-plaintext` is the deliberate removal, opt-in for the reason
+    `~/AGENTS.md` reserves an inverted flag shape for: this is the genuinely-destructive-by-default
+    case, so it is `rm -i`'s shape rather than apt's `-y`. It runs only after the round trip has
+    passed, so a machine whose store does not answer cannot lose a credential to it.
     """
     if not util.command_exists(CREDENTIAL_HELPER):
         # Not an error: the helper is a `workstation`-tagged package, so a headless or container
@@ -220,12 +271,17 @@ def configure_credential_store(c: Context):
         print(f"[docker-credentials] credsStore={CREDS_STORE} written to {DOCKER_CONFIG}")
     else:
         print(f"[docker-credentials] credsStore={CREDS_STORE} already set — nothing to do")
-    if plaintext:
+    if not plaintext:
+        return
+    if not purge_plaintext:
         print(
             f"[docker-credentials] {plaintext} registry credential(s) still stored as plaintext in that file.\n"
             "  Migrate each deliberately: `docker login <host>` to re-store it through the helper,\n"
-            "  then delete its `auths` entry — docker reads the plaintext one until you do."
+            "  then `inv docker.configure-credential-store --purge-plaintext` to strip what is left.\n"
+            "  docker reads the plaintext entry until you do, so nothing looks wrong until it is gone."
         )
+        return
+    print(f"[docker-credentials] purged the secret from {_purge_plaintext_auths()} plaintext entr(ies)")
 
 
 def _prune(c: Context, label: str, flags: str, desc: str) -> None:
