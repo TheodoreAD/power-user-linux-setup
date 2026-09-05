@@ -227,6 +227,55 @@ helper that does the resolving is `repo_tasks/docs.py`'s `_bad_link` — cited h
 was `_broken_link` in that same window, and a private helper's name is the least stable thing to
 hang a citation on.
 
+### There is no way to build without writing, and that is why the gate is shaped as it is
+
+`zensical build --strict` is the only way to get a render out of zensical, so the check that wants a
+renderer's opinion necessarily writes a site into the working tree. That is the whole reason the
+docs build sits in `quality.precommit` rather than `quality.check` — the read-only half has to stay
+safe on a concurrent run and a read-only checkout — and it is worth recording that the alternative
+was looked for rather than assumed away.
+
+**Three major generators ship exactly the mode zensical lacks**, so wanting one is the mainstream
+design rather than a purist preference:
+
+| tool   | mode                      | what it does                                                                                                   |
+| ------ | ------------------------- | -------------------------------------------------------------------------------------------------------------- |
+| Zola   | `zola check`              | "build all pages just like the build command would, but without writing any of the results to disk"            |
+| Sphinx | `sphinx-build -b dummy`   | "produces no output. The input is only parsed and checked for consistency" — documented as the linting builder |
+| Hugo   | `--renderToMemory` / `-M` | renders without writing; `-d/--destination` redirects output when it does write                                |
+
+**MkDocs has neither, and its only lever is `-d`/`--site-dir`. Zensical has not even that.** Probed
+2026-09-04 on 0.0.44 and re-probed 2026-09-06 on **0.0.59**, the current release: the CLI has
+exactly three commands (`build`, `new`, `serve`) and `build` takes exactly `-f/--config-file`,
+`-c/--clean` and `-s/--strict`. No check mode, no dry run, no output directory. The workaround is
+therefore not provisional pending a version bump — re-probe it at the next one, but do not assume it
+has changed.
+
+[PITFALL: **run that probe through the ephemeral environment's own entry point, not by typing
+`zensical`.** `uv run --with zensical==<v> -- zensical …` runs whatever `zensical` PATH finds first,
+which in this repo is `.venv/bin/zensical` at the pinned version — so the probe reports the pin's
+behaviour while looking like it tested the new release, and `env -u VIRTUAL_ENV` does not help
+because PATH is what carries it. Caught 2026-09-06, mid-probe, by `shutil.which`. Load the console
+script from `importlib.metadata.entry_points` inside the ephemeral interpreter and print
+`m.version("zensical")` alongside the answer. For the same reason an unpinned `--with zensical`
+resolves to the version already present rather than to the latest.]
+
+Two further findings from the 0.0.44 probe, both still true at 0.0.59 and one worth reporting
+upstream:
+
+- `site_dir` is an `mkdocs.yml` key and `config.py` rejects only a `..` inside it, so an
+  **absolute** path passes validation and then **panics** — `invariant: Format(Path(RootDir))` at
+  `crates/zensical/src/workflow.rs:238`, a Rust invariant violation rather than a clean error.
+- A _relative_ alternate `site_dir` builds fine, but that is still a write inside the repo. And the
+  alternate config file has to sit in the repo root regardless: `project_root` is
+  `os.path.dirname(config_path)`, so a config in `/tmp` resolves `docs_dir` under `/tmp` too and the
+  build fails on a missing docs directory.
+
+The comparison pattern this repo uses elsewhere — `fix` regenerates, `check` re-renders and fails on
+a diff, as for `catalog.render-tasks` — does not transfer, because it works only where the output is
+committed. `site/` is deliberately gitignored, and committing a 3.3 MB build output to obtain a
+comparison target would be a far worse trade than the one being avoided.
+
 ## Checklist for next time (re-verifying after a version bump)
 
 **A bump is its own deliberate task, never something inherited.** The pin's job is that the gate, CI
@@ -252,5 +301,7 @@ particularly:
 - [ ] Do the diagrams still render, and do HTML labels still survive? Re-run the headless-Chrome
       check above rather than trusting a green `--strict` build, which cannot see either.
 - [ ] Has native math (MathJax/KaTeX) support been added to the bundle?
+- [ ] Has `build` grown a check/dry-run mode or an output-directory flag? (would retire the
+      `precommit`-not-`check` placement above — last checked 0.0.59, 2026-09-06: no)
 - [ ] Has `zensical.toml` stabilized enough to be worth migrating to from the `mkdocs.yml` compat
       path?

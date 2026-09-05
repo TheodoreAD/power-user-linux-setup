@@ -23,11 +23,13 @@ jobs:
       - run: inv quality.check
 
   # The docs build is a check, and it lives here rather than in `quality.check` because it writes
-  # `site/` and that gate is the read-only half by construction — see
-  # plans/2026-09-04-precommit-does-not-build-the-docs.md. It is the only thing in this repo that
-  # catches a link aimed at a renamed heading: `docs.link-check` resolves the file and stops at the
-  # `#`, dprint never reads markdown as a document, and a reviewer sees a path that is genuinely
-  # correct. Two red Pages deploys, on 2a4de19 and ae59318, are what it is here to prevent.
+  # `site/` and that gate is the read-only half by construction — `repo_tasks.quality.precommit`'s
+  # docstring carries that decision and the argument it beat. What it catches is whatever a renderer
+  # objects to, which dprint (never reading markdown as a document) and a reviewer (seeing a path
+  # that is genuinely correct) both miss. Two red Pages deploys, on 2a4de19 and ae59318, are what it
+  # is here to prevent — those were dangling heading anchors, which `inv docs.link-check` now
+  # resolves on its own, so this is defence in depth behind that rather than the sole detector.
+  # Background: contributing/zensical.md, "Renaming a heading is an anchor change".
   #
   # A job rather than a step in `quality`, so a docs failure is named "docs" in the runs list
   # instead of reading as a lint failure — the whole problem this addresses is a signal nobody
