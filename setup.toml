@@ -1798,6 +1798,11 @@ method = "uv-tool"
 package = "keyring"
 check_cmd = "keyring"
 verify_cmd = "keyring --help" # no --version support
+# uv's keyring-provider, declared here rather than on a uv package because the CLI this installs is
+# what `subprocess` mode actually calls — a machine without it should not get the setting either.
+# The file's own header has why it must be the per-user path and nowhere else: in a project file it
+# makes `uv publish` skip Trusted Publishing, and CI has no keyring to fall back to.
+config_files = [{ src = "config/uv.toml", dst = "~/.config/uv/uv.toml" }]
 
 [packages.nox]
 description = "Python session-based test automation, similar to tox"

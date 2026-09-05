@@ -1,0 +1,22 @@
+# uv's per-user configuration. Seeded by power-user-linux-setup ([packages.python-keyring] in
+# setup.toml, source config/uv.toml); yours to edit afterwards, and `inv deploy.all --name
+# python-keyring --yes` is the deliberate overwrite if you ever want the baseline back.
+#
+# `subprocess` means uv shells out to the `keyring` CLI, which is exactly the household rule:
+# anything needing a password goes through the OS secret store via whatever native integration the
+# tool already has, and `keyring` is a machine-provided command rather than a dependency of any
+# project. The CLI it calls is [packages.python-keyring] itself, which is why this file is declared
+# on that package — a machine without the CLI does not get the setting either.
+#
+# THIS FILE, AND NOWHERE ELSE. uv resolves configuration user -> system -> project, and a
+# keyring-provider that reaches a *project* file breaks publishing: with
+# `trusted-publishing = "automatic"` a non-disabled provider makes `uv publish` skip Trusted
+# Publishing entirely, and with `"always"` it is a hard MixedCredentials error. CI has no keyring to
+# fall back to, so the same line that secures a developer's machine turns a green release job red the
+# moment it is committed. Per-user placement keeps both correct at once.
+#
+# It is also inert until something supplies a username: uv consults keyring only when a URL carries
+# one, and otherwise logs "Skipping keyring fetch ... use `authenticate = always` to force". For
+# PyPI the username is the literal `__token__`. So this file switches the mechanism on; it does not
+# by itself make any particular index authenticate.
+keyring-provider = "subprocess"
