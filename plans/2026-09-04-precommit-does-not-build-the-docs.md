@@ -276,3 +276,37 @@ build and an anchor-resolving `docs.link-check` on every commit.
    with a documented "green local build does not imply a green deploy", which was the _version
    drift_ warning step 1 deleted. What is left to contrast with is the gate warning — a green
    `precommit` not implying a green deploy — which is the same hazard and a narrower one.
+
+## Migrated to
+
+Retired 2026-09-06. All three steps landed, the one `[UNVERIFIED:]` is answered by a re-probe
+against the current zensical, and `refs` found a single inbound citation, which was fixed rather
+than repointed because the passage around it had gone false.
+
+- **`contributing/zensical.md`, "Renaming a heading is an anchor change"** — the class, why every
+  other check structurally misses it, the two red deploys, and the `docs_dir`-only coverage bound
+  that makes `link_check` the only check reaching `AGENTS.md`/`contributing/`/`plans/`. Migrated
+  earlier the same day while retiring this plan's verification sibling.
+- **`contributing/zensical.md`, "There is no way to build without writing"** — new. The Zola/Sphinx/
+  Hugo comparison showing that a parse-and-validate mode is the mainstream design, the probes
+  proving zensical has none (re-run against 0.0.59), the `site_dir` panic worth reporting upstream,
+  and why the `fix`-regenerates/`check`-diffs pattern this repo uses elsewhere cannot transfer to a
+  gitignored output. The bump checklist carries the standing question with its answer and date.
+- **`.github/workflows/ci.yml`** — already held the "a job, not a step in `quality`" decision and
+  the `--only-group docs` reasoning in its own comment; that comment's stale half is corrected in
+  the same pass.
+- **`CONTRIBUTING.md`** — the docs-site warning rewritten from "the gate does not build the site,
+  here is the manual step" to what actually runs.
+- **`pyproject.toml`** — step 1, the `docs` dependency group and `[tool.uv] default-groups`, is the
+  code and needs no prose.
+
+Deliberately not migrated:
+
+- **The placement decision.** `repo_tasks.quality.precommit`'s docstring states it and the argument
+  it beat, currently and at length. A second copy here would be the divergence this plan's own
+  sibling was about.
+- **The timings.** 1.54 s, 2.00 s, 6.76 s on one machine on one afternoon; the conclusion they
+  supported — the cost is negligible — is settled and the numbers age.
+- **The `_broken_link`/`_bad_link` naming pitfall.** The helper is cited by behaviour rather than by
+  name now, which was the pitfall's own recommendation, and the stale citation it worried about is
+  filed for `repo-tasks` as `2026-09-06-docs-build-docstring-contradicts-its-own-placement.md`.
