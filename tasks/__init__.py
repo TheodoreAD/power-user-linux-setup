@@ -60,6 +60,35 @@ def _import_repo_tasks_modules(simulate_missing: bool = False):
 
 agents, ci, configs, deps, dev_env, docs, quality, testing = _import_repo_tasks_modules()
 
+
+def _configure_report_mode(ns: Collection, simulate_missing: bool = False) -> bool:
+    """Turn on repo_tasks' agent output mode — one folded line per command, output replayed whole on
+    failure, a verdict line at the end — when REPO_TASKS_RUN_REPORT is set, which
+    [packages.claude-code]'s zshenv snippet exports for agent shells and nothing else.
+
+    Exporting the variable is NOT sufficient on its own, which is the whole reason this exists:
+    repo_tasks swaps the runner on its own `ns`, and this repo never uses that Collection — it builds
+    the one below. So every consumer with its own namespace repeats this line or silently stays on
+    stock invoke. Observed 2026-09-05: with the export live and this call absent, the gate printed
+    stock output and nothing anywhere said the mode was off.
+
+    Imported here rather than in `_import_repo_tasks_modules` above so the module keeps its real
+    type: that helper's Nones-or-modules return widens to Any under basedpyright, which is harmless
+    for `Collection.from_module` but not for reading two attributes off it. `simulate_missing`
+    exercises the degraded branch the same way that helper does.
+    """
+    if simulate_missing:
+        return False
+    try:
+        from repo_tasks import runner  # noqa: PLC0415
+    except ImportError:
+        return False
+    if not runner.enabled():
+        return False
+    ns.configure({"runners": {"local": runner.ReportingLocal}})
+    return True
+
+
 namespace = Collection(
     setup.setup,
     Collection.from_module(ai),
@@ -129,3 +158,5 @@ if configs is not None:
     # entrypoints (`inv setup` for full machine bootstrap, `inv dev-env.setup` for the dev loop);
     # only the nested `inv configs.pull`/`inv configs.diff` are relevant here.
     namespace.add_collection(Collection.from_module(configs))
+
+_configure_report_mode(namespace)
