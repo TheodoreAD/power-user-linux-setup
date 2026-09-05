@@ -5,7 +5,7 @@ updated: 2026-09-04
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Ten sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Eleven sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
@@ -38,6 +38,7 @@ again on 2026-09-03 from two more filed the same way from sessions in other repo
 - `2026-09-02-adherence-sample-a-research-session-in-another-repo.md` (sample 5)
 - `2026-09-02-adherence-sample-the-session-that-wrote-the-rule.md` (sample 6)
 - `2026-09-03-adherence-sample-the-masked-calls-were-the-gate.md` (sample 7)
+- `2026-09-05-adherence-sample-sed-n-at-a-record-high.md` (sample 11), merged 2026-09-05
 
 Those names are what `plans.py archive --search` needs to read any of them back.
 
@@ -58,8 +59,9 @@ expire around 2026-10-02:
 | 8  | `power-user-linux-setup` | `92f54986-8a19-49a4-b792-8ebb1d5fcf1a.jsonl` | `2026-09-03T20:45:51.765Z`  |
 | 9  | `repo-tasks`             | `1f762304-ee1a-4bfb-a78f-52da747d29e3.jsonl` | `2026-09-04T12:25:24.475Z`  |
 | 10 | `power-user-linux-setup` | `bc30285c-145c-494d-b2d1-be6b37cd37f1.jsonl` | `2026-09-04T10:01:32.556Z`  |
+| 11 | `ingesta`                | `6291d9d1-b8ed-4826-9967-9ae30f70bebf.jsonl` | `2026-09-05T10:21:37Z`      |
 
-Rows 6 and 7 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
+Rows 6, 7 and 11 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
 needed to reproduce the figures.
 
@@ -79,6 +81,7 @@ needed to reproduce the figures.
 | 8  | `power-user-linux-setup` |   220 | code + docs + vendor research  |         27% |           17% |               0% | —     |
 | 9  | `repo-tasks`             |   202 | shared gate, plans, ~12h       |     **15%** |       **10%** |               0% | 10/11 |
 | 10 | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h      |         23% |           20% |               1% | 8/11  |
+| 11 | `ingesta`                |   228 | domain safety rules, one repo  |         24% |            7% |               0% | 9/11  |
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
 was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
@@ -384,6 +387,51 @@ correctly all day. A single call cannot move a rate, so nothing in the scored ou
 the latter. Read the samples, not only the rates, is the same lesson sample 3's `+0pp` MISS taught
 from the opposite direction.]
 
+### Sample 11 — `ingesta`, 228 calls, `sed -n` at a record high with no auto mode to blame
+
+`audit.py --session 6291d9d1 --until 2026-09-05T10:21:37Z --compare 2026-09-04.json`, **9/11**. 228
+calls in the window, 236 including the harvest's own sweep. The session's subject was safety rules
+in a medical repository — not tooling work, and not a session with any reason to be careless.
+
+| tag                         | rate | vs baseline     |
+| --------------------------- | ---: | --------------- |
+| `chain`                     |  39% | −7pp, OK        |
+| `chain5`                    |   2% | —               |
+| `head/tail`                 |  24% | −7pp, OK        |
+| **`sed-n`**                 |  16% | **+11pp, MISS** |
+| `heredoc`                   |  11% | −2pp, OK        |
+| `exit-masked`               |   7% | —               |
+| **`git-mutating-in-chain`** |   7% | **+1pp, MISS**  |
+| `cat-view`                  |   1% | −0pp, OK        |
+| `cd-own-repo`               |   0% | −1pp, OK        |
+| `git-C-own-repo`            |   0% | −2pp, OK        |
+| `redirect-then-filter`      |   0% | −0pp, OK        |
+
+**16% is the highest `sed-n` the corpus has recorded**, against previous rows of 0%, 2%, 3%, 4%, 8%,
+10% and 11% — and this is the row that removes the standing explanation for the two high ones.
+Samples 4 and 6 sat at 10% and 11% under auto mode, whose system reminder asks for `cat`/`sed -n`
+over the dedicated tools; **this session was in the default mode**, had no competing instruction,
+and went higher than either. So the behaviour is not auto-mode compliance leaking into the numbers.
+
+The calls are uniformly **reading a known line range of a source file to quote it into the
+conversation** — `sed -n '331,360p' src/ingesta/store/tables.py`, `sed -n '240,285p'` of a TOML
+catalogue — never a filter in a pipeline, never a case `Read` with `offset`/`limit` could not serve.
+That is the same characterisation sample 4's 10% row gives, so the shape is stable across samples
+and only the rate moved. Pair it with `head/tail` at 24% (54 calls, mostly `| head -20` on `rg`):
+the two are one instinct aimed at files and at output respectively, and both are the global rule's
+"prefer the dedicated harness tool" losing to shell idiom under time pressure.
+
+**Nine green claims, and the unpiped re-run exits 0 (1020 passed), so all nine hold.** Every one of
+those greens came from a run piped through `rg` or `tail` — `inv quality.precommit 2>&1 | tail -40`
+and several `pytest -q 2>&1 | rg "passed|failed"`.
+
+[PITFALL: **the session that produced these numbers had the rule in front of it all day.** It spent
+the day writing safety rules into a medical repository — about not inventing figures, about stating
+a bound with every total — and broke the `sed -n` rule in sixteen per cent of its calls while doing
+it. That is the same shape as the corpus's authoring-a-rule note above, arriving from a fifth
+independent direction, and it is the argument for measuring rather than asking whether a rule is
+understood.]
+
 ## What the corpus has settled
 
 **`head/tail` is worse in prose sessions than in code sessions.** Seven samples: 24% code, then 45%,
@@ -395,28 +443,46 @@ rather than a counter-example. That points the fix away from wording: `Read` wit
 is the tool for the quoting half, and the harness's own truncation handles the gate half — neither
 is what the rule currently opens on.
 
+**`sed -n` is not an auto-mode artefact.** The two high rows before sample 11 — 10% and 11% — were
+both auto-mode sessions, where the harness's own reminder asks for `cat`/`sed -n` over `Read`, and
+that reading was the standing explanation. Sample 11 ran in the default mode with no competing
+instruction and reached **16%**, the corpus high. So the same population produces the behaviour with
+and without the reminder, and the reminder is at most an aggravator. The shape is identical in every
+row that recorded it: reading a known line range to quote it, where `Read` takes `offset` and
+`limit`.
+
 **`git -C <own repo>` is a per-session disposition, not a machine-wide trend.** Sample 1's 23% and
 sample 3's 0% came from the same repo, the same shape, the same day's rules. Nothing further is owed
 on that question.
 
-**The `exit-masked` consequence check works, and has fired clean five times.** `session-harvest`'s
-rule — a non-zero `exit-masked` means the session's own green results are unverified, so re-run the
-gate unpiped and count how many times the session asserted a green on a masked call:
+**The `exit-masked` consequence check works, and has fired clean every time it has been run.**
+`session-harvest`'s rule — a non-zero `exit-masked` means the session's own green results are
+unverified, so re-run the gate unpiped and count how many times the session asserted a green on a
+masked call:
 
-| sample | `exit-masked` | assertions | what was masked | unpiped re-run     |
-| ------ | ------------: | ---------: | --------------- | ------------------ |
-| 1      |           19% |          — | not recorded    | exit 0             |
-| 2      |           28% |        ~15 | the gate        | exit 0             |
-| 3      |           27% |          3 | not recorded    | exit 0             |
-| 4      |           32% |          5 | the gate        | exit 0             |
-| 5      |            8% |          6 | mostly the gate | exit 0, 643 passed |
-| 6      |           27% |          — | listings        | exit 0             |
-| 7      |           22% |          7 | the gate        | exit 0             |
+| sample | `exit-masked` | assertions | what was masked | unpiped re-run      |
+| ------ | ------------: | ---------: | --------------- | ------------------- |
+| 1      |           19% |          — | not recorded    | exit 0              |
+| 2      |           28% |        ~15 | the gate        | exit 0              |
+| 3      |           27% |          3 | not recorded    | exit 0              |
+| 4      |           32% |          5 | the gate        | exit 0              |
+| 5      |            8% |          6 | mostly the gate | exit 0, 643 passed  |
+| 6      |           27% |          — | listings        | exit 0              |
+| 7      |           22% |          7 | the gate        | exit 0              |
+| 8      |           17% |         10 | both            | exit 0, 551 passed  |
+| 11     |            7% |          9 | the gate        | exit 0, 1020 passed |
 
 Every green held. **"No harm done" is the wrong lesson**: the claims were true and the method could
 not have distinguished them from false ones, and sample 2's session pushed five times on that basis.
 The count tracks how chatty a session is about its gate rather than how bad the piping is — 27% and
 28% produced 3 and ~15 assertions respectively.
+
+**So `exit-masked` measures a hazard, not a defect rate** — worth stating outright before somebody
+reads a high number as evidence that false claims were made. Seven samples carry a claims count, all
+seven re-ran clean, at rates from 7% to 32%: the counter says how much of a session's evidence
+_could_ have been wrong, and the corpus has yet to find a case where any of it was. Sample 11 is the
+sharpest version — the lowest masked rate of any row that made claims at all, and nine claims riding
+on it, all sound.
 
 **The headline rate cannot tell the three consequences apart, and samples 6 and 7 are the pair that
 proves it.** Both are high-rate rows a week apart, and they sit at opposite ends of the distinction:

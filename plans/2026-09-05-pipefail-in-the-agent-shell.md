@@ -112,6 +112,78 @@ its default filename is a UTC date, and at 02:13 local (+03:00) that is the prev
 Reconstructed from the transcripts and filed against the skill as
 `agent-skills/2026-09-05-save-baseline-overwrites-silently.md`; pass an explicit path meanwhile.]
 
+## The second export on the same snippet: `REPO_TASKS_RUN_REPORT`
+
+Merged in 2026-09-05 from `2026-09-05-agent-shells-set-repo-tasks-run-report.md`, filed for this
+repo from a `repo-tasks` session that did not know this plan existed
+(`source_session: 86b6d25d-eb68-4751-b989-ad45931ef62a.jsonl`,
+`source_moment: 2026-09-05T11:00:00Z`; that file is gone —
+`plans.py archive --file 2026-09-05-agent-shells-set-repo-tasks-run-report.md` reads it back). **It
+is the same file, the same guard and the same population**, and the two lines are complementary
+halves of one lie: `PIPE_FAIL` makes a piped gate **exit** non-zero, report mode makes its last
+three lines **say which command failed**. Neither substitutes for the other. The name of this plan
+is kept rather than widened because `agent-skills` and `repo-tasks` plans cite it by filename and
+this repo may not edit theirs.
+
+`repo-tasks` gained an opt-in agent output mode on 2026-09-05 (`d322392`..`7db8b29`): with
+`REPO_TASKS_RUN_REPORT` set, every command run with `echo=True` collapses to one delimited line with
+its output folded on success and replayed whole on failure, and a gate ends with a verdict line.
+
+```
+ruff check . | ok | 0.0s | All checks passed!
+basedpyright | ok | 2.5s | 0 errors, 0 warnings, 0 notes
+pytest | ok | 1.4s | 592 passed in 1.27s
+quality.precommit | PASS | 15 steps | 4.6s
+```
+
+With the variable unset, the package touches invoke's config not at all and `inv` behaves exactly as
+invoke documents. **Nothing sets the variable, so nothing is in that mode** — which makes the
+`repo-tasks` change a net regression against the measurement that motivated it until this half
+lands: the reporting exists and no agent session sees it.
+
+**The measurement is the same one this plan opens on, read from the other end.** `repo-tasks`'
+`contributing/quality-gate.md`, "What the gate prints": over the seven days to 2026-09-05, across
+every consumer, **812 of 1,396 `inv quality.*` runs — 58% — were piped through `head`/`tail`**, 466
+of them asking for the last few lines of a roughly 50-line success. Every one of those runs was an
+agent session, because the corpus is agent transcripts. That is the fact the change turns on.
+
+The first design there made folding the **default**, and the user rejected it on the rule of least
+surprise — without the env var everything runs normally, with it the runner is overloaded. Both
+positions hold at once, and **this repo is where they are reconciled**: the variable is set by the
+environment for agent shells, so no session has to reach for anything, while a human at a terminal
+and a CI runner keep stock invoke. ("Flip the default" and "reach the population" looked like the
+same lever and were not — the general form of that lesson is
+[`2026-09-05-least-surprise-is-not-written-down-anywhere.md`](2026-09-05-least-surprise-is-not-written-down-anywhere.md).)
+
+The change is one line beside the `PIPE_FAIL` one, under the same `CLAUDECODE` guard:
+
+```shell
+export REPO_TASKS_RUN_REPORT=1
+```
+
+### Verification for that half
+
+- `env | rg REPO_TASKS_RUN_REPORT` in a fresh agent Bash call returns it set; unset in an
+  interactive human shell.
+- `inv quality.precommit` here then prints report lines and a verdict for an agent, and invoke's own
+  streaming output for the human.
+- End to end with layer 1: `inv quality.check 2>&1 | tail -3` on a failing gate ends with
+  `FAIL | <command> | exit=<n> (output above)` **and** the Bash tool reports a non-zero exit.
+
+[NEEDS CLARIFICATION: whether the guard stays `CLAUDECODE` or widens. The variable is useful to any
+agent harness, `CLAUDECODE` is the only such marker this machine sets, and inventing a broader
+condition with nothing to test it against is worse than a narrow one that works. Recommend keeping
+the existing guard and widening when a second harness actually appears — the same call this plan
+already makes for `PIPE_FAIL`.]
+
+[NEEDS CLARIFICATION: whether this repo's own CI should set it. Recommend **no** — a GitHub Actions
+log is scrolled by a human reading a failure, and full streaming is what belongs there. Recorded
+because it will be asked.]
+
+[DEFERRED: this repo pins `repo-tasks`, so report mode does nothing here until that bump lands.
+`repo-tasks`' `contributing/consumer-sweep.md` owns that sequence, and the batched sweep is
+`repo-tasks`' `plans/2026-08-25-consumer-transitions.md`.]
+
 ## Remaining
 
 Layers 2 and 3 are other repos' work and are not this plan's to do: 3 is `agent-skills`' own
