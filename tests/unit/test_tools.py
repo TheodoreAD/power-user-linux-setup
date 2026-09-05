@@ -384,3 +384,28 @@ def test_install_archive_leaves_no_download_behind(tmp_path):
     tools._install_archive(_ShellContext(), "t", _archive_cfg(install_dir, _tarball(tmp_path, "a.tar.xz", "J")))
 
     assert sorted(p.name for p in install_dir.iterdir()) == ["binary"]
+
+
+def test_resolve_url_version_leaves_a_url_with_no_placeholder_alone():
+    """Every caller routes through this, so the no-placeholder case must cost nothing — and in
+    particular must not demand a version_cmd that the package has no reason to declare."""
+    cfg: util.PackageConfig = {}
+    assert tools._resolve_url_version(MockContext(), "t", "https://example/bin", cfg, "url") == "https://example/bin"
+
+
+def test_resolve_url_version_substitutes_every_occurrence():
+    """Upstreams that name the version in the asset filename usually also name it in the release
+    path, so one substitution is not enough — docker-credential-helpers is exactly that shape."""
+    cfg: util.PackageConfig = {"version_cmd": "echo v0.9.9"}
+    context = MockContext(run={"echo v0.9.9": Result(stdout="v0.9.9\n", exited=0)})
+
+    resolved = tools._resolve_url_version(context, "t", "https://e/{version}/tool-{version}.bin", cfg, "url")
+
+    assert resolved == "https://e/v0.9.9/tool-v0.9.9.bin"
+
+
+def test_resolve_url_version_names_the_missing_field_for_the_method_that_asked():
+    """The error has to say which field carried the placeholder: `url` for the binary method,
+    `download_url` for archive, and a reader with the wrong one looks in the wrong place."""
+    with pytest.raises(RuntimeError, match=r"url has \{version\}"):
+        tools._resolve_url_version(MockContext(), "t", "https://e/{version}", {}, "url")

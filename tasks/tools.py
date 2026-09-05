@@ -46,6 +46,27 @@ def _install_script(c: Context, name: str, cfg: util.PackageConfig) -> None:
     print(f"[{name}] installed")
 
 
+def _resolve_url_version(c: Context, name: str, url: str, cfg: util.PackageConfig, field: str) -> str:
+    """Substitute `{version}` in a download URL from `version_cmd` or `version_url`.
+
+    A URL with no `{version}` is returned unchanged, so every caller can route through this. Shared
+    by the `archive` and `binary` methods, whose upstreams name the version in the asset filename:
+    without it the alternative is a URL frozen at whatever release someone happened to type into
+    setup.toml, on a method that skips when the command already exists and therefore never upgrades
+    it either. `apt.py`'s deb-url resolution is deliberately not folded in here — it reports and
+    returns instead of raising, because a failed .deb install is one package rather than the phase.
+    """
+    if "{version}" not in url:
+        return url
+    if version_cmd := cfg.get("version_cmd"):
+        version = c.run(version_cmd, hide=True).stdout.strip()
+    elif version_url := cfg.get("version_url"):
+        version = c.run(f"curl -fsSL {version_url} | head -1", hide=True).stdout.strip()
+    else:
+        raise util.missing_fields(name, f"version_cmd or version_url ({field} has {{version}})")
+    return url.format(version=version)
+
+
 def _install_binary(c: Context, name: str, cfg: util.PackageConfig) -> None:
     check_cmd = cfg.get("check_cmd", name)
     if util.DRY_RUN:
@@ -56,10 +77,11 @@ def _install_binary(c: Context, name: str, cfg: util.PackageConfig) -> None:
         return
     if "url" not in cfg:
         raise util.missing_fields(name, "url")
+    url = _resolve_url_version(c, name, cfg["url"], cfg, "url")
     dest = Path.home() / ".local" / "bin" / check_cmd
     dest.parent.mkdir(parents=True, exist_ok=True)
     print(f"[{name}] installing...")
-    c.run(f"curl -fsSL {cfg['url']} -o {dest}")
+    c.run(f'curl -fsSL "{url}" -o {dest}')
     c.run(f"chmod +x {dest}")
     print(f"[{name}] installed")
 
@@ -139,15 +161,7 @@ def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  #
 
     if "download_url" not in cfg:
         raise util.missing_fields(name, "download_url")
-    url = cfg["download_url"]
-    if "{version}" in url:
-        if version_cmd := cfg.get("version_cmd"):
-            version = c.run(version_cmd, hide=True).stdout.strip()
-        elif version_url := cfg.get("version_url"):
-            version = c.run(f"curl -fsSL {version_url} | head -1", hide=True).stdout.strip()
-        else:
-            raise util.missing_fields(name, "version_cmd or version_url (download_url has {version})")
-        url = url.format(version=version)
+    url = _resolve_url_version(c, name, cfg["download_url"], cfg, "download_url")
 
     print(f"[{name}] installing...")
     # Downloaded to a file rather than piped into tar, because tar can only auto-detect an

@@ -88,7 +88,10 @@
 #   Only one of url / download_page is needed; url takes priority if both are set.
 #
 # binary sections:
-#   url           direct URL to download as an executable into ~/.local/bin/<check_cmd>
+#   url           direct URL to download as an executable into ~/.local/bin/<check_cmd>. Supports
+#                 {version} + version_cmd / version_url exactly like archive's download_url below —
+#                 needed wherever upstream names the version in the asset filename, since this
+#                 method skips when the command already exists and so never revisits a frozen URL
 #   check_cmd     binary name to check/install as (default: section name)
 #
 # archive sections:
