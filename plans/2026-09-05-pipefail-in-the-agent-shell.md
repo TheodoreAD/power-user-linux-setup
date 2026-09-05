@@ -1,6 +1,6 @@
 ---
-status: in-progress
-updated: 2026-09-05
+status: landed
+updated: 2026-09-06
 source_repo: github.com-personal/agent-skills
 source_session: 4e6fc3cc-eebb-4ea1-b035-ca0112dc9982.jsonl
 source_moment: 2026-09-04T22:17:38Z
@@ -91,12 +91,13 @@ no difference. `setopt | rg pipefail` returns `pipefail`; `(exit 3) | tail -1` r
 success. The `| head` side behaves as the child-zsh probe predicted — 141 for a SIGPIPE'd `git log`,
 1 for a truncated `rg`, 0 for an untruncated `ls`.
 
-[UNVERIFIED: whether the piped-gate _rate_ moves. Compare against
-**`~/.local/state/session-bash-audit/2026-09-05-pipefail-live-rescored.json`**, not the
-`…-pipefail-live.json` this plan originally named. Truthfulness is the goal and is already achieved;
-a rate change would be a bonus, not the test.]
+**Whether the piped-gate _rate_ moves is answered, and it is not this plan's question.** The first
+post-deploy sample says it did not, and the habit belongs to
+`plans/2026-08-23-global-agents-md-adherence-watch.md`, which carries the sample as session 18
+together with the two instrument caveats below. Truthfulness was the goal and it is achieved; a rate
+change would have been a bonus, not the test.
 
-### Samples against that question
+### The sample, kept here only as the summary — the watch owns it
 
 Merged in 2026-09-05 from `2026-09-05-piped-gate-rate-after-pipefail-one-session.md`, filed for this
 repo from an `ingesta` session (`51a36fd5-b684-4cfb-8848-a1a5937b294c.jsonl`,
@@ -229,15 +230,19 @@ failed. Neither alone gives that.
 template most of all, since every repo it generates would be born that way. Filed for `repo-tasks`
 as `2026-09-05-report-mode-reaches-no-consumer-by-itself.md` rather than fixed from here.
 
-[NEEDS CLARIFICATION: whether the guard stays `CLAUDECODE` or widens. The variable is useful to any
-agent harness, `CLAUDECODE` is the only such marker this machine sets, and inventing a broader
-condition with nothing to test it against is worse than a narrow one that works. Recommend keeping
-the existing guard and widening when a second harness actually appears — the same call this plan
-already makes for `PIPE_FAIL`.]
+~~[NEEDS CLARIFICATION: whether the guard stays `CLAUDECODE` or widens.]~~ **Answered 2026-09-06: it
+stays.** `CLAUDECODE` is the only agent-harness marker this machine sets, so a broader condition
+would have nothing to test it against — and an untested guard on a variable that changes what every
+gate prints is the wrong thing to speculate with. Widen it when a second harness actually appears,
+which is the same call this plan already makes for `PIPE_FAIL`; the snippet is written so a second
+guard is one added clause. `plans/2026-09-02-agent-harness-support-matrix.md` is where a second
+harness would be noticed.
 
-[NEEDS CLARIFICATION: whether this repo's own CI should set it. Recommend **no** — a GitHub Actions
-log is scrolled by a human reading a failure, and full streaming is what belongs there. Recorded
-because it will be asked.]
+~~[NEEDS CLARIFICATION: whether this repo's own CI should set it.]~~ **Answered 2026-09-06: no.** A
+GitHub Actions log is read by a human scrolling a failure, and full streaming is what belongs there
+— folding output to one line per command optimises for an agent's context window, which a runner
+does not have. Recorded rather than left implicit because the symmetry ("agents get it, why not
+CI?") makes it a question someone will ask.
 
 The pin was the prerequisite and it is no longer outstanding: this repo's `repo-tasks` pin moved
 `9d57d464` -> `7bb880b0` in the same session, as the `power-user-linux-setup` half of the batched
