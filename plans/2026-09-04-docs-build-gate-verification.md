@@ -150,6 +150,39 @@ summary line changing to "Fix, then check, then build the docs site". That test'
 exactly this — it goes stale with no commit in this repo — and it is the reason a `repo-tasks` bump
 is never a one-file change here.]
 
+## Migrated to
+
+Retired 2026-09-06. Every step below is done, the deletion gate is clean (no open `DEFERRED` or
+`UNVERIFIED`), and `refs` found no inbound links.
+
+- **`contributing/zensical.md`, "Renaming a heading is an anchor change"** — rewritten rather than
+  extended, because what was there had gone false in three places: it claimed `--strict` is the only
+  check that sees an anchor, that `docs.link-check` stops at the `#`, and that the docs build
+  joining the gate was still pending. It now describes both checks, names the `docs_dir`-only
+  coverage bound that makes `link_check` the one covering `AGENTS.md`/`contributing/`/`plans/`, and
+  keeps the two red deploys as the evidence. Re-verified against the pinned `repo_tasks` before
+  writing, not copied from this plan: `_bad_link` resolves fragments against the union of the `toc`
+  and github sluggers, and `quality.precommit` is `pre=[fix, *_CHECKS, docs_build]`.
+- **`contributing/zensical.md`, "Checklist for next time"** — the `[DECISION:` on keeping `0.0.44`,
+  with the 2026-09-02 red deploy that a single pin exists to prevent and the reason a bump is now
+  cheap to attempt but still deliberate.
+- **`contributing/repo-family-architecture.md`, "Landing a change the test assigns to a sibling
+  repo"** — the divergence itself, generalised. It sits under "The test that actually settles it"
+  because that section answers which repo owns a change and this one answers how it gets there.
+
+Deliberately not migrated:
+
+- **The placement decision itself.** `repo-tasks` owns it and states it currently, in
+  `quality.precommit`'s docstring together with the argument it beat. A second copy here would
+  diverge, which is the specific failure this plan is about.
+- **The verification table, the `## Evidence` block and the timings.** A log of one afternoon's
+  runs; the property it established is now asserted by the gate on every commit.
+- **The `test_committed_task_index_matches_the_namespace` pitfall.** Already in that test's own
+  docstring, checked rather than assumed: "a `repo-tasks` bump changes the task surface here".
+- **The stale `docs.build` docstring.** Still present on `repo-tasks` `main`, saying "In
+  `quality.check`" and "`link_check` strips the fragment by design" — both false in the same package
+  that ships them. Filed for that repo rather than fixed from here.
+
 ## Recommended direction
 
 1. ~~Update the `repo_tasks` this repo resolves.~~ **Done** — `02975ab` takes `9d57d46`.
