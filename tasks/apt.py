@@ -1,3 +1,4 @@
+from enum import StrEnum
 from pathlib import Path
 
 from invoke import Context, Exit, task
@@ -264,6 +265,21 @@ def install_repos(c: Context):
 # ---------------------------------------------------------------------------
 
 
+class DebOutcome(StrEnum):
+    """What became of one `dpkg -i`, and only the last of the three is a failure.
+
+    The distinction is the whole reason install_debs can report failures at all. `dpkg -i` exits
+    non-zero for a .deb whose dependencies are not on the system yet, which the closing
+    `apt-get install -f -y` repairs — so that exit code is not evidence and UNCONFIGURED is a normal
+    intermediate state. A download that 404s or an archive with no .deb in it is repaired by
+    nothing.
+    """
+
+    INSTALLED = "installed"
+    UNCONFIGURED = "unconfigured"
+    FAILED = "failed"
+
+
 def _resolve_version(c: Context, name: str, cfg: util.PackageConfig) -> str | None:
     """Return the version/tag string for a deb-github package, or None on failure."""
     if "tag" in cfg:
@@ -284,17 +300,14 @@ def _resolve_version(c: Context, name: str, cfg: util.PackageConfig) -> str | No
     return version
 
 
-def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) -> bool:
-    """Download and dpkg-install a deb-github asset. Returns True if dpkg accepted it outright.
+def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) -> DebOutcome:
+    """Download and dpkg-install a deb-github asset.
 
     Some projects (e.g. flameshot's CI artifacts) publish the .deb wrapped in a .zip rather than
     as a bare asset — unzip to a scratch dir and install whatever .deb is inside.
 
-    False is not the same as "failed". `dpkg -i` exits non-zero for a .deb whose dependencies
-    aren't on the system yet and leaves the package unconfigured, which is precisely what
-    install_debs()'s closing `apt-get install -f -y` repairs — so the caller reports a deferred
-    install rather than a failure, and the download/unzip failures above, which nothing later can
-    repair, are the ones that say FAILED.
+    Every FAILED return here is a download or archive problem, which is why they can be reported as
+    failures without waiting for `apt-get install -f`: see DebOutcome.
     """
     if "repo" not in cfg or "asset" not in cfg:
         raise util.missing_fields(name, "repo", "asset")
@@ -307,7 +320,7 @@ def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) 
     )
     if not result.ok:
         print(f"[{name}] FAILED: download of {asset}")
-        return False
+        return DebOutcome.FAILED
 
     if downloaded.endswith(".zip"):
         extract_dir = f"/tmp/{name}-deb-extract"
@@ -315,51 +328,63 @@ def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) 
         if not c.run(f"unzip -oq {downloaded} -d {extract_dir}", warn=True).ok:
             print(f"[{name}] FAILED: could not unzip {asset}")
             c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
-            return False
+            return DebOutcome.FAILED
         deb_result = c.run(f"find {extract_dir} -name '*.deb' | head -1", hide=True, warn=True)
         deb = deb_result.stdout.strip()
         if not deb:
             print(f"[{name}] FAILED: no .deb inside {asset}")
             c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
-            return False
+            return DebOutcome.FAILED
         accepted = c.run(util.dpkg_command(f"-i {deb}"), warn=True).ok
         c.run(f"rm -rf {downloaded} {extract_dir}", warn=True)
     else:
         accepted = c.run(util.dpkg_command(f"-i {downloaded}"), warn=True).ok
         c.run(f"rm -f {downloaded}", warn=True)
-    return accepted
+    return DebOutcome.INSTALLED if accepted else DebOutcome.UNCONFIGURED
 
 
 def _dpkg_install_and_report(
     c: Context, name: str, cfg: util.PackageConfig, version: str, verb: str, past_verb: str
-) -> None:
+) -> str | None:
     """Download+dpkg-install `version` and print a "<verb>..."/"<past_verb>" pair around it —
-    shared by the first-install path (installing/installed) and upgrade_debs() (upgrading/upgraded)."""
+    shared by the first-install path (installing/installed) and upgrade_debs() (upgrading/upgraded).
+
+    Returns a one-line reason when the package cannot be installed at all, for the caller's failure
+    summary, and None otherwise — including for UNCONFIGURED, which is not a failure.
+    """
     tag_prefix = cfg.get("tag_prefix", "v")
     print(f"[{name}] {verb} {tag_prefix}{version}...")
-    if _dpkg_install(c, name, cfg, version):
+    outcome = _dpkg_install(c, name, cfg, version)
+    if outcome is DebOutcome.INSTALLED:
         print(f"[{name}] {past_verb} {tag_prefix}{version}")
-    else:
+        return None
+    if outcome is DebOutcome.UNCONFIGURED:
         # Previously this printed nothing at all, so a package dpkg had left unconfigured was
         # indistinguishable in the log from one that was never reached.
         print(f"[{name}] {tag_prefix}{version} unconfigured — deferred to `apt-get install -f`")
+        return None
+    # And this line used to print for a 404 too, promising a repair that cannot apply: `-f` fixes a
+    # package dpkg has, and a download that failed left dpkg nothing to fix.
+    return f"could not fetch {tag_prefix}{version}"
 
 
-def _install_github_deb(c: Context, name: str, cfg: util.PackageConfig) -> None:
+def _install_github_deb(c: Context, name: str, cfg: util.PackageConfig) -> str | None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
         print(f"[{name}] {util.ok_label(ok)}")
-        return
+        return None
 
+    failure: str | None = None
     if not util.command_exists(cfg.get("check_cmd", name)):
         version = _resolve_version(c, name, cfg)
         if version is None:
-            return
-        _dpkg_install_and_report(c, name, cfg, version, "installing", "installed")
+            return "could not resolve the latest release"
+        failure = _dpkg_install_and_report(c, name, cfg, version, "installing", "installed")
     else:
         print(f"[{name}] already installed")
 
     deploy.apply_config_files(name, cfg)
+    return failure
 
 
 def _report_deb_result(name: str, accepted: bool) -> None:
@@ -400,41 +425,45 @@ def _install_manual_deb(c: Context, name: str, page: str) -> None:
     _report_deb_result(name, c.run(util.dpkg_command(f"-i {path}"), warn=True).ok)
 
 
-def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> None:
+def _install_deb_url(c: Context, name: str, cfg: util.PackageConfig) -> str | None:
     if util.DRY_RUN:
         ok = util.command_exists(cfg.get("check_cmd", name))
         print(f"[{name}] {util.ok_label(ok)}")
-        return
+        return None
     if util.command_exists(cfg.get("check_cmd", name)):
         print(f"[{name}] already installed")
-        return
+        return None
     url = cfg.get("url", "")
     if not url:
         page = cfg.get("download_page", "")
         if not page:
-            print(f"[{name}] skipped — no url or download_page set")
-            return
+            # A declaration that can never install anything, so it is a failure rather than a skip
+            # — unlike the manual-download branch below, which is a package the run deliberately
+            # left alone.
+            print(f"[{name}] FAILED: neither url nor download_page is set")
+            return "no url or download_page in setup.toml"
         _install_manual_deb(c, name, page)
-        return
+        return None
     if "{version}" in url:
         if "version_cmd" not in cfg:
             raise util.missing_fields(name, "version_cmd")
         version_result = c.run(cfg["version_cmd"], hide=True, warn=True)
         if not version_result.ok:
             print(f"[{name}] FAILED: version_cmd — cannot build the download URL")
-            return
+            return "version_cmd failed, so the download URL could not be built"
         url = url.format(version=version_result.stdout.strip())
     print(f"[{name}] installing...")
     deb = f"/tmp/{name}.deb"
     if not c.run(f'curl -fsSL "{url}" -o {deb}', warn=True).ok:
         print(f"[{name}] FAILED: download from {url}")
         c.run(f"rm -f {deb}", warn=True)
-        return
+        return "download failed"
     accepted = c.run(util.dpkg_command(f"-i {deb}"), warn=True).ok
     # Unconditional, unlike the `&& rm` this replaced: a dpkg failure used to leave the .deb in
     # /tmp, where the next run neither reuses nor cleans it.
     c.run(f"rm -f {deb}", warn=True)
     _report_deb_result(name, accepted)
+    return None
 
 
 def _cache_size_report(c: Context, label: str) -> None:
@@ -476,22 +505,46 @@ def clean_cache_full(c: Context):
 
 @task
 def install_debs(c: Context):
-    """Install packages sourced from GitHub releases or direct deb URLs."""
+    """Install packages sourced from GitHub releases or direct deb URLs.
+
+    Fails the run when a package could not be fetched at all, the same way install_base does — a
+    run where every download 404'd used to exit 0 having installed nothing.
+
+    What made that look unanswerable is that `dpkg -i`'s exit code genuinely is not evidence here:
+    it goes non-zero for a package whose dependencies are not in place yet, and the closing
+    `apt-get install -f -y` is what repairs exactly that. But only that one outcome is ambiguous.
+    A release lookup that returned nothing, a 404, an archive with no .deb in it — none of those
+    leave dpkg anything to repair, so they can be reported without waiting for the `-f` pass and
+    without a second existence sweep duplicating `verify.all`. See DebOutcome.
+
+    What is still not covered, deliberately: a package that downloaded fine, dpkg left
+    unconfigured, and `-f` then failed to repair. That one needs the check_cmd sweep `verify.all`
+    already performs one phase later, and duplicating it here would buy a slightly earlier failure
+    for a second copy of the same list.
+    """
     util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
+    failed: Failures = {}
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
-        _install_github_deb(c, name, cfg)
+        if reason := _install_github_deb(c, name, cfg):
+            failed[name] = [reason]
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_URL).items():
-        _install_deb_url(c, name, cfg)
+        if reason := _install_deb_url(c, name, cfg):
+            failed[name] = [reason]
 
-    if not util.DRY_RUN:
-        # Both loops above install via plain `dpkg -i`, which doesn't resolve dependencies — a
-        # .deb needing a package not already on the system (e.g. google-chrome-stable needing
-        # fonts-liberation/libasound2/libnspr4/libnss3, unremarkable on an aged daily-driver
-        # machine but missing on a fresh install) leaves dpkg with that package "unconfigured"
-        # instead of actually installed. `apt-get install -f` resolves and installs whatever's
-        # currently missing for any package dpkg left in that state; cheap no-op if nothing broke.
-        c.run(util.apt_command("install -f -y"), warn=True)
+    # Both loops above install via plain `dpkg -i`, which doesn't resolve dependencies — a .deb
+    # needing a package not already on the system (e.g. google-chrome-stable needing
+    # fonts-liberation/libasound2/libnspr4/libnss3, unremarkable on an aged daily-driver machine but
+    # missing on a fresh install) leaves dpkg with that package "unconfigured" instead of actually
+    # installed. `apt-get install -f` resolves and installs whatever's currently missing for any
+    # package dpkg left in that state; cheap no-op if nothing broke.
+    #
+    # Its own exit code, unlike dpkg's, is evidence: this is the repair, so nothing comes after it
+    # to make a failure here provisional.
+    if not util.DRY_RUN and not c.run(util.apt_command("install -f -y"), warn=True).ok:
+        failed["apt-get install -f"] = ["could not repair the packages dpkg left unconfigured"]
+
+    _report_failures("apt.install-debs", failed)
 
 
 @task
@@ -541,12 +594,20 @@ def uninstall(c: Context, name: str):
 
 @task
 def upgrade_debs(c: Context):
-    """Upgrade all deb-github packages to their latest versions (re-downloads and reinstalls each)."""
+    """Upgrade all deb-github packages to their latest versions (re-downloads and reinstalls each).
+
+    Reports the same failures install_debs does, for the same reason — an upgrade sweep where every
+    download 404'd is worth more than a zero exit.
+    """
+    failed: Failures = {}
     for name, cfg in util.packages_by_method(util.PackageMethod.DEB_GITHUB).items():
         version = _resolve_version(c, name, cfg)
         if version is None:
+            failed[name] = ["could not resolve the latest release"]
             continue
-        _dpkg_install_and_report(c, name, cfg, version, "upgrading to", "upgraded to")
+        if reason := _dpkg_install_and_report(c, name, cfg, version, "upgrading to", "upgraded to"):
+            failed[name] = [reason]
+    _report_failures("apt.upgrade-debs", failed)
 
 
 @task

@@ -285,3 +285,89 @@ def test_install_deb_url_treats_an_empty_answer_as_skip(monkeypatch):
     apt._install_deb_url(c, "manual", _MANUAL)
 
     assert c.commands == []
+
+
+# ---------------------------------------------------------------------------
+# install_debs — a run that installed nothing used to exit 0
+# ---------------------------------------------------------------------------
+
+
+_GITHUB_DEB: util.PackageConfig = {"repo": "acme/tool", "asset": "tool_{version}.deb", "tag": "1.0"}
+
+
+@pytest.fixture
+def _debs(monkeypatch):
+    """Nothing installed, no sudo, no apt requirement — the fresh-machine shape."""
+    monkeypatch.setattr(util, "ensure_sudo", lambda: None)
+    monkeypatch.setattr(util, "require_apt", lambda: None)
+    monkeypatch.setattr(util, "command_exists", lambda _cmd: False)
+    monkeypatch.setattr(deploy, "apply_config_files", lambda _name, _cfg: None)
+
+
+def _deb_packages(monkeypatch, github: dict[str, util.PackageConfig], url: dict[str, util.PackageConfig]) -> None:
+    monkeypatch.setattr(
+        util,
+        "packages_by_method",
+        lambda m, _g=github, _u=url: dict(_g) if m == util.PackageMethod.DEB_GITHUB else dict(_u),
+    )
+
+
+@pytest.mark.usefixtures("_debs")
+def test_install_debs_fails_the_run_when_a_download_404s(monkeypatch):
+    """The deferred item: both installers reported and returned, so a run where every download
+    failed exited 0 having installed nothing."""
+    _deb_packages(monkeypatch, {"tool": _GITHUB_DEB}, {})
+
+    with pytest.raises(Exit) as excinfo:
+        apt.install_debs(_FakeContext(fail=["releases/download"]))
+
+    assert "[tool]" in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("_debs")
+def test_install_debs_does_not_fail_on_a_package_dpkg_left_unconfigured(monkeypatch):
+    """The distinction the whole change rests on. `dpkg -i` exits non-zero for a .deb whose
+    dependencies are not on the system yet — google-chrome-stable on a fresh machine — and the
+    closing `apt-get install -f -y` is what repairs it. Treating that exit code as a failure would
+    fail runs that are about to succeed.
+    """
+    _deb_packages(monkeypatch, {"tool": _GITHUB_DEB}, {})
+    c = _FakeContext(fail=["dpkg -i"])
+
+    apt.install_debs(c)  # must not raise
+
+    assert any("install -f -y" in cmd for cmd in c.commands), "the repair pass is what makes this survivable"
+
+
+@pytest.mark.usefixtures("_debs")
+def test_install_debs_fails_when_the_repair_pass_itself_fails(monkeypatch):
+    """`apt-get install -f` is the repair, so nothing comes after it to make its failure
+    provisional — unlike dpkg's, its exit code is evidence and was being discarded."""
+    _deb_packages(monkeypatch, {}, {})
+
+    with pytest.raises(Exit) as excinfo:
+        apt.install_debs(_FakeContext(fail=["install -f -y"]))
+
+    assert "install -f" in str(excinfo.value)
+
+
+@pytest.mark.usefixtures("_debs")
+def test_install_debs_does_not_blame_a_deliberately_skipped_manual_download(monkeypatch):
+    """A `download_page` package with nobody at the terminal is a package the run left alone, not
+    one that failed — the distinction the deferred item named as the open part."""
+    monkeypatch.setattr(sys, "stdin", _NoTty())
+    _deb_packages(monkeypatch, {}, {"manual": _MANUAL})
+
+    apt.install_debs(_FakeContext())  # must not raise
+
+
+@pytest.mark.usefixtures("_debs")
+def test_a_failed_download_is_not_reported_as_deferred_to_the_repair_pass(monkeypatch, capsys):
+    """`-f` repairs a package dpkg has; a download that 404'd left dpkg nothing to repair. Both
+    outcomes used to print the same "unconfigured — deferred" line."""
+    _deb_packages(monkeypatch, {"tool": _GITHUB_DEB}, {})
+
+    with pytest.raises(Exit):
+        apt.install_debs(_FakeContext(fail=["releases/download"]))
+
+    assert "unconfigured" not in capsys.readouterr().out
