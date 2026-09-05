@@ -190,8 +190,9 @@ surprise — without the env var everything runs normally, with it the runner is
 positions hold at once, and **this repo is where they are reconciled**: the variable is set by the
 environment for agent shells, so no session has to reach for anything, while a human at a terminal
 and a CI runner keep stock invoke. ("Flip the default" and "reach the population" looked like the
-same lever and were not — the general form of that lesson is
-[`2026-09-05-least-surprise-is-not-written-down-anywhere.md`](2026-09-05-least-surprise-is-not-written-down-anywhere.md).)
+same lever and were not — the general form of that lesson is now a rule, in `~/AGENTS.md`'s "Adding
+a flag, or changing what a tool does by default", with its evidence under the matching heading in
+`contributing/global-agents-md.md`.)
 
 The change is one line beside the `PIPE_FAIL` one, under the same `CLAUDECODE` guard:
 

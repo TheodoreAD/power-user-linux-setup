@@ -476,12 +476,11 @@ and the discipline that actually keeps the file small lives upstream in the admi
 pass that trims 1,000 words while the intake gate stays open just schedules the next pass.
 
 [DEFERRED: **a candidate admission signal the criteria do not currently name — "the user believes
-this rule is already recorded".** Moved here 2026-09-05 from
-`2026-09-05-least-surprise-is-not-written-down-anywhere.md` — landed the same day and awaiting
-retirement once its commits are pushed — whose own case is the evidence: the user wrote _"i'm sure
-i've mentioned this is important in our projects"_ about a principle that `rg -in 'least surprise'`
-could not find, after a session had already shipped and pushed the design it would have prevented.
-Arguably that is direct evidence for admission and belongs in `contributing/global-agents-md.md`'s
-criteria. Kept as an observation rather than a proposal, which is how it was filed — it is that
-document's call, and this plan is where it waits because the intake gate is this plan's own
-subject.]
+this rule is already recorded".** Moved here 2026-09-05 from the now-retired
+`2026-09-05-least-surprise-is-not-written-down-anywhere.md` — `plans.py archive --file` on that name
+reads it back — whose own case is the evidence: the user wrote _"i'm sure i've mentioned this is
+important in our projects"_ about a principle that `rg -in 'least surprise'` could not find, after a
+session had already shipped and pushed the design it would have prevented. Arguably that is direct
+evidence for admission and belongs in `contributing/global-agents-md.md`'s criteria. Kept as an
+observation rather than a proposal, which is how it was filed — it is that document's call, and this
+plan is where it waits because the intake gate is this plan's own subject.]
