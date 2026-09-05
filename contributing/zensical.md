@@ -194,27 +194,51 @@ in `docs/kubernetes.md` during the original mkdocs → zensical migration. Keep 
 
 ### Renaming a heading is an anchor change
 
-The `unresolved heading anchor` half of that list is the one worth knowing about, because
-`zensical build --strict` is the **only** check in this repo that catches it. A link written as
-`claude-code.md#some-heading` keeps a correct path when the heading it points at gets renamed — only
-the fragment goes stale — and:
+The `unresolved heading anchor` half of that list is worth knowing about because a rename produces a
+link that is wrong in a way nothing reads as wrong. `claude-code.md#some-heading` keeps a correct
+path when the heading it points at is renamed — only the fragment goes stale — so `dprint` formats
+the markdown without reading it as a document, `pytest` never renders a page, and a reviewer reads
+the link as fine because it _is_ fine, at the path. The rename also lands in a different file from
+the link, usually in a commit about something else.
 
-- `inv docs.link-check` passes. It resolves the file and stops at the `#` on purpose;
-  `repo_tasks/docs.py`'s `_broken_link` says so in its own docstring.
-- `dprint` formats markdown without reading it as a document, `pytest` never renders a page, and a
-  reviewer reads the link as fine because it _is_ fine, at the path.
-- The rename lands in a different file from the link, usually in a commit about something else.
-
-It has shipped a red deploy here twice, on `2a4de19` and `ae59318`: `docs/claude-code.md`'s
+It shipped a red deploy here twice, on `2a4de19` and `ae59318`: `docs/claude-code.md`'s
 global-instructions heading was renamed in `e7b481e` while `docs/index.md` kept linking to the old
 anchor, `CI` stayed green both times, and the published site quietly served the last good build.
 
-**After renaming any heading in `docs/`, grep for inbound links to the old anchor and run
-`inv docs.build`.** The `--strict` mode is not just a CI nicety; until `docs.build` joins the gate
-(`plans/2026-09-04-precommit-does-not-build-the-docs.md`, whose remaining step is a `repo-tasks`
-change) it is a manual step, and the only one that exists.
+**Two checks catch it now, and neither is a manual step any more.** Both run under
+`inv quality.precommit`:
+
+- **`inv docs.link-check` resolves the fragment**, not just the file, against the union of what
+  python-markdown's `toc` extension and github.com would emit as a slug — the two sluggers a reader
+  of this repo actually follows. It reports the nearest surviving anchor as a hint, and it walks
+  **every tracked `.md`**, which is the coverage that matters: `--strict` only walks `docs_dir`
+  (`mkdocs.yml` sets `docs_dir: docs`), so anchors written in `AGENTS.md`, `CONTRIBUTING.md`,
+  `contributing/*.md` or `plans/*.md` are checked by this and by nothing else. Three such links
+  existed when that was measured, all pointing into `docs/`, and all had to be verified by hand.
+- **`zensical build --strict` is defence in depth behind it**, catching whatever a renderer objects
+  to that a link checker cannot see. It sits in `quality.precommit`'s chain rather than
+  `quality.check`'s, because `check` is the read-only half by construction and zensical offers no
+  way to build without writing a site into the tree — `repo_tasks.quality.precommit`'s docstring
+  carries that decision and the argument it beat.
+
+Historical note for anyone reading an older session or plan: until 2026-09-04 `--strict` genuinely
+was the only check that saw an anchor, and `docs.link-check` stripped the fragment by design. The
+helper that does the resolving is `repo_tasks/docs.py`'s `_bad_link` — cited here only because it
+was `_broken_link` in that same window, and a private helper's name is the least stable thing to
+hang a citation on.
 
 ## Checklist for next time (re-verifying after a version bump)
+
+**A bump is its own deliberate task, never something inherited.** The pin's job is that the gate, CI
+and the deploy build with the _same_ version, which any single pin resolved from `uv.lock` gives —
+`inv docs.build`, `ci.yml`'s `docs` job and `publish_on_push.yml` all read this one. **Which**
+version it is, is separate. Zensical is early alpha and its versions demonstrably disagree about
+what valid markdown is: a local 0.0.57 against CI's 0.0.44 disagreed about a `[certs]` table cell
+being a link reference, and turned the deploy red on 2026-09-02. That is the whole reason there is a
+pin. Versions also differ in speed by ~30%, so a bump moves gate latency too. It is much cheaper to
+attempt than it was, because the docs build is in `quality.precommit` — a version that disagrees
+about this repo's markdown now fails locally instead of failing the deploy — but it is still a
+change to make on purpose and measure, not to drift into.
 
 Re-run `zensical build --strict` at the repo root and re-check each of the above still holds,
 particularly:
