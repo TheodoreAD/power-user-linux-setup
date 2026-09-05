@@ -11,6 +11,9 @@ PACKAGES_PHASE = [
     docker.configure,
     apt.install_debs,
     tools.install,
+    # After tools.install, not beside docker.configure: the credential helper is a `binary`-method
+    # package that tools.install is what puts on PATH, and this task is a no-op without it.
+    docker.configure_credential_store,
     system.install_apparmor_profiles,
     python.install_tools,
     node.install,

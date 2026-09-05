@@ -41,7 +41,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import certs, chrome, deploy, fonts, gnome, ide, proxy, screenshot, ssh, system, util
+from . import certs, chrome, deploy, docker, fonts, gnome, ide, proxy, screenshot, ssh, system, util
 
 _HOME = Path.home()
 
@@ -357,6 +357,18 @@ def _merge_claims() -> Iterator[Claim]:
     # fonts.py picks whichever parent directory exists. Reporting the one it would pick keeps the
     # inventory honest about which file is actually claimed on this machine.
     vscode = next((p for p in fonts.VSCODE_SETTINGS_PATHS if p.parent.exists()), None)
+    yield Claim(
+        target=f"{_rel(docker.DOCKER_CONFIG)} [credsStore]",
+        writer=Writer.MERGE,
+        authority=Authority.CO_OWNED,
+        tier=Tier.PUBLIC,
+        owner="inv docker.configure-credential-store",
+        source="tasks/docker.py",
+        # The key's value is a constant from this repo, hence PUBLIC — the rest of the document is
+        # docker's, and holds real credentials, which is why only the one key is claimed.
+        note="one key; docker owns auths/credHelpers",
+        path=docker.DOCKER_CONFIG,
+    )
     yield Claim(
         target=_rel(vscode) if vscode else "~/.config/Code/User/settings.json (not installed)",
         writer=Writer.MERGE,

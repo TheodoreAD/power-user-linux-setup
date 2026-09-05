@@ -1587,6 +1587,27 @@ gpg_path = "/usr/share/keyrings/docker-archive-keyring.gpg"
 sources_path = "/etc/apt/sources.list.d/docker.list"
 sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://download.docker.com/linux/ubuntu {codename} stable"
 
+[packages.docker-credential-secretservice]
+description = "Docker credential helper backed by the Secret Service — keeps registry passwords in the OS keyring instead of base64 in ~/.docker/config.json"
+method = "binary"
+tags = ["workstation"]
+check_cmd = "docker-credential-secretservice"
+# Upstream's own release binary, not noble's golang-docker-credential-helpers: that package is
+# 0.6.4+ds1 against an upstream 0.9.x line whose latest shipped 2026-08-26 — three minor versions
+# and years apart, which "judge a package from its own release cadence" says to weigh rather than
+# wave through. The asset filename carries the version, hence version_cmd rather than a URL frozen
+# at whatever release someone last typed here.
+#
+# This is not only docker's helper. helm resolves registry credentials through oras, which reads the
+# same store and falls back to ~/.docker/config.json keyed by host — and oras, unlike docker, does
+# NOT check that the helper binary exists before selecting it: it returns a secretservice store
+# unconditionally and fails when it execs. So a machine with a helm registry config and no helper
+# installed is the broken, hard-to-understand auth failure this entry exists to prevent, which is
+# also why a half-finished install must fail loudly rather than degrade.
+version_cmd = "curl -fsSL https://api.github.com/repos/docker/docker-credential-helpers/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'])\""
+url = "https://github.com/docker/docker-credential-helpers/releases/download/{version}/docker-credential-secretservice-{version}.linux-amd64"
+verify_cmd = "docker-credential-secretservice version"
+
 [packages.terraform]
 description = "Hashicorp Terraform — infrastructure as code"
 method = "apt-repo"

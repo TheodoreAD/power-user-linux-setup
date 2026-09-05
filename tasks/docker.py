@@ -3,11 +3,21 @@ import tempfile
 from pathlib import Path
 from typing import cast
 
-from invoke import Context, task
+from invoke import Context, Exit, task
 
 from . import util
 
 _DAEMON_JSON = Path("/etc/docker/daemon.json")
+
+DOCKER_CONFIG = Path.home() / ".docker" / "config.json"
+CREDS_STORE = "secretservice"
+CREDENTIAL_HELPER = f"docker-credential-{CREDS_STORE}"
+# Nothing resolves, so a stray entry left by an interrupted probe can never be used against a real
+# registry. The secret is a constant for the same reason it is discardable: it is compared against
+# what comes back, and it is never anyone's credential.
+_PROBE_SERVER = "https://pulse-credential-store-check.invalid"
+_PROBE_USERNAME = "pulse-check"
+_PROBE_SECRET = "pulse-round-trip"
 
 _DEFAULTS: util.JsonObject = {
     "log-driver": "json-file",
@@ -109,6 +119,113 @@ def configure(c: Context):
 
     _configure_group(c, util.current_user())
     _configure_daemon_json(c)
+
+
+def _read_docker_config() -> util.JsonObject:
+    if not DOCKER_CONFIG.exists():
+        return {}
+    return cast(util.JsonObject, util.parse_json(DOCKER_CONFIG.read_text()))
+
+
+def _plaintext_auth_count(config: util.JsonObject) -> int:
+    """How many registries still have a base64 `auths` entry. Counted, never named: a registry
+    hostname here is likely to be work infrastructure, and this output goes into a public repo's
+    CI logs and an agent's transcript."""
+    auths = config.get("auths")
+    return len(auths) if isinstance(auths, dict) else 0
+
+
+def _credential_round_trip(c: Context) -> str | None:
+    """Store a throwaway credential through the helper, read it back, erase it. Returns a reason
+    string on failure, or None when the store answered correctly.
+
+    A `which` check passes on exactly the machine where the confusing failure happens — helper
+    installed, Secret Service absent or locked, every registry push failing as though the password
+    were wrong. So presence is not the question; whether the store answers is.
+    """
+    payload = json.dumps({"ServerURL": _PROBE_SERVER, "Username": _PROBE_USERNAME, "Secret": _PROBE_SECRET})
+    stored = c.run(f"printf '%s' '{payload}' | {CREDENTIAL_HELPER} store", hide=True, warn=True)
+    if not stored.ok:
+        return f"`{CREDENTIAL_HELPER} store` failed: {(stored.stderr or stored.stdout).strip()}"
+    got = c.run(f"printf '%s' '{_PROBE_SERVER}' | {CREDENTIAL_HELPER} get", hide=True, warn=True)
+    # Erased before the result is judged, so a mismatch does not also leave the probe behind.
+    c.run(f"printf '%s' '{_PROBE_SERVER}' | {CREDENTIAL_HELPER} erase", hide=True, warn=True)
+    if not got.ok:
+        return f"`{CREDENTIAL_HELPER} get` failed: {(got.stderr or got.stdout).strip()}"
+    if cast(util.JsonObject, util.parse_json(got.stdout)).get("Secret") != _PROBE_SECRET:
+        return f"`{CREDENTIAL_HELPER}` returned a different secret than was stored"
+    return None
+
+
+def _write_creds_store() -> bool:
+    """Set `credsStore`, preserving every other key. True when the file changed."""
+    config = _read_docker_config()
+    if config.get("credsStore") == CREDS_STORE:
+        return False
+    config["credsStore"] = CREDS_STORE
+    DOCKER_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    # 0600 before the write, not after: this file holds credentials, and a new one created under
+    # the default umask would be world-readable for the moment between the two calls.
+    DOCKER_CONFIG.touch(mode=0o600, exist_ok=True)
+    DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
+    return True
+
+
+@task
+def configure_credential_store(c: Context):
+    """Point docker (and, through oras, helm) at the OS secret store instead of a plaintext file.
+
+    `credsStore` is written explicitly rather than left to auto-detection, and that is the whole
+    design. Docker and oras both gate detection on the config having no authentication in it yet
+    (`ContainsAuth()` / `IsAuthConfigured()` — `credsStore`, `credHelpers` or `auths` non-empty), so
+    on any machine that has ever logged in to a registry, installing the helper changes nothing at
+    all. An explicit value is consulted before the detected one and does not depend on what else the
+    file contains.
+
+    Fails loudly rather than degrading, because a half-finished install is worse than none here:
+    oras, unlike docker, does not check that the helper binary exists before selecting it — it
+    returns a secretservice store unconditionally and fails when it execs. A machine with a helm
+    registry config and a missing or unresponsive store is exactly the broken, hard-to-understand
+    auth failure this exists to prevent.
+
+    Existing plaintext `auths` entries are reported, never deleted: migrating one needs that
+    registry's credentials to hand, so it is a deliberate step with the user rather than something a
+    setup run does behind them. Setting `credsStore` does not migrate them either — docker keeps
+    reading the plaintext entry and it keeps working, which is the quiet half of the failure.
+    """
+    if not util.command_exists(CREDENTIAL_HELPER):
+        # Not an error: the helper is a `workstation`-tagged package, so a headless or container
+        # machine legitimately has none. Saying so is the requirement — silently leaving credentials
+        # in a file is the state this task exists to end.
+        print(f"[docker-credentials] {CREDENTIAL_HELPER} not installed — credentials stay in {DOCKER_CONFIG}")
+        return
+
+    config = _read_docker_config()
+    plaintext = _plaintext_auth_count(config)
+    if util.DRY_RUN:
+        configured = config.get("credsStore") == CREDS_STORE
+        print(f"[docker-credentials] credsStore:{util.ok_label(configured)}  plaintext auths: {plaintext}")
+        return
+
+    if reason := _credential_round_trip(c):
+        raise Exit(
+            f"[docker-credentials] the credential helper is installed but the secret store did not answer: {reason}\n"
+            "  Nothing was written. On a desktop this usually means the keyring is locked or the\n"
+            "  Secret Service is not running; `gh auth status` reporting `(keyring)` is a quick\n"
+            "  independent check that the service is up.",
+            code=1,
+        )
+
+    if _write_creds_store():
+        print(f"[docker-credentials] credsStore={CREDS_STORE} written to {DOCKER_CONFIG}")
+    else:
+        print(f"[docker-credentials] credsStore={CREDS_STORE} already set — nothing to do")
+    if plaintext:
+        print(
+            f"[docker-credentials] {plaintext} registry credential(s) still stored as plaintext in that file.\n"
+            "  Migrate each deliberately: `docker login <host>` to re-store it through the helper,\n"
+            "  then delete its `auths` entry — docker reads the plaintext one until you do."
+        )
 
 
 def _prune(c: Context, label: str, flags: str, desc: str) -> None:
