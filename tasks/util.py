@@ -125,6 +125,7 @@ class PackageConfig(TypedDict, total=False):
     claude_permissions_allow: list[str]
     claude_additional_directories: list[str]
     claude_default_mode: str
+    claude_skill_listing_budget_fraction: float
     claude_statusline: StatusLine
     omz_plugin: str | list[str]
     cleanup_paths: list[str]
@@ -293,6 +294,7 @@ class ClaudeSettings(TypedDict, total=False):
 
     permissions: ClaudePermissions
     statusLine: StatusLine
+    skillListingBudgetFraction: float
 
 
 def load_toml(path: Path) -> object:

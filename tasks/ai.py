@@ -493,6 +493,56 @@ def _apply_declared_default_mode() -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: permissions.defaultMode set to {declared!r}")
 
 
+def _apply_declared_skill_listing_budget() -> None:
+    """Sync `[packages.claude-code]`'s `claude_skill_listing_budget_fraction` into
+    ~/.claude/settings.json's top-level `skillListingBudgetFraction`. Same three-outcome scalar
+    shape as the two functions either side of this one — absent -> set; matches -> no-op; set to
+    something else -> ask before overwriting.
+
+    What the number does: the skill listing Claude Code sends the model is capped at
+    `context_window_tokens * 4 * fraction` **characters**, and on overflow user and project skills
+    are demoted to name-only in ascending order of decayed usage — the description dropped whole
+    rather than shortened, so the skill can no longer be matched against a request. The default 0.01
+    is 8,000 characters on a 200k-window model against a real listing here of 18,109. setup.toml
+    carries the arithmetic and the reason 0.02 is too tight.
+
+    A ceiling, not an allocation: on a session whose listing already fits — every model in real use
+    — raising it changes nothing that is sent.
+
+    [PITFALL: this reads `load_config()` rather than `enabled_packages()`, matching
+    `_apply_declared_default_mode` and `_apply_declared_statusline` immediately around it. All three
+    look up one named package rather than scanning, so they are not the blind-scan shape the
+    2026-09-06 audit moved off that call — but they do share the question of whether disabling
+    `[packages.claude-code]` should withdraw the harness settings it declared. That is one decision
+    for all three and a behaviour change, so it is not made here by adding a fourth shape.]
+    """
+    declared = util.load_config()["packages"].get("claude-code", {}).get("claude_skill_listing_budget_fraction")
+    if declared is None:
+        return
+
+    settings = util.load_claude_settings()
+    current = settings.get("skillListingBudgetFraction")
+
+    if util.DRY_RUN:
+        print(f"[ai.install-skills] skillListingBudgetFraction: {util.ok_label(current == declared)}")
+        return
+
+    if current == declared:
+        print("[ai.install-skills] skillListingBudgetFraction: already up to date")
+        return
+
+    if current is not None and not ui.ask(
+        f"~/.claude/settings.json already sets skillListingBudgetFraction={current!r} — replace it with {declared!r}?",
+        default=False,
+    ):
+        print("[ai.install-skills] skillListingBudgetFraction: left existing value in place")
+        return
+
+    settings["skillListingBudgetFraction"] = declared
+    util.write_claude_settings(settings)
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: skillListingBudgetFraction set to {declared!r}")
+
+
 def _apply_declared_statusline() -> None:
     """Point ~/.claude/settings.json's top-level `statusLine` key at the managed script, declared
     via `[packages.claude-statusline]`'s `claude_statusline` field.
@@ -597,8 +647,9 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
     On the default (global) run, also merges every declared `claude_permissions_allow` rule and
     `claude_additional_directories` entry into ~/.claude/settings.json, syncs the declared
-    `claude_default_mode` and `claude_statusline` values into `permissions.defaultMode` /
-    `statusLine`, and checks for GitHub Copilot (see docs/claude-code.md).
+    `claude_default_mode`, `claude_skill_listing_budget_fraction` and `claude_statusline` values
+    into `permissions.defaultMode` / `skillListingBudgetFraction` / `statusLine`, and checks for
+    GitHub Copilot (see docs/claude-code.md).
 
     Before actually installing or updating a skill, shows its own description and asks — same
     `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
@@ -632,6 +683,7 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
         _apply_static_claude_permissions()
         _apply_additional_directories()
         _apply_declared_default_mode()
+        _apply_declared_skill_listing_budget()
         _apply_declared_statusline()
         _note_copilot_permissions()
 

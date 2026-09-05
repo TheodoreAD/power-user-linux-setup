@@ -319,6 +319,32 @@ Read `cli-allowlist.md`'s `mode_covered` section for the matching change on the 
 filesystem commands `acceptEdits` gates by path (`mkdir`, `cp`, `rm`, ...) no longer render as `ask`
 rules, because an explicit `ask` rule would beat the mode's in-scope grant.
 
+## Declaring the skill-listing budget — `claude_skill_listing_budget_fraction`
+
+A third scalar on `[packages.claude-code]`, synced with the same three outcomes:
+`claude_skill_listing_budget_fraction = 0.03` → `skillListingBudgetFraction`.
+
+**The part nobody guesses is that the budget is model-dependent.** Claude Code sends the model a
+listing of every skill's name and description, capped at `context_window_tokens × 4` **characters**
+times this fraction. At the stock `0.01` that is 8,000 characters on a 200k-window model — against a
+real listing on this machine of 18,109 characters over 30 entries. When it overflows, user and
+project skills are demoted to name-only in ascending order of decayed usage, and the description is
+**dropped whole rather than shortened**: a skill listed as `- plan-docs` with nothing after it
+cannot be matched against a request, which is also what keeps it at the bottom of the ranking that
+demoted it. Nothing errors, and the only visible sign is in `claude --debug-file`.
+
+`0.03` gives 24,000 characters, clearing today's listing with room to grow by a third; `0.02` would
+not clear it at all. **It is a ceiling rather than an allocation**, so on a session whose listing
+already fits — every model in real use here — raising it changes nothing that is sent.
+
+This is insurance against a latent failure, not a repair: 11 truncated listings have ever been
+recorded on this machine, 2 of them in a real session, and none since 2026-08-31. Measure the
+current state with `fitness.py budget` from the `skill-fitness` skill, which reads listings the
+harness actually sent rather than probing for new ones. Two settings that look like alternatives are
+deliberately not used — `disableBundledSkills` frees the budget by removing working features, and
+per-skill `skillOverrides` buys the same headroom at the cost of a curated list to revisit whenever
+the CLI ships or drops a bundled skill.
+
 ## The statusline
 
 PULSE ships a custom Claude Code statusline

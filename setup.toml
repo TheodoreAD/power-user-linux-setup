@@ -1036,6 +1036,20 @@ check_cmd = "claude"
 # skill's references/research.md. Synced by `inv ai.install-skills` (asks before replacing a
 # different explicit value).
 claude_default_mode = "acceptEdits"
+# Fraction of the context window Claude Code may spend listing every skill's name and description.
+# The budget is `context_window_tokens * 4 * fraction` CHARACTERS, so the stock 0.01 is 8,000 on a
+# 200k-window model — and this machine's real listing measured 18,109 characters over 30 entries on
+# 2026-08-31. On overflow, user and project skills are demoted to name-only in ascending order of
+# decayed usage: the description is dropped whole, not shortened, and a skill listed as `- plan-docs`
+# cannot be matched against a request. 0.03 gives 24,000 characters, clearing today's listing with
+# room to grow by a third; 0.02 would not even clear it.
+#
+# This is insurance, not a repair: 11 truncated listings have ever been recorded here, 2 of them in a
+# real session and none since 2026-08-31, because every model in actual use has a window far larger
+# than 200k. The budget is a ceiling rather than an allocation, so on a listing that already fits
+# this changes nothing at all. Synced by `inv ai.install-skills` (asks before replacing a different
+# explicit value). Re-measure with `fitness.py budget` from the `skill-fitness` skill.
+claude_skill_listing_budget_fraction = 0.03
 # Where the harness itself puts per-session scratch (`/tmp/claude-1000/<project>/<session>/
 # scratchpad`) and background-job tmp (`~/.claude/jobs/<id>/tmp`). Outside every repo, so without
 # this every scratch write prompts under acceptEdits. File access only — nothing loads from here.

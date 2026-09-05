@@ -898,6 +898,88 @@ def test_apply_declared_default_mode_noop_when_nothing_declared(monkeypatch):
     ai._apply_declared_default_mode()
 
 
+# ---------------------------------------------------------------------------
+# _apply_declared_skill_listing_budget — same scalar shape, one numeric twist
+# ---------------------------------------------------------------------------
+
+
+def _stub_declared_budget(monkeypatch, value=0.03):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {"packages": {"claude-code": {"enabled": True, "claude_skill_listing_budget_fraction": value}}},
+    )
+
+
+def test_apply_declared_budget_sets_when_absent(monkeypatch, capsys):
+    _stub_declared_budget(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"allow": []}})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("no existing value, must never prompt"))
+
+    ai._apply_declared_skill_listing_budget()
+
+    assert written == [{"permissions": {"allow": []}, "skillListingBudgetFraction": 0.03}]
+    assert "skillListingBudgetFraction set to 0.03" in capsys.readouterr().out
+
+
+def test_apply_declared_budget_noop_when_already_correct(monkeypatch, capsys):
+    _stub_declared_budget(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"skillListingBudgetFraction": 0.03})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("already correct, must never write"))
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("already correct, must never prompt"))
+
+    ai._apply_declared_skill_listing_budget()
+
+    assert "already up to date" in capsys.readouterr().out
+
+
+def test_apply_declared_budget_declined_overwrite_leaves_existing(monkeypatch, capsys):
+    _stub_declared_budget(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"skillListingBudgetFraction": 0.05})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("declined, must never write"))
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
+
+    ai._apply_declared_skill_listing_budget()
+
+    assert "left existing value in place" in capsys.readouterr().out
+
+
+def test_apply_declared_budget_confirmed_overwrite_keeps_other_keys(monkeypatch):
+    _stub_declared_budget(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"skillListingBudgetFraction": 0.01, "theme": "dark"})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._apply_declared_skill_listing_budget()
+
+    assert written == [{"skillListingBudgetFraction": 0.03, "theme": "dark"}]
+
+
+def test_apply_declared_budget_noop_when_nothing_declared(monkeypatch):
+    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"claude-code": {"enabled": True}}})
+    monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
+
+    ai._apply_declared_skill_listing_budget()
+
+
+def test_apply_declared_budget_treats_a_declared_zero_as_declared(monkeypatch):
+    """`if not declared` would read 0.0 as "nothing declared" and skip — the one way this scalar
+    differs from the string-valued siblings either side of it. 0.0 is a real setting (list no
+    skills at all), so the guard is `is None`."""
+    _stub_declared_budget(monkeypatch, value=0.0)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("no existing value, must never prompt"))
+
+    ai._apply_declared_skill_listing_budget()
+
+    assert written == [{"skillListingBudgetFraction": 0.0}]
+
+
 # --- static Claude permissions (allow / deny / ask) --------------------------------------------
 #
 # deny and ask matter more than allow here: in `auto` mode a classifier decides, so an allow rule
