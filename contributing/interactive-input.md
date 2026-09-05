@@ -156,6 +156,31 @@ original report, from a different cause entirely.
 `env` rather than a `VAR=value sudo …` prefix (sudo's `env_reset` drops that) or a
 `sudo VAR=value …` prefix (allowed only where sudoers grants `setenv`).
 
+## The read this whole investigation walked past: our own `input()`
+
+Everything above is about a **child process** reading a terminal — sudo through `/dev/tty`, debconf
+through apt. That framing is what let one case survive the pass: `apt._install_deb_url` called
+Python's own `input()`, in the invoke process, so none of the mechanisms above applied to it and
+grepping for `c.run` and `pty=True` could not find it. It sat there through the fix, the write-up
+and a container bake, and was noticed only by re-reading the module months later.
+
+It is the same defect for the person running it. With stdin closed — a `docker build` layer — the
+call raises `EOFError`; with stdin an open pipe it blocks forever, which is indistinguishable from a
+slow download and is exactly the "stuck with no output" shape the original report opened with. Only
+the three `download_page` packages reach it (the Citrix ones, which genuinely have no scriptable
+URL), so it is rare rather than harmless.
+
+**The rule is therefore about the read, not about the runner:** nothing reached from a task may wait
+for typed input unless it has checked that someone is there to type. `util.interactive()` is that
+check, and `util.confirm()`/`util.prompt_text()` carry it internally — so the fix was to stop
+calling `input()` directly rather than to invent anything. A bare `input()` anywhere under `tasks/`
+is the grep worth repeating.
+
+[PITFALL: **the non-interactive branch has to say something useful, not just return.** A silent skip
+in an unattended log is the quiet half of the same problem — the package is missing and nothing
+explains why. It names the download page and what to do instead, which is the shape every other
+`skipped` line in `apt.py` already uses.]
+
 ## What the container run then found
 
 With the sudo path fixed, the same simulation got as far as writing `/etc/wsl.conf` and died on the
