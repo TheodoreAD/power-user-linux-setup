@@ -247,6 +247,30 @@ toolchain reaches (`uv` → pypi + pythonhosted, `npm`, `cargo`, `go`). `allowWr
 places daily work writes outside a repo — the plan store, which `plans.py` touches constantly, and
 the caches and manifests without which `uv` and the audit baselines fail.
 
+[PITFALL: **this machine has the preconditions for a sandbox escape, and enabling the sandbox
+without closing it would report a boundary that is not one.** Found 2026-09-05, before any trial run
+— which is the only reason it was found before being trusted. Three facts together:
+
+- `@anthropic-ai/sandbox-runtime`, the **optional seccomp filter, is what adds Unix domain socket
+  blocking**, and it is **not installed** (`npm ls -g` finds nothing).
+- `/var/run/docker.sock` exists, mode `srw-rw---- root:docker`.
+- The user **is** in the `docker` group.
+
+The sandboxing page names this combination in its own security limitations: _"allowing access to
+`/var/run/docker.sock` effectively grants access to the host system through the Docker socket."_
+With no filter, Unix sockets are not blocked at all, so a sandboxed command that reaches docker.sock
+leaves the boundary entirely. Filesystem and network isolation are unaffected — those are bubblewrap
+and socat, both present — so the sandbox is still worth having; what is absent is the socket layer.
+Closing it is one declared package in `[packages.node].global_packages`, the same route `skills`
+already takes, plus a Claude Code restart, since the dependency check runs at startup.]
+
+[PITFALL: **the same filter governs the ssh-agent socket, so a `git fetch` test run today would not
+answer the question for the configuration actually worth running.** `SSH_AUTH_SOCK` is
+`/run/user/1000/keyring/ssh`, a Unix socket, and with no filter installed it is reachable — so an
+SSH test now would likely pass on the agent-auth path and might stop passing once the filter is
+added. The test is only conclusive when run in the final shape. This is why the ordering below is
+filter first, restart, `/sandbox`, then test — not the reverse.]
+
 [NEEDS CLARIFICATION: **does the sandbox proxy carry SSH, and therefore `git push`?** This is the
 single biggest unknown and the one most likely to make the sandbox feel like a slog. Every remote
 here is `git@github.com`, and the proxy is described in terms of hostnames and HTTPS, with the
@@ -295,9 +319,22 @@ whether a deny can express a CIDR range are both unverified.]
 
 In order, because each step makes the next one honest:
 
-1. **Enable the Bash sandbox** and set `network.allowedDomains`. Free on this machine, and the only
-   step that adds a boundary rather than removing a prompt. Take the AppArmor profile into
-   `setup.toml` at the same time so it stops depending on another package's postinst.
+1. **Enable the Bash sandbox**, in this order, because two of the steps change what the others
+   measure — deferred 2026-09-05, nothing applied:
+   1. Declare `@anthropic-ai/sandbox-runtime` in `[packages.node].global_packages` and install it,
+      closing the docker.sock escape above. Optional in the sense that the sandbox runs without it;
+      not optional on a machine whose user is in the `docker` group.
+   2. Restart Claude Code — the dependency check runs at startup.
+   3. Open `/sandbox`, auto-allow mode, `strictAllowlist` left off. Interactive, so it is the user's
+      step; the harness writing the setting itself is the sanctioned exception to "settings.json is
+      declared, not edited".
+   4. Test in that shape and not before: `git fetch` (the SSH question), `inv quality.precommit` (uv
+      cache plus network), and a `plans.py` write to `~/plans`.
+   5. Only then write `claude_sandbox` + `_apply_declared_sandbox()` and move the settled block into
+      `setup.toml`, so the mechanism is built around a configuration known to work.
+
+   Take the AppArmor profile into `setup.toml` at the same time so it stops depending on another
+   package's postinst.
 2. **Allow `WebSearch`** at user scope on `[packages.claude-code]`. Needs no boundary, removes 55%
    of the friction.
 3. **Then `WebFetch` domains**, single-tenant only, checked against the built-in preapproved set
