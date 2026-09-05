@@ -149,6 +149,33 @@ real, not hypothetically):
   empirically means checking the real exit code, not scanning text output for the word "error" — a
   tool can print a clean summary and still exit nonzero.**
 
+## Landing a change the test assigns to a sibling repo
+
+Writing into another repo's working tree is out, so a change this repo needs from `repo-tasks` or
+`scaffoldapy` is **filed** as a plan in that repo's store mirror and acted on by a session working
+there. That mechanism works — one such plan was absorbed, implemented and retired inside about half
+an hour — and it has exactly one failure mode, hit for real on 2026-09-04.
+
+**A filed plan is a snapshot of what its author knew, and the sibling session implements it
+faithfully.** This repo filed a change putting `docs.build` in `quality.check`, then revised its own
+decision to `quality.precommit` a few hours later, on the ground that `check` is the read-only half
+by construction. The filed copy still said `check`. The `repo-tasks` session absorbed it, built
+exactly that, and retired it — so what shipped carried the superseded reasoning verbatim, in a
+docstring arguing for a placement this repo had already talked itself out of. Both repos then
+believed the question settled, and held opposite answers.
+
+Nothing in either repo's history shows that chain, which is the point: the filed plan is deleted on
+retirement there, and the revision lives here. Two habits follow.
+
+- **A decision you revise after filing is not revised until the filed copy says so.** Flagging the
+  staleness in the local plan is not enough — the session that acts on it never reads the local
+  plan. File a follow-up in the same store mirror, or say plainly in the original that it is
+  superseded and by what.
+- **Then read what actually shipped, not what you asked for.** The placement was corrected the same
+  night once the divergence was noticed; the `docs.build` docstring arguing for `check` survived it,
+  and was still there two days later. A cross-repo change is verified by reading the sibling's code
+  after the bump lands here, not by the sibling's plan having been retired.
+
 ## The runtime/dev-venv split
 
 Extracted from the now-retired `plans/2026-08-20-runtime-dev-venv-split.md` (landed 2026-08-23).
