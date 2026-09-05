@@ -91,10 +91,21 @@ no difference. `setopt | rg pipefail` returns `pipefail`; `(exit 3) | tail -1` r
 success. The `| head` side behaves as the child-zsh probe predicted — 141 for a SIGPIPE'd `git log`,
 1 for a truncated `rg`, 0 for an untruncated `ls`.
 
-[UNVERIFIED: whether the piped-gate _rate_ moves. Baseline saved as
-`~/.local/state/session-bash-audit/2026-09-05-pipefail-live.json`, to be read with
-`audit.py --compare` after a week. Truthfulness is the goal and is already achieved; a rate change
-would be a bonus, not the test.]
+[UNVERIFIED: whether the piped-gate _rate_ moves. Compare against
+**`~/.local/state/session-bash-audit/2026-09-05-pipefail-live-rescored.json`**, not the
+`…-pipefail-live.json` this plan originally named. Truthfulness is the goal and is already achieved;
+a rate change would be a bonus, not the test.]
+
+[PITFALL: **the original baseline was written by a superseded instrument, and nothing in the file
+says so.** It was saved at 02:14 local from the _installed_ `audit.py`, whose mtime shows the
+re-install carrying `0165577` ("a pipe inside quotes is not a pipe") did not land until 18:44 the
+same day — so the baseline predates the commit that changes what counts as a pipe, which is the
+entire subject of this measurement. Re-scoring the same 7-day window under the current code moved
+`exit-masked` **down** (2,383 → 2,323) and `head/tail` flat (3,765 → 3,767) while the call count
+rose by 577, which is the quote fix removing false positives. A `--compare` straddling that commit
+would credit the pattern change to `PIPE_FAIL`, in the direction that flatters it. Both baselines
+are kept — overwriting the old one is a separate filed defect — and `agent-skills`'
+`plans/2026-09-05-quiet-gate-changes-what-the-instruments-see.md` owns the general problem.]
 
 [PITFALL: `audit.py --save-baseline` with no path silently destroyed the pre-`bba2ed9` baseline —
 its default filename is a UTC date, and at 02:13 local (+03:00) that is the previous day's name.

@@ -200,6 +200,16 @@ next reading is inside that band, teaching is spent for this clause and step 3 i
 the same crossroads the `head`/`tail` cluster reached after four attempts, arrived at here after
 one.]
 
+[PITFALL: **the 2026-09-05 counts above were taken with a superseded `audit.py` and shift under the
+current one.** Every `audit.py` call that produced them ran the installed copy at 02:13 and 12:13
+local; the re-install carrying `0165577` and `88bfd42` did not land until 18:44 the same day.
+Re-scored over the same window: `find-not-fd` **41 → 44**, `find-exempt` 5 → 5, `grep-r-not-rg` 150
+→ 151, total calls 13,754 → 14,331 (the window also slid ~10h, so part of that is real growth). The
+`fd`-versus-`find` conclusion is unaffected — the ratio barely moves — but **the next reading must
+be taken with the same instrument as the one it is compared against**, or a pattern change will be
+read as an adherence change. Same caveat, and the same fix, as
+`plans/2026-09-05-pipefail-in-the-agent-shell.md` records for its own baseline.]
+
 [DEFERRED: the general finding, which outlives this rule — a preference clause with an adjacent
 exemption list adheres worse than one without. Two spellings of the same preference in one file, one
 with carve-outs and one without, measured 92% and 57%, and re-measured 2026-09-05 at 94.5% and 60%.

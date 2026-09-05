@@ -150,10 +150,17 @@ restated the same prohibition at a different trigger. Whether that difference ma
 what the next count tests.]
 
 [UNVERIFIED: whether this moves the rate. Baseline is
-`~/.local/state/session-bash-audit/2026-09-05-pipefail-live.json` (32 real defective calls, 21
-sessions, 1.2% of `rg` invocations); re-count with `audit.py --days 7 --compare` after a week, and
-correct for the counter's ~8% prose over-report until that is fixed. If it has not moved, the
-`ask`-rule below is the fallback and the wording lever is spent for this rule too.]
+**`~/.local/state/session-bash-audit/2026-09-05-pipefail-live-rescored.json`** — not the
+`…-pipefail-live.json` first named here, which was written by a superseded `audit.py` (see
+`plans/2026-09-05-pipefail-in-the-agent-shell.md`). Re-count with `audit.py --days 7 --compare`
+after a week, and correct for the counter's ~8% prose over-report until that is fixed. If it has not
+moved, the `ask`-rule below is the fallback and the wording lever is spent for this rule too.]
+
+[PITFALL: **the 39/32 split above is a pre-`0165577` figure; the row now reads 46.** The tagged
+count rose from 39 to 46 when the same window was re-scored under the current instrument, part
+pattern change and part ~10h of real growth. The finding does not turn on the absolute number — it
+turns on the bundle distribution, which no commit here touched, and on there being **no bare `-r`**
+— but the next reading has to come from the same instrument as its baseline.]
 
 ## Open questions
 
