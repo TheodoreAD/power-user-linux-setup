@@ -1091,7 +1091,26 @@ claude_permissions_allow = ["WebSearch"]
 # report what happened, which is what shellcheck asks of any script.
 # `if` rather than `[ … ] && setopt`, which would leave ~/.zshenv's last status non-zero in every
 # shell that is not an agent's.
-zshenv = 'if [ -n "${CLAUDECODE:-}" ]; then setopt PIPE_FAIL; fi'
+#
+# REPO_TASKS_RUN_REPORT is the second half of the same lie, under the same guard. repo-tasks gained
+# an opt-in agent output mode on 2026-09-05: with the variable set, every command it runs with
+# echo=True collapses to one delimited line, folded on success and replayed whole on failure, and a
+# gate ends with a verdict line; with it unset the package touches invoke's config not at all. Its
+# first design made folding the default and was reverted on the rule of least surprise — a shared
+# dependency changing what it does for every consumer's next upgrade, none of whom asked. Setting it
+# from the environment is what reconciles that with the measurement: the 58% of gate runs piped
+# through head/tail in the week to 2026-09-05 were ALL agent sessions, because the corpus is agent
+# transcripts, so the departure can be switched on for exactly that population while a human at a
+# terminal and a CI runner keep stock invoke. Deliberately not set in this repo's own CI: a GitHub
+# Actions log is scrolled by a human reading a failure, and full streaming is what belongs there.
+#
+# The two lines are complementary rather than redundant. PIPE_FAIL makes `inv quality.check 2>&1 |
+# tail -3` exit non-zero on a red run; report mode makes those three lines say which command failed.
+zshenv = '''
+if [ -n "${CLAUDECODE:-}" ]; then
+  setopt PIPE_FAIL
+  export REPO_TASKS_RUN_REPORT=1
+fi'''
 
 [packages.agents-md]
 description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/AGENTS.md and ~/.claude/CLAUDE.md symlink to it"
