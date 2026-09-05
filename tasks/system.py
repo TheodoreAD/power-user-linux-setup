@@ -99,13 +99,14 @@ def set_locale(
 ):
     """Set the system locale via localectl, preserving every variable not named here. Idempotent.
 
-    The defaults are deliberate and measured (see
-    plans/2026-08-30-english-iso-locale-defaults.md). `en_DK.UTF-8` is the only stock locale giving
-    English weekday and month names, a 24-hour clock and `YYYY-MM-DD` dates at once — `en_CA` gets
-    the date right and the clock wrong, `en_GB` the reverse — and it keeps Monday as the first day
-    of the week, which `en_US` would silently flip to Sunday in the desktop calendar. `LC_NUMERIC`
-    is separate because `en_DK` is comma-decimal like a European locale, so it would leave
-    `awk`/`printf` emitting `1,50`; `C.UTF-8` is the dot-decimal answer developer tooling expects.
+    The defaults are deliberate and measured; the comparison table behind them, and what the desktop
+    does and does not take from the locale, are in docs/locale.md. `en_DK.UTF-8` is the only stock
+    locale giving English weekday and month names, a 24-hour clock and `YYYY-MM-DD` dates at once —
+    `en_CA` gets the date right and the clock wrong, `en_GB` the reverse — and it keeps Monday as the
+    first day of the week, which `en_US` would silently flip to Sunday in the desktop calendar.
+    `LC_NUMERIC` is separate because `en_DK` is comma-decimal like a European locale, so it would
+    leave `awk`/`printf` emitting `1,50`; `C.UTF-8` is the dot-decimal answer developer tooling
+    expects.
 
     Read-modify-write rather than a bare `set-locale LANG=…`: localed takes the whole locale
     configuration, so naming only some variables risks dropping the rest. The regional ones a
