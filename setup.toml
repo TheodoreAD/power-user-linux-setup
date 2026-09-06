@@ -414,6 +414,26 @@ method = "apt"
 # config/askpass-zenity.sh.
 tags = ["gui", "shell", "system"]
 
+[packages.dbus-user-session]
+description = "Per-user D-Bus session bus (systemd user unit) — one bus at /run/user/<uid>/bus shared by every session in the distro, so a secret store unlocked once is visible to an IDE-started server too"
+method = "apt"
+# Not gui/desktop-tagged, and that is the point: a session bus is not a display. A WSL2 distro with
+# WSLg has a display and still autolaunches a private bus per process without this, which is how a
+# keyring unlocked in a terminal ends up invisible to everything else. Present already on any
+# machine with a desktop session; this entry is what puts it on the ones without.
+tags = ["system", "shell"]
+check_cmd = "dbus-run-session"
+verify_cmd = "dbus-run-session --version"
+
+[packages.gnome-keyring]
+description = "Secret Service provider — the store inv proxy.install writes the proxy credential into, and docker's credential helper reads registry passwords from"
+method = "apt"
+tags = ["system", "shell"]
+check_cmd = "gnome-keyring-daemon"
+# --version exits cleanly; the daemon only starts when asked to with --start/--daemonize, so this
+# does not leave one running the way px --version did.
+verify_cmd = "gnome-keyring-daemon --version"
+
 [packages.lm-sensors]
 description = "Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command"
 method = "apt"

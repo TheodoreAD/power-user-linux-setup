@@ -312,6 +312,80 @@ that already runs better on the Windows side:
 Drop `ide` from `PULSE_EXCLUDE_TAGS` if you specifically want a Linux-side IDE window running inside
 the distro rather than a remote client from Windows.
 
+### Does an IDE-started process see what PULSE exported?
+
+It matters, because everything `inv certs.install` and `inv proxy.install` configure for the tools
+you actually work in — `SSL_CERT_FILE`, `NODE_EXTRA_CA_CERTS`, `REQUESTS_CA_BUNDLE`, `http_proxy` —
+is exported from `~/.zshenv`, and an IDE server is not a shell you started.
+
+VS Code's Remote-WSL server **runs no startup scripts of its own**; it starts the default shell once
+as an interactive login shell, probes the environment out of it, and hands that to the extension
+host
+([Remote Development Tips and Tricks](https://code.visualstudio.com/docs/remote/troubleshooting)).
+Two consequences:
+
+- **It works because the default shell is zsh.** `inv zsh.configure` sets it with `usermod -s`, and
+  zsh reads `~/.zshenv` on _every_ invocation — so the exports reach the probe. On a distro still
+  defaulting to bash they reach nothing: PULSE writes no file bash reads. If you skip the shell
+  phase, expect the IDE to see none of this.
+- **The probe runs once, at server start.** Anything PULSE exports after that is invisible to a
+  running server — restart it (or `wsl --shutdown` from Windows) once setup has finished. This is
+  the same reason a session started before `.envrc` existed doesn't pick direnv up.
+
+`~/.vscode-server/server-env-setup` is VS Code's own hook if something ever needs to run before the
+server starts. **JetBrains' equivalent is unverified here** — Gateway and the built-in WSL target
+launch a backend inside the distro the same way in principle, but nothing in this repo has checked
+what environment it inherits.
+
+## Assumptions this repo makes about WSL
+
+Stated because three of them were previously lumped together as "headless", which is wrong on a
+modern distro and hid the one that actually bites:
+
+| assumption               | what supplies it                     | what fails without it                             |
+| ------------------------ | ------------------------------------ | ------------------------------------------------- |
+| WSL2 with `systemd=true` | `/etc/wsl.conf`, `inv wsl.fix`       | every `system.*`/`docker.*` task, `--user` units  |
+| **a display**            | WSLg                                 | `gui`/`desktop` packages, the GUI askpass dialog  |
+| **a session D-Bus**      | `[packages.dbus-user-session]`       | nothing is shared between sessions — see below    |
+| **a secret store**       | `[packages.gnome-keyring]`, unlocked | `inv proxy.install`'s credential, docker's helper |
+
+WSLg supplies the display **and nothing else**. A fully modern WSL2 distro with a working display
+still has no session bus and no secret store unless something installs them, which is why those are
+now three separate lines in `inv wsl.check` rather than one WSLg line.
+
+**Run the setup itself from a plain WSL terminal** (Windows Terminal → `wsl.exe`), not from an IDE's
+integrated terminal. Not because prompting fails there — an integrated terminal is a real pty — but
+because the shell PULSE installs, the login shell it sets, and the environment it exports are all
+things an already-running IDE server has cached a copy of. Setting them up underneath it produces a
+machine that is configured correctly and an IDE that cannot see it.
+
+## The secret store, and unlocking it
+
+`inv proxy.install` writes the corporate proxy credential into the OS keyring because that is where
+Px reads it back at its own startup; `inv docker.configure-credential-store` uses the same store for
+registry passwords. On a desktop that store arrives with the GNOME session. Under WSL it does not,
+so PULSE declares it: `[packages.gnome-keyring]` provides it and `[packages.dbus-user-session]`
+provides the bus it is reached over — one bus at `/run/user/<uid>/bus` shared by every session in
+the distro, so a store unlocked once is visible to your terminal and to an IDE-started server alike.
+Without that bus each process autolaunches a private one and shares nothing.
+
+**Installing it does not unlock it, and there is no clean unattended unlock under WSL.** A desktop
+unlocks the login keyring through PAM at graphical login; WSL bypasses TTY login, and WSL2's systemd
+does not fully implement `graphical-session.target`, so nothing performs that step for you (see the
+[Arch wiki](https://wiki.archlinux.org/title/GNOME/Keyring) and
+[microsoft/WSL#9375](https://github.com/microsoft/WSL/discussions/9375)). Two honest options:
+
+- **Unlock once per WSL boot**, then everything on the shared bus sees it:
+  ```shell
+  dbus-run-session -- bash -c 'echo "<your login password>" | gnome-keyring-daemon --unlock --components=secrets'
+  ```
+  Good when you are at the machine anyway. Bad for anything that has to come up on its own.
+- **`inv proxy.install --keyring-fallback`** — the proxy credential goes into a 0600 file instead,
+  and the daemon starts unattended. A real downgrade from a locked store, which is why it is a flag;
+  see [corporate-proxy.md](corporate-proxy.md#when-there-is-no-keyring).
+
+`inv wsl.check` reports which of the two situations you are in before either task asks for anything.
+
 ## Windows-native duplicates
 
 Tagged `windows-native` and excluded by default under WSL — these install and run fine under WSLg,
