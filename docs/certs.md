@@ -83,10 +83,31 @@ under aliases `pulse-corporate-0`, `pulse-corporate-1`, etc. (idempotent — che
 WSL2's trust store is fully independent of Windows' own. IT populating the Windows certificate store
 via Group Policy/Intune does **not** carry over into WSL — `update-ca-certificates` still has to run
 inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an OS-trust-store
-issue, not a networking one). If the bundle needs to be pulled off the Windows side first, that's a
-one-time manual copy (e.g. via `/mnt/c`) — this repo has no automation for reading the Windows
-certificate store or shelling out to `certutil.exe`/`powershell.exe`; usually simplest to just ask
-IT for the raw file directly.
+issue, not a networking one).
+
+`--from-windows` bridges that without a manual file copy:
+
+```shell
+inv certs.check --from-windows      # read-only — names the roots this distro doesn't trust yet
+inv certs.install --from-windows    # installs them, alongside anything else configured
+```
+
+It reads `Cert:\LocalMachine\Root` and `Cert:\CurrentUser\Root` through WSL interop
+(`powershell.exe`, so `/etc/wsl.conf`'s `[interop] enabled` has to be on — `inv wsl.check` reports
+that) and **installs only the roots this distro doesn't already trust**. The Windows Root store
+carries ~50 public CAs alongside the corporate one; trusting all of them would add trust Ubuntu's
+own `ca-certificates` deliberately doesn't carry, so the public set is subtracted by SHA-256
+fingerprint rather than filtered by name. Every remaining root is printed by subject before anything
+is installed — read that list; it is the whole review step.
+
+The filtered export is kept at `~/.local/state/power-user-linux-setup/windows-root-extras.pem`,
+which is also what makes a re-run idempotent. `--from-windows` composes with `--bundle` and with a
+configured `[certs] bundle` rather than replacing either, so a machine with both an IT-provided file
+and a Windows-only root installs both. Outside WSL the flag refuses rather than guessing.
+
+Asking IT for the raw file and pointing `--bundle` at it is still the most direct route when that's
+available; this exists for the common case where the root is already on the Windows side and nobody
+has a copy to hand out.
 
 ## Uninstall / rotation
 
@@ -109,6 +130,11 @@ by hand:
 
 - **Real Windows-issued PKCS#7 bundles are untested** — only locally-generated test fixtures were
   used to build and verify the four detection branches.
+- **`--from-windows` has never run against a real Windows certificate store.** The PowerShell
+  payload, the PEM parsing, the fingerprint diff and the ordering are unit-tested against captured
+  fixtures and a real (locally-generated) certificate; what nobody here can test is that
+  `Get-ChildItem Cert:\...` on a domain-joined machine emits what those fixtures assume. Run
+  `inv certs.check --from-windows` first and read the subjects it prints before installing.
 - **The Java `cacerts` step is untested against a real JDK** — no JDK is present anywhere in this
   environment (see Java above). Reviewed-and-defensive, not proven.
 - **`update-ca-certificates --fresh` interaction with other manually-added local certs is out of

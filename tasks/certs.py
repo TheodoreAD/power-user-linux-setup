@@ -14,8 +14,11 @@ already being on PATH, a no-op if none is present, self-activating for free if o
 independently later.
 """
 
+import base64
+import hashlib
 import re
 import shlex
+import subprocess
 import tempfile
 from pathlib import Path
 
@@ -113,6 +116,165 @@ def _desired_bundle_text(c: Context, paths: list[Path]) -> str:
             raise RuntimeError(f"{path}: configured bundle file not found")
         parts.append(f"# {path} (PULSE certs.install)\n{_convert_bundle(c, path)}")
     return "".join(parts)
+
+
+# ---------------------------------------------------------------------------
+# The Windows root store, from inside a WSL distro. WSL2's trust store is fully independent of
+# Windows', so a root IT deployed by Group Policy/Intune is present on the host and absent here —
+# see docs/certs.md's WSL section. tasks/netdoctor.py already crosses this boundary for the proxy
+# half of the same problem (reg.exe, netsh.exe); this is the CA half.
+
+_WINDOWS_ROOTS_PEM = util.PULSE_STATE_DIR / "windows-root-extras.pem"
+_WINDOWS_STORES = ("Cert:\\LocalMachine\\Root", "Cert:\\CurrentUser\\Root")
+
+# One `# <subject> [<thumbprint>]` line per certificate, then its PEM. The OutputEncoding line is
+# first for a reason: a redirected PowerShell 5.1 stream otherwise emits the console's OEM codepage,
+# which turns a non-ASCII subject into mojibake (the base64 itself is ASCII either way).
+_PS_EXPORT_SCRIPT = (
+    "[Console]::OutputEncoding = [System.Text.Encoding]::UTF8\n"
+    f"Get-ChildItem -Path {', '.join(_WINDOWS_STORES)} | ForEach-Object {{\n"
+    '  "# $($_.Subject) [$($_.Thumbprint)]"\n'
+    "  '-----BEGIN CERTIFICATE-----'\n"
+    "  [Convert]::ToBase64String($_.RawData, [Base64FormattingOptions]::InsertLineBreaks)\n"
+    "  '-----END CERTIFICATE-----'\n"
+    "}\n"
+)
+
+
+def _encoded_command(script: str) -> str:
+    """A PowerShell -EncodedCommand payload: UTF-16LE, then base64.
+
+    Not a quoted -Command string. The script contains backslashes (`Cert:\\LocalMachine\\Root`),
+    `$()` interpolation and both kinds of quote, and it would have to survive invoke's shell *and*
+    PowerShell's own parser intact. Encoding removes the quoting question entirely, and leaves a
+    pure function that can be tested without a Windows host to run it against.
+    """
+    return base64.b64encode(script.encode("utf-16-le")).decode("ascii")
+
+
+_ENCODED_EXPORT = _encoded_command(_PS_EXPORT_SCRIPT)
+
+
+def _pem_fingerprint(pem: str) -> str | None:
+    """The certificate's SHA-256 fingerprint — the same value `openssl x509 -fingerprint -sha256`
+    prints, computed here because the fingerprint *is* the digest of the DER. The alternative is one
+    openssl subprocess per certificate, and the system bundle holds ~140 of them. None if the block's
+    body isn't valid base64.
+    """
+    body = "".join(line.strip() for line in pem.splitlines() if "-----" not in line)
+    try:
+        der = base64.b64decode(body, validate=True)
+    except ValueError:  # binascii.Error subclasses it
+        return None
+    return hashlib.sha256(der).hexdigest().upper()
+
+
+def _fingerprints(text: str) -> dict[str, str]:
+    """Every PEM block in `text`, keyed by fingerprint. First occurrence wins — the two Windows
+    stores overlap, and a root present in both is one certificate, not two."""
+    found: dict[str, str] = {}
+    for pem in _split_pem_certs(text):
+        fingerprint = _pem_fingerprint(pem)
+        if fingerprint:
+            found.setdefault(fingerprint, pem)
+    return found
+
+
+def _windows_extra_roots(windows_export: str, system_bundle: str) -> list[str]:
+    """The exported Windows roots this distro doesn't already trust, ordered by fingerprint.
+
+    The Windows Root store carries ~50 public CAs alongside whatever the corporate one is, and
+    installing all of them would add trust Debian's own ca-certificates deliberately doesn't carry.
+    So the public set is subtracted rather than filtered by name — an issuer's common name is a
+    label, not an identity.
+
+    Sorted, not in enumeration order: `_desired_bundle_text` compares the assembled text against
+    what's installed to decide whether to touch the trust store at all, and PowerShell makes no
+    ordering promise, so an unsorted export would re-trigger update-ca-certificates on every run.
+    """
+    system = _fingerprints(system_bundle)
+    extras = {fp: pem for fp, pem in _fingerprints(windows_export).items() if fp not in system}
+    return [extras[fp] for fp in sorted(extras)]
+
+
+def _windows_labels(export: str) -> dict[str, str]:
+    """Each exported certificate's fingerprint mapped to the `# <subject> [<thumbprint>]` line above
+    it, so the roots about to be trusted can be named on screen. A block with no label is kept with
+    an empty one — the certificate still installs; only the report loses a name.
+    """
+    labels: dict[str, str] = {}
+    label = ""
+    block: list[str] = []
+    for line in export.replace("\r\n", "\n").splitlines():
+        if line.startswith("# "):
+            label = line[2:].strip()
+        elif line.startswith("-----BEGIN CERTIFICATE-----"):
+            block = [line]
+        elif block:
+            block.append(line)
+            if line.startswith("-----END CERTIFICATE-----"):
+                fingerprint = _pem_fingerprint("\n".join(block))
+                if fingerprint:
+                    labels[fingerprint] = label
+                block = []
+    return labels
+
+
+def _run_windows(args: list[str]) -> str | None:
+    """Run a Windows-side executable through WSL interop. None on any failure — a distro with
+    interop disabled, a PowerShell execution policy that refuses, a host that never answers.
+
+    subprocess rather than c.run: the output needs `errors="replace"` (a subject line can carry
+    anything) and the argv needs to reach PowerShell without a shell in between.
+    """
+    try:
+        result = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=60, check=False)
+    except (OSError, subprocess.SubprocessError):
+        return None
+    return result.stdout if result.returncode == 0 else None
+
+
+def _export_windows_roots() -> Path | None:
+    """Export the Windows root stores and keep only what this distro doesn't already trust, at a
+    stable path so re-running is idempotent. None when there's nothing to add.
+    """
+    if not util.is_wsl():
+        raise RuntimeError(
+            "--from-windows reads the Windows certificate store through WSL interop, and this "
+            "isn't a WSL distro. Pass --bundle=path, or set [certs] bundle in identity.toml."
+        )
+    if not util.command_exists("powershell.exe"):
+        raise RuntimeError(
+            "powershell.exe not found — WSL interop is what makes the Windows side reachable. "
+            "Check /etc/wsl.conf's [interop] enabled=true (see `inv wsl.check`), or copy the "
+            "bundle over /mnt/c by hand and pass --bundle=path."
+        )
+
+    export = _run_windows(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", _ENCODED_EXPORT])
+    if export is None:
+        raise RuntimeError(
+            "powershell.exe returned no certificate data — the store may be empty, or an execution "
+            "policy may have refused. Nothing was installed."
+        )
+
+    system_bundle = Path(_SYSTEM_BUNDLE)
+    extras = _windows_extra_roots(export, system_bundle.read_text(errors="replace") if system_bundle.exists() else "")
+    total = len(_split_pem_certs(export))
+    if not extras:
+        print(f"[certs] windows: {total} root(s) in the Windows store, all already trusted here — nothing to add")
+        return None
+
+    labels = _windows_labels(export)
+    for pem in extras:
+        print(f"[certs] windows: + {labels.get(_pem_fingerprint(pem) or '') or '<unnamed certificate>'}")
+    if util.DRY_RUN:
+        print(f"[certs] windows: would write {len(extras)} root(s) to {_WINDOWS_ROOTS_PEM}")
+        return _WINDOWS_ROOTS_PEM if _WINDOWS_ROOTS_PEM.exists() else None
+
+    _WINDOWS_ROOTS_PEM.parent.mkdir(parents=True, exist_ok=True)
+    _WINDOWS_ROOTS_PEM.write_text("\n".join(extras) + "\n")
+    print(f"[certs] windows: {len(extras)} of {total} root(s) not already trusted -> {_WINDOWS_ROOTS_PEM}")
+    return _WINDOWS_ROOTS_PEM
 
 
 # ---------------------------------------------------------------------------
@@ -219,15 +381,18 @@ def _missing_source_message(command: str) -> str:
 # Tasks
 
 
-def _require_bundle_paths(bundle: str | None, command: str, *, raise_on_missing: bool) -> list[Path] | None:
+def _require_bundle_paths(
+    bundle: str | None, command: str, *, raise_on_missing: bool, from_windows: bool = False
+) -> list[Path] | None:
     """Resolve and validate configured bundle paths, shared by check()/install(). Returns None
     (having already printed an explanatory message) if nothing is configured, or if a configured
     file is missing and raise_on_missing is False. Raises RuntimeError instead of returning None
-    if a file is missing and raise_on_missing is True."""
+    if a file is missing and raise_on_missing is True.
+
+    --from-windows *adds* the exported Windows roots to whatever else is configured rather than
+    replacing it: a machine can legitimately have both an IT-provided file and a root that only
+    ever reached the Windows store."""
     paths = _resolve_paths(bundle)
-    if not paths:
-        print(_missing_source_message(command))
-        return None
     missing = [p for p in paths if not p.exists()]
     if missing:
         message = f"configured bundle file(s) not found: {', '.join(str(p) for p in missing)}"
@@ -235,17 +400,23 @@ def _require_bundle_paths(bundle: str | None, command: str, *, raise_on_missing:
             raise RuntimeError(message)
         print(f"[certs] {message}")
         return None
+    if from_windows and (exported := _export_windows_roots()):
+        paths.append(exported)
+    if not paths:
+        print(_missing_source_message(command))
+        return None
     return paths
 
 
 @task
-def check(c: Context, bundle: str | None = None):
+def check(c: Context, bundle: str | None = None, from_windows: bool = False):
     """Read-only diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts. Never
-    mutates. --bundle=path overrides the [certs] table in ~/.config/power-user-linux-setup/identity.toml. See
+    mutates. --bundle=path overrides the [certs] table in ~/.config/power-user-linux-setup/identity.toml.
+    --from-windows reports which Windows-side roots this WSL distro doesn't trust yet. See
     docs/certs.md.
     """
     util.require_apt()
-    paths = _require_bundle_paths(bundle, "check", raise_on_missing=False)
+    paths = _require_bundle_paths(bundle, "check", raise_on_missing=False, from_windows=from_windows)
     if paths is None:
         return
     status = _status(c, paths)
@@ -253,17 +424,19 @@ def check(c: Context, bundle: str | None = None):
 
 
 @task
-def install(c: Context, bundle: str | None = None):
+def install(c: Context, bundle: str | None = None, from_windows: bool = False):
     """Install the corporate CA bundle into the OS trust store and export it for
     python/node/awscli. --bundle=path overrides the [certs] table in
-    ~/.config/power-user-linux-setup/identity.toml. See docs/certs.md.
+    ~/.config/power-user-linux-setup/identity.toml. --from-windows (WSL only) additionally exports
+    the Windows root store and installs whatever this distro doesn't already trust. See
+    docs/certs.md.
     """
     util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
     if not util.command_exists("openssl"):
         raise RuntimeError("openssl not found — run `sudo apt install openssl` first")
 
-    paths = _require_bundle_paths(bundle, "install", raise_on_missing=True)
+    paths = _require_bundle_paths(bundle, "install", raise_on_missing=True, from_windows=from_windows)
     if paths is None:
         return
 

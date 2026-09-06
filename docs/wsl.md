@@ -210,7 +210,10 @@ check with `wsl --version`. Reference:
 With `autoProxy=true`, nothing needs a proxy environment variable inside the distro. Without it,
 export one by hand (`http_proxy`/`https_proxy`/`no_proxy`) or run `inv proxy.install`
 ([corporate-proxy.md](corporate-proxy.md)) — and if the proxy inspects TLS, install its root CA
-inside the distro as well ([certs.md](certs.md)); the Windows trust store does not carry across.
+inside the distro as well; the Windows trust store does not carry across.
+`inv certs.install
+--from-windows` pulls the roots straight out of the Windows store through
+interop, installing only the ones this distro doesn't already trust ([certs.md](certs.md#wsl)).
 
 ## Docker
 
