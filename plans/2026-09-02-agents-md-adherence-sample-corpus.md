@@ -1,14 +1,26 @@
 ---
 status: idea
-updated: 2026-09-04
+updated: 2026-09-06
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Eleven sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Twelve sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
+
+[PITFALL: **rows 1–11 were measured with an instrument that under-counted, and are understated by an
+amount that varies per row.** `audit.py`'s `strip_heredoc` cut a command at its heredoc marker and
+dropped every command that followed it, which in this family means the gate run after a patch
+heredoc. Corpus-wide the correction is `head/tail` 25.0% -> 27.8% and `exit-masked` 15.3% -> 17.8%,
+but it reached **+12pp** on heredoc-heavy sessions — sample 6's `exit-masked` is 37%, not the 27%
+recorded below. Fixed in `agent-skills` on 2026-09-06. The re-score-or-annotate decision, which rows
+can still be re-scored before their transcripts expire around 2026-10-02, and whether a row should
+record the instrument commit that measured it, are the open questions in
+`plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md` — read that before
+comparing any two rows here. **Sample 12 is the first row measured after the fix**, so it is
+comparable with a re-scored corpus and not with the rows as they stand.]
 
 [PITFALL: **the baseline moved out of the skill on 2026-09-04, so the command in every row above is
 stale.** `session-bash-audit` now expects `--compare ~/.local/state/session-bash-audit/<name>.json`
@@ -39,6 +51,8 @@ again on 2026-09-03 from two more filed the same way from sessions in other repo
 - `2026-09-02-adherence-sample-the-session-that-wrote-the-rule.md` (sample 6)
 - `2026-09-03-adherence-sample-the-masked-calls-were-the-gate.md` (sample 7)
 - `2026-09-05-adherence-sample-sed-n-at-a-record-high.md` (sample 11), merged 2026-09-05
+- `2026-09-06-post-heredoc-fix-adherence-row-from-an-announced-session.md` (sample 12), merged
+  2026-09-06 — filed from `ingesta` asking to be absorbed here rather than kept as a third plan
 
 Those names are what `plans.py archive --search` needs to read any of them back.
 
@@ -60,6 +74,7 @@ expire around 2026-10-02:
 | 9  | `repo-tasks`             | `1f762304-ee1a-4bfb-a78f-52da747d29e3.jsonl` | `2026-09-04T12:25:24.475Z`  |
 | 10 | `power-user-linux-setup` | `bc30285c-145c-494d-b2d1-be6b37cd37f1.jsonl` | `2026-09-04T10:01:32.556Z`  |
 | 11 | `ingesta`                | `6291d9d1-b8ed-4826-9967-9ae30f70bebf.jsonl` | `2026-09-05T10:21:37Z`      |
+| 12 | `ingesta`                | `88f860c9…` (short form only)                | `2026-09-05T21:03+03:00`    |
 
 Rows 6, 7 and 11 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
@@ -82,6 +97,7 @@ needed to reproduce the figures.
 | 9  | `repo-tasks`             |   202 | shared gate, plans, ~12h       |     **15%** |       **10%** |               0% | 10/11 |
 | 10 | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h      |         23% |           20% |               1% | 8/11  |
 | 11 | `ingesta`                |   228 | domain safety rules, one repo  |         24% |            7% |               0% | 9/11  |
+| 12 | `ingesta`                |   183 | announced the rule, ~6h        |      **5%** |            8% |               0% | —     |
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
 was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
@@ -431,6 +447,44 @@ a bound with every total — and broke the `sed -n` rule in sixteen per cent of 
 it. That is the same shape as the corpus's authoring-a-rule note above, arriving from a fifth
 independent direction, and it is the argument for measuring rather than asking whether a rule is
 understood.]
+
+### Sample 12 — `ingesta`, 183 calls, the first row measured after the heredoc fix
+
+Session `88f860c9`, 2026-09-05 21:03 to 2026-09-06 03:12, about six hours, 183 calls before the
+harvest's own sweep. No `--compare`, so rates without a score. **Measured with the fixed
+`strip_heredoc`** (from the `agent-skills` checkout, `2248ec7` and siblings, unpushed at the time),
+which is what makes it incomparable with the rows above until they are re-scored.
+
+| tag                     | rate           |
+| ----------------------- | -------------- |
+| `chain`                 | 21%            |
+| `sed-n`                 | 11% (21 calls) |
+| `exit-masked`           | 8% (15 calls)  |
+| `head/tail`             | 5% (10 calls)  |
+| `cat-view`              | 4% (8 calls)   |
+| `chain5`                | 2% (3 calls)   |
+| `heredoc`               | 0%             |
+| `cd-own-repo`           | 0%             |
+| `git-C-own-repo`        | 0%             |
+| `git-mutating-in-chain` | 0%             |
+
+**`head/tail` at 5% is the corpus low by a wide margin** — the previous best was sample 9's 15%,
+against a band of 24–55% everywhere else — and it was measured by the instrument that counts _more_,
+not less. Whatever produced it, it is not a measurement artefact in the flattering direction.
+
+**The session announced the resolution in its first message**, in the phrase
+`2026-08-28-auto-mode-contradicts-bash-rules.md` already tracks: _"Using Read/Edit/Write for files
+despite the auto-mode note, and `rg` for search — per `~/AGENTS.md`."_ It then read files through
+`sed -n` twenty-one times and `cat`/`head` eight more — 29 Bash file views against the rule it had
+just said out loud it was following, while the truncation rules it did not announce came out at the
+corpus's best figures. That is a fourth instance of announcement-as-substitute, from a fifth
+session, and the row is recorded there too.
+
+[PITFALL: **the two zero rows worth a second look are `git-C-own-repo` and `cd-own-repo`, and here
+they are genuine.** A zero from an instrument is a claim to check rather than a result to report:
+this session used `git -C` seven times and every one targeted `~/plans` or `agent-skills`, which are
+genuinely other repos, and it never `cd`-ed at all. A `git-C-own-repo` of 0% in a session that used
+`git -C` at all is exactly the shape that deserves the check.]
 
 ## What the corpus has settled
 

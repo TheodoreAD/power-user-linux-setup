@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-01
+updated: 2026-09-06
 ---
 
 # Auto mode's Bash note contradicts `~/AGENTS.md`, and it measurably changes behaviour
@@ -39,7 +39,7 @@ sessions that did read and edit files under the note are measured, one of them c
 it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
 the table.
 
-## What the note costs, measured across five sessions
+## What the note costs, measured across six sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
@@ -51,6 +51,7 @@ share of its own Bash calls.
 | `agent-skills`, 08-30  |   110 | **refused it** |             ~8% |               4% |       — |             — |
 | `ingesta`, 08-30       |   228 | yes            |              5% |              36% |     22% |           20% |
 | `ingesta`, 08-31/09-01 |   306 | **announced**  |         **18%** |          **46%** | **57%** |       **30%** |
+| `ingesta`, 09-05/06    |   183 | **announced**  |         **15%** |               5% |     21% |            0% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -192,7 +193,16 @@ the most actionable finding either plan has: it would mean the announcement is a
 behaviour rather than a precursor to it, and every fix of the form "make the agent state which rule
 wins" — including this plan's own recommended direction — is aimed at the wrong thing. Distinguish
 it by measuring announcing and non-announcing sessions separately; `session-bash-audit` can detect
-the announcement, since all three used a recognisable phrase in the first two messages.]
+the announcement, since all three used a recognisable phrase in the first two messages.
+
+**A fourth occurrence, 2026-09-05/06, splits the hypothesis rather than confirming it.** That
+session announced the same resolution and then read files through Bash 29 times (15% of its calls),
+so the announcement bought nothing for the rule it named — but its `| head`/`tail` came in at 5%,
+the best figure in the whole corpus, and it chained less than any earlier row. The announcement
+tracks the rule it mentions and nothing else, which is a narrower and more testable claim than
+"announcing sessions score worse". It is also the first row measured after `audit.py`'s heredoc
+under-count was fixed, so it is the only one of the four whose numbers need no correction — see
+`plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md`.]
 
 [NEEDS CLARIFICATION: **is `heredoc edits` at 30% the same failure as the others, or the rule being
 wrong about a case it never considered?** The heredocs in that session were `python3 - <<'PY'`
