@@ -7,7 +7,6 @@ I/O). See tests/README.md.
 import struct
 
 import pytest
-
 from invoke import MockContext, Result
 
 from tasks import wsl
