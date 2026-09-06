@@ -245,3 +245,44 @@ def test_configure_credential_store_sets_the_key_when_the_store_answers(docker_c
     docker.configure_credential_store(_round_trip_context())
 
     assert json.loads(docker_config.read_text())["credsStore"] == docker.CREDS_STORE
+
+
+def test_proxy_dropin_sets_both_schemes():
+    dropin = docker._proxy_dropin("http://127.0.0.1:3128", None)
+    assert 'Environment="HTTP_PROXY=http://127.0.0.1:3128"' in dropin
+    assert 'Environment="HTTPS_PROXY=http://127.0.0.1:3128"' in dropin
+    assert "NO_PROXY" not in dropin
+
+
+def test_proxy_dropin_carries_the_bypass_list_when_there_is_one():
+    assert 'Environment="NO_PROXY=registry.internal"' in docker._proxy_dropin("http://p:3128", "registry.internal")
+
+
+def test_container_proxy_leaves_credentials_in_place():
+    # The merge writes into a file that can hold every registry credential on the machine, so
+    # replacing rather than merging would log the user out of everything.
+    existing = cast(util.JsonObject, {"credsStore": "secretservice", "auths": {"registry.example": {}}})
+    updated = docker._with_container_proxy(existing, "http://172.17.0.1:3128", None)
+    assert updated["credsStore"] == "secretservice"
+    assert updated["auths"] == {"registry.example": {}}
+    assert cast(util.JsonObject, cast(util.JsonObject, updated["proxies"])["default"])["httpProxy"] == (
+        "http://172.17.0.1:3128"
+    )
+
+
+def test_container_proxy_keeps_a_sibling_proxy_entry():
+    existing = cast(util.JsonObject, {"proxies": {"registry.example": {"httpProxy": "http://other:8080"}}})
+    updated = docker._with_container_proxy(existing, "http://172.17.0.1:3128", "localhost")
+    proxies = cast(util.JsonObject, updated["proxies"])
+    assert "registry.example" in proxies
+    assert cast(util.JsonObject, proxies["default"])["noProxy"] == "localhost"
+
+
+def test_registry_names_that_may_become_a_path():
+    assert docker._REGISTRY_RE.match("registry.example.com")
+    assert docker._REGISTRY_RE.match("registry.example.com:5000")
+    # These reach a shell as a path under /etc/docker/certs.d, so a value that is not a host is a
+    # refusal rather than a directory.
+    assert not docker._REGISTRY_RE.match("../../etc/ssl")
+    assert not docker._REGISTRY_RE.match("registry.example.com:5000; rm -rf /")
+    assert not docker._REGISTRY_RE.match("")

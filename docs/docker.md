@@ -76,31 +76,50 @@ sudo systemctl start docker
 sudo chown $USER:docker /var/run/docker.sock
 ```
 
-## Corporate registries/mirrors (not automated yet)
+## Corporate networks
 
-Not covered by `inv docker.configure` or `inv certs.install` — tracked as a follow-up, documented
-here so the mechanism doesn't have to be re-derived. Three distinct, easily-conflated pieces if this
-network has a corporate registry mirror and/or TLS-inspecting proxy:
+`inv docker.configure` handles neither a registry mirror nor a proxy nor a corporate CA —
+`inv docker.configure-corporate` does, driven entirely by an optional `[docker]` table in
+`~/.config/power-user-linux-setup/identity.toml` (see `config/identity.toml.example`):
 
-- **Registry pull-through mirror** (Docker Hub only) — `registry-mirrors` in
-  `/etc/docker/daemon.json`, same merge mechanism `inv docker.configure` already uses for
-  `log-driver`/`dns` above.
-- **Daemon's own outbound proxy** — dockerd is a systemd service and does _not_ inherit the shell's
-  `http_proxy`/`https_proxy`. Needs its own systemd drop-in:
-  `/etc/systemd/system/docker.service.d/http-proxy.conf` with `Environment="HTTPS_PROXY=..."`, then
-  `systemctl daemon-reload && systemctl restart docker`.
-- **Containers' own proxy** (so processes _inside_ containers see it too) — not a daemon setting,
-  goes in `~/.docker/config.json`'s `proxies` key.
+```toml
+[docker]
+registry_mirrors = ["https://registry.corp.example.com"]
+proxy = "http://127.0.0.1:3128" # dockerd's own outbound proxy
+container_proxy = "http://172.17.0.1:3128" # what processes inside containers see
+no_proxy = "localhost,127.0.0.1,*.corp.example.com"
+registries = ["registry.corp.example.com:5000"]
+```
 
-**Cert-wise**, this is separate from `inv certs.install` — Docker doesn't read the OS trust store
-the way `curl` does. A corporate registry behind the same TLS-inspecting proxy (see
-[certs.md](certs.md)) needs its own per-registry CA file:
-`/etc/docker/certs.d/<registry-host>/ca.crt`.
+Each key is independent and a key you leave out is simply not configured; with no `[docker]` table
+at all the task exits cleanly having done nothing. Four mechanisms, easy to conflate and not
+interchangeable:
 
-Also relevant if this is being configured under WSL2 with Docker Desktop's WSL integration:
-`docker.configure` already detects that case (`docker` CLI present, no local `dockerd` —
-`tasks/docker.py`) and skips, since the daemon isn't running inside the WSL guest at all. None of
-the above applies there either — it goes in Docker Desktop's Windows-side settings instead.
+- **Registry pull-through mirror** (Docker Hub only) — `registry-mirrors` merged into
+  `/etc/docker/daemon.json`, the same merge `inv docker.configure` uses for `log-driver`/`dns`.
+- **The daemon's own outbound proxy** — dockerd is a systemd service and does _not_ inherit the
+  shell's `http_proxy`/`https_proxy`, so this is a drop-in at
+  `/etc/systemd/system/docker.service.d/http-proxy.conf`, followed by `daemon-reload` and a restart.
+- **Containers' own proxy** — `proxies.default` in `~/.docker/config.json`, injected as environment
+  variables when a container is created. **Not the same address as the daemon's**: dockerd runs in
+  the host's network namespace and reaches a local Px at `127.0.0.1:3128`, while `127.0.0.1` inside
+  a container is that container's own loopback. This one has to be the bridge gateway
+  (`172.17.0.1`), and Px only answers there if it was started in gateway mode. That is why the two
+  are separate keys rather than one value used twice.
+- **Per-registry CA** — docker doesn't read the OS trust store the way `curl` does, so
+  `inv certs.install` alone does nothing for a registry pull. Each host in `registries` gets the
+  same bundle written to `/etc/docker/certs.d/<host>/ca.crt`, resolved from the `[certs]` table so
+  the two tasks can't disagree about which file the corporate CA is.
+
+Under WSL2 with Docker Desktop's WSL integration, the task detects that there is no local `dockerd`
+and stops: none of the above applies in that distro, and the settings belong in Docker Desktop's
+Windows-side UI instead.
+
+**Not verified against a running daemon** — the writers are unit-tested, but restarting a real
+dockerd isn't something this repo's test run does. Run
+`PULSE_DRY_RUN=1 inv
+docker.configure-corporate` first; it reports what each piece would do and
+changes nothing.
 
 ## See also
 

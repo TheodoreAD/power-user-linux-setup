@@ -109,6 +109,18 @@ def _convert_bundle(c: Context, path: Path) -> str:
     return converted
 
 
+def corporate_bundle_text(c: Context) -> str | None:
+    """The configured corporate CA, normalized to PEM — or None when none is configured.
+
+    Public because docker.py needs the same certificate for a different destination: docker doesn't
+    read the OS trust store, so a corporate registry behind the same inspecting proxy needs its own
+    /etc/docker/certs.d/<host>/ca.crt. One resolver, so the two can't disagree about which file is
+    the corporate CA, or about how a .p7b becomes PEM.
+    """
+    paths = [p for p in _resolve_paths(None) if p.exists()]
+    return "".join(_convert_bundle(c, path) for path in paths) if paths else None
+
+
 def _desired_bundle_text(c: Context, paths: list[Path]) -> str:
     parts: list[str] = []
     for path in paths:

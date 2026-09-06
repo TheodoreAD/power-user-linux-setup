@@ -259,6 +259,16 @@ class CertsSection(TypedDict, total=False):
     bundle: str | list[str]
 
 
+class DockerSection(TypedDict, total=False):
+    """identity.toml's optional `[docker]` table — see docs/docker.md's corporate section."""
+
+    registry_mirrors: list[str]
+    registries: list[str]
+    proxy: str
+    container_proxy: str
+    no_proxy: str
+
+
 class Identity(TypedDict, total=False):
     """identity.toml's top level."""
 
@@ -266,6 +276,7 @@ class Identity(TypedDict, total=False):
     ssh_hosts: list[SshHost]
     proxy: ProxySection
     certs: CertsSection
+    docker: DockerSection
 
 
 class PackageOverride(TypedDict, total=False):
@@ -599,6 +610,16 @@ def load_certs_override() -> CertsSection:
     if not IDENTITY_PATH.exists():
         return {}
     return cast(Identity, load_toml(IDENTITY_PATH)).get("certs", {})
+
+
+def load_docker_override() -> DockerSection:
+    """Optional [docker] table from ~/.config/power-user-linux-setup/identity.toml (corporate
+    registry mirror, dockerd's own proxy, the proxy containers see, registries needing a CA file).
+    Same tolerant-of-missing-file, not-cached rationale as load_proxy_override() — see there.
+    """
+    if not IDENTITY_PATH.exists():
+        return {}
+    return cast(Identity, load_toml(IDENTITY_PATH)).get("docker", {})
 
 
 @cache

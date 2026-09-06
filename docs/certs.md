@@ -140,9 +140,9 @@ by hand:
 - **`update-ca-certificates --fresh` interaction with other manually-added local certs is out of
   scope by design** — hence the "no `--fresh`" uninstall instructions above.
 - **Docker registry mirrors, daemon proxy config, and per-registry `certs.d` are out of scope here**
-  — a corporate registry behind the same TLS-inspecting proxy needs its own separate setup; see
-  [docker.md](docker.md#corporate-registriesmirrors-not-automated-yet) for the mechanism (tracked as
-  a follow-up, not covered by this task).
+  — docker doesn't read the OS trust store, so a corporate registry behind the same TLS-inspecting
+  proxy needs the certificate written per registry. `inv docker.configure-corporate` does that, from
+  this same `[certs]` bundle; see [docker.md](docker.md#corporate-networks).
 
 ## See also
 

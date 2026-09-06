@@ -92,3 +92,23 @@ email    = "jane.smith@work.com"
 #   "/home/jsmith/Downloads/CorporateRootCA.crt",
 #   "/home/jsmith/Downloads/CorporateIntermediateCA.crt",
 # ]
+
+# Optional — docker on a corporate network (`inv docker.configure-corporate`). Every key is
+# independent: what you leave out is simply not configured. See docs/docker.md.
+# [docker]
+# registry_mirrors = ["https://registry.corp.example.com"]  # pull-through mirror, daemon.json
+#
+# The daemon's own outbound proxy. dockerd is a systemd service and inherits nothing from a shell,
+# so this becomes a drop-in. 127.0.0.1 is right here — dockerd runs in the host's network
+# namespace, so a local Px is reachable.
+# proxy = "http://127.0.0.1:3128"
+#
+# What processes *inside* containers see. Deliberately a separate key: 127.0.0.1 in a container is
+# that container's own loopback, so this has to be the bridge gateway — and Px only answers there
+# if it was started in gateway mode.
+# container_proxy = "http://172.17.0.1:3128"
+# no_proxy = "localhost,127.0.0.1,*.corp.example.com"
+#
+# Registries that need the [certs] bundle above at /etc/docker/certs.d/<host>/ca.crt — docker does
+# not read the OS trust store, so `inv certs.install` alone does not cover a registry pull.
+# registries = ["registry.corp.example.com:5000"]

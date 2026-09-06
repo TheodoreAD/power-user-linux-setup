@@ -1,11 +1,13 @@
 import json
+import re
+import shlex
 import tempfile
 from pathlib import Path
 from typing import cast
 
 from invoke import Context, Exit, task
 
-from . import util
+from . import certs, util
 
 _DAEMON_JSON = Path("/etc/docker/daemon.json")
 
@@ -78,6 +80,14 @@ def _configure_group(c: Context, user: str) -> None:
         print(f"[docker] {user} added to docker group — open a new terminal to pick it up")
 
 
+def _write_daemon_json(c: Context, config: util.JsonObject) -> None:
+    updated = json.dumps(config, indent=2) + "\n"
+    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
+        f.write(updated)
+        tmp = f.name
+    c.run(f"{util.SUDO} mkdir -p {_DAEMON_JSON.parent} && {util.SUDO} install -m 0644 {tmp} {_DAEMON_JSON} && rm {tmp}")
+
+
 def _configure_daemon_json(c: Context) -> None:
     existing = _read_daemon_json(c)
     if _is_subset(_DEFAULTS, existing):
@@ -85,11 +95,7 @@ def _configure_daemon_json(c: Context) -> None:
         _ensure_running(c)
         return
 
-    updated = json.dumps(_merge(existing, _DEFAULTS), indent=2) + "\n"
-    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
-        f.write(updated)
-        tmp = f.name
-    c.run(f"{util.SUDO} mkdir -p {_DAEMON_JSON.parent} && {util.SUDO} install -m 0644 {tmp} {_DAEMON_JSON} && rm {tmp}")
+    _write_daemon_json(c, _merge(existing, _DEFAULTS))
     _ensure_running(c)
     print("[docker] daemon.json updated, daemon restarted")
 
@@ -123,6 +129,185 @@ def configure(c: Context):
 
     _configure_group(c, util.current_user())
     _configure_daemon_json(c)
+
+
+# ---------------------------------------------------------------------------
+# Corporate network wiring. Four mechanisms that are easy to conflate and are not interchangeable:
+# a registry mirror (daemon.json), the daemon's own outbound proxy (a systemd drop-in — dockerd is
+# a service and inherits nothing from a shell), the proxy processes *inside* containers see
+# (~/.docker/config.json), and a per-registry CA (docker doesn't read the OS trust store).
+# See docs/docker.md.
+
+_PROXY_DROPIN = Path("/etc/systemd/system/docker.service.d/http-proxy.conf")
+_CERTS_D = Path("/etc/docker/certs.d")
+# A registry directory name is host[:port]; anything else is a config typo, and these values reach
+# a shell as a path.
+_REGISTRY_RE = re.compile(r"^[A-Za-z0-9.\-]+(:\d{1,5})?$")
+
+
+def _proxy_dropin(proxy: str, no_proxy: str | None) -> str:
+    """The systemd drop-in that puts dockerd's own outbound traffic through a proxy — image pulls,
+    not container traffic. Both variables are set: dockerd reads the upper-case names, and a proxy
+    that serves plain HTTP registries as well as HTTPS ones needs both pointed at it.
+    """
+    lines = [
+        "# Written by `inv docker.configure-corporate` — see docs/docker.md.",
+        "[Service]",
+        f'Environment="HTTP_PROXY={proxy}"',
+        f'Environment="HTTPS_PROXY={proxy}"',
+    ]
+    if no_proxy:
+        lines.append(f'Environment="NO_PROXY={no_proxy}"')
+    return "\n".join(lines) + "\n"
+
+
+def _with_container_proxy(config: util.JsonObject, proxy: str, no_proxy: str | None) -> util.JsonObject:
+    """`proxies.default` merged into ~/.docker/config.json, leaving credentials and everything else
+    in that file untouched. docker injects these as environment variables when a container is
+    created — which is why this address is not the daemon's: 127.0.0.1 inside a container is the
+    container's own loopback, and a local Px listening on the host's loopback is unreachable from
+    there.
+    """
+    default: util.JsonObject = {"httpProxy": proxy, "httpsProxy": proxy}
+    if no_proxy:
+        default["noProxy"] = no_proxy
+    return _merge(config, {"proxies": {"default": default}})
+
+
+def _mirror_config(mirrors: list[str]) -> util.JsonObject:
+    """The daemon.json fragment for a pull-through mirror. A cast because JsonObject's list arm is
+    list[Json] and a list[str] is not that — invariance, not a real type mismatch."""
+    return cast(util.JsonObject, {"registry-mirrors": list(mirrors)})
+
+
+def _configure_registry_mirrors(c: Context, mirrors: list[str]) -> bool:
+    desired = _mirror_config(mirrors)
+    existing = _read_daemon_json(c)
+    if _is_subset(desired, existing):
+        print("[docker-corporate] registry mirrors already in daemon.json")
+        return False
+    _write_daemon_json(c, _merge(existing, desired))
+    print(f"[docker-corporate] {len(mirrors)} registry mirror(s) written to {_DAEMON_JSON}")
+    return True
+
+
+def _configure_daemon_proxy(c: Context, proxy: str, no_proxy: str | None) -> bool:
+    desired = _proxy_dropin(proxy, no_proxy)
+    if util.sudo_read(c, _PROXY_DROPIN) == desired:
+        print("[docker-corporate] daemon proxy drop-in already current")
+        return False
+    c.run(f"{util.SUDO} mkdir -p {_PROXY_DROPIN.parent}")
+    util.sudo_write(c, _PROXY_DROPIN, desired)
+    print(f"[docker-corporate] daemon proxy written to {_PROXY_DROPIN}")
+    return True
+
+
+def _configure_container_proxy(proxy: str, no_proxy: str | None) -> None:
+    config = _read_docker_config()
+    updated = _with_container_proxy(config, proxy, no_proxy)
+    if updated == config:
+        print("[docker-corporate] container proxy already set")
+        return
+    DOCKER_CONFIG.parent.mkdir(parents=True, exist_ok=True)
+    # 0600 before the write, for the same reason _write_creds_store does it: this file can hold
+    # credentials, and a new one created under the default umask is world-readable in between.
+    DOCKER_CONFIG.touch(mode=0o600, exist_ok=True)
+    DOCKER_CONFIG.write_text(json.dumps(updated, indent=2) + "\n")
+    print(f"[docker-corporate] container proxy written to {DOCKER_CONFIG}")
+
+
+def _configure_registry_certs(c: Context, registries: list[str]) -> None:
+    """Give each configured registry the corporate CA, from the same file `inv certs.install` uses.
+
+    Docker doesn't read the OS trust store, so trusting the inspecting proxy system-wide does
+    nothing for a registry pull — that needs the certificate at this exact per-registry path.
+    """
+    bundle = certs.corporate_bundle_text(c)
+    if bundle is None:
+        print(
+            "[docker-corporate] registries configured but no corporate CA is — add a [certs] "
+            "bundle to identity.toml (see docs/certs.md), then re-run. Skipping certs.d."
+        )
+        return
+    for host in registries:
+        if not _REGISTRY_RE.match(host):
+            raise RuntimeError(
+                f"[docker] {host!r} is not a host[:port] registry name — refusing to build a path from it"
+            )
+        path = _CERTS_D / host / "ca.crt"
+        if util.sudo_read(c, path) == bundle:
+            print(f"[docker-corporate] {host}: CA already current")
+            continue
+        c.run(f"{util.SUDO} mkdir -p {shlex.quote(str(path.parent))}")
+        util.sudo_write(c, path, bundle)
+        print(f"[docker-corporate] {host}: corporate CA written to {path}")
+
+
+def _corporate_status(c: Context, cfg: util.DockerSection) -> None:
+    daemon = _read_daemon_json(c)
+    mirrors = _is_subset(_mirror_config(cfg["registry_mirrors"]), daemon) if "registry_mirrors" in cfg else None
+    dropin = bool(util.sudo_read(c, _PROXY_DROPIN)) if "proxy" in cfg else None
+    container = _read_docker_config().get("proxies") is not None if "container_proxy" in cfg else None
+    parts = [
+        f"{label}:{'skip' if state is None else util.ok_label(state)}"
+        for label, state in (("mirrors", mirrors), ("daemon-proxy", dropin), ("container-proxy", container))
+    ]
+    print(f"[docker-corporate] {'  '.join(parts)}")
+
+
+def _apply_corporate(c: Context, cfg: util.DockerSection) -> bool:
+    """Each piece runs only if its key is configured. Returns whether dockerd needs restarting —
+    the certs.d files don't need one (the daemon reads them per connection), and the container-side
+    proxy isn't a daemon setting at all.
+    """
+    restart = False
+    if mirrors := cfg.get("registry_mirrors"):
+        restart |= _configure_registry_mirrors(c, mirrors)
+    if proxy := cfg.get("proxy"):
+        restart |= _configure_daemon_proxy(c, proxy, cfg.get("no_proxy"))
+    if container_proxy := cfg.get("container_proxy"):
+        _configure_container_proxy(container_proxy, cfg.get("no_proxy"))
+    if registries := cfg.get("registries"):
+        _configure_registry_certs(c, registries)
+    return restart
+
+
+@task
+def configure_corporate(c: Context):
+    """Wire docker into a corporate network: registry mirror, the daemon's own outbound proxy, the
+    proxy processes inside containers see, and the corporate CA per registry. Each piece is driven
+    by a key in identity.toml's [docker] table and skipped when that key is absent; a machine with
+    no [docker] table exits cleanly having done nothing. See docs/docker.md.
+    """
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
+    if util.is_docker_desktop_wsl_integration():
+        print(
+            "[docker-corporate] `docker` CLI found but no local dockerd — this looks like Docker "
+            "Desktop's WSL integration. There is no daemon in this distro to configure; set the "
+            "proxy, registry mirror and CA in Docker Desktop's own Windows-side settings."
+        )
+        return
+    cfg = util.load_docker_override()
+    if not cfg:
+        print(
+            "[docker-corporate] no [docker] table in ~/.config/power-user-linux-setup/identity.toml "
+            "— nothing to configure (see config/identity.toml.example)."
+        )
+        return
+    if not util.command_exists("docker"):
+        print("[docker-corporate] docker not installed — skipping")
+        return
+
+    if util.DRY_RUN:
+        _corporate_status(c, cfg)
+        return
+
+    if _apply_corporate(c, cfg) and util.has_systemd():
+        # daemon-reload first: a drop-in systemd hasn't re-read is a file with no effect, and the
+        # restart would look like it applied.
+        c.run(f"{util.SUDO} systemctl daemon-reload")
+        _ensure_running(c)
+        print("[docker-corporate] dockerd restarted")
 
 
 def _read_docker_config() -> util.JsonObject:
