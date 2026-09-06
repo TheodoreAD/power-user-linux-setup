@@ -123,6 +123,85 @@ other would produce a config that looks right and fails for containers only.]
 daemon in that distro, so a drop-in and a `daemon.json` would be written where nothing reads them —
 those settings belong in Desktop's Windows-side UI.]
 
+### 4. `inv certs.discover` — find the certificate already in use, and ask
+
+Not yet built. `--from-windows` answers "which roots exist on the Windows side that this distro
+doesn't trust", which is a set, sorted by nothing that says which one matters. Four other routes
+answer a better question — **which certificate is this machine already using, or being told to use**
+— and three of them yield an exact file rather than a candidate list. Read-only, ranked by how
+direct the evidence is, and it **asks before installing anything**: adding a root CA is a trust
+decision, so each candidate is named with its subject, its fingerprint and where it was found.
+
+**A. Environment variables that point at a certificate.** The strongest signal there is, because
+somebody has already decided this file is the corporate CA — the task's job is only to put it where
+the OS trust store can see it:
+
+| variable                                                     | set by              |
+| ------------------------------------------------------------ | ------------------- |
+| `SSL_CERT_FILE`, `SSL_CERT_DIR`, `CURL_CA_BUNDLE`            | OpenSSL, curl       |
+| `REQUESTS_CA_BUNDLE`, `PIP_CERT`, `HTTPLIB2_CA_CERTS`        | Python, pip         |
+| `NODE_EXTRA_CA_CERTS`, `NPM_CONFIG_CAFILE`                   | Node, npm           |
+| `GIT_SSL_CAINFO`, `GIT_SSL_CAPATH`                           | git                 |
+| `AWS_CA_BUNDLE`, `AZURE_CLI_CA_BUNDLE`                       | cloud CLIs          |
+| `CARGO_HTTP_CAINFO`, `DENO_CERT`, `GOPROXY`-adjacent tooling | language toolchains |
+| `JAVA_TOOL_OPTIONS` / `-Djavax.net.ssl.trustStore=`          | anything on a JVM   |
+
+Read from the current environment, `/etc/environment`, and the shell rc files — but also, and this
+is the WSL-specific half, **from the Windows side through `reg.exe`**:
+`HKLM\SYSTEM\CurrentControlSet\Control\Session Manager\Environment` and `HKCU\Environment` are where
+IT sets these machine-wide, and a value like `C:\ProgramData\corp\corp-root.pem` translates straight
+to a readable path with `wslpath`. `WSLENV` is worth reading in the same pass: it names which
+variables were _meant_ to cross the boundary, and its `/p` flag means the path has already been
+translated for the distro.
+
+**B. Config files naming a certificate.** Weaker than A only because a stale entry can outlive its
+file: `~/.npmrc`'s `cafile`, `pip.conf`/`pip.ini`'s `cert`, `.gitconfig`'s `http.sslCAInfo`,
+`~/.curlrc`'s `cacert`, `~/.condarc`'s `ssl_verify`, `gradle.properties`'
+`systemProp.javax.net.ssl.trustStore`, and on the Windows side `%APPDATA%\NuGet\NuGet.Config`.
+
+**C. Verification switched off — the anti-signal, and probably the most valuable output.**
+`GIT_SSL_NO_VERIFY`, `NODE_TLS_REJECT_UNAUTHORIZED=0`, `PYTHONHTTPSVERIFY=0`, npm's
+`strict-ssl=false`, pip's `trusted-host`, conda's `ssl_verify: false`,
+`git config http.sslVerify
+false`. Each one is somebody hitting this exact problem and turning off
+the check instead of installing the CA — a silent, permanent security downgrade that no error
+message will ever mention again.
+
+[DECISION: **report these, install the CA first, and only then offer to remove them — never in the
+other order.** Removing the bypass before the trust store can verify the traffic breaks the tool
+that was working a moment ago, and the natural next move for whoever hits that is to put the bypass
+back, permanently. Removal is also a separate confirmation from installation: a bypass may exist for
+an unrelated host that this CA does not cover.]
+
+**D. Windows-native signals, which rank the candidates A–C cannot produce.**
+
+1. **The group-policy and enterprise physical stores.** `certutil -grouppolicy -store Root` and
+   `certutil -enterprise -store Root` (registry:
+   `HKLM\SOFTWARE\Policies\Microsoft\SystemCertificates\Root\Certificates`) list roots that were
+   **deployed by IT**, by construction. That is a far stronger statement than the current "not in
+   Mozilla's set" subtraction, which cannot tell a corporate root from any other locally-added one,
+   and it should become the ranking signal layered on top of that diff rather than a replacement for
+   it.
+2. **The certificate actually re-signing traffic right now.** `netdoctor` already reads the issuer
+   common name off a failed chain by scanning the DER (it has to — `ssl` only parses a chain it
+   validated, and the interesting case is the one that failed). Matching that name against the
+   candidates turns "here are four extra roots" into "this is the one your traffic is signed by".
+3. **Vendor drop paths, with an asymmetry worth recording so nobody hunts for a file that does not
+   exist.** Netskope writes `C:\ProgramData\netskope\stagent\data\nscacert.pem` (and a
+   `nscacert_combined.pem`), so a glob finds it. Zscaler's client connector injects into the Windows
+   store instead and documents no fixed file path — for that one, D1 and D2 are the only routes.
+4. **Windows git defaults to the schannel TLS backend**, which reads the Windows store directly. So
+   a corporate laptop can have git working perfectly on the Windows side with **no PEM file anywhere
+   on disk** — meaning "there is no file to copy" is the normal state on exactly the machines that
+   need this most, not a failed search. That is the argument for D1 being the primary route rather
+   than a file hunt.
+
+[NEEDS CLARIFICATION: **does `discover` install, or only report and hand over to `install`?** A
+single task that finds and installs is the smaller surface and the obvious flow, but it makes a
+read-only diagnostic into a mutating one, which is the split every other pair here keeps
+(`check`/`install`, `proxy.check`/`proxy.install`). The likely answer is `certs.discover` reporting
+plus a `--install` flag that routes into the existing installer, so the default stays read-only.]
+
 ## Files touched
 
 - `tasks/certs.py` — Windows root export, fingerprint diff, `--from-windows` on `check`/`install`.
@@ -134,6 +213,10 @@ those settings belong in Desktop's Windows-side UI.]
 - `config/identity.toml.example`, `docs/certs.md`, `docs/corporate-proxy.md`, `docs/docker.md`,
   `docs/wsl.md`.
 - `tests/unit/test_certs.py` (new), `tests/unit/test_proxy.py`, `tests/unit/test_docker.py`.
+
+Section 4 is not built. When it is: `tasks/certs.py` for the discovery routes and the ranking,
+`tasks/netdoctor.py` for the issuer name it already extracts, and `docs/certs.md` for the
+verification-disabled findings, which are the half a reader most needs to be told about.
 
 ## Verification
 
