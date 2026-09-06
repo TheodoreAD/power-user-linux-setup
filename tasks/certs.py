@@ -16,15 +16,17 @@ independently later.
 
 import base64
 import hashlib
+import os
 import re
 import shlex
 import subprocess
 import tempfile
+from dataclasses import dataclass
 from pathlib import Path
 
 from invoke import Context, Exit, task
 
-from . import util
+from . import cert_sources, netdoctor, util
 
 _CA_CERT_FILE = Path("/usr/local/share/ca-certificates/pulse-corporate.crt")
 _SYSTEM_BUNDLE = "/etc/ssl/certs/ca-certificates.crt"  # what update-ca-certificates produces
@@ -232,18 +234,40 @@ def _windows_labels(export: str) -> dict[str, str]:
     return labels
 
 
-def _run_windows(args: list[str]) -> str | None:
-    """Run a Windows-side executable through WSL interop. None on any failure — a distro with
-    interop disabled, a PowerShell execution policy that refuses, a host that never answers.
+def _capture(args: list[str]) -> str | None:
+    """Run a command and return its stdout, or None on any failure — a distro with interop
+    disabled, a PowerShell execution policy that refuses, a host that never answers, a missing
+    binary.
 
-    subprocess rather than c.run: the output needs `errors="replace"` (a subject line can carry
-    anything) and the argv needs to reach PowerShell without a shell in between.
+    subprocess rather than c.run: the output needs `errors="replace"` (a certificate subject or a
+    registry value can carry anything) and the argv needs to reach PowerShell without a shell in
+    between.
     """
     try:
         result = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=60, check=False)
     except (OSError, subprocess.SubprocessError):
         return None
     return result.stdout if result.returncode == 0 else None
+
+
+def _windows_root_export() -> str | None:
+    """The raw PowerShell export of both Windows root stores. None if interop couldn't produce it.
+    Separate from the caller because `discover` reads the same text for a different purpose."""
+    return _capture(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", _ENCODED_EXPORT])
+
+
+def _policy_thumbprints() -> set[str]:
+    """SHA-1 thumbprints of every root deployed by group policy or enterprise enrolment.
+
+    This is the signal `--from-windows`'s fingerprint subtraction cannot produce: "absent from the
+    public CA set" catches a corporate root and equally any other locally-added one, while a
+    certificate in these stores was put there by IT, by construction.
+    """
+    found: set[str] = set()
+    for key, _origin in cert_sources.POLICY_ROOT_KEYS:
+        if output := _capture(["reg.exe", "query", key]):
+            found |= cert_sources.parse_reg_thumbprints(output)
+    return found
 
 
 def _export_windows_roots() -> Path | None:
@@ -267,7 +291,7 @@ def _export_windows_roots() -> Path | None:
             code=1,
         )
 
-    export = _run_windows(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", _ENCODED_EXPORT])
+    export = _windows_root_export()
     if export is None:
         raise RuntimeError(
             "powershell.exe returned no certificate data — the store may be empty, or an execution "
@@ -292,6 +316,150 @@ def _export_windows_roots() -> Path | None:
     _WINDOWS_ROOTS_PEM.write_text("\n".join(extras) + "\n")
     print(f"[certs] windows: {len(extras)} of {total} root(s) not already trusted -> {_WINDOWS_ROOTS_PEM}")
     return _WINDOWS_ROOTS_PEM
+
+
+# ---------------------------------------------------------------------------
+# Discovery: what this machine is already using, or being told to use. Parsing lives in
+# tasks/cert_sources.py; this half is the I/O and the ranking. See docs/certs.md.
+
+# /etc/environment first because it applies to every session, then the shell rc files in the order
+# a login shell would read them. ~/.zshenv specifically is where this repo's own certs block goes,
+# so a re-run sees what a previous install wrote and says so rather than proposing it again.
+_ENV_FILES = ("/etc/environment", "~/.zshenv", "~/.zshrc", "~/.bashrc", "~/.profile")
+
+
+def _read_text(path: Path) -> str | None:
+    try:
+        return path.read_text(errors="replace")
+    except OSError:
+        return None
+
+
+def _env_findings() -> tuple[list[cert_sources.Candidate], list[cert_sources.Bypass]]:
+    """This distro's own environment: the live shell, then the files that populate it."""
+    candidates = cert_sources.env_candidates(os.environ, "this shell")
+    bypasses = cert_sources.env_bypasses(os.environ, "this shell")
+    for name in _ENV_FILES:
+        path = Path(name).expanduser()
+        text = _read_text(path) if path.is_file() else None
+        if text is None:
+            continue
+        values = cert_sources.parse_env_assignments(text)
+        candidates += cert_sources.env_candidates(values, str(path))
+        bypasses += cert_sources.env_bypasses(values, str(path))
+    return candidates, bypasses
+
+
+def _config_findings() -> tuple[list[cert_sources.Candidate], list[cert_sources.Bypass]]:
+    """Config files that name a certificate, or that turned verification off."""
+    candidates: list[cert_sources.Candidate] = []
+    bypasses: list[cert_sources.Bypass] = []
+    for rule in cert_sources.CONFIG_RULES:
+        path = Path(rule.relative) if rule.relative.startswith("/") else Path.home() / rule.relative
+        text = _read_text(path) if path.is_file() else None
+        if text is None:
+            continue
+        for value in cert_sources.scan_config_text(rule, text):
+            if rule.kind is cert_sources.Kind.CERT:
+                candidates.append(cert_sources.Candidate(value, f"{rule.label} in {path}", cert_sources.RANK_NAMED))
+            else:
+                bypasses.append(cert_sources.Bypass(rule.label, str(path), rule.fix))
+    return candidates, bypasses
+
+
+def _windows_env_findings() -> tuple[list[cert_sources.Candidate], list[cert_sources.Bypass]]:
+    """The Windows side's own environment, read out of the registry.
+
+    This is the route that pays under WSL: IT sets NODE_EXTRA_CA_CERTS or REQUESTS_CA_BUNDLE
+    machine-wide for the Windows half of the laptop, nothing carries it across the boundary, and the
+    value it holds is an exact path this distro can read through /mnt.
+    """
+    candidates: list[cert_sources.Candidate] = []
+    bypasses: list[cert_sources.Bypass] = []
+    for key, origin in cert_sources.WINDOWS_ENV_KEYS:
+        output = _capture(["reg.exe", "query", key])
+        if not output:
+            continue
+        values = cert_sources.parse_reg_values(output)
+        candidates += cert_sources.env_candidates(values, origin)
+        bypasses += cert_sources.env_bypasses(values, origin)
+    return candidates, bypasses
+
+
+def _vendor_findings() -> list[cert_sources.Candidate]:
+    return [
+        cert_sources.Candidate(str(match), f"{vendor} install directory", cert_sources.RANK_FOUND)
+        for pattern, vendor in cert_sources.VENDOR_PEM_GLOBS
+        for match in sorted(Path("/").glob(pattern.lstrip("/")))
+    ]
+
+
+def _local_path(value: str) -> Path | None:
+    """A candidate's value as a path this distro can open, translating a Windows one. None when it
+    doesn't resolve to an existing file — a stale config entry pointing at a deleted bundle is
+    ordinary, and is exactly what makes an unchecked candidate list misleading."""
+    translated = value
+    if not value.startswith("/"):
+        # wslpath knows this distro's real mount root, which /etc/wsl.conf can move; the pure
+        # fallback assumes /mnt only when wslpath isn't there to ask.
+        translated = (_capture(["wslpath", "-u", value]) or "").strip() or (
+            cert_sources.windows_path_to_wsl(value) or ""
+        )
+    if not translated:
+        return None
+    path = Path(translated)
+    return path if path.is_file() else None
+
+
+def _windows_store_findings() -> list[tuple[str, bool]]:
+    """Roots in the Windows stores this distro doesn't trust, each flagged with whether IT deployed
+    it by policy. Empty outside WSL, or when interop can't answer."""
+    export = _windows_root_export()
+    if not export:
+        return []
+    system_bundle = Path(_SYSTEM_BUNDLE)
+    extras = _windows_extra_roots(export, system_bundle.read_text(errors="replace") if system_bundle.exists() else "")
+    labels = _windows_labels(export)
+    policy = _policy_thumbprints()
+    found: list[tuple[str, bool]] = []
+    for pem in extras:
+        label = labels.get(_pem_fingerprint(pem) or "", "")
+        thumbprint = cert_sources.thumbprint_from_label(label)
+        found.append((label or "<unnamed certificate>", bool(thumbprint and thumbprint in policy)))
+    return found
+
+
+def _report_wslenv() -> None:
+    """Say when Windows shares a certificate variable across the boundary without translating it.
+
+    `WSLENV`'s `/p` flag is what turns `C:\\corp\\root.pem` into a path this distro can open. Shared
+    without it, the variable arrives set — so every tool reading it looks correct and every one of
+    them fails to open the file, which reads as a broken certificate rather than a missing flag.
+    """
+    shared = cert_sources.parse_wslenv(os.environ.get("WSLENV", ""))
+    for name, flags in shared.items():
+        if name in cert_sources.CERT_ENV_VARS and "p" not in flags:
+            print(f"[certs] {name} is shared through WSLENV without /p — its value stays a Windows path in here")
+
+
+def _live_issuer() -> tuple[str, str | None, bool] | None:
+    """Who signed the certificate this machine is served right now: (host, issuer, verified). None
+    when the probe couldn't run at all.
+
+    **`verified` is the half that matters, and the issuer name alone reads as interception when it
+    is nothing of the kind** — netdoctor fills `tls_issuer` in either case, scanning the DER for the
+    common name on success and re-reading the chain without verification on failure. So a clean
+    connection to a public host reports its ordinary public CA. An issuer with `verified` false is
+    the actionable one: something is re-signing traffic with a root this distro does not trust.
+    """
+    endpoints = netdoctor.endpoints_for("core")
+    if not endpoints:
+        return None
+    endpoint = endpoints[0]
+    probe = netdoctor.probe_endpoint(endpoint, netdoctor.DEFAULT_TIMEOUT)
+    if not probe.tcp_ok:
+        return None
+    return endpoint.host, probe.tls_issuer, probe.tls_ok is not False
 
 
 # ---------------------------------------------------------------------------
@@ -440,6 +608,136 @@ def check(c: Context, bundle: str | None = None, from_windows: bool = False):
     print(f"[certs] bundle:{status['bundle']}  zshenv:{status['zshenv']}  java:{status['java']}")
 
 
+@dataclass(frozen=True)
+class _Discovered:
+    """One certificate this machine points at, after every place that named it has been merged.
+    `path` is None when nothing at that value exists — a stale pointer, which is a finding of its
+    own rather than a candidate to install."""
+
+    value: str
+    path: Path | None
+    origins: tuple[str, ...]
+    installable: bool
+
+
+def _merge_candidates(candidates: list[cert_sources.Candidate]) -> list[_Discovered]:
+    """Group candidates by the file they actually resolve to, so one certificate named by four
+    tools is one row with four origins. Merging on the resolved path rather than the raw value is
+    the point: `C:\\corp\\root.pem` and `/mnt/c/corp/root.pem` are the same file, and under WSL both
+    spellings turn up in the same run."""
+    merged: dict[str, _Discovered] = {}
+    for candidate in candidates:
+        path = _local_path(candidate.value)
+        key = str(path) if path else candidate.value
+        previous = merged.get(key)
+        origins = (*previous.origins, candidate.origin) if previous else (candidate.origin,)
+        installable = candidate.installable and (previous.installable if previous else True)
+        merged[key] = _Discovered(candidate.value, path, origins, installable)
+    return sorted(merged.values(), key=lambda found: (found.path is None, str(found.path or found.value)))
+
+
+def _report_discovery(
+    found: list[_Discovered], store: list[tuple[str, bool]], bypasses: list[cert_sources.Bypass]
+) -> None:
+    for item in found:
+        where = ", ".join(item.origins)
+        if item.path is None:
+            print(f"[certs] named but missing: {item.value} — {where}")
+        elif not item.installable:
+            print(f"[certs] evidence (not a PEM): {item.path} — {where}")
+        else:
+            print(f"[certs] candidate: {item.path} — {where}")
+    for label, by_policy in store:
+        print(f"[certs] windows store: {label}" + ("  ← deployed by policy" if by_policy else ""))
+    for bypass in bypasses:
+        print(f"[certs] VERIFICATION OFF: {bypass.setting} in {bypass.origin} — fix: {bypass.fix}")
+    if bypasses:
+        print(
+            "[certs] each of those turns off certificate checking for good and says nothing "
+            "afterwards. Install the CA first, then undo them — in that order, or the tool that "
+            "works today breaks and the bypass goes back permanently."
+        )
+    if not found and not store and not bypasses:
+        print("[certs] nothing found — no environment variable, config file or store names a corporate CA here")
+
+
+def _install_discovered(c: Context, found: list[_Discovered], store: list[tuple[str, bool]]) -> None:
+    """Ask per certificate, then install what was accepted in one pass.
+
+    Never installs without being told to, and defaults to no: adding a root CA means trusting
+    whoever holds its private key for every TLS connection this machine makes, so it is a decision
+    to put in front of somebody rather than a step to complete. `util.confirm` returns the default
+    when stdin isn't a terminal, so a non-interactive run installs nothing.
+    """
+    # Ask first, authenticate second. `ensure_sudo` opens a GUI password dialog, and running it
+    # ahead of the questions means a non-interactive run — where every confirm returns its default
+    # of no — asks for a root password to then install nothing.
+    paths = [
+        item.path
+        for item in found
+        if item.path and item.installable and util.confirm(f"Trust {item.path} ({item.origins[0]})?", default=False)
+    ]
+    if (
+        store
+        and util.confirm(f"Trust the {len(store)} Windows-store root(s) listed above?", default=False)
+        and (exported := _export_windows_roots())
+    ):
+        paths.append(exported)
+    if not paths:
+        print("[certs] nothing accepted — trust store unchanged")
+        return
+
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
+    util.require_apt()
+    if not util.command_exists("openssl"):
+        raise RuntimeError("openssl not found — run `sudo apt install openssl` first")
+    _install_bundle(c, paths)
+
+
+@task(
+    help={
+        "install": (
+            "Ask about each certificate found and install the ones you accept. Off by default: "
+            "trusting a root CA is a decision, not a step."
+        )
+    }
+)
+def discover(c: Context, install: bool = False):
+    """Find the corporate CA this machine already uses or is told to use, and report where TLS
+    verification was switched off instead.
+
+    Looks at environment variables (this distro's, and under WSL the Windows side's own, read from
+    the registry), config files for npm/pip/git/curl/conda/JVM tooling, vendor install directories,
+    and the Windows certificate store — flagging roots that group policy deployed, which is IT
+    deployment read directly rather than guessed. Read-only unless --install. See docs/certs.md.
+    """
+    candidates, bypasses = _env_findings()
+    config_candidates, config_bypasses = _config_findings()
+    candidates += config_candidates
+    bypasses += config_bypasses
+
+    store: list[tuple[str, bool]] = []
+    if util.is_wsl():
+        windows_candidates, windows_bypasses = _windows_env_findings()
+        candidates += windows_candidates + _vendor_findings()
+        bypasses += windows_bypasses
+        store = _windows_store_findings()
+        _report_wslenv()
+
+    found = _merge_candidates(candidates)
+    if probed := _live_issuer():
+        host, issuer, verified = probed
+        signed_by = f" (signed by {issuer})" if issuer else ""
+        if verified:
+            print(f"[certs] live: {host} verifies against this machine's trust store{signed_by}")
+        else:
+            print(f"[certs] live: {host} does NOT verify here{signed_by} — that issuer is the root to install")
+
+    _report_discovery(found, store, bypasses)
+    if install and not util.DRY_RUN:
+        _install_discovered(c, found, store)
+
+
 @task
 def install(c: Context, bundle: str | None = None, from_windows: bool = False):
     """Install the corporate CA bundle into the OS trust store and export it for
@@ -462,6 +760,13 @@ def install(c: Context, bundle: str | None = None, from_windows: bool = False):
         print(f"[certs] bundle:{status['bundle']}  zshenv:{status['zshenv']}  java:{status['java']}")
         return
 
+    _install_bundle(c, paths)
+
+
+def _install_bundle(c: Context, paths: list[Path]) -> None:
+    """Convert, install into the OS trust store, export the env vars, import into Java. Shared by
+    `install` and by `discover --install`, which resolves its paths a different way and then has
+    exactly the same work to do."""
     # Not wrapped in try/except: an unparseable bundle must raise loudly here, never be silently
     # skipped — see module docstring.
     desired = _desired_bundle_text(c, paths)

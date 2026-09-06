@@ -47,6 +47,62 @@ overrides this for a one-off run without editing the file.
 Re-running `inv certs.install` is idempotent: it compares the desired bundle text against what's
 already installed and skips `update-ca-certificates` entirely when nothing changed.
 
+## Finding the certificate in the first place
+
+```shell
+inv certs.discover             # read-only — what this machine already uses, and what it turned off
+inv certs.discover --install   # asks about each one, installs what you accept
+```
+
+`--from-windows` above answers "which roots exist on the Windows side that this distro doesn't
+trust". `discover` answers a better question — **which certificate is this machine already using, or
+being told to use** — and most of its routes name an exact file:
+
+- **Environment variables** naming a bundle: `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`,
+  `NODE_EXTRA_CA_CERTS`, `GIT_SSL_CAINFO`, `AWS_CA_BUNDLE`, `CARGO_HTTP_CAINFO`,
+  `-Djavax.net.ssl.trustStore` inside `JAVA_TOOL_OPTIONS`, and the rest — read from the live shell,
+  `/etc/environment` and the shell rc files. Somebody has already decided which file is the
+  corporate CA; this just puts it where the OS trust store can see it.
+- **The Windows side's own environment**, under WSL, read out of the registry
+  (`HKLM\...\Session Manager\Environment` and `HKCU\Environment`). This is where IT sets those same
+  variables machine-wide, nothing carries them across the boundary, and the value is an exact path
+  reachable through `/mnt`. `WSLENV` is checked in the same pass: a certificate variable shared
+  without the `/p` flag arrives holding a `C:\` path, so every Linux tool reading it looks
+  configured and fails to open the file.
+- **Config files**: npm's `cafile`, pip's `cert`, git's `http.sslCAInfo`, curl's `cacert`, conda's
+  `ssl_verify`, gradle's `systemProp.javax.net.ssl.trustStore`.
+- **Vendor install directories**, where a vendor writes a readable file at a documented path —
+  Netskope's `C:\ProgramData\netskope\stagent\data\nscacert*.pem`. Zscaler's client connector
+  injects into the Windows store and documents no fixed file, so for that one the store and the live
+  issuer are the routes; hunting for a file is not a search that failed.
+- **The Windows certificate store**, with roots **deployed by group policy or enterprise enrolment
+  flagged** — read from the registry, where each subkey name is the certificate's thumbprint. That
+  is IT deployment read directly, rather than inferred from what the public CA set lacks, and it is
+  the ranking `--from-windows` on its own cannot produce. (The registry rather than
+  `certutil -grouppolicy -store Root` because certutil's output is localized — a parser for it would
+  work on an English machine and quietly find nothing on a German one.)
+- **The live connection**: the issuer that actually signed the certificate served to this machine,
+  and whether it verified. An issuer that _doesn't_ verify names the exact root to install.
+
+Everything found is reported with where it was found; a value naming a file that doesn't exist is
+reported as a stale pointer rather than silently dropped. `--install` then asks about each
+certificate **individually and defaults to no** — trusting a root CA means trusting whoever holds
+its private key for every TLS connection this machine makes, so it is a decision to put in front of
+someone, not a step to complete. A non-interactive run installs nothing.
+
+### Where verification was switched off instead {: #verification-off }
+
+`discover` also reports the opposite of a certificate: `GIT_SSL_NO_VERIFY`,
+`NODE_TLS_REJECT_UNAUTHORIZED=0`, `PYTHONHTTPSVERIFY=0`, npm's `strict-ssl=false`, pip's
+`trusted-host`, conda's `ssl_verify: false`, curl's `--insecure`, `git config http.sslVerify false`.
+
+Each one is somebody who hit exactly this problem and turned the check off rather than installing
+the CA — a permanent, silent downgrade that no error message will mention again. Each is reported
+with the command that undoes it, and **the order matters: install the CA first, undo the bypass
+second.** Removing it while the trust store still can't verify breaks the tool that was working a
+moment ago, and the natural next move is to put the bypass back for good. Nothing removes them
+automatically; a bypass may also exist for an unrelated host this CA doesn't cover.
+
 ## Format detection
 
 The bundle's file extension is not trusted — `.crt`/`.cer`/`.pem` are filename conventions, not a
