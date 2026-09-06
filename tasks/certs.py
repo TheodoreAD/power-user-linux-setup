@@ -22,7 +22,7 @@ import subprocess
 import tempfile
 from pathlib import Path
 
-from invoke import Context, task
+from invoke import Context, Exit, task
 
 from . import util
 
@@ -250,16 +250,21 @@ def _export_windows_roots() -> Path | None:
     """Export the Windows root stores and keep only what this distro doesn't already trust, at a
     stable path so re-running is idempotent. None when there's nothing to add.
     """
+    # Exit, not RuntimeError: both of these are "wrong machine for this flag", which is a message
+    # to read, not a traceback to page through. The failure below is a different thing — something
+    # answered and its answer was unusable — and keeps its stack.
     if not util.is_wsl():
-        raise RuntimeError(
-            "--from-windows reads the Windows certificate store through WSL interop, and this "
-            "isn't a WSL distro. Pass --bundle=path, or set [certs] bundle in identity.toml."
+        raise Exit(
+            "[certs] --from-windows reads the Windows certificate store through WSL interop, and "
+            "this isn't a WSL distro. Pass --bundle=path, or set [certs] bundle in identity.toml.",
+            code=1,
         )
     if not util.command_exists("powershell.exe"):
-        raise RuntimeError(
-            "powershell.exe not found — WSL interop is what makes the Windows side reachable. "
-            "Check /etc/wsl.conf's [interop] enabled=true (see `inv wsl.check`), or copy the "
-            "bundle over /mnt/c by hand and pass --bundle=path."
+        raise Exit(
+            "[certs] powershell.exe not found — WSL interop is what makes the Windows side "
+            "reachable. Check /etc/wsl.conf's [interop] enabled=true (see `inv wsl.check`), or "
+            "copy the bundle over /mnt/c by hand and pass --bundle=path.",
+            code=1,
         )
 
     export = _run_windows(["powershell.exe", "-NoProfile", "-NonInteractive", "-EncodedCommand", _ENCODED_EXPORT])
