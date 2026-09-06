@@ -251,6 +251,11 @@ class ProxySection(TypedDict, total=False):
     host: str
     port: int | str
     noproxy: str
+    # Who may talk to the local daemon. `gateway` opens it past this machine's loopback — which
+    # containers need — and is refused without an `allow` that narrows who, since the daemon is
+    # unauthenticated to its clients and holds the corporate credential behind it.
+    gateway: bool
+    allow: str
 
 
 class CertsSection(TypedDict, total=False):

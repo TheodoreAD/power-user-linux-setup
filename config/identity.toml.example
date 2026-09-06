@@ -79,6 +79,15 @@ email    = "jane.smith@work.com"
 # host    = "proxy.corp.example.com"
 # port    = 8080
 # noproxy = "*.corp.example.com,10.0.0.0/8"
+#
+# The local daemon answers this machine's loopback only, which is right until something in a
+# container needs it — 127.0.0.1 in there is the container's own. `gateway` opens it past loopback
+# and `allow` says to whom; `gateway` without a narrowed `allow` is refused, because the daemon is
+# unauthenticated to its clients and would hand anything that can route here authenticated egress
+# through your corporate account. See docs/corporate-proxy.md, "Reaching the daemon from a
+# container".
+# gateway = true
+# allow   = "172.17.0.0/16"   # docker's default bridge, and nothing else
 
 # Optional — corporate TLS-inspection root CA, if this network has one (`inv certs.install`).
 # Auto-detected by content, not file extension: PEM (-----BEGIN CERTIFICATE-----), raw DER, or a

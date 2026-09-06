@@ -8,12 +8,16 @@ import pytest
 
 from tasks import proxy, util
 from tasks.proxy import (
+    _Exposure,
+    _exposure,
     _keyring_command,
     _keyring_env,
     _needs_negotiate,
     _parse_env_proxy,
     _parse_etc_environment,
+    _parse_gateway,
     _parse_proxy_authenticate,
+    _px_save_command,
     _split_host_port,
 )
 
@@ -120,6 +124,56 @@ def test_the_fallback_backend_is_installed_into_px_own_venv():
     # at its own startup. Declared in setup.toml so this and `inv python.install-tools` cannot
     # install two different pxs.
     assert util.load_config()["packages"]["px-proxy"].get("extras") == ["keyrings.alt"]
+
+
+def test_px_save_command_keeps_the_daemon_local_by_default():
+    command = _px_save_command("proxy.corp", 8080, None, None, False, _Exposure())
+    assert command == "px --proxy=proxy.corp:8080 --save"
+    assert "gateway" not in command
+
+
+def test_px_save_command_carries_every_configured_part():
+    command = _px_save_command(
+        "proxy.corp", 8080, "*.corp,10.0.0.0/8", "DOMAIN\\jsmith", True, _Exposure(True, "172.17.0.0/16")
+    )
+    assert "--noproxy=*.corp,10.0.0.0/8" in command
+    assert "--username=DOMAIN\\jsmith" in command
+    assert "--kerberos=1" in command
+    assert "--gateway=1 --allow=172.17.0.0/16" in command
+
+
+def test_exposure_defaults_to_this_machine_only():
+    assert _exposure({}) == _Exposure(False, "")
+
+
+def test_exposure_refuses_gateway_without_an_allow_list():
+    # The daemon is unauthenticated to its clients by design — that is what keeps the credential in
+    # one place — so opening it with Px's stock allow of *.*.*.* hands anything that can route here
+    # authenticated egress through the user's own corporate account.
+    with pytest.raises(RuntimeError, match="allow list"):
+        _exposure({"gateway": True})
+
+
+@pytest.mark.parametrize("allow", ["*", "*.*.*.*", "0.0.0.0/0"])
+def test_exposure_refuses_an_allow_list_that_narrows_nothing(allow: str):
+    with pytest.raises(RuntimeError, match="narrows nothing"):
+        _exposure({"gateway": True, "allow": allow})
+
+
+def test_exposure_accepts_a_narrowed_range():
+    assert _exposure({"gateway": True, "allow": "172.17.0.0/16"}) == _Exposure(True, "172.17.0.0/16")
+
+
+def test_allow_without_gateway_is_not_a_refusal():
+    # Harmless on its own: allow only bites once remote clients are permitted at all, and refusing
+    # it would fail a machine whose config is merely ahead of its daemon.
+    assert _exposure({"allow": "172.17.0.0/16"}) == _Exposure(False, "172.17.0.0/16")
+
+
+def test_parse_gateway_reads_px_ini():
+    assert _parse_gateway("[proxy]\nserver = proxy.corp:8080\ngateway = 1\n") is True
+    assert _parse_gateway("[proxy]\ngateway = 0\n") is False
+    assert _parse_gateway("[proxy]\nserver = proxy.corp:8080\n") is False
 
 
 def test_both_daemon_start_paths_read_the_env_file_that_pins_the_backend():

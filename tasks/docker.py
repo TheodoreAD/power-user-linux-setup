@@ -7,7 +7,7 @@ from typing import cast
 
 from invoke import Context, Exit, task
 
-from . import certs, util
+from . import certs, proxy, util
 
 _DAEMON_JSON = Path("/etc/docker/daemon.json")
 
@@ -202,9 +202,31 @@ def _configure_daemon_proxy(c: Context, proxy: str, no_proxy: str | None) -> boo
     return True
 
 
-def _configure_container_proxy(proxy: str, no_proxy: str | None) -> None:
+def _warn_if_daemon_is_loopback_only(container_proxy: str) -> None:
+    """A container-side proxy pointing at a local Px that only listens on loopback is config that
+    reads correctly and cannot work: 127.0.0.1 inside a container is the container's own loopback,
+    and Px binds 127.0.0.1 by default. Said here because the symptom — every pull timing out while
+    the host is fine — points at the network rather than at this setting.
+    """
+    if "127.0.0.1" in container_proxy or "localhost" in container_proxy:
+        print(
+            "[docker-corporate] container_proxy names loopback, which inside a container is the "
+            "container's own — it will not reach a proxy on the host. Use the bridge gateway "
+            "(172.17.0.1) and see docs/corporate-proxy.md's gateway section."
+        )
+        return
+    if util.command_exists("px") and not proxy.accepts_remote_clients():
+        print(
+            "[docker-corporate] the local px daemon listens on 127.0.0.1 only, so containers "
+            "cannot reach it at that address. Set [proxy] gateway and allow in identity.toml, "
+            "then re-run `inv proxy.fix` — see docs/corporate-proxy.md."
+        )
+
+
+def _configure_container_proxy(proxy_url: str, no_proxy: str | None) -> None:
+    _warn_if_daemon_is_loopback_only(proxy_url)
     config = _read_docker_config()
-    updated = _with_container_proxy(config, proxy, no_proxy)
+    updated = _with_container_proxy(config, proxy_url, no_proxy)
     if updated == config:
         print("[docker-corporate] container proxy already set")
         return

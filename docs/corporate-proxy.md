@@ -127,6 +127,37 @@ Startup-folder entry (not a SYSTEM service — it needs to run _as the user_ so 
 transparently pass through the logged- in session's identity for NTLM/Kerberos proxies, no stored
 password needed on that side at all).
 
+## Reaching the daemon from a container
+
+By default the daemon answers **this machine's loopback and nothing else** — Px's own defaults are
+`listen=127.0.0.1`, `gateway=0`, `allow=*.*.*.*`. That is the right default and it is why
+`http_proxy=http://127.0.0.1:3128` is safe to export: no other host can use your corporate
+credential.
+
+A process **inside a container** resolves `127.0.0.1` to the container's own loopback, so it never
+reaches the daemon. Pointing containers at the bridge gateway (`172.17.0.1:3128`) is the fix, and it
+needs the daemon to accept a client that isn't loopback:
+
+```toml
+[proxy]
+gateway = true
+allow = "172.17.0.0/16" # docker's default bridge, and nothing else
+```
+
+Then `inv proxy.fix` rewrites `px.ini` and restarts the daemon.
+
+**`allow` is not optional here, and PULSE refuses `gateway` without it.** `gateway=1` overrides
+`listen`, so the daemon binds every interface — and Px's stock `allow` accepts every client that can
+route to the machine. The daemon is deliberately unauthenticated to its clients (that is what keeps
+the credential in one place), so the two together publish authenticated egress through _your_
+corporate account to the whole LAN, and to whatever a VPN attaches you to. A value that narrows
+nothing (`*`, `*.*.*.*`, `0.0.0.0/0`) is refused for the same reason.
+
+`inv proxy.check` reports which of the two postures is in effect, and
+`inv docker.configure-corporate` says so too when `container_proxy` is set while the daemon is still
+loopback-only — configuration that reads correctly and cannot work is exactly the failure this
+pairing produces.
+
 ## Dev container
 
 No systemd `--user` unit is assumed available. `inv proxy.fix`/`install` fall back to a plain

@@ -19,6 +19,7 @@ import re
 import subprocess
 import time
 from collections.abc import Mapping
+from dataclasses import dataclass
 from pathlib import Path
 
 from invoke import Context, task
@@ -240,18 +241,58 @@ def _install_px(c: Context) -> None:
     print("[proxy] px installed")
 
 
-def _configure_px(
-    c: Context, host: str, port: int, noproxy: str | None, username: str | None = None, use_kerberos: bool = False
-) -> bool:
-    """Persist the upstream address + bypass list (+ username, if a credential was just captured)
-    via Px's own --save — px.ini's schema is deliberately not hand-authored here, see the plan
-    doc's "genuine unknowns". Returns True if this changed anything on disk (callers use that to
-    decide whether to restart the daemon).
+# Px's own defaults, from its configuration docs: listen=127.0.0.1, gateway=0, allow=*.*.*.*. The
+# first is why a container cannot reach the daemon at all; the third is why the obvious fix for that
+# is dangerous — `gateway=1` overrides `listen`, and the stock allow-list accepts every client that
+# can route here. So gateway is only ever enabled alongside a narrowed allow-list, and a value that
+# narrows nothing is refused rather than passed through.
+_ALLOW_EVERYTHING = frozenset({"*", "*.*", "*.*.*", "*.*.*.*", "0.0.0.0/0"})
+
+
+@dataclass(frozen=True)
+class _Exposure:
+    """Who may talk to the local daemon. Default is Px's own: this machine, and nothing else."""
+
+    gateway: bool = False
+    allow: str = ""
+
+
+def _exposure(section: util.ProxySection) -> _Exposure:
+    """The `[proxy] gateway`/`allow` pair from identity.toml, validated.
+
+    Refusing `gateway` without a narrowed `allow` is the whole point of reading these through a
+    validator rather than passing them to Px. The daemon is unauthenticated to its clients by design
+    — that is what makes the credential safe to hold in one place — so opening it to remote clients
+    with Px's stock allow-list hands anyone who can route to this machine authenticated egress
+    through the user's own corporate account.
     """
-    if util.DRY_RUN:
-        print(f"[proxy] px.ini ({host}:{port}): {util.ok_label(_PX_INI.exists())}")
-        return False
-    before = _PX_INI.read_text() if _PX_INI.exists() else None
+    gateway = bool(section.get("gateway", False))
+    allow = str(section.get("allow", "")).strip()
+    if gateway and not allow:
+        raise RuntimeError(
+            "[proxy] gateway = true needs an allow list: the daemon is unauthenticated to its "
+            "clients, and Px's default allow of *.*.*.* would let anything that can route here "
+            "reach the corporate proxy as you. Set [proxy] allow to the range that needs it — "
+            "172.17.0.0/16 for docker's default bridge (see docs/corporate-proxy.md)."
+        )
+    if gateway and allow in _ALLOW_EVERYTHING:
+        raise RuntimeError(
+            f"[proxy] allow = {allow!r} narrows nothing, which is the same exposure as leaving it "
+            "unset. Name the range that actually needs the daemon, e.g. 172.17.0.0/16."
+        )
+    return _Exposure(gateway, allow)
+
+
+def _px_save_command(
+    host: str,
+    port: int,
+    noproxy: str | None,
+    username: str | None,
+    use_kerberos: bool,
+    exposure: _Exposure,
+) -> str:
+    """The `px --save` invocation that writes px.ini. Pure, so what ends up in that file is
+    assertable without running Px or having a proxy to point it at."""
     cmd = f"px --proxy={host}:{port} --save"
     if noproxy:
         cmd += f" --noproxy={noproxy}"
@@ -259,7 +300,41 @@ def _configure_px(
         cmd += f" --username={username}"
     if use_kerberos:
         cmd += " --kerberos=1"
-    c.run(cmd, hide=True)
+    if exposure.gateway:
+        cmd += " --gateway=1"
+    if exposure.allow:
+        cmd += f" --allow={exposure.allow}"
+    return cmd
+
+
+def _parse_gateway(px_ini: str) -> bool:
+    """Whether px.ini has the daemon accepting remote clients."""
+    return bool(re.search(r"^\s*gateway\s*=\s*1\b", px_ini, re.MULTILINE))
+
+
+def accepts_remote_clients() -> bool:
+    """Whether the local daemon, as configured, answers anything but this machine's loopback.
+
+    Public because docker.py needs it: a container-side proxy pointing at the bridge gateway is
+    configuration that looks right and cannot work while Px is listening on 127.0.0.1 only.
+    """
+    return _PX_INI.exists() and _parse_gateway(_PX_INI.read_text())
+
+
+def _configure_px(
+    c: Context, host: str, port: int, noproxy: str | None, username: str | None = None, use_kerberos: bool = False
+) -> bool:
+    """Persist the upstream address + bypass list + exposure (+ username, if a credential was just
+    captured) via Px's own --save — px.ini's schema is deliberately not hand-authored here, see the
+    plan doc's "genuine unknowns". Returns True if this changed anything on disk (callers use that
+    to decide whether to restart the daemon).
+    """
+    exposure = _exposure(util.load_proxy_override())
+    if util.DRY_RUN:
+        print(f"[proxy] px.ini ({host}:{port}): {util.ok_label(_PX_INI.exists())}")
+        return False
+    before = _PX_INI.read_text() if _PX_INI.exists() else None
+    c.run(_px_save_command(host, port, noproxy, username, use_kerberos, exposure), hide=True)
     after = _PX_INI.read_text() if _PX_INI.exists() else None
     return before != after
 
@@ -577,6 +652,10 @@ def check(c: Context, proxy: str = "auto"):
         # credential was actually captured (confirmed against a real px --save run).
         saved = _PX_INI.exists() and bool(re.search(r"^username\s*=\s*\S", _PX_INI.read_text(), re.MULTILINE))
         print(f"[proxy] px.ini: {'username saved (credential likely cached)' if saved else 'no saved username yet'}")
+        if accepts_remote_clients():
+            print("[proxy] listen: remote clients allowed (gateway) — check [proxy] allow narrows who")
+        else:
+            print("[proxy] listen: 127.0.0.1 only — containers and other hosts cannot reach this daemon")
     else:
         print("[proxy] px: not installed  ← `inv proxy.install` installs it (uv tool)")
 

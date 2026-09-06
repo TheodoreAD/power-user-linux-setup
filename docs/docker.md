@@ -104,8 +104,11 @@ interchangeable:
   variables when a container is created. **Not the same address as the daemon's**: dockerd runs in
   the host's network namespace and reaches a local Px at `127.0.0.1:3128`, while `127.0.0.1` inside
   a container is that container's own loopback. This one has to be the bridge gateway
-  (`172.17.0.1`), and Px only answers there if it was started in gateway mode. That is why the two
-  are separate keys rather than one value used twice.
+  (`172.17.0.1`), and Px answers there only once `[proxy] gateway`/`allow` are set — see
+  [corporate-proxy.md](corporate-proxy.md#reaching-the-daemon-from-a-container), which is also where
+  the reason `allow` is mandatory lives. `docker.configure-corporate` warns when this key is set
+  while the daemon is still loopback-only. That is why the two are separate keys rather than one
+  value used twice.
 - **Per-registry CA** — docker doesn't read the OS trust store the way `curl` does, so
   `inv certs.install` alone does nothing for a registry pull. Each host in `registries` gets the
   same bundle written to `/etc/docker/certs.d/<host>/ca.crt`, resolved from the `[certs]` table so
