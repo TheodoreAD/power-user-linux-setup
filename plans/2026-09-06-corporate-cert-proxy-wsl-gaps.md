@@ -196,11 +196,23 @@ an unrelated host that this CA does not cover.]
    need this most, not a failed search. That is the argument for D1 being the primary route rather
    than a file hunt.
 
-[NEEDS CLARIFICATION: **does `discover` install, or only report and hand over to `install`?** A
-single task that finds and installs is the smaller surface and the obvious flow, but it makes a
-read-only diagnostic into a mutating one, which is the split every other pair here keeps
-(`check`/`install`, `proxy.check`/`proxy.install`). The likely answer is `certs.discover` reporting
-plus a `--install` flag that routes into the existing installer, so the default stays read-only.]
+[DECISION: **`discover` reports by default and installs only under `--install`**, which asks about
+each certificate individually and defaults to no. That keeps the read-only/mutating split every
+other pair here has, and the per-certificate question is not ceremony: trusting a root means
+trusting whoever holds its private key for every TLS connection the machine makes. `util.confirm`
+returns its default without a terminal, so a non-interactive run installs nothing.]
+
+[PITFALL: **ask before authenticating, not after.** The first version called `util.ensure_sudo()` at
+the top of the install path, which opens a GUI password dialog — so a non-interactive
+`discover --install`, where every question answers no, asked for a root password in order to install
+nothing. The confirmations now run first and sudo is reached only once something has been accepted.]
+
+[PITFALL: **`netdoctor` fills `tls_issuer` whether or not the chain verified**, scanning the DER on
+success and re-reading the chain without verification on failure. Reporting the issuer alone printed
+"pypi.org is re-signed by GlobalSign …" on a perfectly clean personal machine — an interception
+claim about an ordinary public CA. The report carries `tls_ok` with it now. Caught by running the
+task, not by reading it: every unit test passed either way, because the bug was in what the sentence
+asserted rather than in what the code computed.]
 
 ## Files touched
 
@@ -214,9 +226,9 @@ plus a `--install` flag that routes into the existing installer, so the default 
   `docs/wsl.md`.
 - `tests/unit/test_certs.py` (new), `tests/unit/test_proxy.py`, `tests/unit/test_docker.py`.
 
-Section 4 is not built. When it is: `tasks/certs.py` for the discovery routes and the ranking,
-`tasks/netdoctor.py` for the issuer name it already extracts, and `docs/certs.md` for the
-verification-disabled findings, which are the half a reader most needs to be told about.
+Section 4 landed as `tasks/cert_sources.py` (all the parsing, pure and stdlib-only) plus
+`inv certs.discover` in `tasks/certs.py`, `tests/unit/test_cert_sources.py`, and `docs/certs.md`'s
+"Finding the certificate in the first place".
 
 ## Verification
 
@@ -231,3 +243,14 @@ tested here is that `Get-ChildItem Cert:\...` on a real machine emits what those
 [UNVERIFIED: **the systemd drop-in and `certs.d` writes have not been exercised against a running
 dockerd** — the writers are unit-tested, but restarting the dev machine's docker daemon is not
 something a test run may do.]
+
+`certs.discover` was run for real against a fabricated corporate environment — a bundle named by two
+environment variables and an npmrc at once (merged into one candidate with three origins), a
+variable pointing at a file that does not exist (reported as a stale pointer), a JVM trust store,
+and four separate verification-off settings across the environment, npmrc, curlrc and condarc. Both
+bugs above came out of that run rather than out of the tests.
+
+[UNVERIFIED: **the Windows-side halves of `discover` have never run on Windows** — the registry
+environment read, the group-policy thumbprint read, `WSLENV`, and the vendor globs. Their parsers
+are tested against captured output shapes; what no machine here can check is that a real
+`reg.exe query` prints what those fixtures assume.]
