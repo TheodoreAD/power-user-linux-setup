@@ -1851,6 +1851,11 @@ method = "uv-tool"
 package = "px-proxy"
 check_cmd = "px"
 tags = ["corporate"]
+# Px reads its credential from the keyring at its own startup, so the backend has to be importable
+# in *its* venv, not in PULSE's. keyrings.alt supplies the file backend `inv proxy.install
+# --keyring-fallback` selects on a distro with no Secret Service; it is inert otherwise, since
+# nothing selects it without PYTHON_KEYRING_BACKEND being set for that process.
+extras = ["keyrings.alt"]
 # --version doesn't exit — starts the proxy daemon itself instead (hung for the full check
 # timeout during the audit pass before this override was added). --help exits cleanly.
 verify_cmd = "px --help"

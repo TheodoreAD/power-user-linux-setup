@@ -32,6 +32,18 @@ UNIT_PATH = Path.home() / ".config" / "systemd" / "user" / "pulse-proxy.service"
 ZSHENV = Path.home() / ".zshenv"
 _DEFAULT_PORT = 3128
 
+# Read by the systemd unit's EnvironmentFile= and by pulse-proxy-start; holds the keyring backend
+# and nothing else. Never a credential — the credential is in the keyring that this names.
+ENV_FILE = util.PULSE_CONFIG_DIR / "proxy.env"
+# keyring's own name for the non-recommended file backend, and the package that supplies it.
+_FALLBACK_BACKEND = "keyrings.alt.file.PlaintextKeyring"
+_FALLBACK_PACKAGE = "keyrings.alt"
+# Nothing real is stored: the service name resolves to nothing, and the secret is a constant that
+# is compared against what comes back and then deleted. Same shape as docker.py's store probe.
+_PROBE_SERVICE = "pulse-proxy-keyring-check"
+_PROBE_ACCOUNT = "pulse-check"
+_PROBE_SECRET = "pulse-round-trip"
+
 
 # ---------------------------------------------------------------------------
 # Pure helpers — unit-tested in tests/unit/test_proxy.py, see tests/README.md for why these and not
@@ -219,8 +231,12 @@ def _install_px(c: Context) -> None:
         return
     if not util.command_exists("uv"):
         raise RuntimeError("uv not found — run ./bootstrap.sh first")
+    # Extras come from setup.toml rather than being spelled out here, so this and
+    # `inv python.install-tools` cannot install two different pxs. keyrings.alt is what makes
+    # --keyring-fallback possible: the backend has to be importable inside px's own tool venv.
+    extras = "".join(f" --with {extra}" for extra in util.load_config()["packages"]["px-proxy"].get("extras", []))
     print("[proxy] installing px (uv tool)...")
-    c.run("uv tool install --upgrade px-proxy")
+    c.run(f"uv tool install --upgrade{extras} px-proxy")
     print("[proxy] px installed")
 
 
@@ -307,6 +323,110 @@ def _restart_daemon(c: Context) -> None:
 
 
 # ---------------------------------------------------------------------------
+# The keyring Px reads its credential back out of, and the fallback for a machine that has none.
+
+
+def _keyring_command(fallback: bool, snippet: str) -> list[str]:
+    """A one-shot `uv run` that can talk to the keyring. `--no-project` because this has nothing to
+    do with the repo the task happens to be running from: without it, uv resolves the project's
+    interpreter and will silently delete and recreate its .venv when the answer differs from what
+    is already there (plans/2026-08-30-uv-run-destroys-the-project-venv.md).
+    """
+    with_flags = ["--with", "keyring"] + (["--with", _FALLBACK_PACKAGE] if fallback else [])
+    return ["uv", "run", "--no-project", *with_flags, "python", "-c", snippet]
+
+
+def _keyring_env(fallback: bool) -> dict[str, str]:
+    """PYTHON_KEYRING_BACKEND, per process, only when the fallback is in play. Deliberately not
+    ~/.config/python_keyring/keyringrc.cfg: that file selects the backend for every keyring
+    consumer on the machine, would quietly downgrade unrelated tools to a plaintext store, and
+    would keep doing so after a Secret Service provider appeared.
+    """
+    env = dict(os.environ)
+    if fallback:
+        env["PYTHON_KEYRING_BACKEND"] = _FALLBACK_BACKEND
+    return env
+
+
+_ROUND_TRIP = (
+    "import keyring, sys\n"
+    "service, account, secret = sys.argv[1:4]\n"
+    "keyring.set_password(service, account, secret)\n"
+    "got = keyring.get_password(service, account)\n"
+    "keyring.delete_password(service, account)\n"
+    "print(keyring.get_keyring())\n"
+    "sys.exit(0 if got == secret else 3)\n"
+)
+
+
+def _keyring_round_trip(*, fallback: bool = False) -> tuple[bool, str]:
+    """Store a throwaway secret, read it back, delete it. Returns (worked, backend-or-reason).
+
+    Whether `keyring` imports is not the question — it always does. Whether a backend answers is,
+    and on a minimal WSL2 distro or a from-scratch container with no Secret Service provider the
+    answer is NoKeyringError. Probing for that here is what stops `install` from discovering it
+    only after a password has been typed. Same rationale as docker.py's `_credential_round_trip`.
+    """
+    proc = subprocess.run(
+        [*_keyring_command(fallback, _ROUND_TRIP), _PROBE_SERVICE, _PROBE_ACCOUNT, _PROBE_SECRET],
+        capture_output=True,
+        text=True,
+        env=_keyring_env(fallback),
+        check=False,
+    )
+    if proc.returncode == 0:
+        backend = proc.stdout.strip().splitlines()
+        return True, backend[-1] if backend else "ok"
+    reason = (proc.stderr or proc.stdout).strip().splitlines()
+    return False, reason[-1] if reason else f"exit {proc.returncode}"
+
+
+def _write_env_file() -> None:
+    """Pin the fallback backend for Px's own process, through the file both start paths read."""
+    ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
+    ENV_FILE.write_text(f"PYTHON_KEYRING_BACKEND={_FALLBACK_BACKEND}\n")
+    print(f"[proxy] keyring backend pinned for the daemon in {ENV_FILE}")
+
+
+def _keyring_status(*, fallback: bool) -> bool:
+    """Report the keyring, and say what to do about it when it doesn't answer. True if usable."""
+    ok, detail = _keyring_round_trip(fallback=fallback)
+    if ok:
+        print(f"[proxy] keyring: {detail}")
+        return True
+    print(f"[proxy] keyring: no usable backend — {detail}")
+    print(
+        "[proxy] Px reads its credential from the keyring at its own startup, so this has to work "
+        "before a password is worth capturing. Either start a Secret Service provider (install "
+        "gnome-keyring and dbus-user-session, common on a minimal WSL2 distro), or re-run with "
+        "`inv proxy.install --keyring-fallback` to store it in a 0600 file instead."
+    )
+    return False
+
+
+def _use_fallback_keyring() -> bool:
+    """Switch to the file backend, having said plainly what that costs. False if it doesn't work
+    either — `keyrings.alt` may not be installed alongside px, and pretending otherwise would fail
+    later, inside the daemon, where the error is much harder to read.
+    """
+    ui.block(
+        "The credential will be stored base64-encoded in a 0600 file under "
+        "~/.local/share/python_keyring/, not in a locked keyring. Anything running as this user "
+        "can read it. That is the same exposure as PULSE_PROXY_PASSWORD_FILE, and still better "
+        "than a password embedded in http_proxy — but it is a downgrade, and it is why this is a "
+        "flag rather than an automatic fallback.",
+        label="keyring fallback",
+    )
+    ok, detail = _keyring_round_trip(fallback=True)
+    if not ok:
+        print(f"[proxy] fallback keyring did not work either — {detail}")
+        return False
+    print(f"[proxy] keyring: {detail} (fallback)")
+    _write_env_file()
+    return True
+
+
+# ---------------------------------------------------------------------------
 # Credential capture (proxy.install only — proxy.fix never prompts)
 
 
@@ -329,7 +449,7 @@ def _capture_password(prompt: str) -> str | None:
     return None
 
 
-def _capture_credential(c: Context) -> str | None:
+def _capture_credential(*, fallback: bool = False) -> str | None:
     """Capture a username+password once and store the password in the same keyring entry Px
     itself reads at its own startup (service "Px", account <username>). Returns the username on
     success, None on failure — the caller (install()) still needs the username to pass to
@@ -370,20 +490,13 @@ def _capture_credential(c: Context) -> str | None:
     # not worth adding to the project's `pyproject.toml`. subprocess.run directly, not c.run:
     # invoke's Runner doesn't offer a clean way to pass stdin bytes without echoing them through
     # the terminal-mirroring machinery it otherwise provides.
+    write = "import keyring, sys; keyring.set_password('Px', sys.argv[1], sys.stdin.read())"
     proc = subprocess.run(
-        [
-            "uv",
-            "run",
-            "--with",
-            "keyring",
-            "python",
-            "-c",
-            "import keyring, sys; keyring.set_password('Px', sys.argv[1], sys.stdin.read())",
-            username,
-        ],
+        [*_keyring_command(fallback, write), username],
         input=password,
         capture_output=True,
         text=True,
+        env=_keyring_env(fallback),
         check=False,
     )
     if proc.returncode != 0:
@@ -391,6 +504,22 @@ def _capture_credential(c: Context) -> str | None:
         return None
     print(f"[proxy] credential saved to the system keyring for {username}")
     return username
+
+
+def _capture_with_keyring(*, keyring_fallback: bool) -> str | None:
+    """Check the keyring can hold a credential, then capture one. None if either half fails.
+
+    The two steps are one function because their order is the whole point: Px reads the credential
+    back out of the keyring at its own startup, so a machine with no backend cannot hold one, and
+    asking for a password before finding that out is exactly what this used to do. A machine that
+    chose the fallback once keeps it — proxy.env existing is that decision, recorded.
+    """
+    fallback = keyring_fallback or ENV_FILE.exists()
+    usable = _use_fallback_keyring() if fallback else _keyring_status(fallback=False)
+    if not usable:
+        print("[proxy] no keyring to store the credential in — stopping before asking for one")
+        return None
+    return _capture_credential(fallback=fallback)
 
 
 def _needs_negotiate(schemes: list[str]) -> bool:
@@ -451,6 +580,8 @@ def check(c: Context, proxy: str = "auto"):
     else:
         print("[proxy] px: not installed  ← `inv proxy.install` installs it (uv tool)")
 
+    _keyring_status(fallback=ENV_FILE.exists())
+
     if _user_systemd_available(c):
         active = c.run("systemctl --user is-active pulse-proxy.service", hide=True, warn=True).stdout.strip()
         print(f"[proxy] pulse-proxy.service: {active or 'not found'}")
@@ -487,8 +618,16 @@ def fix(c: Context, proxy: str = "auto", noproxy: str | None = None):
     print(f"[proxy] configured for {host}:{port}" + (f", bypass: {noproxy}" if noproxy else ""))
 
 
-@task
-def install(c: Context, proxy: str = "auto", noproxy: str | None = None):
+@task(
+    help={
+        "keyring_fallback": (
+            "Store the proxy password in a 0600 file (keyrings.alt's plaintext backend) instead of "
+            "the OS keyring, for a distro or container with no Secret Service provider. A real "
+            "downgrade — anything running as this user can read it — so it is never automatic."
+        )
+    }
+)
+def install(c: Context, proxy: str = "auto", noproxy: str | None = None, keyring_fallback: bool = False):
     """Full flow: detect, capture a credential if the probe requires one, configure + start the
     daemon, then verify it actually authenticates before pointing every terminal at it. See
     docs/corporate-proxy.md.
@@ -526,7 +665,7 @@ def install(c: Context, proxy: str = "auto", noproxy: str | None = None):
     needs_credential = bool(schemes) and not (has_negotiate and _has_kerberos_ticket(c))
     username = None
     if needs_credential:
-        username = _capture_credential(c)
+        username = _capture_with_keyring(keyring_fallback=keyring_fallback)
         if username is None:
             print("[proxy] credential capture failed or was skipped — stopping before daemon start")
             return

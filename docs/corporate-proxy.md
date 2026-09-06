@@ -83,6 +83,31 @@ piping input nor a `PX_PASSWORD` env var on that specific invocation changed tha
 keyring entry directly, then letting Px read it back at its own startup, is what was actually
 confirmed working end to end.
 
+### When there is no keyring
+
+Px reads the credential back out of the keyring at **its own** startup, so a machine with no Secret
+Service provider — a minimal WSL2 distro, a from-scratch container — cannot hold one at all.
+`proxy.check` reports which backend answers, and `proxy.install` probes it with a throwaway
+store/read/delete **before** asking for a password, rather than failing after one has been typed.
+
+Two ways out, and the first is better:
+
+- **Give the distro a keyring**: `sudo apt install gnome-keyring dbus-user-session`, then start a
+  user D-Bus session. The credential stays in a locked store, which is the whole premise of the
+  feature.
+- **`inv proxy.install --keyring-fallback`** — stores the password base64-encoded in a 0600 file
+  (`~/.local/share/python_keyring/keyring_pass.cfg`, `keyrings.alt`'s plaintext backend). Anything
+  running as this user can read it: the same exposure as `PULSE_PROXY_PASSWORD_FILE`, still better
+  than a credential embedded in `http_proxy`, and a real downgrade from a locked keyring. It is a
+  flag, never an automatic fallback, and the task says what it costs before writing anything.
+
+The backend is selected **per process**, through `PYTHON_KEYRING_BACKEND` in
+`~/.config/power-user-linux-setup/proxy.env`, which the systemd unit pulls in with
+`EnvironmentFile=-` and the `pulse-proxy-start` fallback script sources. That file holds the backend
+name and no secret. The alternative — `~/.config/python_keyring/keyringrc.cfg` — is global to every
+`keyring` consumer on the machine and would silently downgrade unrelated tools, including after a
+real keyring became available.
+
 `px.ini` itself (`~/.config/px/px.ini`) is never hand-authored by PULSE — it's written entirely by
 Px's own `--save`, and PULSE only checks whether a non-empty `username =` line is present as a
 "credential likely cached" signal.
@@ -117,9 +142,12 @@ already cached) each time the container restarts, e.g. from `postCreateCommand`.
   local Squid instance with `auth_param basic`. Treat the NTLM/Kerberos code paths as
   reviewed-and-defensive, not proven.
 - **Secret Service availability varies** — `keyring`'s SecretService backend needs a running
-  provider (`gnome-keyring-daemon` on most desktop distros). A minimal WSL2 install or a
-  from-scratch dev container may not have one; `keyring.set_password`/Px's own lookup will fail
-  loudly rather than silently in that case, but there's no PULSE-side fallback secret store today.
+  provider (`gnome-keyring-daemon` on most desktop distros), and a minimal WSL2 install or a
+  from-scratch dev container may not have one. That is now detected before a password is asked for,
+  with `--keyring-fallback` as the documented way out — see
+  [When there is no keyring](#when-there-is-no-keyring). The probe and both backends were exercised
+  locally; what remains unverified is Px's own read of the fallback store on a machine that actually
+  lacks a Secret Service, since this one has one.
 - **`Proxy-Authenticate` header shape** — the parser handles both a repeated header per scheme and a
   single comma-joined header (RFC 7235 permits either), but which form any given real corporate
   proxy actually sends hasn't been observed firsthand.
