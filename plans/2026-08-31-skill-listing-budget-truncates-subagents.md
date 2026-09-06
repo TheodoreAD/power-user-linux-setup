@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-09-06
 source_repo: github.com-personal/agent-skills
 source_session: 7e9e213d-6989-4534-a4c2-cf22bbab93ea.jsonl
@@ -233,7 +233,55 @@ and **none since 2026-08-31** — a week of nothing. Every model in real use fit
 the plan called it, insurance against a latent failure, and the opposite direction it worried about
 cannot be argued for without usage data that does not exist.
 
-[NEEDS CLARIFICATION: does the fraction interact with `/context`'s accounting or with autocompact
-thresholds in any way worth knowing? The listing is an attachment, not a tool definition, and it is
-re-sent per turn; 1,900 extra tokens per turn is small, but it was not measured against a long
-session's compaction cadence.]
+~~[NEEDS CLARIFICATION: does the fraction interact with `/context`'s accounting or with autocompact
+thresholds in any way worth knowing?]~~ **Answered 2026-09-06 without new measurement, because the
+question's premise does not hold: on every model in real use the change costs nothing per turn.**
+
+The budget is a **ceiling, not an allocation**. A model whose window puts the cap above the
+listing's own size was already being sent the whole listing — this machine's is 18,109 characters,
+and `claude-opus-5`, `claude-sonnet-5` and `claude-fable-5` each produce no overflow warning, which
+puts every one of their budgets above that. Raising 0.01 to 0.03 moves a ceiling none of them
+reaches, so there are no extra per-turn tokens to interact with `/context` or with a compaction
+threshold.
+
+The extra cost exists only where the old cap bit — a 200k-window model, where the listing grows from
+8,000 characters to about 18,000, roughly 2,500 tokens a turn. That population here is `haiku-4-5`,
+averaging **0.12 assistant turns per session** across 686 `sdk-cli` sessions: headless probes with
+no compaction cadence for the cost to accumulate against. A long session on a 200k window would be
+worth measuring; this machine does not run one.
+
+Recorded rather than dropped because the reasoning is what makes it safe to stop asking: if a
+200k-window model ever becomes a daily driver here, the question comes back with real force and
+`fitness.py budget` plus a `/context` reading is where it would start.
+
+## Migrated to
+
+Retired 2026-09-06. Landed the same day: `claude_skill_listing_budget_fraction = 0.03` declared on
+`[packages.claude-code]`, synced by `inv ai.install-skills`, six tests, and the probe run clean.
+Both open questions answered above, and `refs` found nothing pointing here.
+
+- **`setup.toml`** — the declaration, with the arithmetic, the 200k number, why `0.02` is too tight
+  and why this is insurance rather than a repair, in its own comment.
+- **`tasks/ai.py`'s `_apply_declared_skill_listing_budget`** — the mechanism and the one way this
+  scalar differs from the two beside it, guarded by a test: `0.0` is a real setting, so the check is
+  against `None` rather than truthiness.
+- **`docs/claude-code.md`** — the published half. That the budget is characters and model-dependent
+  is the part nobody guesses, so it leads; then the demote-to-name-only behaviour, the
+  ceiling-not-allocation property, the current truncation count, and the two settings
+  (`disableBundledSkills`, per-skill `skillOverrides`) deliberately not used and why.
+- **`tests/unit/test_ai.py`** — absent/matches/declined/confirmed/undeclared, plus the declared-zero
+  case.
+
+Deliberately not migrated:
+
+- **The subagent measurement.** Its value is that the question cannot be answered from this store,
+  and that is a fact about the store rather than about this repo's configuration. It would be worth
+  re-running only if the harness starts recording subagent turns; nothing here would notice, and the
+  commit that recorded it is the durable copy.
+- **The sampling error and the `agent-*` counts.** Both are corrections to this plan's own earlier
+  drafts. The general lesson — ask which field defines the population before counting rows — is not
+  specific enough to this repo to carry, and `skill-fitness` already teaches the
+  zero-is-not-a-verdict shape it is an instance of.
+- **The 2026-08-31 listing arithmetic.** Reproducible on demand with `fitness.py budget`, which
+  reads listings the harness actually sent; a frozen table would age against a corpus that changes
+  whenever a skill is added.
