@@ -214,6 +214,29 @@ claim about an ordinary public CA. The report carries `tls_ok` with it now. Caug
 task, not by reading it: every unit test passed either way, because the bug was in what the sentence
 asserted rather than in what the code computed.]
 
+### 5. Who may talk to the local proxy daemon
+
+Found by asking what the state of the proxy half actually was, after sections 2 and 3 had landed:
+**they contradicted each other.** `[docker] container_proxy` points containers at the bridge
+gateway, and the daemon answers loopback only — Px's defaults are `listen=127.0.0.1`, `gateway=0`,
+`allow=*.*.*.*`. Nothing here configured that, so the key shipped as configuration that reads
+correctly and cannot work, with the docs naming the requirement and nothing implementing it.
+
+[DECISION: **`gateway` is refused without an `allow` that narrows something.** The obvious fix for
+the above is `gateway = 1`, and it is the dangerous one: gateway overrides `listen`, so the daemon
+binds every interface, while Px's stock allow-list accepts every client that can route to the
+machine. The daemon is unauthenticated to its clients by design — that is what keeps the credential
+in one place — so the pair publishes authenticated egress through the user's own corporate account
+to the LAN, and to whatever a VPN attaches them to. An `allow` of `*`, `*.*.*.*` or `0.0.0.0/0` is
+refused for the same reason: it is the default wearing an explicit spelling.]
+
+[DECISION: **the mismatch is reported where it is discovered, not only where it is configured.**
+`proxy.check` prints which posture is in effect, and `docker.configure-corporate` warns when a
+container proxy is set while the daemon is still loopback-only. The symptom otherwise is every
+container pull timing out while the host is fine, which reads as a network problem rather than as a
+setting — and the two halves are configured in different files, by different tasks, on different
+days.]
+
 ## Files touched
 
 - `tasks/certs.py` — Windows root export, fingerprint diff, `--from-windows` on `check`/`install`.
@@ -249,6 +272,17 @@ environment variables and an npmrc at once (merged into one candidate with three
 variable pointing at a file that does not exist (reported as a stale pointer), a JVM trust store,
 and four separate verification-off settings across the environment, npmrc, curlrc and condarc. Both
 bugs above came out of that run rather than out of the tests.
+
+The exposure settings were checked against the real binary rather than its documentation: `px` is
+installed on this machine, so `--gateway=1 --allow=172.17.0.0/16 --save` was run with
+`XDG_CONFIG_HOME` redirected into a scratch directory, and it wrote `gateway = 1` and
+`allow = 172.17.0.0/16` into a px.ini that the reader then parsed correctly. The user's own
+`~/.config/px` was never touched — it does not exist.
+
+[PITFALL: **`px --version` starts the daemon instead of printing a version**, which is why
+`[packages.px-proxy]` carries `verify_cmd = "px --help"`. Hit live while checking whether px was
+installed at all: the call hung for the full timeout and left a proxy running until it was killed.
+The comment in setup.toml says this; running the command anyway is how it gets learned.]
 
 [UNVERIFIED: **the Windows-side halves of `discover` have never run on Windows** — the registry
 environment read, the group-policy thumbprint read, `WSLENV`, and the vendor globs. Their parsers
