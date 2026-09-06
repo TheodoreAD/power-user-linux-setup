@@ -8,6 +8,9 @@ import struct
 
 import pytest
 
+from invoke import MockContext, Result
+
+from tasks import wsl
 from tasks.netdoctor import dns_query_packet as _dns_query_packet
 from tasks.wsl import _parse_tristate
 
@@ -44,3 +47,39 @@ def test_parse_tristate_falsy_values(value):
 def test_parse_tristate_rejects_unknown_value_with_flag_name_in_message():
     with pytest.raises(RuntimeError, match=r"--wslg must be auto, yes, or no \(got 'maybe'\)"):
         _parse_tristate("maybe", "wslg")
+
+
+def _bus_context(stdout: str, ok: bool = True) -> MockContext:
+    """A Context whose dbus-send answers with `stdout`. The command is matched loosely because the
+    real one is a single long line and pinning it here would test the string, not the parse."""
+    return MockContext(run=Result(stdout=stdout, exited=0 if ok else 1), repeat=True)
+
+
+def test_secret_service_reports_a_store_that_answers(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(wsl, "_session_bus", lambda: "unix:path=/run/user/1000/bus")
+    monkeypatch.setattr(wsl.util, "command_exists", lambda _name: True)
+    assert "answering" in wsl._secret_service_state(_bus_context("   boolean true\n"))
+
+
+def test_secret_service_separates_installed_from_running(monkeypatch: pytest.MonkeyPatch):
+    # The distinction that matters: gnome-keyring on disk with nothing holding the bus name is the
+    # normal state of a WSL distro after installing it, and it is not the same as "no keyring".
+    monkeypatch.setattr(wsl, "_session_bus", lambda: "unix:path=/run/user/1000/bus")
+    monkeypatch.setattr(wsl.util, "command_exists", lambda _name: True)
+    assert wsl._secret_service_state(_bus_context("   boolean false\n")) == "installed but not running/unlocked"
+
+
+def test_secret_service_needs_a_bus_before_anything_can_answer(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(wsl, "_session_bus", lambda: None)
+    assert "no session bus" in wsl._secret_service_state(MockContext())
+
+
+def test_secret_service_says_unknown_rather_than_guessing(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(wsl, "_session_bus", lambda: "unix:path=/run/user/1000/bus")
+    monkeypatch.setattr(wsl.util, "command_exists", lambda _name: False)
+    assert "unknown" in wsl._secret_service_state(MockContext())
+
+
+def test_session_bus_prefers_the_environment(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/somewhere-else")
+    assert wsl._session_bus() == "unix:path=/tmp/somewhere-else"
