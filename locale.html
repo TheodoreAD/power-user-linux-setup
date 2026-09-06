@@ -2422,9 +2422,9 @@
   
 
 
-<h1 id="locale">Locale<a class="headerlink" href="#locale" title="Permanent link">&para;</a></h1>
+<h1 id="locale">Locale</h1>
 <p>Language and formats: what PULSE sets, why, and how to change it.</p>
-<h2 id="setup">Setup<a class="headerlink" href="#setup" title="Permanent link">&para;</a></h2>
+<h2 id="setup">Setup</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>system.set-locale
 </span></code></pre></div>
 <p>Writes <code>/etc/locale.conf</code> through <code>localectl</code> (systemd-integrated, persists across reboots),
@@ -2461,7 +2461,7 @@ person or a script reads, and its own regional facts for currency, paper size an
 No single locale expresses that, which is why an ordinary &ldquo;Language: English, Region: elsewhere&rdquo;
 install already produces a mix. <code>LC_MONETARY</code>, <code>LC_PAPER</code>, <code>LC_MEASUREMENT</code>, <code>LC_ADDRESS</code>,
 <code>LC_NAME</code>, <code>LC_TELEPHONE</code> and <code>LC_IDENTIFICATION</code> are read back and passed through untouched.</p>
-<h3 id="why-en_dk-for-time">Why <code>en_DK</code> for time<a class="headerlink" href="#why-en_dk-for-time" title="Permanent link">&para;</a></h3>
+<h3 id="why-en_dk-for-time">Why <code>en_DK</code> for time</h3>
 <p>Measured across every candidate installed on a real machine — one <code>date</code> call each:</p>
 <table>
 <thead>
@@ -2530,7 +2530,7 @@ Setting <code>LC_TIME</code> alone would fix weekdays, clock and dates while lea
 under <code>en_DK</code> and 1 (Sunday) under <code>en_US</code>, so it silently flips the first day of the week in the
 GNOME calendar. Easy to notice and hard to attribute.</p>
 </div>
-<h2 id="verify">Verify<a class="headerlink" href="#verify" title="Permanent link">&para;</a></h2>
+<h2 id="verify">Verify</h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>locale
 </span></code></pre></div>
 <p><code>LANG=en_US.UTF-8</code>, <code>LC_TIME=en_DK.UTF-8</code>, <code>LC_NUMERIC=C.UTF-8</code>, and the regional categories on
@@ -2540,14 +2540,14 @@ at login. Shells and applications already running keep the old values until rest
 <p>The GNOME panel clock does <strong>not</strong> follow <code>LC_TIME</code> for 12h-vs-24h — that is
 <code>org.gnome.desktop.interface clock-format</code>, independent of the locale. What the locale drives in the
 panel and calendar is weekday and month <em>names</em>.</p>
-<h2 id="changing-it">Changing it<a class="headerlink" href="#changing-it" title="Permanent link">&para;</a></h2>
+<h2 id="changing-it">Changing it</h2>
 <p>The task takes all three as parameters, so a one-off is:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>system.set-locale<span class="w"> </span>--lc-time<span class="o">=</span>en_GB.UTF-8<span class="w"> </span>--lc-numeric<span class="o">=</span>en_US.UTF-8
 </span></code></pre></div>
 <p>That is not persistent: the next <code>inv setup</code> applies the defaults again. Making the choice stick is
 an open design question, tracked with the machine-local overrides mechanism — nobody has needed it
 yet, and the values above are the ones this machine wanted.</p>
-<h2 id="pitfalls">Pitfalls<a class="headerlink" href="#pitfalls" title="Permanent link">&para;</a></h2>
+<h2 id="pitfalls">Pitfalls</h2>
 <ul>
 <li><strong>Do not set <code>LC_ALL</code></strong> — it overrides every individual <code>LC_*</code> category with no escape hatch,
   which would defeat exactly the split above.</li>
@@ -2560,7 +2560,7 @@ yet, and the values above are the ones this machine wanted.</p>
   rather than merging into it, so anything not passed on the command line is dropped. That is why
   the task reads the current set back and passes all of it.</li>
 </ul>
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — the setup phase this runs in</li>
 <li><a href="index.html">Quick start</a> — where <code>inv system.set-locale</code> sits in a first run</li>
