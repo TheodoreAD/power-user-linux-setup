@@ -93,6 +93,22 @@ credential-in-the-proxy-URL pattern the whole feature exists to avoid, but it is
 from a locked keyring. The flag is the user stating that trade, and the task prints what it means
 before writing anything.]
 
+**Revised after being asked what "headless WSL" meant, given WSLg.** It meant three things at once,
+and only the first is what WSLg supplies: a display, a per-user D-Bus session, and a Secret Service.
+A fully modern WSL2 distro has the first and neither of the others, so the fallback was being
+described as the answer to a machine shape that mostly does not exist — the real shape is "has a
+display, has no store". `[packages.dbus-user-session]` and `[packages.gnome-keyring]` are now
+declared so the store exists, and `wsl.check` reports the three axes separately rather than
+collapsing them into WSLg.
+
+[DEFERRED: **unlocking that store on a WSL boot has no clean unattended answer.** A desktop unlocks
+the login keyring through PAM at graphical login; WSL bypasses TTY login, and WSL2's systemd does
+not fully implement `graphical-session.target`. So the store can be unlocked once per boot by hand
+(`dbus-run-session` plus `gnome-keyring-daemon --unlock`), or the proxy daemon uses
+`--keyring-fallback` and starts on its own. Both are documented in docs/wsl.md; neither is a
+mechanism this repo can automate without storing the unlock password, which is the same trade the
+fallback already makes with fewer moving parts.]
+
 `keyrings.alt` reaches Px's own environment as `extras = ["keyrings.alt"]` on `[packages.px-proxy]`
 — the `uv-tool` method already supports extras (`tasks/python.py`), so no new mechanism, and
 `_install_px` reads the same declaration rather than hard-coding a second copy of it.
