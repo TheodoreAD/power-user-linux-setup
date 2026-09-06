@@ -90,7 +90,7 @@ certificate **individually and defaults to no** — trusting a root CA means tru
 its private key for every TLS connection this machine makes, so it is a decision to put in front of
 someone, not a step to complete. A non-interactive run installs nothing.
 
-### Where verification was switched off instead {: #verification-off }
+### Where verification was switched off instead
 
 `discover` also reports the opposite of a certificate: `GIT_SSL_NO_VERIFY`,
 `NODE_TLS_REJECT_UNAUTHORIZED=0`, `PYTHONHTTPSVERIFY=0`, npm's `strict-ssl=false`, pip's
