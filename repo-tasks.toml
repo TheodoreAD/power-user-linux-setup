@@ -1,0 +1,18 @@
+# Per-repo settings for the shared `repo-tasks` task package.
+#
+# This repo's trunk is `master`, and every `repo-tasks` task that resolves one defaults to `main`.
+# `inv ci.status` is where that bites: `gh run list --branch main` is a valid query returning an
+# empty list, so it printed `no runs recorded for main` on a repo with runs on every push — which
+# reads as "nothing to see" rather than as "wrong branch". Found 2026-09-06 while checking CI after
+# a push, and it is the same shape this repo keeps recording elsewhere: a filter that matches nothing
+# returns success, so "no results" is indistinguishable from "no problem".
+#
+# [PITFALL: this file is correct and inert at the pin this repo currently resolves. The setting is
+# read by `repo_tasks.projects.trunk_branch()`, which does not exist in `7bb880b` — there
+# `ci.status` takes `branch: str = "main"` as a plain default with nothing to override it. Upstream
+# `main` has both the function and a docstring naming this repo as the consumer it was added for. So
+# until the pin moves, pass `--branch master` explicitly; after it moves, this file is what makes
+# that unnecessary. Declared now rather than at the bump because the bump is where it would be
+# forgotten, and an inert correct setting costs nothing.]
+[branches]
+trunk = "master"

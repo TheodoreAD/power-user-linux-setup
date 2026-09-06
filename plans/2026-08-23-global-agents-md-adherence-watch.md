@@ -838,3 +838,47 @@ as "this session's green results are unverified" therefore costs a full gate re-
 something the shell already settled. The counter and the harvest step that reads it belong to
 `agent-skills`, filed there as `2026-09-05-exit-masked-measures-a-risk-pipefail-removed.md`; what
 this watch has to do meanwhile is not read its own `exit-masked` column as a risk figure.]
+
+### Session 19 — `power-user-linux-setup`, 2026-09-06: the best rates yet, and the one rule broken twice
+
+`245a4cb0-8e05-451d-9bcc-501922241f86`, 309 Bash calls to the harvest boundary, six hours of plan
+retirement and three deferred items. **11/11 against the rescored baseline, and by the widest
+margins this watch has recorded**: `chain` 11% (−33pp), `head/tail` 9% (−18pp), `sed-n`, `cat-view`,
+`heredoc`, `cd-own-repo`, `git-C-own-repo`, `git-mutating-in-chain` all 0%. `exit-masked` 6%, five
+green-gate claims, unpiped re-run PASS — all five hold.
+
+**And the rate table is not where the finding is.** Two rules were broken, neither visible in any
+column:
+
+1. **The no-backticks commit-message rule, twice, three hours apart** — the rule session 13 settled
+   (`-m` inline, no backticks or `$`) and this watch records the reversal of. First at `99cdeae`: a
+   message quoting a `uv run --with …` example, which the shell executed and substituted, committing
+   a message with a hole where the command should have been. Caught only because the failed command
+   printed to stderr; the commit itself succeeded. Second about an hour later, quoting `is None` and
+   a conditional — that one was a parse error, exit 127, and no commit happened.
+2. **One `rg -rn`**, the `-r`-eats-the-bundle shape
+   `plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md` measures at 32 defective calls a
+   week.
+
+[PITFALL: **the same violation failed in opposite directions, and the dangerous one is the quiet
+one.** A backticked message whose substitution _errors_ takes the commit down loudly and costs a
+retype. One whose substitution _succeeds_ — or fails in a way git does not see — lands a commit
+whose message is missing the clause that explained it, and `git log` shows nothing wrong. This
+session got one of each, which is why the rule says write the message without backticks rather than
+"check the message afterwards": only one of the two failure modes is checkable at a glance.]
+
+[PITFALL: **this session had the rule in context, diagnosed the first breach correctly, said so to
+the user, and repeated it three hours later.** That is session 14's shape — a breach by the session
+that had just read the rule — with the additional detail that the intervening correction was
+explicit and out loud. So it is not a wording gap and not a comprehension gap; it is the third of
+`session-harvest`'s three shapes, a rule simply not followed, which the watch has now recorded often
+enough to be its most reproducible finding after `exit-masked`. The standing
+`[DECISION: adherence, not wording]` is what applies; a fifth rewording is not.]
+
+[PITFALL: **two of this run's reported zeros were false, and the session could prove it from its own
+transcript.** `heredoc=0%` while the session wrote a scratch script with `cat > … <<'PY'`, and
+`rg -rn` invisible because `rg-replace` is in none of `audit.py`'s display sets. Both are filed in
+`agent-skills` (`audit.py` drops commands after a heredoc; a session-view 0% is not a count of
+zero), so the rates above are a **floor**. Read every 0% in this watch's tables as "the instrument
+found none", not "there were none" — and the tell is a zero on a row the session has a specific
+reason to expect a hit on.]
