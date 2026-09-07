@@ -29,7 +29,9 @@ skill (edit → gate → commit → **push** → re-install → verify) — the 
 remote, so an unpushed edit reaches nothing. Editing the installed copy under `~/.agents/skills/` is
 always wrong: it is overwritten by the next install and never leaves this machine. The
 `source = "local"` mechanism still exists as an escape hatch for a skill that genuinely cannot be
-published, and is deliberately unused.
+published, and is deliberately unused — since 2026-09-07 it goes through the same `skills` CLI as
+everything else, handed an absolute directory path instead of a repo, rather than PULSE copying the
+tree itself.
 
 Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills`
 setup) isn't this repo's job anymore — see

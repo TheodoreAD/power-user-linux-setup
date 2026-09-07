@@ -219,13 +219,18 @@
 #                 Use method = "skill" for entries that exist purely to declare skills, with no
 #                 other package attached. Each list item is one of:
 #                   { source = "local", path = "skills/<name>" }
-#                     Copies to ~/.agents/skills/<name> (or <dir>/.agents/skills/<name> with
-#                     `inv ai.install-skills --dir`) from this repo's own skills/<name>/ — author real
-#                     skill directories (SKILL.md + any supporting files) under skills/ at the
-#                     repo root, tracked by git. A real copy, not a symlink, same as the npx
-#                     source below; a `.pulse-source` marker in the copy tracks provenance so a
-#                     re-run can refresh it safely. Edit the repo copy, then `inv ai.install-skills` to
-#                     apply.
+#                     A skill authored in this repo, under skills/<name>/ at the repo root. Since
+#                     2026-09-07 this is installed by the same `skills` CLI as an npx entry, just
+#                     handed a directory instead of a repo — PULSE used to copy the tree itself,
+#                     with a `.pulse-source` marker and an up-to-date check, and that was a second
+#                     implementation of what the CLI already does ("Use local path directly, no
+#                     cloning needed"). The CLI also writes the per-skill entry into each selected
+#                     agent's own directory, which the copier never did. Edit the repo copy, then
+#                     `inv ai.install-skills` to apply.
+#                     `path` is repo-relative and is resolved to an absolute path before it is
+#                     passed on — that is load-bearing, not tidiness: the CLI treats only an
+#                     absolute path (or ./, ../, .) as local, so a bare `skills/<name>` would be
+#                     parsed as the GitHub repo `skills/<name>` and fetched over the network.
 #                   { source = "npx", repo = "<owner>/<repo>", names = [...], agents = [...], description = "..." }
 #                     Installs via the `skills` CLI (global npm package, see [packages.node]),
 #                     e.g. `skills add <owner>/<repo> --global --skill <names...> --agent

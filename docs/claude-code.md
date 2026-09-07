@@ -228,20 +228,24 @@ Two sources:
   (`[packages.node].global_packages`, [skills.sh](https://skills.sh)):
   `skills add <repo> --global --skill <names...> --agent <agents...> --yes`. `names` omitted
   installs every skill the repo has, which is what `[packages.agent-skills]` does — so a skill added
-  upstream arrives without editing `setup.toml`. `agents` defaults to `["claude-code"]`; since
-  `.claude/skills` is symlinked to `.agents/skills`, that lands in the shared hub rather than a
-  separate copy. The CLI prints its own security-risk assessment (Socket/Snyk-style) per skill at
-  install time — worth actually reading before adding an entry, since an installed skill runs with
-  full agent permissions, same trust level as any other content read into an agent session.
+  upstream arrives without editing `setup.toml`. `agents` defaults to `["claude-code"]`. The one
+  real copy of each skill lands in `~/.agents/skills/<name>`, and the CLI links each selected
+  agent's own directory at it per skill — `~/.claude/skills/<name>` on Linux, a junction on Windows,
+  a copy if neither works. The CLI prints its own security-risk assessment (Socket/Snyk-style) per
+  skill at install time — worth actually reading before adding an entry, since an installed skill
+  runs with full agent permissions, same trust level as any other content read into an agent
+  session.
 - **`{ source = "local", path = "skills/<name>" }`** — for a skill authored _in this repo_. **Not
   used by anything today**, and there is no `skills/` directory: every skill moved to
   [`agent-skills`](https://github.com/TheodoreAD/agent-skills) by 2026-08-28
   (`plans/2026-08-26-agent-artifact-authoring-decoupling.md`). The mechanism is kept as the escape
-  hatch for a skill that genuinely cannot be published — it copies `skills/<name>/` to
-  `~/.agents/skills/<name>` and drops a `.pulse-source` marker so a re-run can tell "ours, safe to
-  refresh" from "something else is already here, leave it alone". Before reaching for it, check the
-  bar the published repo sets: a skill that assumes something about one machine should declare that
-  assumption, not stay unpublishable because of it.
+  hatch for a skill that genuinely cannot be published, and since 2026-09-07 it is the **same
+  installer** as an `npx` entry — the `skills` CLI accepts a directory as a source, so PULSE hands
+  it the absolute path and the CLI does the rest, including writing the per-skill entry into each
+  selected agent's directory. PULSE used to copy the tree itself with a `.pulse-source` marker; that
+  was a second implementation of something the tool already did, and a narrower one. Before reaching
+  for this at all, check the bar the published repo sets: a skill that assumes something about one
+  machine should declare that assumption, not stay unpublishable because of it.
 
 Add a skill to install without attaching it to some other tool's entry by giving it its own
 `[packages.<name>]` block with `method = "skill"` and nothing else but `skills`.
