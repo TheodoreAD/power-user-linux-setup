@@ -139,6 +139,7 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 - [Designing a uv tool-install or shared-dependency mechanism](#designing-a-uv-tool-install-or-shared-dependency-mechanism)
 - [Installing a tool on this machine](#installing-a-tool-on-this-machine)
 - [About to author content, config, or a workaround from scratch](#about-to-author-content-config-or-a-workaround-from-scratch)
+- [About to fetch a page or file to learn how something works](#about-to-fetch-a-page-or-file-to-learn-how-something-works)
 - [Choosing a tool or library](#choosing-a-tool-or-library)
 - [About to ask the user something factual](#about-to-ask-the-user-something-factual)
 - [Writing conventions into a shareable skill or template](#writing-conventions-into-a-shareable-skill-or-template)
@@ -840,6 +841,67 @@ Admitted on one instance, like the backtick and one-`-m` clauses, and for the sa
 rather than a frequency one: the parent rule's own framing invites the wrong move. "Check whether an
 actively-maintained external project already provides it" reads as a yes/no gate, so a partial yes
 has no branch and falls through to "no".
+
+## About to fetch a page or file to learn how something works
+
+Admitted 2026-09-07, on a measurement and a live failure in the same session.
+
+**The measurement.** Counted over the 30 days to 2026-09-07 from the transcript store (`WebFetch` +
+`WebSearch` tool-use blocks against calls that add a research-library entry):
+
+| counter                         | 30 days |
+| ------------------------------- | ------: |
+| `WebSearch`                     |     619 |
+| `WebFetch`                      |     426 |
+| library entries **added**       |   **9** |
+| library entries **read**        |     485 |
+| sessions fetching from the web  |      89 |
+| sessions adding a library entry |       6 |
+
+**116 web calls per entry added**, and the shape of the failure is in the last two rows rather than
+the first: 485 reads say the library _is_ used once something is in it, so nothing is wrong with the
+store or with anyone's willingness to grep it. **The gap is entirely at acquisition** — a session
+that needs material it does not have reaches for a page instead of a clone, and the next session
+that needs the same material pays again. The heaviest fetcher in the window made 78 web calls and
+touched the library zero times.
+
+[PITFALL: **the first version of this measurement reported 456 adds and a healthy 2:1 ratio, which
+would have killed the rule.** The marker matched any tool input naming a path under the library, so
+every `rg` over an existing clone counted as an acquisition. The library holds ~50 entries, so 456
+adds in a month was refuted by `ls` — the sanity check that a rate has to survive before it is
+quoted. Separating "add" from "read" is what turned a non-finding into a 116:1 one, in the same
+direction the corpus keeps finding: an instrument agreeing with the comfortable answer is the one to
+re-read.]
+
+**The live failure, in the session that wrote this rule.** Asked for deep research on cross-platform
+`AGENTS.md` composition, it dispatched three subagents whose prompts said "find from PRIMARY
+documentation", named specific doc pages, and told one of them to read registry JSON —
+page-at-a-time retrieval, prescribed. `$RESEARCH_HOME` already held `python--cpython`,
+`openai--codex`, `google-gemini--gemini-cli`, `cline--cline` and `anthropics--skills`: **five of the
+sources those prompts sent agents to the web for were already cloned on the machine.** The user
+stopped it mid-run — _"we need a clear rule to clone all these things instead of curling files… we
+want grep locally, not reading the internet all the time for bits and pieces. your capabilities are
+far better on full clones anyway"_ — and then, when the agents were already running, _"make sure you
+take care of the agents you let loose, they need to do the same thing"_.
+
+Two things that makes concrete, and both are in the rule:
+
+- **The delegation clause is not a corollary, it is where the failure happened.** The subagents did
+  exactly what they were told. `~/AGENTS.md` does not reach them ("Which sessions load this file"),
+  so a research prompt that omits the clone instruction is a prompt _for_ fetching, and the fault is
+  the prompt author's. That is why the clause is added to the paste-this list in that rule as well
+  as stated here.
+- **The `research-library` skill was not missing, and did not fire.** `skill-fitness usage`, same
+  day: 14 auto-invocations across 1,188 transcripts, most recent that morning, zero explicit. Its
+  description triggers on _working on the library_ ("adding to, or updating"), which is the moment
+  after the decision has already gone the other way. A skill cannot catch a request framed as "go
+  research X", which is why this is a rule in the always-loaded file rather than a wording fix to
+  the skill. The skill-side half — whether its description should also claim the research-framed
+  request — is filed for `agent-skills`, which owns it.
+
+Not admitted as an extension of "About to author content, config, or a workaround from scratch",
+though both are about research: that rule governs _whether_ to look, this one governs _how_, and the
+measured failure is entirely in sessions that had already decided to look.
 
 ## Choosing a tool or library
 

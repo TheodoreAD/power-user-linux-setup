@@ -64,6 +64,11 @@ this into every `Plan`/`Explore`/`claude-code-guide` prompt: "Use Read/Grep/Glob
 `cat`/`sed -n`/`grep` via Bash. One Bash command per call, no `&&`/`;` chains, no `cd` — cwd is
 already the repo. Never pipe output through `| head`/`| tail`."
 
+**A research prompt needs one clause more**, for the same reason and with a worse measured rate:
+"Clone sources into `$RESEARCH_HOME` with the `research-library` skill and grep them locally; fetch
+a page only where there is no repo." Without it the subagent fetches pages, because that is what the
+prompt asked for — see "About to fetch a page or file to learn how something works".
+
 ### Writing conventions into a shareable skill or template
 
 Apply them to one real, already-working repo first — never straight from research to the shareable

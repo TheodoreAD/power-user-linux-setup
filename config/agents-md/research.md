@@ -16,6 +16,29 @@ Claude Code symlink it does not create, and PULSE covers exactly that gap instea
 skill installation. Check what the tool actually did, fill what it missed, and let it keep owning
 the rest.
 
+### About to fetch a page or file to learn how something works [needs agent-skills]
+
+**Clone it and grep it locally.** One command does the whole thing — canonical name, shallow clone,
+provenance file:
+
+```shell
+python3 ~/.agents/skills/research-library/scripts/library.py add <repo url>
+```
+
+Check `$RESEARCH_HOME/repos/` first; it already holds ~50 clones, and the thing you are about to
+look up is often one of them. A clone answers what a rendered page cannot — the resolution rule, the
+error path and the edge case are in the code and the tests, not in the prose — and one `rg` over a
+whole tree beats a sequence of fetches at files you guessed the names of. Reading a local tree is
+also what this model is best at; page-at-a-time retrieval is the weakest available shape.
+
+**A page fetch is the exception, and it needs a reason**: genuinely no public repo behind it — a
+closed vendor's docs — or a registry's own metadata, which is data rather than documentation. When a
+report mixes both, say which answers came from a clone and which from a page.
+
+The same applies to **any research you delegate**: a subagent never loads this file, so a prompt
+that does not say "clone into `$RESEARCH_HOME` and grep locally" gets page-at-a-time fetching, and
+the fault is the prompt's.
+
 ### Choosing a tool or library
 
 For a real selection decision with trade-offs, go deeper than a single-pass web-search summary
