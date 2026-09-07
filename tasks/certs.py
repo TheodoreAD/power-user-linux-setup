@@ -601,10 +601,15 @@ def _require_bundle_paths(
 
 @task
 def check(c: Context, bundle: str | None = None, from_windows: bool = False):
-    """Read-only diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts. Never
-    mutates. --bundle=path overrides the [certs] table in ~/.config/power-user-linux-setup/identity.toml.
-    --from-windows reports which Windows-side roots this WSL distro doesn't trust yet. See
-    docs/certs.md.
+    """Diagnostic: bundle install status, ~/.zshenv env vars, Java cacerts. Installs nothing and
+    touches no trust store. --bundle=path overrides the [certs] table in
+    ~/.config/power-user-linux-setup/identity.toml.
+
+    --from-windows reports which Windows-side roots this WSL distro doesn't trust yet, and is the
+    one thing here that writes: the export lands at its stable path under ~/.local/state so the
+    desired-bundle text is comparable between runs (see the plan's section 1), and nothing can be
+    compared against a file that was never written. Said plainly because this docstring claimed
+    "never mutates" while that was untrue. See docs/certs.md.
     """
     util.require_apt()
     paths = _require_bundle_paths(bundle, "check", raise_on_missing=False, from_windows=from_windows)

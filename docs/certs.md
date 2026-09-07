@@ -14,7 +14,7 @@ then points those tools at the resulting merged bundle.
 ## Quick start
 
 ```shell
-inv certs.check      # read-only — bundle/env-var/Java status, changes nothing
+inv certs.check      # bundle/env-var/Java status; installs nothing, touches no trust store
 inv certs.install     # installs into the OS trust store, exports env vars for python/node/awscli
 ```
 
@@ -151,7 +151,7 @@ issue, not a networking one).
 `--from-windows` bridges that without a manual file copy:
 
 ```shell
-inv certs.check --from-windows      # read-only — names the roots this distro doesn't trust yet
+inv certs.check --from-windows      # names the roots this distro doesn't trust yet (writes the export)
 inv certs.install --from-windows    # installs them, alongside anything else configured
 ```
 
