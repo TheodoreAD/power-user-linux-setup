@@ -427,12 +427,18 @@ def _keyring_env(fallback: bool) -> dict[str, str]:
     return env
 
 
+# The delete is in a finally, not in a line after the read: a store that accepts a write and then
+# raises on the read is exactly the half-broken state this probe exists to find, and the linear
+# version left its throwaway entry behind on that path. docker.py's equivalent already erases
+# before it judges the result, for the same reason.
 _ROUND_TRIP = (
     "import keyring, sys\n"
     "service, account, secret = sys.argv[1:4]\n"
     "keyring.set_password(service, account, secret)\n"
-    "got = keyring.get_password(service, account)\n"
-    "keyring.delete_password(service, account)\n"
+    "try:\n"
+    "    got = keyring.get_password(service, account)\n"
+    "finally:\n"
+    "    keyring.delete_password(service, account)\n"
     "print(keyring.get_keyring())\n"
     "sys.exit(0 if got == secret else 3)\n"
 )
@@ -643,7 +649,14 @@ def _has_kerberos_ticket(c: Context) -> bool:
 @task
 def check(c: Context, proxy: str = "auto"):
     """Diagnose corporate-proxy state: environment, candidate address, auth scheme, Px/daemon
-    status. Read-only — never mutates. --proxy=host:port overrides auto-discovery, e.g. to probe
+    status. Changes no configuration — with one exception worth stating rather than burying, since
+    "read-only" was claimed here while it was untrue: the keyring probe stores a throwaway secret
+    under a service name that resolves to nothing and deletes it again in a `finally`. There is no
+    way to ask a keyring whether it can hold a credential except by holding one, and the alternative
+    — reporting only what the D-Bus name owner says — cannot see a store that accepts a write and
+    fails the read, which is the state this exists to catch.
+
+    --proxy=host:port overrides auto-discovery, e.g. to probe
     a specific address without it being live in the environment yet. See docs/corporate-proxy.md.
     """
     kind = "WSL" if util.is_wsl() else "dev container" if util.is_devcontainer() else "native Linux"

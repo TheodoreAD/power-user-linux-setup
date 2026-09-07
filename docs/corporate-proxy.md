@@ -17,7 +17,7 @@ with the real corporate proxy on their behalf.
 ## Quick start
 
 ```shell
-inv proxy.check      # read-only — detects a candidate proxy and its auth scheme, changes nothing
+inv proxy.check      # detects a candidate proxy and its auth scheme; changes no configuration
 inv proxy.install     # full flow: capture a credential if needed, start the daemon, verify it works
 ```
 
