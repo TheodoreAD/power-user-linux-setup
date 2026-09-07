@@ -365,3 +365,31 @@ def test_a_filter_matching_nothing_says_so(two_claims, capsys):
     home.list_claims(MockContext(), tier="secret")
 
     assert "no claims match" in capsys.readouterr().out
+
+
+def _keyring_store_claims(fake_home) -> list[home.Claim]:
+    return [c for c in home.claims() if c.target.endswith("keyring_pass.cfg")]
+
+
+def test_the_plaintext_credential_store_is_claimed_once_the_fallback_was_chosen(fake_home, monkeypatch, tmp_path):
+    # The one credential file on the machine, written by the keyring library rather than by PULSE
+    # but existing because proxy.install --keyring-fallback said so. An inventory that omits it is
+    # not an inventory.
+    _stub_config(monkeypatch, {})
+    env_file = tmp_path / "proxy.env"
+    env_file.write_text("PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring\n")
+    monkeypatch.setattr(home.proxy, "ENV_FILE", env_file)
+
+    claim = _keyring_store_claims(fake_home)[0]
+
+    assert claim.tier == home.Tier.SECRET
+    assert claim.writer == home.Writer.EXTERNAL
+
+
+def test_no_credential_store_claim_on_a_machine_that_never_chose_the_fallback(fake_home, monkeypatch, tmp_path):
+    # Same rule the PyCharm claims follow: a row for a file that was never going to exist reads as
+    # something missing rather than as something not applicable.
+    _stub_config(monkeypatch, {})
+    monkeypatch.setattr(home.proxy, "ENV_FILE", tmp_path / "never-written")
+
+    assert _keyring_store_claims(fake_home) == []

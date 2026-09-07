@@ -601,6 +601,27 @@ def _external_claims() -> Iterator[Claim]:
                 path=path,
             )
 
+    # The plaintext keyring `--keyring-fallback` selects. PULSE never writes it — the `keyring`
+    # library does, inside Px's own process and inside PULSE's one-shot credential writer — but its
+    # existence is a PULSE decision recorded in proxy.env, and it holds a base64-encoded corporate
+    # password readable by anything running as this user. A surface inventory that omits the one
+    # credential file on the machine is not an inventory.
+    #
+    # Claimed only when that decision was actually taken, following the PyCharm rule: a row for a
+    # file that was never going to exist is worse than no row.
+    if proxy.ENV_FILE.exists():
+        keyring_store = _HOME / ".local" / "share" / "python_keyring" / "keyring_pass.cfg"
+        yield Claim(
+            target=_rel(keyring_store),
+            writer=Writer.EXTERNAL,
+            authority=Authority.USER,
+            tier=Tier.SECRET,
+            owner="inv proxy.install --keyring-fallback",
+            source=f"python keyring <- {_rel(proxy.ENV_FILE)}",
+            note="plaintext credential store; readable by anything running as this user",
+            path=keyring_store,
+        )
+
     claude_skills = _HOME / ".claude" / "skills"
     yield Claim(
         target=_rel(claude_skills),
