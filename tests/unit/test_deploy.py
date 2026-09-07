@@ -41,19 +41,6 @@ def _managed(tmp_path, mechanism=deploy.Mechanism.CONFIG_FILE, *, name="app") ->
     )
 
 
-def _skill(tmp_path, *, name="research-library") -> deploy.Managed:
-    source = f"skills/{name}"
-    src_dir = tmp_path / source
-    src_dir.mkdir(parents=True)
-    (src_dir / "SKILL.md").write_text("---\nname: x\n---\n")
-    return deploy.Managed(
-        path=tmp_path / "home" / ".agents" / "skills" / name,
-        package="pkg",
-        source=source,
-        mechanism=deploy.Mechanism.SKILL,
-    )
-
-
 # ---------------------------------------------------------------------------
 # classify
 # ---------------------------------------------------------------------------
@@ -122,25 +109,6 @@ def test_wrapper_script_content_is_stripped_and_newline_terminated(tmp_path, src
     deploy.deploy(m)
 
     assert m.path.read_text() == "new content\n"
-    assert deploy.classify(m) == deploy.State.CLEAN
-
-
-def test_a_skill_directory_classifies_by_content(tmp_path):
-    m = _skill(tmp_path)
-    assert deploy.classify(m) == deploy.State.ABSENT
-
-    deploy.deploy(m)
-    assert deploy.classify(m) == deploy.State.CLEAN
-
-    (m.path / "SKILL.md").write_text("hand-edited\n")
-    assert deploy.classify(m) == deploy.State.DIRTY
-
-
-def test_the_skill_marker_is_written_and_ignored_by_the_digest(tmp_path):
-    m = _skill(tmp_path)
-    deploy.deploy(m)
-
-    assert (m.path / deploy.SKILL_MARKER).read_text() == "skills/research-library\n"
     assert deploy.classify(m) == deploy.State.CLEAN
 
 
@@ -338,7 +306,10 @@ def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
     )
 
 
-def test_the_registry_covers_all_three_mechanisms(tmp_path, monkeypatch):
+def test_the_registry_covers_both_file_mechanisms_and_no_skills(tmp_path, monkeypatch):
+    """A declared skill must contribute **nothing** to the registry since 2026-09-07. It used to
+    register a directory PULSE copied itself; the `skills` CLI installs those now, so an entry here
+    would claim a destination nothing writes — `deploy.status` would report it MISSING forever."""
     _stub_config(
         monkeypatch,
         {
@@ -362,9 +333,7 @@ def test_the_registry_covers_all_three_mechanisms(tmp_path, monkeypatch):
 
     assert registry[tmp_path / "AGENTS.md"].mechanism == deploy.Mechanism.WRAPPER_SCRIPT
     assert registry[tmp_path / "wezterm.lua"].mechanism == deploy.Mechanism.CONFIG_FILE
-    skill = registry[tmp_path / ".agents" / "skills" / "research-library"]
-    assert skill.mechanism == deploy.Mechanism.SKILL
-    assert skill.policy == deploy.Policy.MANAGED
+    assert (tmp_path / ".agents" / "skills" / "research-library") not in registry
 
 
 def test_a_config_files_destination_is_seeded_not_managed(tmp_path, monkeypatch):

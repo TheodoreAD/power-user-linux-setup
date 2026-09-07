@@ -1,11 +1,16 @@
 """One way to write a file into the home directory.
 
 Every path this repo deploys under `~` goes through this module: the `wrapper-script` method's
-`content_file` (`~/AGENTS.md`, `askpass-zenity`, ...), any package's `config_files` mappings
-(wezterm, terminator), and the skill directories under `~/.agents/skills/`. Before this existed
-those were three separate writers with four different answers to "the destination already exists"
-— unconditional overwrite, skip-if-exists, diff-then-prompt, and marker-checked prompt — and the
-unconditional one silently ate hand-edits to `~/AGENTS.md` twice in one day.
+`content_file` (`~/.agents/AGENTS.md`, `askpass-zenity`, ...) and any package's `config_files`
+mappings (wezterm, terminator). Before this existed those were separate writers with different
+answers to "the destination already exists" — unconditional overwrite, skip-if-exists,
+diff-then-prompt — and the unconditional one silently ate hand-edits to `~/AGENTS.md` twice in one
+day.
+
+**Files only.** Skill *directories* used to be deployed here too, under `~/.agents/skills/`; that
+mechanism was removed on 2026-09-07 when the `skills` CLI took over installing local skills as well
+as remote ones. With it went `Mechanism.SKILL`, the `.pulse-source` marker, `dir_digest`, the
+`is_dir` branch in every digest and write path, and the `copytree`/`rmtree` limb of `_write`.
 
 The rule here is that PULSE never destroys content it can't prove it wrote. `classify()` answers
 that from a state manifest recording the digest of what was last deployed; `deploy()` acts on the
@@ -20,7 +25,6 @@ model, not a different style.
 import difflib
 import hashlib
 import json
-import shutil
 from collections.abc import Iterator
 from dataclasses import dataclass, replace
 from datetime import UTC, datetime
@@ -41,12 +45,6 @@ _REPO_ROOT = Path(__file__).parent.parent
 # manifest and allowlist.py's applied manifest.
 _MANIFEST = util.PULSE_STATE_DIR / "deployed.json"
 _MANIFEST_VERSION = 1
-
-# Written inside every skill directory this repo installs, recording the setup.toml-declared path
-# that installed it. Lives here rather than in ai.py because both the skill installer and this
-# module's registry need it. It answers a different question than the manifest does: the marker
-# says *whose is this* and survives a wiped state dir, the manifest says *what did we write, when*.
-SKILL_MARKER = ".pulse-source"
 
 
 class ManifestEntry(TypedDict):
@@ -81,7 +79,6 @@ class Mechanism(StrEnum):
     # manifest entry, no diff and no never-clobber guarantee. Same verbatim copy as CONFIG_FILE,
     # opposite policy.
     MANAGED_FILE = "managed-file"
-    SKILL = "skill"
     # One destination composed from several repo-side fragments rather than copied from a single
     # source file — `~/AGENTS.md`, assembled from every `agents_md` fragment declared anywhere in
     # setup.toml. Everything else about it is a normal MANAGED file: same digest comparison, same
@@ -136,26 +133,11 @@ class Managed:
     def policy(self) -> Policy:
         return Policy.SEEDED if self.mechanism == Mechanism.CONFIG_FILE else Policy.MANAGED
 
-    @property
-    def is_dir(self) -> bool:
-        return self.mechanism == Mechanism.SKILL
-
     @cached_property
     def src(self) -> Path:
         """Absolute repo-side source. Resolved against the repo root, never the cwd, so every
         caller works from any directory."""
         return _REPO_ROOT / self.source
-
-
-def dir_digest(path: Path) -> str:
-    """Hash of a directory's file contents, keyed by relative path — order-independent, ignores
-    the marker file itself so a freshly-copied dest compares equal to its source."""
-    h = hashlib.sha256()
-    for f in sorted(path.rglob("*")):
-        if f.is_file() and f.name != SKILL_MARKER:
-            h.update(f.relative_to(path).as_posix().encode())
-            h.update(f.read_bytes())
-    return h.hexdigest()
 
 
 def block_name(part: str) -> str:
@@ -203,15 +185,11 @@ def expected_bytes(m: Managed) -> bytes:
 
 def expected_digest(m: Managed) -> str:
     """Digest of what a fresh deploy of `m` would put at its destination."""
-    if m.is_dir:
-        return dir_digest(m.src)
     return hashlib.sha256(expected_bytes(m)).hexdigest()
 
 
 def deployed_digest(m: Managed) -> str | None:
     """Digest of what's actually at the destination now, or None if nothing is."""
-    if m.is_dir:
-        return dir_digest(m.path) if m.path.is_dir() else None
     return hashlib.sha256(m.path.read_bytes()).hexdigest() if m.path.is_file() else None
 
 
@@ -302,34 +280,22 @@ def _config_file_entries() -> Iterator[Managed]:
         yield from config_file_entries(name, cfg)
 
 
-def _skill_entries(base: Path) -> Iterator[Managed]:
-    # Mirrors ai.py:_install_declared_skills deliberately, so the registry and the installer never
-    # disagree about which skills exist. Both went through enabled_packages() on 2026-09-06; before
-    # that both read load_config() and checked only `enabled`, which agreed with each other and with
-    # neither overrides.toml nor tags. If one of them changes, change the other in the same commit.
-    for name, cfg in util.enabled_packages().items():
-        for entry in cfg.get("skills", []):
-            if entry.get("source") != "local":
-                continue  # npx-sourced skills are installed by the `skills` CLI, not by this repo
-            if "path" not in entry:
-                raise util.missing_fields(name, "skills[].path")
-            source = entry["path"]
-            yield Managed(
-                path=base / ".agents" / "skills" / Path(source).name,
-                package=name,
-                source=source,
-                mechanism=Mechanism.SKILL,
-            )
-
-
 def managed_paths(base: Path | None = None) -> dict[Path, Managed]:
     """Every home-directory path this repo deploys, keyed by absolute destination.
 
-    `base` is the skills root (defaults to the home directory) — `inv ai.install-skills --dir` installs
-    project-local skills elsewhere, and passing that directory here scopes the registry to match.
+    **No skills.** `_skill_entries` used to register every `source = "local"` skill here, because
+    PULSE copied those directories itself. That copier was deleted on 2026-09-07 in favour of the
+    `skills` CLI, which takes a local path directly — so keeping the registry entries would have
+    been worse than useless: the registry would claim `~/.agents/skills/<name>` as a destination
+    this repo deploys, `deploy.status` would report it MISSING forever, and nothing would ever
+    write it. A registry entry is a promise that something writes that path.
+
+    `base` was the skills root — the only mechanism it scoped. It is kept rather than removed
+    because `lookup`, `status` and `all_` all thread it through to here, so dropping it is a
+    signature change across four call sites for no behavioural gain; it becomes meaningful again
+    the moment anything directory-shaped is deployed.
     """
-    home = base or Path.home()
-    entries = (*_wrapper_script_entries(), *_config_file_entries(), *_skill_entries(home))
+    entries = (*_wrapper_script_entries(), *_config_file_entries())
     return {m.path: m for m in entries}
 
 
@@ -442,8 +408,6 @@ def scan(base: Path | None = None) -> list[tuple[Managed, State]]:
 
 def diff(m: Managed) -> str:
     """Indented unified diff of what's deployed against what a fresh deploy would write."""
-    if m.is_dir:
-        return f"  (directory — {m.path} differs from {m.source})\n"
     try:
         before = m.path.read_bytes().decode().splitlines(keepends=True)
         after = expected_bytes(m).decode().splitlines(keepends=True)
@@ -456,22 +420,14 @@ def diff(m: Managed) -> str:
 def _write(m: Managed) -> str:
     """Put the source content at the destination and return the digest actually landed.
 
-    Re-reads rather than trusting the write: a full disk, a permission race, or a partial copytree
-    should fail loudly here, before the manifest records it as ours, not silently surface later as
-    a stale-looking file someone has to go diff by hand.
+    Re-reads rather than trusting the write: a full disk or a permission race should fail loudly
+    here, before the manifest records it as ours, not silently surface later as a stale-looking
+    file someone has to go diff by hand.
     """
     m.path.parent.mkdir(parents=True, exist_ok=True)
-    if m.is_dir:
-        if m.path.is_symlink():
-            m.path.unlink()
-        elif m.path.exists():
-            shutil.rmtree(m.path)
-        shutil.copytree(m.src, m.path)
-        (m.path / SKILL_MARKER).write_text(m.source + "\n")
-    else:
-        m.path.write_bytes(expected_bytes(m))
-        if m.mechanism == Mechanism.WRAPPER_SCRIPT:
-            m.path.chmod(0o755)
+    m.path.write_bytes(expected_bytes(m))
+    if m.mechanism == Mechanism.WRAPPER_SCRIPT:
+        m.path.chmod(0o755)
 
     landed = deployed_digest(m)
     if landed is None or landed != expected_digest(m):

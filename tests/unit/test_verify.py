@@ -79,7 +79,7 @@ def test_deploy_check_seeded_content_fails_only_when_absent(tmp_path, state, pas
 
 
 def test_deploy_check_failure_message_points_at_deploy_status(tmp_path):
-    ok, message = verify._deploy_check(_managed(tmp_path, deploy.Mechanism.SKILL), deploy.State.DIRTY)
+    ok, message = verify._deploy_check(_managed(tmp_path, deploy.Mechanism.MANAGED_FILE), deploy.State.DIRTY)
     assert ok is False
     assert "inv deploy.status --name pkg" in message
 
@@ -99,7 +99,7 @@ def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
     )
 
 
-def test_all_checks_covers_config_files_and_skills_without_duplicating_wrapper_scripts(tmp_path, monkeypatch):
+def test_all_checks_covers_config_files_without_duplicating_wrapper_scripts(tmp_path, monkeypatch):
     _stub_config(
         monkeypatch,
         {
@@ -123,9 +123,9 @@ def test_all_checks_covers_config_files_and_skills_without_duplicating_wrapper_s
 
     assert deploy_checks.count(("agents-md", str(tmp_path / "AGENTS.md"))) == 1
     assert ("wezterm", str(tmp_path / "wezterm.lua")) in deploy_checks
-    skill_targets = [target for name, target in deploy_checks if name == "research-library"]
-    assert skill_targets
-    assert skill_targets[0].endswith("skills/research-library")
+    # A declared skill contributes no deploy check since 2026-09-07: the `skills` CLI installs
+    # those, so verify has no destination of this repo's to prove. It would otherwise fail forever.
+    assert [target for name, target in deploy_checks if name == "research-library"] == []
 
 
 def test_all_checks_wrapper_script_verify_false_still_skips(tmp_path, monkeypatch):
