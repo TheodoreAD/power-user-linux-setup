@@ -3,21 +3,25 @@ status: idea
 updated: 2026-09-08
 ---
 
-# Making PULSE runnable from anywhere: what it costs, and whether it is worth it
+# A `uv tool` shim for PULSE's production tasks, and what to call it
 
-## The finding that reframes the question
+**The ask, stated 2026-09-08:** PULSE's main/production invoke tasks installed as a `uv tool` with a
+shim, callable like any other tool from anywhere. Running it must expose **none** of `repo-tasks`
+and none of PULSE's own development tasks. Open question carried with the ask: the name, because
+`pulse` might clash with PulseAudio.
+
+Everything below was measured or probed on 2026-09-08 rather than reasoned about.
+
+## What is already true, and it is more than expected
 
 **PULSE's code is already location-independent.** Every repo-relative path in `tasks/` resolves from
-`Path(__file__).parent.parent` — 24 sites across 11 modules, checked 2026-09-08, with not one
-`Path.cwd()` or `os.getcwd()` anywhere in the package. And no `c.run` in the repo invokes a
-repo-relative command: every shelled-out command is a system tool (`apt`, `gsettings`, `uv`,
-`systemctl`, `docker`) or a path derived from that same `__file__` anchor. Nothing in PULSE's own
-task set reads the process's working directory.
+`Path(__file__).parent.parent` — 24 sites across 11 modules, with not one `Path.cwd()` or
+`os.getcwd()` in the package. No `c.run` in the repo invokes a repo-relative command: every
+shelled-out command is a system tool (`apt`, `gsettings`, `uv`, `systemctl`, `docker`) or a path
+derived from that same anchor. **So no task needs the process to be standing in the repo.**
 
-What binds PULSE to a directory is exactly one thing: **invoke's task discovery**, which walks up
-from cwd looking for a `tasks/` package.
-
-And that already has a flag. Verified live from a scratchpad directory, 2026-09-08:
+The only thing binding PULSE to a directory is invoke's task discovery, which walks up from cwd —
+and even that redirects with `-r`. Verified from a scratchpad:
 
 | command                       | result                                                                       |
 | ----------------------------- | ---------------------------------------------------------------------------- |
@@ -25,45 +29,149 @@ And that already has a flag. Verified live from a scratchpad directory, 2026-09-
 | `inv -r <repo> --list`        | the whole namespace — PULSE's 28 collections plus 8 borrowed                 |
 | `inv -r <repo> deploy.status` | **executed correctly**, resolved every repo-side source, reported real drift |
 
-So "PULSE needs to be run from a directory" is false as stated. The accurate version is narrower and
-more annoying: **`inv` needs to be told where the tasks are, and `~/AGENTS.md` says there is no way
-to tell it.**
+That does not satisfy the ask — `-r` is not "callable like a regular tool", and it exposes
+everything rather than the production subset — but it means **the shim is a packaging and namespace
+job, not a portability one.** No task has to be rewritten.
 
-[PITFALL: **the rule is wrong, and sessions have been paying for it for weeks.** `~/AGENTS.md`'s
-"Running a command against a different repo" says: _"`inv` is the exception: invoke finds `tasks.py`
-by walking up from cwd, **so no flag redirects it**"_. `-r`/`--search-root` redirects it, and has
-since invoke 1.0. The rest of that clause is right, and is why the mistake is easy to make:
-`inv -r <other repo> quality.precommit` loads the right tasks and then shells out to bare
-`pytest`/`ruff`, which resolve from the **caller's** PATH — so the dev-loop half genuinely does need
-`cd` plus a PATH prefix. The clause generalised a true statement about eight borrowed collections
-into a false one about the mechanism. **Correcting it is a one-line edit to
-`config/agents-md/bash.md` and is worth more than anything else in this plan, because it is free and
-it is the thing that has actually been costing.**]
+[PITFALL: **`~/AGENTS.md` said no flag redirects `inv`, which is false and had been costing.** Fixed
+2026-09-08 in `199ed92` and deployed: the clause now picks by what the task needs — `inv -r <repo>`
+for a task that drives the machine, `cd <repo> && PATH=… inv` for one that runs the target repo's
+own toolchain, since bare `pytest`/`ruff` resolve from the caller's PATH whatever `inv` was
+launched. Two traps went in with it, both of which look like the shortcut and neither of which
+announces itself: `INVOKE_TASKS_SEARCH_ROOT` is read after the collection has loaded and fails
+exactly as if unset, and `tasks.search_root` in `~/.invoke.yaml` replaces cwd for **every** repo on
+the machine.]
 
-## The split that decides everything else
+## The install shape: editable, and this is not a preference
 
-PULSE's namespace has two halves, and only one of them wants portability.
+`uv tool install` supports both, and the difference is total. Probed with a throwaway package built
+to mirror this repo exactly — a `ptasks/` package in the wheel, a `setup.toml` and a `config/`
+beside it at the project root, and `Path(__file__).parent.parent` at runtime — installed into a
+redirected `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR` so nothing touched `~/.local/bin`, then run from an
+unrelated cwd:
 
-- **Machine administration — 28 collections, PULSE's own.** `deploy`, `ai`, `tools`, `apt`,
-  `verify`, `gnome`, `certs`, `proxy`, `allowlist`, … These act on the machine, take their inputs
-  from the repo through the `__file__` anchor, and shell out to system tools. **Already portable**;
-  they only need discovery pointed at the checkout.
-- **The dev loop — 8 collections borrowed from `repo-tasks`.** `quality`, `test`, `dev-env`, `docs`,
-  `ci`, `deps`, `configs`, `agents`. These run `ruff .`, `pytest`, `dprint fmt` against the working
-  directory and resolve their tools from PATH. **Not portable, and should not be** — running this
-  repo's gate is work done in this repo, and `~/AGENTS.md` already routes substantial cross-repo
-  work to its own session.
+| install                        | anchor resolves to                           | `setup.toml` | `config/frag.md` |
+| ------------------------------ | -------------------------------------------- | ------------ | ---------------- |
+| `uv tool install --editable .` | **the checkout**                             | read         | read             |
+| `uv tool install .`            | `…/tools/<pkg>/lib/python3.14/site-packages` | **MISSING**  | **MISSING**      |
 
-Everything below is about the first half only. Making the second half portable is not a goal that
-survives being stated.
+**Editable is the only shape that works, and the non-editable failure is silent.** The program ran,
+exited 0, and simply found nothing — which for PULSE means `deploy.all` with no sources to deploy
+and `util._CONFIG_PATH` with no `setup.toml`, each failing wherever its own call site happens to
+check.
 
-## What the need actually is, measured
+The deeper reason not to "fix" that by packaging `config/` and `setup.toml` as package data: PULSE's
+job is deploying files **from a checkout you `git pull`** and reporting drift against it. Freeze
+those into a wheel and `deploy.status` starts comparing the machine against a copy nobody edits, so
+the whole drift model stops meaning anything. **The tool must stay anchored to the checkout, and
+`--editable` is what does that.**
 
-Counted over the harness's ~30-day transcript window, 2026-09-08: every session in another repo that
-reached for a PULSE task by `cd`-ing into the checkout.
+## The production boundary does not fall where it looks like it falls
 
-**16 occurrences, 6 sessions, 3 repos** — `agent-skills` 12, `repo-tasks` 3, `olx-polite-mcp` 1.
-Roughly two a week, and lopsided:
+The obvious split is PULSE's own 28 collections against the 8 borrowed from `repo-tasks` (`quality`,
+`test`, `dev-env`, `docs`, `ci`, `deps`, `configs`, `agents`). Those 8 are unambiguously out — and
+they would fall out **by accident** anyway, since a tool venv resolves only `dependencies` and
+`repo-tasks` is a dev-group entry, so `tasks/__init__.py`'s existing graceful-degradation branch
+would simply skip them.
+
+**Relying on that accident is the trap.** It is invisible, it makes the tool's task list a property
+of how it was installed rather than of what it declares, and one `uv tool install --with repo-tasks`
+silently changes what the command means. The exclusion has to be declared.
+
+And it does not stop at the repo-tasks line. Reading PULSE's own 28, the development tasks are
+**inside** collections that are otherwise production:
+
+| task                                                                | why it is development                                        |
+| ------------------------------------------------------------------- | ------------------------------------------------------------ |
+| `catalog.render-packages`, `catalog.render-tasks`                   | regenerate docs tables from `setup.toml`                     |
+| `devcontainer.render-docs`                                          | regenerates a docs table                                     |
+| `allowlist.extract/classify/review/render/check-*/reconfirm/status` | authoring pipeline writing into `cli-allowlist/` in the repo |
+
+`allowlist.apply` is the exception inside its own collection — it writes `~/.claude/settings.json`,
+which is machine configuration and belongs in the tool. `devcontainer.check`, `print-exclude-tags`
+and `print-mounts` serve someone setting up a container, so they stay. `home.list-claims` is a
+read-only diagnostic and stays.
+
+So **a collection-level filter cannot express this**, which is the finding that shapes the
+implementation.
+
+## Implementation, and what each piece costs
+
+1. **Mark the development tasks where they are defined**, and derive both namespaces from one
+   source. A module-level set naming that module's dev-only tasks, read by the shim's namespace
+   builder, keeps the declaration next to the task it describes — so adding a task and forgetting
+   the list is a one-file mistake rather than a two-file one. `inv` in the repo keeps showing
+   everything; the shim shows everything minus the marked set. **Never two hand-maintained lists**:
+   they drift, and the drift is silent in the same way the repo-tasks accident is.
+2. **`tasks/cli.py`**, about fifteen lines: build the production `Collection`, hand it to
+   `Program(namespace=…, version=…)`. Invoke supports this directly — `program.py:461` reads
+   `if self.namespace is not None: self.collection = self.namespace`, skipping disk discovery
+   entirely, so the shim never looks for a `tasks/` directory and never cares where it is run.
+3. **`invoke` moves from the dev group to real `dependencies`.** A tool venv resolves only
+   `dependencies`, and the entry point imports invoke, so without this the shim fails at import.
+   Safe for everything else: `bootstrap.sh`'s zero-install path installs invoke as its own uv tool
+   and never runs `uv sync`, and CI's `uv sync` already gets invoke from the dev group today.
+4. **`setup.toml` needs a local-editable install method.** Existing `uv-tool` entries name a PyPI
+   package; this one installs `--editable` from the checkout's own path. Either a field on `uv-tool`
+   or a sibling method — the field is smaller and matches the ecosystem shape rule. The
+   chicken-and-egg resolves itself: `bootstrap.sh` clones, `inv setup` runs, and the packages phase
+   installs the shim from the repo it is already standing in.
+5. **`verify.all` needs a check** for the new package — `<name> --list` is the natural one, and it
+   is cheap and non-launching, unlike the GUI cases that plan documents.
+6. **Allowlist**: a new `Bash(<name>:*)` family through `inv allowlist.review`. This is a saving
+   rather than a cost — it replaces the `cd <repo> && inv …` chains that match no rule today.
+7. **Docs**: `docs/tasks.md` and friends cite `inv <task>` 161 files deep. Nothing has to change,
+   because `inv` in-repo keeps working — but the tool needs one page saying which entry point is
+   which, or the two spellings become folklore.
+
+## The name
+
+**The clash is nominal, not actual.** Checked on this machine and against the archive:
+
+- **No package ships a bare `pulse` binary.** PulseAudio's own executables are `pulseaudio`,
+  `pactl`, `pacmd`, `paplay`, `parec`; the apt names are `pulseaudio*`, `pulsemixer`, `pulseview`,
+  `pulseeffects`. Nothing is called `pulse`.
+- **PulseAudio is not even installed here.** This machine runs PipeWire (`pipewire`,
+  `pipewire-pulse`), whose CLIs are `pw-*` and `wpctl`.
+- **This repo already owns the `pulse` namespace on this machine**: it deploys
+  `~/.local/bin/pulse-proxy-start`, ships `pulse-proxy.service`, and its own env vars are
+  `PULSE_DRY_RUN` and `PULSE_EXCLUDE_TAGS`.
+
+Against that, three real if minor risks: tab-completion and muscle memory sit next to `pulseaudio`
+for anyone who has it installed; a future Debian package could take the name; and PyPI has a dormant
+`pulse` project (0.1.2, a WSGI middleware), which cannot collide with a path install but would if
+anyone ever typed `uv tool install pulse`.
+
+**`pulse-setup` is specifically ruled out**, and by this machine's own naming rule, which uses this
+exact alias as its worked example of what not to do: the full canonical name or a genuine short
+form, never a compound that half-repeats the disambiguating word. The same rule permits a short form
+"where the full name is genuinely unwieldy" — `power-user-linux-setup` as something you type daily
+qualifies.
+
+[NEEDS CLARIFICATION: **`pulse`, or a name with no overlap at all?** `pulse` is consistent with
+every other artefact this repo already installs and collides with nothing that exists. A
+zero-overlap alternative buys immunity from a package that does not exist yet and from confusion in
+a `pulseaudio`-installed environment, at the cost of a name that matches nothing else in the repo.
+The decision is the user's; the evidence above is all of it.]
+
+## Alternatives considered, and why they lose to the shim
+
+- **`inv -r <repo> <task>`** — works today, zero code, but it is not a tool: the path is typed every
+  time, it exposes the whole namespace including `quality` and `test`, and the leading global option
+  changes the command prefix so every call misses the 13 `Bash(inv …)` allowlist rules and prompts.
+- **A shell wrapper** (`exec inv -r "$PULSE_ROOT" "$@"`) through the existing `wrapper-script`
+  method — two lines, declared, tracked by `deploy.status`. Cheaper than the shim and it does fix
+  discoverability, but it inherits the whole namespace, so it cannot satisfy the "no repo-tasks, no
+  development tasks" half of the ask. It is the fallback if the namespace work is deferred.
+- **A global `~/.invoke.yaml` with `tasks.search_root`** — never. It works, which is the danger:
+  `search_root` replaces cwd as the discovery start for every repo on the machine, so `repo-tasks`,
+  `scaffoldapy` and the `*-polite-mcp` family would all load PULSE's tasks instead of their own.
+
+## What the shim is worth, measured
+
+Counted over the harness's ~30-day transcript window: every session in another repo that reached for
+a PULSE task by `cd`-ing into the checkout. **16 occurrences, 6 sessions, 3 repos** — `agent-skills`
+12, `repo-tasks` 3, `olx-polite-mcp` 1.
 
 | what was typed          | count | note                                       |
 | ----------------------- | ----: | ------------------------------------------ |
@@ -72,170 +180,46 @@ Roughly two a week, and lopsided:
 | `inv --list`            |     1 | looking for the name                       |
 | `inv ai.init`           |     1 | **no such task**                           |
 
-Two things fall out of that table, and the second is the more interesting.
+Two a week is thin. **A quarter of the attempts failing on a guessed task name is not** — three
+named tasks that do not exist and one was a bare `inv --list` hunting for the name, from outside the
+checkout where that does not work. A tool on PATH answers that with `<name> --list`.
 
-**The need is one task.** Twelve of sixteen are `ai.install-skills`, and the shape is always the
-same: a session edits a skill in `agent-skills`, pushes it, and has to re-install it from PULSE
-because PULSE owns the installer. That is the `skill-authoring` sequence's last step crossing a repo
-boundary by design.
-
-**Four of sixteen were the session not knowing what to type.** Three named tasks that do not exist
-(`ai.skills` twice, `ai.init` once) and one was a bare `inv --list` hunting for the name. From
-outside the checkout there is no cheap way to ask what PULSE can do — which is a **discoverability**
-failure wearing portability's clothes, and it is the half a wrapper actually fixes. A quarter
-failure rate on a two-a-week operation is a better argument than the two-a-week is.
-
-## The options, and what each costs
-
-### A — `inv -r <repo> <task>`. Zero code, works today.
-
-Costs a 60-character path per call, and one thing that is not obvious: **the allowlist stops
-matching.** `~/.claude/settings.json` carries 13 `Bash(inv …)` rules, matched on literal command
-prefix, and a global option before the verb changes the prefix — the same trap `~/AGENTS.md`
-documents for `git -C x push`. So every from-anywhere PULSE call prompts, every time, on a machine
-whose whole allowlist pipeline exists to stop that.
-
-Fixable by rendering `Bash(inv -r:*)`-shaped rules, which is one `inv allowlist.review` pass.
-Nothing else changes; `inv <task>` in-repo keeps working unaltered.
-
-### B — a `pulse` wrapper on PATH, deployed by `setup.toml`. Recommended.
-
-Two lines of shell — `exec inv -r "${PULSE_ROOT}" "$@"` — shipped through the existing
-`method = "wrapper-script"` mechanism (`dest = "~/.local/bin/pulse"`,
-`content_file = "config/pulse.sh"`), which means `deploy.status` tracks it, `deploy.all` redeploys
-it, and it is declared rather than hand-installed like everything else on this machine.
-
-- **The repo path is the one real design question.** Hard-coding it is wrong — the clone's location
-  is the user's choice and the repo is meant to work on a fresh machine. Read `PULSE_ROOT` from the
-  environment, exported by the same `zshenv` field that already ships `SUDO_ASKPASS` for
-  `[packages.askpass-zenity]`, with the installer writing the path it just cloned into.
-- **It fixes the discoverability quarter**, which `-r` does not: `pulse --list` from anywhere is a
-  one-word answer to the question three sessions guessed wrong.
-- **Allowlist**: one new tool to classify and a `Bash(pulse:*)` family to render — exactly what
-  `cli-allowlist/` is for, and cheaper than the `inv -r` prefix rules option A needs anyway.
-- **The cost is a second name.** `inv <task>` in-repo, `pulse <task>` outside, for one task set. The
-  family convention prefers one mandatory identical composite over a menu — though this is two
-  situations rather than two choices, which is the case that convention exempts. Worth stating in
-  the docs as "same tasks, two entry points, and which one you use is decided by where you are", not
-  as two commands.
-
-### C — a real console script, `pulse = "tasks.cli:program.run"`. Do not.
-
-Invoke supports it directly and cleanly: `Program(namespace=namespace)` skips disk discovery
-entirely (`invoke/program.py:461` —
-`if self.namespace is not None: self.collection = self.namespace`). About fifteen lines and a
-`[project.scripts]` entry. Installed with `uv tool install --editable <repo>`, the `__file__` anchor
-still points at the checkout, so `config/`, `setup.toml` and `cli-allowlist/` resolve with **no
-packaging work at all**.
-
-It fails on something else:
-
-[PITFALL: **the tool venv would silently publish a different task set under the same name.**
-`dependencies = []` and `repo-tasks` is a dev-group dependency, so a `uv tool install` of this
-project resolves without it — and `tasks/__init__.py` degrades gracefully by design, returning Nones
-and skipping those collections rather than erroring. So `pulse --list` would show 28 collections
-where `inv --list` shows 36, with nothing anywhere saying why, and `pulse quality.precommit` would
-be "no idea what that is". Fixing it means moving `invoke` and `repo-tasks` into real
-`dependencies`, which changes what `uv sync` installs and what CI resolves for a repo that currently
-declares none. One command name meaning two things depending on how it was reached is worse than
-either shape chosen whole.]
-
-And the shape is wrong on its own terms: a console script is what a tool you **ship** looks like.
-PULSE has one consumer and its entire value is that it is a checkout you `git pull` — option B's
-wrapper delegates to that checkout, while C dresses it as a distributable it is not.
-
-### D — a global `~/.invoke.yaml` with `tasks.search_root`. Never.
-
-Written down so nobody re-derives it as the obvious answer. It **would** work — user config files
-are loaded by `create_config()` before `parse_collection()`, unlike the shell environment — and that
-is precisely what makes it dangerous. `search_root` **replaces** cwd as the discovery start
-(`invoke/loader.py:114-121`), so every other repo on this machine — `repo-tasks`, `scaffoldapy`, the
-`*-polite-mcp` family, `ingesta` — would load PULSE's tasks instead of its own. A machine-wide
-setting that breaks every project except one.
-
-[PITFALL: **`INVOKE_TASKS_SEARCH_ROOT` looks like the answer and silently does nothing.** Tested
-2026-09-08 from outside the repo: same `Can't find any collection named 'tasks'!`, exit 1, no
-warning that the variable was seen and ignored. The config key exists, the env var name is derived
-correctly (`INVOKE_` + the nested path), and the value is read **too late to matter** —
-`Program.run` calls `create_config()` and then `parse_collection()`, while `load_shell_env` is
-documented in `invoke/config.py` as "intended for execution late in a `Config`'s lifecycle" and
-lands after the collection is already loaded. An hour is available to anyone who assumes the env var
-works because the key is real.]
-
-## Is it worth it
-
-**The free half, yes, immediately**: the `~/AGENTS.md` clause is wrong, one line fixes it, and it is
-the only item here that has demonstrably been costing something.
-
-**The wrapper, probably — but on the discoverability argument, not the frequency one.** Two calls a
-week saved ten seconds each does not pay for a new entry point, a docs paragraph and an allowlist
-pass. A quarter of those calls failing on a guessed task name is a different claim, and
-`pulse
---list` answers it in a way `cd` never will. If the wrapper is built, that is the reason to
-record for it.
-
-**The cheapest option is not on the list above — and checking it turned up something better than a
-cheap fix.** Twelve of sixteen reaches are one task from one repo, so the obvious move was to name
-the command in `skill-authoring`'s last step and be done. Checked 2026-09-08: **that step names
-`npx skills add <owner>/<repo> --global`, not `inv ai.install-skills`.** Nothing in the documented
-sequence mentions PULSE at all.
-
-So twelve sessions crossed a repo boundary to run a task their own loaded skill did not tell them
-about, and three more guessed at its name. That is not a discoverability gap inside PULSE; it is
-**two commands competing for one step**, and the sessions picked the one the skill does not name.
-They may well have been right to: `ai.install-skills` also creates `~/.agents/skills/` and the
-`.claude/skills` symlink, which is the gap this repo exists to cover because the `skills` CLI
-announces it and does not create it. If that is the reason, the documented step is the one that is
-wrong, and a `pulse` wrapper would be paving a path that should not be walked.
-
-**That has to be settled before anything is built**, and it is not settleable here:
-`skill-authoring` lives in `agent-skills`, and a session in this repo does not edit that one. File
-it there.
+[DECISION: **chasing the cheap version of that fix found something else, and it is filed
+elsewhere.** The obvious move was to name the command in `skill-authoring`'s last step. That step
+already names a command — `npx skills add <owner>/<repo> --global` — and never mentions PULSE. So
+twelve sessions overrode their own loaded skill in favour of a task that also creates the
+`.claude/skills` symlink the `skills` CLI announces and does not create. Whether that is correct
+decides whether the measured need is sixteen or four. It belongs to `agent-skills`, and is filed
+there as `2026-09-08-skill-authoring-reinstall-step-is-contested.md`. **It does not block the shim**
+— the ask is for a tool, not for a fix to that rate — but it should be answered before the rate is
+ever cited as the shim's justification.]
 
 ## Open questions
 
-[DECISION: **the "just name the command in the skill" fix is unavailable, and the reason is worth
-more than the fix would have been.** `skill-authoring`'s step 6 names `npx skills add … --global`.
-Twelve of the sixteen measured cross-repo reaches ran `inv ai.install-skills` instead, and three
-guessed at its name — so the sessions were not failing to follow their instructions, they were
-overriding them, consistently, in favour of a command that does one thing more. Whether that is
-correct decides whether this plan has a problem to solve at all: if PULSE's task is the right step,
-`skill-authoring` should say so and the from-anywhere need is real and recurring; if
-`npx skills add` is the right step, twelve of the sixteen data points are sessions doing something
-unnecessary and the measured need drops to four.]
+[NEEDS CLARIFICATION: **where exactly the production line falls inside `allowlist`.** `apply` writes
+machine configuration and clearly belongs; the other eight write into `cli-allowlist/` in the repo
+and clearly do not. But `status` and `check-coverage` are read-only and answer "what would apply
+do", which is a question a machine administrator asks. Splitting one collection across the line is
+the first time this repo would do that, and it is worth deciding deliberately rather than by
+whichever list gets written first.]
 
-[NEEDS CLARIFICATION: **which command is the canonical last step of the skill-authoring sequence?**
-The case for `inv ai.install-skills` is the symlink gap — `~/AGENTS.md` and this repo's `AGENTS.md`
-both record that the `skills` CLI announces a Claude Code symlink it does not create, and that PULSE
-covers exactly that. The case for `npx skills add` is that it is one mechanism deep, needs no
-checkout, and is what the skill already says. Belongs in `agent-skills` as the repo owning that
-skill; this plan cannot answer it and must not edit it.]
+[NEEDS CLARIFICATION: whether the shim should refuse to run when the checkout has moved or is
+missing. An editable install whose source directory is gone fails at import with a traceback, which
+is the worst available message for the most likely long-run failure — a repo that was moved or
+renamed. One early check naming the expected path costs a few lines and turns it into a sentence.]
 
-[NEEDS CLARIFICATION: whether `PULSE_ROOT` should be exported by `zshenv` or discovered. Exporting
-it is the mechanism this repo already uses and is honest about being machine state; discovering it
-(a marker file, a well-known clone path) re-invents what the environment already knows. Leaning
-exported — but the installer has to write it, which means the wrapper does not work until the next
-shell, and that is a first-run wart worth deciding about rather than discovering.]
-
-[UNVERIFIED: the 16-occurrence count is from a `cd <path> && inv` grep over ~30 days of transcripts,
-so it misses any cross-repo reach spelled some other way, and misses everything the user did outside
-an agent session. It is a floor. It is also skewed by the retention window rather than the habit —
-the harness keeps 30 days, and PULSE is older than that.]
+[UNVERIFIED: whether `uv tool install --editable` survives a `uv self update` or a Python bump on
+the tool venv. The probe covered install and invocation, not the upgrade path, and a tool that
+silently stops resolving its own checkout after an unrelated upgrade is exactly the failure this
+repo exists to prevent. Probe before shipping.]
 
 ## Recommended direction
 
-1. **Correct the `~/AGENTS.md` clause** — `config/agents-md/bash.md`, one line: `-r`/`--search-root`
-   does redirect invoke's discovery, and the reason the `cd` form is still needed for another repo's
-   gate is PATH resolution of `pytest`/`ruff`, not discovery. Free, independent of everything below,
-   and it is the actual bug this plan found.
-2. **File the canonical-step question in `agent-skills`**, where `skill-authoring` lives. It decides
-   whether the measured need is sixteen reaches or four, and therefore whether steps 3 and 4 have
-   anything to pay for.
-3. **Then B, if 1 and 2 do not close it**: the `pulse` wrapper through `wrapper-script`, sold on
-   discoverability rather than on two calls a week, with `PULSE_ROOT` from `zshenv` and one
-   allowlist pass.
-4. **Not C, and never D.**
-
-Nothing here is worth doing in the order it was discovered: the portability question was the ask,
-and the two things worth acting on are a wrong sentence in `~/AGENTS.md` and a contested step in
-another repo's skill. The portability itself was already there behind a flag.
+1. **Done** — the `~/AGENTS.md` `inv -r` correction (`199ed92`), deployed. Independent of the rest.
+2. **Decide the name.** Evidence is above and complete; nothing else is blocked on it, but every
+   file the work touches will carry it.
+3. **Build it in the order the costs fall**: mark the dev tasks where they are defined, add
+   `tasks/cli.py` with an explicit production `Collection`, move `invoke` into `dependencies`, then
+   the `setup.toml` install method, the `verify` check, and the allowlist pass.
+4. **Probe the upgrade path** before it ships, per the `UNVERIFIED` above.
+5. **Not a self-contained wheel, and never the global invoke config.**
