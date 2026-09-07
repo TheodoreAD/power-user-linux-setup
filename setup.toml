@@ -1277,10 +1277,29 @@ method = "apt"
 tags = ["shell", "zsh"]
 
 [packages.zsh-path]
-description = "User PATH entries — ~/.local/bin prepended so user tools shadow system tools"
+description = "User PATH entries — ~/.local/bin prepended so user tools shadow system tools, and PATH kept free of duplicates"
 method = "zsh"
 tags = ["shell", "zsh"]
-zshenv = 'export PATH="${HOME}/.local/bin:${PATH}"'
+# `typeset -U path PATH` marks the array unique: it drops duplicates from the value it inherits and
+# from every later assignment for the shell's life. So this one line covers the export below it, the
+# one in [packages.go], direnv's .venv prepend and anything added by hand afterwards — no block
+# needs a guard of its own. It stays in the first zshenv block, which is where setup.toml order puts
+# it, though the flag would work from anywhere in the file.
+#
+# Without it these exports are non-idempotent by construction, and ~/.zshenv is read on *every* zsh
+# invocation — the property the certs/proxy exports depend on, so it is not going away. Nested
+# invocations therefore grow PATH without limit: measured 2026-09-07 at four copies of
+# ~/.local/bin, ~/.local/share/go/bin and ~/go/bin in a login shell, and five in a `zsh -c` started
+# from it. It also leaves the machine: GDM starts this session through a login shell and
+# gnome-session imports that environment into the systemd user manager (`_=/usr/bin/gnome-session`
+# is still in `systemctl --user show-environment`), so every dock-launched application inherits the
+# duplicated PATH for the whole session.
+#
+# Dedupe keeps the *first* occurrence, which is what preserves the precedence this package exists
+# for: ~/.local/bin still shadows the system copy, and direnv's .venv still shadows both.
+zshenv = '''
+typeset -U path PATH
+export PATH="${HOME}/.local/bin:${PATH}"'''
 
 [packages.zsh-history]
 description = "Zsh history tuning — large history, deduplication, timestamps, cross-session sharing"

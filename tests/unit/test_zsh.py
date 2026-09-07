@@ -104,3 +104,19 @@ def test_configure_dry_run_reports_a_stale_block_as_work_to_do(tmp_path, monkeyp
 
     assert "MISSING" in capsys.readouterr().out
     assert "ASKPASS" in _zshenv(tmp_path), "a dry run must not write"
+
+
+def test_path_is_marked_unique_before_anything_prepends_to_it():
+    """~/.zshenv is read on every zsh invocation — the property the certs/proxy exports depend on —
+    so an unguarded `PATH="x:$PATH"` grows the variable once per nested shell, without limit.
+    Measured 2026-09-07 before the fix: four copies of ~/.local/bin in a login shell, five in a
+    `zsh -c` started from it, and the duplicated value reaches every dock-launched application,
+    because gnome-session imports this session's environment into the systemd user manager.
+
+    Asserted against setup.toml rather than the deployed file: the declaration is the source, and
+    the failure this guards is somebody rewriting the block without carrying the one line that
+    makes every other PATH assignment in the file idempotent.
+    """
+    snippet = util.load_config()["packages"]["zsh-path"].get("zshenv", "")
+    assert "typeset -U path PATH" in snippet
+    assert snippet.index("typeset -U") < snippet.index("PATH="), "the flag has to be set before the value it dedupes"
