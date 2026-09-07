@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-24
+updated: 2026-09-07
 ---
 
 # Should session environment variables move to `~/.config/environment.d/`?
@@ -18,7 +18,42 @@ this machine is 50 lines holding ~19 exports: `PATH` additions (`~/.local/bin`, 
 `GOROOT`/`GOPATH`, `UV_PYTHON`, `NVM_DIR`, `RUSTUP_HOME`/`CARGO_HOME`, `RESEARCH_HOME`, the
 `SUDO_ASKPASS`/`SSH_ASKPASS`/`SSH_ASKPASS_REQUIRE` trio, and the `FZF_*` family.
 
-### The gap (verified 2026-08-24 — do not re-derive)
+### The gap — re-measured 2026-09-07, and the original reading does not hold
+
+[PITFALL: **`/proc/<pid>/environ` is not a reliable read for a Chromium or Electron process, and
+both of the applications measured below are Electron.** The 2026-08-24 measurement read `code` and
+`claude-desktop` that way, found none of the variables, and concluded the systemd user manager never
+sees `~/.zshenv`. Two things found on 2026-09-07 contradict it:
+
+- `systemctl --user show-environment` **carries every one of them** on this machine — `PLANS_HOME`,
+  `RESEARCH_HOME`, `UV_PYTHON`, `NVM_DIR`, `GOPATH`, `CARGO_HOME`, `SUDO_ASKPASS`, `SSH_ASKPASS` —
+  along with a `PATH` holding `~/.local/bin` and the go/JetBrains block three times each. That is
+  the manager's own environment block, read by a route the artifact cannot touch.
+  `~/.config/environment.d/` does not exist, so this was imported at run time rather than generated,
+  and the triplication is the signature of a repeated `systemctl --user import-environment` /
+  `dbus-update-activation-environment`. **Nothing in this repo does that import** — it is not in
+  `~/.zshenv`, `~/.zprofile`, `~/.zshrc`, `setup.toml`, `config/`, `tasks/`, or the user's zsh
+  history. Which tool does it is still open.
+- `claude-desktop`'s own launcher, `/usr/bin/claude-desktop-unofficial`, is a bash script started
+  from the same dock entry, and it **does** have the variables. It sets nothing, unsets nothing and
+  runs no `env -i` before exec'ing the Electron binary — which then reports not having them. A child
+  cannot lose inherited environment across a plain exec, so what changed is the reading, not the
+  environment. Chromium rewrites the contiguous argv/envp region to set process titles, which is the
+  known mechanism; the exact one matters less than the fact that the reading cannot be trusted here.
+
+So the table below records what was read, not what is true, and the sentence it was used to support
+— "the repo's environment variables are invisible to exactly the class of program that cannot source
+a shell rc" — is **unproven and probably false on this machine.** The `gnome-shell` control that
+read positive is the one non-Electron process in the set, which is exactly the shape an artifact
+takes.
+
+**A method that works**, for whoever picks this up: read a non-Chromium child the app spawns
+(`claude-desktop`'s `cowork-linux` helper reads positive), or launch a plain process from a
+`.desktop` entry and read that, or ask the app itself (`process.env` in an Electron devtools
+console). Do not re-run the original measurement — the "do not re-derive" note that used to head
+this section is how a bad reading survives.]
+
+### What was read on 2026-08-24
 
 Modern GNOME launches desktop applications as **systemd user scopes**, not as children of
 `gnome-shell`. Confirmed by cgroup:
@@ -153,6 +188,16 @@ _content_, but not that the running session picked it up — the two disagree fo
 after any change.]
 
 ## Recommended direction
+
+0. **Re-establish the premise before building anything on it** (added 2026-09-07). Steps 1–4 below
+   were written against a measurement that no longer stands, and the question they answer may not
+   exist: if the user manager already carries these variables, the gap this plan exists to close is
+   an unmanaged import by an unidentified tool rather than an absence. Two things to settle, in
+   order — which tool runs the import, and whether an `app.slice` application genuinely lacks the
+   variables when measured by a method that works. Only then does the replacement-vs-addition
+   question below mean anything. Note that an unmanaged import is its own finding: it makes the
+   session environment depend on something outside `setup.toml`, which is the condition
+   `inv home.list-claims` exists to make visible one directory up.
 
 1. **Do not frame this as "replace the zsh stuff."** The zsh blocks stay; they are the only
    mechanism that works on the no-systemd targets this repo supports, and they are what interactive
