@@ -26,8 +26,9 @@ with throwaway `--user-data-dir` profiles (explicit `--ozone-platform=x11` → 9
 x11; `OZONE_PLATFORM=x11` with no flag → all children on `wayland`), and
 `strings /opt/google/chrome/chrome | grep -x OZONE_PLATFORM` → no match at all. `OZONE_PLATFORM` is
 an Electron convention, not a Chrome one. This kills the otherwise-attractive
-`~/.config/environment.d/` route for this particular problem — see
-`plans/2026-08-24-environment-d-session-env.md`, which wants that directory for unrelated reasons.
+`~/.config/environment.d/` route for this particular problem. That directory was separately proposed
+for unrelated reasons and is not used here either — `contributing/session-environment.md` has why,
+out of a plan since retired.
 
 **There is no `#ozone-platform-hint` in Google Chrome stable 151.** The complete set of `ozone*`
 switch names in the binary is `ozone`, `ozone-dump-file`, `ozone-override-screen-size`,

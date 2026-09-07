@@ -1,5 +1,5 @@
 ---
-status: idea
+status: abandoned
 updated: 2026-09-07
 ---
 
@@ -227,3 +227,28 @@ after any change.]
    alongside `zshenv`/`zshrc`/`zprofile` keeps the fact next to the package that owns it, which is
    the pattern the repo already uses and the reason `~/.zshenv` is coherent today. Route the write
    through the drift-guard plan's shared writer rather than adding a fourth one.
+
+## Migrated to
+
+Retired 2026-09-07: the gap this plan proposed to close does not exist on this machine, so there is
+nothing to build. Its premise was a `/proc/<pid>/environ` reading of two Electron applications,
+which that file does not report reliably.
+
+- **`contributing/session-environment.md`** (new, and the design-rationale home this repo did not
+  have for the subject) — the full chain from `~/.zshenv` to a dock-launched application, why
+  `environment.d` stays unadopted for two independent reasons, the Chromium measurement pitfall and
+  what to measure instead, and why the duplicated `PATH` was this repo's own.
+- **`docs/zsh.md`**, PATH section — the user-facing half: `typeset -U path PATH`, why it is not
+  tidiness, and that dedupe keeps the first occurrence so precedence is unchanged.
+- **`setup.toml`, `[packages.zsh-path]`** — the fix itself, with the measurement in its comment,
+  plus a test asserting the flag is set before anything prepends.
+- **`plans/2026-09-07-pam-environment-absence-assertion.md`** — the one open question that survived,
+  because it is about a different mechanism and a real removal timer.
+
+**Deliberately not migrated.** The five other `NEEDS CLARIFICATION` tags — replacement-vs-addition,
+which variables to move, `PATH` expansion semantics inside `environment.d`, whether a re-login makes
+it unverifiable — are all questions about adopting a mechanism that is not being adopted. They are
+answers to nothing now, and preserving them would leave the next reader weighing a decision already
+closed. The `DECISION` tag about routing a new home-directory writer through `deploy.deploy()` is
+not migrated either: it is the established rule in `contributing/deploy.md` and
+`contributing/home-claims.md`, and this plan was restating it rather than establishing it.
