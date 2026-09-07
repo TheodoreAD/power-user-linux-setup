@@ -1,14 +1,14 @@
 ---
 status: idea
-updated: 2026-09-07
+updated: 2026-09-08
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Thirteen sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Sixteen sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
-without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
+without `--compare`**, and so were samples 8, 14 and 15 — they have rates but no baseline deltas.
 
 [PITFALL: **rows 1–11 were measured with an instrument that under-counted. Four have been re-scored;
 the other seven are floors, and a floor may only be compared downward.** `audit.py`'s
@@ -53,8 +53,9 @@ ran in auto mode, whose system reminder asks for `cat`/`sed -n` over `Read`, so 
 and `grep/find` are mode-mixed in it while `chain`, `head/tail` and `exit-masked` are not.]
 
 Merged on 2026-09-02 from five plans filed separately by five sessions, each of which found the
-store dirty and added a file rather than editing one another session might have been holding, and
-again on 2026-09-03 from two more filed the same way from sessions in other repos:
+store dirty and added a file rather than editing one another session might have been holding, again
+on 2026-09-03 from two more filed the same way from sessions in other repos, and again on 2026-09-08
+from three rows in two files:
 
 - `2026-09-02-adherence-sample-first-run-under-the-until-rule.md` (sample 1)
 - `2026-09-02-adherence-sample-a-verbose-gate-and-a-masked-exit.md` (sample 2)
@@ -65,13 +66,18 @@ again on 2026-09-03 from two more filed the same way from sessions in other repo
 - `2026-09-05-adherence-sample-sed-n-at-a-record-high.md` (sample 11), merged 2026-09-05
 - `2026-09-06-post-heredoc-fix-adherence-row-from-an-announced-session.md` (sample 12), merged
   2026-09-06 — filed from `ingesta` asking to be absorbed here rather than kept as a third plan
+- `2026-09-07-adherence-sample-a-rules-authoring-session-that-broke-them.md` (samples 14 and 15),
+  filed from `repo-tasks` for a corpus it could not edit, absorbed and merged 2026-09-08
+- `2026-09-08-adherence-sample-the-best-row-the-corpus-has-and-it-announced.md` (sample 16), written
+  in this repo and deliberately held apart from the corpus so that all three could be merged in one
+  pass rather than three edits to the same table
 
 Those names are what `plans.py archive --search` needs to read any of them back.
 
 Each sample carried its own `source_repo`/`source_session`/`source_moment` frontmatter, which one
 merged file cannot. Kept here instead, because a triage session re-reading the original turns is the
-whole point of recording them — and the harness keeps a transcript for 30 days by default, so these
-expire around 2026-10-02:
+whole point of recording them — and the harness keeps a transcript for 30 days by default, so rows
+1–13 expire around 2026-10-02 and rows 14–16 around 2026-10-06:
 
 | #  | source repo              | transcript                                   | session start               |
 | -- | ------------------------ | -------------------------------------------- | --------------------------- |
@@ -88,6 +94,13 @@ expire around 2026-10-02:
 | 11 | `ingesta`                | `6291d9d1-b8ed-4826-9967-9ae30f70bebf.jsonl` | `2026-09-05T10:21:37Z`      |
 | 12 | `ingesta`                | `88f860c9…` (short form only)                | `2026-09-05T21:03+03:00`    |
 | 13 | `power-user-linux-setup` | `3ad94750-3d54-410e-9c1b-9ad44ffc7e14.jsonl` | `2026-09-06T00:41:15.258Z`  |
+| 14 | `repo-tasks`             | `52905ee0-50ff-4376-bd19-5ab4d9ca0a24.jsonl` | `2026-09-06T00:11:27.349Z`  |
+| 15 | `agent-skills`           | `af52116e-18ca-4557-9fbe-86cec225fe3e.jsonl` | `2026-09-07T12:07:35.439Z`  |
+| 16 | `power-user-linux-setup` | `9164dacd-2813-4087-a593-14dc24c44782.jsonl` | `2026-09-07T14:55Z`         |
+
+Row 14's session started on 2026-09-06 and did its working day after a `/clear` on 2026-09-07, which
+is why its start and its boundary sit a day apart; row 16's start is recorded to the minute rather
+than the millisecond because its filed plan gave a span rather than a timestamp.
 
 Rows 6, 7 and 11 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
@@ -103,6 +116,16 @@ so the whole of the movement is the heredoc fix. Every other row of 1–11 was m
 instrument change visible instead of silent: without it a rate cannot be told from the rate a later
 instrument would have printed for the same session, which is exactly the confusion this plan spent a
 week in. `save_baseline` already does this for baselines.
+
+**Rows 14 and 15 do not record their instrument, and the gap was closed by inference rather than by
+the row.** Sample 16 records `95f8af7`; the two filed from `repo-tasks` record the boundary and the
+shell and not the third thing, on the same day this plan wrote "every future row carries the
+instrument commit, the boundary, and the shell". Recovered on 2026-09-08 rather than left open:
+`95f8af7` is the newest commit touching `audit.py` and landed 2026-09-07 13:58 +03:00, before both
+boundaries, so each row was measured at `95f8af7` or at its parent `43bc1e0` — and `95f8af7` changes
+only the expectations/scoring surface, which neither unscored row uses. So the rates are the same
+under either, and the pin holds. **That it holds is luck**: an instrument commit that had touched a
+counter would have left both rows uncorrectable in exactly the way the un-daggered rows above are.
 
 **The `score` column is deliberately not re-scored, and the re-scored rates do not license one.**
 Re-running the comparison today prints 4/12 for sample 6 and 8/12 for sample 11, against the 6/11
@@ -131,6 +154,9 @@ The one verdict recorded as changed is sample 11's `chain`, which moves for the 
 | 11† | `ingesta`                |   228 | domain safety rules, one repo  |         27% |           12% |               0% | 9/11  |
 | 12  | `ingesta`                |   183 | announced the rule, ~6h        |      **5%** |            8% |               0% | —     |
 | 13  | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h     |         17% |            1% |               0% | 10/13 |
+| 14  | `repo-tasks`             |   372 | a detection rule + plans, ~8h  |         42% |           25% |          **19%** | —     |
+| 15  | `agent-skills`           |   196 | skills + plans, ~11.5h         |         28% |           23% |               0% | —     |
+| 16  | `power-user-linux-setup` |   270 | plans, research, edits, ~6h    |      **2%** |            2% |               0% | 12/13 |
 
 `†` = re-scored 2026-09-07 at the row's own `--until` boundary with the fixed instrument. **Every
 un-daggered row of 1–11 is a floor**, so `55%` on row 4 means "at least 55%" and a comparison
@@ -139,15 +165,22 @@ as the highest `exit-masked` the corpus can actually assert; row 4's `32%` is a 
 be higher.
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
-was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
-they were run without `--compare`.
+was domain research rather than work on the tooling itself. Samples 7, 8, 14 and 15 have no score
+because they were run without `--compare`.
 
-**Sample 9 is the best row the corpus has** — `head/tail` at 15% against a previous best of 24%, on
-a twelve-hour gate-heavy day, and the second consecutive clean `chain`. (Both figures are floors,
-and sample 12's 5% has since beaten it outright on the fixed instrument.) **Sample 10 is the
-counterweight, from the same day and the same baseline**, and is the more useful of the pair for
-what the corpus is actually asking: it is the session that _authored_ the `| tail` rule change, and
-it still finished at 23%.
+**Sample 16 is the best row the corpus has, by a margin no earlier row approaches** — `head/tail` at
+2% against a previous best of 5%, `chain` at 7% against a range of 21–64%, `sed-n` and
+`git-C-own-repo` at a clean zero, and 12 of 13 expectations met. Sample 9 held the title on the
+pre-fix instrument (15%, a floor) and sample 12 took it at 5%; both are now beaten outright by a row
+measured with the counting instrument. **Sample 10 is the counterweight**, and is still the more
+useful of that pair for what the corpus is actually asking: it is the session that _authored_ the
+`| tail` rule change, and it finished at 23%.
+
+**Sample 14 is the other end, and it is the largest row in the corpus** — 372 calls, the highest
+`chain` and second-highest `head/tail` recorded, and the second row ever to put `git-C-own-repo` in
+double figures. Read against sample 16 from the same week, the spread between the best and worst
+rows of this corpus is now 2% against 42% on the same rule, on the same machine, under the same
+instructions.
 
 [PITFALL: **sample 10 is the first row measured twice in one session, and the rate got worse between
 them.** A harvest at 00:15 read `chain` 45% / `head/tail` 20% / `exit-masked` 22% over 283 calls; a
@@ -612,6 +645,146 @@ commands whose exit code the harness already reports; the `rg -r` bundle twice (
 that rule's rewording); and one `cd <own repo> && …`. None of them was under auto mode, and the
 session was in the repo that _owns_ these rules — the fourth instance of authoring-and-breaking.
 
+### Sample 14 — `repo-tasks`, 372 calls, the largest row and the worst chain
+
+`audit.py --session 52905ee0 --until 2026-09-07T19:12:55+03:00`, **no `--compare`**, so rates
+without deltas or a score. 372 calls in the window, which passes sample 4's 350 as the largest
+sample in the corpus. The session started 2026-09-06 and did its eight working hours after a
+`/clear` on 2026-09-07; its subject was writing deterministic detection for a coupling rule.
+
+| tag                                           | rate | note                                     |
+| --------------------------------------------- | ---: | ---------------------------------------- |
+| **`chain`**                                   |  56% | 210 calls, second only to sample 4's 64% |
+| **`head/tail`**                               |  42% | second-highest recorded                  |
+| **`exit-masked`**                             |  25% | 93 calls, **74 of them wrapping a gate** |
+| **`git-C-own-repo`**                          |  19% | 71 calls, **55 of them mutating**        |
+| `search\|head`                                |  19% | 72 calls                                 |
+| `heredoc`                                     |  13% | 49 calls                                 |
+| `chain5`                                      |   5% | 18 calls                                 |
+| `git-mutating-in-chain`                       |    — | 20 calls                                 |
+| `sed-n`, `cat-view`                           |   1% | 5 calls each                             |
+| `cd-own-repo`, `grep-r-not-rg`, `find-not-fd` |   0% |                                          |
+
+**74 of 93 masked calls wrapped a gate — the largest masked-gate population the corpus holds**, and
+the first time the derived split has answered the question on a _high_ rate rather than a low one.
+`setopt` answered `pipefail` in this session's own shell, so the seven green-gate claims stood on
+real exit codes and no re-run was owed. Sample 13 was the first row where the split replaced a gate
+re-run; this is the first where it replaced a re-run that 74 calls were riding on.
+
+**`git-C-own-repo` at 19% with `cd-own-repo` at 0%** is sample 1's exact shape arriving a second
+time, and the more lopsided of the two: 55 of the 71 were mutating, against sample 1's 16%. The
+rule's own claim — that the recommended flag is now the commoner mistake than the banned `cd` it
+replaced — has been observed twice with the `cd` at a clean zero both times.
+
+**`chain` at 56% is one habit repeated, not 210 decisions.** The shape is
+`git add <paths> && plans.py scan --mode staged` before every commit, plus
+`inv quality.precommit 2>&1 | tail -N && git add …`. The filed plan read the first of those as two
+rules meeting at one point and asked the corpus to decide it; see the open question below, where it
+does not survive inspection.
+
+**The session's subject was a detection rule, and it broke four Bash rules writing it** — the
+corpus's recurring shape, now at the highest rates it has produced.
+
+### Sample 15 — `agent-skills`, 196 calls, the same seam in a different repo
+
+`audit.py --session af52116e --until 2026-09-07T23:43:57+03:00`, no `--compare`, from the same filed
+plan and added to it 2026-09-07. 196 calls over ~11.5 hours, 8 sweep calls excluded.
+
+| tag                     |   rate | note                               |
+| ----------------------- | -----: | ---------------------------------- |
+| **`chain`**             |    57% | 112 calls                          |
+| `head/tail`             |    28% |                                    |
+| `exit-masked`           |    23% | `pipefail` in force, 5 gate claims |
+| `chain5`                |    11% | 21 calls                           |
+| `git-mutating-in-chain` |      — | 12 calls                           |
+| `heredoc`               |     6% | 11 calls                           |
+| `search\|head`          |     5% | 10 calls                           |
+| `sed-n`, `cat-view`     |     1% | 2 and 1 call                       |
+| `find-not-fd`           |     1% |                                    |
+| `cd-own-repo`           | 1 call |                                    |
+| `git-C-own-repo`        |     0% | `git-C-mutating` 1                 |
+
+**The chain seam reproduces**: 57% here against 56% in sample 14, different repo, different subject,
+dominated by the same `git add <paths> && plans.py scan --mode staged`. Two rows are what turn one
+session's observation into something worth deciding.
+
+**And one finding that is not a rate.** `~/AGENTS.md` names the exact command, the exact failure and
+the mechanism: `gh run list --commit <7-char-sha>` prints `[]` and exits 0 because `--commit`
+matches only the full 40-character SHA, so an `until` loop over it can never become true and "still
+running" is indistinguishable from "will never finish". This session reproduced it **verbatim** —
+short SHA, `until` loop, the wait moved to the background at its timeout — with the rule sitting in
+its context. Recovery cost one `git rev-parse HEAD`, which is what makes it easy to under-weight.
+
+[PITFALL: **this is the corpus's sharpest instance of its own claim, and it moves the claim one step
+further along.** Every earlier instance was a session that had _authored_ the rule it broke —
+samples 3, 4, 6, 11, 13. Here the rule was authored elsewhere, and what the session had was the
+finished text: the command named, the failure named, the mechanism explained, the working
+replacement given. It typed the failing form anyway. So "authoring a rule is not evidence of
+following it" understates the problem — **reading one is not evidence either**, and the corpus has
+no sample that separates "had not read it" from "had read it and did it regardless", because every
+session here had it in context the whole time.]
+
+### Sample 16 — `power-user-linux-setup`, 270 calls, the best row the corpus has
+
+`audit.py --session 9164dacd --until <harvest boundary> --compare 2026-09-06-zero-on-count.json`,
+instrument at **`95f8af7`**, **12/13**. About six hours, 2026-09-07 14:55Z to 21:15Z, on plan work,
+clone-and-grep research and long `Edit` runs.
+
+| tag                     |   rate | vs baseline    |
+| ----------------------- | -----: | -------------- |
+| `chain`                 |     7% | −40pp, OK      |
+| `head/tail`             | **2%** | −27pp, OK      |
+| `exit-masked`           |     2% | 2 gate, 3 list |
+| `search\|head`          |     1% | —              |
+| `heredoc`               |     1% | −10pp, OK      |
+| `cat-view`              |     0% | −1pp, OK       |
+| **`rg-replace-bundle`** |  **1** | **MISS**       |
+| `sed-n`                 |     0% | −5pp, OK       |
+| `cd-own-repo`           |     0% | OK             |
+| `git-C-own-repo`        |     0% | OK             |
+| `git-mutating-in-chain` |     0% | −6pp, OK       |
+
+**Four headline counters are corpus bests and nothing else is mid-band.** `head/tail` at 2% against
+a previous low of 5% and a band of 15–55% everywhere else; `chain` at 7% against 21–64%; `sed-n` and
+`git-C-own-repo` at zero. `exit-masked` at 2% is second to sample 13's 1%, and its split says 2 of
+the 5 masked calls wrapped a gate — with `PIPE_FAIL` in force in this session's shell, so those
+greens stood on real exit codes and no re-run was owed.
+
+**This is an announcing session, and it is the row `2026-08-28-auto-mode-contradicts-bash-rules.md`
+had been waiting for.** It opened by stating the resolution out loud — _"Using Read/Edit/Write for
+files and `rg` for search despite the auto-mode note — per `~/AGENTS.md`"_ — the fifth announcing
+row in that plan's table, and the one that settles its narrow claim. The four before it scored Bash
+file reads at 18%, 15%, 3% and 6%; this one is **0%** — zero `sed -n`, one `cat`-view call in 270.
+What it adds beyond that is the first case where the _unopposed_ rules moved too: `chain` at 7% and
+`head/tail` at 2% are rules the auto-mode note says nothing about, and every previous announcing row
+left them mid-corpus while the announced half improved.
+
+[NEEDS CLARIFICATION: **so is this an announcement effect at all, or a task-shape effect?** Sample
+10's pitfall above says a single end-of-session figure is one sample of a rate that drifts with what
+the session is doing, and this session was unusually edit-heavy and research-heavy — long `Edit`
+runs and clone-and-grep research, both naturally low in chained shell work. A session that spent six
+hours on installer debugging would chain more whatever it announced. Separating the two needs a row
+that announces _and_ does shell-shaped work, which nothing has yet supplied — and sample 14, the
+shell-shaped row from the same week, did not announce.]
+
+**The one miss is the interesting one.** `rg-replace-bundle = 1`: a single `rg -rn --stats -l` in
+the first hour, where `-r` ate the `n` and the flags never applied. It was caught by the documented
+detection signature within one call — the output shape was wrong for what had been asked — and the
+search re-run correctly. That makes it the fourth occurrence recorded against a session holding the
+rewritten clause, and it is carried into
+`plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md` where the count lives.
+
+[PITFALL: **the same session broke the `| head`/`| tail` rule twice and the `find`-versus-`fd` rule
+zero times, while spending its day enforcing the truncation rule on three subagents and writing a
+new `~/AGENTS.md` rule about research method.** Both violations were self-caught and announced in
+the conversation, which is why the rate is 2% rather than higher. That is the seventh instance of
+authoring-and-breaking — samples 3, 4, 6, 11, 13, 14 and this one, listed rather than counted
+because the corpus's earlier "fourth" and "fifth" tallies were each counting a different subset —
+and the mildest form of it on record: the author followed the rule 98% of the time and still
+produced the shape. **The corpus should stop reading that claim as being about hypocrisy and start
+reading it as a measurement of how weak a rule's grip is at its strongest** — 2% is what
+near-perfect adherence looks like, and it is not zero.]
+
 **`head/tail` is worse in prose sessions than in code sessions.** Seven samples: 24% code, then 45%,
 38%, 55%, 35% and 47% on sessions that spent most of their calls reading files to quote from and
 running gates to confirm markdown formatting. The one purely code-shaped session is the one low
@@ -623,6 +796,16 @@ it survives; the mixed row no longer sits neatly in the gap. That points the fix
 `Read` with `offset`/`limit` is the tool for the quoting half, and the harness's own truncation
 handles the gate half — neither is what the rule currently opens on.
 
+[PITFALL: **sample 16 is the counter-example that claim never had, and it should be retired rather
+than patched.** A session that spent six hours on plans, research and edits — the prose end of the
+spectrum by every description the claim uses — came in at **2%**, below the one purely code-shaped
+row the argument rests on. Samples 14 and 15 do not rescue it either: 42% on a mixed code-and-prose
+day and 28% on another sit inside the band the claim assigns to prose, but so did every mixed row
+before them. What the three new rows show together is that the spread within one week and one
+machine (2% to 42%) is wider than the code/prose gap the corpus spent seven rows describing, so task
+shape is at best a weak term in whatever produces this rate. The remedy sentence above survives
+untouched — it never depended on the split.]
+
 **`sed -n` is not an auto-mode artefact.** The two high rows before sample 11 — 10% and 11% — were
 both auto-mode sessions, where the harness's own reminder asks for `cat`/`sed -n` over `Read`, and
 that reading was the standing explanation. Sample 11 ran in the default mode with no competing
@@ -633,27 +816,40 @@ row that recorded it: reading a known line range to quote it, where `Read` takes
 
 **`git -C <own repo>` is a per-session disposition, not a machine-wide trend.** Sample 1's 23% and
 sample 3's 0% came from the same repo, the same shape, the same day's rules. Nothing further is owed
-on that question.
+on that question — and **sample 14's 19% confirms it rather than reopening it**, being the third
+value in the set and the second non-zero, on a day when samples 15 and 16 sat at zero. What sample
+14 does add is cost: 55 of its 71 were mutating `git -C` calls against the session's own repo, so
+the disposition, when a session has it, is not confined to the read-only verbs the allowlist waves
+through.
 
 **The `exit-masked` consequence check works, and has fired clean every time it has been run.**
 `session-harvest`'s rule — a non-zero `exit-masked` means the session's own green results are
 unverified, so re-run the gate unpiped and count how many times the session asserted a green on a
 masked call:
 
-| sample | `exit-masked` | assertions | what was masked         | unpiped re-run      |
-| ------ | ------------: | ---------: | ----------------------- | ------------------- |
-| 1      |   19% (floor) |          — | not recorded            | exit 0              |
-| 2      |   28% (floor) |        ~15 | the gate                | exit 0              |
-| 3      |   27% (floor) |          3 | not recorded            | exit 0              |
-| 4      |   32% (floor) |          5 | the gate                | exit 0              |
-| 5      |    8% (floor) |          6 | mostly the gate         | exit 0, 643 passed  |
-| 6†     |           38% |          — | **30 gate, 52 listing** | exit 0              |
-| 7†     |           28% |          7 | **31 gate, 5 listing**  | exit 0              |
-| 8†     |           18% |         10 | **16 gate, 23 listing** | exit 0, 551 passed  |
-| 11†    |           12% |          9 | **25 gate, 3 listing**  | exit 0, 1020 passed |
+| sample | `exit-masked` | assertions | what was masked         | unpiped re-run            |
+| ------ | ------------: | ---------: | ----------------------- | ------------------------- |
+| 1      |   19% (floor) |          — | not recorded            | exit 0                    |
+| 2      |   28% (floor) |        ~15 | the gate                | exit 0                    |
+| 3      |   27% (floor) |          3 | not recorded            | exit 0                    |
+| 4      |   32% (floor) |          5 | the gate                | exit 0                    |
+| 5      |    8% (floor) |          6 | mostly the gate         | exit 0, 643 passed        |
+| 6†     |           38% |          — | **30 gate, 52 listing** | exit 0                    |
+| 7†     |           28% |          7 | **31 gate, 5 listing**  | exit 0                    |
+| 8†     |           18% |         10 | **16 gate, 23 listing** | exit 0, 551 passed        |
+| 11†    |           12% |          9 | **25 gate, 3 listing**  | exit 0, 1020 passed       |
+| 12     |            8% |          — | not recorded            | not run; shell unrecorded |
+| 13     |            1% |          3 | **0 gate, 2 listing**   | not owed, `pipefail`      |
+| 14     |           25% |          7 | **74 gate, 19 listing** | not owed, `pipefail`      |
+| 15     |           23% |          5 | not recorded            | not owed, `pipefail`      |
+| 16     |            2% |          2 | **2 gate, 3 listing**   | not owed, `pipefail`      |
 
 The bolded splits are derived by the instrument; the rest are hand readings, and rows 1–5 are floors
-whose true rate is higher by an unknown amount.
+whose true rate is higher by an unknown amount. **The last column changes meaning at row 13**: rows
+1–11 were re-run because nothing else could answer the question, while rows 13–16 confirmed
+`pipefail` in the session's own shell with `setopt` and owed no re-run at all. Row 12 is the one gap
+— it did neither, so its 8% is the only masked figure in the corpus whose consequence is still
+unknown, and its transcript expires around 2026-10-05.
 
 Every green held. **"No harm done" is the wrong lesson**: the claims were true and the method could
 not have distinguished them from false ones, and sample 2's session pushed five times on that basis.
@@ -661,12 +857,13 @@ The count tracks how chatty a session is about its gate rather than how bad the 
 28% produced 3 and ~15 assertions respectively.
 
 **So `exit-masked` measures a hazard, not a defect rate** — worth stating outright before somebody
-reads a high number as evidence that false claims were made. Seven samples carry a claims count, all
-seven re-ran clean, across a printed range of 8% to 32%: the counter says how much of a session's
-evidence _could_ have been wrong, and the corpus has yet to find a case where any of it was. Sample
-11 is still the sharpest version — 12%, nine claims riding on it, and 25 of its 28 masked calls
-wrapping a gate — though it is no longer the lowest rate of any claim-making row, because it moved
-up and sample 5's floor did not.
+reads a high number as evidence that false claims were made. Seven samples carry a claims count and
+a re-run, all seven clean, across a printed range of 8% to 32%; four more (13–16) carry a count that
+`pipefail` made a re-run unnecessary for, 17 claims between them. The counter says how much of a
+session's evidence _could_ have been wrong, and across eleven samples and roughly seventy claims the
+corpus has yet to find a case where any of it was. Sample 11 is still the sharpest version — 12%,
+nine claims riding on it, and 25 of its 28 masked calls wrapping a gate — though it is no longer the
+lowest rate of any claim-making row, because it moved up and sample 5's floor did not.
 
 [PITFALL: **the hazard this column measures largely stopped existing on 2026-09-05, and nothing in
 the table says so.** `[packages.claude-code]`'s `zshenv` snippet gives every Bash-tool shell
@@ -679,18 +876,24 @@ only the script.** A session's shell snapshot is captured once, so a session tha
 deploy kept the old behaviour whatever the date says; `setopt | rg pipefail` is the check.]
 
 **The headline rate cannot tell the three consequences apart, and the re-score makes the point
-harder rather than softer.** Three rows, three consequences:
+harder rather than softer.** Four rows, four consequences:
 
 - **sample 6†** — 38%, the highest the corpus can assert, and it was recorded as "listings only,
   damage structurally impossible". 30 of its 82 masked calls wrapped a gate;
 - **sample 2** — at least 28%, masked gate, and that session **pushed five times** on evidence it
   could not distinguish from false;
-- **sample 7†** — 28%, masked gate, seven assertions to the user, re-run clean.
+- **sample 7†** — 28%, masked gate, seven assertions to the user, re-run clean;
+- **sample 14** — 25%, and **74 of its 93 masked calls wrapped a gate**, the largest masked-gate
+  population in the corpus — which cost exactly nothing, because `pipefail` was in force and carried
+  every one of those exit codes through the pipe.
 
-One number separates none of them. What changed is where the error was: the corpus used to read the
-highest of the three as the harmless one, and that reading came from a hand-built `what was masked`
-column over a call list the instrument had already pruned. `audit.py` derives the split now, which
-is the open question below, answered.
+One number separates none of them, and the fourth is what makes that terminal rather than
+inconvenient: the same counter at roughly the same value now spans "structurally harmless", "pushed
+five times on it", "seven claims, re-run clean", and "the shell reported truthfully the whole time".
+The last of those is not a property of the session at all. What changed is where the error was: the
+corpus used to read the highest of the three as the harmless one, and that reading came from a
+hand-built `what was masked` column over a call list the instrument had already pruned. `audit.py`
+derives the split now, which is the open question below, answered.
 
 **`audit.py`'s `compare` scored absent baseline tags wrongly, and older rows are affected.** A tag
 **missing** from the baseline was treated as `0.0`, so a "down" expectation on a pattern added after
@@ -702,6 +905,27 @@ quoted from a run whose baseline predates the pattern is affected, in both direc
 rather than re-trusted if an older sample's score is ever compared against a newer one.
 
 ## Open questions
+
+[DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
+survive inspection, and what is left is more interesting than what it replaces.** The filed plan
+asked whether `git add <paths> && plans.py scan --mode staged` — the shape behind 56% and 57% in two
+repos — is a different finding from a chain of convenience, on the grounds that "stage immediately
+before the commit" and "one command per call" pull against each other at that point. They do not.
+Staging, scanning and committing are three calls and nothing in either rule asks for fewer:
+"immediately before" orders the steps, it does not forbid an intervening call, and the scan is a
+read-only check whose output the user never has to approve. The chain buys one round trip.
+
+What makes it worth recording rather than dismissing is **why it survived roughly twenty repetitions
+in one session and then reappeared in another**: it has a rationalisation available. A chain typed
+for convenience is visible as laziness on the next read; a chain that looks like two rules being
+honoured at once reads as care, and nothing in the session's own view contradicts it. That is a
+different failure from the `| tail` reflex, which the corpus has repeatedly found to be typed while
+thinking about something else. Both produce the same counter.
+
+The residual is one clause, and it is **deliberately not written here** because admitting one is the
+user's call: neither the staging rule nor the chaining rule says the scan is its own call, so a
+session reconstructing the sequence has to derive that. Same shape as the truncation clause held
+open above.]
 
 [NEEDS CLARIFICATION: **the gate may be the fix rather than the discipline.**
 `inv quality.precommit` prints ~45 lines on success, of which the informative part is the last four,
@@ -817,6 +1041,17 @@ partway through the corpus. A row that records all three can be corrected by any
 that records none of them can only be re-measured, which is a different row. Every future row
 carries the instrument commit, the boundary, and the shell.
 
+**Revised 2026-09-08, after samples 14, 15 and 16. Still nothing owed to `~/AGENTS.md`, and two
+candidate clauses now held open rather than one.** The three rows landed in the same week and span
+2% to 42% on the same rule, which retires the code-versus-prose reading and leaves the corpus
+without a term that explains the spread. Two questions closed: the chain seam is not a seam (above),
+and `git-C-own-repo` has a third value that confirms the disposition reading. One question sharpened
+past where its current wording can go — sample 15 broke a rule whose text names the command, the
+failure, the mechanism _and_ the replacement, which is every lever a sentence has. The held-open
+clauses are the truncation one (the harness keeps the **head**) and now the staging one (the scan is
+its own call); both are the user's to admit, and neither is argued for by a rate here.
+
 `2026-09-02-rg-replace-flag-used-twice-in-one-session.md` is a separate finding of the same "simply
 not followed" kind and is deliberately not merged here — it is one flag with its own proposed
-counter, not a session-level rate.
+counter, not a session-level rate. Sample 16's single `-rn` is recorded there, as samples 7, 11 and
+13's were.
