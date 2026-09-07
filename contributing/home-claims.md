@@ -65,7 +65,8 @@ Re-measured on this machine, 2026-09-07 (the 2026-08-30 figures are in brackets)
 | `block`                 |   25 (24) | `util.ensure_block` marker regions                     |
 | `imperative`            |   23 (23) | `gsettings`/`dconf` — no file at any path              |
 | `whole-file`            |   12 (11) | `deploy.py`, from a `setup.toml` declaration           |
-| `symlink`               |     6 (5) | links this repo creates                                |
+| `mirror`                |     6 (5) | copies of a deployed file, at paths other tools read   |
+| `symlink`               |     1 (—) | `~/.claude/skills`, the one link this repo still makes |
 | `whole-file-undeclared` |     4 (3) | `deploy.py`, destination decided at run time           |
 | `key`                   |     3 (3) | regex surgery on one key of a file an application owns |
 | `merge`                 |     3 (2) | structured merge into co-owned JSON                    |
@@ -110,9 +111,18 @@ Building it turned up five claims nobody had written down, each a real ownership
   and replaces a value; `zsh.configure-omz`, `screenshot.enable` and `chrome.fix-launchers` do regex
   substitution on text some other program owns. The failure modes differ: a merge can only lose the
   key it writes, a regex can rewrite the wrong line.
-- **`symlink` is its own claim.** `deploy.lookup()` resolves `~/.claude/CLAUDE.md` onto
-  `~/AGENTS.md`'s entry, which is right for "what content should be here" and means the link itself
-  appears in no registry. There are five such links.
+- **`mirror` is its own claim, and since 2026-09-07 it is the writer with real drift.** The
+  instruction-file destinations were symlinks until then and are now byte-for-byte copies —
+  `deploy.py`'s "Mirrored destinations" header carries the three reasons, the short version being
+  that Claude Code ignores a symlinked `~/.claude/CLAUDE.md` in Cowork sessions and Windows has no
+  admin-less way to link a file at all. A link could only be right or wrong; a copy can be _stale_,
+  so `ensure_mirror` records every one in the deploy manifest and `verify` compares content rather
+  than looking for a link. `deploy.lookup()` still resolves through a link, which now serves only a
+  machine that has not re-deployed since the change.
+- **`symlink` survives for exactly one claim**, `~/.claude/skills` → `~/.agents/skills`, which is a
+  directory whose contents a third-party CLI writes. Copying it would mean a skill installed by
+  `skills add` did not reach Claude Code until the next `inv ai.install-skills`, so that one is a
+  separate decision rather than an oversight.
 - **Every skill on this machine is invisible to `deploy.py`.** `deploy._skill_entries` registers
   only `source = "local"` skills, and this repo deliberately declares none — every skill is authored
   in `agent-skills` and fetched from its remote by the `skills` CLI. So the whole of

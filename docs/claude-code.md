@@ -124,17 +124,21 @@ Code itself.
 ## `~/.agents/AGENTS.md` — global instructions, declaratively managed
 
 `[packages.agents-md]` writes `~/.agents/AGENTS.md` (the cross-tool, cross-project instructions file
-every agent CLI on this machine can read) from `setup.toml`, and symlinks
-`~/.claude/CLAUDE.md -> ~/.agents/AGENTS.md` via the `wrapper-script` method's `symlink_dest` field
-— the exact same real-content-plus-symlink pattern this repo's own root uses for its `AGENTS.md`/
-`CLAUDE.md` pair. The sudo/ssh guidance above, plus Bash/allowlist discipline, lives there in
-agent-readable form, so every session on this machine picks it up automatically without needing to
-rediscover it.
+every agent CLI on this machine can read) from `setup.toml`, and copies it to `~/.claude/CLAUDE.md`
+via the `wrapper-script` method's `also_deploy_to` field. The sudo/ssh guidance above, plus
+Bash/allowlist discipline, lives there in agent-readable form, so every session on this machine
+picks it up automatically without needing to rediscover it.
 
-**The real file moved there on 2026-09-04**; it used to be `~/AGENTS.md`, which is now a symlink to
-it. The reason is that `~/.agents/AGENTS.md` is a path several agents read on their own — Goose,
-Warp, Cline and Kimi Code, each verified against its own source or documentation — while nothing
-verified reads a bare `~/AGENTS.md`; that path worked only because every symlink pointed at it. See
+**Those destinations are copies, not symlinks, since 2026-09-07.** Claude Code skips a
+`~/.claude/CLAUDE.md` that is itself a symlink or hard link in Cowork sessions, and on Windows there
+is no admin-less way to link a _file_ at all — so a plain copy is the one wiring every agent, every
+platform and every checkout treats identically. The cost is drift, which `inv verify.all` checks by
+comparing content rather than by looking for a link, and `inv deploy.all` repairs.
+
+**The real file moved there on 2026-09-04**; it used to be `~/AGENTS.md`, which is now a copy of it.
+The reason is that `~/.agents/AGENTS.md` is a path several agents read on their own — Goose, Warp,
+Cline and Kimi Code, each verified against its own source or documentation — while nothing verified
+reads a bare `~/AGENTS.md`; that path worked only because every symlink pointed at it. See
 `docs/ai.md` and `contributing/ai-tooling.md`. Either path still works for reading or editing.
 
 **The file is assembled, not copied.** `[packages.agents-md]` sets `assembled_from = "agents_md"`,
