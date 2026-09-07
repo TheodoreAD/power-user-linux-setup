@@ -70,23 +70,25 @@ Re-measured on this machine, 2026-09-07 (the 2026-08-30 figures are in brackets)
 | `key`                   |     3 (3) | regex surgery on one key of a file an application owns |
 | `merge`                 |     3 (2) | structured merge into co-owned JSON                    |
 | `generated`             |     1 (1) | composed by a task, with no source to compare against  |
+| `directory`             |     1 (—) | created by a task, filled by the user or another tool  |
 | `external`              |     1 (1) | `~/.agents/skills/`, installed by the `skills` CLI     |
-| **total**               | 120 (109) |                                                        |
+| **total**               | 121 (109) |                                                        |
 
-By tier: 74 `public`, 41 `derived`, 4 `machine`, 1 `secret`; zero `personal`. The `secret` count is
+By tier: 75 `public`, 41 `derived`, 4 `machine`, 1 `secret`; zero `personal`. The `secret` count is
 1 rather than 2 because this machine kept a real keyring — the plaintext credential store below is
 claimed only where `--keyring-fallback` was chosen.
 
-**A whole-file-only lifecycle would reach 16 of the 79 non-derived claims — 20%** (14 of 74, 18%, in
+**A whole-file-only lifecycle would reach 16 of the 80 non-derived claims — 20%** (14 of 74, 18%, in
 August). That is the number `plans/2026-08-29-dotfiles-repo-config-lifecycle.md` step 1 exists to
 produce, and it is what the rest of that plan has to be sized against. (The first measurement,
 before step 3 folded the ad-hoc writers in, was 15 of 74 with only 10 classifiable; the reach barely
 moved because those files were already whole files — what changed is that all of them now carry a
 manifest entry and a diff.)
 
-The eleven claims added since August are what a re-measurement is for: none came from a change to
-this registry, all from features landing beside it. A number in a doc that nothing re-derives goes
-stale silently, which is the same failure this registry exists to prevent one directory up.
+The twelve claims added since August are what a re-measurement is for: eleven came from features
+landing beside this registry rather than from a change to it, and the twelfth is the `directory`
+writer below, which the audit found. A number in a doc that nothing re-derives goes stale silently,
+which is the same failure this registry exists to prevent one directory up.
 
 `derived` is excluded from that denominator deliberately: an installed Go toolchain or an `nvm`
 directory can never be the subject of a config lifecycle, because its content is upstream's and
@@ -177,6 +179,40 @@ never written during `inv setup` at all. It waited for an `inv deploy.all` a fre
 reason to run, while `verify.all` at the end of that same phase demanded it exist. The helper moved
 to `deploy.apply_config_files` and `tools.install` now calls it after every installer, which is what
 makes declaring `~/.p10k.zsh` safe.
+
+## The eleventh writer: a directory PULSE creates and does not fill
+
+Added 2026-09-07, by running the audit the section above describes rather than by extending the
+registry for its own sake. Two paths came out of it, and neither fits any existing writer:
+
+- `~/Pictures/Screenshots`, created by `inv screenshot.enable` beside the `flameshot.ini` savePath
+  it already claims.
+- `~/projects/<name>`, one per `[[git_profiles]]` entry, created by `inv git.configure` — the
+  directories the user's own work lives in, and the most consequential thing this repo creates in a
+  home directory.
+
+`INSTALL` was the near miss, and taking it would have been wrong in a way that matters: its whole
+note is _content is upstream's, so a divergence is not drift but a version_, and saying that about
+somebody's projects directory is false. `DIRECTORY` says the true thing instead — **PULSE runs
+`mkdir -p` and owns nothing inside**. Nothing can drift because nothing is written; the claim is the
+existence of the container. Authority is `user` for both.
+
+Tier reads the **path** here, because there is no content to place: the screenshots directory is a
+constant in this public repo, and a projects directory is named in `identity.toml` and true of this
+machine only, which is where every other identity-derived claim already sits. That keeps
+`unassigned`'s zero intact, and its zero still means what "The number this was built to produce"
+says it means — no _config_ is personal-but-homeless.
+
+Two behaviours worth knowing, both of which have tests: a profile `directory` may be an absolute
+path anywhere, so it gets the same `_under_home` test an install target does; and the git claims are
+gated on `identity.toml` **existing** rather than on `load_identity()`, which raises. The machine
+most likely to ask what PULSE would put in its home directory is the one that has not run
+`inv identity.init` yet.
+
+`~/.claude/settings.json.bak` came out of the same audit and is deliberately **not** a row. It is a
+copy of the claim above it, written and overwritten by the same function, with no independent
+content and no state of its own to report — so it is named in that claim's note instead, because a
+backup nobody knows about is one nobody can use.
 
 ## The one credential file, and why it is claimed by a different writer
 

@@ -48,7 +48,7 @@ _UNTOUCHED_SHELL_KEYS = [
     ),
 ]
 
-_SCREENSHOTS_DIR = Path.home() / "Pictures" / "Screenshots"
+SCREENSHOTS_DIR = Path.home() / "Pictures" / "Screenshots"
 FLAMESHOT_INI = Path.home() / ".config" / "flameshot" / "flameshot.ini"
 _DESKTOP_FILE = Path("/usr/share/applications/org.flameshot.Flameshot.desktop")
 
@@ -68,12 +68,12 @@ def _bindings() -> list[dict[str, str]]:
         {
             "name": "Flameshot GUI",
             "binding": "Print",
-            "command": f'bash -c "{prefix} gui -p {_SCREENSHOTS_DIR} -c"',
+            "command": f'bash -c "{prefix} gui -p {SCREENSHOTS_DIR} -c"',
         },
         {
             "name": "Flameshot full",
             "binding": "<Shift>Print",
-            "command": f'bash -c "{prefix} full -p {_SCREENSHOTS_DIR} -c"',
+            "command": f'bash -c "{prefix} full -p {SCREENSHOTS_DIR} -c"',
         },
     ]
 
@@ -175,13 +175,13 @@ def enable(c: Context):  # noqa: C901
         for b in bindings:
             state = "ok (already bound)" if b["name"] in existing_names else "would bind"
             print(f"[screenshot] {b['binding']} -> {b['name']}: {state}")
-        save_ok = _read_ini_key(FLAMESHOT_INI, "savePath") == str(_SCREENSHOTS_DIR)
-        print(f"[screenshot] flameshot savePath: {'ok' if save_ok else f'would set -> {_SCREENSHOTS_DIR}'}")
+        save_ok = _read_ini_key(FLAMESHOT_INI, "savePath") == str(SCREENSHOTS_DIR)
+        print(f"[screenshot] flameshot savePath: {'ok' if save_ok else f'would set -> {SCREENSHOTS_DIR}'}")
         return
 
-    _SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
-    if _set_ini_key(FLAMESHOT_INI, "savePath", str(_SCREENSHOTS_DIR)):
-        print(f"[screenshot] flameshot savePath -> {_SCREENSHOTS_DIR}")
+    SCREENSHOTS_DIR.mkdir(parents=True, exist_ok=True)
+    if _set_ini_key(FLAMESHOT_INI, "savePath", str(SCREENSHOTS_DIR)):
+        print(f"[screenshot] flameshot savePath -> {SCREENSHOTS_DIR}")
 
     if _is_wayland() and _DESKTOP_FILE.exists():
         content = _DESKTOP_FILE.read_text()
@@ -275,7 +275,7 @@ def status(c: Context):
     if save_path is None:
         print("[screenshot] flameshot.ini: not found (never configured)")
     else:
-        ok = save_path == str(_SCREENSHOTS_DIR)
+        ok = save_path == str(SCREENSHOTS_DIR)
         print(f"[screenshot] flameshot savePath: {'ok' if ok else f'MISMATCH ({save_path})'}")
 
 

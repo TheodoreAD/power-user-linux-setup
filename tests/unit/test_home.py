@@ -393,3 +393,53 @@ def test_no_credential_store_claim_on_a_machine_that_never_chose_the_fallback(fa
     monkeypatch.setattr(home.proxy, "ENV_FILE", tmp_path / "never-written")
 
     assert _keyring_store_claims(fake_home) == []
+
+
+def _directory_claims(fake_home) -> list[home.Claim]:
+    return [c for c in home.claims() if c.writer == home.Writer.DIRECTORY]
+
+
+def test_a_directory_pulse_creates_for_the_user_is_claimed(fake_home, monkeypatch):
+    # PULSE runs mkdir -p and then owns nothing inside, so authority is the user's. The claim is the
+    # existence of the container, which is still a thing this repo put in the home directory.
+    _stub_config(monkeypatch, {})
+    monkeypatch.setattr(home.screenshot, "SCREENSHOTS_DIR", fake_home / "Pictures" / "Screenshots")
+    monkeypatch.setattr(util, "IDENTITY_PATH", fake_home / "never-written")
+
+    claim = _directory_claims(fake_home)[0]
+
+    assert claim.target == "~/Pictures/Screenshots"
+    assert claim.authority == home.Authority.USER
+
+
+def test_each_git_profile_directory_is_claimed(fake_home, monkeypatch):
+    _stub_config(monkeypatch, {})
+    monkeypatch.setattr(home.screenshot, "SCREENSHOTS_DIR", fake_home / "Pictures" / "Screenshots")
+    identity = fake_home / "identity.toml"
+    identity.write_text("")
+    monkeypatch.setattr(util, "IDENTITY_PATH", identity)
+    monkeypatch.setattr(
+        util,
+        "load_identity",
+        lambda: {
+            "git_profiles": [
+                {"directory": str(fake_home / "projects" / "personal"), "email": "a@example.com", "name": "A"},
+                {"directory": "/mnt/work/repos", "email": "b@example.com", "name": "B"},
+            ]
+        },
+    )
+
+    targets = [c.target for c in _directory_claims(fake_home)]
+
+    assert "~/projects/personal" in targets
+    assert not any("/mnt/work" in t for t in targets), "a profile directory outside ~ is out of scope here"
+
+
+def test_no_git_directory_claims_before_identity_init(fake_home, monkeypatch):
+    # The machine most likely to ask what PULSE would put in its home directory is the one that has
+    # not run the wizard yet, so this must not raise the way load_identity() does on its own.
+    _stub_config(monkeypatch, {})
+    monkeypatch.setattr(home.screenshot, "SCREENSHOTS_DIR", fake_home / "Pictures" / "Screenshots")
+    monkeypatch.setattr(util, "IDENTITY_PATH", fake_home / "never-written")
+
+    assert [c.target for c in _directory_claims(fake_home)] == ["~/Pictures/Screenshots"]

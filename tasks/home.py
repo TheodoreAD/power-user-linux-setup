@@ -41,7 +41,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import certs, chrome, deploy, docker, fonts, gnome, ide, proxy, screenshot, ssh, system, util
+from . import certs, chrome, deploy, docker, fonts, git, gnome, ide, proxy, screenshot, ssh, system, util
 
 _HOME = Path.home()
 
@@ -81,6 +81,12 @@ class Writer(StrEnum):
     # Written by something this repo declares but does not implement — the `skills` CLI installing
     # from a remote repo.
     EXTERNAL = "external"
+    # A directory PULSE creates and then owns nothing inside: `mkdir -p` and no more. Distinct from
+    # INSTALL, whose note is "content is upstream's" — here the content is the *user's*, and saying
+    # otherwise about somebody's projects directory would be wrong in a way that matters. Nothing
+    # can drift, because nothing is written; the claim is the existence of the container, which is
+    # still a thing this repo put in the home directory and therefore a thing an inventory owes.
+    DIRECTORY = "directory"
 
 
 class Authority(StrEnum):
@@ -350,7 +356,10 @@ def _merge_claims() -> Iterator[Claim]:
         tier=Tier.PUBLIC,
         owner="inv ai.install-skills, inv allowlist.apply",
         source="setup.toml claude_* fields, cli-allowlist/",
-        note="6 call sites through util.write_claude_settings",
+        # The .bak is not a second claim: it is a copy of this file, written and overwritten by the
+        # same function, so it has no independent content and no state of its own to report. Named
+        # here because a backup nobody knows about is one nobody can use.
+        note="6 call sites through util.write_claude_settings; a .json.bak copy beside it each time",
         path=util.CLAUDE_SETTINGS,
     )
     # VS Code's settings.json lives in one of two places depending on how it was installed, and
@@ -418,6 +427,57 @@ def _key_claims() -> Iterator[Claim]:
 # ---------------------------------------------------------------------------
 # Imperative — gsettings/dconf, where there is no path to look at
 # ---------------------------------------------------------------------------
+
+
+def _directory_claims() -> Iterator[Claim]:
+    """Directories a task creates for content it will never write.
+
+    Both were found on 2026-09-07 by the audit `contributing/home-claims.md` describes — asking what
+    a feature writes into the home directory and comparing that against this registry, rather than
+    asking the registry, which cannot report a path nobody claimed.
+
+    The tier reads the path rather than the content, because there is no content: the screenshots
+    directory is a constant in this public repo, and a projects directory is named in identity.toml
+    and true of this machine only, which is where the other identity-derived claims sit. Authority
+    is `user` throughout — everything inside belongs to them, and no task here rewrites or removes
+    either directory.
+    """
+    yield Claim(
+        target=_rel(screenshot.SCREENSHOTS_DIR),
+        writer=Writer.DIRECTORY,
+        authority=Authority.USER,
+        tier=Tier.PUBLIC,
+        owner="inv screenshot.enable",
+        source="tasks/screenshot.py",
+        note="created alongside flameshot's savePath; the screenshots in it are yours",
+        path=screenshot.SCREENSHOTS_DIR,
+    )
+
+    # One per git_profiles entry, so a machine with no identity.toml yields none rather than a row
+    # for a directory nothing was ever going to create. A profile's `directory` may be an absolute
+    # path anywhere, so it gets the same _under_home test an install target does — `_under_home` is
+    # applied per producer here rather than once over the whole list, since most producers can only
+    # ever yield a home path.
+    #
+    # The existence check rather than load_identity(), which raises on a missing file: this command
+    # has to stay runnable on a machine that has not run `inv identity.init` yet — which is exactly
+    # the machine most likely to be asking what PULSE would put in its home directory.
+    if not util.IDENTITY_PATH.exists():
+        return
+    for profile in util.load_identity().get("git_profiles", []):
+        project_dir = git.resolve_project_dir(profile["directory"])
+        if not _under_home(project_dir):
+            continue
+        yield Claim(
+            target=_rel(project_dir),
+            writer=Writer.DIRECTORY,
+            authority=Authority.USER,
+            tier=Tier.MACHINE,
+            owner="inv git.configure",
+            source="identity.toml [[git_profiles]] directory",
+            note=f"gitconfig includeIf scope for {profile['email']}",
+            path=project_dir,
+        )
 
 
 def _imperative_claims() -> Iterator[Claim]:
@@ -655,6 +715,7 @@ def claims() -> list[Claim]:
         *_merge_claims(),
         *_key_claims(),
         *_imperative_claims(),
+        *_directory_claims(),
         *_install_claims(),
         *_external_claims(),
     ]
