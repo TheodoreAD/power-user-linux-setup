@@ -7,7 +7,28 @@ from . import util
 
 
 def _nvm_sh(nvm_dir: Path) -> str:
-    return f'export NVM_DIR="{nvm_dir}" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+    """Source nvm **and select its default version**.
+
+    Sourcing alone only defines the shell function; the active node stays whatever is already on
+    `PATH`. That is not neutral inside `inv`: the process inherits its PATH from the shell that
+    launched it, and Claude Code replays a shell snapshot captured once per session — so a task can
+    run every `npm` call against a node version installed months ago while `nvm alias default`
+    points somewhere else entirely.
+
+    Confirmed 2026-09-07, and it had already caused a silent split: `inv node.install` installed
+    v24.20.0 and made it the default, then ran `npm list -g skills` under the **inherited** v24.16.0,
+    found it, and printed "already installed globally". The new default was left with no global
+    packages at all, so the next login shell — which does select the default — would have had no
+    `skills` binary, and `inv ai.install-skills` would have reported the CLI missing on a machine
+    that had just installed it.
+
+    `|| true` because a machine with no `default` alias yet (the first install, before
+    `nvm alias default` runs) must still get a usable shell rather than a failed `&&` chain.
+    """
+    return (
+        f'export NVM_DIR="{nvm_dir}" && [ -s "$NVM_DIR/nvm.sh" ] && . "$NVM_DIR/nvm.sh"'
+        " && { nvm use --silent default > /dev/null 2>&1 || true; }"
+    )
 
 
 def _node_cfg() -> tuple[util.PackageConfig, Path, str]:
@@ -71,6 +92,48 @@ def install(c: Context):
         else:
             c.run(f"bash -c '{nvm_sh} && npm install -g {pkg}'")
             print(f"[{pkg}] installed")
+
+
+@task(name="update-globals")
+def update_globals(c: Context):
+    """Update every `global_packages` entry in `[packages.node]` to its latest release.
+
+    `node.install` only ever *adds* a missing global package — by design, since an install task
+    that silently upgraded tooling on every `inv setup` would be a surprise. So updating is its own
+    deliberate command, the same shape as `inv deploy.all` versus `inv deploy.status`.
+
+    Installs `<pkg>@latest` per declared package rather than running `npm update -g`, for two
+    reasons found in npm's own documentation (`docs/lib/content/commands/npm-update.md`):
+
+    - `npm update -g` acts on **every** globally installed package, including ones this repo never
+      declared and does not own. Declaring what is managed and then updating exactly that is the
+      same contract `deploy.py` keeps for files.
+    - Its semantics have a trap: globals have no semver range, so their `wanted` is `latest`, and
+      npm states plainly that "if a package has been upgraded to a version newer than `latest`, it
+      will be _downgraded_". Anyone holding a prerelease deliberately would lose it silently.
+    """
+    _cfg, nvm_dir, nvm_sh = _node_cfg()
+    cfg = _cfg
+    global_packages = cfg.get("global_packages", [])
+
+    if not nvm_dir.exists():
+        print("[node.update-globals] nvm not installed — nothing to do")
+        return
+    if not global_packages:
+        print("[node.update-globals] no global_packages declared — nothing to do")
+        return
+
+    for pkg in global_packages:
+        if util.DRY_RUN:
+            print(f"[{pkg}] would run: npm install -g {pkg}@latest")
+            continue
+        before = c.run(f"bash -c '{nvm_sh} && npm list -g {pkg} --depth=0'", hide=True, warn=True)
+        c.run(f"bash -c '{nvm_sh} && npm install -g {shlex.quote(pkg)}@latest'")
+        after = c.run(f"bash -c '{nvm_sh} && npm list -g {pkg} --depth=0'", hide=True, warn=True)
+        # Report the version rather than "updated": on a machine already current this task should
+        # look like a no-op, and a line saying "updated" when nothing moved is how a report stops
+        # being read.
+        print(f"[{pkg}] {'unchanged' if before.stdout == after.stdout else 'updated'}")
 
 
 @task
