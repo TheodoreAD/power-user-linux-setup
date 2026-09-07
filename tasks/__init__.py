@@ -5,6 +5,8 @@
 # one file that structurally trips it, so `failOnWarnings` can stay on and the rule stays live for
 # every other file. See repo-tasks' contributing/type-checking.md.
 
+from types import ModuleType
+
 from invoke import Collection
 
 from . import (
@@ -119,24 +121,38 @@ namespace = Collection(
     Collection.from_module(wsl),
     Collection.from_module(zsh),
 )
+# Which top-level collections came from repo_tasks rather than from this repo, recorded as they
+# are added rather than listed somewhere. tasks/cli.py subtracts these to build the shim's
+# namespace, and a hand-written list would be wrong the first time a collection is published here
+# and nobody remembers to update it — silently, and in the direction that ships this repo's own dev
+# loop to every machine.
+BORROWED_COLLECTIONS: set[str] = set()
+
+
+def _add_borrowed(module: ModuleType, name: str | None = None) -> None:
+    collection = Collection.from_module(module)
+    namespace.add_collection(collection, name=name)
+    BORROWED_COLLECTIONS.add(name or str(collection.name))
+
+
 if quality is not None:
-    namespace.add_collection(Collection.from_module(quality))
+    _add_borrowed(quality)
 if testing is not None:
     # repo_tasks keeps the module named `testing` (a `test.py` inside an installed package would
     # sit next to CPython's own stdlib `test`) and publishes it as `test` on the CLI — same name
     # every consumer in the family uses (`inv test.unit`, `inv test.integration`, ...).
-    namespace.add_collection(Collection.from_module(testing), name="test")
+    _add_borrowed(testing, name="test")
 if dev_env is not None:
-    namespace.add_collection(Collection.from_module(dev_env), name="dev-env")
+    _add_borrowed(dev_env, name="dev-env")
 if agents is not None:
     # `inv agents.wire-claude-hook` used to reach this repo as `inv dev-env.claude-hook`, which
     # existed only because repo_tasks' dev_env.py imports it for a pre= chain and
     # Collection.from_module republished it. That leak is fixed upstream, so the namespace it
     # really lives in has to be wired explicitly or the command disappears from this repo — and
     # docs/claude-code.md documents it.
-    namespace.add_collection(Collection.from_module(agents))
+    _add_borrowed(agents)
 if docs is not None:
-    namespace.add_collection(Collection.from_module(docs))
+    _add_borrowed(docs)
 if ci is not None:
     # `inv ci.status` before a push, `inv ci.check-actions` when a workflow is edited. Both are
     # network+`gh` tasks and neither is in `quality.check`, which stays offline.
@@ -146,17 +162,17 @@ if ci is not None:
     # warning annotations, and an annotation on a *green* run is the only signal for a deprecation
     # — `actions/checkout@v4` carried one for eleven months while every run passed. `--branch
     # master`, since its default is `main` and this repo is not.
-    namespace.add_collection(Collection.from_module(ci))
+    _add_borrowed(ci)
 if deps is not None:
     # `deps.check` (lock drift) is a member of `quality.check`'s pre-chain, so the gate ran it
     # while `inv deps.check` did not exist here — a failing check nobody could re-run on its own
     # to see what it objected to. The rest of the namespace (`lock`, `audit`, `list`, `tree`,
     # `export`) comes with it, the same way every other repo_tasks collection is published whole.
-    namespace.add_collection(Collection.from_module(deps))
+    _add_borrowed(deps)
 if configs is not None:
     # Not repo_tasks' bare top-level `configure` — this repo already has its own top-level
     # entrypoints (`inv setup` for full machine bootstrap, `inv dev-env.setup` for the dev loop);
     # only the nested `inv configs.pull`/`inv configs.diff` are relevant here.
-    namespace.add_collection(Collection.from_module(configs))
+    _add_borrowed(configs)
 
 _configure_report_mode(namespace)

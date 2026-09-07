@@ -73,6 +73,7 @@ def _generated_content() -> str:
 
 
 @task
+@util.dev_only
 def render_docs(c: Context):
     """Regenerate the tag-table + example block in docs/dev-container.md from
     CONTAINER_EXCLUDE_TAGS/_TAG_DESCRIPTIONS (HTML-comment-marked — see util.MarkerStyle.HTML,

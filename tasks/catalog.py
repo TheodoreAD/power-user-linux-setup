@@ -149,6 +149,7 @@ def _render(doc: Path, block: str, content: str, label: str) -> None:
 
 
 @task
+@util.dev_only
 def render_packages(c: Context):
     """Regenerate docs/packages.md's catalog table from setup.toml.
 
@@ -160,6 +161,7 @@ def render_packages(c: Context):
 
 
 @task
+@util.dev_only
 def render_tasks(c: Context):
     """Regenerate docs/tasks.md's task index from the invoke namespace.
 

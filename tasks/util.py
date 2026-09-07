@@ -7,12 +7,12 @@ import sys
 import tempfile
 import threading
 import tomllib
-from collections.abc import Sequence
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
-from typing import NotRequired, Required, TypeAlias, TypedDict, cast, overload
+from typing import NotRequired, Required, TypeAlias, TypedDict, TypeVar, cast, overload
 
 from invoke import Context
 
@@ -37,6 +37,30 @@ _PULSE_WIDTH = 78
 
 _PROC_VERSION = Path("/proc/version")
 _CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
+
+# Marks a task as one for developing *this repo*, not for administering a machine — so the shim
+# built by tasks/cli.py leaves it out while `inv` in the checkout still shows it.
+#
+# The mark lives on the task itself rather than in a list somewhere, which is the whole point: a
+# list of excluded names is a second place to edit, and forgetting it is silent in exactly the
+# direction that matters (a repo-authoring task shipping to every machine). `@task` wraps the
+# function and `functools.update_wrapper` copies its `__dict__` across, so the attribute is
+# readable off either the raw function or the resulting Task.
+_DEV_ONLY_ATTR = "_pulse_dev_only"
+
+_TaskFn = TypeVar("_TaskFn", bound=Callable[..., object])
+
+
+def dev_only(fn: _TaskFn) -> _TaskFn:
+    """Mark a task as repo-development-only. Apply *under* `@task`, closest to the function."""
+    setattr(fn, _DEV_ONLY_ATTR, True)
+    return fn
+
+
+def is_dev_only(obj: object) -> bool:
+    """Is this task (or its underlying function) marked repo-development-only?"""
+    return bool(getattr(obj, _DEV_ONLY_ATTR, False) or getattr(getattr(obj, "body", None), _DEV_ONLY_ATTR, False))
+
 
 # Machine-local, out-of-repo state namespace shared by identity.toml and the applied-manifest
 # files tasks/ai.py and tasks/allowlist.py each track their own writes to settings.json with.

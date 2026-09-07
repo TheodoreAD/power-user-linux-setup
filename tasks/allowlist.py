@@ -879,6 +879,7 @@ def _extract_one(name: str, cfg: ToolConfig | None, force: bool) -> None:
 
 
 @task
+@util.dev_only
 def extract(c: Context, tool: str | None = None, force: bool = False):
     """Capture --help text per registered tool (tools.toml), recursing into the subcommand tree
     for any tool with max_depth > 1. Skips any tool whose --version output hasn't changed since
@@ -1125,6 +1126,7 @@ def _assemble_new_nodes(
 
 
 @task
+@util.dev_only
 def classify(c: Context, tool: str | None = None, force: bool = False, model: str = "haiku"):
     """Classify each tool's extracted nodes (subcommands, and nested subcommands for any tool
     with max_depth > 1) as read_only/write/dangerous via a headless `claude -p` call, isolated in
@@ -1247,6 +1249,7 @@ def _build_reconfirm_prompt(tool: str, candidates: dict[str, _ReconfirmCandidate
 
 
 @task
+@util.dev_only
 def reconfirm(c: Context, tool: str | None = None, model: str = "haiku"):  # noqa: C901
     """Second-pass LLM reclassification for everything currently sitting at `needs_review`
     (subcommands and flags alike) — items where the model said read_only but the deterministic
@@ -1340,6 +1343,7 @@ def reconfirm(c: Context, tool: str | None = None, model: str = "haiku"):  # noq
 
 
 @task
+@util.dev_only
 def review(c: Context, apply_all: bool = False, only: str | None = None, tool: str | None = None):  # noqa: C901
     """Show tools with unreviewed classifications (new or changed since the last reviewed
     snapshot) and, on confirmation, mark them reviewed. Nothing in `render` trusts an unreviewed
@@ -1604,6 +1608,7 @@ def _render_copilot(rules: dict[str, RuleEntry]) -> str:
 
 
 @task
+@util.dev_only
 def render(c: Context, target: str = "claude", out: str | None = None):
     """Print the reviewed subset of rules as Claude Bash(...) allow/ask rules or Copilot
     chat.tools.terminal.autoApprove regex rules. Output-only — never writes to any settings file
@@ -1850,6 +1855,7 @@ def _man_dependency(log_text: str) -> str | None:
 
 
 @task
+@util.dev_only
 def check_man_deps(c: Context):
     """Does any registered tool's --help invocation secretly depend on a separately-installed
     man-page-rendering package?
