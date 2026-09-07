@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-07
+updated: 2026-09-08
 ---
 
 # `rg -r`: 32 defective calls a week, and never once the bare flag
@@ -253,4 +253,38 @@ both harmful and self-announcing. If it holds, the detection signature only ever
 occurrences that were going to be caught anyway, and the residue is exactly the invisible half. That
 would move the argument for the `ask`-rule above from "the wording does not prevent it" to "no
 reader-side signal can", which is a stronger case than the plan currently makes and rests on one
-observation.]
+observation. **Sharpened 2026-09-08 by the seventh occurrence below**, which had matches, announced
+itself within one call, and was re-run correctly — a second observation on the matching side, and
+still one on the zero-match side.]
+
+## A seventh, 2026-09-07 — and the post-rewording tally is four, not three
+
+One `rg -rn --stats -l`, in this repo, in a 270-call session — a different session from the sixth,
+which ran the same day in the same repo. Recorded as sample 16 of
+`plans/2026-09-02-agents-md-adherence-sample-corpus.md`, where it is the single miss on the best
+adherence row that corpus holds: every other counter came in at or near zero and this one did not.
+
+`-r` ate the `n`, so the requested flags never applied. **It was caught within one call, and by the
+signature rather than by luck** — the output shape was wrong for what had been asked, which is the
+documented tell working as designed rather than the searched string happening to be conspicuous in
+its own absence. The search was re-run correctly and the conversation said so.
+
+**The count is four, not three.** The filed plan that brought this row in called it the third
+occurrence against a session holding the rewritten clause, counting the two in the 2026-09-06 row
+and missing the sixth above — which landed the same day, in the same repo, from another session.
+Written out, the four post-rewording occurrences and what caught each:
+
+| when       | bundle | caught by                                                    |
+| ---------- | ------ | ------------------------------------------------------------ |
+| 2026-09-06 | `-rln` | output shape — the searched word absent from its own results |
+| 2026-09-06 | `-rn`  | the session's own earlier instance, an hour before           |
+| 2026-09-07 | `-rn`  | **nobody** — zero matches, found by the harvest's audit      |
+| 2026-09-07 | `-rn`  | the detection signature, within one call                     |
+
+So the rewriting has been in force for four occurrences across three sessions, and the rate it was
+meant to move has not been re-counted yet — that measurement is still owed and is still what decides
+the lever. What the four do settle is the shape of the residue: **three of four were caught, and the
+one that was not is the one with no output to look at.** That is the same split the `UNVERIFIED`
+above predicted, now on four observations rather than one, and it says the fallback `ask`-rule would
+be buying exactly one case in four — the invisible one, which is also the one that has so far cost
+nothing.
