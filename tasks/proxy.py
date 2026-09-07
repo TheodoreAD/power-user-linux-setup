@@ -44,6 +44,10 @@ _FALLBACK_PACKAGE = "keyrings.alt"
 _PROBE_SERVICE = "pulse-proxy-keyring-check"
 _PROBE_ACCOUNT = "pulse-check"
 _PROBE_SECRET = "pulse-round-trip"
+# What install() writes into ~/.zshenv once the daemon verifies, named for util.login_shell_warning.
+# A bash login shell reads none of it, and the symptom is the daemon running perfectly with nothing
+# pointed at it — every tool goes straight out to a proxy that wants a credential they do not have.
+_PROXY_EXPORTS = "http_proxy, https_proxy and their uppercase twins"
 
 
 # ---------------------------------------------------------------------------
@@ -463,47 +467,6 @@ def _write_env_file() -> None:
     print(f"[proxy] keyring backend pinned for the daemon in {ENV_FILE}")
 
 
-_UNLOCK_CMD = "gnome-keyring-daemon --unlock --components=secrets"
-# What install() writes into ~/.zshenv once the daemon verifies, named for util.login_shell_warning.
-# A bash login shell reads none of it, and the symptom is the daemon running perfectly with nothing
-# pointed at it — every tool goes straight out to a proxy that wants a credential they do not have.
-_PROXY_EXPORTS = "http_proxy, https_proxy and their uppercase twins"
-
-
-def _keyring_remedy(c: Context) -> str:
-    """Which of the states this machine is actually in, because the round trip cannot tell them
-    apart: a locked store and an absent one both fail it, and their fixes are opposite.
-
-    The message this replaced named only the absent case — install gnome-keyring and
-    dbus-user-session — which is no help at all on a machine where both are already installed, and
-    that is now the likelier state: `[packages.gnome-keyring]` and `[packages.dbus-user-session]`
-    are declared, so a WSL distro that ran setup has the store and still has nobody to unlock it.
-    The D-Bus name-owner probe is what separates them (util.secret_service_state).
-    """
-    state = util.secret_service_state(c)
-    if state.startswith("answering"):
-        return (
-            "a Secret Service is answering on the session bus, so the store is not missing — a "
-            "round trip that fails anyway is usually a locked collection with nothing able to "
-            f"prompt for it. Unlock it with `{_UNLOCK_CMD}`, login password on stdin."
-        )
-    if state.startswith("no session bus"):
-        return (
-            "there is no session D-Bus here, so no store can answer on one whether or not it is "
-            "installed. Install dbus-user-session as well as gnome-keyring."
-        )
-    if state.startswith("installed but"):
-        return (
-            "nothing owns org.freedesktop.secrets on the session bus: either no provider is "
-            "installed (apt install gnome-keyring) or its daemon has not been started. Starting it "
-            f"is also what unlocks it — `{_UNLOCK_CMD}`, login password on stdin."
-        )
-    return (
-        f"could not tell whether a store is present ({state}) — install gnome-keyring and "
-        f"dbus-user-session if this distro has neither, or unlock what it has with `{_UNLOCK_CMD}`."
-    )
-
-
 def _keyring_status(c: Context, *, fallback: bool) -> bool:
     """Report the keyring, and say what to do about it when it doesn't answer. True if usable."""
     ok, detail = _keyring_round_trip(fallback=fallback)
@@ -513,7 +476,7 @@ def _keyring_status(c: Context, *, fallback: bool) -> bool:
     print(f"[proxy] keyring: no usable backend — {detail}")
     print(
         "[proxy] Px reads its credential from the keyring at its own startup, so this has to work "
-        f"before a password is worth capturing: {_keyring_remedy(c)}"
+        f"before a password is worth capturing: {util.secret_store_remedy(c)}"
     )
     print(
         '[proxy] PULSE never unlocks a store unattended (docs/wsl.md, "The secret store, and '

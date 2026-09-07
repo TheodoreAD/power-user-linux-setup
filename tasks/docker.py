@@ -482,9 +482,9 @@ def configure_credential_store(c: Context, purge_plaintext: bool = False):
     if reason := _credential_round_trip(c):
         raise Exit(
             f"[docker-credentials] the credential helper is installed but the secret store did not answer: {reason}\n"
-            "  Nothing was written. On a desktop this usually means the keyring is locked or the\n"
-            "  Secret Service is not running; `gh auth status` reporting `(keyring)` is a quick\n"
-            "  independent check that the service is up.",
+            f"  Nothing was written. {util.secret_store_remedy(c)}\n"
+            "  `gh auth status` reporting `(keyring)` is a quick independent check that the "
+            "service is up.",
             code=1,
         )
 

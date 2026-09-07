@@ -75,7 +75,9 @@ def docker_config(tmp_path, monkeypatch):
     return path
 
 
-def _round_trip_context(*, secret: str = docker._PROBE_SECRET, store_ok: bool = True, get_ok: bool = True):
+def _round_trip_context(
+    *, secret: str = docker._PROBE_SECRET, store_ok: bool = True, get_ok: bool = True, secrets_owned: bool = False
+):
     """A context answering the helper's three verbs. Matched on the trailing verb rather than on
     the whole command, since each one is a pipeline carrying a JSON payload nobody should have to
     spell twice — and MockContext's dict keys are either exact strings or compiled patterns."""
@@ -88,6 +90,12 @@ def _round_trip_context(*, secret: str = docker._PROBE_SECRET, store_ok: bool = 
                 stdout=json.dumps({"Secret": secret}), exited=0 if get_ok else 1, stderr="get refused"
             ),
             re.compile(rf".*{docker.CREDENTIAL_HELPER} erase$"): Result(exited=0),
+            # util.secret_store_remedy asks the bus which failure this is, so the failure paths
+            # below reach dbus-send too. Answering "nobody owns the name" keeps the remedy on its
+            # install-or-start branch, which is what a store that refused a write looks like.
+            re.compile(r"^dbus-send .*org\.freedesktop\.secrets$"): Result(
+                stdout=f"   boolean {'true' if secrets_owned else 'false'}\n", exited=0
+            ),
         },
         repeat=True,
     )
@@ -286,3 +294,17 @@ def test_registry_names_that_may_become_a_path():
     assert not docker._REGISTRY_RE.match("../../etc/ssl")
     assert not docker._REGISTRY_RE.match("registry.example.com:5000; rm -rf /")
     assert not docker._REGISTRY_RE.match("")
+
+
+def test_store_failure_names_the_state_the_bus_reports_rather_than_guessing(docker_config, monkeypatch):
+    # The message used to say the keyring is "usually" locked or not running. On a machine where a
+    # Secret Service is answering, "not running" is wrong and unlocking is the whole fix; the same
+    # message was the mirror of proxy.py's, which used to name only the opposite case.
+    monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
+
+    with pytest.raises(Exit) as excinfo:
+        docker.configure_credential_store(_round_trip_context(store_ok=False, secrets_owned=True))
+
+    message = str(excinfo.value)
+    assert "not missing" in message
+    assert "--unlock" in message

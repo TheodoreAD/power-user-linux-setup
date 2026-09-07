@@ -493,6 +493,45 @@ def secret_service_state(c: Context) -> str:
     return "answering ✓" if "true" in owned.stdout else "installed but not running/unlocked"
 
 
+_UNLOCK_CMD = "gnome-keyring-daemon --unlock --components=secrets"
+
+
+def secret_store_remedy(c: Context) -> str:
+    """Which secret-store state this machine is actually in, for a caller whose own probe just
+    failed without being able to say why.
+
+    A locked store and an absent one fail a keyring round trip identically and their fixes are
+    opposite, so both callers used to guess and guessed differently: proxy.py named only the absent
+    case (install gnome-keyring and dbus-user-session), docker.py only the locked one ("this
+    usually means..."). Each is useless on the machine the other was written for, and both are now
+    likely — `[packages.gnome-keyring]` and `[packages.dbus-user-session]` are declared, so a distro
+    that ran setup has the store and nobody to unlock it. The D-Bus name-owner probe is what
+    separates them; the caller adds its own tail, since what to do instead differs per feature.
+    """
+    state = secret_service_state(c)
+    if state.startswith("answering"):
+        return (
+            "a Secret Service is answering on the session bus, so the store is not missing — a "
+            "round trip that fails anyway is usually a locked collection with nothing able to "
+            f"prompt for it. Unlock it with `{_UNLOCK_CMD}`, login password on stdin."
+        )
+    if state.startswith("no session bus"):
+        return (
+            "there is no session D-Bus here, so no store can answer on one whether or not it is "
+            "installed. Install dbus-user-session as well as gnome-keyring."
+        )
+    if state.startswith("installed but"):
+        return (
+            "nothing owns org.freedesktop.secrets on the session bus: either no provider is "
+            "installed (apt install gnome-keyring) or its daemon has not been started. Starting it "
+            f"is also what unlocks it — `{_UNLOCK_CMD}`, login password on stdin."
+        )
+    return (
+        f"could not tell whether a store is present ({state}) — install gnome-keyring and "
+        f"dbus-user-session if this distro has neither, or unlock what it has with `{_UNLOCK_CMD}`."
+    )
+
+
 def has_systemd() -> bool:
     """True if systemd is the running init system — the same check require_systemd() uses to
     decide whether to abort. False for containers with no init system, WSL1, and WSL2 with
