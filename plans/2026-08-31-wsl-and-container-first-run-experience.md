@@ -257,6 +257,23 @@ may later have a display. Only `[packages.zenity]`, the dialog binary, moved to 
 
 ## Still open
 
+[DECISION: **WSLg is not a reason to install desktop apps under WSL. GUI there is for the
+askpass-class problem only.** Stated by the user 2026-09-07: _"just because wsl has wslg doesn't
+mean we want to work with desktop apps there, we want to use gui only to solve hard problems like
+password prompts and such."_ So the `gui` tag keeps meaning "this machine runs desktop
+applications", and a WSL profile keeps excluding it, even on a WSLg-capable distro where those apps
+would technically run — a GUI editor, browser or messaging client belongs to the Windows side of
+that machine, not to the distro. What Finding 4 established stays intact and is the whole of the
+exception: a password or passphrase dialog is a problem the terminal genuinely cannot solve when
+there is no controlling TTY, which is why `[packages.askpass-zenity]` stays `shell, system` and only
+`[packages.zenity]` moved to `gui`. Read the two together as one policy — the dialog is provisioned
+because it rescues a headless case, not because the distro has a display server.
+
+The consequence worth naming, since it is the thing a future session will get wrong: **a
+WSLg-capable distro must not start passing the `gui` tag**, and "WSLg is present" is not evidence
+for widening a profile. If a GUI package is ever genuinely wanted under WSL it earns its own
+argument, per package, on the same footing as the askpass helper.]
+
 [DECISION: **`inv net.check` stays out of `inv verify.all`.** Settled 2026-09-01, converting what
 was filed as a DEFERRED item — it was a reasoned rejection all along, not work put off, and leaving
 it tagged as deferred kept a backlog entry nobody intended to act on. `verify.all` is a post-install
