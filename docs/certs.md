@@ -44,6 +44,13 @@ overrides this for a one-off run without editing the file.
    `NODE_EXTRA_CA_CERTS`, and `AWS_CA_BUNDLE`, all pointed at that _merged_ bundle — not a
    corporate-only file, since those tools still need the public CAs too.
 
+**Step 3 requires zsh to be the login shell**, which is a prerequisite of this repo rather than a
+preference: nothing here writes a file bash reads, so on a bash login shell those four exports reach
+nothing and say nothing — the failure looks like a network fault, not a missing setting.
+`certs.check` and `certs.install` both report it; the full reasoning, and why no bash-side file is
+written instead, is in [wsl.md](wsl.md#assumptions-this-repo-makes-about-wsl) (it is not
+WSL-specific, that is just where the prerequisites are listed).
+
 Re-running `inv certs.install` is idempotent: it compares the desired bundle text against what's
 already installed and skips `update-ca-certificates` entirely when nothing changed.
 

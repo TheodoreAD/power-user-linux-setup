@@ -342,16 +342,28 @@ what environment it inherits.
 Stated because three of them were previously lumped together as "headless", which is wrong on a
 modern distro and hid the one that actually bites:
 
-| assumption               | what supplies it                     | what fails without it                             |
-| ------------------------ | ------------------------------------ | ------------------------------------------------- |
-| WSL2 with `systemd=true` | `/etc/wsl.conf`, `inv wsl.fix`       | every `system.*`/`docker.*` task, `--user` units  |
-| **a display**            | WSLg                                 | `gui`/`desktop` packages, the GUI askpass dialog  |
-| **a session D-Bus**      | `[packages.dbus-user-session]`       | nothing is shared between sessions — see below    |
-| **a secret store**       | `[packages.gnome-keyring]`, unlocked | `inv proxy.install`'s credential, docker's helper |
+| assumption               | what supplies it                     | what fails without it                               |
+| ------------------------ | ------------------------------------ | --------------------------------------------------- |
+| WSL2 with `systemd=true` | `/etc/wsl.conf`, `inv wsl.fix`       | every `system.*`/`docker.*` task, `--user` units    |
+| **a display**            | WSLg                                 | `gui`/`desktop` packages, the GUI askpass dialog    |
+| **a session D-Bus**      | `[packages.dbus-user-session]`       | nothing is shared between sessions — see below      |
+| **a secret store**       | `[packages.gnome-keyring]`, unlocked | `inv proxy.install`'s credential, docker's helper   |
+| **zsh as login shell**   | `inv zsh.set-default-shell`          | every `~/.zshenv` export — silently, see just below |
 
 WSLg supplies the display **and nothing else**. A fully modern WSL2 distro with a working display
 still has no session bus and no secret store unless something installs them, which is why those are
 now three separate lines in `inv wsl.check` rather than one WSLg line.
+
+**zsh is a prerequisite, not a preference**, and it is the one on that list with no error message at
+all when it is missing. `certs.install` and `proxy.install` export into `~/.zshenv`, which zsh reads
+on _every_ invocation — login, interactive and non-interactive alike. Nothing here writes a file
+bash reads, and there is no single bash file that would do the same job: `~/.profile` covers a login
+shell and only while no `~/.bash_profile` exists, `~/.bashrc` covers an interactive one and Ubuntu's
+own default returns straight out of it when the shell is not interactive, and `BASH_ENV` covers the
+rest but has to be exported by something that already ran. So on a bash login shell every one of
+those exports reaches nothing, in silence — an unverified TLS chain reads as a network fault, and a
+proxy daemon running with nothing pointed at it reads as a broken proxy. `inv setup`'s shell phase
+sets zsh; `inv wsl.check`, `inv certs.check` and `inv proxy.check` each say so if it did not take.
 
 **Run the setup itself from a plain WSL terminal** (Windows Terminal → `wsl.exe`), not from an IDE's
 integrated terminal. Not because prompting fails there — an integrated terminal is a real pty — but
