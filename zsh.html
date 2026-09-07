@@ -3065,6 +3065,19 @@ all zsh instances):</p>
 <p><code>~/.local/bin</code> goes in <code>~/.zshenv</code> rather than <code>~/.zshrc</code> so they are available to all zsh
 instances, including non-interactive scripts. <code>/usr/local/bin</code> is already in the system PATH via
 <code>/etc/environment</code> and is not duplicated here.</p>
+<p><strong><code>[packages.zsh-path]</code> also sets <code>typeset -U path PATH</code></strong>, which makes the array reject duplicates
+— in the value a shell inherits and in every assignment afterwards, so the other entries in the
+table need no guards of their own. That is not tidiness. <code>~/.zshenv</code> is read on <em>every</em> zsh
+invocation, which is the property the <a href="certs.html">corporate CA</a> and <a href="corporate-proxy.html">proxy</a>
+exports depend on, so an unguarded <code>PATH="x:$PATH"</code> grows PATH once per nested shell forever:
+measured on this machine before the fix at four copies of <code>~/.local/bin</code> in a login shell and five
+in a <code>zsh -c</code> started from it. It does not stay in the terminal either — GDM starts the desktop
+session through a login shell and <code>gnome-session</code> imports that environment into the systemd user
+manager, so every application launched from the dock inherited the duplicated value for the whole
+session.</p>
+<p>Deduplication keeps the <strong>first</strong> occurrence, which is what preserves the precedence the table
+describes: <code>~/.local/bin</code> still shadows the system copy, and a direnv-activated <code>.venv/bin</code> still
+shadows both.</p>
 <p>When adding a new tool that needs a PATH entry, prefer creating a symlink in <code>~/.local/bin</code> over a
 new PATH manipulation. Only add a PATH entry when the tool writes multiple binaries to its own
 directory dynamically (like <code>go install</code> populating <code>$GOPATH/bin</code>).</p>

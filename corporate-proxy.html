@@ -2500,7 +2500,7 @@ slow and fragile.</p>
 <code>127.0.0.1:3128</code> — nothing sensitive in that URL — and the daemon does the authentication handshake
 with the real corporate proxy on their behalf.</p>
 <h2 id="quick-start">Quick start</h2>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>proxy.check<span class="w">      </span><span class="c1"># read-only — detects a candidate proxy and its auth scheme, changes nothing</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>proxy.check<span class="w">      </span><span class="c1"># detects a candidate proxy and its auth scheme; changes no configuration</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>proxy.install<span class="w">     </span><span class="c1"># full flow: capture a credential if needed, start the daemon, verify it works</span>
 </span></code></pre></div>
 <p>On a personal machine with no corporate proxy on the network, <code>proxy.check</code>/<code>proxy.install</code> both

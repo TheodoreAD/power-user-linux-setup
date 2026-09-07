@@ -2541,7 +2541,7 @@ bundle instead of reading the OS one: Python (<code>certifi</code>), Node/npm, a
 <p><code>inv certs.*</code> installs an IT-provided bundle into the OS trust store via <code>update-ca-certificates</code>,
 then points those tools at the resulting merged bundle.</p>
 <h2 id="quick-start">Quick start</h2>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>certs.check<span class="w">      </span><span class="c1"># read-only — bundle/env-var/Java status, changes nothing</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>certs.check<span class="w">      </span><span class="c1"># bundle/env-var/Java status; installs nothing, touches no trust store</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>certs.install<span class="w">     </span><span class="c1"># installs into the OS trust store, exports env vars for python/node/awscli</span>
 </span></code></pre></div>
 <p>On a personal machine with no corporate CA configured, both exit cleanly with &ldquo;nothing to configure&rdquo;
@@ -2653,7 +2653,7 @@ via Group Policy/Intune does <strong>not</strong> carry over into WSL — <code>
 inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an OS-trust-store
 issue, not a networking one).</p>
 <p><code>--from-windows</code> bridges that without a manual file copy:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>certs.check<span class="w"> </span>--from-windows<span class="w">      </span><span class="c1"># read-only — names the roots this distro doesn&#39;t trust yet</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>certs.check<span class="w"> </span>--from-windows<span class="w">      </span><span class="c1"># names the roots this distro doesn&#39;t trust yet (writes the export)</span>
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--from-windows<span class="w">    </span><span class="c1"># installs them, alongside anything else configured</span>
 </span></code></pre></div>
 <p>It reads <code>Cert:\LocalMachine\Root</code> and <code>Cert:\CurrentUser\Root</code> through WSL interop
