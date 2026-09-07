@@ -511,6 +511,9 @@ wheels = [
 name = "power-user-linux-setup"
 version = "0.1.0"
 source = { editable = "." }
+dependencies = [
+    { name = "invoke" },
+]
 
 [package.dev-dependencies]
 dev = [
@@ -519,7 +522,6 @@ dev = [
     { name = "basedpyright" },
     { name = "dprint-py" },
     { name = "hadolint-py" },
-    { name = "invoke" },
     { name = "invoke-stubs" },
     { name = "pytest" },
     { name = "pytest-cov" },
@@ -537,6 +539,7 @@ docs = [
 ]
 
 [package.metadata]
+requires-dist = [{ name = "invoke" }]
 
 [package.metadata.requires-dev]
 dev = [
@@ -545,7 +548,6 @@ dev = [
     { name = "basedpyright", specifier = ">=1.39.10" },
     { name = "dprint-py" },
     { name = "hadolint-py" },
-    { name = "invoke" },
     { name = "invoke-stubs", git = "https://github.com/TheodoreAD/invoke-stubs" },
     { name = "pytest" },
     { name = "pytest-cov" },

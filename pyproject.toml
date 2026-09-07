@@ -2,12 +2,23 @@
 name = "power-user-linux-setup"
 version = "0.1.0"
 requires-python = ">=3.11"
-dependencies = []
+# `invoke` is a real dependency, not a dev one: `spowse` is installed with `uv tool install`, whose
+# environment resolves `dependencies` and nothing else, and `tasks/cli.py` imports invoke at module
+# scope. In the dev group it resolved fine for `inv` in the checkout and left the shim unable to
+# start. Nothing else changes — bootstrap.sh's zero-install path installs invoke as its own uv tool
+# and never runs `uv sync`, and CI's sync already pulled it in through the group.
+dependencies = ["invoke"]
+
+# Sensible POWer-user SEtup. `spouse` is the same entry point under the spelling fingers reach for
+# first — the joke is a homophone, so the typo is guaranteed rather than hypothetical, and a second
+# console script costs one line against a `command not found` every time it happens.
+[project.scripts]
+spowse = "tasks.cli:main"
+spouse = "tasks.cli:main"
 
 [dependency-groups]
 dev = [
   "basedpyright>=1.39.10",
-  "invoke",
   "pytest",
   "repo-tasks",
   "ruff",

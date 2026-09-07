@@ -181,6 +181,7 @@ class PackageConfig(TypedDict, total=False):
     package: str
     python: str
     extras: list[str]
+    editable: bool
     # script
     script_url: str
     shell: str

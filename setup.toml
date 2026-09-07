@@ -111,7 +111,13 @@
 #   check_path    path to check for existence instead of check_cmd (useful when binary is not on PATH yet)
 #
 # uv-tool sections:
-#   package       PyPI package name to install (uv tool install --upgrade <package>)
+#   package       PyPI package name to install (uv tool install --upgrade <package>) — or, with
+#                 editable = true, a path relative to this repo's root
+#   editable      install `package` as a repo-relative path with --editable instead of from PyPI.
+#                 Required, not cosmetic, for a tool whose code reads repo files through
+#                 Path(__file__).parent.parent: a non-editable install anchors that at the tool's
+#                 own site-packages, where setup.toml and config/ do not exist, and every read comes
+#                 back missing with no error. Only [packages.spowse] uses it.
 #   python        override the Python version for this tool (default: settings.uv_python_default)
 #   extras        list of extra packages to install alongside (--with <extra>, e.g. python-dotenv)
 #   check_cmd     binary name to check/install as (default: section name)
@@ -667,6 +673,22 @@ method = "uv-tool"
 package = "copier"
 check_cmd = "copier"
 tags = ["dev"]
+
+[packages.spowse]
+description = "PULSE's own machine-administration CLI — Sensible POWer-user SEtup. The tasks that set up and maintain this machine, callable from any directory instead of only from inside the checkout."
+method = "uv-tool"
+# This repo, installed from its own checkout rather than from an index — see the `editable` field in
+# the header for why a non-editable install fails silently rather than loudly. tasks/cli.py builds
+# the namespace: PULSE's own collections minus every task marked @util.dev_only, and none of the
+# eight borrowed from repo-tasks, so `spowse --list` is machine administration and nothing else
+# while `inv --list` in the checkout stays the full set.
+package = "."
+editable = true
+check_cmd = "spowse"
+# `spouse` is the same entry point under the spelling fingers reach for first; both console scripts
+# are declared in pyproject.toml and uv installs both. Only one is checked here — they are one
+# install, and a second check would report the same tool twice.
+tags = ["cli", "dev"]
 
 [packages.dos2unix]
 description = "Convert CRLF line endings to LF — useful when receiving files from Windows"

@@ -32,6 +32,15 @@ def install_tools(c: Context):
         extras = cfg.get("extras", [])
         flags = f" --python {python}" if python else ""
         flags += "".join(f" --with {e}" for e in extras)
+        if cfg.get("editable"):
+            # A tool installed from a path in this repo rather than from an index, and it has to be
+            # editable: the package reaches setup.toml and config/ through
+            # Path(__file__).parent.parent, so a regular install anchors that at the tool's own
+            # site-packages and every repo-side source silently reads as missing — exit 0, nothing
+            # found. Editable keeps the anchor on the checkout, which is also what makes
+            # `deploy.status` compare against a tree you can `git pull` rather than a frozen copy.
+            package = str((_REPO_ROOT / package).resolve())
+            flags += " --editable"
         print(f"[{name}] installing: {package}{' + ' + ', '.join(extras) if extras else ''}")
         c.run(f"uv tool install --upgrade{flags} {package}")
         print(f"[{name}] ok")
