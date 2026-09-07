@@ -43,10 +43,15 @@ Read off this repo 2026-09-07. Four blockers, all small, all in the slice this a
 | `tasks/verify.py:187` | `_symlink_check` requires `link.is_symlink()`        | there will not be a symlink there       |
 
 The first two are import-time, so nothing in the repo runs at all on Windows until they are guarded
-— that is the whole reason "does PULSE work on Windows" has never had an answer. The third is the
-one that would have been found late and blamed on something else: every fragment is full of em
-dashes and arrows, so the assembler would raise `UnicodeDecodeError` on a machine whose locale is
-not UTF-8, and Python does not default to UTF-8 mode until 3.15 while this repo pins 3.14.
+— that is the whole reason "does PULSE work on Windows" has never had an answer.
+
+[PITFALL: **the encoding one does not raise, it corrupts.** `read_text()` with no `encoding=` uses
+the locale encoding until Python 3.15 (PEP 686) and this repo pins 3.14. The expected failure is a
+`UnicodeDecodeError` on a cp1252 machine — and that is not what happens for the character that
+matters. `→` is U+2192; its UTF-8 bytes `E2 86 92` are **each individually defined in cp1252**, so
+the read succeeds and silently yields `â†'`. The fragments are full of `—`, `…` and `→`. A deployed
+instructions file that is subtly mojibaked in every session, with no error anywhere, is the worst
+shape this whole plan contains. `rg -c "encoding=" tasks/` finds it in exactly one module today.]
 
 Two more that are conventions rather than bugs:
 
@@ -55,8 +60,36 @@ Two more that are conventions rather than bugs:
   and `%LOCALAPPDATA%`, honouring `$XDG_*` first and branching on `os.name == "nt"` only for the
   default. **Copy that, do not invent a second answer**, because the two would disagree on the same
   machine.
-- The write path is already safe: `deploy` writes with `write_bytes`, so no newline translation and
-  no CRLF-versus-digest fight. Only the read side needs the encoding.
+- The write path is already safe **in `deploy`**, which uses `write_bytes` — so no newline
+  translation and no CRLF-versus-digest fight there. `util.py`'s `ensure_block`, `remove_block` and
+  the `~/.claude/settings.json` writer all use bare `write_text()`, which translates `\n` to
+  `os.linesep` on Windows; those need `newline="\n"`.
+
+### Three the survey found that bite before deployment even starts
+
+1. **A Windows clone of this repo has a broken `CLAUDE.md`.** It is tracked as a symlink (`120000`
+   in `git ls-files -s`), and Git for Windows sets `core.symlinks=false` by default — independently
+   of Developer Mode, unless `MSYS=winsymlinks:nativestrict` is set. The checkout is then a regular
+   file whose entire content is the string `AGENTS.md`, and Claude Code loads that as the project
+   instructions. This is the repo's own agent config being wrong on Windows, before anything is
+   deployed anywhere.
+2. **The quality gate fails on a Windows checkout, on every markdown file.** Git for Windows'
+   installer sets `core.autocrlf=true` system-wide, so tracked files check out CRLF; dprint's
+   markdown plugin defaults to LF and this repo's `dprint.json` sets no `newLineKind`. There is no
+   `.gitattributes` here and `.editorconfig` sets no `end_of_line`. A `.gitattributes` pinning
+   markdown to LF fixes it, and is worth having regardless of Windows.
+3. **A UTF-8 BOM silently destroys a `SKILL.md`.** Both `python-frontmatter` and the `skills` CLI
+   anchor their frontmatter match at position 0 with no BOM strip, so the skill is skipped with a
+   missing-fields warning rather than an error. Windows PowerShell 5.1 cannot write BOM-less UTF-8
+   at all, so a hand-edit there is the likely source. Relevant here because skills are the half that
+   already works on Windows.
+
+Two more worth knowing but not blocking: `HOME` and `%USERPROFILE%` can be **different directories**
+when Git Bash is in play — Git for Windows sets `HOME` to `%HOMEDRIVE%%HOMEPATH%` when that exists,
+which on a domain-joined machine with a network home share is a different place than the profile —
+and Claude Code resolves home as `HOME` → `USERPROFILE` → `HOMEDRIVE`+`HOMEPATH`, so a Git Bash
+session and a PowerShell session can read two different `~/.claude`. And `shlex.join` in
+`tasks/ai.py` produces POSIX quoting that `cmd.exe` does not parse the same way.
 
 ## What the research says, and it converges
 
@@ -120,6 +153,34 @@ the working directory — so on that surface both a link and an import degrade, 
 assembled file survives. A plain generated file at each destination is the only wiring with no
 vendor caveat attached.]
 
+### The skills half is nearly free, and Claude Code is the whole of what is left
+
+Read out of the shipped Claude Code binary rather than its docs: **`.agents/skills` appears zero
+times in it**, against 50 occurrences of `.claude/skills`. So the cross-tool path Claude Code is
+given by symlink on Linux is not something it will ever read natively, and that link is load-bearing
+on every platform rather than a convenience.
+
+Every other agent named for this machine reads `~/.agents/skills` directly, verified per vendor:
+Codex (`host_roots.rs` adds `home/.agents/skills` as a user root, with a test asserting it), Copilot
+(documented, verbatim: _"create a `~/.copilot/skills` or `~/.agents/skills` directory"_), Gemini CLI
+(`getUserAgentSkillsDir()`), Cursor (documented). So the skills half needs nothing on Windows except
+whatever makes Claude Code see them.
+
+**And the `skills` CLI already solved that.** It is `vercel-labs/skills`, its CI matrix includes
+`windows-latest`, and on Windows it creates a **junction** per skill rather than a symlink, falling
+back to copying with a Windows-specific message when that fails. It links per skill —
+`<base>/<skill-name>` — never the whole directory. PULSE's own `_ensure_agents_skills`, which links
+the whole `~/.claude/skills` directory, is therefore the one piece with no Windows story, and the
+question is whether it should keep that shape there or defer to the CLI's per-skill junctions.
+
+[UNVERIFIED: **whether Claude Code follows a junction for a skill entry.** Its docs say a
+`<skill-name>` entry "can be a symlink to a directory elsewhere on disk", and its binary classifies
+a Windows junction as `isSymbolicLink: true` in its own directory-listing wrapper while every
+user/project skill loader accepts `isDirectory() || isSymbolicLink()` — so it almost certainly
+works. That is source inference about a closed binary, not documentation and not a Windows test. It
+is also the single fact the skills half rests on, so it is the first thing to check on a real
+Windows machine.]
+
 ## Design
 
 ### 1. The OS axis goes on the fragment, not into the fragment
@@ -154,28 +215,52 @@ a fragment's applicability could be derived from its `[needs <package>]` label p
 tags, with no new axis at all — one mechanism instead of two. This is the same question as the one
 above from the other end, and they should be answered together.]
 
-### 2. Linking degrades to what Windows can do without admin
+### 2. On Windows there is no link. Deploy the file to every destination
 
-Symlinks need Developer Mode or elevation, which this machine may not have. The fallbacks are not
-equivalent and the choice differs by kind:
+The survey killed the tiered fallback this section first proposed, and it is worth recording why,
+because the idea is the obvious one and someone will have it again.
 
-- **A directory** (`~/.claude/skills` → `~/.agents/skills`) — a junction is the admin-less option.
-- **A file** (`~/.claude/CLAUDE.md` → `~/.agents/AGENTS.md`) — a hardlink is admin-less on the same
-  volume, and survives this repo's writer because `deploy` writes in place with `write_bytes` rather
-  than replacing the file by rename.
-- **A copy**, last resort, which drifts between deploys and therefore has to be verified by content
-  rather than by identity.
+- **A symlink needs Developer Mode or Administrator.** `Path.symlink_to` is `os.symlink`, which
+  raises `OSError` WinError 1314 without the privilege; Developer Mode itself needs admin once to
+  turn on and can be disabled by org policy. CPython's own test suite does not assume it works — it
+  probes by attempting one and catching `OSError`.
+- **A junction cannot replace a file link.** Junctions are directories only. **All five
+  `symlink_dest` entries are file links**, so the admin-less mechanism does not apply to any of
+  them. This is the fact that collapses the design: the tier that made the fallback look workable
+  covers none of the actual destinations.
+- **A hardlink works without privilege but Anthropic documents against it.** NTFS, files, same
+  volume, no privilege — and then Claude Code's Cowork sessions _"skip a `~/.claude/CLAUDE.md` that
+  is itself a symlink or hard link"_, with the shipped binary rejecting `nlink > 1` across several
+  other paths. Choosing it means choosing a wiring the vendor has already said it ignores.
 
-[UNVERIFIED: the junction and hardlink claims above are the design's load-bearing Windows facts and
-the survey answering them had not landed when this section was written. Confirm before building:
-whether a junction really needs no elevation, what creates one from Python (there is no stdlib API —
-`_winapi.CreateJunction` is private), whether `os.link` needs any privilege, and what
-`Path.symlink_to` raises without it.]
+So on Windows every destination gets **a real file**, written by the same assembler. That is not a
+degraded fallback, it is the only wiring with no vendor caveat attached — and it is what Claude
+Code's own `/import` does, copying `~/.codex/AGENTS.md` into `~/.claude/CLAUDE.md` rather than
+linking it. Anthropic's documented alternative, `@AGENTS.md`, is worse here for a reason specific to
+us: see the import PITFALL above, and note it would also mean the deployed file is no longer what
+the agent reads.
 
-`verify.py` then cannot ask `is_symlink()`. The check becomes "this destination is equivalent to the
-deployed file" — resolve for a link or junction, same file index for a hardlink, equal digest for a
-copy — which is a better check than the current one on every platform, since it is the question the
-current one is a proxy for.
+Copies drift, which is the real cost and the thing to design against — `deploy`'s digest comparison
+already detects it, and `assemble()` is a pure function of the fragments, so N destinations cost N
+`write_bytes` calls and re-deploy is idempotent. The manifest already tracks per-path digests.
+
+**`verify.py` stops asking `is_symlink()` and asks whether the destination is equivalent** — resolve
+for a link, equal digest for a copy. That is a better check than today's on every platform, because
+it is the question the current one is only a proxy for.
+
+[PITFALL: **`Path.is_symlink()` is `False` for a junction, and `shutil.rmtree` refuses one.** If a
+junction is ever used for the one directory case that can take it, every is-this-a-link branch in
+`deploy` reads it as a plain directory. `Path.is_junction()` exists from 3.12, `Path.readlink()`
+works on a junction, and `Path.unlink()` is the correct removal — it deletes the link and leaves the
+target. Reach for those rather than the `os.path` spellings the source material uses.]
+
+[PITFALL: **pathlib cannot create a junction, and that is the one place this repo's pathlib-only
+rule has no answer.** There is no public API at all: `_winapi.CreateJunction` is private,
+undocumented outside the audit-events table, and every use of it in CPython is inside CPython's own
+tests, which themselves skip on `OSError`. It also stores the target as an absolute path resolved
+against the **process cwd**, not the link's directory. If the skills directory ever needs a
+junction, that call is quarantined behind one helper with a comment saying why the rule is broken
+there — rather than the rule quietly eroding across the module.]
 
 ### 3. What the Windows side actually installs
 
@@ -211,7 +296,22 @@ Filed here because Windsurf was named as a target; it may deserve its own plan.]
 ## Recommended direction
 
 Answer the two paired questions in §1 first — they are one question — because everything else is
-mechanical once the axis exists. Then port the four blockers, which is an afternoon, and prove the
-assembler on Windows with the existing fragment set before adding a single Windows-specific rule.
-Take the link strategy last: it is the only part with an unverified premise, and a copy with a
-content check is a correct fallback that would let the rest ship without it.
+mechanical once the axis exists.
+
+The link strategy no longer needs deciding: **there are no links on Windows**, junctions cover none
+of the file destinations and the one privilege-free file mechanism is one Anthropic documents
+against. That is settled, which moves the work to the order below.
+
+1. **The three pre-deployment breakages**, because they are wrong on Windows today and none of them
+   waits on the axis: `.gitattributes`, the tracked `CLAUDE.md` symlink, and `encoding="utf-8"` on
+   every text read. The encoding one first — it corrupts silently, and every later verification on
+   Windows would be measuring a mojibaked file.
+2. **The four import- and write-time blockers**, which is an afternoon.
+3. **Prove the assembler on Windows with the existing fragment set**, before adding one
+   Windows-specific rule. A deployed file that is byte-identical to the Linux one is the checkpoint
+   that says the port works; content differences are the next problem, not this one.
+4. **Then the axis**, then the Windows-only rules it enables.
+
+The one thing to check on a real Windows machine before trusting any of it is whether Claude Code
+follows a junction for a skill entry, since the whole skills half rests on it and the evidence is
+inference from a closed binary.
