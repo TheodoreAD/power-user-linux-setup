@@ -290,6 +290,21 @@ all zsh instances):
 instances, including non-interactive scripts. `/usr/local/bin` is already in the system PATH via
 `/etc/environment` and is not duplicated here.
 
+**`[packages.zsh-path]` also sets `typeset -U path PATH`**, which makes the array reject duplicates
+— in the value a shell inherits and in every assignment afterwards, so the other entries in the
+table need no guards of their own. That is not tidiness. `~/.zshenv` is read on _every_ zsh
+invocation, which is the property the [corporate CA](certs.md) and [proxy](corporate-proxy.md)
+exports depend on, so an unguarded `PATH="x:$PATH"` grows PATH once per nested shell forever:
+measured on this machine before the fix at four copies of `~/.local/bin` in a login shell and five
+in a `zsh -c` started from it. It does not stay in the terminal either — GDM starts the desktop
+session through a login shell and `gnome-session` imports that environment into the systemd user
+manager, so every application launched from the dock inherited the duplicated value for the whole
+session.
+
+Deduplication keeps the **first** occurrence, which is what preserves the precedence the table
+describes: `~/.local/bin` still shadows the system copy, and a direnv-activated `.venv/bin` still
+shadows both.
+
 When adding a new tool that needs a PATH entry, prefer creating a symlink in `~/.local/bin` over a
 new PATH manipulation. Only add a PATH entry when the tool writes multiple binaries to its own
 directory dynamically (like `go install` populating `$GOPATH/bin`).

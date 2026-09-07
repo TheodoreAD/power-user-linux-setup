@@ -29,11 +29,24 @@ sees `~/.zshenv`. Two things found on 2026-09-07 contradict it:
   `RESEARCH_HOME`, `UV_PYTHON`, `NVM_DIR`, `GOPATH`, `CARGO_HOME`, `SUDO_ASKPASS`, `SSH_ASKPASS` —
   along with a `PATH` holding `~/.local/bin` and the go/JetBrains block three times each. That is
   the manager's own environment block, read by a route the artifact cannot touch.
-  `~/.config/environment.d/` does not exist, so this was imported at run time rather than generated,
-  and the triplication is the signature of a repeated `systemctl --user import-environment` /
-  `dbus-update-activation-environment`. **Nothing in this repo does that import** — it is not in
-  `~/.zshenv`, `~/.zprofile`, `~/.zshrc`, `setup.toml`, `config/`, `tasks/`, or the user's zsh
-  history. Which tool does it is still open.
+  `~/.config/environment.d/` does not exist, so this was imported at run time rather than generated.
+
+  **Which importer, settled the same day:** `gnome-session`, doing the ordinary thing. The manager's
+  environment still carries `_=/usr/bin/gnome-session`, `SHLVL=0` and `PWD=/home/tdumitrescu` — the
+  trailing state of a shell whose last command was the session binary — alongside
+  `SHELL=/usr/bin/zsh` and a `PATH` containing `~/.local/share/JetBrains/Toolbox/scripts`, which
+  only `~/.zprofile` adds and only a zsh **login** shell reads. So GDM starts this session through
+  the user's login shell, that shell reads `~/.zshenv` and `~/.zprofile`, and `gnome-session`
+  imports the result into the user manager. No rogue tool, nothing unmanaged, and the mechanism this
+  plan proposed adopting is one the session already has an equivalent of.
+
+  **The triplication was ours, and is now fixed.** Not repeated imports: `~/.zshenv`'s
+  `PATH="${HOME}/.local/bin:${PATH}"` and `[packages.go]`'s append are non-idempotent, and
+  `~/.zshenv` is read on every zsh invocation, so each nested shell added another copy — four in the
+  login shell, five in a `zsh -c` started from it, and whatever the session had when `gnome-session`
+  imported it, for the life of that session. `[packages.zsh-path]` now sets `typeset -U path PATH`
+  ahead of the first prepend; a fresh `zsh -c` has zero duplicates and the precedence order is
+  unchanged.
 - `claude-desktop`'s own launcher, `/usr/bin/claude-desktop-unofficial`, is a bash script started
   from the same dock entry, and it **does** have the variables. It sets nothing, unsets nothing and
   runs no `env -i` before exec'ing the Electron binary — which then reports not having them. A child
@@ -191,13 +204,14 @@ after any change.]
 
 0. **Re-establish the premise before building anything on it** (added 2026-09-07). Steps 1–4 below
    were written against a measurement that no longer stands, and the question they answer may not
-   exist: if the user manager already carries these variables, the gap this plan exists to close is
-   an unmanaged import by an unidentified tool rather than an absence. Two things to settle, in
-   order — which tool runs the import, and whether an `app.slice` application genuinely lacks the
-   variables when measured by a method that works. Only then does the replacement-vs-addition
-   question below mean anything. Note that an unmanaged import is its own finding: it makes the
-   session environment depend on something outside `setup.toml`, which is the condition
-   `inv home.list-claims` exists to make visible one directory up.
+   exist. The user manager already carries these variables, put there by `gnome-session` importing a
+   login shell's environment — so on this machine the `app.slice` gap this plan was written to close
+   may simply not be there. **One thing left to settle, and it is the one the original measurement
+   got wrong:** whether an `app.slice` application genuinely lacks the variables, measured by a
+   method that works on an Electron process. If it does not, this plan closes as answered rather
+   than as built, and what it leaves behind is the PATH-duplication fix and the measurement caveat
+   above — both of which came out of asking the question, which is worth more than the feature would
+   have been. Only if the gap is real does the replacement-vs-addition question below mean anything.
 
 1. **Do not frame this as "replace the zsh stuff."** The zsh blocks stay; they are the only
    mechanism that works on the no-systemd targets this repo supports, and they are what interactive
