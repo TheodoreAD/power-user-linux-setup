@@ -1,4 +1,3 @@
-import pwd
 import re
 import shutil
 from pathlib import Path
@@ -14,17 +13,6 @@ def _snippets(cfg: util.PackageConfig) -> list[tuple[str, str]]:
     names: a TypedDict lookup only keeps its field type for a literal key."""
     declared = (("zshrc", cfg.get("zshrc")), ("zshenv", cfg.get("zshenv")), ("zprofile", cfg.get("zprofile")))
     return [(target, content) for target, content in declared if content]
-
-
-def _current_shell() -> str:
-    return pwd.getpwnam(util.current_user()).pw_shell
-
-
-def _shell_is_zsh(shell_path: str) -> bool:
-    # Name-based, not exact-path: machines can have more than one zsh on disk (e.g. an apt one
-    # at /usr/bin/zsh and another earlier on PATH) — what matters is that the registered login
-    # shell is *a* zsh, not that it's byte-for-byte the one `shutil.which` happens to find.
-    return Path(shell_path).name == "zsh"
 
 
 @task
@@ -148,10 +136,10 @@ def set_default_shell(c: Context):
         print("[zsh] zsh not found on PATH — install it first (apt.install-base)")
         return
     if util.DRY_RUN:
-        print(f"[zsh] default shell: {util.ok_label(_shell_is_zsh(_current_shell()))}")
+        print(f"[zsh] default shell: {util.ok_label(util.login_shell_is_zsh())}")
         return
-    if _shell_is_zsh(_current_shell()):
-        print(f"[zsh] default shell already zsh ({_current_shell()}) — nothing to do")
+    if util.login_shell_is_zsh():
+        print(f"[zsh] default shell already zsh ({util.login_shell()}) — nothing to do")
         return
     c.run(f"{util.SUDO} usermod -s {zsh_path} {util.current_user()}")
     print(f"[zsh] default shell set to {zsh_path} — close this terminal and open a new one for it to take effect")

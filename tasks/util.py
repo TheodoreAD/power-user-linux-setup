@@ -400,6 +400,37 @@ def current_user() -> str:
     return os.environ.get("SUDO_USER") or os.environ.get("USER") or pwd.getpwuid(os.getuid()).pw_name
 
 
+def login_shell() -> str:
+    """The shell registered for this user in /etc/passwd — what a new terminal starts, and what an
+    IDE server probes the environment out of. Empty string if the user has no passwd entry.
+
+    Not `$SHELL`, which is inherited from whatever started the current process and so answers a
+    different question: a task run from a bash subshell inside a zsh terminal sees `$SHELL=/bin/zsh`
+    while `bash -c` is what is actually reading rc files.
+    """
+    try:
+        return pwd.getpwnam(current_user()).pw_shell
+    except KeyError:
+        return ""
+
+
+def login_shell_is_zsh() -> bool:
+    """Whether this repo's ~/.zshenv exports reach anything at all.
+
+    zsh is a prerequisite rather than a preference, and this is the check that says so: nothing here
+    writes a file bash reads, so on a bash login shell every export certs.install and proxy.install
+    write is invisible — silently, with no error anywhere. See docs/wsl.md, "Assumptions this repo
+    makes about WSL", and the section-7 decision in
+    plans/2026-09-06-corporate-cert-proxy-wsl-gaps.md for why no bash-side file is written instead.
+
+    Name-based, not exact-path: a machine can have more than one zsh on disk (an apt one at
+    /usr/bin/zsh plus another earlier on PATH), and what matters is that the registered shell is *a*
+    zsh, not that it is byte-for-byte the one `shutil.which` happens to find right now. Previously
+    duplicated in tasks/zsh.py and tasks/next_steps.py, with that comment copied into both.
+    """
+    return Path(login_shell()).name == "zsh"
+
+
 def has_systemd() -> bool:
     """True if systemd is the running init system — the same check require_systemd() uses to
     decide whether to abort. False for containers with no init system, WSL1, and WSL2 with

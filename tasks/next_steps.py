@@ -1,16 +1,7 @@
-import pwd
 import shutil
 import subprocess
-from pathlib import Path
 
 from . import git, ssh, ui, util
-
-
-def _current_shell() -> str:
-    try:
-        return pwd.getpwnam(util.current_user()).pw_shell
-    except KeyError:
-        return ""
 
 
 def _git_settings_applied() -> bool:
@@ -75,11 +66,8 @@ def print_next_steps(extra_note: str | None = None) -> None:
     both of those import util, so util importing them back would be circular.
     """
     zsh_path = shutil.which("zsh")
-    current_shell = _current_shell()
-    # Name-based, not exact-path: a machine can have more than one zsh on disk (e.g. an apt one
-    # at /usr/bin/zsh plus another earlier on PATH) — what matters is the registered shell is
-    # *a* zsh, not that it's byte-for-byte the one `shutil.which` happens to find right now.
-    if zsh_path and Path(current_shell).name != "zsh":
+    current_shell = util.login_shell()
+    if zsh_path and not util.login_shell_is_zsh():
         ui.block(
             f"Your login shell isn't zsh yet (currently: {current_shell or 'unknown'}).",
             "zsh.set_default_shell just tried to set it — if that succeeded, close this "

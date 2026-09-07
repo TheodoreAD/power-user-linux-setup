@@ -4,7 +4,9 @@ sudo state machine with every probe stubbed out. See tests/README.md.
 """
 
 import os
+import pwd
 import sys
+import types
 
 import pytest
 
@@ -325,3 +327,35 @@ def test_apt_command_can_never_stop_on_a_question(monkeypatch):
 def test_apt_command_as_root_has_no_stray_sudo(monkeypatch):
     monkeypatch.setattr(util, "SUDO", "")
     assert util.apt_command("update").startswith("env DEBIAN_FRONTEND=noninteractive")
+
+
+def _raise_key_error(_name: str):
+    raise KeyError(_name)
+
+
+def _passwd_shell(monkeypatch, shell: str) -> None:
+    monkeypatch.setattr(util, "current_user", lambda: "someone")
+    monkeypatch.setattr(pwd, "getpwnam", lambda _name: types.SimpleNamespace(pw_shell=shell))
+
+
+def test_login_shell_reads_the_registered_shell_not_the_inherited_one(monkeypatch):
+    # $SHELL answers "what started the process that started me", which is a different question and
+    # is wrong in exactly the case this check exists for.
+    _passwd_shell(monkeypatch, "/bin/bash")
+    monkeypatch.setenv("SHELL", "/usr/bin/zsh")
+    assert util.login_shell() == "/bin/bash"
+    assert util.login_shell_is_zsh() is False
+
+
+def test_login_shell_is_zsh_matches_by_name_not_by_path(monkeypatch):
+    # A machine can have an apt zsh at /usr/bin/zsh and another earlier on PATH; both count.
+    _passwd_shell(monkeypatch, "/usr/local/bin/zsh")
+    assert util.login_shell_is_zsh() is True
+
+
+def test_login_shell_survives_a_user_with_no_passwd_entry(monkeypatch):
+    # A plain `docker build` sets $HOME and no $USER; getpwnam("") raises rather than returning.
+    monkeypatch.setattr(util, "current_user", lambda: "ghost")
+    monkeypatch.setattr(pwd, "getpwnam", _raise_key_error)
+    assert util.login_shell() == ""
+    assert util.login_shell_is_zsh() is False
