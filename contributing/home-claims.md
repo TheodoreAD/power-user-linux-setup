@@ -148,10 +148,13 @@ Building it turned up five claims nobody had written down, each a real ownership
   vendor documents it** — Claude Code's docs say a `<skill-name>` _entry_ may be a symlink, never
   the directory. Being the outlier is what made Windows look hard, and the fix was to stop doing
   something rather than to port it.
-- **Every skill on this machine is invisible to `deploy.py`.** `deploy._skill_entries` registers
-  only `source = "local"` skills, and this repo deliberately declares none — every skill is authored
-  in `agent-skills` and fetched from its remote by the `skills` CLI. So the whole of
-  `~/.agents/skills/` is declared in `setup.toml` and absent from the deploy registry.
+- **Every skill on this machine is invisible to `deploy.py`, and since 2026-09-07 that is true by
+  construction rather than by circumstance.** It used to hold only because this repo declared no
+  `source = "local"` skill; `deploy._skill_entries` would have registered one if it had. Both that
+  function and `Mechanism.SKILL` are now gone, because the `skills` CLI installs local skills too —
+  and a registry entry for a path nothing writes is worse than no entry, since `deploy.status` would
+  report it MISSING forever with no command able to fix it. The whole of `~/.agents/skills/` is
+  declared in `setup.toml`, written by that CLI, and claimed here as `external`.
 - **The machine tier already exists, at four claims.** The `certs` and `proxy` blocks in
   `~/.zshenv`, the `ssh` block in `~/.ssh/config`, and `overrides.toml`. All four are derived from
   `identity.toml` or hand-written, and all four are genuinely true of this box only — which is
