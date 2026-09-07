@@ -260,7 +260,7 @@ def _undeclared_whole_file_claims() -> Iterator[Claim]:
     with no PyCharm here there are no claims, which is the right answer rather than two rows
     reporting a file absent that was never going to exist.
     """
-    for m in (proxy.UNIT, *ide.managed_files()):
+    for m in (proxy.UNIT, proxy.ENV_MANAGED, *ide.managed_files()):
         yield Claim(
             target=_rel(m.path),
             writer=Writer.WHOLE_FILE_UNDECLARED,

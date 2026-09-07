@@ -466,11 +466,28 @@ def _keyring_round_trip(*, fallback: bool = False) -> tuple[bool, str]:
     return False, reason[-1] if reason else f"exit {proc.returncode}"
 
 
+ENV_MANAGED = deploy.Managed(
+    path=ENV_FILE,
+    package="px-proxy",
+    source="config/pulse-proxy.env",
+    mechanism=deploy.Mechanism.MANAGED_FILE,
+)
+
+
 def _write_env_file() -> None:
-    """Pin the fallback backend for Px's own process, through the file both start paths read."""
-    ENV_FILE.parent.mkdir(parents=True, exist_ok=True)
-    ENV_FILE.write_text(f"PYTHON_KEYRING_BACKEND={_FALLBACK_BACKEND}\n")
-    print(f"[proxy] keyring backend pinned for the daemon in {ENV_FILE}")
+    """Pin the fallback backend for Px's own process, through the file both start paths read.
+
+    Deployed rather than written: this used to be a bare `write_text` of an f-string, so the file
+    had no repo-side source, no manifest entry and no diff — the same gap `_write_unit` documents,
+    in the same feature, missed because one line of generated content does not look like a
+    deployment. It can be static because its content never varied: the backend name is a constant.
+
+    Undeclared in setup.toml for the reason the unit beside it is: every declared destination is one
+    `inv verify.all` requires to exist, and this one is written only where a machine chose
+    `--keyring-fallback`.
+    """
+    if deploy.deploy(ENV_MANAGED) in (deploy.Action.CREATED, deploy.Action.UPDATED):
+        print(f"[proxy] keyring backend pinned for the daemon in {ENV_FILE}")
 
 
 def _keyring_status(c: Context, *, fallback: bool) -> bool:
