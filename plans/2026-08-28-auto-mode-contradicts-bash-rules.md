@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-07
+updated: 2026-09-08
 ---
 
 # Auto mode's Bash note contradicts `~/AGENTS.md`, and it measurably changes behaviour
@@ -39,7 +39,7 @@ sessions that did read and edit files under the note are measured, one of them c
 it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
 the table.
 
-## What the note costs, measured across eight sessions
+## What the note costs, measured across nine sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
@@ -53,7 +53,8 @@ share of its own Bash calls.
 | `ingesta`, 08-31/09-01 |   306 | **announced**  |         **18%** |          **46%** | **57%** |       **30%** |
 | `ingesta`, 09-05/06    |   183 | **announced**  |         **15%** |               5% |     21% |            0% |
 | `invoke-stubs`, 09-06  |   306 | **announced**  |              3% |              27% |     44% |            5% |
-| this repo, 09-07       |   201 | **announced**  |              6% |              23% |     45% |           12% |
+| this repo, 09-07 (a)   |   201 | **announced**  |              6% |              23% |     45% |           12% |
+| this repo, 09-07 (b)   |   270 | **announced**  |          **0%** |           **2%** |  **7%** |            1% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -191,6 +192,33 @@ without re-running anything. Worth recording as the shape this table keeps produ
 pipes its listings freely and its gate rarely, where the headline rate is dominated by calls no
 claim ever rested on.]
 
+**The ninth row is the eighth row's twin, and the pair is the nearest thing to a controlled
+comparison this table will ever get.** Same repo, same day, same rules, same announcement in the
+first message — _"Using Read/Edit/Write for files and `rg` for search despite the auto-mode note —
+per `~/AGENTS.md`"_ — and 270 calls against 201. Every counter moved by a factor of six to twenty:
+file reads 6% to **0%** (zero `sed -n`, one `cat`-view call), `head`/`tail` 23% to **2%**, chaining
+45% to **7%**, heredocs 12% to 1%. Recorded in full as sample 16 of
+`plans/2026-09-02-agents-md-adherence-sample-corpus.md`, where it is the best row that corpus holds.
+
+Two things follow, and they point in opposite directions.
+
+- **It is the first announcing row where the unopposed rules moved too.** Chaining and truncation
+  are rules the note says nothing about, and the previous five announcing rows all left them
+  mid-corpus while the announced half improved or did not. If the announcement were doing the work,
+  this is not the row it would produce.
+- **Which is why it is evidence against the announcement rather than for it.** Holding the
+  announcement, the repo, the day and the instruction set constant leaves task shape as the variable
+  that differs, and the two sessions differed in shape sharply: row (b) was plan writing,
+  clone-and-grep research and long `Edit` runs, all naturally low in chained shell work. **The
+  announcement cannot explain a twenty-fold spread it was present for on both sides.**
+
+That does not retire the narrow claim below — an announcement tracking the rule it names and nothing
+else is still consistent with both rows, since (a) and (b) announced the same thing and (b) is the
+only one that reached 0%. It does mean the table cannot separate the two explanations with any row
+it currently holds, and the row that would is one that **announces and does shell-shaped work**.
+Nothing has supplied one: the shell-shaped session of the same week, sample 14 of the corpus, did
+not announce and came in at 56% chaining and 42% truncation.
+
 ## The note removes tools, and that settles half the question (2026-08-30)
 
 A fifth session, in this repo, under the note from its first system turn. It read the note, decided
@@ -276,6 +304,20 @@ counter-example, and "announcing sessions score worse" has none: the two rows th
 evidence for it were announcing about a rule they then broke, which is a different failure. Worth
 one more announcing row before treating the narrow claim as settled, since a single confirmation of
 a hypothesis built to explain four earlier rows is weak evidence by construction.
+
+**The sixth and seventh occurrences are the two `this repo, 09-07` rows, and together they are worth
+more than either alone.** Row (a) came in at 6% file reads and did not settle anything; row (b), the
+next day's session in the same repo with the same announcement, came in at **0%** — the clean
+confirmation the paragraph above asked for, and the second one the narrow claim has. So the narrow
+claim now stands on two confirmations and still no counter-example.
+
+**But the pair also caps how much any of this can be worth.** They differ twenty-fold on rules the
+announcement never mentioned, with the announcement itself held constant, which means the variable
+that moved those counters is not in this table at all — and nothing rules out its having moved the
+announced counter too. The narrow claim is compatible with the evidence; it is not yet distinguished
+from "task shape explains all of it, announcement included". Distinguishing them needs an announcing
+session doing shell-shaped work, and the request stands unfilled: the only shell-shaped session of
+that week did not announce.
 
 Both of the last two rows were measured after `audit.py`'s heredoc under-count was fixed, so they
 are the only ones in this table whose numbers need no correction; every earlier row here is a floor.
