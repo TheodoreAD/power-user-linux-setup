@@ -288,3 +288,33 @@ one that was not is the one with no output to look at.** That is the same split 
 above predicted, now on four observations rather than one, and it says the fallback `ask`-rule would
 be buying exactly one case in four — the invisible one, which is also the one that has so far cost
 nothing.
+
+## Eighth and ninth, 2026-09-08 — typed by the session merging this plan, twice
+
+The session that absorbed the filed rows above and wrote the table on this page produced
+`rg -rn --stats -c` about twenty minutes after committing it, and `rg -rn --stats -l` roughly ten
+minutes after that. Both were self-caught immediately, announced in the conversation, and re-run
+without `-r`; both re-runs returned the same result, so neither conclusion was affected.
+
+That is the corpus's authoring-and-breaking shape at its shortest interval on record — minutes
+rather than the same day — and this plan is where the interval is smallest, since the trap and the
+text about the trap are the same subject. It is worth writing down here rather than only in the
+corpus, because it costs the plan one of its own claims.
+
+[PITFALL: **"the session's own earlier instance" is a detection aid, not a deterrent, and these two
+separate the roles.** The 2026-09-06 row's second occurrence was caught _because_ the first had
+happened an hour earlier, and this plan has since leaned on that as the thing that saves a repeating
+session. Here the first occurrence was caught, named out loud, and corrected — and the second
+followed anyway, ten minutes later, from a session that had just written the correction. So a prior
+instance in the same session raises the chance of noticing the next one and does nothing at all to
+prevent it. Every mechanism this plan has considered on the reader's side is a detection mechanism;
+nine occurrences in, **not one prevention has been observed from any wording, any authorship, or any
+amount of immediately prior awareness.** That is the strongest argument the `ask`-rule has yet had,
+and it arrived from the plan's own author.]
+
+[UNVERIFIED: whether these two belong in the corpus as a row as well. The session was mid-work when
+they happened and no `audit.py` run at a recorded boundary exists for it, so there are no rates —
+and a row without the instrument, the boundary and the shell is exactly what
+`plans/2026-09-02-agents-md-adherence-sample-corpus.md` resolved on 2026-09-07 to stop accepting.
+Recorded here as occurrences, which need no denominator; if that session is ever harvested properly,
+the row can cite them.]
