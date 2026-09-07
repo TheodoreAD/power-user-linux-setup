@@ -57,29 +57,36 @@ personal-but-homeless.
 
 ## The number this was built to produce
 
-Measured on this machine, 2026-08-30:
+Re-measured on this machine, 2026-09-07 (the 2026-08-30 figures are in brackets):
 
-| writer                  | claims | what it is                                             |
-| ----------------------- | -----: | ------------------------------------------------------ |
-| `install`               |     36 | trees and binaries an installer puts under `~`         |
-| `block`                 |     24 | `util.ensure_block` marker regions                     |
-| `imperative`            |     23 | `gsettings`/`dconf` — no file at any path              |
-| `whole-file`            |     11 | `deploy.py`, from a `setup.toml` declaration           |
-| `symlink`               |      5 | links this repo creates                                |
-| `whole-file-undeclared` |      3 | `deploy.py`, destination decided at run time           |
-| `key`                   |      3 | regex surgery on one key of a file an application owns |
-| `merge`                 |      2 | structured merge into co-owned JSON                    |
-| `generated`             |      1 | composed by a task, with no source to compare against  |
-| `external`              |      1 | `~/.agents/skills/`, installed by the `skills` CLI     |
-| **total**               |    109 |                                                        |
+| writer                  |    claims | what it is                                             |
+| ----------------------- | --------: | ------------------------------------------------------ |
+| `install`               |   42 (36) | trees and binaries an installer puts under `~`         |
+| `block`                 |   25 (24) | `util.ensure_block` marker regions                     |
+| `imperative`            |   23 (23) | `gsettings`/`dconf` — no file at any path              |
+| `whole-file`            |   12 (11) | `deploy.py`, from a `setup.toml` declaration           |
+| `symlink`               |     6 (5) | links this repo creates                                |
+| `whole-file-undeclared` |     4 (3) | `deploy.py`, destination decided at run time           |
+| `key`                   |     3 (3) | regex surgery on one key of a file an application owns |
+| `merge`                 |     3 (2) | structured merge into co-owned JSON                    |
+| `generated`             |     1 (1) | composed by a task, with no source to compare against  |
+| `external`              |     1 (1) | `~/.agents/skills/`, installed by the `skills` CLI     |
+| **total**               | 120 (109) |                                                        |
 
-By tier: 69 `public`, 35 `derived`, 4 `machine`, 1 `secret`; zero `personal`.
+By tier: 74 `public`, 41 `derived`, 4 `machine`, 1 `secret`; zero `personal`. The `secret` count is
+1 rather than 2 because this machine kept a real keyring — the plaintext credential store below is
+claimed only where `--keyring-fallback` was chosen.
 
-**A whole-file-only lifecycle would reach 14 of the 74 non-derived claims — 18%.** That is the
-number `plans/2026-08-29-dotfiles-repo-config-lifecycle.md` step 1 exists to produce, and it is what
-the rest of that plan has to be sized against. (The first measurement, before step 3 folded the
-ad-hoc writers in, was 15 of 74 with only 10 classifiable; the reach barely moved because those
-files were already whole files — what changed is that all 14 now carry a manifest entry and a diff.)
+**A whole-file-only lifecycle would reach 16 of the 79 non-derived claims — 20%** (14 of 74, 18%, in
+August). That is the number `plans/2026-08-29-dotfiles-repo-config-lifecycle.md` step 1 exists to
+produce, and it is what the rest of that plan has to be sized against. (The first measurement,
+before step 3 folded the ad-hoc writers in, was 15 of 74 with only 10 classifiable; the reach barely
+moved because those files were already whole files — what changed is that all of them now carry a
+manifest entry and a diff.)
+
+The eleven claims added since August are what a re-measurement is for: none came from a change to
+this registry, all from features landing beside it. A number in a doc that nothing re-derives goes
+stale silently, which is the same failure this registry exists to prevent one directory up.
 
 `derived` is excluded from that denominator deliberately: an installed Go toolchain or an `nvm`
 directory can never be the subject of a config lifecycle, because its content is upstream's and
@@ -130,6 +137,22 @@ and the never-destroy-what-we-can't-prove-we-wrote rule — or is correctly outs
   by a wizard from answers, so there is no source to diff it against, and it is the one claim on the
   surface whose content must reach no repo at all. It gets its own writer value, `generated`.
 
+**A sixth turned up on 2026-09-07, in the same feature as the systemd unit.**
+`~/.config/power-user-linux-setup/proxy.env` — the file that pins the keyring backend for the daemon
+— was a bare `write_text` of an f-string: no repo-side source, no manifest entry, no diff, no
+redeploy path. Exactly the shape `_write_unit` had before this work and describes in its own
+docstring, missed because one line of generated content does not look like a deployment. It is now
+`config/pulse-proxy.env`, deployed through the one writer, and undeclared for the same reason the
+unit beside it is. Its content could be static because the backend name never varied — and a unit
+test now asserts the deployed file names the same backend `tasks/proxy.py` probes with, since a
+drift there is silent in precisely the way the file-path drift already tested for is: px finds no
+credential and answers 407 as though the password were wrong.
+
+The lesson worth keeping is the detection one. Neither `deploy.status` nor this registry could have
+found it — a path nothing claims is a path nothing looks for. It was found by asking what the
+_feature_ writes into the home directory and comparing that list against the registry, which is a
+question to ask of each new feature rather than of the registry.
+
 ### Why two of those are _not_ declared in `setup.toml`
 
 This is the constraint the fold-in ran into, and it is the reason the `whole-file-undeclared` writer
@@ -155,8 +178,26 @@ reason to run, while `verify.all` at the end of that same phase demanded it exis
 to `deploy.apply_config_files` and `tools.install` now calls it after every installer, which is what
 makes declaring `~/.p10k.zsh` safe.
 
+## The one credential file, and why it is claimed by a different writer
+
+`~/.local/share/python_keyring/keyring_pass.cfg` holds a base64-encoded corporate proxy password in
+a 0600 file, readable by anything running as this user. PULSE never writes it — the `keyring`
+library does, inside Px's process and inside PULSE's one-shot credential writer — so its writer is
+`external`, the same value the `skills` CLI's output carries, and its authority is `user` rather
+than `pulse`. Its tier is `secret`, the only one besides `identity.toml`.
+
+It is claimed **only when `proxy.env` exists**, which is the record that `--keyring-fallback` was
+actually chosen. That follows the PyCharm rule above: a row for a file that was never going to exist
+reads as something missing rather than as something not applicable, and on every machine that kept a
+real keyring this file is the latter.
+
 ## Deliberately not claimed
 
+- **`~/.local/state/power-user-linux-setup/windows-root-extras.pem`** — the Windows root export.
+  Derived output, regenerated from the Windows certificate store on every
+  `certs.check`/`install --from-windows`, inside a directory the registry already claims. Claiming
+  it would be claiming a cache, and the same argument as "the contents of an installed tree"
+  applies: the destination is the claim.
 - **Skill-written config** — `~/.config/plan-docs/config.toml`,
   `~/.config/tasks-md/workspaces.json`, `~/.beads-planning`. This repo declares the _skill_; the
   skill's own config is `agent-skills`' business, and hard-coding another repo's paths here would
