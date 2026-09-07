@@ -146,14 +146,25 @@ For the unavoidable quick **read-only** cross-repo command:
   mutating one (`git -C x commit`/`push`) matches no rule and prompts — treat that prompt as a stop,
   not a checkpoint to click through: by the rule above there is almost nothing legitimate on the far
   side of it.
-- `inv` is the exception: invoke finds `tasks.py` by walking up from cwd, so no flag redirects it,
-  and its tasks shell out to bare tool names (`pytest`, `ruff`, `basedpyright`) that resolve from
-  PATH rather than from the `inv` that launched them — an absolute `<repo>/.venv/bin/inv` fixes
-  neither. `cd <repo> && PATH="<repo>/.venv/bin:$PATH" inv <task>`, chained in one call, is the
-  working form: the `cd` supplies task discovery, the PATH prefix supplies that repo's `inv` and
-  every tool underneath it. Expect a prompt — a leading env assignment matches no rule's prefix. A
-  repo with no `inv` in its own venv still falls back to `~/.local/bin`, where which of two uv tools
-  owns the name varies.
+- `inv` is the exception, and **for one reason rather than the two it looks like.** Discovery does
+  redirect: `inv -r <repo> <task>` points invoke's search at another checkout and runs the task from
+  anywhere — verified 2026-09-08, including a task that reads its own repo's files. What does not
+  redirect is what the task then shells out to: bare tool names (`pytest`, `ruff`, `basedpyright`)
+  resolve from PATH rather than from the `inv` that launched them, so an absolute
+  `<repo>/.venv/bin/inv` fixes nothing either. **So pick by what the task needs.** A task that
+  drives the machine or reads its own repo (`deploy.status`, `ai.install-skills`, `verify.all`)
+  takes `inv -r <repo> <task>` and needs no `cd`. A task that runs the target repo's own toolchain
+  (`quality.precommit`, `test.unit`, anything under `docs`) needs
+  `cd <repo> && PATH="<repo>/.venv/bin:$PATH" inv <task>`, chained in one call — the `cd` for cwd,
+  which the linters read, and the PATH prefix for the tools. Expect a prompt either way: a leading
+  env assignment matches no rule's prefix, and a global option before the verb changes the prefix
+  the same way `git -C x push` does. A repo with no `inv` in its own venv still falls back to
+  `~/.local/bin`, where which of two uv tools owns the name varies.
+
+  `INVOKE_TASKS_SEARCH_ROOT` is not the shortcut it looks like — the config key is real and the
+  value is read after the collection has already loaded, so it fails exactly as if it were unset.
+  And never set `tasks.search_root` in `~/.invoke.yaml`: it replaces cwd as the start for **every**
+  repo on the machine, so one project gains a shortcut and all the others load the wrong tasks.
 - Never a bare `pytest`/`inv` against another repo: PATH stays the primary project's
   direnv-activated `.venv/bin` (direnv hooks don't fire in non-interactive shells), so the command
   silently runs the wrong repo's interpreter, dependencies, or tasks — and looks like it passed.
