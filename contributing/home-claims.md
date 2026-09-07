@@ -124,16 +124,17 @@ Building it turned up five claims nobody had written down, each a real ownership
   so `ensure_mirror` records every one in the deploy manifest and `verify` compares content rather
   than looking for a link. `deploy.lookup()` still resolves through a link, which now serves only a
   machine that has not re-deployed since the change.
-- **`symlink` survives for exactly one claim**, `~/.claude/skills` → `~/.agents/skills`, and it is a
-  decision rather than an oversight. That directory's contents are written by the `skills` CLI,
-  whose installer resolves symlinks in parent directories specifically so that
-  `~/.claude/skills/<skill>` and `~/.agents/skills/<skill>` are recognised as the same file — the
-  comment in `src/installer.ts` names this arrangement — and which at global scope writes only the
-  canonical `~/.agents/skills/<skill>`. As a copy, a skill installed by `skills add` would not reach
-  Claude Code until the next `inv ai.install-skills`, and the CLI would start creating the per-agent
-  duplicate it currently skips. Windows gets the same shape from a junction, which is what that CLI
-  itself creates there and which needs no privilege — junctions being directory-only is exactly why
-  they could not save the instruction files.
+- **`symlink` survives for exactly one claim**, `~/.claude/skills` → `~/.agents/skills`, and it is
+  the one piece of this wiring still under question. While it exists it is load-bearing: the
+  `skills` CLI resolves symlinks in parent directories, so `~/.claude/skills/<skill>` and
+  `~/.agents/skills/<skill>` are recognised as the same file and nothing per-skill gets created. But
+  `claude-code` is **not** one of that CLI's universal agents — its `skillsDir` is `.claude/skills`,
+  not `.agents/skills` — so without the directory link the CLI writes that per-skill entry itself,
+  as a junction on Windows with a copy fallback. A whole-directory symlink is the one shape Windows
+  cannot make without Developer Mode, and it is not a shape any vendor documents: Claude Code's docs
+  say a `<skill-name>` _entry_ may be a symlink, never the directory.
+  `plans/2026-09-07-agents-md-and-skills-on-native-windows.md` carries the version gap that has to
+  be measured before this changes.
 - **Every skill on this machine is invisible to `deploy.py`.** `deploy._skill_entries` registers
   only `source = "local"` skills, and this repo deliberately declares none — every skill is authored
   in `agent-skills` and fetched from its remote by the `skills` CLI. So the whole of

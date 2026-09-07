@@ -172,9 +172,40 @@ back to copying with a Windows-specific message when that fails. It links per sk
 `<base>/<skill-name>` — never the whole directory. PULSE's own `_ensure_agents_skills`, which links
 the whole `~/.claude/skills` directory, is therefore the one piece with no Windows story.
 
-[DECISION: **`~/.claude/skills` stays a symlink, and does not become a copy with the instruction
-files.** Settled 2026-09-07 from the CLI's source rather than by preference. Two findings, both in
-`src/installer.ts`:
+[PITFALL: **the decision below is wrong on its central fact, and is reopened. Read this first.**
+Written 2026-09-07 and corrected the same day when the user asked how the symlink would work on
+Windows — which it does not, and the answer given for keeping it does not survive its own source.
+
+- **`claude-code` is not a universal agent.** `src/agents.ts:152-156` gives it
+  `skillsDir: '.claude/skills'`, and `isUniversalAgent` is exactly
+  `agents[type].skillsDir === '.agents/skills'` (`agents.ts:879-881`). So the early return quoted
+  below — which applies only to universal agents — **never applies to Claude Code**. It applies to
+  `github-copilot`, whose `skillsDir` really is `.agents/skills`.
+- **So the CLI already writes Claude Code's per-skill entry itself.** For a non-universal agent at
+  global scope, `installer.ts:391` calls `createSymlink(canonicalDir, agentDir)` with
+  `agentDir = ~/.claude/skills/<skill>`, using a **junction** on Windows and falling back to copying
+  the skill directory when that fails (lines 393-405). No privilege needed on either platform.
+- **Which makes PULSE's whole-directory link redundant for anything the CLI installs, and it is the
+  one shape that cannot be made on Windows.** A directory symlink needs Developer Mode or
+  Administrator; a junction would do, but nothing in this repo creates one and there is no public
+  Python API to. "Windows keeps the same shape from a junction" was written below as though settled
+  and was a proposal that had not been checked.
+- **The community shape is per-skill, not per-directory.** Claude Code's own docs say a
+  `<skill-name>` _entry_ may be a symlink; nothing documents `~/.claude/skills` itself being one.
+  The link is our invention, and being the outlier is what made Windows hard.
+
+What is genuinely unresolved is a version gap, not a design question. `setup.toml` records a
+2026-08-27 measurement that the CLI "announces that symlink and does not create it", which is why
+`_ensure_agents_skills` exists. That was measured against the installed build, still **v1.5.10**;
+the source above is **v1.5.24**. The directory link also _masks_ the per-skill behaviour — with the
+parent symlinked, `isAlreadyLinked`'s parent resolution (lines 214-222) makes the two paths
+identical and the CLI correctly skips — so the current arrangement cannot observe what the CLI would
+do without it. Updating the CLI and re-measuring with the link removed is the experiment; until then
+neither the old note nor this correction is proven against what actually runs here.]
+
+[DECISION: ~~**`~/.claude/skills` stays a symlink, and does not become a copy with the instruction
+files.**~~ **Superseded by the pitfall above** — kept because its second finding is still true and
+still matters. Written 2026-09-07 from the CLI's source. Two findings, both in `src/installer.ts`:
 
 - **The CLI is written _for_ this exact arrangement.** Lines 214–222 resolve symlinks in _parent_
   directories before deciding whether a skill is already installed, with the comment naming our
@@ -191,10 +222,11 @@ CLI's duplicate detection would stop recognising the two paths as one, so it wou
 the per-agent copy it currently skips. A copy there buys Windows uniformity and costs the Linux
 workflow plus the tool's own model of the machine.
 
-Windows keeps the same shape by a different mechanism: a junction, which is what the CLI itself
-creates there per skill and needs no privilege. The instruction files could not take that route
-because junctions are directories only — the skills directory is the one destination in this repo
-where it applies.]
+That second finding stands and is the one to keep: **while the directory link exists, it is load-
+bearing**, because the CLI's parent-symlink resolution then treats `~/.claude/skills/<skill>` and
+`~/.agents/skills/<skill>` as the same file and skips creating anything. Removing the link is
+therefore safe only together with a CLI that does create the per-skill entry — which is what the
+pitfall above says has to be measured rather than assumed.]
 
 [UNVERIFIED: **whether Claude Code follows a junction for a skill entry.** Its docs say a
 `<skill-name>` entry "can be a symlink to a directory elsewhere on disk", and its binary classifies
