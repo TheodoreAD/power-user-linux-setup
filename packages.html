@@ -2290,7 +2290,7 @@
   
 
 
-<h1 id="package-catalog">Package catalog</h1>
+<h1 id="package-catalog">Package catalog<a class="headerlink" href="#package-catalog" title="Permanent link">&para;</a></h1>
 <p>Everything a full <code>inv setup</code> installs on a workstation, in one table. This is the answer to &ldquo;what
 do I actually get&rdquo; — <a href="configuration.html">How it works</a> is the answer to &ldquo;how&rdquo;, and
 <a href="apt_packages.html">apt_packages.md</a> explains the install <em>methods</em> the <code>Method</code> column names.</p>
@@ -2421,6 +2421,12 @@ grant).</p>
 <td><code>curl</code></td>
 <td>Command-line tool for transferring data with URLs — HTTP, FTP, and more. wget is also available without installing (ubuntu-standard default) for simple downloads.</td>
 <td><code>network</code>, <code>cli</code></td>
+<td><code>apt</code></td>
+</tr>
+<tr>
+<td><code>dbus-user-session</code></td>
+<td>Per-user D-Bus session bus (systemd user unit) — one bus at /run/user/<uid>/bus shared by every session in the distro, so a secret store unlocked once is visible to an IDE-started server too</td>
+<td><code>system</code>, <code>shell</code></td>
 <td><code>apt</code></td>
 </tr>
 <tr>
@@ -2608,6 +2614,12 @@ grant).</p>
 <td>gext — CLI tool for installing, enabling, and updating GNOME Shell extensions from extensions.gnome.org.</td>
 <td><code>gnome</code>, <code>desktop</code>, <code>gui</code></td>
 <td><code>uv-tool</code></td>
+</tr>
+<tr>
+<td><code>gnome-keyring</code></td>
+<td>Secret Service provider — the store inv proxy.install writes the proxy credential into, and docker&rsquo;s credential helper reads registry passwords from</td>
+<td><code>system</code>, <code>shell</code></td>
+<td><code>apt</code></td>
 </tr>
 <tr>
 <td><code>go</code></td>
@@ -2919,7 +2931,7 @@ grant).</p>
 </table>
 <!-- /PULSE::package-catalog -->
 
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="apt_packages.html">Install methods</a> — what each value in the <code>Method</code> column does</li>
 <li><a href="configuration.html">How it works</a> — how tags decide which of these a machine gets</li>

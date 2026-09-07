@@ -1725,6 +1725,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#finding-the-certificate-in-the-first-place" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Finding the certificate in the first place
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding the certificate in the first place">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-verification-was-switched-off-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where verification was switched off instead
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#format-detection" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2318,6 +2346,34 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#finding-the-certificate-in-the-first-place" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Finding the certificate in the first place
+      </span>
+    </span>
+  </a>
+  
+    <nav class="md-nav" aria-label="Finding the certificate in the first place">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#where-verification-was-switched-off-instead" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Where verification was switched off instead
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#format-detection" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2474,7 +2530,7 @@
   
 
 
-<h1 id="corporate-ca-bundle">Corporate CA bundle</h1>
+<h1 id="corporate-ca-bundle">Corporate CA bundle<a class="headerlink" href="#corporate-ca-bundle" title="Permanent link">&para;</a></h1>
 <p>Many corporate networks run a TLS-inspecting proxy (Zscaler, Netskope, Palo Alto, etc.) that
 terminates HTTPS and re-signs it with its own root CA. Every TLS client on the machine needs to
 trust that CA, or verification fails everywhere (<code>SSL: CERTIFICATE_VERIFY_FAILED</code>,
@@ -2484,13 +2540,13 @@ Installing it into the OS trust store alone isn&rsquo;t enough — several commo
 bundle instead of reading the OS one: Python (<code>certifi</code>), Node/npm, and the AWS CLI.</p>
 <p><code>inv certs.*</code> installs an IT-provided bundle into the OS trust store via <code>update-ca-certificates</code>,
 then points those tools at the resulting merged bundle.</p>
-<h2 id="quick-start">Quick start</h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>certs.check<span class="w">      </span><span class="c1"># read-only — bundle/env-var/Java status, changes nothing</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>certs.install<span class="w">     </span><span class="c1"># installs into the OS trust store, exports env vars for python/node/awscli</span>
 </span></code></pre></div>
 <p>On a personal machine with no corporate CA configured, both exit cleanly with &ldquo;nothing to configure&rdquo;
 — expected, not a failure.</p>
-<h2 id="config">Config</h2>
+<h2 id="config">Config<a class="headerlink" href="#config" title="Permanent link">&para;</a></h2>
 <p>Add a <code>[certs]</code> section to <code>~/.config/power-user-linux-setup/identity.toml</code> (see
 <code>config/identity.toml.example</code>):</p>
 <div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[certs]</span>
@@ -2498,7 +2554,7 @@ then points those tools at the resulting merged bundle.</p>
 </span></code></pre></div>
 <p>A root + separate intermediate can be given as a list instead. <code>--bundle=path</code> on either task
 overrides this for a one-off run without editing the file.</p>
-<h2 id="what-gets-installed">What gets installed</h2>
+<h2 id="what-gets-installed">What gets installed<a class="headerlink" href="#what-gets-installed" title="Permanent link">&para;</a></h2>
 <ol>
 <li>Each configured file is format-detected and normalized to PEM (see below), then written to
    <code>/usr/local/share/ca-certificates/pulse-corporate.crt</code>.</li>
@@ -2510,7 +2566,56 @@ overrides this for a one-off run without editing the file.</p>
 </ol>
 <p>Re-running <code>inv certs.install</code> is idempotent: it compares the desired bundle text against what&rsquo;s
 already installed and skips <code>update-ca-certificates</code> entirely when nothing changed.</p>
-<h2 id="format-detection">Format detection</h2>
+<h2 id="finding-the-certificate-in-the-first-place">Finding the certificate in the first place<a class="headerlink" href="#finding-the-certificate-in-the-first-place" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>certs.discover<span class="w">             </span><span class="c1"># read-only — what this machine already uses, and what it turned off</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>certs.discover<span class="w"> </span>--install<span class="w">   </span><span class="c1"># asks about each one, installs what you accept</span>
+</span></code></pre></div>
+<p><code>--from-windows</code> above answers &ldquo;which roots exist on the Windows side that this distro doesn&rsquo;t
+trust&rdquo;. <code>discover</code> answers a better question — <strong>which certificate is this machine already using, or
+being told to use</strong> — and most of its routes name an exact file:</p>
+<ul>
+<li><strong>Environment variables</strong> naming a bundle: <code>SSL_CERT_FILE</code>, <code>REQUESTS_CA_BUNDLE</code>,
+  <code>NODE_EXTRA_CA_CERTS</code>, <code>GIT_SSL_CAINFO</code>, <code>AWS_CA_BUNDLE</code>, <code>CARGO_HTTP_CAINFO</code>,
+  <code>-Djavax.net.ssl.trustStore</code> inside <code>JAVA_TOOL_OPTIONS</code>, and the rest — read from the live shell,
+  <code>/etc/environment</code> and the shell rc files. Somebody has already decided which file is the
+  corporate CA; this just puts it where the OS trust store can see it.</li>
+<li><strong>The Windows side&rsquo;s own environment</strong>, under WSL, read out of the registry
+  (<code>HKLM\...\Session Manager\Environment</code> and <code>HKCU\Environment</code>). This is where IT sets those same
+  variables machine-wide, nothing carries them across the boundary, and the value is an exact path
+  reachable through <code>/mnt</code>. <code>WSLENV</code> is checked in the same pass: a certificate variable shared
+  without the <code>/p</code> flag arrives holding a <code>C:\</code> path, so every Linux tool reading it looks
+  configured and fails to open the file.</li>
+<li><strong>Config files</strong>: npm&rsquo;s <code>cafile</code>, pip&rsquo;s <code>cert</code>, git&rsquo;s <code>http.sslCAInfo</code>, curl&rsquo;s <code>cacert</code>, conda&rsquo;s
+  <code>ssl_verify</code>, gradle&rsquo;s <code>systemProp.javax.net.ssl.trustStore</code>.</li>
+<li><strong>Vendor install directories</strong>, where a vendor writes a readable file at a documented path —
+  Netskope&rsquo;s <code>C:\ProgramData\netskope\stagent\data\nscacert*.pem</code>. Zscaler&rsquo;s client connector
+  injects into the Windows store and documents no fixed file, so for that one the store and the live
+  issuer are the routes; hunting for a file is not a search that failed.</li>
+<li><strong>The Windows certificate store</strong>, with roots <strong>deployed by group policy or enterprise enrolment
+  flagged</strong> — read from the registry, where each subkey name is the certificate&rsquo;s thumbprint. That
+  is IT deployment read directly, rather than inferred from what the public CA set lacks, and it is
+  the ranking <code>--from-windows</code> on its own cannot produce. (The registry rather than
+  <code>certutil -grouppolicy -store Root</code> because certutil&rsquo;s output is localized — a parser for it would
+  work on an English machine and quietly find nothing on a German one.)</li>
+<li><strong>The live connection</strong>: the issuer that actually signed the certificate served to this machine,
+  and whether it verified. An issuer that <em>doesn&rsquo;t</em> verify names the exact root to install.</li>
+</ul>
+<p>Everything found is reported with where it was found; a value naming a file that doesn&rsquo;t exist is
+reported as a stale pointer rather than silently dropped. <code>--install</code> then asks about each
+certificate <strong>individually and defaults to no</strong> — trusting a root CA means trusting whoever holds
+its private key for every TLS connection this machine makes, so it is a decision to put in front of
+someone, not a step to complete. A non-interactive run installs nothing.</p>
+<h3 id="where-verification-was-switched-off-instead">Where verification was switched off instead<a class="headerlink" href="#where-verification-was-switched-off-instead" title="Permanent link">&para;</a></h3>
+<p><code>discover</code> also reports the opposite of a certificate: <code>GIT_SSL_NO_VERIFY</code>,
+<code>NODE_TLS_REJECT_UNAUTHORIZED=0</code>, <code>PYTHONHTTPSVERIFY=0</code>, npm&rsquo;s <code>strict-ssl=false</code>, pip&rsquo;s
+<code>trusted-host</code>, conda&rsquo;s <code>ssl_verify: false</code>, curl&rsquo;s <code>--insecure</code>, <code>git config http.sslVerify false</code>.</p>
+<p>Each one is somebody who hit exactly this problem and turned the check off rather than installing
+the CA — a permanent, silent downgrade that no error message will mention again. Each is reported
+with the command that undoes it, and <strong>the order matters: install the CA first, undo the bypass
+second.</strong> Removing it while the trust store still can&rsquo;t verify breaks the tool that was working a
+moment ago, and the natural next move is to put the bypass back for good. Nothing removes them
+automatically; a bypass may also exist for an unrelated host this CA doesn&rsquo;t cover.</p>
+<h2 id="format-detection">Format detection<a class="headerlink" href="#format-detection" title="Permanent link">&para;</a></h2>
 <p>The bundle&rsquo;s file extension is not trusted — <code>.crt</code>/<code>.cer</code>/<code>.pem</code> are filename conventions, not a
 format guarantee, and IT-issued files show up as ASCII PEM, raw binary DER, or a Windows PKCS#7
 <code>.p7b</code>/<code>.p7c</code> (common from AD Certificate Services) with no reliable way to tell from the name
@@ -2527,7 +2632,7 @@ a deliberate departure from <code>update-ca-certificates</code>&rsquo;s own beha
 can&rsquo;t parse (just a warning), so a plain reinstall attempt with a bad file would otherwise &ldquo;succeed&rdquo;
 while TLS verification keeps failing with no clear signal why. Inspect a rejected file manually with
 <code>file &lt;path&gt;</code> or <code>openssl asn1parse -in &lt;path&gt;</code>.</p>
-<h2 id="java">Java</h2>
+<h2 id="java">Java<a class="headerlink" href="#java" title="Permanent link">&para;</a></h2>
 <p>No JDK is installed or managed by this repo — Scala tooling uses Coursier&rsquo;s own private JVM instead
 (see <a href="scala.html">scala.md</a>), and nothing else here needs one. The <code>cacerts</code> import step is purely
 conditional on <code>keytool</code> already being on <code>PATH</code>: a no-op today, and it activates automatically
@@ -2536,17 +2641,32 @@ without any further changes if a JDK is added independently later.</p>
 under aliases <code>pulse-corporate-0</code>, <code>pulse-corporate-1</code>, etc. (idempotent — checked via
 <code>keytool
 -list</code> first, <code>storepass</code> is the Java default <code>changeit</code>).</p>
-<h2 id="wsl">WSL</h2>
+<h2 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h2>
 <p>WSL2&rsquo;s trust store is fully independent of Windows&rsquo; own. IT populating the Windows certificate store
 via Group Policy/Intune does <strong>not</strong> carry over into WSL — <code>update-ca-certificates</code> still has to run
 inside the WSL guest, regardless of NAT vs. mirrored networking mode (this is an OS-trust-store
-issue, not a networking one). If the bundle needs to be pulled off the Windows side first, that&rsquo;s a
-one-time manual copy (e.g. via <code>/mnt/c</code>) — this repo has no automation for reading the Windows
-certificate store or shelling out to <code>certutil.exe</code>/<code>powershell.exe</code>; usually simplest to just ask
-IT for the raw file directly.</p>
-<h2 id="uninstall-rotation">Uninstall / rotation</h2>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/share/ca-certificates/pulse-corporate.crt
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>sudo<span class="w"> </span>update-ca-certificates
+issue, not a networking one).</p>
+<p><code>--from-windows</code> bridges that without a manual file copy:</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>certs.check<span class="w"> </span>--from-windows<span class="w">      </span><span class="c1"># read-only — names the roots this distro doesn&#39;t trust yet</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>certs.install<span class="w"> </span>--from-windows<span class="w">    </span><span class="c1"># installs them, alongside anything else configured</span>
+</span></code></pre></div>
+<p>It reads <code>Cert:\LocalMachine\Root</code> and <code>Cert:\CurrentUser\Root</code> through WSL interop
+(<code>powershell.exe</code>, so <code>/etc/wsl.conf</code>&rsquo;s <code>[interop] enabled</code> has to be on — <code>inv wsl.check</code> reports
+that) and <strong>installs only the roots this distro doesn&rsquo;t already trust</strong>. The Windows Root store
+carries ~50 public CAs alongside the corporate one; trusting all of them would add trust Ubuntu&rsquo;s
+own <code>ca-certificates</code> deliberately doesn&rsquo;t carry, so the public set is subtracted by SHA-256
+fingerprint rather than filtered by name. Every remaining root is printed by subject before anything
+is installed — read that list; it is the whole review step.</p>
+<p>The filtered export is kept at <code>~/.local/state/power-user-linux-setup/windows-root-extras.pem</code>,
+which is also what makes a re-run idempotent. <code>--from-windows</code> composes with <code>--bundle</code> and with a
+configured <code>[certs] bundle</code> rather than replacing either, so a machine with both an IT-provided file
+and a Windows-only root installs both. Outside WSL the flag refuses rather than guessing.</p>
+<p>Asking IT for the raw file and pointing <code>--bundle</code> at it is still the most direct route when that&rsquo;s
+available; this exists for the common case where the root is already on the Windows side and nobody
+has a copy to hand out.</p>
+<h2 id="uninstall-rotation">Uninstall / rotation<a class="headerlink" href="#uninstall-rotation" title="Permanent link">&para;</a></h2>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>rm<span class="w"> </span>/usr/local/share/ca-certificates/pulse-corporate.crt
+</span><span id="__span-4-2"><a id="__codelineno-4-2" name="__codelineno-4-2" href="#__codelineno-4-2"></a>sudo<span class="w"> </span>update-ca-certificates
 </span></code></pre></div>
 <p>Don&rsquo;t pass <code>--fresh</code> — it rebuilds the trust store from scratch and would also drop any <em>other</em>
 locally-added certs, not just this one. Neither task prunes stale config on its own, so also remove
@@ -2558,20 +2678,25 @@ by hand:</p>
   "$JAVA_HOME/lib/security/cacerts" -storepass changeit</code>
   (repeat per alias).</li>
 </ul>
-<h2 id="genuine-limitations">Genuine limitations</h2>
+<h2 id="genuine-limitations">Genuine limitations<a class="headerlink" href="#genuine-limitations" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>Real Windows-issued PKCS#7 bundles are untested</strong> — only locally-generated test fixtures were
   used to build and verify the four detection branches.</li>
+<li><strong><code>--from-windows</code> has never run against a real Windows certificate store.</strong> The PowerShell
+  payload, the PEM parsing, the fingerprint diff and the ordering are unit-tested against captured
+  fixtures and a real (locally-generated) certificate; what nobody here can test is that
+  <code>Get-ChildItem Cert:\...</code> on a domain-joined machine emits what those fixtures assume. Run
+  <code>inv certs.check --from-windows</code> first and read the subjects it prints before installing.</li>
 <li><strong>The Java <code>cacerts</code> step is untested against a real JDK</strong> — no JDK is present anywhere in this
   environment (see Java above). Reviewed-and-defensive, not proven.</li>
 <li><strong><code>update-ca-certificates --fresh</code> interaction with other manually-added local certs is out of
   scope by design</strong> — hence the &ldquo;no <code>--fresh</code>&rdquo; uninstall instructions above.</li>
 <li><strong>Docker registry mirrors, daemon proxy config, and per-registry <code>certs.d</code> are out of scope here</strong>
-  — a corporate registry behind the same TLS-inspecting proxy needs its own separate setup; see
-  <a href="docker.html#corporate-registriesmirrors-not-automated-yet">docker.md</a> for the mechanism (tracked as
-  a follow-up, not covered by this task).</li>
+  — docker doesn&rsquo;t read the OS trust store, so a corporate registry behind the same TLS-inspecting
+  proxy needs the certificate written per registry. <code>inv docker.configure-corporate</code> does that, from
+  this same <code>[certs]</code> bundle; see <a href="docker.html#corporate-networks">docker.md</a>.</li>
 </ul>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="corporate-proxy.html">corporate-proxy.md</a> — the separate concern of authenticating <em>through</em> a
   corporate HTTP(S) proxy (Px daemon). This page is about trusting a TLS-inspection root CA; proxy

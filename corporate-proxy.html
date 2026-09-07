@@ -1695,6 +1695,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Credential handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-there-is-no-keyring" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        When there is no keyring
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -1702,6 +1719,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         WSL
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaching-the-daemon-from-a-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reaching the daemon from a container
       </span>
     </span>
   </a>
@@ -2293,6 +2321,23 @@
     </span>
   </a>
   
+    <nav class="md-nav" aria-label="Credential handling">
+      <ul class="md-nav__list">
+        
+          <li class="md-nav__item">
+  <a href="#when-there-is-no-keyring" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        When there is no keyring
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+      </ul>
+    </nav>
+  
 </li>
       
         <li class="md-nav__item">
@@ -2300,6 +2345,17 @@
     <span class="md-ellipsis">
       <span class="md-typeset">
         WSL
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#reaching-the-daemon-from-a-container" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Reaching the daemon from a container
       </span>
     </span>
   </a>
@@ -2430,7 +2486,7 @@
   
 
 
-<h1 id="corporate-proxy">Corporate proxy</h1>
+<h1 id="corporate-proxy">Corporate proxy<a class="headerlink" href="#corporate-proxy" title="Permanent link">&para;</a></h1>
 <p>Many corporate networks require an authenticating HTTP(S) proxy for external traffic while routing
 internal artifact mirrors (apt, npm, PyPI, etc.) <em>directly</em> — a blanket system-wide proxy setting
 breaks the second half of that. The common ways people solve the first half are both bad: embedding
@@ -2443,7 +2499,7 @@ slow and fragile.</p>
 (<a href="https://github.com/genotrance/px">Px</a>) holds the real credential once, apps point at
 <code>127.0.0.1:3128</code> — nothing sensitive in that URL — and the daemon does the authentication handshake
 with the real corporate proxy on their behalf.</p>
-<h2 id="quick-start">Quick start</h2>
+<h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>proxy.check<span class="w">      </span><span class="c1"># read-only — detects a candidate proxy and its auth scheme, changes nothing</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>proxy.install<span class="w">     </span><span class="c1"># full flow: capture a credential if needed, start the daemon, verify it works</span>
 </span></code></pre></div>
@@ -2452,7 +2508,7 @@ exit cleanly with &ldquo;nothing to configure&rdquo; — this is the expected, n
 <p><code>inv proxy.fix</code> is the non-interactive half of <code>install</code> (installs/configures/restarts the daemon,
 never prompts for a credential) — useful for re-applying config after a <code>setup.toml</code> change, or as a
 build step where prompting isn&rsquo;t possible.</p>
-<h2 id="how-detection-works">How detection works</h2>
+<h2 id="how-detection-works">How detection works<a class="headerlink" href="#how-detection-works" title="Permanent link">&para;</a></h2>
 <p><code>proxy.check</code>/<code>proxy.install --proxy=auto</code> (the default) look for a candidate address in this order,
 and print which source they used:</p>
 <ol>
@@ -2475,7 +2531,7 @@ several at once). No credentials are sent for this probe; it&rsquo;s read-only.<
 <code>--proxy
 host:port</code> overrides auto-discovery on any of the three tasks, e.g. to check a specific
 address manually.</p>
-<h2 id="credential-handling">Credential handling</h2>
+<h2 id="credential-handling">Credential handling<a class="headerlink" href="#credential-handling" title="Permanent link">&para;</a></h2>
 <p><code>proxy.install</code> only prompts for a credential when the probe requires one and no better option is
 available:</p>
 <ul>
@@ -2502,10 +2558,32 @@ which opens <code>/dev/tty</code> directly and raises <code>EOFError</code> with
 piping input nor a <code>PX_PASSWORD</code> env var on that specific invocation changed that. Writing the
 keyring entry directly, then letting Px read it back at its own startup, is what was actually
 confirmed working end to end.</p>
+<h3 id="when-there-is-no-keyring">When there is no keyring<a class="headerlink" href="#when-there-is-no-keyring" title="Permanent link">&para;</a></h3>
+<p>Px reads the credential back out of the keyring at <strong>its own</strong> startup, so a machine with no Secret
+Service provider — a minimal WSL2 distro, a from-scratch container — cannot hold one at all.
+<code>proxy.check</code> reports which backend answers, and <code>proxy.install</code> probes it with a throwaway
+store/read/delete <strong>before</strong> asking for a password, rather than failing after one has been typed.</p>
+<p>Two ways out, and the first is better:</p>
+<ul>
+<li><strong>Give the distro a keyring</strong>: <code>sudo apt install gnome-keyring dbus-user-session</code>, then start a
+  user D-Bus session. The credential stays in a locked store, which is the whole premise of the
+  feature.</li>
+<li><strong><code>inv proxy.install --keyring-fallback</code></strong> — stores the password base64-encoded in a 0600 file
+  (<code>~/.local/share/python_keyring/keyring_pass.cfg</code>, <code>keyrings.alt</code>&rsquo;s plaintext backend). Anything
+  running as this user can read it: the same exposure as <code>PULSE_PROXY_PASSWORD_FILE</code>, still better
+  than a credential embedded in <code>http_proxy</code>, and a real downgrade from a locked keyring. It is a
+  flag, never an automatic fallback, and the task says what it costs before writing anything.</li>
+</ul>
+<p>The backend is selected <strong>per process</strong>, through <code>PYTHON_KEYRING_BACKEND</code> in
+<code>~/.config/power-user-linux-setup/proxy.env</code>, which the systemd unit pulls in with
+<code>EnvironmentFile=-</code> and the <code>pulse-proxy-start</code> fallback script sources. That file holds the backend
+name and no secret. The alternative — <code>~/.config/python_keyring/keyringrc.cfg</code> — is global to every
+<code>keyring</code> consumer on the machine and would silently downgrade unrelated tools, including after a
+real keyring became available.</p>
 <p><code>px.ini</code> itself (<code>~/.config/px/px.ini</code>) is never hand-authored by PULSE — it&rsquo;s written entirely by
 Px&rsquo;s own <code>--save</code>, and PULSE only checks whether a non-empty <code>username =</code> line is present as a
 &ldquo;credential likely cached&rdquo; signal.</p>
-<h2 id="wsl">WSL</h2>
+<h2 id="wsl">WSL<a class="headerlink" href="#wsl" title="Permanent link">&para;</a></h2>
 <p>WSL doesn&rsquo;t get its own local daemon. If an unauthenticated proxy is already reachable at the
 Windows host&rsquo;s IP (<code>ip route show default</code>&rsquo;s gateway) on port 3128, <code>proxy.check</code>/<code>proxy.install</code>
 report that directly and configure WSL&rsquo;s side to point at it — no second daemon, no duplicated
@@ -2517,27 +2595,53 @@ install extras/px</code>, run as a per-user Scheduled Task or
 Startup-folder entry (not a SYSTEM service — it needs to run <em>as the user</em> so Windows SSPI can
 transparently pass through the logged- in session&rsquo;s identity for NTLM/Kerberos proxies, no stored
 password needed on that side at all).</p>
-<h2 id="dev-container">Dev container</h2>
+<h2 id="reaching-the-daemon-from-a-container">Reaching the daemon from a container<a class="headerlink" href="#reaching-the-daemon-from-a-container" title="Permanent link">&para;</a></h2>
+<p>By default the daemon answers <strong>this machine&rsquo;s loopback and nothing else</strong> — Px&rsquo;s own defaults are
+<code>listen=127.0.0.1</code>, <code>gateway=0</code>, <code>allow=*.*.*.*</code>. That is the right default and it is why
+<code>http_proxy=http://127.0.0.1:3128</code> is safe to export: no other host can use your corporate
+credential.</p>
+<p>A process <strong>inside a container</strong> resolves <code>127.0.0.1</code> to the container&rsquo;s own loopback, so it never
+reaches the daemon. Pointing containers at the bridge gateway (<code>172.17.0.1:3128</code>) is the fix, and it
+needs the daemon to accept a client that isn&rsquo;t loopback:</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="k">[proxy]</span>
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="n">gateway</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="kc">true</span>
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="n">allow</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;172.17.0.0/16&quot;</span><span class="w"> </span><span class="c1"># docker&#39;s default bridge, and nothing else</span>
+</span></code></pre></div>
+<p>Then <code>inv proxy.fix</code> rewrites <code>px.ini</code> and restarts the daemon.</p>
+<p><strong><code>allow</code> is not optional here, and PULSE refuses <code>gateway</code> without it.</strong> <code>gateway=1</code> overrides
+<code>listen</code>, so the daemon binds every interface — and Px&rsquo;s stock <code>allow</code> accepts every client that can
+route to the machine. The daemon is deliberately unauthenticated to its clients (that is what keeps
+the credential in one place), so the two together publish authenticated egress through <em>your</em>
+corporate account to the whole LAN, and to whatever a VPN attaches you to. A value that narrows
+nothing (<code>*</code>, <code>*.*.*.*</code>, <code>0.0.0.0/0</code>) is refused for the same reason.</p>
+<p><code>inv proxy.check</code> reports which of the two postures is in effect, and
+<code>inv docker.configure-corporate</code> says so too when <code>container_proxy</code> is set while the daemon is still
+loopback-only — configuration that reads correctly and cannot work is exactly the failure this
+pairing produces.</p>
+<h2 id="dev-container">Dev container<a class="headerlink" href="#dev-container" title="Permanent link">&para;</a></h2>
 <p>No systemd <code>--user</code> unit is assumed available. <code>inv proxy.fix</code>/<code>install</code> fall back to a plain
 wrapper script (<code>~/.local/bin/pulse-proxy-start</code>, backgrounds <code>px</code> with a <code>pgrep</code> guard against
 double-starting) instead. Real limitation, not papered over: no crash auto-restart, and nothing
 persists across a container rebuild — re-run <code>inv proxy.install</code> (or <code>fix</code>, if a credential is
 already cached) each time the container restarts, e.g. from <code>postCreateCommand</code>.</p>
-<h2 id="genuine-limitations">Genuine limitations</h2>
+<h2 id="genuine-limitations">Genuine limitations<a class="headerlink" href="#genuine-limitations" title="Permanent link">&para;</a></h2>
 <ul>
 <li><strong>NTLM and Kerberos/Negotiate paths are not verified against real infra</strong> — there&rsquo;s no corporate
   proxy available to test against. The Basic-auth path <em>is</em> verified end to end against a disposable
   local Squid instance with <code>auth_param basic</code>. Treat the NTLM/Kerberos code paths as
   reviewed-and-defensive, not proven.</li>
 <li><strong>Secret Service availability varies</strong> — <code>keyring</code>&rsquo;s SecretService backend needs a running
-  provider (<code>gnome-keyring-daemon</code> on most desktop distros). A minimal WSL2 install or a
-  from-scratch dev container may not have one; <code>keyring.set_password</code>/Px&rsquo;s own lookup will fail
-  loudly rather than silently in that case, but there&rsquo;s no PULSE-side fallback secret store today.</li>
+  provider (<code>gnome-keyring-daemon</code> on most desktop distros), and a minimal WSL2 install or a
+  from-scratch dev container may not have one. That is now detected before a password is asked for,
+  with <code>--keyring-fallback</code> as the documented way out — see
+  <a href="#when-there-is-no-keyring">When there is no keyring</a>. The probe and both backends were exercised
+  locally; what remains unverified is Px&rsquo;s own read of the fallback store on a machine that actually
+  lacks a Secret Service, since this one has one.</li>
 <li><strong><code>Proxy-Authenticate</code> header shape</strong> — the parser handles both a repeated header per scheme and a
   single comma-joined header (RFC 7235 permits either), but which form any given real corporate
   proxy actually sends hasn&rsquo;t been observed firsthand.</li>
 </ul>
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="certs.html">certs.md</a> — the separate concern of trusting a TLS-inspection root CA. Proxy auth (this
   page) and CA trust are unrelated; a network can have either, both, or neither.</li>

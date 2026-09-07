@@ -1389,10 +1389,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#corporate-registriesmirrors-not-automated-yet" class="md-nav__link">
+  <a href="#corporate-networks" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Corporate registries/mirrors (not automated yet)
+        Corporate networks
       </span>
     </span>
   </a>
@@ -2296,10 +2296,10 @@
 </li>
       
         <li class="md-nav__item">
-  <a href="#corporate-registriesmirrors-not-automated-yet" class="md-nav__link">
+  <a href="#corporate-networks" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        Corporate registries/mirrors (not automated yet)
+        Corporate networks
       </span>
     </span>
   </a>
@@ -2404,22 +2404,22 @@
   
 
 
-<h1 id="docker">Docker</h1>
+<h1 id="docker">Docker<a class="headerlink" href="#docker" title="Permanent link">&para;</a></h1>
 <p>Installed via apt-repo by <code>inv apt.install-repos</code> (or <code>inv setup</code>). Installs: <code>docker-ce</code>,
 <code>docker-ce-cli</code>, <code>containerd.io</code>, <code>docker-buildx-plugin</code>, <code>docker-compose-plugin</code>.</p>
 <p><code>inv docker.configure</code> (part of <code>inv setup</code>) adds the current user to the <code>docker</code> group and
 configures the daemon.</p>
-<h2 id="post-install">Post-install</h2>
+<h2 id="post-install">Post-install<a class="headerlink" href="#post-install" title="Permanent link">&para;</a></h2>
 <p>Group membership takes effect in new login sessions. Open a new terminal after running
 <code>inv docker.configure</code> — no full logout needed.</p>
 <p>Verify:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>docker<span class="w"> </span>run<span class="w"> </span>hello-world
 </span></code></pre></div>
-<h2 id="compose">Compose</h2>
+<h2 id="compose">Compose<a class="headerlink" href="#compose" title="Permanent link">&para;</a></h2>
 <p>Docker Compose v1 (<code>docker-compose</code>) is deprecated and unmaintained. Use the v2 plugin:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>docker<span class="w"> </span>compose<span class="w"> </span>up
 </span></code></pre></div>
-<h2 id="daemon-config">Daemon config</h2>
+<h2 id="daemon-config">Daemon config<a class="headerlink" href="#daemon-config" title="Permanent link">&para;</a></h2>
 <p><code>overlay2</code> storage driver and <code>systemd</code> cgroup driver are the defaults on Ubuntu 24.04 — no changes
 needed for those.</p>
 <p>Log limits and DNS are configured by <code>inv docker.configure</code> (also runs as part of <code>inv setup</code>):</p>
@@ -2444,7 +2444,7 @@ log space (3 × 50 MB). Per-container overrides work via <code>--log-opt</code> 
 docker-compose.</p>
 <p><strong>DNS:</strong> optional but makes containers use Cloudflare, matching <code>inv system.configure-dns</code>. Without
 it, Docker falls back to <code>8.8.8.8</code> automatically. See <a href="networking.html">networking.md</a>.</p>
-<h2 id="troubleshooting">Troubleshooting</h2>
+<h2 id="troubleshooting">Troubleshooting<a class="headerlink" href="#troubleshooting" title="Permanent link">&para;</a></h2>
 <p><strong>Daemon masked</strong> (<code>Loaded: masked</code>): <code>inv docker.configure</code> detects and fixes this automatically.
 To fix manually:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>sudo<span class="w"> </span>systemctl<span class="w"> </span>unmask<span class="w"> </span>docker
@@ -2453,30 +2453,49 @@ To fix manually:</p>
 <p><strong>Socket permission error</strong> (temporary workaround if the group change hasn&rsquo;t propagated):</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-5-1"><a id="__codelineno-5-1" name="__codelineno-5-1" href="#__codelineno-5-1"></a>sudo<span class="w"> </span>chown<span class="w"> </span><span class="nv">$USER</span>:docker<span class="w"> </span>/var/run/docker.sock
 </span></code></pre></div>
-<h2 id="corporate-registriesmirrors-not-automated-yet">Corporate registries/mirrors (not automated yet)</h2>
-<p>Not covered by <code>inv docker.configure</code> or <code>inv certs.install</code> — tracked as a follow-up, documented
-here so the mechanism doesn&rsquo;t have to be re-derived. Three distinct, easily-conflated pieces if this
-network has a corporate registry mirror and/or TLS-inspecting proxy:</p>
+<h2 id="corporate-networks">Corporate networks<a class="headerlink" href="#corporate-networks" title="Permanent link">&para;</a></h2>
+<p><code>inv docker.configure</code> handles neither a registry mirror nor a proxy nor a corporate CA —
+<code>inv docker.configure-corporate</code> does, driven entirely by an optional <code>[docker]</code> table in
+<code>~/.config/power-user-linux-setup/identity.toml</code> (see <code>config/identity.toml.example</code>):</p>
+<div class="language-toml highlight"><pre><span></span><code><span id="__span-6-1"><a id="__codelineno-6-1" name="__codelineno-6-1" href="#__codelineno-6-1"></a><span class="k">[docker]</span>
+</span><span id="__span-6-2"><a id="__codelineno-6-2" name="__codelineno-6-2" href="#__codelineno-6-2"></a><span class="n">registry_mirrors</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;https://registry.corp.example.com&quot;</span><span class="p">]</span>
+</span><span id="__span-6-3"><a id="__codelineno-6-3" name="__codelineno-6-3" href="#__codelineno-6-3"></a><span class="n">proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;http://127.0.0.1:3128&quot;</span><span class="w"> </span><span class="c1"># dockerd&#39;s own outbound proxy</span>
+</span><span id="__span-6-4"><a id="__codelineno-6-4" name="__codelineno-6-4" href="#__codelineno-6-4"></a><span class="n">container_proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;http://172.17.0.1:3128&quot;</span><span class="w"> </span><span class="c1"># what processes inside containers see</span>
+</span><span id="__span-6-5"><a id="__codelineno-6-5" name="__codelineno-6-5" href="#__codelineno-6-5"></a><span class="n">no_proxy</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="s2">&quot;localhost,127.0.0.1,*.corp.example.com&quot;</span>
+</span><span id="__span-6-6"><a id="__codelineno-6-6" name="__codelineno-6-6" href="#__codelineno-6-6"></a><span class="n">registries</span><span class="w"> </span><span class="o">=</span><span class="w"> </span><span class="p">[</span><span class="s2">&quot;registry.corp.example.com:5000&quot;</span><span class="p">]</span>
+</span></code></pre></div>
+<p>Each key is independent and a key you leave out is simply not configured; with no <code>[docker]</code> table
+at all the task exits cleanly having done nothing. Four mechanisms, easy to conflate and not
+interchangeable:</p>
 <ul>
-<li><strong>Registry pull-through mirror</strong> (Docker Hub only) — <code>registry-mirrors</code> in
-  <code>/etc/docker/daemon.json</code>, same merge mechanism <code>inv docker.configure</code> already uses for
-  <code>log-driver</code>/<code>dns</code> above.</li>
-<li><strong>Daemon&rsquo;s own outbound proxy</strong> — dockerd is a systemd service and does <em>not</em> inherit the shell&rsquo;s
-  <code>http_proxy</code>/<code>https_proxy</code>. Needs its own systemd drop-in:
-  <code>/etc/systemd/system/docker.service.d/http-proxy.conf</code> with <code>Environment="HTTPS_PROXY=..."</code>, then
-  <code>systemctl daemon-reload &amp;&amp; systemctl restart docker</code>.</li>
-<li><strong>Containers&rsquo; own proxy</strong> (so processes <em>inside</em> containers see it too) — not a daemon setting,
-  goes in <code>~/.docker/config.json</code>&rsquo;s <code>proxies</code> key.</li>
+<li><strong>Registry pull-through mirror</strong> (Docker Hub only) — <code>registry-mirrors</code> merged into
+  <code>/etc/docker/daemon.json</code>, the same merge <code>inv docker.configure</code> uses for <code>log-driver</code>/<code>dns</code>.</li>
+<li><strong>The daemon&rsquo;s own outbound proxy</strong> — dockerd is a systemd service and does <em>not</em> inherit the
+  shell&rsquo;s <code>http_proxy</code>/<code>https_proxy</code>, so this is a drop-in at
+  <code>/etc/systemd/system/docker.service.d/http-proxy.conf</code>, followed by <code>daemon-reload</code> and a restart.</li>
+<li><strong>Containers&rsquo; own proxy</strong> — <code>proxies.default</code> in <code>~/.docker/config.json</code>, injected as environment
+  variables when a container is created. <strong>Not the same address as the daemon&rsquo;s</strong>: dockerd runs in
+  the host&rsquo;s network namespace and reaches a local Px at <code>127.0.0.1:3128</code>, while <code>127.0.0.1</code> inside
+  a container is that container&rsquo;s own loopback. This one has to be the bridge gateway
+  (<code>172.17.0.1</code>), and Px answers there only once <code>[proxy] gateway</code>/<code>allow</code> are set — see
+  <a href="corporate-proxy.html#reaching-the-daemon-from-a-container">corporate-proxy.md</a>, which is also where
+  the reason <code>allow</code> is mandatory lives. <code>docker.configure-corporate</code> warns when this key is set
+  while the daemon is still loopback-only. That is why the two are separate keys rather than one
+  value used twice.</li>
+<li><strong>Per-registry CA</strong> — docker doesn&rsquo;t read the OS trust store the way <code>curl</code> does, so
+  <code>inv certs.install</code> alone does nothing for a registry pull. Each host in <code>registries</code> gets the
+  same bundle written to <code>/etc/docker/certs.d/&lt;host&gt;/ca.crt</code>, resolved from the <code>[certs]</code> table so
+  the two tasks can&rsquo;t disagree about which file the corporate CA is.</li>
 </ul>
-<p><strong>Cert-wise</strong>, this is separate from <code>inv certs.install</code> — Docker doesn&rsquo;t read the OS trust store
-the way <code>curl</code> does. A corporate registry behind the same TLS-inspecting proxy (see
-<a href="certs.html">certs.md</a>) needs its own per-registry CA file:
-<code>/etc/docker/certs.d/&lt;registry-host&gt;/ca.crt</code>.</p>
-<p>Also relevant if this is being configured under WSL2 with Docker Desktop&rsquo;s WSL integration:
-<code>docker.configure</code> already detects that case (<code>docker</code> CLI present, no local <code>dockerd</code> —
-<code>tasks/docker.py</code>) and skips, since the daemon isn&rsquo;t running inside the WSL guest at all. None of
-the above applies there either — it goes in Docker Desktop&rsquo;s Windows-side settings instead.</p>
-<h2 id="see-also">See also</h2>
+<p>Under WSL2 with Docker Desktop&rsquo;s WSL integration, the task detects that there is no local <code>dockerd</code>
+and stops: none of the above applies in that distro, and the settings belong in Docker Desktop&rsquo;s
+Windows-side UI instead.</p>
+<p><strong>Not verified against a running daemon</strong> — the writers are unit-tested, but restarting a real
+dockerd isn&rsquo;t something this repo&rsquo;s test run does. Run
+<code>PULSE_DRY_RUN=1 inv
+docker.configure-corporate</code> first; it reports what each piece would do and
+changes nothing.</p>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="kubernetes.html">Kubernetes</a> — the cluster tooling built on top of it</li>
 <li><a href="dev-container.html">Dev container</a> — running this whole setup inside a container</li>
