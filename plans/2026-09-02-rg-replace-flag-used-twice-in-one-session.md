@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-05
+updated: 2026-09-07
 ---
 
 # `rg -r`: 32 defective calls a week, and never once the bare flag
@@ -163,7 +163,31 @@ pattern change and part ~10h of real growth. The finding does not turn on the ab
 turns on the bundle distribution, which no commit here touched, and on there being **no bare `-r`**
 — but the next reading has to come from the same instrument as its baseline.]
 
-## Open questions
+## Two more, 2026-09-06 — the first session measured after the rewording, and it did not hold
+
+A session in this repo, 174 Bash calls, produced **`-rln` once and `-rn` once**, three hours apart.
+It is the first sample taken after the 2026-09-05 clause landed, so it is the first evidence about
+the lever that plan chose — and it is negative. The session had the new wording in context, quoted
+its "delete the `r`" framing out loud when it caught itself the first time, and typed the bundle
+again anyway.
+
+Both were caught by the same accident as all three earlier ones, not by the new detection signature:
+
+- `rg -rln --no-messages -i 'proxy|cacert|ca-cert|certificate' <repo>` — every match came back with
+  the searched terms replaced by `ln`, so the file list read `from tasks.ln import (` and
+  `def test_parse_ln_authenticate…`. Conspicuous, because the corpus being searched was about
+  proxies and the word had vanished from its own results.
+- `rg -rn 'anchor' tasks/docs.py 2>/dev/null | head -20` — returned nothing, which is
+  indistinguishable from "no such function", and the session only re-ran it because it had made the
+  same mistake an hour earlier in the same session.
+
+[UNVERIFIED: **this is one session, not the week's re-count the plan asks for** — the corrected rate
+against `2026-09-05-pipefail-live-rescored.json` is still owed and is what decides the lever. What
+this row establishes is narrower and still useful: the rewording does not prevent the bundle in a
+session that has read it, which is the hypothesis the fallback `ask`-rule rests on. Two instances
+also make the second bullet's point sharper than the plan could state before — the second occurrence
+was caught **because the first had happened in the same session**, which is not a detection method
+that generalises to the session that only does it once.]
 
 [NEEDS CLARIFICATION: **which mechanism, if the wording attempt above does not move the rate.**
 Three candidates, and the choice is a real trade-off rather than an obvious pick:

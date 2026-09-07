@@ -1,11 +1,11 @@
 ---
 status: idea
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Twelve sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Thirteen sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
@@ -75,6 +75,7 @@ expire around 2026-10-02:
 | 10 | `power-user-linux-setup` | `bc30285c-145c-494d-b2d1-be6b37cd37f1.jsonl` | `2026-09-04T10:01:32.556Z`  |
 | 11 | `ingesta`                | `6291d9d1-b8ed-4826-9967-9ae30f70bebf.jsonl` | `2026-09-05T10:21:37Z`      |
 | 12 | `ingesta`                | `88f860c9…` (short form only)                | `2026-09-05T21:03+03:00`    |
+| 13 | `power-user-linux-setup` | `3ad94750-3d54-410e-9c1b-9ad44ffc7e14.jsonl` | `2026-09-06T00:41:15.258Z`  |
 
 Rows 6, 7 and 11 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
@@ -98,6 +99,7 @@ needed to reproduce the figures.
 | 10 | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h      |         23% |           20% |               1% | 8/11  |
 | 11 | `ingesta`                |   228 | domain safety rules, one repo  |         24% |            7% |               0% | 9/11  |
 | 12 | `ingesta`                |   183 | announced the rule, ~6h        |      **5%** |            8% |               0% | —     |
+| 13 | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h     |         17% |            1% |               0% | 10/13 |
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
 was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
@@ -486,7 +488,41 @@ this session used `git -C` seven times and every one targeted `~/plans` or `agen
 genuinely other repos, and it never `cd`-ed at all. A `git-C-own-repo` of 0% in a session that used
 `git -C` at all is exactly the shape that deserves the check.]
 
-## What the corpus has settled
+### Sample 13 — `power-user-linux-setup`, 174 calls, the lowest `exit-masked` the corpus has
+
+`audit.py --session 3ad94750 --until <harvest boundary> --compare 2026-09-06-zero-on-count.json`,
+**10/13**. A thirteen-hour session: three corporate cert/proxy features, seventeen commits, five
+plan files touched.
+
+| tag                       | rate | vs baseline       |
+| ------------------------- | ---: | ----------------- |
+| `chain`                   |  35% | −12pp, OK         |
+| **`head/tail`**           |  17% | −11pp, OK         |
+| `search\|head`            |  15% | —                 |
+| `git-mutating-in-chain`   |   5% | −1pp, OK          |
+| **`echo-exit`**           |    7 | **MISS**          |
+| **`rg-replace-bundle`**   |    2 | **MISS**          |
+| `chain5`                  |   4% | —                 |
+| **`cd-own-repo`**         |    1 | **MISS**          |
+| `exit-masked`             |   1% | 0 gate, 2 listing |
+| `heredoc`, `cat-view`     |   1% | −10pp / −0pp, OK  |
+| `sed-n`, `git-C-own-repo` |   0% | OK                |
+
+**`exit-masked` at 1% is the corpus low, and the gate/listing split is why it needs no re-run.**
+Both masked calls were listings (`which px && px --version | head -3`, a `python -c` parse probe);
+the gate was run plain every time, so the session's three green claims rest on real exit codes. That
+is the first row in this corpus where the split answered the question outright rather than by
+re-running the gate — worth recording because the previous nine rows all had to.
+
+**`sed-n` at 0% against sample 11's record 16%**, on a session of comparable length in the same
+week. Whatever produces that rate, it is not constant across sessions or repos.
+
+**The three misses are all rules with no ambiguity and no competing instruction**, which is the
+corpus's recurring shape rather than a new finding: `echo "exit=$?"` appended seven times to
+commands whose exit code the harness already reports; the `rg -r` bundle twice (recorded in
+`plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md`, where it is the first sample after
+that rule's rewording); and one `cd <own repo> && …`. None of them was under auto mode, and the
+session was in the repo that _owns_ these rules — the fourth instance of authoring-and-breaking.
 
 **`head/tail` is worse in prose sessions than in code sessions.** Seven samples: 24% code, then 45%,
 38%, 55%, 35% and 36% on sessions that spent most of their calls reading files to quote from and
