@@ -118,7 +118,7 @@ def _resolv_conf_symlinked_to_stub() -> bool:
     missing it has nothing to point at and DNS keeps failing (curl error 6) until the symlink is
     restored.
     """
-    return _RESOLV_CONF.is_symlink() and os.path.realpath(_RESOLV_CONF) == os.path.realpath(_STUB_RESOLV_CONF)
+    return _RESOLV_CONF.is_symlink() and _RESOLV_CONF.resolve() == _STUB_RESOLV_CONF.resolve()
 
 
 def _dns_resolves(c: Context) -> bool:
