@@ -1,13 +1,15 @@
 """Unit tests for tasks/ai.py's skill-installation logic: the pure helpers
-(_parse_frontmatter_description, _local_skill_plan, _remote_skill_label, _remote_skill_prompt),
-plus the confirm/-y behavior of _install_local_skill/_install_remote_skill/_install_declared_skills
-and the skills task itself — exercised with tmp_path fixtures and monkeypatched ui.ask/c.run/
-util.load_config rather than any real system call, same shape as tests/unit/test_phases.py. See
-tests/README.md.
+(_parse_frontmatter_description, _skill_source, _remote_skill_label, _remote_skill_prompt), plus
+the confirm/-y behavior of _install_skill/_install_declared_skills and the skills task itself —
+exercised with tmp_path fixtures and monkeypatched ui.ask/c.run/util.load_config rather than any
+real system call, same shape as tests/unit/test_phases.py. See tests/README.md.
+
+The copier that used to install `source = "local"` skills was removed 2026-09-07 along with its
+eleven tests: the `skills` CLI takes a local path directly, so both sources now go through
+_install_skill and the only thing that differs is the argument.
 """
 
 import json
-import shutil
 from pathlib import Path
 
 import pytest
@@ -27,9 +29,9 @@ def _reset_dry_run():
 
 @pytest.fixture(autouse=True)
 def _isolated_deploy_manifest(tmp_path, monkeypatch):
-    """_install_local_skill writes through tasks/deploy.py, which records into the deploy manifest
-    — never the real one under ~/.local/state, and never with PULSE_ASSUME_YES leaking in from
-    the environment the suite runs under."""
+    """Nothing here writes through tasks/deploy.py any more, but the statusline and permissions
+    helpers below still do — never the real manifest under ~/.local/state, and never with
+    PULSE_ASSUME_YES leaking in from the environment the suite runs under."""
     monkeypatch.setattr(deploy, "_MANIFEST", tmp_path / "state" / "deployed.json")
     monkeypatch.setattr(util, "ASSUME_YES", False)
 
@@ -42,7 +44,7 @@ def _fail_if_asked(message):
 
 
 class _FakeContext(Context):
-    """A Context that records the shell commands _install_remote_skill would have run, never
+    """A Context that records the shell commands _install_skill would have run, never
     executing anything. A real subclass (not a duck-typed stand-in) so it satisfies the
     `c: Context` annotation the helpers declare; invoke's own MockContext would raise on any
     command it wasn't pre-loaded with, and the commands are what these tests assert on."""
@@ -103,27 +105,6 @@ def test_skill_frontmatter_description_missing_file(tmp_path):
 
 
 # ---------------------------------------------------------------------------
-# _local_skill_plan — pure decision table
-# ---------------------------------------------------------------------------
-
-
-@pytest.mark.parametrize(
-    ("present", "ours", "state", "expected"),
-    [
-        (False, False, deploy.State.ABSENT, "install"),
-        (True, False, deploy.State.UNKNOWN, "foreign"),
-        (True, False, deploy.State.CLEAN, "foreign"),  # foreign wins even if a digest happened to match
-        (True, True, deploy.State.STALE, "update"),
-        (True, True, deploy.State.UNKNOWN, "update"),  # ours by marker, no manifest entry yet
-        (True, True, deploy.State.DIRTY, "overwrite"),
-        (True, True, deploy.State.CLEAN, "up_to_date"),
-    ],
-)
-def test_local_skill_plan(present, ours, state, expected):
-    assert ai._local_skill_plan(present=present, ours=ours, state=state) == expected
-
-
-# ---------------------------------------------------------------------------
 # _remote_skill_label / _remote_skill_prompt — pure string building
 # ---------------------------------------------------------------------------
 
@@ -144,11 +125,6 @@ def test_remote_skill_prompt_no_description():
     assert ai._remote_skill_prompt("x from y", None) == "Install x from y?"
 
 
-# ---------------------------------------------------------------------------
-# _install_local_skill — confirm/-y behavior against a real tmp_path tree
-# ---------------------------------------------------------------------------
-
-
 def _make_src_skill(repo_root: Path, rel_path: str, *, description: str = "desc") -> Path:
     src = repo_root / rel_path
     src.mkdir(parents=True)
@@ -156,201 +132,35 @@ def _make_src_skill(repo_root: Path, rel_path: str, *, description: str = "desc"
     return src
 
 
-def test_install_local_skill_asks_before_first_install(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo", description="Do the thing.")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-
-    asked = {}
-
-    def fake_ask(question, default=True):
-        asked["question"] = question
-        return True
-
-    monkeypatch.setattr(ui, "ask", fake_ask)
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert "Install skill 'foo'?" in asked["question"]
-    assert "Do the thing." in asked["question"]
-    assert (base / ".agents" / "skills" / "foo" / "SKILL.md").exists()
+# ---------------------------------------------------------------------------
+# _skill_source — what actually gets handed to `skills add`
+# ---------------------------------------------------------------------------
 
 
-def test_install_local_skill_declining_prompt_skips_install(tmp_path, monkeypatch, capsys):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert not (base / ".agents" / "skills" / "foo").exists()
-    assert "skipped (declined)" in capsys.readouterr().out
+def test_skill_source_returns_a_remote_entrys_repo_untouched():
+    assert ai._skill_source({"source": "npx", "repo": "owner/repo"}, label="t") == "owner/repo"
 
 
-def test_install_local_skill_raises_when_copy_doesnt_match_source(tmp_path, monkeypatch):
-    # The exact gap this check exists to catch: copytree "succeeds" (no exception) but what
-    # actually landed on disk doesn't match the source — simulated via a real digest mismatch
-    # (corrupting one file post-copy) rather than mocking _dir_digest, so the comparison itself is
-    # exercised for real.
-    repo_root = tmp_path / "repo"
-    src = _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
-    base = tmp_path / "home"
+def test_skill_source_makes_a_local_path_absolute(tmp_path, monkeypatch):
+    """The `skills` CLI decides local-versus-remote by shape: only an absolute path, `./`, `../`,
+    `.` or `..` counts as local, and everything else is parsed as GitHub shorthand. A declared
+    `skills/foo` handed over as-is would be fetched from the *GitHub repo* `skills/foo` — someone
+    else's code, over the network, under a name that reads as local in setup.toml."""
+    monkeypatch.setattr(ai, "_REPO_ROOT", tmp_path)
 
-    real_copytree = shutil.copytree
+    resolved = ai._skill_source({"source": "local", "path": "skills/foo"}, label="t")
 
-    def corrupting_copytree(s, d, *args, **kwargs):
-        result = real_copytree(s, d, *args, **kwargs)
-        (Path(d) / "SKILL.md").write_text("corrupted during copy")
-        return result
-
-    monkeypatch.setattr(shutil, "copytree", corrupting_copytree)
-
-    with pytest.raises(RuntimeError, match="doesn't match"):
-        ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert src.exists()  # source untouched by the corruption
+    assert resolved == str(tmp_path / "skills" / "foo")
+    assert Path(resolved).is_absolute()
 
 
-def test_install_local_skill_records_the_copy_in_the_deploy_manifest(tmp_path, monkeypatch):
-    # Without this, `inv deploy.status`/`deploy.all` reported every skill as "not deployed by
-    # PULSE" — the marker said whose it was, but nothing said what PULSE had written.
-    repo_root = tmp_path / "repo"
-    src = _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-
-    ai._install_local_skill(base, "skills/foo", label="pkg", yes=True)
-
-    entry = deploy.load_manifest()[str(base / ".agents" / "skills" / "foo")]
-    assert entry["package"] == "pkg"
-    assert entry["source"] == "skills/foo"
-    assert entry["mechanism"] == "skill"
-    assert entry["digest"] == deploy.dir_digest(src)
-
-
-def test_install_local_skill_yes_skips_prompt(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    monkeypatch.setattr(ui, "ask", _fail_if_asked("yes=True must never prompt"))
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
-
-    assert (base / ".agents" / "skills" / "foo" / "SKILL.md").exists()
-
-
-def test_install_local_skill_update_uses_update_verb(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=True)  # first install, quiet
-    # change the source so the next run sees it as stale, not up to date
-    (repo_root / "skills" / "foo" / "SKILL.md").write_text('---\nname: foo\ndescription: "changed"\n---\nbody\n')
-
-    asked = {}
-
-    def fake_ask(question, default=True):
-        asked["question"] = question
-        return True
-
-    monkeypatch.setattr(ui, "ask", fake_ask)
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert asked["question"].startswith("Update skill 'foo'?")
-
-
-def test_install_local_skill_already_up_to_date_never_prompts(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
-    ai._install_local_skill(base, "skills/foo", label="test", yes=True)  # first install
-
-    monkeypatch.setattr(ui, "ask", _fail_if_asked("an unchanged, up-to-date skill must never prompt"))
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-
-def test_install_local_skill_edited_copy_asks_before_overwriting_and_defaults_to_no(tmp_path, monkeypatch):
-    # A skill PULSE installed, then edited under ~/.agents/skills/ — the content exists only there.
-    # The prompt has to say so and default to keeping it; declining leaves the edit in place.
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
-    deployed_md = base / ".agents" / "skills" / "foo" / "SKILL.md"
-    deployed_md.write_text("edited at the destination\n")
-
-    asked = {}
-
-    def fake_ask(question, default=True):
-        asked["question"], asked["default"] = question, default
-        return default
-
-    monkeypatch.setattr(ui, "ask", fake_ask)
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert asked["question"].startswith("Overwrite skill 'foo'?")
-    assert asked["default"] is False
-    assert deployed_md.read_text() == "edited at the destination\n"
-
-
-def test_install_local_skill_yes_overwrites_an_edited_copy_without_a_second_prompt(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
-    deployed_md = base / ".agents" / "skills" / "foo" / "SKILL.md"
-    deployed_md.write_text("edited at the destination\n")
-    monkeypatch.setattr(ui, "ask", _fail_if_asked("yes=True must never prompt"))
-    monkeypatch.setattr(util, "confirm", _fail_if_asked("deploy() must not ask again after this task's own prompt"))
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=True)
-
-    assert "edited at the destination" not in deployed_md.read_text()
-
-
-def test_install_local_skill_foreign_content_never_prompts_and_is_untouched(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    dest = base / ".agents" / "skills" / "foo"
-    dest.mkdir(parents=True)
-    (dest / "unrelated.txt").write_text("someone else's content")
-    monkeypatch.setattr(ui, "ask", _fail_if_asked("foreign content must never prompt"))
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert (dest / "unrelated.txt").read_text() == "someone else's content"
-
-
-def test_install_local_skill_dry_run_never_prompts_or_writes(tmp_path, monkeypatch):
-    repo_root = tmp_path / "repo"
-    _make_src_skill(repo_root, "skills/foo")
-    monkeypatch.setattr(deploy, "_REPO_ROOT", repo_root)
-    base = tmp_path / "home"
-    monkeypatch.setattr(ui, "ask", _fail_if_asked("dry run must never prompt"))
-    util.DRY_RUN = True
-
-    ai._install_local_skill(base, "skills/foo", label="test", yes=False)
-
-    assert not (base / ".agents" / "skills" / "foo").exists()
+def test_skill_source_raises_when_a_local_entry_declares_no_path():
+    with pytest.raises(Exception, match="path"):
+        ai._skill_source({"source": "local"}, label="t")
 
 
 # ---------------------------------------------------------------------------
-# _install_remote_skill — confirm/-y behavior with a fake invoke Context
+# _install_skill — confirm/-y behavior with a fake invoke Context
 # ---------------------------------------------------------------------------
 
 
@@ -363,7 +173,7 @@ def _skills_cli_on_path(monkeypatch):
     monkeypatch.setattr(ai.util, "command_exists", lambda name: name == "skills")
 
 
-def test_install_remote_skill_reaches_the_cli_through_nvm_when_it_is_not_on_path(monkeypatch):
+def test_install_skill_reaches_the_cli_through_nvm_when_it_is_not_on_path(monkeypatch):
     """The ordinary first-run case: nvm has just installed `skills` globally, and nothing in this
     non-interactive process has sourced nvm.sh, so a bare call would exit 127."""
     c = _FakeContext()
@@ -371,19 +181,19 @@ def test_install_remote_skill_reaches_the_cli_through_nvm_when_it_is_not_on_path
     monkeypatch.setattr(ai.node, "nvm_command", lambda command: f"bash -c 'nvm && {command}'")
     monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
 
-    ai._install_remote_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+    ai._install_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
 
     assert c.commands == ["bash -c 'nvm && skills add owner/repo --global --yes --agent claude-code --skill '*''"]
 
 
-def test_install_remote_skill_skips_when_the_cli_exists_nowhere(monkeypatch, capsys):
+def test_install_skill_skips_when_the_cli_exists_nowhere(monkeypatch, capsys):
     """Not a crash: a bare `skills` call exited 127 and took a whole unattended container build
     down with it."""
     c = _FakeContext()
     monkeypatch.setattr(ai.util, "command_exists", lambda name: False)
     monkeypatch.setattr(ai.node, "nvm_command", lambda command: None)
 
-    ai._install_remote_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+    ai._install_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
 
     assert c.commands == []
     # ui.warn word-wraps, so match on words that survive a line break rather than a phrase.
@@ -392,7 +202,7 @@ def test_install_remote_skill_skips_when_the_cli_exists_nowhere(monkeypatch, cap
     assert "inv node.install" in printed
 
 
-def test_install_remote_skill_asks_before_running_skills_add(monkeypatch):
+def test_install_skill_asks_before_running_skills_add(monkeypatch):
     c = _FakeContext()
     entry: util.SkillEntry = {"repo": "owner/repo", "names": ["foo"], "description": "Does foo things."}
     asked = {}
@@ -403,13 +213,13 @@ def test_install_remote_skill_asks_before_running_skills_add(monkeypatch):
 
     monkeypatch.setattr(ui, "ask", fake_ask)
 
-    ai._install_remote_skill(c, entry, label="test", yes=False)
+    ai._install_skill(c, entry, label="test", yes=False)
 
     assert "Does foo things." in asked["question"]
     assert c.commands == ["skills add owner/repo --global --yes --agent claude-code --skill foo"]
 
 
-def test_install_remote_skill_pins_the_cli_telemetry_off(monkeypatch):
+def test_install_skill_pins_the_cli_telemetry_off(monkeypatch):
     """The `skills` CLI reports to add-skill.vercel.sh unless told not to, and it is on by default.
 
     PULSE runs it unattended, so the choice is PULSE's rather than something to inherit — the rule
@@ -420,39 +230,39 @@ def test_install_remote_skill_pins_the_cli_telemetry_off(monkeypatch):
     c = _FakeContext()
     monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
 
-    ai._install_remote_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+    ai._install_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
 
     assert c.envs == [{"DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1"}]
 
 
-def test_install_remote_skill_declining_prompt_skips_command(monkeypatch, capsys):
+def test_install_skill_declining_prompt_skips_command(monkeypatch, capsys):
     c = _FakeContext()
     entry: util.SkillEntry = {"repo": "owner/repo"}
     monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
 
-    ai._install_remote_skill(c, entry, label="test", yes=False)
+    ai._install_skill(c, entry, label="test", yes=False)
 
     assert c.commands == []
     assert "skipped (declined)" in capsys.readouterr().out
 
 
-def test_install_remote_skill_yes_skips_prompt_and_runs(monkeypatch):
+def test_install_skill_yes_skips_prompt_and_runs(monkeypatch):
     c = _FakeContext()
     entry: util.SkillEntry = {"repo": "owner/repo"}
     monkeypatch.setattr(ui, "ask", _fail_if_asked("yes=True must never prompt"))
 
-    ai._install_remote_skill(c, entry, label="test", yes=True)
+    ai._install_skill(c, entry, label="test", yes=True)
 
     assert c.commands == ["skills add owner/repo --global --yes --agent claude-code --skill '*'"]
 
 
-def test_install_remote_skill_dry_run_never_prompts_or_runs(monkeypatch):
+def test_install_skill_dry_run_never_prompts_or_runs(monkeypatch):
     c = _FakeContext()
     entry: util.SkillEntry = {"repo": "owner/repo"}
     monkeypatch.setattr(ui, "ask", _fail_if_asked("dry run must never prompt"))
     util.DRY_RUN = True
 
-    ai._install_remote_skill(c, entry, label="test", yes=False)
+    ai._install_skill(c, entry, label="test", yes=False)
 
     assert c.commands == []
 
@@ -519,13 +329,17 @@ def test_select_entry_skips_remote_entry_whose_names_are_unknowable():
 # ---------------------------------------------------------------------------
 
 
-def test_install_declared_skills_dispatches_by_source_and_threads_yes(monkeypatch):
+def test_install_declared_skills_dispatches_both_sources_and_threads_yes(monkeypatch):
+    """Both sources go to the same installer since 2026-09-07 — what differs is only the argument
+    it hands `skills add`. The dispatch still has to reach it for each, and skip a disabled
+    package."""
     calls = []
     monkeypatch.setattr(
-        ai, "_install_local_skill", lambda base, path, *, label, yes: calls.append(("local", path, label, yes))
-    )
-    monkeypatch.setattr(
-        ai, "_install_remote_skill", lambda c, entry, *, label, yes: calls.append(("npx", entry["repo"], label, yes))
+        ai,
+        "_install_skill",
+        lambda c, entry, *, label, yes: calls.append(
+            (entry.get("source"), entry.get("path") or entry.get("repo"), label, yes)
+        ),
     )
     monkeypatch.setattr(
         util,
@@ -546,9 +360,12 @@ def test_install_declared_skills_dispatches_by_source_and_threads_yes(monkeypatc
 
 
 def _stub_two_skill_packages(monkeypatch, calls):
-    monkeypatch.setattr(ai, "_install_local_skill", lambda base, path, *, label, yes: calls.append(("local", path)))
     monkeypatch.setattr(
-        ai, "_install_remote_skill", lambda c, entry, *, label, yes: calls.append(("npx", entry.get("names")))
+        ai,
+        "_install_skill",
+        lambda c, entry, *, label, yes: calls.append(
+            ("local", entry["path"]) if entry.get("source") == "local" else ("npx", entry.get("names"))
+        ),
     )
     monkeypatch.setattr(
         util,
@@ -603,8 +420,7 @@ def test_install_declared_skills_unmatched_selection_raises_and_lists_declared(m
 
 
 def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
-    monkeypatch.setattr(ai, "_install_local_skill", _fail_if_asked("should not install"))
-    monkeypatch.setattr(ai, "_install_remote_skill", _fail_if_asked("should not install"))
+    monkeypatch.setattr(ai, "_install_skill", _fail_if_asked("should not install"))
     monkeypatch.setattr(
         util,
         "load_config",

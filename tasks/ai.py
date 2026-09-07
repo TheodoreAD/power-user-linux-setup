@@ -6,7 +6,12 @@ from typing import cast
 
 from invoke import Context, Exit, task
 
-from . import deploy, node, ui, util
+from . import node, ui, util
+
+# Its own constant rather than reaching into deploy's, matching fonts.py/python.py/system.py. Only
+# `source = "local"` needs it, to turn a repo-relative `path` into the absolute one the `skills` CLI
+# requires before it will treat a source as a directory at all — see _skill_source.
+_REPO_ROOT = Path(__file__).parent.parent
 
 # Deliberately separate from tasks/allowlist.py's _APPLIED_MANIFEST — that one tracks
 # CLI-classification-derived Bash rules specifically; this tracks static, hand-declared rules
@@ -52,25 +57,6 @@ def _skill_frontmatter_description(skill_md: Path) -> str | None:
     if not skill_md.is_file():
         return None
     return _parse_frontmatter_description(skill_md.read_text())
-
-
-def _local_skill_plan(*, present: bool, ours: bool, state: deploy.State) -> str:
-    """Pure decision of what _install_local_skill should do next, given the on-disk state it
-    already gathered (present/ours come from the marker file, `state` from deploy.classify — real
-    filesystem checks, but the decision itself has no I/O of its own).
-
-    One of: "foreign" (something else already lives at dest, leave it alone), "up_to_date"
-    (ours, nothing to do), "install" (nothing there yet), "update" (ours, source moved on), or
-    "overwrite" (ours, but edited at the destination since PULSE wrote it — the one case where
-    the prompt must say what it's about to discard).
-    """
-    if present and not ours:
-        return "foreign"
-    if state == deploy.State.CLEAN:
-        return "up_to_date"
-    if state == deploy.State.ABSENT:
-        return "install"
-    return "overwrite" if state == deploy.State.DIRTY else "update"
 
 
 def _selected_skill_names(skill: str | None) -> set[str] | None:
@@ -126,73 +112,6 @@ def _remote_skill_prompt(label: str, entry_description: str | None) -> str:
     return f"Install {label}?{explain}"
 
 
-def _install_local_skill(base: Path, repo_path: str, *, label: str, yes: bool) -> None:
-    """Copy this repo's skills/<name>/ to <base>/.agents/skills/<name> (source = "local") — a
-    real, standalone copy, not a symlink, matching how the npx-sourced installer behaves (it
-    also copies, per its own install summary output). A `.pulse-source` marker records which
-    setup.toml-declared path installed it, so re-runs can tell "ours, safe to refresh" apart
-    from "foreign content, don't touch" the same way _ensure_agents_skills does for the
-    .claude/skills symlink — without a marker, two directory copies are indistinguishable by
-    content alone. Refreshed to exactly match the repo on every run once it's ours; an edit to
-    the repo copy needs `inv ai.install-skills` re-run to take effect, unlike the old symlink approach.
-
-    Asks (showing the skill's own SKILL.md description) before an actual install/update, unless
-    `yes` is set — same `-y`/`--yes` convention as the `skills` CLI's own `--yes` flag used below.
-    Never asks for a skill that's already up to date, so a re-run of an unchanged setup stays
-    quiet either way.
-
-    The copy itself, its post-copy verification, the marker and the deploy-manifest record all
-    happen in deploy.deploy() — the one writer for every path under ~. What stays here is the
-    foreign check (a marker-less directory at dest is someone else's, whatever its content) and
-    this task's own install/update prompt, which deploy() then never repeats.
-    """
-    name = Path(repo_path).name
-    managed = deploy.Managed(
-        path=base / ".agents" / "skills" / name,
-        package=label,
-        source=repo_path,
-        mechanism=deploy.Mechanism.SKILL,
-    )
-    src, dest = managed.src, managed.path
-    present = dest.exists() or dest.is_symlink()
-    marker = dest / deploy.SKILL_MARKER
-    ours = marker.is_file() and marker.read_text().strip() == repo_path
-    plan = _local_skill_plan(present=present, ours=ours, state=deploy.classify(managed))
-
-    if util.DRY_RUN:
-        print(f"[{label}] {name}: {util.ok_label(plan == 'up_to_date')}")
-        return
-
-    if plan == "foreign":
-        ui.warn(
-            f"{dest} already exists and wasn't installed by this entry ({repo_path}).",
-            "Leaving it alone — remove it yourself and re-run to install the repo's copy.",
-        )
-        return
-
-    if plan == "up_to_date":
-        print(f"[{label}] {name} already up to date")
-        return
-
-    if not yes:
-        desc = _skill_frontmatter_description(src / "SKILL.md") or "(no description found)"
-        if plan == "overwrite":
-            # Content that exists only at the destination is what's about to be discarded — say
-            # so, and default to keeping it, the same way deploy() itself does for a DIRTY file.
-            question = f"Overwrite skill '{name}'? It was edited under {dest} since PULSE deployed it.\n{desc}"
-            default = False
-        else:
-            verb = "Update" if plan == "update" else "Install"
-            question = f"{verb} skill '{name}'?\n{desc}"
-            default = True
-        if not ui.ask(question, default=default):
-            print(f"[{label}] {name}: skipped (declined)")
-            return
-
-    # The prompt above already covered the DIRTY case, so deploy() must not ask a second time.
-    deploy.deploy(managed, assume_yes=True)
-
-
 # The `skills` CLI reports usage to add-skill.vercel.sh unless one of these is set, and it is on by
 # default. Every event carries the CLI version, a CI flag and the name of the agent it detects
 # running it; an `install` adds the source repo, the skill names, the target agents and a JSON map
@@ -226,37 +145,65 @@ def _skills_command(command: str) -> str | None:
     return node.nvm_command(command)
 
 
-def _install_remote_skill(c: Context, entry: util.SkillEntry, *, label: str, yes: bool) -> None:
-    """Install a skill from a GitHub repo via the `skills` CLI (source = "npx").
+def _skill_source(entry: util.SkillEntry, *, label: str) -> str:
+    """The source argument to hand `skills add` — a repo shorthand, or an absolute local path.
+
+    **The path must be absolute, and that is not a style choice.** The CLI decides local-versus-
+    remote by shape: `isLocalPath` in its `source-parser.ts` accepts only an absolute path, `./`,
+    `../`, `.` or `..`, and everything else falls through to GitHub-shorthand parsing. A
+    repo-relative `skills/my-skill` is therefore read as the GitHub repo `skills/my-skill` — a real
+    repo namespace — and the CLI would go to the network for somebody else's code under a name that
+    looked local in `setup.toml`.
+    """
+    if entry.get("source") == "local":
+        if "path" not in entry:
+            raise util.missing_fields(label, 'skills[].path (source = "local")')
+        return str((_REPO_ROOT / entry["path"]).resolve())
+    if "repo" not in entry:
+        raise util.missing_fields(label, 'skills[].repo (source = "npx")')
+    return entry["repo"]
+
+
+def _install_skill(c: Context, entry: util.SkillEntry, *, label: str, yes: bool) -> None:
+    """Install a skill through the `skills` CLI, from a GitHub repo or a local directory.
 
     Always global (this is unattended provisioning, not a project-local, interactive `skills
     add`) — `--yes` on the `skills` CLI invocation below skips *its own* per-file overwrite
     prompts, separate from the `yes` param here, which gates whether we ask before running it at
-    all. `names` omitted installs every skill in the repo; `agents` defaults to just claude-code,
-    since that's the one this repo actively manages (its .claude/skills is symlinked to
-    .agents/skills, so this converges on the same shared directory local skills use, not a
-    separate claude-code-only copy).
+    all. `names` omitted installs every skill in the source; `agents` defaults to just claude-code.
 
-    Asks before running `skills add` unless `yes` is set — there's no cheap up-to-date check for
-    a remote repo the way there is for a local copy (see _install_local_skill), so unlike that one
-    this always asks, even on a re-run of an already-installed skill.
+    **`source = "local"` used to be PULSE copying the directory itself**, with a `.pulse-source`
+    marker, an up-to-date check and a deploy-registry entry. That was removed 2026-09-07: the CLI
+    takes a local path directly (`add.ts`, "Use local path directly, no cloning needed"), so the
+    copier was a second implementation of something the tool already did — and a worse one, because
+    it wrote only `.agents/skills/<name>` and relied on a `~/.claude/skills` directory symlink that
+    no longer exists. Routing both sources through the CLI means a local skill gets the same
+    per-skill entry in every selected agent's directory as a remote one, on every platform.
+
+    Asks before running `skills add` unless `yes` is set. There is no cheap up-to-date check here,
+    so this asks even on a re-run of an already-installed skill.
     """
-    if "repo" not in entry:
-        raise util.missing_fields(label, 'skills[].repo (source = "npx")')
-    repo = entry["repo"]
+    source = _skill_source(entry, label=label)
     names = entry.get("names")
     agents = entry.get("agents", ["claude-code"])
-    desc = _remote_skill_label(names, repo)
+    desc = _remote_skill_label(names, source)
 
     if util.DRY_RUN:
         print(f"[{label}] {desc}: not checked in dry-run (would run `skills add`)")
         return
 
-    if not yes and not ui.ask(_remote_skill_prompt(desc, entry.get("description"))):
+    # A local skill can describe itself, and the copier this replaced showed that description in
+    # its prompt — keeping it means routing through the CLI costs the reader nothing. A remote one
+    # cannot be read without fetching it first, so there `description` in setup.toml is all there is.
+    explain = entry.get("description")
+    if explain is None and entry.get("source") == "local":
+        explain = _skill_frontmatter_description(Path(source) / "SKILL.md")
+
+    if not yes and not ui.ask(_remote_skill_prompt(desc, explain)):
         print(f"[{label}] {desc}: skipped (declined)")
         return
 
-    cmd = ["skills", "add", repo, "--global", "--yes"]
+    cmd = ["skills", "add", source, "--global", "--yes"]
     for a in agents:
         cmd += ["--agent", a]
     cmd += ["--skill", *(names or ["*"])]
@@ -298,12 +245,8 @@ def _install_declared_skills(c: Context, base: Path, *, yes: bool, selected: set
                 continue
             matched = True
             source = chosen.get("source")
-            if source == "local":
-                if "path" not in chosen:
-                    raise util.missing_fields(name, 'skills[].path (source = "local")')
-                _install_local_skill(base, chosen["path"], label=name, yes=yes)
-            elif source == "npx":
-                _install_remote_skill(c, chosen, label=name, yes=yes)
+            if source in ("local", "npx"):
+                _install_skill(c, chosen, label=name, yes=yes)
             else:
                 ui.warn(f"[{name}] skills entry has unknown source {source!r} — skipping")
 
