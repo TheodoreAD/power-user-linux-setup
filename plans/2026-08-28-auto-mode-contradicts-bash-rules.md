@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 
 # Auto mode's Bash note contradicts `~/AGENTS.md`, and it measurably changes behaviour
@@ -39,7 +39,7 @@ sessions that did read and edit files under the note are measured, one of them c
 it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
 the table.
 
-## What the note costs, measured across six sessions
+## What the note costs, measured across seven sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
@@ -52,6 +52,7 @@ share of its own Bash calls.
 | `ingesta`, 08-30       |   228 | yes            |              5% |              36% |     22% |           20% |
 | `ingesta`, 08-31/09-01 |   306 | **announced**  |         **18%** |          **46%** | **57%** |       **30%** |
 | `ingesta`, 09-05/06    |   183 | **announced**  |         **15%** |               5% |     21% |            0% |
+| `invoke-stubs`, 09-06  |   306 | **announced**  |              3% |              27% |     44% |            5% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -124,6 +125,44 @@ That makes it the second recorded instance of the shape, after the session that 
 `head`/`tail` rule and then produced it in a third of its calls.
 `plans/2026-08-23-global-agents-md-adherence-watch.md`'s session 10 records a third from this repo
 and cites this one — so the count across both plans is three.
+
+**The `invoke-stubs` row is the announcing case working on the half it names.** Merged in from
+`plans/2026-09-07-auto-mode-announcing-session-row.md`, filed by that session because it could not
+write to this repo. 26 hours of stub work on `claude-opus-5`; it declined the note's file-tool half
+out loud once and never repeated it, and the file-read column is the lowest of any announcing row —
+`sed -n` at 7 calls, `cat`-view at 2. Set against the `ingesta` rows at 15% and 18%, that is the
+first evidence that refusing the note is cheap to sustain across a long session rather than a
+posture that decays.
+
+Three things in it cut against reading the row as a clean result:
+
+- **`sed -n` at 7 calls contradicts the session's own headline, and where they fall says why.**
+  Every one is a _read_ of a sibling repo's config or of a stub's own lines, all in the last third,
+  where the work was comparing this repo against five others. Refusing the note protected the file
+  tools it names; it did not protect a read reached for while thinking about something else.
+- **`chain` at 44% is mid-corpus**, and the plan's standing point holds: the note says nothing about
+  chaining, so this is an unopposed `~/AGENTS.md` rule broken in nearly half the calls of a session
+  that was deliberately following the file-tool one.
+- **`cd-own-repo` = 11 is the first non-zero in this table**, and it is not the flat violation it
+  looks like. cwd was reset out from under the session repeatedly by work in throwaway probe
+  directories — the harness reported "Primary working directory … (was …)" seven times — and
+  `~/AGENTS.md`'s cross-repo clause _prescribes_ `cd <session repo> && …` as the next call after
+  that. Most of the 11 are the rule being followed, and the audit cannot tell those from the banned
+  habit.
+
+`exit-masked` was 23%, 49 of them wrapping a gate, with `setopt` confirming `pipefail` in force — so
+those exit codes were real and no gate re-run was owed. The count is the point: a session can be
+careful about file tools and still route almost every check through a filter.
+
+[PITFALL: **a mid-session measurement of one session is not a smaller version of its final row.** At
+n=211, two hours before this session ended, the same metrics read
+`chain=36% head/tail=20%
+exit-masked=20% sed-n=0%(1)`. The last third — converting a bespoke script
+to the family's pytest-and-tasks layout, so mostly reading sibling repos' configs — moved every one
+of them the wrong way, `sed -n` worst at 1 call to 7. Any harvest reporting adherence before a
+session ends is reporting a prefix, and a session whose phases differ has no representative prefix.
+This is a sampling finding about the instrument, not about this session, and it applies to every row
+in this table that was measured live.]
 
 ## The note removes tools, and that settles half the question (2026-08-30)
 
@@ -200,9 +239,36 @@ session announced the same resolution and then read files through Bash 29 times 
 so the announcement bought nothing for the rule it named — but its `| head`/`tail` came in at 5%,
 the best figure in the whole corpus, and it chained less than any earlier row. The announcement
 tracks the rule it mentions and nothing else, which is a narrower and more testable claim than
-"announcing sessions score worse". It is also the first row measured after `audit.py`'s heredoc
-under-count was fixed, so it is the only one of the four whose numbers need no correction — see
+"announcing sessions score worse".
+
+**The fifth occurrence, `invoke-stubs` 2026-09-06, is the first where the announcement tracked its
+own rule.** File reads came in at 3%, against 15% and 18% for the two announcing `ingesta` rows,
+while `| head`/`tail` sat at 27% and chaining at 44% — both rules the announcement never mentioned,
+both mid-corpus. So across five occurrences the narrower claim now has one clean confirmation and no
+counter-example, and "announcing sessions score worse" has none: the two rows that looked like
+evidence for it were announcing about a rule they then broke, which is a different failure. Worth
+one more announcing row before treating the narrow claim as settled, since a single confirmation of
+a hypothesis built to explain four earlier rows is weak evidence by construction.
+
+Both of the last two rows were measured after `audit.py`'s heredoc under-count was fixed, so they
+are the only ones whose numbers need no correction — see
 `plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md`.]
+
+[NEEDS CLARIFICATION: **should `cd-own-repo` discount a `cd` that follows a cwd reset, or is the
+right fix a separate row?** The `invoke-stubs` row is 11 calls of a metric that had been 0% across
+the whole table, and most of them are `~/AGENTS.md`'s own cross-repo clause being obeyed after the
+harness moved cwd out from under the session. As counted today the number is unreadable for any
+session that works in a scratchpad, which is every session that builds a throwaway venv — so the
+metric is measuring the harness, in the same way the search-tool counts were before the tool removal
+was found.]
+
+[NEEDS CLARIFICATION: **`rg-replace-bundle` fired once, and what caught it was the detection
+signature rather than the prohibition.** `rg -rln` typed for `rg -ln` — the exact trap `~/AGENTS.md`
+documents at length with a six-row table. The rule did not prevent the typo; the documented tell did
+its job, the flag letters appeared where matched text belonged, and the session noticed within one
+call and re-ran correctly. That is evidence the signature earns its place while the prohibition does
+not prevent the mistake, which is a different conclusion from "the wording needs work" and is worth
+settling before anyone rewords that section.]
 
 [NEEDS CLARIFICATION: **is `heredoc edits` at 30% the same failure as the others, or the rule being
 wrong about a case it never considered?** The heredocs in that session were `python3 - <<'PY'`
