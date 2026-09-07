@@ -15,13 +15,14 @@ the other seven are floors, and a floor may only be compared downward.** `audit.
 `strip_heredoc` cut a command at its heredoc marker and dropped every command that followed it,
 which in this family means the gate run after a patch heredoc. Corpus-wide the correction is
 `head/tail` 25.0% -> 27.8% and `exit-masked` 15.3% -> 17.8%, reaching **+12pp** on heredoc-heavy
-sessions. Fixed in `agent-skills` on 2026-09-06 (`2248ec7`) and applied here on 2026-09-07, per
-`plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md`. **Rows 6, 7, 8 and 11
-carry a `†` and were re-measured at their own recorded `--until` boundary**, which reproduces each
-row's published `calls` figure exactly — that is what makes the new rate a correction of the old one
-rather than a different measurement. **Every other row of 1–11 is a floor**: its true rate is at or
-above what is printed, by an amount that varies with how many heredocs that session wrote, and the
-boundary needed to correct it was never recorded. Rows 12 and 13 were measured after the fix.]
+sessions. Fixed in `agent-skills` on 2026-09-06 (`2248ec7`) and applied here on 2026-09-07, from the
+now-retired `2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md` — that name is what
+`plans.py archive --search` needs to read the decision back. **Rows 6, 7, 8 and 11 carry a `†` and
+were re-measured at their own recorded `--until` boundary**, which reproduces each row's published
+`calls` figure exactly — that is what makes the new rate a correction of the old one rather than a
+different measurement. **Every other row of 1–11 is a floor**: its true rate is at or above what is
+printed, by an amount that varies with how many heredocs that session wrote, and the boundary needed
+to correct it was never recorded. Rows 12 and 13 were measured after the fix.]
 
 [PITFALL: **a whole-transcript re-score is not a correction, and on one row it reads as an
 improvement that never happened.** Sample 1 has no recorded boundary: measured whole it is 384 calls

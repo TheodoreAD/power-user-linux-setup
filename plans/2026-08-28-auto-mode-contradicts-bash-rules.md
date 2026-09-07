@@ -278,8 +278,11 @@ one more announcing row before treating the narrow claim as settled, since a sin
 a hypothesis built to explain four earlier rows is weak evidence by construction.
 
 Both of the last two rows were measured after `audit.py`'s heredoc under-count was fixed, so they
-are the only ones whose numbers need no correction — see
-`plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md`.]
+are the only ones in this table whose numbers need no correction; every earlier row here is a floor.
+The corpus took the other route on 2026-09-07 — four of its rows re-scored at their own `--until`
+boundary, the rest annotated — and the instrument pitfall at the top of
+`plans/2026-09-02-agents-md-adherence-sample-corpus.md` is the live account of what a floor may be
+compared against. The plan that decided it has been retired.]
 
 [NEEDS CLARIFICATION: **should `cd-own-repo` discount a `cd` that follows a cwd reset, or is the
 right fix a separate row?** The `invoke-stubs` row is 11 calls of a metric that had been 0% across
