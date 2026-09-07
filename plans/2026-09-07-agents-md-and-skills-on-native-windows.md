@@ -170,8 +170,31 @@ whatever makes Claude Code see them.
 `windows-latest`, and on Windows it creates a **junction** per skill rather than a symlink, falling
 back to copying with a Windows-specific message when that fails. It links per skill —
 `<base>/<skill-name>` — never the whole directory. PULSE's own `_ensure_agents_skills`, which links
-the whole `~/.claude/skills` directory, is therefore the one piece with no Windows story, and the
-question is whether it should keep that shape there or defer to the CLI's per-skill junctions.
+the whole `~/.claude/skills` directory, is therefore the one piece with no Windows story.
+
+[DECISION: **`~/.claude/skills` stays a symlink, and does not become a copy with the instruction
+files.** Settled 2026-09-07 from the CLI's source rather than by preference. Two findings, both in
+`src/installer.ts`:
+
+- **The CLI is written _for_ this exact arrangement.** Lines 214–222 resolve symlinks in _parent_
+  directories before deciding whether a skill is already installed, with the comment naming our
+  case: _"This handles cases where e.g. `~/.claude/skills` is a symlink to `~/.agents/skills`, so
+  `~/.claude/skills/<skill>` and `~/.agents/skills/<skill>` are physically the same."_ The link is
+  not something the tool tolerates; it is a case it was taught.
+- **At global scope it writes only the canonical directory.** For a universal agent — which is all
+  four of ours — lines 362–372 copy into `~/.agents/skills/<skill>` and return early, explicitly to
+  avoid duplicates.
+
+Put together: with the link, `skills add --global` reaches Claude Code immediately. As a copy, it
+would reach `~/.agents/skills` and stop there until the next `inv ai.install-skills`, **and** the
+CLI's duplicate detection would stop recognising the two paths as one, so it would start creating
+the per-agent copy it currently skips. A copy there buys Windows uniformity and costs the Linux
+workflow plus the tool's own model of the machine.
+
+Windows keeps the same shape by a different mechanism: a junction, which is what the CLI itself
+creates there per skill and needs no privilege. The instruction files could not take that route
+because junctions are directories only — the skills directory is the one destination in this repo
+where it applies.]
 
 [UNVERIFIED: **whether Claude Code follows a junction for a skill entry.** Its docs say a
 `<skill-name>` entry "can be a symlink to a directory elsewhere on disk", and its binary classifies
@@ -180,6 +203,37 @@ user/project skill loader accepts `isDirectory() || isSymbolicLink()` — so it 
 works. That is source inference about a closed binary, not documentation and not a Windows test. It
 is also the single fact the skills half rests on, so it is the first thing to check on a real
 Windows machine.]
+
+### Nothing out there syncs both, and the drift model we just adopted is the mature one
+
+Asked because replacing five symlinks with five copies takes on a drift problem, and it would be
+foolish to own that if somebody else had solved it. Read from the clones, 2026-09-07:
+
+**The generator category does not have this problem, because it does not reconcile — it
+regenerates.** `ai-rulez` is the one with real skills machinery (`internal/config/skills.go`,
+`includes/skill_resolver.go`, `crud/installed_skill.go`): skills are declared as `installed_skills`
+with a git or local `source`, a `ref`, a `path` and a `local_override`, fetched and re-rendered on
+every run. There is no state to drift because the output is disposable. That is a coherent design
+and it is not ours: our destinations are files other tools read at their own paths, which we must
+not blow away wholesale.
+
+**`chezmoi` is the only surveyed tool that tracks drift, and its model is the one PULSE already
+has.** `internal/chezmoi/entrystate.go`: an `EntryState` is `{Type, Mode, ContentsSHA256}`,
+persisted, and compared on apply — `Equal` is a type check, a permission check and a SHA-256
+comparison. PULSE's deploy manifest records `{package, source, mechanism, digest, deployed_at}` per
+destination and `classify` compares the digest. Same shape, arrived at independently, which is the
+strongest available argument for keeping the mechanism in-house rather than adopting a second
+config-management system that would co-own `$HOME`.
+
+[PITFALL: **`chezmoi` skips the permission comparison on Windows entirely** — `Equal` guards it with
+`runtime.GOOS != "windows"` — because Windows synthesises `st_mode` from file attributes. That is
+the same conclusion `skill-authoring` reached for `0700` checks, from a second direction, and it is
+a trap waiting for any content check we extend to modes: a mirror that compares permissions would
+fail on every Windows machine for a concept that does not exist there.]
+
+So: **keep owning it.** The verdict is not "nothing exists", it is that the two categories solve
+different problems and the one whose problem we actually have already agrees with us about the
+mechanism.
 
 ## Design
 
