@@ -340,7 +340,8 @@ Two things follow that are worth keeping separate from the decisions themselves:
 - `setup.toml` — `extras = ["keyrings.alt"]` on `[packages.px-proxy]`.
 - `config/identity.toml.example`, `docs/certs.md`, `docs/corporate-proxy.md`, `docs/docker.md`,
   `docs/wsl.md`.
-- `tests/unit/test_certs.py` (new), `tests/unit/test_proxy.py`, `tests/unit/test_docker.py`.
+- `tests/unit/test_certs.py` (new), `tests/unit/test_proxy.py`, `tests/unit/test_docker.py`,
+  `tests/unit/test_util.py` (which is where `test_wsl.py`'s four bus/secret-service tests went).
 
 Section 4 landed as `tasks/cert_sources.py` (all the parsing, pure and stdlib-only) plus
 `inv certs.discover` in `tasks/certs.py`, `tests/unit/test_cert_sources.py`, and `docs/certs.md`'s
@@ -376,6 +377,23 @@ installed on this machine, so `--gateway=1 --allow=172.17.0.0/16 --save` was run
 `[packages.px-proxy]` carries `verify_cmd = "px --help"`. Hit live while checking whether px was
 installed at all: the call hung for the full timeout and left a proxy running until it was killed.
 The comment in setup.toml says this; running the command anyway is how it gets learned.]
+
+Writing section 7's docs turned up a contradiction in what this plan had already shipped.
+`docs/wsl.md` recommended unlocking the store with
+`dbus-run-session -- bash -c '… | gnome-keyring-daemon --unlock …'`, one paragraph below the
+explanation that the point of `[packages.dbus-user-session]` is a single shared bus at
+`/run/user/<uid>/bus`. `man dbus-run-session` is explicit that it starts its own session bus and
+terminates it when the command exits — so the store was being unlocked on a private bus that died
+immediately and that nothing else could ever see. The shared-bus form is the plain
+`gnome-keyring-daemon --unlock --components=secrets`; `dbus-run-session -- bash` survives as the
+no-`dbus-user-session` shape, with the work done inside that subshell. Found by reading the man page
+while writing the proxy remedy, not by running anything.
+
+[UNVERIFIED: **that unlock command has not been run on a WSL guest from here.** Its shape follows
+from `man dbus-run-session` and from `gnome-keyring-daemon`'s own interface, and running it on this
+machine would mean replacing the daemon holding the user's live desktop keyring — not something a
+verification pass may do. What is verified is the negative: `dbus-run-session`'s bus does not
+outlive its command, so the form this replaced could not have worked as documented.]
 
 [UNVERIFIED: **the Windows-side halves of `discover` have never run on Windows** — the registry
 environment read, the group-policy thumbprint read, `WSLENV`, and the vendor globs. Their parsers
