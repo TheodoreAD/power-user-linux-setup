@@ -90,11 +90,19 @@ Service provider — a minimal WSL2 distro, a from-scratch container — cannot 
 `proxy.check` reports which backend answers, and `proxy.install` probes it with a throwaway
 store/read/delete **before** asking for a password, rather than failing after one has been typed.
 
+**A locked store and an absent one fail that probe identically**, so `proxy.check` asks the session
+bus which of the two it is (`org.freedesktop.secrets` having an owner) and prints the fix that
+matches: install a provider, or unlock the one that is already there. Since
+`[packages.gnome-keyring]` and `[packages.dbus-user-session]` are declared, "already there and
+locked" is the state a WSL distro that ran setup ends up in — and telling it to install what it has
+is the failure mode this replaced.
+
 Two ways out, and the first is better:
 
 - **Give the distro a keyring**: `sudo apt install gnome-keyring dbus-user-session`, then start a
-  user D-Bus session. The credential stays in a locked store, which is the whole premise of the
-  feature.
+  user D-Bus session, and unlock the store — [docs/wsl.md](wsl.md#the-secret-store-and-unlocking-it)
+  has the command and why PULSE does not run it for you. The credential stays in a locked store,
+  which is the whole premise of the feature.
 - **`inv proxy.install --keyring-fallback`** — stores the password base64-encoded in a 0600 file
   (`~/.local/share/python_keyring/keyring_pass.cfg`, `keyrings.alt`'s plaintext backend). Anything
   running as this user can read it: the same exposure as `PULSE_PROXY_PASSWORD_FILE`, still better

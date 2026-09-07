@@ -463,7 +463,44 @@ def _write_env_file() -> None:
     print(f"[proxy] keyring backend pinned for the daemon in {ENV_FILE}")
 
 
-def _keyring_status(*, fallback: bool) -> bool:
+_UNLOCK_CMD = "gnome-keyring-daemon --unlock --components=secrets"
+
+
+def _keyring_remedy(c: Context) -> str:
+    """Which of the states this machine is actually in, because the round trip cannot tell them
+    apart: a locked store and an absent one both fail it, and their fixes are opposite.
+
+    The message this replaced named only the absent case — install gnome-keyring and
+    dbus-user-session — which is no help at all on a machine where both are already installed, and
+    that is now the likelier state: `[packages.gnome-keyring]` and `[packages.dbus-user-session]`
+    are declared, so a WSL distro that ran setup has the store and still has nobody to unlock it.
+    The D-Bus name-owner probe is what separates them (util.secret_service_state).
+    """
+    state = util.secret_service_state(c)
+    if state.startswith("answering"):
+        return (
+            "a Secret Service is answering on the session bus, so the store is not missing — a "
+            "round trip that fails anyway is usually a locked collection with nothing able to "
+            f"prompt for it. Unlock it with `{_UNLOCK_CMD}`, login password on stdin."
+        )
+    if state.startswith("no session bus"):
+        return (
+            "there is no session D-Bus here, so no store can answer on one whether or not it is "
+            "installed. Install dbus-user-session as well as gnome-keyring."
+        )
+    if state.startswith("installed but"):
+        return (
+            "nothing owns org.freedesktop.secrets on the session bus: either no provider is "
+            "installed (apt install gnome-keyring) or its daemon has not been started. Starting it "
+            f"is also what unlocks it — `{_UNLOCK_CMD}`, login password on stdin."
+        )
+    return (
+        f"could not tell whether a store is present ({state}) — install gnome-keyring and "
+        f"dbus-user-session if this distro has neither, or unlock what it has with `{_UNLOCK_CMD}`."
+    )
+
+
+def _keyring_status(c: Context, *, fallback: bool) -> bool:
     """Report the keyring, and say what to do about it when it doesn't answer. True if usable."""
     ok, detail = _keyring_round_trip(fallback=fallback)
     if ok:
@@ -472,9 +509,12 @@ def _keyring_status(*, fallback: bool) -> bool:
     print(f"[proxy] keyring: no usable backend — {detail}")
     print(
         "[proxy] Px reads its credential from the keyring at its own startup, so this has to work "
-        "before a password is worth capturing. Either start a Secret Service provider (install "
-        "gnome-keyring and dbus-user-session, common on a minimal WSL2 distro), or re-run with "
-        "`inv proxy.install --keyring-fallback` to store it in a 0600 file instead."
+        f"before a password is worth capturing: {_keyring_remedy(c)}"
+    )
+    print(
+        '[proxy] PULSE never unlocks a store unattended (docs/wsl.md, "The secret store, and '
+        'unlocking it") — `inv proxy.install --keyring-fallback` stores the credential in a 0600 '
+        "file instead, which is the unattended option."
     )
     return False
 
@@ -581,7 +621,7 @@ def _capture_credential(*, fallback: bool = False) -> str | None:
     return username
 
 
-def _capture_with_keyring(*, keyring_fallback: bool) -> str | None:
+def _capture_with_keyring(c: Context, *, keyring_fallback: bool) -> str | None:
     """Check the keyring can hold a credential, then capture one. None if either half fails.
 
     The two steps are one function because their order is the whole point: Px reads the credential
@@ -590,7 +630,7 @@ def _capture_with_keyring(*, keyring_fallback: bool) -> str | None:
     chose the fallback once keeps it — proxy.env existing is that decision, recorded.
     """
     fallback = keyring_fallback or ENV_FILE.exists()
-    usable = _use_fallback_keyring() if fallback else _keyring_status(fallback=False)
+    usable = _use_fallback_keyring() if fallback else _keyring_status(c, fallback=False)
     if not usable:
         print("[proxy] no keyring to store the credential in — stopping before asking for one")
         return None
@@ -659,7 +699,7 @@ def check(c: Context, proxy: str = "auto"):
     else:
         print("[proxy] px: not installed  ← `inv proxy.install` installs it (uv tool)")
 
-    _keyring_status(fallback=ENV_FILE.exists())
+    _keyring_status(c, fallback=ENV_FILE.exists())
 
     if _user_systemd_available(c):
         active = c.run("systemctl --user is-active pulse-proxy.service", hide=True, warn=True).stdout.strip()
@@ -744,7 +784,7 @@ def install(c: Context, proxy: str = "auto", noproxy: str | None = None, keyring
     needs_credential = bool(schemes) and not (has_negotiate and _has_kerberos_ticket(c))
     username = None
     if needs_credential:
-        username = _capture_with_keyring(keyring_fallback=keyring_fallback)
+        username = _capture_with_keyring(c, keyring_fallback=keyring_fallback)
         if username is None:
             print("[proxy] credential capture failed or was skipped — stopping before daemon start")
             return

@@ -369,22 +369,41 @@ provides the bus it is reached over — one bus at `/run/user/<uid>/bus` shared 
 the distro, so a store unlocked once is visible to your terminal and to an IDE-started server alike.
 Without that bus each process autolaunches a private one and shares nothing.
 
-**Installing it does not unlock it, and there is no clean unattended unlock under WSL.** A desktop
-unlocks the login keyring through PAM at graphical login; WSL bypasses TTY login, and WSL2's systemd
-does not fully implement `graphical-session.target`, so nothing performs that step for you (see the
+**Installing it does not unlock it, and PULSE never unlocks it for you.** A desktop unlocks the
+login keyring through PAM at graphical login; WSL bypasses TTY login, and WSL2's systemd does not
+fully implement `graphical-session.target`, so nothing performs that step (see the
 [Arch wiki](https://wiki.archlinux.org/title/GNOME/Keyring) and
-[microsoft/WSL#9375](https://github.com/microsoft/WSL/discussions/9375)). Two honest options:
+[microsoft/WSL#9375](https://github.com/microsoft/WSL/discussions/9375)).
 
-- **Unlock once per WSL boot**, then everything on the shared bus sees it:
+No task here supplies one either, and that is a decision rather than a gap. An unattended unlock
+needs the unlock password readable by the machine at boot with nobody present; once it is on the
+same disk as the store, the at-rest encryption that is the _only_ thing a locked keyring has over a
+0600 file is gone. So an auto-unlocked keyring is `--keyring-fallback` with a daemon, a bus and a
+unit added on top and nothing bought — and a login keyring with an empty password is the same trade
+with the password set to nothing. Two honest options instead:
+
+- **Unlock once per WSL boot**, from a shell that already has the shared bus
+  (`echo
+  $DBUS_SESSION_BUS_ADDRESS` should name `/run/user/<uid>/bus`). Everything on that bus
+  then sees the store:
   ```shell
-  dbus-run-session -- bash -c 'echo "<your login password>" | gnome-keyring-daemon --unlock --components=secrets'
+  gnome-keyring-daemon --unlock --components=secrets   # login password on stdin
   ```
   Good when you are at the machine anyway. Bad for anything that has to come up on its own.
+
+  On a distro with no `dbus-user-session`, the equivalent is `dbus-run-session -- bash` and doing
+  the work inside that subshell. **Do not reach for `dbus-run-session` when the shared bus already
+  exists**: it starts a _private_ bus and terminates it as soon as the command exits
+  (`man dbus-run-session`), so a keyring unlocked inside it is invisible to everything else and gone
+  a moment later. This page recommended exactly that one-liner until 2026-09-07, which contradicted
+  the paragraph above it.
 - **`inv proxy.install --keyring-fallback`** — the proxy credential goes into a 0600 file instead,
   and the daemon starts unattended. A real downgrade from a locked store, which is why it is a flag;
   see [corporate-proxy.md](corporate-proxy.md#when-there-is-no-keyring).
 
-`inv wsl.check` reports which of the two situations you are in before either task asks for anything.
+`inv wsl.check` reports which of the two situations you are in before either task asks for anything,
+and `inv proxy.check` names which fix applies — a locked store and an absent one fail its keyring
+probe identically and want opposite things done about them.
 
 ## Windows-native duplicates
 

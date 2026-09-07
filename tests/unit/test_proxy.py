@@ -5,6 +5,7 @@ doesn't shell out or touch the filesystem/keyring. See tests/README.md.
 from pathlib import Path
 
 import pytest
+from invoke import MockContext
 
 from tasks import proxy, util
 from tasks.proxy import (
@@ -182,3 +183,41 @@ def test_both_daemon_start_paths_read_the_env_file_that_pins_the_backend():
     relative = str(proxy.ENV_FILE).removeprefix(str(Path.home()))
     assert f"EnvironmentFile=-%h{relative}" in (_REPO / "config" / "pulse-proxy.service").read_text()
     assert relative in (_REPO / "config" / "pulse-proxy-start.sh").read_text()
+
+
+def _service_state(monkeypatch: pytest.MonkeyPatch, state: str) -> None:
+    monkeypatch.setattr(util, "secret_service_state", lambda _c: state)
+
+
+def test_keyring_remedy_says_unlock_when_a_store_is_already_answering(monkeypatch):
+    # The case the old single message got exactly backwards: telling a machine that already has
+    # gnome-keyring and dbus-user-session to install them is no help, and both are now declared
+    # packages, so this is the state a WSL distro that ran setup lands in.
+    _service_state(monkeypatch, "answering ✓")
+    remedy = proxy._keyring_remedy(MockContext())
+    assert "not missing" in remedy
+    assert "--unlock" in remedy
+    assert "install" not in remedy
+
+
+def test_keyring_remedy_asks_for_dbus_when_there_is_no_bus_at_all(monkeypatch):
+    _service_state(monkeypatch, "no session bus, so nothing can answer")
+    remedy = proxy._keyring_remedy(MockContext())
+    assert "dbus-user-session" in remedy
+    assert "--unlock" not in remedy, "nothing can be unlocked on a bus that does not exist"
+
+
+def test_keyring_remedy_covers_both_fixes_when_nothing_owns_the_bus_name(monkeypatch):
+    # A bus with no owner for org.freedesktop.secrets cannot distinguish "not installed" from
+    # "installed, never started" from the outside, so the message may not pick one.
+    _service_state(monkeypatch, "installed but not running/unlocked")
+    remedy = proxy._keyring_remedy(MockContext())
+    assert "gnome-keyring" in remedy
+    assert "--unlock" in remedy
+
+
+def test_keyring_remedy_does_not_guess_when_the_probe_could_not_answer(monkeypatch):
+    _service_state(monkeypatch, "unknown (dbus-send not installed)")
+    remedy = proxy._keyring_remedy(MockContext())
+    assert "could not tell" in remedy
+    assert "dbus-send not installed" in remedy
