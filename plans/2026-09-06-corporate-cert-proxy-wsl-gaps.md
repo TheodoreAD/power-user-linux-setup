@@ -101,13 +101,28 @@ display, has no store". `[packages.dbus-user-session]` and `[packages.gnome-keyr
 declared so the store exists, and `wsl.check` reports the three axes separately rather than
 collapsing them into WSLg.
 
-[DEFERRED: **unlocking that store on a WSL boot has no clean unattended answer.** A desktop unlocks
-the login keyring through PAM at graphical login; WSL bypasses TTY login, and WSL2's systemd does
-not fully implement `graphical-session.target`. So the store can be unlocked once per boot by hand
-(`dbus-run-session` plus `gnome-keyring-daemon --unlock`), or the proxy daemon uses
-`--keyring-fallback` and starts on its own. Both are documented in docs/wsl.md; neither is a
-mechanism this repo can automate without storing the unlock password, which is the same trade the
-fallback already makes with fewer moving parts.]
+[DECISION: **PULSE never unlocks the store — the unlock stays a human step, once per WSL boot.** A
+desktop unlocks the login keyring through PAM at graphical login; WSL bypasses TTY login, and WSL2's
+systemd does not fully implement `graphical-session.target`, so nothing performs that step. The
+reason not to supply one is not squeamishness: an unattended unlock needs the unlock secret readable
+by the machine at boot with nobody present, and wherever that secret is put it is readable by
+anything running as this user — and, sitting on the same disk, it also removes the at-rest
+encryption that is the _only_ thing a locked keyring has over `--keyring-fallback`'s 0600 file. So
+an auto-unlocked keyring is the fallback with a daemon, a bus and a systemd user unit added on top
+and nothing bought. A login keyring with an empty password is that same trade with the secret set to
+the empty string, which is why it is not the shortcut it looks like.
+
+Prompting for the unlock from a shell rc is refused separately, and for a reason specific to this
+machine: it turns every new shell into a possible blocking prompt, the non-interactive `zsh -c` of
+an agent's Bash tool included (`[packages.claude-code]` already relies on that shell reading
+`~/.zshenv`), where a hang is indistinguishable from a slow command.
+
+What lands instead is the distinction the guidance was missing. "No store at all" and "a store that
+is locked" fail the same round trip and have opposite fixes, and `_keyring_status` named only the
+first — install gnome-keyring and dbus-user-session — which is no help on a machine where both are
+already installed and is the more likely state once `[packages.gnome-keyring]` is declared. The
+D-Bus name-owner probe `wsl.check` already does separates them, so it moves to `util` and the proxy
+guidance reads it. See section 7.]
 
 `keyrings.alt` reaches Px's own environment as `extras = ["keyrings.alt"]` on `[packages.px-proxy]`
 — the `uv-tool` method already supports extras (`tasks/python.py`), so no new mechanism, and
@@ -262,23 +277,65 @@ a process because zsh reads `~/.zshenv` on **every** invocation, and because `in
 makes zsh the login shell. VS Code's Remote-WSL server probes an interactive login shell at start,
 so that chain is what carries the corporate configuration into an IDE-started process.
 
-[DEFERRED: **whether a bash-side equivalent is owed.** Nothing this repo writes lands in a file bash
-reads — no `.bashrc`, no `.bash_profile`, no `BASH_ENV` — so on a machine whose login shell is still
-bash, every one of those exports is invisible and the failure is silent: TLS verification fails in
-the IDE and works in the terminal. Three options, none obviously right. Write the same block into
-`~/.bashrc` too, which doubles the deployment surface for a shell this setup does not otherwise
-support. Set `BASH_ENV`, which only covers non-interactive bash. Or state zsh as a prerequisite the
-way modern WSL2 and a real terminal are now stated, and let `wsl.check` fail loudly when the login
-shell is not zsh — cheapest, and consistent with `zsh.configure` already being part of every install
-path. The third is the likely answer; what makes it a decision rather than an obvious pick is that
-it turns a silent degradation into a hard requirement for anyone who prefers bash.]
+[DECISION: **zsh is a stated prerequisite, and no bash-side file is written.** Parity is not one
+file, and it is not three either. `~/.zshenv` is read on _every_ zsh invocation — login, interactive
+and non-interactive alike. Bash's equivalent is `~/.profile` for a login shell, and only while
+neither `~/.bash_profile` nor `~/.bash_login` exists, since bash reads the first of the three it
+finds; `~/.bashrc` for an interactive one, which Ubuntu's own default returns out of immediately
+when the shell is not interactive; and `BASH_ENV` for the non-interactive case, which has to be
+exported by something that has already run and so cannot bootstrap itself. `/etc/profile.d` does not
+unify them: Ubuntu's `/etc/zsh/zprofile` does not source `/etc/profile`, so a drop-in there reaches
+bash and not zsh, and reaches login shells only.
+
+It is also less new a requirement than it reads. `inv setup`'s shell phase runs
+`zsh.set-default-shell`, `next_steps` refuses to advance past a login shell that is not zsh, and
+`[packages.claude-code]`'s `PIPE_FAIL` snippet already depends on `~/.zshenv` being read by a
+_non-interactive_ `zsh -c` — precisely the case bash has no file for at all. Writing the block into
+bash would add a second deployment surface for a shell nothing else here supports, and still not
+cover that one.
+
+**Not a `verify.all` failure**, which is the shape "fail loudly" first suggested: `verify.all` runs
+at the end of the packages phase and `zsh.set-default-shell` runs in the shell phase _after_ it, so
+a hard gate there would abort every first run before the task that satisfies it has run. The
+degradation is conditional besides — it costs nothing on a machine with no cert or proxy config. The
+check belongs where those exports are written and read: `certs.check`/`certs.install`,
+`proxy.check`/`proxy.install`, and `wsl.check`'s assumptions. That is section 5's rule about
+reporting a mismatch where it is discovered, applied a second time.]
+
+### 7. Both open questions were the same question
+
+Answered together on 2026-09-07, and they turned out to be one decision with two applications:
+**PULSE does not stand in for a login session.** A desktop session establishes two things the rest
+of this repo then leans on — a PAM-unlocked keyring, and a login shell that has read the environment
+— and each deferral was asking it to reproduce one of them on a machine that has no such session.
+
+The answer is no both times for the same reason, and it is not a general reluctance to automate: in
+each case the automation reproduces, with more machinery, something this repo already offers
+explicitly. An unattended keyring unlock is `--keyring-fallback` plus a daemon, a bus and a unit. A
+bash-side export set is `~/.zshenv` split across three files with a hole in the middle, for a shell
+`inv setup` already replaces. What is owed instead is the same in both: **say it is a prerequisite,
+and check it where its absence is silent.** A locked store and a bash login shell both fail by
+producing nothing — no error, no log line — which is why neither was noticed until the surface
+around them was written down.
+
+Two things follow that are worth keeping separate from the decisions themselves:
+
+- `util` gains what both checks need — `login_shell()`/`login_shell_is_zsh()`, factored out of the
+  two copies in `zsh.py` and `next_steps.py`, and `session_bus_address()`/`secret_service_state()`,
+  moved out of `wsl.py` because the proxy guidance needs the same answer. Same reasoning as
+  `is_docker_desktop_wsl_integration()`: a second copy of a check is a check that will drift.
+- The prerequisites are stated in one table (`docs/wsl.md`, "Assumptions this repo makes about WSL")
+  and pointed at from the two docs whose features depend on them, rather than restated per doc.
 
 ## Files touched
 
 - `tasks/certs.py` — Windows root export, fingerprint diff, `--from-windows` on `check`/`install`.
 - `tasks/proxy.py` — keyring round-trip probe, `--keyring-fallback`, `proxy.env` writer.
 - `tasks/docker.py` — `configure_corporate` and its four writers.
-- `tasks/util.py` — `load_docker_override()`, `DockerSection`.
+- `tasks/util.py` — `load_docker_override()`, `DockerSection`; and, for section 7, `login_shell()`,
+  `login_shell_is_zsh()`, `session_bus_address()`, `secret_service_state()`.
+- `tasks/wsl.py`, `tasks/zsh.py`, `tasks/next_steps.py` — callers of those four, none keeping a
+  copy.
 - `config/pulse-proxy.service`, `config/pulse-proxy-start.sh` — optional env file.
 - `setup.toml` — `extras = ["keyrings.alt"]` on `[packages.px-proxy]`.
 - `config/identity.toml.example`, `docs/certs.md`, `docs/corporate-proxy.md`, `docs/docker.md`,
