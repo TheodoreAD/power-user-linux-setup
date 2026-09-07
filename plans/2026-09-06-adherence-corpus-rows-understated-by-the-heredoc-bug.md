@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-09-07
 source_repo: github.com-personal/agent-skills
 source_session: c3ef9832-a5b8-4d99-932b-2597c5846af6.jsonl
@@ -149,3 +149,29 @@ audit.py --session 6291d9d1-b8ed-4826-9967-9ae30f70bebf --until 2026-09-05T10:21
 ```
 
 The boundaries are the `source_moment` values the corpus already records for those three rows.
+
+## Migrated to
+
+Applied 2026-09-07, in commit `faceb15`.
+
+- **`plans/2026-09-02-agents-md-adherence-sample-corpus.md`** — everything this plan was for. The
+  re-scored cells for rows 6, 7 and 11 plus a fourth, **row 8**, whose boundary is recorded in its
+  own section rather than in the transcript table and which this plan therefore counted as
+  un-re-scorable; the floor annotation on every other row of 1–11; the instrument commit
+  (`95f8af7`); and both `PITFALL`s — the whole-transcript-is-not-a-correction one verbatim, with row
+  8's 18%-versus-15% divergence added as a second instance, and the 37-versus-38 one dropped in
+  favour of the corrected figure standing on its own.
+- **The same file, beyond what this plan asked for.** Step 3 said to re-read what leaned on sample
+  6's rate; the answer was that the row's mitigation is false, not merely understated — the derived
+  gate/listing split is 30 of 82, against a hand reading of "listings only". Sample 11's `chain`
+  verdict flips. Two open questions close. All of it is recorded there.
+- **`agent-skills`' `skills/session-bash-audit/references/research.md`** already owns the
+  instrument's side — the fix, the 15,479-call measurement, the boundary pitfall and the
+  two-instruments-over-one-corpus lesson — and is pointed at rather than copied. A plan is filed
+  there for the one thing it gets wrong: its own migrated table still prints the pre-fix rates it
+  corrects forty lines above.
+
+Deliberately not migrated: the `## Evidence` section's transcript pointers, which are provenance for
+a finding now stated in two permanent homes; the re-run command block, superseded by the corpus
+naming the instrument commit and each row's boundary; and the transcript-expiry deadline, which the
+corpus's own preamble already carries.
