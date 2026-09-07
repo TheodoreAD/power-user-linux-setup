@@ -73,10 +73,6 @@ class Writer(StrEnum):
     # No file at a knowable path: gsettings/dconf. The value is in a binary database keyed by
     # schema, and the only way to read one back is to ask the tool.
     IMPERATIVE = "imperative"
-    # A symlink PULSE creates; the claim is the link and its target, not any bytes. Only the
-    # skills directory is still one — the instruction-file destinations became MIRROR on
-    # 2026-09-07, see deploy.py's "Mirrored destinations".
-    SYMLINK = "symlink"
     # A byte-for-byte copy of a file this repo deploys elsewhere, at a path another tool reads from.
     # Drift is meaningful here in a way it is not for a symlink, which is the whole reason the two
     # are separate writers: a mirror can go stale while its source is current.
@@ -692,12 +688,16 @@ def _external_claims() -> Iterator[Claim]:
     claude_skills = _HOME / ".claude" / "skills"
     yield Claim(
         target=_rel(claude_skills),
-        writer=Writer.SYMLINK,
+        writer=Writer.EXTERNAL,
         authority=Authority.PULSE,
         tier=Tier.PUBLIC,
         owner="inv ai.install-skills",
         source=str(_HOME / ".agents" / "skills"),
-        note="never replaces existing non-symlink content",
+        # PULSE made this a symlink to .agents/skills until 2026-09-07. It now creates neither the
+        # directory nor the links: the `skills` CLI writes one entry per skill here, because
+        # `claude-code` is not one of its universal agents. Still a claim — this repo's declaration
+        # is why anything is here at all — but an EXTERNAL one, same as ~/.agents/skills itself.
+        note="per-skill entries written by the `skills` CLI, not by this repo",
         path=claude_skills,
     )
 

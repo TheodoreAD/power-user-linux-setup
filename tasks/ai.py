@@ -606,38 +606,39 @@ def _note_copilot_permissions() -> None:
 
 
 def _ensure_agents_skills(base: Path, *, label: str) -> None:
-    """Ensure <base>/.agents/skills exists and <base>/.claude/skills is a symlink to it.
+    """Ensure <base>/.agents/skills exists. Deliberately does **not** link .claude/skills to it.
 
-    .agents/skills is the emerging cross-tool convention for agent skills; Claude Code itself
-    doesn't read it natively yet, only .claude/skills, so the symlink is what actually makes
-    skills placed there visible to Claude Code today. Never touches an existing .claude/skills
-    that isn't already that exact symlink — real content there is left alone, not overwritten.
+    Until 2026-09-07 this made `.claude/skills` a symlink to `.agents/skills`, because Claude Code
+    does not read the cross-tool path natively (verified: zero occurrences of `.agents/skills` in
+    its shipped binary, against 50 of `.claude/skills`) and a 2026-08-27 measurement said the
+    `skills` CLI announced a symlink it did not create.
+
+    That measurement is stale, and the whole-directory link was the wrong shape anyway:
+
+    - **The CLI does create it, per skill.** `claude-code` is not one of its *universal* agents —
+      its `skillsDir` is `.claude/skills`, and `isUniversalAgent` tests for `.agents/skills` — so
+      the early return that skips per-agent links never applied to it. Re-measured on this machine
+      with CLI v1.5.24 and the directory link removed: 14 skills, 14 symlinks created at
+      `~/.claude/skills/<name>` pointing to `../../.agents/skills/<name>`.
+    - **The old link hid that.** The CLI resolves parent symlinks before deciding whether a skill
+      is already installed, so with `.claude/skills` linked, `<link>/<name>` and
+      `.agents/skills/<name>` are the same file and it correctly skipped. The arrangement could not
+      observe what the CLI would do without it.
+    - **A directory symlink is the one shape Windows cannot make** without Developer Mode or
+      admin, and no vendor documents it: Claude Code's docs say a `<skill-name>` *entry* may be a
+      symlink, never the directory. The CLI's per-skill path uses a junction on Windows, which
+      needs no privilege, and falls back to copying.
+
+    So the directory is created and the linking is left to the tool that owns it.
     """
     agents_skills = base / ".agents" / "skills"
-    claude_skills = base / ".claude" / "skills"
-
-    already_linked = claude_skills.is_symlink() and claude_skills.resolve() == agents_skills.resolve()
     if util.DRY_RUN:
-        print(f"[{label}] {util.ok_label(already_linked and agents_skills.is_dir())}")
+        print(f"[{label}] {util.ok_label(agents_skills.is_dir())}")
         return
-
+    existed = agents_skills.is_dir()
     agents_skills.mkdir(parents=True, exist_ok=True)
-
-    if already_linked:
-        print(f"[{label}] .claude/skills already linked to .agents/skills")
-        return
-
-    if claude_skills.exists() or claude_skills.is_symlink():
-        ui.warn(
-            f"{claude_skills} already exists and isn't a symlink to {agents_skills}.",
-            "Leaving it alone — move its contents into .agents/skills yourself, then re-run, to "
-            "get both a working Claude Code setup and the cross-tool convention.",
-        )
-        return
-
-    claude_skills.parent.mkdir(parents=True, exist_ok=True)
-    claude_skills.symlink_to(agents_skills)
-    print(f"[{label}] created .agents/skills, symlinked .claude/skills to it")
+    if not existed:
+        print(f"[{label}] created {agents_skills}")
 
 
 @task
