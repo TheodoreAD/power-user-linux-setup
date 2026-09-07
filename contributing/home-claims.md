@@ -65,7 +65,7 @@ Re-measured on this machine, 2026-09-07 (the 2026-08-30 figures are in brackets)
 | `block`                 |   25 (24) | `util.ensure_block` marker regions                     |
 | `imperative`            |   23 (23) | `gsettings`/`dconf` — no file at any path              |
 | `whole-file`            |   12 (11) | `deploy.py`, from a `setup.toml` declaration           |
-| `mirror`                |     6 (5) | copies of a deployed file, at paths other tools read   |
+| `mirror`                |     5 (—) | copies of a deployed file, at paths other tools read   |
 | `symlink`               |     1 (—) | `~/.claude/skills`, the one link this repo still makes |
 | `whole-file-undeclared` |     4 (3) | `deploy.py`, destination decided at run time           |
 | `key`                   |     3 (3) | regex surgery on one key of a file an application owns |
@@ -74,6 +74,11 @@ Re-measured on this machine, 2026-09-07 (the 2026-08-30 figures are in brackets)
 | `directory`             |     1 (—) | created by a task, filled by the user or another tool  |
 | `external`              |     1 (1) | `~/.agents/skills/`, installed by the `skills` CLI     |
 | **total**               | 121 (109) |                                                        |
+
+`mirror` and `symlink` were one `symlink` row of 6 (5) until 2026-09-07; the split changed the
+mechanism, not the count, and the total is unchanged. Both figures above are read from
+`inv home.list-claims --json` rather than adjusted by hand — the first attempt at this edit put 6 in
+the `mirror` row from a `rg -c` that had also matched a line of prose.
 
 By tier: 75 `public`, 41 `derived`, 4 `machine`, 1 `secret`; zero `personal`. The `secret` count is
 1 rather than 2 because this machine kept a real keyring — the plaintext credential store below is
