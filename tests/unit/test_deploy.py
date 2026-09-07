@@ -409,7 +409,7 @@ def test_lookup_matches_a_symlink_to_a_managed_destination(tmp_path, monkeypatch
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/statusline-command.sh",
-                "symlink_dest": str(link),
+                "also_deploy_to": str(link),
             }
         },
     )
@@ -962,13 +962,13 @@ def test_a_customized_seeded_destination_is_still_left_alone_without_yes(tmp_pat
 
 
 # ---------------------------------------------------------------------------
-# symlink_dest, deployed by deploy.all rather than only by tools.install
+# also_deploy_to, deployed by deploy.all rather than only by tools.install
 # ---------------------------------------------------------------------------
 
 
-def test_deploy_all_creates_a_packages_symlink_dests(tmp_path, monkeypatch, capsys):
-    """`inv deploy.all` is the documented way to link a newly-installed agent in, and until
-    2026-09-04 it wrote content and no links at all — the only writer was `tools.install`, which
+def test_deploy_all_writes_a_packages_mirrors(tmp_path, monkeypatch, capsys):
+    """`inv deploy.all` is the documented way to wire a newly-installed agent in, and until
+    2026-09-04 it wrote content and nothing else — the only writer was `tools.install`, which
     re-runs every installer for every package."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
@@ -983,7 +983,7 @@ def test_deploy_all_creates_a_packages_symlink_dests(tmp_path, monkeypatch, caps
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/agents.md",
-                "symlink_dest": [str(vendor)],
+                "also_deploy_to": [str(vendor)],
             }
         },
     )
@@ -991,12 +991,43 @@ def test_deploy_all_creates_a_packages_symlink_dests(tmp_path, monkeypatch, caps
     deploy.all_(MockContext(), name="agents-md", yes=True)
 
     assert dest.read_text() == "rules\n"
-    assert vendor.is_symlink()
-    assert vendor.resolve() == dest.resolve()
+    assert not vendor.is_symlink()
+    assert vendor.read_text() == "rules\n"
 
 
-def test_deploy_all_creates_an_always_link_whose_parent_is_missing(tmp_path, monkeypatch):
-    """The `~/AGENTS.md` compatibility link: no vendor owns it, so its parent is created."""
+def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypatch):
+    """Every machine deployed before 2026-09-07 carries symlinks at these paths. If they were not
+    replaced they would keep working on Linux and quietly keep the old wiring forever — which is
+    the migration this whole change needs and the one `mirror_ok` refusing a symlink buys."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
+    vendor.parent.mkdir(parents=True)
+    dest.parent.mkdir(parents=True)
+    dest.write_text("rules\n")
+    vendor.symlink_to(dest)
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "content_file": "config/agents.md",
+                "also_deploy_to": [str(vendor)],
+            }
+        },
+    )
+
+    deploy.all_(MockContext(), name="agents-md", yes=True)
+
+    assert not vendor.is_symlink()
+    assert vendor.read_text() == "rules\n"
+
+
+def test_deploy_all_writes_an_always_mirror_whose_parent_is_missing(tmp_path, monkeypatch):
+    """The `~/AGENTS.md` compatibility copy: no vendor owns it, so its parent is created."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     compat = tmp_path / "home" / "AGENTS.md"
     (tmp_path / "config").mkdir(exist_ok=True)
@@ -1009,20 +1040,20 @@ def test_deploy_all_creates_an_always_link_whose_parent_is_missing(tmp_path, mon
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/agents.md",
-                "symlink_dest": [{"path": str(compat), "always": True}],
+                "also_deploy_to": [{"path": str(compat), "always": True}],
             }
         },
     )
 
     deploy.all_(MockContext(), name="agents-md", yes=True)
 
-    assert compat.is_symlink()
-    assert compat.resolve() == dest.resolve()
+    assert not compat.is_symlink()
+    assert compat.read_text() == "rules\n"
 
 
-def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch, capsys):
-    """`PULSE_DRY_RUN=1` reports without writing — the link half has to honour that too, and it
-    has to *report*: returning early made a machine that would gain three links print
+def test_deploy_all_writes_no_mirror_under_dry_run(tmp_path, monkeypatch, capsys):
+    """`PULSE_DRY_RUN=1` reports without writing — the mirror half has to honour that too, and it
+    has to *report*: returning early made a machine that would gain three of them print
     `1 path(s): 1 created` and nothing else, which understates the real run in the one output
     someone reads before deciding to trust it."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
@@ -1038,7 +1069,7 @@ def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch, capsys):
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/agents.md",
-                "symlink_dest": [{"path": str(compat), "always": True}],
+                "also_deploy_to": [{"path": str(compat), "always": True}],
             }
         },
     )
@@ -1047,7 +1078,7 @@ def test_deploy_all_writes_no_link_under_dry_run(tmp_path, monkeypatch, capsys):
 
     assert not compat.exists()
     assert not compat.is_symlink()
-    assert f"{compat}: would symlink -> {dest}" in capsys.readouterr().out
+    assert f"{compat}: would write a copy of {dest}" in capsys.readouterr().out
 
 
 def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
@@ -1065,7 +1096,7 @@ def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/agents.md",
-                "symlink_dest": [str(vendor)],
+                "also_deploy_to": [str(vendor)],
             }
         },
     )

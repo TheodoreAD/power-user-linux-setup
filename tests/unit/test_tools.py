@@ -32,10 +32,10 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config.sh").write_text("echo hi\n")
 
 
-def _cfg(tmp_path, *, symlink_dest: str | list[str | dict[str, str | bool]] | None = None) -> util.PackageConfig:
+def _cfg(tmp_path, *, also_deploy_to: str | list[str | dict[str, str | bool]] | None = None) -> util.PackageConfig:
     cfg: util.PackageConfig = {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh"}
-    if symlink_dest is not None:
-        cfg["symlink_dest"] = symlink_dest
+    if also_deploy_to is not None:
+        cfg["also_deploy_to"] = also_deploy_to
     return cfg
 
 
@@ -130,80 +130,81 @@ def test_install_wrapper_script_dry_run_reports_ok_or_missing_without_writing(tm
     assert not deploy._MANIFEST.exists()
 
 
-def test_install_wrapper_script_creates_the_symlink_dest(tmp_path):
-    link = tmp_path / "CLAUDE.md"
+def test_install_wrapper_script_writes_the_mirror(tmp_path):
+    mirror = tmp_path / "CLAUDE.md"
 
-    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=str(mirror)))
 
-    assert link.is_symlink()
-    assert link.resolve() == (tmp_path / "deployed.sh").resolve()
+    assert not mirror.is_symlink()
+    assert mirror.read_text() == (tmp_path / "deployed.sh").read_text()
 
 
-def test_install_wrapper_script_leaves_a_non_symlink_at_symlink_dest_alone(tmp_path, capsys):
-    link = tmp_path / "CLAUDE.md"
-    link.write_text("a real file, not a symlink\n")
+def test_install_wrapper_script_leaves_someone_elses_file_at_a_mirror_path_alone(tmp_path, capsys):
+    mirror = tmp_path / "CLAUDE.md"
+    mirror.write_text("a real file nobody here wrote\n")
 
-    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=str(mirror)))
 
-    assert not link.is_symlink()
-    assert link.read_text() == "a real file, not a symlink\n"
+    assert mirror.read_text() == "a real file nobody here wrote\n"
     assert "Leaving it alone" in capsys.readouterr().out
 
 
-def test_install_wrapper_script_creates_every_symlink_in_a_list(tmp_path):
-    """One real file, linked into several agents' own instruction paths."""
+def test_install_wrapper_script_writes_every_mirror_in_a_list(tmp_path):
+    """One canonical file, copied into several agents' own instruction paths."""
     claude = tmp_path / "dot-claude" / "CLAUDE.md"
     copilot = tmp_path / "dot-copilot" / "copilot-instructions.md"
     claude.parent.mkdir()
     copilot.parent.mkdir()
 
-    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[str(claude), str(copilot)]))
+    cfg = _cfg(tmp_path, also_deploy_to=[str(claude), str(copilot)])
+    tools._install_wrapper_script(MockContext(), "test-tool", cfg)
 
-    assert claude.is_symlink()
-    assert copilot.is_symlink()
-    assert claude.resolve() == copilot.resolve() == (tmp_path / "deployed.sh")
+    deployed = (tmp_path / "deployed.sh").read_text()
+    assert claude.read_text() == copilot.read_text() == deployed
+    assert not claude.is_symlink()
+    assert not copilot.is_symlink()
 
 
-def test_install_wrapper_script_skips_a_symlink_whose_parent_doesnt_exist(tmp_path, capsys):
+def test_install_wrapper_script_skips_a_mirror_whose_parent_doesnt_exist(tmp_path, capsys):
     """A missing ~/.codex means Codex isn't installed — creating it to hold an instruction file
     would make an absent agent look present, so the link is reported and skipped instead."""
     absent = tmp_path / "dot-codex" / "AGENTS.md"
 
-    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[str(absent)]))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=[str(absent)]))
 
     assert not absent.parent.exists()
     assert "skipped" in capsys.readouterr().out
 
 
-def test_install_wrapper_script_links_the_installed_agents_and_skips_the_rest(tmp_path):
-    """One absent agent must not stop the others from being linked."""
+def test_install_wrapper_script_writes_for_installed_agents_and_skips_the_rest(tmp_path):
+    """One absent agent must not stop the others from being written."""
     present = tmp_path / "dot-claude" / "CLAUDE.md"
     present.parent.mkdir()
     absent = tmp_path / "dot-codex" / "AGENTS.md"
 
-    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[str(absent), str(present)]))
+    cfg = _cfg(tmp_path, also_deploy_to=[str(absent), str(present)])
+    tools._install_wrapper_script(MockContext(), "test-tool", cfg)
 
-    assert present.is_symlink()
+    assert present.read_text() == (tmp_path / "deployed.sh").read_text()
     assert not absent.parent.exists()
 
 
-def test_install_wrapper_script_creates_the_parent_of_an_always_symlink(tmp_path):
+def test_install_wrapper_script_creates_the_parent_of_an_always_mirror(tmp_path):
     """`always = true` is for a path no vendor owns, so a missing parent is not a verdict.
 
     `~/.agents/` is created by this repo, so asking "does it exist?" only ever answers a question
     about PULSE's own earlier run — the absent-agent rule has nothing to detect there.
     """
-    link = tmp_path / "dot-agents" / "AGENTS.md"
+    mirror = tmp_path / "dot-agents" / "AGENTS.md"
 
     tools._install_wrapper_script(
-        MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=[{"path": str(link), "always": True}])
+        MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=[{"path": str(mirror), "always": True}])
     )
 
-    assert link.is_symlink()
-    assert link.resolve() == (tmp_path / "deployed.sh").resolve()
+    assert mirror.read_text() == (tmp_path / "deployed.sh").read_text()
 
 
-def test_an_always_symlink_does_not_make_its_siblings_unconditional(tmp_path):
+def test_an_always_mirror_does_not_make_its_siblings_unconditional(tmp_path):
     """The flag is per-destination: a vendor path in the same list keeps the absent-agent rule."""
     always = tmp_path / "dot-agents" / "AGENTS.md"
     vendor = tmp_path / "dot-codex" / "AGENTS.md"
@@ -211,31 +212,31 @@ def test_an_always_symlink_does_not_make_its_siblings_unconditional(tmp_path):
     tools._install_wrapper_script(
         MockContext(),
         "test-tool",
-        _cfg(tmp_path, symlink_dest=[{"path": str(always), "always": True}, str(vendor)]),
+        _cfg(tmp_path, also_deploy_to=[{"path": str(always), "always": True}, str(vendor)]),
     )
 
-    assert always.is_symlink()
+    assert always.is_file()
     assert not vendor.parent.exists()
 
 
-def test_symlink_dests_defaults_always_to_false_for_a_bare_string(tmp_path):
+def test_mirror_dests_defaults_always_to_false_for_a_bare_string(tmp_path):
     """A plain string must stay conditional — the flag is opt-in, never inferred."""
-    dests = deploy.symlink_dests(_cfg(tmp_path, symlink_dest=[str(tmp_path / "a"), {"path": str(tmp_path / "b")}]))
+    dests = deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=[str(tmp_path / "a"), {"path": str(tmp_path / "b")}]))
 
     assert [d.always for d in dests] == [False, False]
 
 
-def test_symlink_dests_rejects_a_table_without_a_path(tmp_path):
+def test_mirror_dests_rejects_a_table_without_a_path(tmp_path):
     """A typo'd key must fail loudly rather than silently declaring nothing."""
     with pytest.raises(TypeError, match="string `path`"):
-        deploy.symlink_dests(_cfg(tmp_path, symlink_dest=[{"always": True}]))
+        deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=[{"always": True}]))
 
 
-def test_a_dest_change_converts_the_old_real_file_into_a_link(tmp_path, capsys):
-    """Moving a package's `dest` must not leave two real files with the links on the old one.
+def test_a_dest_change_rewrites_the_old_real_file_as_a_mirror(tmp_path, capsys):
+    """Moving a package's `dest` must not leave two real files diverging from each other.
 
     This is the `agents-md` move of 2026-09-04 in miniature: deploy to path A, repoint `dest` at
-    path B, declare A as a link. A holds exactly what PULSE wrote, so converting it loses nothing —
+    path B, declare A as a mirror. A holds exactly what PULSE wrote, so rewriting it loses nothing —
     and refusing would strand every existing machine in the split-brain state.
     """
     old = tmp_path / "AGENTS.md"
@@ -244,39 +245,43 @@ def test_a_dest_change_converts_the_old_real_file_into_a_link(tmp_path, capsys):
     assert old.is_file()
     assert not old.is_symlink()
 
+    # The source moves on in the same step, so the old file is genuinely stale rather than
+    # coincidentally identical — otherwise `mirror_ok` short-circuits and this proves nothing.
+    (tmp_path / "config.sh").write_text("echo v2\n")
     moved: util.PackageConfig = {
         "dest": str(new),
         "content_file": "config.sh",
-        "symlink_dest": [{"path": str(old), "always": True}],
+        "also_deploy_to": [{"path": str(old), "always": True}],
     }
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
-    assert new.is_file()
-    assert old.is_symlink()
-    assert old.resolve() == new.resolve()
+    assert new.read_text() == "echo v2\n"
+    assert not old.is_symlink()
+    assert old.read_text() == "echo v2\n"
     assert "replaced a stale copy" in capsys.readouterr().out
 
 
-def test_a_dest_change_repoints_a_link_that_aimed_at_the_old_dest(tmp_path, capsys):
-    """A vendor link left pointing at the previous destination is stale, not a hand-edit.
+def test_a_dest_change_rewrites_a_mirror_that_held_the_old_dests_content(tmp_path, capsys):
+    """A vendor mirror left holding the previous destination's content is stale, not a hand-edit.
 
-    Without this the four `~/.claude`, `~/.codex`, ... links keep resolving to the old file after a
-    move — the agent reads a copy that no longer gets updated, and nothing says so.
+    Without this the four `~/.claude`, `~/.codex`, ... copies keep whatever the old file said after
+    a move — the agent reads content that no longer gets updated, and nothing says so.
     """
     old = tmp_path / "AGENTS.md"
     new = tmp_path / "dot-agents" / "AGENTS.md"
     vendor = tmp_path / "dot-claude" / "CLAUDE.md"
     vendor.parent.mkdir()
     tools._install_wrapper_script(
-        MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh", "symlink_dest": [str(vendor)]}
+        MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh", "also_deploy_to": [str(vendor)]}
     )
-    assert vendor.resolve() == old.resolve()
+    assert vendor.read_text() == old.read_text()
 
-    moved: util.PackageConfig = {"dest": str(new), "content_file": "config.sh", "symlink_dest": [str(vendor)]}
+    (tmp_path / "config.sh").write_text("echo moved\n")
+    moved: util.PackageConfig = {"dest": str(new), "content_file": "config.sh", "also_deploy_to": [str(vendor)]}
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
-    assert vendor.resolve() == new.resolve()
-    assert "replaced a stale link" in capsys.readouterr().out
+    assert new.read_text() == "echo moved\n"
+    assert vendor.read_text() == "echo moved\n"
 
 
 def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path, capsys):
@@ -289,7 +294,7 @@ def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path,
     moved: util.PackageConfig = {
         "dest": str(new),
         "content_file": "config.sh",
-        "symlink_dest": [{"path": str(old), "always": True}],
+        "also_deploy_to": [{"path": str(old), "always": True}],
     }
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
@@ -305,7 +310,7 @@ def test_a_hand_made_symlink_to_an_unmanaged_file_is_left_alone(tmp_path, capsys
     link = tmp_path / "CLAUDE.md"
     link.symlink_to(someone_elses)
 
-    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, symlink_dest=str(link)))
+    tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=str(link)))
 
     assert link.resolve() == someone_elses.resolve()
     assert "Leaving it alone" in capsys.readouterr().out
@@ -319,7 +324,7 @@ def test_install_wrapper_script_dry_run_ignores_a_link_whose_parent_doesnt_exist
     dry-run branch counted their unmade links as failures. A dry run that cries wolf on a healthy
     machine is how a report teaches people to ignore it.
     """
-    cfg = _cfg(tmp_path, symlink_dest=[str(tmp_path / "dot-codex" / "AGENTS.md")])
+    cfg = _cfg(tmp_path, also_deploy_to=[str(tmp_path / "dot-codex" / "AGENTS.md")])
     tools._install_wrapper_script(MockContext(), "test-tool", cfg)  # deploy the content for real
     capsys.readouterr()
     monkeypatch.setattr(util, "DRY_RUN", True)

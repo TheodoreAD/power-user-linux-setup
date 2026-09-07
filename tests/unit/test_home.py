@@ -87,7 +87,7 @@ def test_a_seeded_destination_is_user_authority_and_a_managed_one_is_pulse(fake_
     assert by_path[fake_home / "w.lua"].authority == home.Authority.USER
 
 
-def test_a_symlink_dest_is_its_own_claim(fake_home, monkeypatch):
+def test_an_also_deploy_to_is_its_own_claim(fake_home, monkeypatch):
     _stub_config(
         monkeypatch,
         {
@@ -95,23 +95,23 @@ def test_a_symlink_dest_is_its_own_claim(fake_home, monkeypatch):
                 "method": "wrapper-script",
                 "dest": str(fake_home / "AGENTS.md"),
                 "content_file": "config/statusline-command.sh",
-                "symlink_dest": [str(fake_home / ".claude" / "CLAUDE.md")],
+                "also_deploy_to": [str(fake_home / ".claude" / "CLAUDE.md")],
             }
         },
     )
 
-    claims = list(home._symlink_claims())
+    claims = list(home._mirror_claims())
 
     assert [c.path for c in claims] == [fake_home / ".claude" / "CLAUDE.md"]
-    assert claims[0].writer == home.Writer.SYMLINK
+    assert claims[0].writer == home.Writer.MIRROR
 
 
-def test_an_always_symlink_dest_is_claimed_like_any_other(fake_home, monkeypatch):
+def test_an_always_mirror_is_claimed_like_any_other(fake_home, monkeypatch):
     """The registry must see a `{ path, always }` table, not choke on it or drop it.
 
-    It parsed `symlink_dest` itself before the table shape existed, which would have handed a
-    mapping straight to `Path()` — a claim silently missing from the one command that answers "is
-    this path PULSE-managed?".
+    It parsed the field itself before the table shape existed, which would have handed a mapping
+    straight to `Path()` — a claim silently missing from the one command that answers "is this path
+    PULSE-managed?".
     """
     _stub_config(
         monkeypatch,
@@ -120,7 +120,7 @@ def test_an_always_symlink_dest_is_claimed_like_any_other(fake_home, monkeypatch
                 "method": "wrapper-script",
                 "dest": str(fake_home / ".agents" / "AGENTS.md"),
                 "content_file": "config/statusline-command.sh",
-                "symlink_dest": [
+                "also_deploy_to": [
                     {"path": str(fake_home / "AGENTS.md"), "always": True},
                     str(fake_home / ".claude" / "CLAUDE.md"),
                 ],
@@ -128,7 +128,7 @@ def test_an_always_symlink_dest_is_claimed_like_any_other(fake_home, monkeypatch
         },
     )
 
-    claims = list(home._symlink_claims())
+    claims = list(home._mirror_claims())
 
     assert [c.path for c in claims] == [fake_home / "AGENTS.md", fake_home / ".claude" / "CLAUDE.md"]
     assert {c.source for c in claims} == {str(fake_home / ".agents" / "AGENTS.md")}

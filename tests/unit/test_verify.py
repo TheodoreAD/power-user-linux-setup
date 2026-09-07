@@ -176,82 +176,107 @@ def test_classify_deploy_raises_for_a_path_outside_the_registry(tmp_path, monkey
         verify._classify_deploy(str(tmp_path / "nope"))
 
 
-def test_symlink_check_passes_for_a_link_to_a_deployed_path(tmp_path, monkeypatch):
-    dest = tmp_path / "AGENTS.md"
-    dest.write_text("rules\n")
-    link = tmp_path / "CLAUDE.md"
-    link.symlink_to(dest)
+def _stub_mirror_package(monkeypatch, dest, mirror):
+    """One enabled package declaring `mirror` as a copy of `dest`, which is what `_mirror_source`
+    walks to answer "what should be here"."""
     monkeypatch.setattr(
-        deploy,
-        "lookup",
-        lambda p, base=None: deploy.Managed(
-            path=dest, package="agents-md", source="config/agents-md", mechanism=deploy.Mechanism.ASSEMBLED
-        ),
+        util,
+        "enabled_packages",
+        lambda: {"agents-md": {"dest": str(dest), "also_deploy_to": [str(mirror)]}},
     )
 
-    passed, _ = verify._symlink_check(str(link))
+
+def test_mirror_check_passes_for_a_copy_holding_the_deployed_bytes(tmp_path, monkeypatch):
+    dest = tmp_path / "AGENTS.md"
+    dest.write_text("rules\n")
+    mirror = tmp_path / "CLAUDE.md"
+    mirror.write_text("rules\n")
+    _stub_mirror_package(monkeypatch, dest, mirror)
+
+    passed, _ = verify._mirror_check(str(mirror))
 
     assert passed
 
 
-def test_symlink_check_fails_for_a_missing_link(tmp_path):
-    passed, message = verify._symlink_check(str(tmp_path / "CLAUDE.md"))
+def test_mirror_check_fails_for_a_missing_file(tmp_path, monkeypatch):
+    dest = tmp_path / "AGENTS.md"
+    dest.write_text("rules\n")
+    mirror = tmp_path / "CLAUDE.md"
+    _stub_mirror_package(monkeypatch, dest, mirror)
+
+    passed, message = verify._mirror_check(str(mirror))
 
     assert not passed
     assert "missing" in message
 
 
-def test_symlink_check_fails_for_a_real_file_at_the_link_path(tmp_path):
-    """The failure that matters: an agent reading a stale hand-made copy instead of the deployed
-    file looks completely normal until someone diffs the two."""
-    link = tmp_path / "CLAUDE.md"
-    link.write_text("a stale copy\n")
+def test_mirror_check_fails_for_content_that_has_drifted(tmp_path, monkeypatch):
+    """The failure the copy mechanism introduced, and the reason this check compares bytes: a
+    mirror left behind by an older deploy is a real file at the right path, and an agent reading
+    last week's rules looks exactly like an agent reading this week's."""
+    dest = tmp_path / "AGENTS.md"
+    dest.write_text("this week's rules\n")
+    mirror = tmp_path / "CLAUDE.md"
+    mirror.write_text("last week's rules\n")
+    _stub_mirror_package(monkeypatch, dest, mirror)
 
-    passed, message = verify._symlink_check(str(link))
-
-    assert not passed
-    assert "not a symlink" in message
-
-
-def test_symlink_check_fails_when_the_link_points_outside_the_registry(tmp_path, monkeypatch):
-    other = tmp_path / "somewhere-else.md"
-    other.write_text("not ours\n")
-    link = tmp_path / "CLAUDE.md"
-    link.symlink_to(other)
-    monkeypatch.setattr(deploy, "lookup", lambda p, base=None: None)
-
-    passed, message = verify._symlink_check(str(link))
+    passed, message = verify._mirror_check(str(mirror))
 
     assert not passed
-    assert "doesn't deploy" in message
+    assert "drifted" in message
 
 
-def test_symlink_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch):
-    """A link into a directory that doesn't exist is correct, not a failure — that agent simply
+def test_mirror_check_fails_for_a_leftover_symlink(tmp_path, monkeypatch):
+    """A machine deployed before 2026-09-07 still has links at these paths. They resolve to the
+    right bytes, so a content comparison alone would pass one — and the whole point of the change
+    is that a link is not what should be there."""
+    dest = tmp_path / "AGENTS.md"
+    dest.write_text("rules\n")
+    mirror = tmp_path / "CLAUDE.md"
+    mirror.symlink_to(dest)
+    _stub_mirror_package(monkeypatch, dest, mirror)
+
+    passed, message = verify._mirror_check(str(mirror))
+
+    assert not passed
+    assert "still a symlink" in message
+
+
+def test_mirror_check_fails_for_a_path_no_package_declares(tmp_path, monkeypatch):
+    monkeypatch.setattr(util, "enabled_packages", lambda: {})
+
+    passed, message = verify._mirror_check(str(tmp_path / "CLAUDE.md"))
+
+    assert not passed
+    assert "not declared as a mirror" in message
+
+
+def test_mirror_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch):
+    """A mirror into a directory that doesn't exist is correct, not a failure — that agent simply
     isn't on this machine, and the installer skips creating it for the same reason."""
     present = tmp_path / "installed"
     present.mkdir()
     packages = {
         "agents-md": {
-            "symlink_dest": [str(present / "CLAUDE.md"), str(tmp_path / "absent" / "AGENTS.md")],
+            "also_deploy_to": [str(present / "CLAUDE.md"), str(tmp_path / "absent" / "AGENTS.md")],
         }
     }
     monkeypatch.setattr(util, "enabled_packages", lambda: packages)
 
-    checks = verify._symlink_checks()
+    checks = verify._mirror_checks()
 
     assert [t for _, _, t in checks] == [str(present / "CLAUDE.md")]
 
 
-def test_symlink_checks_never_skip_an_always_destination(tmp_path, monkeypatch):
-    """`always = true` has no agent to be absent, so a missing link there is a real failure.
+def test_mirror_checks_never_skip_an_always_destination(tmp_path, monkeypatch):
+    """`always = true` has no agent to be absent, so a missing file there is a real failure.
 
     The installer creates that parent rather than reading its absence as "not installed", so
     skipping the check would hide exactly the case the flag exists to make verifiable.
     """
-    packages = {"agents-md": {"symlink_dest": [{"path": str(tmp_path / "absent" / "AGENTS.md"), "always": True}]}}
+    packages = {"agents-md": {"also_deploy_to": [{"path": str(tmp_path / "absent" / "AGENTS.md"), "always": True}]}}
     monkeypatch.setattr(util, "enabled_packages", lambda: packages)
 
-    checks = verify._symlink_checks()
+    checks = verify._mirror_checks()
 
     assert [t for _, _, t in checks] == [str(tmp_path / "absent" / "AGENTS.md")]

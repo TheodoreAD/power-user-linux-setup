@@ -151,46 +151,63 @@ def _all_checks() -> list[tuple[str, str, str]]:
         for m in deploy.managed_paths().values()
         if m.mechanism not in (deploy.Mechanism.WRAPPER_SCRIPT, deploy.Mechanism.ASSEMBLED)
     ]
-    checks += _symlink_checks()
+    checks += _mirror_checks()
     return checks
 
 
-def _symlink_checks() -> list[tuple[str, str, str]]:
-    """One check per `symlink_dest` whose agent is actually installed here.
+def _mirror_checks() -> list[tuple[str, str, str]]:
+    """One check per `also_deploy_to` whose agent is actually installed here.
 
-    A deploy check proves the instructions file holds the right bytes; it says nothing about whether
-    each agent can *see* it, and a missing or misdirected link is silent — the agent simply runs
-    without the rules. Links whose parent directory doesn't exist are skipped for the same reason
-    the installer skips creating them: that agent isn't installed, so its missing link is correct.
+    A deploy check proves the instructions file holds the right bytes at its own path; it says
+    nothing about whether each agent can *see* it, and a missing or stale mirror is silent — the
+    agent simply runs without the rules, or with last week's. Mirrors whose parent directory doesn't
+    exist are skipped for the same reason the installer skips creating them: that agent isn't
+    installed, so its missing mirror is correct.
 
-    An `always` destination is never skipped, matching `deploy.ensure_symlink`: the installer
-    creates that parent rather than reading its absence as a verdict, so a missing link there is a
-    real failure and not a machine without that agent.
+    An `always` destination is never skipped, matching `deploy.ensure_mirror`: the installer creates
+    that parent rather than reading its absence as a verdict, so a missing file there is a real
+    failure and not a machine without that agent.
     """
     return [
-        (name, "symlink", str(link.path))
+        (name, "mirror", str(mirror.path))
         for name, cfg in util.enabled_packages().items()
-        for link in deploy.symlink_dests(cfg)
-        if link.always or link.path.parent.is_dir()
+        for mirror in deploy.mirror_dests(cfg)
+        if mirror.always or mirror.path.parent.is_dir()
     ]
 
 
-def _symlink_check(target: str) -> tuple[bool, str]:
-    """(passed, message) for one declared symlink.
+def _mirror_source(mirror: Path) -> Path | None:
+    """The deployed file `mirror` is supposed to be a copy of, or None if nothing declares it."""
+    for cfg in util.enabled_packages().values():
+        dest = cfg.get("dest")
+        if dest and any(m.path == mirror for m in deploy.mirror_dests(cfg)):
+            return Path(dest).expanduser()
+    return None
 
-    Correctness is "resolves to a path this repo deploys", not merely "is a symlink": a link
-    pointing at a stale or hand-made copy of the file would satisfy the weaker test while leaving
-    that agent reading something PULSE doesn't manage. deploy.lookup already resolves a symlink to
-    its target's registry entry, which is exactly the question being asked.
+
+def _mirror_check(target: str) -> tuple[bool, str]:
+    """(passed, message) for one declared mirror.
+
+    Correctness is "holds exactly the bytes of the file this repo deploys". That is a stronger
+    question than the symlink version this replaced could ask, and it is the *right* question: a
+    copy is only as good as its freshness, so the check that matters is content equality rather
+    than the existence of a link. A stale mirror is the failure mode the whole mechanism introduced
+    on 2026-09-07, and this is what catches it.
     """
-    link = Path(target).expanduser()
-    if not link.is_symlink():
-        kind = "a regular file" if link.exists() else "missing"
-        return False, f"{target} is {kind}, not a symlink — that agent isn't reading the deployed file"
-    m = deploy.lookup(link)
-    if m is None or m.path != link.resolve():
-        return False, f"{target} points at {link.resolve()}, which this repo doesn't deploy"
-    return True, f"{target} -> {m.path}"
+    mirror = Path(target).expanduser()
+    source = _mirror_source(mirror)
+    if source is None:
+        return False, f"{target} is not declared as a mirror by any enabled package"
+    if not mirror.is_file():
+        kind = "a directory" if mirror.is_dir() else "missing"
+        return False, f"{target} is {kind} — that agent isn't reading the deployed file"
+    if mirror.is_symlink():
+        return False, f"{target} is still a symlink — re-run `inv deploy.all` to replace it with a copy"
+    if not source.is_file():
+        return False, f"{target} has nothing to mirror: {source} is missing"
+    if mirror.read_bytes() != source.read_bytes():
+        return False, f"{target} has drifted from {source} — re-run `inv deploy.all`"
+    return True, f"{target} == {source}"
 
 
 def _classify_deploy(target: str) -> tuple[deploy.Managed, deploy.State]:
@@ -231,8 +248,8 @@ def all(c: Context):  # noqa: A001, C901
                 print(f"[verify] {name}: {util.ok_label(Path(target).expanduser().exists())}")
             elif kind == "deploy":
                 print(f"[verify] {name}: {util.ok_label(_deploy_check(*_classify_deploy(target))[0])}")
-            elif kind == "symlink":
-                print(f"[verify] {name}: {util.ok_label(_symlink_check(target)[0])}")
+            elif kind == "mirror":
+                print(f"[verify] {name}: {util.ok_label(_mirror_check(target)[0])}")
             elif kind == "cmd":
                 print(f"[verify] {name}: {util.ok_label(util.command_exists(target.split()[0]))}")
             else:
@@ -251,8 +268,8 @@ def all(c: Context):  # noqa: A001, C901
             if not passed:
                 raise RuntimeError(f"[verify] {name}: {message} — redeploy needed (`inv deploy.all`)")
             print(f"[verify] {name}: {message}")
-        elif kind == "symlink":
-            passed, message = _symlink_check(target)
+        elif kind == "mirror":
+            passed, message = _mirror_check(target)
             if not passed:
                 raise RuntimeError(f"[verify] {name}: {message} — re-run `inv tools.install`")
             print(f"[verify] {name}: {message}")

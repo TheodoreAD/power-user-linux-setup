@@ -169,10 +169,12 @@ class PackageConfig(TypedDict, total=False):
     depth: int
     content_file: str
     assembled_from: str
-    # A bare string is a vendor path, linked only when its parent directory already exists (that
-    # agent is installed). A `{ path = ..., always = true }` table is a path no vendor owns — the
-    # cross-tool `~/.agents/AGENTS.md` shape — which is linked unconditionally, parent created.
-    symlink_dest: str | list[str | dict[str, str | bool]]
+    # Additional destinations the deployed file is *copied* to — not symlinked; see deploy.py's
+    # "Mirrored destinations" header for why the mechanism changed on 2026-09-07. A bare string is
+    # a vendor path, written only when its parent directory already exists (that agent is
+    # installed). A `{ path = ..., always = true }` table is a path no vendor owns — the cross-tool
+    # `~/.agents/AGENTS.md` shape — which is written unconditionally, parent created.
+    also_deploy_to: str | list[str | dict[str, str | bool]]
     # gnome-extension
     uuid: str
     ego_id: int

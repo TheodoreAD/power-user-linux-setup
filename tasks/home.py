@@ -73,8 +73,14 @@ class Writer(StrEnum):
     # No file at a knowable path: gsettings/dconf. The value is in a binary database keyed by
     # schema, and the only way to read one back is to ask the tool.
     IMPERATIVE = "imperative"
-    # A symlink PULSE creates; the claim is the link and its target, not any bytes.
+    # A symlink PULSE creates; the claim is the link and its target, not any bytes. Only the
+    # skills directory is still one — the instruction-file destinations became MIRROR on
+    # 2026-09-07, see deploy.py's "Mirrored destinations".
     SYMLINK = "symlink"
+    # A byte-for-byte copy of a file this repo deploys elsewhere, at a path another tool reads from.
+    # Drift is meaningful here in a way it is not for a symlink, which is the whole reason the two
+    # are separate writers: a mirror can go stale while its source is current.
+    MIRROR = "mirror"
     # An installer puts a tree or a binary here. Content is upstream's, never this repo's — a
     # divergence is not drift, it is a version.
     INSTALL = "install"
@@ -222,31 +228,32 @@ def _whole_file_claims() -> Iterator[Claim]:
         )
 
 
-def _symlink_claims() -> Iterator[Claim]:
-    """`symlink_dest` links pointing at a deployed file — `~/.claude/CLAUDE.md` -> `~/AGENTS.md`.
+def _mirror_claims() -> Iterator[Claim]:
+    """`also_deploy_to` copies of a deployed file — `~/.claude/CLAUDE.md` from `~/.agents/AGENTS.md`.
 
-    `deploy.lookup()` resolves these onto their target's entry, which is right for "what content
-    should be here" and wrong for an inventory: the link is a separate thing this repo creates in
-    the home directory, and nothing else enumerates it.
+    Each is a separate file this repo writes into the home directory, and nothing else enumerates
+    them: `deploy`'s own registry holds the source, not its mirrors. Since 2026-09-07 these are
+    copies rather than symlinks, which makes them the one claim class where drift is both possible
+    and invisible without a content check — a mirror can be stale while its source is current.
     """
     for name, cfg in util.packages_by_method(util.PackageMethod.WRAPPER_SCRIPT).items():
         dest = cfg.get("dest")
         if not dest:
             continue
-        # Via deploy.symlink_dests rather than re-normalising here: `symlink_dest` takes a string, a
-        # list, or a `{ path, always }` table, and a second copy of that parsing is a second place
+        # Via deploy.mirror_dests rather than re-normalising here: `also_deploy_to` takes a string,
+        # a list, or a `{ path, always }` table, and a second copy of that parsing is a second place
         # to forget a shape. It was one before the table existed, and a dict would have reached
         # `Path()` as a mapping.
-        for link in deploy.symlink_dests(cfg):
-            path = link.path
+        for mirror in deploy.mirror_dests(cfg):
+            path = mirror.path
             yield Claim(
                 target=_rel(path),
-                writer=Writer.SYMLINK,
+                writer=Writer.MIRROR,
                 authority=Authority.PULSE,
                 tier=Tier.PUBLIC,
                 owner=name,
                 source=str(Path(dest).expanduser()),
-                note="symlink_dest",
+                note="also_deploy_to",
                 path=path,
             )
 
@@ -710,7 +717,7 @@ def claims() -> list[Claim]:
     return [
         *_whole_file_claims(),
         *_undeclared_whole_file_claims(),
-        *_symlink_claims(),
+        *_mirror_claims(),
         *_block_claims(),
         *_merge_claims(),
         *_key_claims(),

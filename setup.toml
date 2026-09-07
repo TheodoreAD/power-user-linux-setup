@@ -140,11 +140,15 @@
 #   content_file  repo-relative path to the real file under config/ whose contents get deployed to
 #                 dest verbatim (stripped + trailing newline added). Not inlined in setup.toml —
 #                 a whole file's content belongs in a real, diffable, editable file, e.g.
-#                 config/research-update.sh, not a TOML string. symlink_dest (optional, a string or
-#                 a list of them) gets symlinked to dest if not already correct, same as
-#                 [packages.agents-md]'s ~/.claude/CLAUDE.md -> ~/AGENTS.md. A link whose
-#                 parent directory doesn't exist is reported and skipped, never created: that
-#                 directory's absence is how an uninstalled agent is detected.
+#                 config/research-update.sh, not a TOML string. also_deploy_to (optional, a string
+#                 or a list of them) gets a byte-for-byte *copy* of dest whenever it doesn't
+#                 already hold one, same as [packages.agents-md]'s ~/.claude/CLAUDE.md. A
+#                 destination whose parent directory doesn't exist is reported and skipped, never
+#                 created: that directory's absence is how an uninstalled agent is detected.
+#                 Copies, not symlinks, since 2026-09-07 — the field is named for the intent
+#                 because the mechanism is the part that changed; tasks/deploy.py's "Mirrored
+#                 destinations" header has the three reasons, and inv verify.all checks each
+#                 mirror's content rather than its existence.
 #   assembled_from  alternative to content_file: names an any-section list field whose fragments
 #                 are composed into dest instead of copying one source file. Only `agents_md` uses
 #                 it today ([packages.agents-md] -> ~/AGENTS.md). Each fragment lands in its
@@ -1155,23 +1159,27 @@ method = "wrapper-script"
 tags = ["shell", "ai"]
 # The real file sits at the cross-tool path, not at ~/AGENTS.md, because that is the one four
 # verified agents read on their own: Goose, Warp, Cline and Kimi Code (sources and the reasoning are
-# in contributing/ai-tooling.md). ~/AGENTS.md is now a link back to it, so nothing that already
-# points at the old location breaks. Moved 2026-09-04; before that the real file was ~/AGENTS.md and
-# no agent read it directly — it worked only because every link pointed there.
+# in contributing/ai-tooling.md). ~/AGENTS.md is now a copy of it, so nothing that already points at
+# the old location breaks. Moved 2026-09-04; before that the real file was ~/AGENTS.md and no agent
+# read it directly — it worked only because every link pointed there.
 dest = "~/.agents/AGENTS.md"
-# One real file, linked into every agent's own instruction path. A bare string is a vendor path and
-# is only linked when that agent's config directory already exists — an absent ~/.codex means Codex
-# isn't installed here, and creating it would make it look like it is. Install the agent, re-run,
-# and the link appears. Paths confirmed against each vendor's own docs; Codex's AGENTS.override.md
-# is deliberately not touched, it's the documented per-user escape hatch. Gemini can instead be
-# pointed at AGENTS.md directly via `context.fileName` in its settings.json — not done yet, see the
-# plan.
+# The canonical file, copied into every agent's own instruction path. A bare string is a vendor path
+# and is only written when that agent's config directory already exists — an absent ~/.codex means
+# Codex isn't installed here, and creating it would make it look like it is. Install the agent,
+# re-run, and the copy appears. Paths confirmed against each vendor's own docs; Codex's
+# AGENTS.override.md is deliberately not touched, it's the documented per-user escape hatch. Gemini
+# can instead be pointed at AGENTS.md directly via `context.fileName` in its settings.json — not
+# done yet, see the plan.
+#
+# Cline, goose and Kimi Code read ~/.agents/AGENTS.md natively (verified in their source
+# 2026-09-07), so they need no entry here at all and deliberately have none — this list is the
+# agents that cannot be pointed at the canonical path.
 #
 # `always = true` opts a destination out of that test, for a path no vendor owns. ~/AGENTS.md is
 # one: its parent is the home directory, so the conditional test would pass vacuously and record
 # nothing about why, and the flag is what makes "this is not an agent-installed check" explicit to
 # deploy, verify and home.list-claims alike.
-symlink_dest = [
+also_deploy_to = [
   { path = "~/AGENTS.md", always = true },
   "~/.claude/CLAUDE.md",
   "~/.codex/AGENTS.md",
