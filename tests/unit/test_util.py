@@ -397,3 +397,31 @@ def test_secret_service_says_unknown_rather_than_guessing(monkeypatch: pytest.Mo
 def test_session_bus_prefers_the_environment(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/somewhere-else")
     assert util.session_bus_address() == "unix:path=/tmp/somewhere-else"
+
+
+def test_login_shell_warning_is_silent_on_a_zsh_machine(monkeypatch):
+    _passwd_shell(monkeypatch, "/usr/bin/zsh")
+    assert util.login_shell_warning("SSL_CERT_FILE") is None
+
+
+def test_login_shell_warning_names_both_the_shell_and_what_is_lost(monkeypatch):
+    # The whole failure is silent, so the message has to carry the diagnosis: neither the shell in
+    # use nor the exports that never arrived shows up anywhere else.
+    _passwd_shell(monkeypatch, "/bin/bash")
+    note = util.login_shell_warning("SSL_CERT_FILE and friends")
+
+    assert note is not None
+    assert "/bin/bash" in note
+    assert "SSL_CERT_FILE and friends" in note
+    assert "zsh.set-default-shell" in note
+
+
+def test_login_shell_warning_still_warns_when_the_shell_is_unknown(monkeypatch):
+    # A container with no passwd entry is not evidence that zsh is in place — the exports are just
+    # as invisible, so the safe answer is the warning, not silence.
+    monkeypatch.setattr(util, "current_user", lambda: "ghost")
+    monkeypatch.setattr(pwd, "getpwnam", _raise_key_error)
+    note = util.login_shell_warning("http_proxy")
+
+    assert note is not None
+    assert "unknown" in note

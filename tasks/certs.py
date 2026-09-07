@@ -529,6 +529,12 @@ def _configure_java(c: Context, desired: str) -> None:
 # the Java import above must be gated on keytool actually existing before it acts).
 
 
+# What the block below exports, named for util.login_shell_warning — a bash login shell reads none
+# of it, and nothing here writes a file bash does read (see docs/wsl.md, "Assumptions this repo
+# makes about WSL"). Silent by construction: an unverified TLS chain looks like a network fault.
+_CERT_EXPORTS = "SSL_CERT_FILE, REQUESTS_CA_BUNDLE, NODE_EXTRA_CA_CERTS and AWS_CA_BUNDLE"
+
+
 def _env_block_content() -> str:
     return (
         f'export SSL_CERT_FILE="{_SYSTEM_BUNDLE}"\n'
@@ -606,6 +612,8 @@ def check(c: Context, bundle: str | None = None, from_windows: bool = False):
         return
     status = _status(c, paths)
     print(f"[certs] bundle:{status['bundle']}  zshenv:{status['zshenv']}  java:{status['java']}")
+    if note := util.login_shell_warning(_CERT_EXPORTS):
+        print(f"[certs] {note}")
 
 
 @dataclass(frozen=True)
@@ -794,4 +802,10 @@ def _install_bundle(c: Context, paths: list[Path]) -> None:
 
     _configure_java(c, desired)
 
-    print("[certs] open a new terminal for the ~/.zshenv changes to take effect")
+    # The block is written either way — it is correct, idempotent, and right for the moment the
+    # shell changes. What is not said either way is "open a new terminal", which on bash would be
+    # advice to go and watch nothing happen.
+    if note := util.login_shell_warning(_CERT_EXPORTS):
+        print(f"[certs] {note}")
+    else:
+        print("[certs] open a new terminal for the ~/.zshenv changes to take effect")

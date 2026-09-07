@@ -309,6 +309,15 @@ def check(c: Context):  # noqa: C901
         'docker\'s credential helper reads. See docs/wsl.md, "The secret store, and unlocking it".'
     )
 
+    # The fourth axis, and the one with no error at all when it is missing: certs.install and
+    # proxy.install export into ~/.zshenv, nothing here writes a file bash reads, and an IDE server
+    # probes whatever the login shell is. Reported here as well as by those two tasks because this
+    # is the pre-flight — the point of it is to find this before the corporate config is written.
+    if note := util.login_shell_warning("the cert and proxy environment"):
+        print(f"[wsl] {note}")
+    else:
+        print(f"[wsl] login shell: {util.login_shell()} ✓")
+
     # Fonts — cannot be checked or fixed from inside WSL; always worth the reminder
     print(
         "[wsl] fonts: inv fonts.install only installs into ~/.local/share/fonts inside this distro — "

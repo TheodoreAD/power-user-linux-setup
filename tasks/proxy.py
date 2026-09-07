@@ -464,6 +464,10 @@ def _write_env_file() -> None:
 
 
 _UNLOCK_CMD = "gnome-keyring-daemon --unlock --components=secrets"
+# What install() writes into ~/.zshenv once the daemon verifies, named for util.login_shell_warning.
+# A bash login shell reads none of it, and the symptom is the daemon running perfectly with nothing
+# pointed at it — every tool goes straight out to a proxy that wants a credential they do not have.
+_PROXY_EXPORTS = "http_proxy, https_proxy and their uppercase twins"
 
 
 def _keyring_remedy(c: Context) -> str:
@@ -637,6 +641,28 @@ def _capture_with_keyring(c: Context, *, keyring_fallback: bool) -> str | None:
     return _capture_credential(fallback=fallback)
 
 
+def _export_proxy_env(noproxy: str | None) -> None:
+    """Point every shell at the verified local daemon, and say whether that will reach anything.
+
+    The last step of install() and the only one whose failure is silent: on a bash login shell the
+    block is written correctly and read by nothing, so the daemon runs perfectly with no client
+    while every tool goes straight out to a proxy that wants a credential they do not have.
+    """
+    content = (
+        f'export http_proxy="http://127.0.0.1:{_DEFAULT_PORT}"\n'
+        f'export https_proxy="http://127.0.0.1:{_DEFAULT_PORT}"\n'
+        f'export HTTP_PROXY="http://127.0.0.1:{_DEFAULT_PORT}"\n'
+        f'export HTTPS_PROXY="http://127.0.0.1:{_DEFAULT_PORT}"\n'
+        + (f'export no_proxy="{noproxy}"\nexport NO_PROXY="{noproxy}"\n' if noproxy else "")
+    )
+    status = util.ensure_block(ZSHENV, "proxy", content)
+    if note := util.login_shell_warning(_PROXY_EXPORTS):
+        print(f"[proxy] ~/.zshenv proxy block: {status.value}")
+        print(f"[proxy] {note}")
+    else:
+        print(f"[proxy] ~/.zshenv proxy block: {status.value} — open a new terminal for it to take effect")
+
+
 def _needs_negotiate(schemes: list[str]) -> bool:
     return any(s.lower() in ("negotiate", "kerberos") for s in schemes)
 
@@ -700,6 +726,9 @@ def check(c: Context, proxy: str = "auto"):
         print("[proxy] px: not installed  ← `inv proxy.install` installs it (uv tool)")
 
     _keyring_status(c, fallback=ENV_FILE.exists())
+
+    if note := util.login_shell_warning(_PROXY_EXPORTS):
+        print(f"[proxy] {note}")
 
     if _user_systemd_available(c):
         active = c.run("systemctl --user is-active pulse-proxy.service", hide=True, warn=True).stdout.strip()
@@ -804,12 +833,4 @@ def install(c: Context, proxy: str = "auto", noproxy: str | None = None, keyring
         return
     print("[proxy] verified: 127.0.0.1:3128 authenticates through to the upstream proxy")
 
-    content = (
-        f'export http_proxy="http://127.0.0.1:{_DEFAULT_PORT}"\n'
-        f'export https_proxy="http://127.0.0.1:{_DEFAULT_PORT}"\n'
-        f'export HTTP_PROXY="http://127.0.0.1:{_DEFAULT_PORT}"\n'
-        f'export HTTPS_PROXY="http://127.0.0.1:{_DEFAULT_PORT}"\n'
-        + (f'export no_proxy="{noproxy}"\nexport NO_PROXY="{noproxy}"\n' if noproxy else "")
-    )
-    status = util.ensure_block(ZSHENV, "proxy", content)
-    print(f"[proxy] ~/.zshenv proxy block: {status.value} — open a new terminal for it to take effect")
+    _export_proxy_env(noproxy)

@@ -431,6 +431,28 @@ def login_shell_is_zsh() -> bool:
     return Path(login_shell()).name == "zsh"
 
 
+def login_shell_warning(exports: str) -> str | None:
+    """What to print when this repo's ~/.zshenv exports cannot reach anything — None when they can.
+
+    `exports` names what is being lost, since the caller knows which block it just wrote and this
+    does not.
+
+    Printed where those exports are written and read rather than enforced centrally. A `verify.all`
+    check was the obvious shape and is the wrong one twice over: it runs at the end of the packages
+    phase while `zsh.set-default-shell` runs in the shell phase after it, so it would abort every
+    first run before the task that satisfies it has run — and the degradation costs nothing at all
+    on a machine with no cert or proxy config, which is most of them.
+    """
+    if login_shell_is_zsh():
+        return None
+    return (
+        f"login shell is {login_shell() or 'unknown'}, not zsh — {exports} are exported from "
+        "~/.zshenv and nothing here writes a file bash reads, so they reach nothing: not a "
+        "terminal, not a script, not an IDE-started server. Run `inv zsh.set-default-shell`, then "
+        "open a new terminal."
+    )
+
+
 def session_bus_address() -> str | None:
     """The per-user D-Bus session bus, if this machine has one.
 
