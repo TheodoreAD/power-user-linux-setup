@@ -66,19 +66,23 @@ Re-measured on this machine, 2026-09-07 (the 2026-08-30 figures are in brackets)
 | `imperative`            |   23 (23) | `gsettings`/`dconf` — no file at any path              |
 | `whole-file`            |   12 (11) | `deploy.py`, from a `setup.toml` declaration           |
 | `mirror`                |     5 (—) | copies of a deployed file, at paths other tools read   |
-| `symlink`               |     1 (—) | `~/.claude/skills`, the one link this repo still makes |
 | `whole-file-undeclared` |     4 (3) | `deploy.py`, destination decided at run time           |
 | `key`                   |     3 (3) | regex surgery on one key of a file an application owns |
 | `merge`                 |     3 (2) | structured merge into co-owned JSON                    |
+| `external`              |     2 (1) | skills directories, written by the `skills` CLI        |
 | `generated`             |     1 (1) | composed by a task, with no source to compare against  |
 | `directory`             |     1 (—) | created by a task, filled by the user or another tool  |
-| `external`              |     1 (1) | `~/.agents/skills/`, installed by the `skills` CLI     |
 | **total**               | 121 (109) |                                                        |
 
-`mirror` and `symlink` were one `symlink` row of 6 (5) until 2026-09-07; the split changed the
-mechanism, not the count, and the total is unchanged. Both figures above are read from
-`inv home.list-claims --json` rather than adjusted by hand — the first attempt at this edit put 6 in
-the `mirror` row from a `rg -c` that had also matched a line of prose.
+**There is no `symlink` row any more: this repo creates no symlinks under `~`.** It was 6 (5) until
+2026-09-07, when the five instruction destinations became `mirror` copies and the sixth,
+`~/.claude/skills`, turned out to be something the `skills` CLI writes per skill on its own — so it
+became a second `external` claim. Neither change moved the total, which is the useful check that a
+reclassification is a reclassification.
+
+Every figure here is read from `inv home.list-claims --json` rather than adjusted by hand. The first
+attempt at this edit put 6 in the `mirror` row from a `rg -c` that had also matched a line of prose,
+and the row was wrong in a committed doc for one commit.
 
 By tier: 75 `public`, 41 `derived`, 4 `machine`, 1 `secret`; zero `personal`. The `secret` count is
 1 rather than 2 because this machine kept a real keyring — the plaintext credential store below is
@@ -124,17 +128,26 @@ Building it turned up five claims nobody had written down, each a real ownership
   so `ensure_mirror` records every one in the deploy manifest and `verify` compares content rather
   than looking for a link. `deploy.lookup()` still resolves through a link, which now serves only a
   machine that has not re-deployed since the change.
-- **`symlink` survives for exactly one claim**, `~/.claude/skills` → `~/.agents/skills`, and it is
-  the one piece of this wiring still under question. While it exists it is load-bearing: the
-  `skills` CLI resolves symlinks in parent directories, so `~/.claude/skills/<skill>` and
-  `~/.agents/skills/<skill>` are recognised as the same file and nothing per-skill gets created. But
-  `claude-code` is **not** one of that CLI's universal agents — its `skillsDir` is `.claude/skills`,
-  not `.agents/skills` — so without the directory link the CLI writes that per-skill entry itself,
-  as a junction on Windows with a copy fallback. A whole-directory symlink is the one shape Windows
-  cannot make without Developer Mode, and it is not a shape any vendor documents: Claude Code's docs
-  say a `<skill-name>` _entry_ may be a symlink, never the directory.
-  `plans/2026-09-07-agents-md-and-skills-on-native-windows.md` carries the version gap that has to
-  be measured before this changes.
+- **The `~/.claude/skills` symlink was ours, unnecessary, and hiding the evidence that it was.**
+  PULSE made that directory a link to `~/.agents/skills` because Claude Code does not read the
+  cross-tool path natively and a 2026-08-27 measurement said the `skills` CLI announced a per-agent
+  symlink it did not create. The measurement was against CLI v1.5.10; the reading that mattered was
+  wrong at any version. `claude-code` is **not** one of that CLI's universal agents — its
+  `skillsDir` is `.claude/skills`, and `isUniversalAgent` tests for `.agents/skills` — so the early
+  return that skips per-agent links never applied to it.
+
+  The link was also self-concealing: the CLI resolves parent symlinks before deciding whether a
+  skill is installed, so with the directory linked, `<link>/<name>` and `.agents/skills/<name>` are
+  the same file and it correctly skipped. **The arrangement could not observe what the tool would do
+  without it.** Removed and re-measured 2026-09-07 on CLI v1.5.24: 14 skills, 14 per-skill symlinks
+  created at `~/.claude/skills/<name>` → `../../.agents/skills/<name>`, and this session's own skill
+  listing unchanged. On Windows the same code path makes a junction, which needs no privilege, and
+  falls back to copying.
+
+  The general lesson is the one worth keeping: **a whole-directory link was our invention, and no
+  vendor documents it** — Claude Code's docs say a `<skill-name>` _entry_ may be a symlink, never
+  the directory. Being the outlier is what made Windows look hard, and the fix was to stop doing
+  something rather than to port it.
 - **Every skill on this machine is invisible to `deploy.py`.** `deploy._skill_entries` registers
   only `source = "local"` skills, and this repo deliberately declares none — every skill is authored
   in `agent-skills` and fetched from its remote by the `skills` CLI. So the whole of
