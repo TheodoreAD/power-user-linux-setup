@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-06
+updated: 2026-09-07
 ---
 
 # Corporate cert/proxy gaps left open under WSL
@@ -252,6 +252,26 @@ container proxy is set while the daemon is still loopback-only. The symptom othe
 container pull timing out while the host is fine, which reads as a network problem rather than as a
 setting — and the two halves are configured in different files, by different tasks, on different
 days.]
+
+### 6. Everything this installs is exported from `~/.zshenv` alone
+
+Established 2026-09-06 while answering the IDE question, and it is the assumption the whole
+cert/proxy surface rests on without saying so: `SSL_CERT_FILE`, `REQUESTS_CA_BUNDLE`,
+`NODE_EXTRA_CA_CERTS`, `AWS_CA_BUNDLE`, `http_proxy`/`https_proxy` and the keyring backend all reach
+a process because zsh reads `~/.zshenv` on **every** invocation, and because `inv zsh.configure`
+makes zsh the login shell. VS Code's Remote-WSL server probes an interactive login shell at start,
+so that chain is what carries the corporate configuration into an IDE-started process.
+
+[DEFERRED: **whether a bash-side equivalent is owed.** Nothing this repo writes lands in a file bash
+reads — no `.bashrc`, no `.bash_profile`, no `BASH_ENV` — so on a machine whose login shell is still
+bash, every one of those exports is invisible and the failure is silent: TLS verification fails in
+the IDE and works in the terminal. Three options, none obviously right. Write the same block into
+`~/.bashrc` too, which doubles the deployment surface for a shell this setup does not otherwise
+support. Set `BASH_ENV`, which only covers non-interactive bash. Or state zsh as a prerequisite the
+way modern WSL2 and a real terminal are now stated, and let `wsl.check` fail loudly when the login
+shell is not zsh — cheapest, and consistent with `zsh.configure` already being part of every install
+path. The third is the likely answer; what makes it a decision rather than an obvious pick is that
+it turns a silent degradation into a hard requirement for anyone who prefers bash.]
 
 ## Files touched
 
