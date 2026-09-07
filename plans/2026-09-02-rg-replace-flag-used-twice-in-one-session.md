@@ -217,3 +217,40 @@ so the wording lever was not spent after all, and the rewritten clause is the ch
 of it. Re-count in a week against the baseline named above. If the rate holds, the `ask`-rule is the
 fallback: it is the only one of the three mechanisms that needs no standing rule bent to allow it,
 and its cost is one prompt on a shape occurring about four times a week.
+
+## A sixth, 2026-09-07 — the first one nobody caught in the session that made it
+
+One `-rn`, in this repo, in a 201-call session. What makes it worth a section rather than a tally
+mark is that it is the case the row above **predicted and could not yet show**: a session that typed
+the bundle exactly once, and therefore had no earlier instance of its own to be alerted by.
+
+```shell
+rg -rn --no-heading "import-environment" /etc/xdg/autostart/ /etc/X11/Xsession.d/ /usr/share/gdm/
+```
+
+It returned nothing. The session read that as "no autostart entry imports the environment", moved
+on, and reached its conclusion by a different route entirely. Nothing surfaced the typo for the rest
+of the session; the harvest's own `audit.py` run found it, roughly forty calls later.
+
+**The detection signature cannot fire on a zero-match search, and that is a gap in the signature
+rather than in the reader.** Every earlier occurrence was caught because output came back with the
+searched term replaced — the file list reading `from tasks.ln import`, or a pattern conspicuously
+absent from a corpus that is about it. A search with no matches produces no output at all, so there
+is nothing for the eye to find wrong: the mangled call and the correct one are byte-identical in
+their result. The plan's own second bullet at 2026-09-06 said the same thing about a `-rn` that
+"returned nothing, which is indistinguishable from 'no such function'" — but there the session
+re-ran it because it had made the mistake an hour earlier. Take that crutch away and the occurrence
+simply stands.
+
+Re-run correctly afterwards, the search still exits 1 with no matches, so **the conclusion the
+session drew was right** — `-r` rewrites output and does not affect matching, so a zero-match search
+is the one case where the bundle is harmless to the answer while being invisible to the reader. That
+is not reassurance: it means the harmless case is also the undetectable one, and the session cannot
+tell which case it is in without re-running.
+
+[UNVERIFIED: whether that generalises — a zero-match `-r` bundle is harmless, and a matching one is
+both harmful and self-announcing. If it holds, the detection signature only ever fires on the
+occurrences that were going to be caught anyway, and the residue is exactly the invisible half. That
+would move the argument for the `ask`-rule above from "the wording does not prevent it" to "no
+reader-side signal can", which is a stronger case than the plan currently makes and rests on one
+observation.]

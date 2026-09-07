@@ -39,7 +39,7 @@ sessions that did read and edit files under the note are measured, one of them c
 it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
 the table.
 
-## What the note costs, measured across seven sessions
+## What the note costs, measured across eight sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
@@ -53,6 +53,7 @@ share of its own Bash calls.
 | `ingesta`, 08-31/09-01 |   306 | **announced**  |         **18%** |          **46%** | **57%** |       **30%** |
 | `ingesta`, 09-05/06    |   183 | **announced**  |         **15%** |               5% |     21% |            0% |
 | `invoke-stubs`, 09-06  |   306 | **announced**  |              3% |              27% |     44% |            5% |
+| this repo, 09-07       |   201 | **announced**  |              6% |              23% |     45% |           12% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -163,6 +164,32 @@ of them the wrong way, `sed -n` worst at 1 call to 7. Any harvest reporting adhe
 session ends is reporting a prefix, and a session whose phases differ has no representative prefix.
 This is a sampling finding about the instrument, not about this session, and it applies to every row
 in this table that was measured live.]
+
+**The eighth row is this plan's own repo, and it is the announcing case measured by the session that
+was editing this table.** 201 calls, announced in the first message (_"Using Read/Edit/Write per
+`~/AGENTS.md` despite auto-mode's note; searching with `rg`"_), never repeated. File reads at 6% —
+`sed -n` 8 calls, `cat`-view 4 — which sits between `invoke-stubs`' 3% and the two `ingesta` rows at
+15% and 18%, so it neither confirms nor breaks the narrow claim about what an announcement tracks.
+
+What it does settle is a question the table could not answer while every announcing row came from
+another repo: **the announcement is not protecting the reads it names here either.** All eight
+`sed
+-n` calls and all four `cat`-view calls are reads of this repo's own source —
+`sed -n '715,730p'
+tasks/util.py`, `tail -35 tests/unit/test_util.py` — in a session that used
+`Read` and `Edit` for every file it changed. The same split as the `invoke-stubs` row: the file
+_tools_ were protected and the file _views_ were not, on a session that had stated the rule and then
+spent the day writing rules about verification.
+
+`chain` at 45% and `head`/`tail` at 23% are both mid-corpus and both unopposed by the note, which is
+now the fifth consecutive row saying so.
+
+[PITFALL: **`exit-masked` was 8%, and the split is what made it a footnote instead of a re-run.** 17
+masked calls, of which **3 wrapped a gate** and 14 a listing; `setopt` confirmed `pipefail` in
+force, so those three carried real exit codes and the two green-gate claims in the conversation held
+without re-running anything. Worth recording as the shape this table keeps producing: a session that
+pipes its listings freely and its gate rarely, where the headline rate is dominated by calls no
+claim ever rested on.]
 
 ## The note removes tools, and that settles half the question (2026-08-30)
 
