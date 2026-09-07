@@ -159,45 +159,6 @@ def _wslg_available() -> bool:
     return Path("/mnt/wslg").exists() or bool(os.environ.get("WAYLAND_DISPLAY"))
 
 
-def _session_bus() -> str | None:
-    """The per-user D-Bus session bus, if this distro has one.
-
-    A separate question from WSLg, which is the one these three used to be collapsed into: WSLg
-    supplies a display and nothing else. Without a session bus every process that wants one
-    autolaunches its own, so nothing is shared between a terminal and an IDE-started server — and a
-    secret store unlocked in one is invisible to the other. `dbus-user-session` plus a systemd user
-    session is what puts a single bus at /run/user/<uid>/bus.
-    """
-    if address := os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
-        return address
-    path = Path(f"/run/user/{os.getuid()}/bus")
-    return f"unix:path={path}" if path.exists() else None
-
-
-def _secret_service_state(c: Context) -> str:
-    """Whether anything answers as the Secret Service on the session bus.
-
-    The third axis, and the one WSLg does nothing for: `inv proxy.install` needs a store Px can read
-    its credential back out of at its own startup, and `docker.configure-credential-store` needs the
-    same one. Asked over D-Bus rather than by running a keyring round trip, so this stays a cheap
-    read-only probe that works before uv or any Python package exists — `inv proxy.check` does the
-    real round trip when it matters.
-    """
-    if not _session_bus():
-        return "no session bus, so nothing can answer"
-    if not util.command_exists("dbus-send"):
-        return "unknown (dbus-send not installed)"
-    owned = c.run(
-        "dbus-send --session --dest=org.freedesktop.DBus --type=method_call --print-reply "
-        "/org/freedesktop/DBus org.freedesktop.DBus.NameHasOwner string:org.freedesktop.secrets",
-        hide=True,
-        warn=True,
-    )
-    if not owned.ok:
-        return "unknown (the session bus did not answer)"
-    return "answering ✓" if "true" in owned.stdout else "installed but not running/unlocked"
-
-
 def _os_release_id() -> str:
     try:
         text = Path("/etc/os-release").read_text()
@@ -335,14 +296,14 @@ def check(c: Context):  # noqa: C901
     # The two axes WSLg does *not* supply, reported separately from it on purpose: a modern WSL2
     # with a working display still has no bus and no secret store unless something installed them,
     # and collapsing the three into "headless" is what hid that.
-    if bus := _session_bus():
+    if bus := util.session_bus_address():
         print(f"[wsl] session D-Bus: {bus} ✓")
     else:
         print(
             "[wsl] session D-Bus: none — every process autolaunches its own, so a keyring unlocked "
             "in one shell is invisible to an IDE-started server. Install [packages.dbus-user-session]."
         )
-    print(f"[wsl] secret service: {_secret_service_state(c)}")
+    print(f"[wsl] secret service: {util.secret_service_state(c)}")
     print(
         "[wsl]   that store is what `inv proxy.install` writes the proxy credential into and what "
         'docker\'s credential helper reads. See docs/wsl.md, "The secret store, and unlocking it".'

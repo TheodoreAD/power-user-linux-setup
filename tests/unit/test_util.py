@@ -9,6 +9,7 @@ import sys
 import types
 
 import pytest
+from invoke import MockContext, Result
 
 from tasks import util
 
@@ -359,3 +360,40 @@ def test_login_shell_survives_a_user_with_no_passwd_entry(monkeypatch):
     monkeypatch.setattr(pwd, "getpwnam", _raise_key_error)
     assert util.login_shell() == ""
     assert util.login_shell_is_zsh() is False
+
+
+def _bus_context(stdout: str, ok: bool = True) -> MockContext:
+    """A Context whose dbus-send answers with `stdout`. The command is matched loosely because the
+    real one is a single long line and pinning it here would test the string, not the parse."""
+    return MockContext(run=Result(stdout=stdout, exited=0 if ok else 1), repeat=True)
+
+
+def test_secret_service_reports_a_store_that_answers(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(util, "session_bus_address", lambda: "unix:path=/run/user/1000/bus")
+    monkeypatch.setattr(util, "command_exists", lambda _name: True)
+    assert "answering" in util.secret_service_state(_bus_context("   boolean true\n"))
+
+
+def test_secret_service_separates_installed_from_running(monkeypatch: pytest.MonkeyPatch):
+    # The distinction that matters, and the reason this moved out of wsl.py: gnome-keyring on disk
+    # with nothing holding the bus name is the normal state of a WSL distro after installing it,
+    # and it is not the same as "no keyring" — proxy.py tells the two apart by this answer.
+    monkeypatch.setattr(util, "session_bus_address", lambda: "unix:path=/run/user/1000/bus")
+    monkeypatch.setattr(util, "command_exists", lambda _name: True)
+    assert util.secret_service_state(_bus_context("   boolean false\n")) == "installed but not running/unlocked"
+
+
+def test_secret_service_needs_a_bus_before_anything_can_answer(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(util, "session_bus_address", lambda: None)
+    assert "no session bus" in util.secret_service_state(MockContext())
+
+
+def test_secret_service_says_unknown_rather_than_guessing(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(util, "session_bus_address", lambda: "unix:path=/run/user/1000/bus")
+    monkeypatch.setattr(util, "command_exists", lambda _name: False)
+    assert "unknown" in util.secret_service_state(MockContext())
+
+
+def test_session_bus_prefers_the_environment(monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("DBUS_SESSION_BUS_ADDRESS", "unix:path=/tmp/somewhere-else")
+    assert util.session_bus_address() == "unix:path=/tmp/somewhere-else"

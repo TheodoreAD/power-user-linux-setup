@@ -431,6 +431,46 @@ def login_shell_is_zsh() -> bool:
     return Path(login_shell()).name == "zsh"
 
 
+def session_bus_address() -> str | None:
+    """The per-user D-Bus session bus, if this machine has one.
+
+    A separate question from whether there is a display, which is the one it used to be collapsed
+    into under WSL: WSLg supplies a display and nothing else. Without a session bus every process
+    that wants one autolaunches its own, so nothing is shared between a terminal and an IDE-started
+    server — and a secret store unlocked in one is invisible to the other. `dbus-user-session` plus
+    a systemd user session is what puts a single bus at /run/user/<uid>/bus.
+    """
+    if address := os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
+        return address
+    path = Path(f"/run/user/{os.getuid()}/bus")
+    return f"unix:path={path}" if path.exists() else None
+
+
+def secret_service_state(c: Context) -> str:
+    """Whether anything answers as the Secret Service on the session bus.
+
+    Two callers with the same question and opposite framings: `wsl.check` reports it as one of the
+    three axes a desktop supplies and WSL does not, and `proxy.py` reads it to tell a machine with
+    no store apart from a machine whose store is merely locked — the keyring round trip fails
+    identically for both and the fixes are opposite (install a provider, versus unlock the one
+    already installed). Asked over D-Bus rather than by running a keyring round trip, so this stays
+    a cheap read-only probe that works before uv or any Python package exists.
+    """
+    if not session_bus_address():
+        return "no session bus, so nothing can answer"
+    if not command_exists("dbus-send"):
+        return "unknown (dbus-send not installed)"
+    owned = c.run(
+        "dbus-send --session --dest=org.freedesktop.DBus --type=method_call --print-reply "
+        "/org/freedesktop/DBus org.freedesktop.DBus.NameHasOwner string:org.freedesktop.secrets",
+        hide=True,
+        warn=True,
+    )
+    if not owned.ok:
+        return "unknown (the session bus did not answer)"
+    return "answering ✓" if "true" in owned.stdout else "installed but not running/unlocked"
+
+
 def has_systemd() -> bool:
     """True if systemd is the running init system — the same check require_systemd() uses to
     decide whether to abort. False for containers with no init system, WSL1, and WSL2 with
