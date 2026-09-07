@@ -689,6 +689,35 @@ check_cmd = "spowse"
 # are declared in pyproject.toml and uv installs both. Only one is checked here — they are one
 # install, and a second check would report the same tool twice.
 tags = ["cli", "dev"]
+# The read-only-by-naming-convention grant [packages.repo-tasks] already gives `inv`, mirrored onto
+# both shim names — see that entry for the convention itself and for the known hole in the
+# mid-pattern `*`. Two differences, both deliberate: no `quality.*`/`test.*`, because the shim does
+# not publish them at all; and nothing broader, because `spowse setup` installs a machine and
+# `spowse deploy.all` writes the home directory. Those keep their prompt exactly as `inv`'s do.
+claude_permissions_allow = [
+  "Bash(spowse --list:*)",
+  "Bash(spowse -l:*)",
+  "Bash(spowse *.status:*)",
+  "Bash(spowse *.check:*)",
+  "Bash(spowse *.diff:*)",
+  "Bash(spowse *.list:*)",
+  "Bash(spowse *.show:*)",
+  "Bash(spowse *.print-*)",
+  "Bash(spowse *.check-*)",
+  "Bash(spowse *.list-*)",
+  "Bash(spowse *-check:*)",
+  "Bash(spouse --list:*)",
+  "Bash(spouse -l:*)",
+  "Bash(spouse *.status:*)",
+  "Bash(spouse *.check:*)",
+  "Bash(spouse *.diff:*)",
+  "Bash(spouse *.list:*)",
+  "Bash(spouse *.show:*)",
+  "Bash(spouse *.print-*)",
+  "Bash(spouse *.check-*)",
+  "Bash(spouse *.list-*)",
+  "Bash(spouse *-check:*)",
+]
 
 [packages.dos2unix]
 description = "Convert CRLF line endings to LF — useful when receiving files from Windows"
