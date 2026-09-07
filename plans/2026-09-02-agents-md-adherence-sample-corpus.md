@@ -10,17 +10,27 @@ Thirteen sessions measured with `session-bash-audit`'s `audit.py`, all taken wit
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so was sample 8 — both have rates but no baseline deltas.
 
-[PITFALL: **rows 1–11 were measured with an instrument that under-counted, and are understated by an
-amount that varies per row.** `audit.py`'s `strip_heredoc` cut a command at its heredoc marker and
-dropped every command that followed it, which in this family means the gate run after a patch
-heredoc. Corpus-wide the correction is `head/tail` 25.0% -> 27.8% and `exit-masked` 15.3% -> 17.8%,
-but it reached **+12pp** on heredoc-heavy sessions — sample 6's `exit-masked` is 37%, not the 27%
-recorded below. Fixed in `agent-skills` on 2026-09-06. The re-score-or-annotate decision, which rows
-can still be re-scored before their transcripts expire around 2026-10-02, and whether a row should
-record the instrument commit that measured it, are the open questions in
-`plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md` — read that before
-comparing any two rows here. **Sample 12 is the first row measured after the fix**, so it is
-comparable with a re-scored corpus and not with the rows as they stand.]
+[PITFALL: **rows 1–11 were measured with an instrument that under-counted. Four have been re-scored;
+the other seven are floors, and a floor may only be compared downward.** `audit.py`'s
+`strip_heredoc` cut a command at its heredoc marker and dropped every command that followed it,
+which in this family means the gate run after a patch heredoc. Corpus-wide the correction is
+`head/tail` 25.0% -> 27.8% and `exit-masked` 15.3% -> 17.8%, reaching **+12pp** on heredoc-heavy
+sessions. Fixed in `agent-skills` on 2026-09-06 (`2248ec7`) and applied here on 2026-09-07, per
+`plans/2026-09-06-adherence-corpus-rows-understated-by-the-heredoc-bug.md`. **Rows 6, 7, 8 and 11
+carry a `†` and were re-measured at their own recorded `--until` boundary**, which reproduces each
+row's published `calls` figure exactly — that is what makes the new rate a correction of the old one
+rather than a different measurement. **Every other row of 1–11 is a floor**: its true rate is at or
+above what is printed, by an amount that varies with how many heredocs that session wrote, and the
+boundary needed to correct it was never recorded. Rows 12 and 13 were measured after the fix.]
+
+[PITFALL: **a whole-transcript re-score is not a correction, and on one row it reads as an
+improvement that never happened.** Sample 1 has no recorded boundary: measured whole it is 384 calls
+against the row's 331, and its `exit-masked` comes out **18% against the published 19%** — lower,
+after a fix that can only ever raise the count, because the extra 53 calls were cleaner than the
+ones in the original window. Sample 8 diverges the same way from the other side: 18% at its recorded
+boundary over 220 calls, 15% over the whole 269. Re-scoring a row without its boundary changes the
+denominator silently and stops it being comparable with its neighbours, which is the corpus's whole
+value.]
 
 [PITFALL: **the baseline moved out of the skill on 2026-09-04, so the command in every row above is
 stale.** `session-bash-audit` now expects `--compare ~/.local/state/session-bash-audit/<name>.json`
@@ -28,9 +38,10 @@ stale.** `session-bash-audit` now expects `--compare ~/.local/state/session-bash
 comparison rather than reach for the shipped file, on the grounds that a baseline measured on
 somebody else's machine reports how your session differs from their setup. The shipped
 `references/baselines/2026-08-24-auto-mode.json` still exists in both the install and the checkout,
-and for this corpus it was measured on this machine, so rows 1–6 remain valid as recorded. But
-nothing has been saved to the XDG path yet, so a new sample either re-uses the shipped file against
-current guidance or, like sample 8 below, runs uncompared. Save the existing baseline to
+and for this corpus it was measured on this machine, so rows 1–6's **baselines** remain valid as
+recorded — their rates are the instrument pitfall's business, not this one's. But nothing has been
+saved to the XDG path yet, so a new sample either re-uses the shipped file against current guidance
+or, like sample 8 below, runs uncompared. Save the existing baseline to
 `~/.local/state/session-bash-audit/` before the next sample if the deltas are to stay comparable.
 
 **Done 2026-09-04**: `~/.local/state/session-bash-audit/2026-09-04.json`, 7,580 calls over 25 main
@@ -79,34 +90,60 @@ expire around 2026-10-02:
 
 Rows 6, 7 and 11 record the filed plan's `source_moment`, which is the **`--until` boundary** rather
 than the session start — the two are different ends of the same session, and only the boundary is
-needed to reproduce the figures.
+needed to reproduce the figures. **Row 8's boundary is recorded in its own section** rather than in
+the table above, which is why it is re-scorable and rows 1–5 are not; the re-score decision counted
+three such rows because it read only this table, and the fourth turned up while applying it.
+
+**Instrument.** The four `†` rows were re-scored on 2026-09-07 with `agent-skills`'
+`skills/session-bash-audit/scripts/audit.py` at **`95f8af7`** — five commits past the
+`strip_heredoc` fix, none of which touches the `exit-masked` predicate (checked with `git log -S`),
+so the whole of the movement is the heredoc fix. Every other row of 1–11 was measured before
+`2248ec7`, and rows 12 and 13 between the two. Recording the commit is what makes the next
+instrument change visible instead of silent: without it a rate cannot be told from the rate a later
+instrument would have printed for the same session, which is exactly the confusion this plan spent a
+week in. `save_baseline` already does this for baselines.
+
+**The `score` column is deliberately not re-scored, and the re-scored rates do not license one.**
+Re-running the comparison today prints 4/12 for sample 6 and 8/12 for sample 11, against the 6/11
+and 9/11 recorded — but the expectation set grew by a row and several `zero` expectations changed
+from a rate band to a count in `43bc1e0`, so that movement is three instrument changes at once and a
+correction of none of them. The rate cells are corrections because the predicate behind them did not
+change; the score is a different measurement and is left as the instrument of the day printed it.
+The one verdict recorded as changed is sample 11's `chain`, which moves for the heredoc fix alone.
 
 ## Context
 
 ### The corpus at a glance
 
-| #  | session repo             | calls | shape                          | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
-| -- | ------------------------ | ----: | ------------------------------ | ----------: | ------------: | ---------------: | ----- |
-| 1  | `agent-skills`           |   331 | code, one repo, ten hours      |         24% |           19% |          **23%** | 9/11  |
-| 2  | `ingesta`                |   137 | prose/gate-heavy, ten hours    |         45% |           28% |               0% | —     |
-| 3  | `agent-skills`           |   157 | prose, one repo, one day       |         38% |           27% |               0% | 9/11  |
-| 4  | `power-user-linux-setup` |   350 | documentation, whole day       |     **55%** |       **32%** |               0% | 7/11  |
-| 5  | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
-| 6  | `agent-skills`           |   216 | tooling, the rule itself       |         36% |           27% |               0% | 6/11  |
-| 7  | `ingesta`                |   129 | code + plans, fourteen hours   |         32% |           22% |               0% | —     |
-| 8  | `power-user-linux-setup` |   220 | code + docs + vendor research  |         27% |           17% |               0% | —     |
-| 9  | `repo-tasks`             |   202 | shared gate, plans, ~12h       |     **15%** |       **10%** |               0% | 10/11 |
-| 10 | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h      |         23% |           20% |               1% | 8/11  |
-| 11 | `ingesta`                |   228 | domain safety rules, one repo  |         24% |            7% |               0% | 9/11  |
-| 12 | `ingesta`                |   183 | announced the rule, ~6h        |      **5%** |            8% |               0% | —     |
-| 13 | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h     |         17% |            1% |               0% | 10/13 |
+| #   | session repo             | calls | shape                          | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
+| --- | ------------------------ | ----: | ------------------------------ | ----------: | ------------: | ---------------: | ----- |
+| 1   | `agent-skills`           |   331 | code, one repo, ten hours      |         24% |           19% |          **23%** | 9/11  |
+| 2   | `ingesta`                |   137 | prose/gate-heavy, ten hours    |         45% |           28% |               0% | —     |
+| 3   | `agent-skills`           |   157 | prose, one repo, one day       |         38% |           27% |               0% | 9/11  |
+| 4   | `power-user-linux-setup` |   350 | documentation, whole day       |     **55%** |           32% |               0% | 7/11  |
+| 5   | `ingesta`                |    84 | domain research + plan writing |         35% |            8% |               0% | 10/11 |
+| 6†  | `agent-skills`           |   216 | tooling, the rule itself       |         47% |       **38%** |               0% | 6/11  |
+| 7†  | `ingesta`                |   129 | code + plans, fourteen hours   |         38% |           28% |               0% | —     |
+| 8†  | `power-user-linux-setup` |   220 | code + docs + vendor research  |         28% |           18% |               0% | —     |
+| 9   | `repo-tasks`             |   202 | shared gate, plans, ~12h       |     **15%** |       **10%** |               0% | 10/11 |
+| 10  | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h      |         23% |           20% |               1% | 8/11  |
+| 11† | `ingesta`                |   228 | domain safety rules, one repo  |         27% |           12% |               0% | 9/11  |
+| 12  | `ingesta`                |   183 | announced the rule, ~6h        |      **5%** |            8% |               0% | —     |
+| 13  | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h     |         17% |            1% |               0% | 10/13 |
+
+`†` = re-scored 2026-09-07 at the row's own `--until` boundary with the fixed instrument. **Every
+un-daggered row of 1–11 is a floor**, so `55%` on row 4 means "at least 55%" and a comparison
+against a `†` row only holds in the direction that makes the floor larger. Row 6's `38%` is bolded
+as the highest `exit-masked` the corpus can actually assert; row 4's `32%` is a floor that may well
+be higher.
 
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
 was domain research rather than work on the tooling itself. Samples 7 and 8 have no score because
 they were run without `--compare`.
 
 **Sample 9 is the best row the corpus has** — `head/tail` at 15% against a previous best of 24%, on
-a twelve-hour gate-heavy day, and the second consecutive clean `chain`. **Sample 10 is the
+a twelve-hour gate-heavy day, and the second consecutive clean `chain`. (Both figures are floors,
+and sample 12's 5% has since beaten it outright on the fixed instrument.) **Sample 10 is the
 counterweight, from the same day and the same baseline**, and is the more useful of the pair for
 what the corpus is actually asking: it is the session that _authored_ the `| tail` rule change, and
 it still finished at 23%.
@@ -286,66 +323,91 @@ and is the one that matters. `exit-masked` (7 calls) is almost entirely that sam
 
 ### Sample 6 — `agent-skills`, 216 calls, the session that spent the day writing this rule
 
-`--compare 2026-08-24-auto-mode.json`, **6/11** — the lowest score in the corpus. 216 calls before
-the harvest's own sweep, 226 including it.
+`--compare 2026-08-24-auto-mode.json`, **6/11** — the lowest score in the corpus. **† re-scored
+2026-09-07** at `--until 2026-09-02T20:32:51+03:00`, `audit.py` at `95f8af7`: 216 calls, the same
+denominator the row published.
 
-| tag                    | rate | vs baseline    |
-| ---------------------- | ---: | -------------- |
-| `chain`                |  50% | −17pp, OK      |
-| **`head/tail`**        |  36% | **+6pp, MISS** |
-| **`heredoc`**          |  17% | **+1pp, MISS** |
-| **`sed-n`**            |  11% | **+3pp, MISS** |
-| **`cat-view`**         |   2% | **+1pp, MISS** |
-| **`git-C-mutating`**   |   2% | **−0pp, MISS** |
-| `cd-own-repo`          |   1% | −3pp, OK       |
-| `redirect-then-filter` |   0% | OK             |
-| `git-C-own-repo`       |   0% | OK             |
-| `exit-masked`          |  27% | (unscored)     |
+| tag                    |      rate | vs baseline     |
+| ---------------------- | --------: | --------------- |
+| `chain`                | 50% → 62% | −5pp, OK        |
+| **`head/tail`**        | 36% → 47% | **+17pp, MISS** |
+| **`heredoc`**          |       17% | **+1pp, MISS**  |
+| **`sed-n`**            |       11% | **+3pp, MISS**  |
+| **`cat-view`**         |        2% | **+1pp, MISS**  |
+| **`git-C-mutating`**   |        2% | **−0pp, MISS**  |
+| `cd-own-repo`          |        1% | −3pp, OK        |
+| `redirect-then-filter` |        0% | OK              |
+| `git-C-own-repo`       |        0% | OK              |
+| `exit-masked`          | 27% → 38% | (unscored)      |
 
-36% during the work, 35% including the sweep — the direction that run happened to lean, and the
-reason the rule says to report both rather than to claim the sweep inflates anything.
+Every cell without an arrow was already right: the bug recovered `head/tail`, `exit-masked` and
+`chain` calls and left the file-reading rows alone, which is the signature of a fault that hid
+commands **after** a heredoc rather than mis-reading the ones it saw. The score does not move — both
+changed cells keep the verdict they had.
+
+The with-sweep figure the row published (35% over 226 calls) has not been re-measured and is not
+comparable: the transcript now holds 252 calls, so that reading was taken while the harvest was
+still running.
 
 **The session's entire subject was this rule.** It shipped `harvest.py` with "nothing runs through a
 shell, so no pipe can eat an exit code" as a design principle, wrote the `exit-masked` consequence
 rule into `session-harvest`, added `fitness.py derivable` to audit skills for exactly this class of
-hand-composed command — and produced `2>&1 | head` in **36%** of its own calls, with 27% masking an
+hand-composed command — and produced `2>&1 | head` in **47%** of its own calls, with 38% masking an
 exit code. That is the third independent confirmation of the corpus's sharpest claim: **authoring a
 rule is not evidence of following it, and may not even correlate.** Samples 3 and 4 were sessions
 that had the rule in context; this one had the rule as its deliverable.
 
-**The mitigating half, stated so the row is not read as worse than it is:** almost every masked call
-was a read-only listing (`plans.py list 2>&1 | head -60`, `--help | head -30`) where the exit code
-carried nothing. The repo's gate was run unpiped throughout, and the harvest's own re-run of it
-exited 0 — so no green claim in that session stands on filtered evidence. The rate is high; the
-damage from it was nil. Both facts belong here, because a corpus of only the alarming half argues
-for a rule nobody can follow.
+[PITFALL: **the mitigation this row was famous for was an artefact of the bug, and the re-score
+kills it.** The row read: "almost every masked call was a read-only listing where the exit code
+carried nothing. The repo's gate was run unpiped throughout." The fixed instrument splits the 82
+masked calls **30 wrapping a gate, 52 a listing**, and names them in its samples —
+`inv quality.precommit 2>&1 | tail -5`, `python3 -m pytest … -q 2>&1 | tail -30`. The gate was not
+run unpiped throughout; the calls that piped it were the ones sitting after a patch heredoc, which
+is exactly what the instrument dropped. What survives is the outcome rather than the
+characterisation: the harvest's own unpiped re-run exited 0, so no green claim in that session was
+wrong. **A hand-read "what was masked" is only as good as the call list the reader was shown**, and
+this one was read off a list missing 30 of its gate calls.]
 
-That mitigation is what sample 7 was filed to test, and it does not survive contact with it.
+That mitigation is what sample 7 was filed to test. Sample 7 remains the sharper row — 31 of its 36
+masked calls wrapped a gate — but the re-score makes sample 6 a second instance of the same shape
+rather than the opposite pole the corpus recorded it as.
 
 ### Sample 7 — `ingesta`, 129 calls, the masked calls _were_ the gate
 
 `audit.py --session 7dab6dae --until 2026-09-03T13:47:32+03:00`, no `--compare`, so verdicts only
 where the expectation is absolute. 129 calls before the harvest's own sweep, 142 including it. A
-fourteen-hour session: four plan steps built, one plan retired, twelve commits.
+fourteen-hour session: four plan steps built, one plan retired, twelve commits. **† re-scored
+2026-09-07** at the same boundary, `audit.py` at `95f8af7`: 129 calls, unchanged.
 
-| tag                         | rate | verdict |
-| --------------------------- | ---: | ------- |
-| `chain`                     |  49% | —       |
-| **`head/tail`**             |  32% | MISS    |
-| **`heredoc`**               |  19% | MISS    |
-| **`git-mutating-in-chain`** |   8% | MISS    |
-| `chain5`                    |   3% | —       |
-| **`cat-view`**              |   1% | MISS    |
-| `sed-n`                     |   0% | OK      |
-| `cd-own-repo`               |   0% | OK      |
-| `git-C-own-repo`            |   0% | OK      |
-| `redirect-then-filter`      |   0% | OK      |
-| `exit-masked`               |  22% | —       |
+| tag                         |      rate | verdict |
+| --------------------------- | --------: | ------- |
+| `chain`                     | 49% → 62% | —       |
+| **`head/tail`**             | 32% → 38% | MISS    |
+| **`heredoc`**               |       19% | MISS    |
+| **`git-mutating-in-chain`** |        8% | MISS    |
+| `chain5`                    |        3% | —       |
+| **`cat-view`**              |        1% | MISS    |
+| **`rg-replace-bundle`**     |   1 (new) | MISS    |
+| `sed-n`                     |        0% | OK      |
+| `cd-own-repo`               |        0% | OK      |
+| `git-C-own-repo`            |        0% | OK      |
+| `redirect-then-filter`      |        0% | OK      |
+| `exit-masked`               | 22% → 28% | —       |
+
+`rg-replace-bundle` is not a re-score but a row the instrument did not have on 2026-09-03: one
+`rg -ril`, surfaced retroactively. Sample 11 carries one `rg -rn` on the same basis. Neither is new
+to `plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md`'s week-wide count, but they are
+the first corpus rows to carry the row at all — and both sessions typed the bundle **exactly once**,
+which is the case that plan says has no detection signature of its own, since the only thing that
+caught it elsewhere was having already done it in the same session.
 
 **Sample 6's mitigation does not apply here, and that is the finding.** This session masked **the
 gate itself**: `inv quality.precommit 2>&1 | tail -N` was the house shape for the whole run, along
 with every `pytest … 2>&1 | tail -N`. The masked set is not listings with no possible victim; it is
-the exact command whose exit code decides whether the work is sound.
+the exact command whose exit code decides whether the work is sound. The re-score puts a number on
+what was read by hand here: **31 of the 36 masked calls wrapped a gate**, the most lopsided split in
+the corpus — and it strengthens rather than moves the row, since the mitigation it was filed against
+turned out not to hold for sample 6 either.
 
 **Seven green claims were made to the user on that evidence**, counted by `harvest.py claims`:
 
@@ -364,8 +426,9 @@ nothing needs correcting. That benign outcome is the reason this row is worth re
 a reason to skip it — see the gate-versus-listing question below, which these two samples together
 are what makes answerable.
 
-Its `head/tail` half is unmitigated and adds nothing new: 32%, against a rule that is unambiguous
-and was in context the whole time, one more point at the low end of the 24–55% band.
+Its `head/tail` half is unmitigated and adds nothing new: 38% re-scored, against a rule that is
+unambiguous and was in context the whole time — mid-band rather than the low end the row was
+recorded at.
 
 ### Sample 8 — `power-user-linux-setup`, 220 calls, the first mixed masked set
 
@@ -374,28 +437,38 @@ baseline PITFALL above), so rates without deltas or a score. 220 calls before th
 sweep, 228 including it. Roughly sixteen hours: a plan corpus merge, a vendor-source survey across
 four agents' repos, a deploy-mechanism change with tests, and a home-directory migration.
 
-| tag                     | rate | note                            |
-| ----------------------- | ---: | ------------------------------- |
-| `chain`                 |  34% | lowest in the corpus            |
-| **`head/tail`**         |  27% | MISS                            |
-| `exit-masked`           |  17% | lowest of the high-rate rows    |
-| `heredoc`               |   8% |                                 |
-| `git-mutating-in-chain` |   1% | 3 calls, all `git add && scan`  |
-| `cd-own-repo`           |   1% | 2 calls, both cross-repo chains |
-| `sed-n`                 |   0% | 1 call                          |
-| `cat-view`              |   0% |                                 |
-| `git-C-own-repo`        |   0% |                                 |
-| `redirect-then-filter`  |   0% |                                 |
+**† re-scored 2026-09-07** at the same boundary, `audit.py` at `95f8af7`: 220 calls, unchanged.
+
+| tag                     |      rate | note                            |
+| ----------------------- | --------: | ------------------------------- |
+| `chain`                 | 34% → 35% | lowest in the corpus            |
+| **`head/tail`**         | 27% → 28% | MISS                            |
+| `exit-masked`           | 17% → 18% | 16 wrapped a gate, 23 a listing |
+| `heredoc`               |        8% |                                 |
+| `git-mutating-in-chain` |        1% | 3 calls, all `git add && scan`  |
+| `cd-own-repo`           |        1% | 2 calls, both cross-repo chains |
+| `sed-n`                 |        0% | 1 call                          |
+| `cat-view`              |        0% |                                 |
+| `git-C-own-repo`        |        0% |                                 |
+| `redirect-then-filter`  |        0% |                                 |
+
+**This row barely moved, and that is what the other three are measured against.** +1pp on both
+counters, against +11pp on sample 6 — the difference is heredoc density (8% here, 17% there), which
+is the mechanism stated as a prediction and then confirmed rather than asserted. A row's correction
+is not a constant, and a floor row with few heredocs is nearly right as printed while a
+heredoc-heavy one is not.
 
 **This is the corpus's first row where the masked set is genuinely both**, which is what makes it
-worth recording at an unremarkable rate. Sample 6 masked only listings and sample 2, 4 and 7 masked
-the gate; this session did both — `inv quality.precommit 2>&1 | tail -N` several times **and** a
-long tail of `gh api … | head -N` calls from the vendor-source survey, which was most of the 27%.
+worth recording at an unremarkable rate — and the re-score is the only place a hand reading and the
+instrument can be compared, because this row recorded both. The hand reading said "both" and the
+split says **16 gate, 23 listing**: `inv quality.precommit 2>&1 | tail -N` several times **and** a
+long tail of `gh api … | head -N` calls from the vendor-source survey. Sample 6's hand reading, on
+the same method, was wrong — the difference is that this session's gate calls were not hiding behind
+heredocs, so the reader could see them.
 
 **Ten green claims, and the unpiped re-run exits 0 (551 passed), so all ten hold.** The count is the
-second-highest in the corpus after sample 7's seven, on a rate lower than any other row that made
-claims at all — which is the corpus's own point restated: the headline number does not predict how
-much is riding on it.
+second-highest in the corpus after sample 2's ~15, on a middling rate — which is the corpus's own
+point restated: the headline number does not predict how much is riding on it.
 
 [PITFALL: **the one `sed -n` call is the most interesting cell, because it rounds to 0% and is a
 straight rule violation.** `sed -n '136,240p'` was used to read a block of `tasks/tools.py` before
@@ -411,19 +484,27 @@ from the opposite direction.]
 calls in the window, 236 including the harvest's own sweep. The session's subject was safety rules
 in a medical repository — not tooling work, and not a session with any reason to be careless.
 
-| tag                         | rate | vs baseline     |
-| --------------------------- | ---: | --------------- |
-| `chain`                     |  39% | −7pp, OK        |
-| `chain5`                    |   2% | —               |
-| `head/tail`                 |  24% | −7pp, OK        |
-| **`sed-n`**                 |  16% | **+11pp, MISS** |
-| `heredoc`                   |  11% | −2pp, OK        |
-| `exit-masked`               |   7% | —               |
-| **`git-mutating-in-chain`** |   7% | **+1pp, MISS**  |
-| `cat-view`                  |   1% | −0pp, OK        |
-| `cd-own-repo`               |   0% | −1pp, OK        |
-| `git-C-own-repo`            |   0% | −2pp, OK        |
-| `redirect-then-filter`      |   0% | −0pp, OK        |
+**† re-scored 2026-09-07** at the same boundary, `audit.py` at `95f8af7`: 228 calls, unchanged.
+
+| tag                         |      rate | vs baseline                    |
+| --------------------------- | --------: | ------------------------------ |
+| **`chain`**                 | 39% → 50% | **+5pp, MISS** (was −7pp, OK)  |
+| `chain5`                    |        2% | —                              |
+| `head/tail`                 | 24% → 27% | −4pp, OK                       |
+| **`sed-n`**                 |       16% | **+11pp, MISS**                |
+| `heredoc`                   |       11% | −2pp, OK                       |
+| `exit-masked`               |  7% → 12% | 25 wrapped a gate, 3 a listing |
+| **`git-mutating-in-chain`** |        7% | **+1pp, MISS**                 |
+| **`rg-replace-bundle`**     |   1 (new) | MISS                           |
+| `cat-view`                  |        1% | −0pp, OK                       |
+| `cd-own-repo`               |        0% | −1pp, OK                       |
+| `git-C-own-repo`            |        0% | −2pp, OK                       |
+| `redirect-then-filter`      |        0% | −0pp, OK                       |
+
+**This is the only cell in the corpus where the fix flips a verdict**: `chain` was recorded as a
+7-point improvement on baseline and is a 5-point regression, because a chained command sitting after
+a heredoc is a chained command the instrument never saw. A row's `head/tail` moving is a number; a
+row's `chain` moving turns "this session was better than the machine" into its opposite.
 
 **16% is the highest `sed-n` the corpus has recorded**, against previous rows of 0%, 2%, 3%, 4%, 8%,
 10% and 11% — and this is the row that removes the standing explanation for the two high ones.
@@ -435,13 +516,15 @@ The calls are uniformly **reading a known line range of a source file to quote i
 conversation** — `sed -n '331,360p' src/ingesta/store/tables.py`, `sed -n '240,285p'` of a TOML
 catalogue — never a filter in a pipeline, never a case `Read` with `offset`/`limit` could not serve.
 That is the same characterisation sample 4's 10% row gives, so the shape is stable across samples
-and only the rate moved. Pair it with `head/tail` at 24% (54 calls, mostly `| head -20` on `rg`):
+and only the rate moved. Pair it with `head/tail` at 27% (61 calls, mostly `| head -20` on `rg`):
 the two are one instinct aimed at files and at output respectively, and both are the global rule's
 "prefer the dedicated harness tool" losing to shell idiom under time pressure.
 
 **Nine green claims, and the unpiped re-run exits 0 (1020 passed), so all nine hold.** Every one of
 those greens came from a run piped through `rg` or `tail` — `inv quality.precommit 2>&1 | tail -40`
-and several `pytest -q 2>&1 | rg "passed|failed"`.
+and several `pytest -q 2>&1 | rg "passed|failed"`. The re-scored split agrees with that reading and
+sharpens it: **25 of the 28 masked calls wrapped a gate**, so at 12% this is the corpus's purest
+gate-masking row — a low rate carrying almost nothing but the calls that matter.
 
 [PITFALL: **the session that produced these numbers had the rule in front of it all day.** It spent
 the day writing safety rules into a medical repository — about not inventing figures, about stating
@@ -512,7 +595,11 @@ plan files touched.
 Both masked calls were listings (`which px && px --version | head -3`, a `python -c` parse probe);
 the gate was run plain every time, so the session's three green claims rest on real exit codes. That
 is the first row in this corpus where the split answered the question outright rather than by
-re-running the gate — worth recording because the previous nine rows all had to.
+re-running the gate — worth recording because the previous nine rows all had to. Four of those nine
+carry it now, retroactively, out of the re-score: rows 6, 7, 8 and 11. It is derivable from any
+transcript the harness still holds, which is what makes the hand-recorded `what was masked` column
+obsolete rather than merely tedious — and sample 6 is the proof, since the hand reading and the
+derived split disagree there.
 
 **`sed-n` at 0% against sample 11's record 16%**, on a session of comparable length in the same
 week. Whatever produces that rate, it is not constant across sessions or repos.
@@ -525,13 +612,15 @@ that rule's rewording); and one `cd <own repo> && …`. None of them was under a
 session was in the repo that _owns_ these rules — the fourth instance of authoring-and-breaking.
 
 **`head/tail` is worse in prose sessions than in code sessions.** Seven samples: 24% code, then 45%,
-38%, 55%, 35% and 36% on sessions that spent most of their calls reading files to quote from and
+38%, 55%, 35% and 47% on sessions that spent most of their calls reading files to quote from and
 running gates to confirm markdown formatting. The one purely code-shaped session is the one low
-rate, and the largest and most purely prose-shaped session is the highest. Sample 7, the one mixed
-shape — code and plans in the same run — sits between them at 32%, which is what the split predicts
-rather than a counter-example. That points the fix away from wording: `Read` with `offset`/`limit`
-is the tool for the quoting half, and the harness's own truncation handles the gate half — neither
-is what the rule currently opens on.
+rate, and the largest and most purely prose-shaped session is the highest. **The re-score weakens
+the middle of this argument without touching its ends**: sample 7, the one mixed shape — code and
+plans in the same run — was recorded at 32%, between the two populations, and at 38% it sits inside
+the prose band's low end instead. The code/prose gap is between a 24% floor and a 35–55% spread, so
+it survives; the mixed row no longer sits neatly in the gap. That points the fix away from wording:
+`Read` with `offset`/`limit` is the tool for the quoting half, and the harness's own truncation
+handles the gate half — neither is what the rule currently opens on.
 
 **`sed -n` is not an auto-mode artefact.** The two high rows before sample 11 — 10% and 11% — were
 both auto-mode sessions, where the harness's own reminder asks for `cat`/`sed -n` over `Read`, and
@@ -550,17 +639,20 @@ on that question.
 unverified, so re-run the gate unpiped and count how many times the session asserted a green on a
 masked call:
 
-| sample | `exit-masked` | assertions | what was masked | unpiped re-run      |
-| ------ | ------------: | ---------: | --------------- | ------------------- |
-| 1      |           19% |          — | not recorded    | exit 0              |
-| 2      |           28% |        ~15 | the gate        | exit 0              |
-| 3      |           27% |          3 | not recorded    | exit 0              |
-| 4      |           32% |          5 | the gate        | exit 0              |
-| 5      |            8% |          6 | mostly the gate | exit 0, 643 passed  |
-| 6      |           27% |          — | listings        | exit 0              |
-| 7      |           22% |          7 | the gate        | exit 0              |
-| 8      |           17% |         10 | both            | exit 0, 551 passed  |
-| 11     |            7% |          9 | the gate        | exit 0, 1020 passed |
+| sample | `exit-masked` | assertions | what was masked         | unpiped re-run      |
+| ------ | ------------: | ---------: | ----------------------- | ------------------- |
+| 1      |   19% (floor) |          — | not recorded            | exit 0              |
+| 2      |   28% (floor) |        ~15 | the gate                | exit 0              |
+| 3      |   27% (floor) |          3 | not recorded            | exit 0              |
+| 4      |   32% (floor) |          5 | the gate                | exit 0              |
+| 5      |    8% (floor) |          6 | mostly the gate         | exit 0, 643 passed  |
+| 6†     |           38% |          — | **30 gate, 52 listing** | exit 0              |
+| 7†     |           28% |          7 | **31 gate, 5 listing**  | exit 0              |
+| 8†     |           18% |         10 | **16 gate, 23 listing** | exit 0, 551 passed  |
+| 11†    |           12% |          9 | **25 gate, 3 listing**  | exit 0, 1020 passed |
+
+The bolded splits are derived by the instrument; the rest are hand readings, and rows 1–5 are floors
+whose true rate is higher by an unknown amount.
 
 Every green held. **"No harm done" is the wrong lesson**: the claims were true and the method could
 not have distinguished them from false ones, and sample 2's session pushed five times on that basis.
@@ -569,22 +661,35 @@ The count tracks how chatty a session is about its gate rather than how bad the 
 
 **So `exit-masked` measures a hazard, not a defect rate** — worth stating outright before somebody
 reads a high number as evidence that false claims were made. Seven samples carry a claims count, all
-seven re-ran clean, at rates from 7% to 32%: the counter says how much of a session's evidence
-_could_ have been wrong, and the corpus has yet to find a case where any of it was. Sample 11 is the
-sharpest version — the lowest masked rate of any row that made claims at all, and nine claims riding
-on it, all sound.
+seven re-ran clean, across a printed range of 8% to 32%: the counter says how much of a session's
+evidence _could_ have been wrong, and the corpus has yet to find a case where any of it was. Sample
+11 is still the sharpest version — 12%, nine claims riding on it, and 25 of its 28 masked calls
+wrapping a gate — though it is no longer the lowest rate of any claim-making row, because it moved
+up and sample 5's floor did not.
 
-**The headline rate cannot tell the three consequences apart, and samples 6 and 7 are the pair that
-proves it.** Both are high-rate rows a week apart, and they sit at opposite ends of the distinction:
+[PITFALL: **the hazard this column measures largely stopped existing on 2026-09-05, and nothing in
+the table says so.** `[packages.claude-code]`'s `zshenv` snippet gives every Bash-tool shell
+`PIPE_FAIL` (landed `38f3422`, 2026-09-05), so a pipeline now reports the rightmost non-zero status
+and a piped gate no longer hides its failure. Rows 1–11 predate it and their masked exits were
+genuinely masked; rows 12 and 13 do not, and reading their `exit-masked` as the same hazard
+overstates it. The two are not the same measurement wearing one column name — which is the
+instrument-commit problem again, one layer down: **a rate needs the machine it was measured on, not
+only the script.** A session's shell snapshot is captured once, so a session that started before the
+deploy kept the old behaviour whatever the date says; `setopt | rg pipefail` is the check.]
 
-- **sample 6** — 27%, masked set was read-only listings, damage structurally impossible;
-- **sample 2** — 28%, masked gate, and that session **pushed five times** on evidence it could not
-  distinguish from false;
-- **sample 7** — 22%, masked gate, seven assertions to the user, re-run clean.
+**The headline rate cannot tell the three consequences apart, and the re-score makes the point
+harder rather than softer.** Three rows, three consequences:
 
-Three samples, three different consequences, one number that separates none of them — the lowest of
-the three is the one with the most claims riding on it. The `what was masked` column above is
-recorded by hand; whether `audit.py` should derive it is the open question below.
+- **sample 6†** — 38%, the highest the corpus can assert, and it was recorded as "listings only,
+  damage structurally impossible". 30 of its 82 masked calls wrapped a gate;
+- **sample 2** — at least 28%, masked gate, and that session **pushed five times** on evidence it
+  could not distinguish from false;
+- **sample 7†** — 28%, masked gate, seven assertions to the user, re-run clean.
+
+One number separates none of them. What changed is where the error was: the corpus used to read the
+highest of the three as the harmless one, and that reading came from a hand-built `what was masked`
+column over a call list the instrument had already pruned. `audit.py` derives the split now, which
+is the open question below, answered.
 
 **`audit.py`'s `compare` scored absent baseline tags wrongly, and older rows are affected.** A tag
 **missing** from the baseline was treated as `0.0`, so a "down" expectation on a pattern added after
@@ -607,18 +712,21 @@ prefer and which the sessions demonstrably do not reach for. Sample 2's falsific
 "output is truncated so the filter buys something" argument for a `--quiet` flag, but not the
 readability argument.]
 
-[NEEDS CLARIFICATION: **should the corpus carry a second column for _what_ was masked — and should
-it count calls or assertions?** Sample 6 asked the first half: seven samples in, the headline number
-is stable at 8–32% and does not distinguish a masked gate from a masked `--help`, which have
-completely different consequences — a masked gate is a wrong answer published, a masked listing is a
-style violation with no possible victim. A `--gate-only` mode in `audit.py` would have separated
-sample 6 from samples 2 and 7 on the first pass. Sample 7 sharpens it into the second half: it
-masked 22% of calls but made **seven** green claims, and it is the claims that reach the user — a
-run that masks forty listings and asserts nothing has no reader, while one that masks a single gate
-and says "green" once does. `harvest.py claims` already counts assertions, so the number exists; the
-question is whether the corpus wants it as a column or whether it belongs only in the harvest
-report. Either way this is an `audit.py` change and **belongs in `agent-skills`**, filed there
-rather than decided here.]
+[DECISION: **the `what was masked` column is derived by the instrument now, and the corpus stops
+recording it by hand.** Asked here as an open question, filed to `agent-skills` as the repo that
+owns `audit.py`, and answered there on 2026-09-06: `exit-masked` prints
+`n masked, of which m wrapped a gate` — one line, one regex over a gate name list, and it classifies
+about half the masked population corpus-wide. A second rate column was designed and rejected (sample
+8 is 99% listings and the 1% is the part that matters, so a rate averages away the call that
+counts), and so was listing the masked gate calls (at corpus scale that is 1,389 calls across 55 of
+67 sessions, a report section rather than a footnote). The reasoning and the measurements that
+killed each alternative are in that skill's `references/research.md`, "One rate over two outcomes".
+The assertions half stays where it was: `harvest.py claims` counts them in the harvest report, and
+the corpus quotes the count rather than growing a column for it. **What settles this beyond the
+design argument is sample 6**: the hand-built column recorded "listings" for a row whose derived
+split is 30 gate calls out of 82, because the reader was shown a pruned call list. A column a human
+fills in from an instrument's output inherits every defect of that instrument and reports none of
+them.]
 
 ### The output ceiling, measured 2026-09-02 — and it is size, not lines
 
@@ -659,10 +767,15 @@ has the same remedy as the gate population. The two still differ in what a sessi
 it reaches for the filter, which is worth knowing for wording, but they no longer differ in what the
 correct call is.
 
-[NEEDS CLARIFICATION: **should `exit-masked` join `EXPECTATIONS`?** It is measured, reported and now
-has a documented consequence in `session-harvest`, but it is scored by nothing, so a run that halves
-it gets no credit and one that doubles it produces no MISS. Against: it is a symptom of `head/tail`
-rather than an independent habit, and scoring both double-counts one behaviour.]
+[DECISION: **`exit-masked` stays out of `EXPECTATIONS`, decided in `agent-skills` on 2026-09-06
+(`8b095f5`), and the reason is stronger than the double-counting argument this corpus raised.**
+Whether a masked exit code cost anything depends on the shell that ran the command — one setting
+`pipefail` carries the status through the pipe and nothing was hidden — and a transcript records the
+command, not the shell. Any verdict computed from it is a confident number standing on an assumption
+about a machine the instrument never saw. A gate-only version of the row fails the same test.
+`head/tail` scores the habit instead, from output loss, which holds on every machine; a test in that
+repo pins the absence so it reads as a decision rather than an omission. This machine is exactly the
+case that motivates it — see the `PIPE_FAIL` pitfall above.]
 
 ## Recommended direction
 
@@ -689,7 +802,19 @@ tell them it keeps the **head**. A reader who knows only "it truncates" has no w
 6 is another `head/tail`/`exit-masked` row and sample 7 is the counterweight that turns sample 6's
 mitigation into a distinction worth measuring. The single action they generate is a plan filed in
 `agent-skills` for the `audit.py` column, per the open question above; nothing here is owed to
-`~/AGENTS.md`.
+`~/AGENTS.md`. (That plan landed: the split ships, and the question above is now a `DECISION`.)
+
+**Revised 2026-09-07, after the re-score. Still nothing owed to `~/AGENTS.md`, and one method
+finding that outlives every rate here.** The corrections moved four rows and flipped one verdict,
+and no wording argument turns on any of it — `head/tail` was the persistent miss before and is a
+larger one now. What the pass actually produced is a rule about the corpus rather than about the
+sessions in it: **a measurement is not a number, it is a number plus the instrument, the boundary
+and the machine.** Each of the three was missing somewhere here, and each cost something —
+`strip_heredoc` understated eleven rows, the missing `--until` boundary makes seven of them
+permanently uncorrectable, and `PIPE_FAIL` silently changed what the `exit-masked` column means
+partway through the corpus. A row that records all three can be corrected by anyone later; a row
+that records none of them can only be re-measured, which is a different row. Every future row
+carries the instrument commit, the boundary, and the shell.
 
 `2026-09-02-rg-replace-flag-used-twice-in-one-session.md` is a separate finding of the same "simply
 not followed" kind and is deliberately not merged here — it is one flag with its own proposed
