@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-08
 ---
 
@@ -64,50 +64,60 @@ install needs it even more than a container does:
    packages, changes the shell and writes GNOME settings — the least reversible thing this repo
    does. Recommended below.
 
-## Open questions
+## What landed, 2026-09-08
 
-[NEEDS CLARIFICATION: **does the one line stop after `bootstrap.sh`, or run `inv setup` too?**
-Stopping leaves the user two lines from done (`cd <path>` and `inv setup`) and makes the dangerous
-half a deliberate command, which is the conservative reading of "clone and install". Running it
-through is what "in one go" plainly asks for, and the run is interactive anyway. Recommendation
-below is to go all the way with a printed summary and a confirmation before the `inv setup` step,
-`--yes` to skip it — but this is the user's call, since it decides what a pasted line does to a
-machine.]
+`install.sh` at the repo root, plus the quick start in `README.md` and `docs/index.md`. Verified in
+a stock `ubuntu:24.04` container with no `git` on it: the script installed git, cloned, ran the real
+`bootstrap.sh` and exited 0. The refuse, adopt, `--bootstrap-only`, `--exclude-tags` and no-terminal
+branches were each exercised against a stub checkout rather than reasoned about.
 
-[NEEDS CLARIFICATION: **the name and the URL.** `install.sh` is the ecosystem shape — it is what uv
-itself uses (`curl -LsSf https://astral.sh/uv/install.sh | sh`) and what a person guesses. The
-repo's own convention is the `bootstrap-` prefix, which would make it `bootstrap-remote.sh`.
-`install.sh` is recommended: the README URL is the interface here, and it is read by people who have
-never seen this repo's file naming.]
+[DECISION: **it runs `inv setup`, after asking.** Stopping at `bootstrap.sh` was the conservative
+option and it loses the ask: "in one go" is the request, and a run started from a terminal has
+somewhere to put the question. The prompt follows apt's shape — on by default, `--yes` to skip,
+never an opt-in `--confirm` — and it names what is about to happen (apt packages, login shell, GNOME
+settings) rather than asking an abstract "continue?". `--bootstrap-only` keeps the conservative path
+available for anyone who wants it. **With no terminal and no `--yes` the script exits 1** rather
+than proceeding, which is the same silent-default failure the never-pipe rule is about: a setup run
+that happens because the question could not be shown is worse than one that does not happen.]
 
-[NEEDS CLARIFICATION: **which ref does it clone?** `stable` is what the container script pins, moved
-forward by CI only on a green smoke test, and reusing it costs nothing and introduces no new
-concept. `master` gets the newest work and is what the README's manual clone gets today, so the two
-documented paths would install different things. Recommended: `stable`, with `--ref` to override,
-and the README's manual instructions changed to match so there is one answer.]
+[DECISION: **`install.sh`, not `bootstrap-remote.sh`.** The raw URL is the interface, and it is read
+by people who have never seen this repo's file naming; `install.sh` is what uv's own one-liner uses
+and what a person guesses. The `bootstrap-` prefix stays accurate for the two scripts that are
+bootstraps in this repo's internal sense.]
 
-[NEEDS CLARIFICATION: **is the shared logic worth factoring?** The clone-then-`bootstrap.sh`-then-
-`inv setup` spine is common to both scripts, but the three decisions above differ at every step, and
-`bootstrap-devcontainer.sh` is on a CI smoke test that a refactor would be risking for a distributed
-entry point. Leaning: leave them as two scripts and keep the never-pipe rationale in one place
-rather than copied, since that is the part that is expensive to rediscover.]
+[PITFALL: **the ref had to be `master`, and `stable` would have shipped a 404.** `stable` was the
+recommendation and it is still where this belongs — it is what `bootstrap-devcontainer.sh` pins, and
+pinning is what lets someone read the script today and run the same bytes tomorrow. But `stable` is
+a **tag**, not a branch, currently on a commit from **2026-09-02**, six days behind and predating
+`install.sh` entirely. Both the raw URL and a clone of that ref would resolve to a tree with no
+installer in it, so the documented one-liner would have failed for every reader while looking
+correct in review. Checked with `git ls-remote` rather than assumed — a local `origin/stable` would
+not have told the truth about the tag. Moving the tag past this commit makes `master` → `stable` a
+one-word change in four places, and the script's own comment names them.]
 
-## Recommended direction
+[DECISION: **two scripts, not one factored spine.** The clone-then-bootstrap-then-setup shape is
+common, but all three decisions above differ at every step, and `bootstrap-devcontainer.sh` is on a
+CI smoke test that a refactor would risk for the sake of a distributed entry point. What is shared
+is the expensive part — the never-pipe measurement — and it stays written up once, in that script's
+header, pointed at rather than copied.]
 
-1. **`install.sh` at the repo root**, a sibling of `bootstrap.sh` and `bootstrap-devcontainer.sh`,
-   with the same download-to-a-file usage comment at the top and a pointer to the measurement rather
-   than a restatement of it.
-2. **Options that mirror the container script's**: `--ref <git-ref>` (default `stable`),
-   `--dir <path>` (default `~/projects/power-user-linux-setup`), `--exclude-tags <tags>`,
-   `--bootstrap-only`, `--yes`.
-3. **Adopt, never clobber.** An existing directory that is a PULSE checkout is fetched and reused;
-   an existing directory that is anything else is a refusal naming the path, not a `rm -rf`.
-4. **Confirm before `inv setup`**, print the checkout path on the way out, and say that the path is
-   permanent because `spowse` and `deploy.status` both resolve through it.
-5. **One README quick start, not two.** The one-liner becomes the quick start; the six manual lines
-   stay underneath as "or, step by step", on the same ref.
-6. **Not a `curl | bash`, and not a `sudo bash`.** The script collects root the way `inv setup`
-   already does, through `util.ensure_sudo()`, so nothing runs as root that does not need to.
+One thing was built more conservatively than planned. "Adopt, never clobber" was going to fetch and
+check out the requested ref in an existing checkout; it now uses the checkout **exactly as it
+stands**, no fetch and no ref change, and says so. A fetch-and-checkout on a directory that may hold
+uncommitted work is a clobber wearing a git command, and this script's job is starting a machine,
+not updating one that already started.
+
+## What is left
+
+1. **Move the `stable` tag past this commit**, then switch the four `master` spellings to `stable` —
+   the header URL, `REF`, `README.md` and `docs/index.md`. Gated on a decision that is not this
+   plan's: `.github/workflows/devcontainer.yml`, which is what moves the tag, is deliberately
+   `workflow_dispatch`-only while the container pipeline iterates.
+2. **A CI smoke test for this script**, the way the container one has. Today's evidence is a manual
+   container run, which is real but is not repeated on anyone else's commit.
+3. Not a `sudo bash`, ever. The script collects root the way `inv setup` already does, through
+   `util.ensure_sudo()`, so nothing runs as root that does not need to. Worth restating here because
+   "why not just tell people to sudo it" is the obvious simplification and it is wrong.
 
 [DECISION: **this is a distribution entry point, so it is pinned and inspectable rather than
 convenient.** A pasted line runs unreviewed code with access to sudo on a fresh machine, which is

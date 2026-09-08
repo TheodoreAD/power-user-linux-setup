@@ -256,11 +256,14 @@ form, never a compound that half-repeats the disambiguating word. The same rule 
 "where the full name is genuinely unwieldy" — `power-user-linux-setup` as something you type daily
 qualifies.
 
-[NEEDS CLARIFICATION: **`pulse`, or a name with no overlap at all?** `pulse` is consistent with
-every other artefact this repo already installs and collides with nothing that exists. A
-zero-overlap alternative buys immunity from a package that does not exist yet and from confusion in
-a `pulseaudio`-installed environment, at the cost of a name that matches nothing else in the repo.
-The decision is the user's; the evidence above is all of it.]
+[DECISION: **that question was overtaken, and closing it is a correction rather than an answer.** It
+asked `pulse` versus a name with no overlap at all, and it was written before the section it sits in
+opened with "Decided `spowse`". By the time it was noticed the name had shipped — two console
+scripts, an allowlist grant on both, the tool installed on this machine — so the zero-overlap
+alternative is what was chosen, by a route this tag never recorded. The evidence above about
+`pulse`'s command namespace being genuinely free still stands on its own terms and is kept; it is
+the reason the withdrawal needed the `~/.config/pulse` collision to justify it, rather than the
+nominal clash alone.]
 
 ## Alternatives considered, and why they lose to the shim
 
@@ -311,15 +314,16 @@ question that needs no checkout. The other six write into `cli-allowlist/` in th
 first collection this repo splits across the line, which is exactly why `AGENTS.md` names it as the
 worked example — the boundary is per task, and reading the namespace name alone gets it wrong.]
 
-[NEEDS CLARIFICATION: whether the shim should refuse to run when the checkout has moved or is
-missing. This was speculative when written and the probe above has made it **the only failure mode
-left** — every upgrade path holds the anchor, so a moved or renamed checkout is what actually breaks
-`spowse`, and it breaks it with `ModuleNotFoundError: No module named 'tasks'`. The fix is small and
-the placement is the question: a `try/except ImportError` in the console-script path cannot work
-(the failure is the import of `tasks.cli` itself, before any of our code runs), so it has to be
-either a check inside `tasks/cli.py:main` for the checkout-side files it needs — which catches a
-partially-moved tree but not a missing one — or a generated wrapper that tests the path before
-exec'ing. Worth deciding now that it is no longer one risk among several.]
+[DECISION: **the shim checks its own checkout before invoke gets control** — landed 2026-09-08 in
+`tasks/cli.py`'s `_require_checkout`, five tests. `main` verifies that `setup.toml` and `config/`
+resolve from the anchor and, when they do not, exits with the expected path, what is missing from
+it, and the `uv tool install --force --editable` line that re-points the install; it echoes the name
+the user typed, since two console scripts share the entry point. A generated wrapper testing the
+path before exec'ing was the alternative and it is the only shape that could also catch a checkout
+that is **gone** — the import of `tasks.cli` fails before any of our code runs, so that half is out
+of reach from inside the package. It was not worth a second artefact between the console script and
+the program: `uv tool upgrade` already names the path in that case, the docstring says plainly which
+half is covered, and a wrapper is one more thing that can drift from what `[project.scripts]` says.]
 
 ## Recommended direction
 
