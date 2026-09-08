@@ -9,6 +9,7 @@ on:
   #     - tasks/**
   #     - bootstrap.sh
   #     - bootstrap-devcontainer.sh
+  #     - install.sh
   #     - .devcontainer/**
   # Intentionally disabled for now (workflow_dispatch-only) while this pipeline is still under
   # active development — repeated pushes to master would otherwise trigger a build/smoke-test on
@@ -69,8 +70,15 @@ jobs:
             zsh -lic 'node --version'
             zsh -lic 'command -v skills'
 
+  # The `stable` tag is what bootstrap-devcontainer.sh pins *and* what README.md's one-line
+  # installer is pinned to, so the container smoke test alone stopped covering it the day install.sh
+  # started sharing the ref. Same definition ci.yml calls on every push, called here so the tag move
+  # can require it — a second copy of the job would be a copy that drifts.
+  install-smoke:
+    uses: ./.github/workflows/install-smoke.yml
+
   publish-stable:
-    needs: smoke-test
+    needs: [smoke-test, install-smoke]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     permissions:
