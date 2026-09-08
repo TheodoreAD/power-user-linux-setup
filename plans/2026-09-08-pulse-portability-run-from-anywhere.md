@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-08
 ---
 
@@ -85,12 +85,13 @@ And it does not stop at the repo-tasks line. Reading PULSE's own 28, the develop
 | ------------------------------------------------------------------- | ------------------------------------------------------------ |
 | `catalog.render-packages`, `catalog.render-tasks`                   | regenerate docs tables from `setup.toml`                     |
 | `devcontainer.render-docs`                                          | regenerates a docs table                                     |
-| `allowlist.extract/classify/review/render/check-*/reconfirm/status` | authoring pipeline writing into `cli-allowlist/` in the repo |
+| `allowlist.extract/classify/review/render/check-man-deps/reconfirm` | authoring pipeline writing into `cli-allowlist/` in the repo |
 
-`allowlist.apply` is the exception inside its own collection — it writes `~/.claude/settings.json`,
-which is machine configuration and belongs in the tool. `devcontainer.check`, `print-exclude-tags`
-and `print-mounts` serve someone setting up a container, so they stay. `home.list-claims` is a
-read-only diagnostic and stays.
+`allowlist.apply`, `status` and `check-coverage` are the exceptions inside their own collection —
+`apply` writes `~/.claude/settings.json`, which is machine configuration, and the other two are
+read-only answers to "what would apply do" that need no checkout. `devcontainer.check`,
+`print-exclude-tags` and `print-mounts` serve someone setting up a container, so they stay.
+`home.list-claims` is a read-only diagnostic and stays.
 
 So **a collection-level filter cannot express this**, which is the finding that shapes the
 implementation.
@@ -98,11 +99,13 @@ implementation.
 ## Implementation, and what each piece costs
 
 1. **Mark the development tasks where they are defined**, and derive both namespaces from one
-   source. A module-level set naming that module's dev-only tasks, read by the shim's namespace
-   builder, keeps the declaration next to the task it describes — so adding a task and forgetting
-   the list is a one-file mistake rather than a two-file one. `inv` in the repo keeps showing
-   everything; the shim shows everything minus the marked set. **Never two hand-maintained lists**:
-   they drift, and the drift is silent in the same way the repo-tasks accident is.
+   source. **Built as a per-task marker rather than the per-module set this planned** —
+   `@util.dev_only` applied directly under `@task`, which is one step better than a module-level
+   list: there is no list to forget at all, the mark travels with the task through a rename or a
+   move between modules, and `functools.update_wrapper` carries it onto the `Task` object for free.
+   `inv` in the repo keeps showing everything; the shim shows everything minus the marked set.
+   **Never two hand-maintained lists**: they drift, and the drift is silent in the same way the
+   repo-tasks accident is.
 2. **`tasks/cli.py`**, about fifteen lines: build the production `Collection`, hand it to
    `Program(namespace=…, version=…)`. Invoke supports this directly — `program.py:461` reads
    `if self.namespace is not None: self.collection = self.namespace`, skipping disk discovery
@@ -124,7 +127,66 @@ implementation.
    because `inv` in-repo keeps working — but the tool needs one page saying which entry point is
    which, or the two spellings become folklore.
 
+## What landed, 2026-09-08
+
+Built in five commits, in the order the costs fall:
+
+| commit    | what                                                                           |
+| --------- | ------------------------------------------------------------------------------ |
+| `0b2d573` | `tasks/cli.py` and the production namespace, derived by subtraction            |
+| `0b46fae` | `[project.scripts]`, `invoke` to a real dependency, `editable` in `setup.toml` |
+| `94997c4` | the read-only permission grant on both shim names                              |
+| `0002495` | `docs/tasks.md` and `AGENTS.md`                                                |
+| `199ed92` | (earlier) the `~/AGENTS.md` `inv -r` correction                                |
+
+Verified end to end from an unrelated directory, into a redirected `UV_TOOL_DIR` so the machine was
+untouched: both shims report a version, `spowse --list` carries 26 collections plus `setup` with no
+`quality`, `test` or `catalog`, and `spowse deploy.status` resolved all twelve deployed sources
+against the checkout.
+
+**The one design decision worth re-reading later**: both namespaces are derived from
+`tasks.namespace` by subtraction, and each subtracted thing is recorded where it is created —
+borrowed collections by the code that adds them, development tasks by `@util.dev_only` on the task
+itself. A parallel list would have been smaller to write and would drift silently in the worse
+direction. The membership is pinned by `tests/unit/test_cli.py`.
+
+**Still open**: the machine install itself (`inv python.install-tools`, which upgrades every uv tool
+on the machine, so it is the user's call), the upgrade-path probe in the `UNVERIFIED` below, and the
+`agent-skills` question about `skill-authoring`'s last step.
+
 ## The name
+
+**Decided `spowse`, with `spouse` as a second console script at the same entry point.**
+
+> **S**ensible **POW**er-user **SE**tup
+
+Same construction as **P**ower **U**ser **L**inux **SE**tup, with no filler word — the `SE` comes
+from `SEtup` in both. `spouse` is a homophone, so the misspelling is guaranteed rather than
+hypothetical; a second `[project.scripts]` entry costs one line and turns a recurring
+`command not found` into nothing at all. `spowse` is canonical in docs, `setup.toml` and the
+allowlist.
+
+The metaphor is the domain rather than decoration: this tool's job is `$HOME`, and a spouse keeps
+the house in order and tells you what has drifted out of place, which is what `spowse deploy.status`
+literally does.
+
+[DECISION: **`pulse` was recommended and then withdrawn, and the reason is a collision this repo has
+already been bitten by.** The first recommendation rested on a real finding — no package ships a
+bare `pulse` binary, PulseAudio's own executables are `pulseaudio` and the `pa*` family, and this
+machine runs PipeWire — so the _command_ namespace is genuinely free. What that missed is in
+`tasks/util.py` beside `PULSE_CONFIG_DIR`: `~/.config/pulse` **is** PulseAudio's own config
+directory, PULSE's state collided with it silently, and `eee0cf6` (2026-08-13) renamed this repo's
+config and state dirs to the full repo name to escape it. Confirmed live — that directory holds a
+card database, a cookie and default-sink files dating to 2020. The command namespace and the XDG
+config namespace are different namespaces, so the original finding stands on its own terms; but a
+repo that deliberately renamed away from `pulse` should not then name its binary `pulse`, and the
+shim's own natural config path is the occupied one. Names screened after that: about sixty across
+six themes, filtered on PATH, apt and PyPI. `fettle` (best meaning) lost to a live 2026 PyPI package
+doing devcontainer scaffolding; `monty` (best pun — "the full monty" plus Monty Python) lost to an
+active 129-release PyPI package; `pumas` (**P**ower **U**ser **MA**chine **S**etup) was a clean
+backronym but a plural, adjacent to `puma` the app server, and not actually wordplay; `powerset`
+lost to the pre-owned mathematical meaning. `spowse` was the user's, and it is the only candidate
+that is a backronym **and** a joke.]
 
 **The clash is nominal, not actual.** Checked on this machine and against the archive:
 
@@ -196,12 +258,12 @@ ever cited as the shim's justification.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **where exactly the production line falls inside `allowlist`.** `apply` writes
-machine configuration and clearly belongs; the other eight write into `cli-allowlist/` in the repo
-and clearly do not. But `status` and `check-coverage` are read-only and answer "what would apply
-do", which is a question a machine administrator asks. Splitting one collection across the line is
-the first time this repo would do that, and it is worth deciding deliberately rather than by
-whichever list gets written first.]
+[DECISION: **`allowlist` splits three to six — `apply`, `status` and `check-coverage` ship.**
+`apply` writes `~/.claude/settings.json`, which is machine configuration; `status` and
+`check-coverage` are read-only and answer "what would apply do", which is a machine-administration
+question that needs no checkout. The other six write into `cli-allowlist/` in the repo. This is the
+first collection this repo splits across the line, which is exactly why `AGENTS.md` names it as the
+worked example — the boundary is per task, and reading the namespace name alone gets it wrong.]
 
 [NEEDS CLARIFICATION: whether the shim should refuse to run when the checkout has moved or is
 missing. An editable install whose source directory is gone fails at import with a traceback, which
@@ -215,11 +277,16 @@ repo exists to prevent. Probe before shipping.]
 
 ## Recommended direction
 
-1. **Done** — the `~/AGENTS.md` `inv -r` correction (`199ed92`), deployed. Independent of the rest.
-2. **Decide the name.** Evidence is above and complete; nothing else is blocked on it, but every
-   file the work touches will carry it.
-3. **Build it in the order the costs fall**: mark the dev tasks where they are defined, add
-   `tasks/cli.py` with an explicit production `Collection`, move `invoke` into `dependencies`, then
-   the `setup.toml` install method, the `verify` check, and the allowlist pass.
-4. **Probe the upgrade path** before it ships, per the `UNVERIFIED` above.
-5. **Not a self-contained wheel, and never the global invoke config.**
+1. ~~The `~/AGENTS.md` `inv -r` correction~~ — **done**, `199ed92`, deployed.
+2. ~~Decide the name~~ — **done**, `spowse` with the `spouse` alias.
+3. ~~Build it~~ — **done**, four commits, gate green throughout and verified from an unrelated
+   directory. `verify.all` needed no override: the convention default is `<check_cmd> --version`,
+   and invoke's `Program` answers that from `[project] version`.
+4. **Install it on this machine.** `inv python.install-tools` is the declared path and it upgrades
+   every other uv tool as it goes, so it is the user's call rather than a side effect of this work.
+   `inv ai.install-skills` applies the permission grant in the same way.
+5. **Probe the upgrade path**, per the `UNVERIFIED` above — a `uv self update` or a Python bump on
+   the tool environment, against a tool whose whole value is resolving a checkout it does not own.
+6. **Answer the `agent-skills` question**, which decides whether the measured need was sixteen
+   reaches or four. It does not change anything already built.
+7. **Not a self-contained wheel, and never the global invoke config.**
