@@ -77,8 +77,15 @@ jobs:
   install-smoke:
     uses: ./.github/workflows/install-smoke.yml
 
+  # Both smoke tests prove the thing runs; this proves it is the code the repo actually accepts.
+  # Without it `stable` could carry failing lint, a type error or a red test suite, because nothing
+  # in this workflow ever looked. `docs` is deliberately not here: a docs-site build failure does not
+  # change what a consumer of this tag installs.
+  quality:
+    uses: ./.github/workflows/quality.yml
+
   publish-stable:
-    needs: [smoke-test, install-smoke]
+    needs: [smoke-test, install-smoke, quality]
     runs-on: ubuntu-latest
     if: github.ref == 'refs/heads/master'
     permissions:

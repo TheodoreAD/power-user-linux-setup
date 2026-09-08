@@ -1,0 +1,25 @@
+name: Quality gate
+
+# Reusable for the same reason install-smoke.yml is: two workflows need this answer and `needs:`
+# does not reach across them. `ci.yml` calls it on every push and pull request; `devcontainer.yml`
+# calls it so `publish-stable` cannot move the `stable` tag onto a commit that does not lint, type
+# check or pass its tests. A `./` caller resolves this file at the caller's own commit.
+on:
+  workflow_call:
+
+permissions:
+  contents: read
+
+jobs:
+  # persist-credentials: false because nothing here pushes, and the default would leave the token
+  # where every later step can read it — the same least-privilege reasoning ci.yml states for the
+  # jobs it still defines inline.
+  check:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          persist-credentials: false
+      - uses: astral-sh/setup-uv@v10.0.1
+      - run: ./.github/ci-bootstrap.sh
+      - run: inv quality.check

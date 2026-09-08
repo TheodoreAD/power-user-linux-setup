@@ -12,15 +12,10 @@ permissions:
   contents: read
 
 jobs:
+  # In its own file so devcontainer.yml's publish-stable can require it before moving the `stable`
+  # tag — same reason as install-smoke below.
   quality:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v7
-        with:
-          persist-credentials: false
-      - uses: astral-sh/setup-uv@v10.0.1
-      - run: ./.github/ci-bootstrap.sh
-      - run: inv quality.check
+    uses: ./.github/workflows/quality.yml
 
   # The docs build is a check, and it lives here rather than in `quality.check` because it writes
   # `site/` and that gate is the read-only half by construction — `repo_tasks.quality.precommit`'s
