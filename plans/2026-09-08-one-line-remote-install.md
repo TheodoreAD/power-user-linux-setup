@@ -109,10 +109,13 @@ not updating one that already started.
 
 ## What is left
 
-1. **Move the `stable` tag past this commit**, then switch the four `master` spellings to `stable` —
-   the header URL, `REF`, `README.md` and `docs/index.md`. Gated on a decision that is not this
-   plan's: `.github/workflows/devcontainer.yml`, which is what moves the tag, is deliberately
-   `workflow_dispatch`-only while the container pipeline iterates.
+1. ~~Move the `stable` tag past this commit and switch the four `master` spellings~~ — **done**, the
+   same day. The tag was moved by hand, which is worth naming rather than leaving implicit: CI moves
+   it "only on a green smoke test", and the workflow that would have run one
+   (`.github/workflows/devcontainer.yml`) is deliberately `workflow_dispatch`-only while the
+   container pipeline iterates. So the tag now points at a commit the smoke test has not seen, and
+   `bootstrap-devcontainer.sh` pins the same ref. Item 2 below is what closes that gap for this
+   script; the container path's own gap predates this plan.
 2. **A CI smoke test for this script**, the way the container one has. Today's evidence is a manual
    container run, which is real but is not repeated on anyone else's commit.
 3. Not a `sudo bash`, ever. The script collects root the way `inv setup` already does, through
