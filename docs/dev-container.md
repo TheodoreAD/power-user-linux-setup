@@ -60,15 +60,27 @@ then `inv setup` with `PULSE_EXCLUDE_TAGS` resolved from `--exclude-tags` or, if
 
 **Why `stable`, not `master`/`HEAD`:** an unpinned ref would mean every consumer's
 `postCreateCommand` runs whatever's currently on `master`, including anything broken mid-commit.
-`stable` is a git tag that CI (`.github/workflows/devcontainer.yml`) only force-moves forward when a
-build/smoke-test against `.devcontainer/devcontainer.json` passes — "up to date" without ever
-running untested instructions.
+`stable` is a git tag that CI (`.github/workflows/devcontainer.yml`) only force-moves forward when
+its `publish-stable` job's gates all pass — "up to date" without ever running untested instructions.
+
+**Three gates, not one, because the tag is shared.** `README.md`'s one-line installer (`install.sh`)
+is pinned to this same ref, so a build/smoke-test against `.devcontainer/devcontainer.json` stopped
+being the whole story. `publish-stable` now requires that `smoke-test`, plus `install-smoke` (the
+installer really clones and bootstraps) and `quality` (the commit lints, type checks and passes its
+tests). The latter two are `workflow_call` files that `.github/workflows/ci.yml` also calls, since
+`needs:` cannot reach across workflows. `docs` is deliberately excluded: a documentation-site build
+failure does not change what a consumer installs.
 
 The tag exists as of 2026-09-01, on that workflow's first-ever run. It had never executed before
 then, so `stable` did not resolve at all and the snippet above returned 404 to anyone who copied it.
 The workflow stays `workflow_dispatch`-only for now (see the file for the re-enable note), which
 means **`stable` moves only when someone runs it by hand** — it is a reviewed marker rather than a
 moving head, and it can lag `master` by however long nobody has dispatched it.
+
+That lag has a measured cost, so it is worth stating rather than implying: between 2026-09-05 and
+2026-09-08 the container build was broken on `master` and nothing reported it, because the only job
+that would have run was never dispatched. The gates above decide what `stable` may move _onto_; they
+say nothing about how long `master` can stay broken first.
 
 **There is no image and no registry.** Delivery is entirely git: one script fetched from
 `raw.githubusercontent.com` at a ref, and a shallow clone of this repo at the same ref. The
