@@ -274,6 +274,49 @@ this rather than re-deriving the design. **`.github/workflows/devcontainer.yml` 
 re-enable note) — this is deliberate, not an oversight, while the pipeline is still under active
 iteration; don't "fix" it by uncommenting the trigger without checking with the user first.
 
+## The one-line installer, and what gates the `stable` tag
+
+`install.sh` is the distribution entry point — the line `README.md` and `docs/index.md` tell a
+person to paste onto a fresh machine. It clones, runs `bootstrap.sh`, then asks before `inv setup`
+(apt's shape: on by default, `--yes` to skip, `--bootstrap-only` to stop early).
+
+**It is a download-then-run, never a `curl … | bash`, and that is measured rather than stylistic.**
+A pipeline reports its _last_ command's status, so a failed download hands `bash` an empty stdin and
+the whole thing exits 0 claiming success — written up once in `bootstrap-devcontainer.sh`'s header,
+pointed at rather than restated. Two consequences are specific to this script: `bootstrap.sh`'s
+repo-tasks question is `[ -t 0 ]`-guarded, so a pipe silently takes `setup.toml`'s default, and
+`util.ensure_sudo()` falls back to `sudo -v` owning the real terminal, which a pipe has none of.
+**With no terminal and no `--yes` the script exits 1** rather than running a machine setup because
+the question could not be shown.
+
+Its clone destination is **permanent**: `spowse` is installed `--editable` against it and
+`deploy.status` compares the machine to it, so an existing checkout is adopted exactly as it stands
+— no fetch, no ref change — and anything else at that path is a refusal, never a delete.
+
+**`stable` is a tag shared by this script and `bootstrap-devcontainer.sh`**, and only
+`devcontainer.yml`'s `publish-stable` moves it, now gated on three jobs: the container `smoke-test`,
+`install-smoke` and `quality`. The latter two live in their own `workflow_call` files
+(`.github/workflows/install-smoke.yml`, `quality.yml`) precisely because `needs:` does not reach
+across workflows — `ci.yml` calls them for per-commit coverage and `devcontainer.yml` calls them as
+the release gate. **Do not copy either job into a second workflow**; a copy drifts, which is the
+same argument `tasks/cli.py` makes about parallel task lists. `docs` is deliberately not a gate: a
+documentation-site build failure does not change what a consumer of the tag installs.
+
+`install-smoke` installs **the commit under test**, not what is published — `--repo-url` points at
+the checkout and the clone takes a branch created at `HEAD`, because cloning `stable` from GitHub
+would confirm the past instead of gating the change. `git branch` rather than a SHA
+(`git clone
+--branch` takes a branch or tag only), and `fetch-depth: 0` because
+`git clone --depth 1` from a shallow repo fails outright. Everything that happens _before_ a
+download — adopt, refuse, the no-terminal refusal — is covered hermetically in
+`tests/unit/test_install_sh.py` instead, so it runs in the local gate.
+
+[PITFALL: **moving `stable` by hand publishes whatever is broken at that commit.** Done once on
+2026-09-08 to get `install.sh` reachable, it carried a three-day-old `verify.all` regression to
+every `bootstrap-devcontainer.sh` consumer. Because the workflow is `workflow_dispatch`-only, the
+container build had been failing since 2026-09-05 with nothing to say so. Let `publish-stable` move
+the tag.]
+
 ## CLI permission allowlist pipeline
 
 `cli-allowlist/` (tracked, unlike the research dump it grew out of) keeps a
