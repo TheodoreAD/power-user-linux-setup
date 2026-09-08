@@ -146,9 +146,29 @@ not updating one that already started.
    argument the shim's namespace derivation makes about parallel lists. A `./` caller resolves the
    file at the caller's own commit, so neither call tests `master` by accident.]
 
-   Still true, and not this plan's to fix: `publish-stable` requires the two smoke tests and **not**
-   `quality` or `docs`, so the tag can still move onto a commit with failing lint or tests. That gap
-   predates `install.sh` and is a decision about the container pipeline.
+   `quality` was wired the same way immediately after, so `publish-stable` now requires all three.
+   `docs` is deliberately left out: a documentation-site build failure does not change what a
+   consumer of this tag installs.
+
+   [PITFALL: **dispatching the finished gate proved it worked by failing, and what it caught was
+   three days old.** `publish-stable` was skipped because the container `smoke-test` died on
+   `[verify] python-keyring: ~/.config/uv/uv.toml not found`. Cause: `tasks/python.py`'s
+   `install_tools` was the only installer never calling `deploy.apply_config_files` — `apt.py` calls
+   it twice, `tools.py` calls it, and that function's own docstring already claimed it was called
+   from every install task. It stayed invisible because only two `uv-tool` packages declare
+   `config_files`, and until 2026-09-05 the only one was `act`, tagged `workstation` and therefore
+   excluded in containers; `python-keyring` declared one with no tags. Run history dates it exactly:
+   last green container build 2026-09-01, nothing dispatched between the breakage and 2026-09-08 —
+   the precise cost this workflow's own comment predicts about being `workflow_dispatch`-only.]
+
+   [PITFALL: **moving the tag by hand had already published that breakage, which is the concrete
+   version of the risk item 1 recorded as hypothetical.** `stable` went from `52cba6e` (2026-09-01,
+   container-green, no `install.sh`) to `48f284a`, which carried the 09-05 regression — so
+   `bootstrap-devcontainer.sh` consumers were broken by the move for as long as it stood, in
+   exchange for the one-liner working. The two could only be fixed together: repair the installer,
+   then let `publish-stable` move the tag itself. It now sits on `2a2a152` with all three gates
+   green, and the raw `stable/install.sh` URL was re-fetched and byte-compared after the move rather
+   than assumed.]
 3. Not a `sudo bash`, ever. The script collects root the way `inv setup` already does, through
    `util.ensure_sudo()`, so nothing runs as root that does not need to. Worth restating here because
    "why not just tell people to sudo it" is the obvious simplification and it is wrong.
