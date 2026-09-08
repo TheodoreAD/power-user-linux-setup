@@ -116,8 +116,28 @@ not updating one that already started.
    container pipeline iterates. So the tag now points at a commit the smoke test has not seen, and
    `bootstrap-devcontainer.sh` pins the same ref. Item 2 below is what closes that gap for this
    script; the container path's own gap predates this plan.
-2. **A CI smoke test for this script**, the way the container one has. Today's evidence is a manual
-   container run, which is real but is not repeated on anyone else's commit.
+2. ~~A CI smoke test for this script~~ — **done**, and it split into two tiers rather than the one
+   this listed. `ci.yml`'s `install-smoke` job runs the real thing on every push and pull request:
+   clone, `bootstrap.sh`, then `inv --list` in what it left behind. `tests/unit/test_install_sh.py`
+   covers the nine branches that happen before any download, hermetically, so they run in
+   `inv quality.precommit` rather than only on a runner — and it replaced the throwaway script those
+   branches were first checked with.
+
+   [DECISION: **the job installs the commit under test, which is what `--repo-url` was added for.**
+   Cloning `stable` from GitHub was the obvious shape and it tests whatever was already released —
+   confirming the past rather than gating the change, which is precisely the evidence that was not
+   missing. So the job points `--repo-url` at the checkout and clones a branch made at `HEAD`.
+   `git branch` rather than a SHA because `git clone --branch` takes a branch or tag and not an
+   arbitrary commit, and creating one works from the detached `HEAD` a `pull_request` checkout
+   leaves. `fetch-depth: 0` is load-bearing next to it: the clone is local, and
+   `git clone --depth 1` from a shallow repository fails outright.]
+
+   Two things it deliberately does not do. It stops at `--bootstrap-only`, because `inv setup` in
+   full is what the devcontainer smoke test already covers and duplicating it would double the
+   slowest job in the repo for no new information. And it lives in `ci.yml` rather than in
+   `devcontainer.yml` next to `publish-stable`, which means **it does not gate the `stable` tag** —
+   `needs:` does not reach across workflows. Wiring that gate is the one piece of item 1's problem
+   still open.
 3. Not a `sudo bash`, ever. The script collects root the way `inv setup` already does, through
    `util.ensure_sudo()`, so nothing runs as root that does not need to. Worth restating here because
    "why not just tell people to sudo it" is the obvious simplification and it is wrong.
