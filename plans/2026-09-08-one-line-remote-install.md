@@ -134,10 +134,21 @@ not updating one that already started.
 
    Two things it deliberately does not do. It stops at `--bootstrap-only`, because `inv setup` in
    full is what the devcontainer smoke test already covers and duplicating it would double the
-   slowest job in the repo for no new information. And it lives in `ci.yml` rather than in
-   `devcontainer.yml` next to `publish-stable`, which means **it does not gate the `stable` tag** —
-   `needs:` does not reach across workflows. Wiring that gate is the one piece of item 1's problem
-   still open.
+   slowest job in the repo for no new information.
+
+   [DECISION: **the `stable` tag waits for it too, through a `workflow_call` rather than a second
+   copy.** `publish-stable` required only the container smoke test, which stopped covering what the
+   tag promises the day `install.sh` started sharing that ref — `stable` could have moved onto a
+   commit whose installer does not clone. `needs:` does not reach across workflows, so the job moved
+   into `.github/workflows/install-smoke.yml` as a `workflow_call` and both workflows call it:
+   `ci.yml`'s call is the per-commit coverage, `devcontainer.yml`'s is the release gate. Copying the
+   job into the second workflow was the alternative and it is the one that drifts — the same
+   argument the shim's namespace derivation makes about parallel lists. A `./` caller resolves the
+   file at the caller's own commit, so neither call tests `master` by accident.]
+
+   Still true, and not this plan's to fix: `publish-stable` requires the two smoke tests and **not**
+   `quality` or `docs`, so the tag can still move onto a commit with failing lint or tests. That gap
+   predates `install.sh` and is a decision about the container pipeline.
 3. Not a `sudo bash`, ever. The script collects root the way `inv setup` already does, through
    `util.ensure_sudo()`, so nothing runs as root that does not need to. Worth restating here because
    "why not just tell people to sudo it" is the obvious simplification and it is wrong.
