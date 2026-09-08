@@ -151,8 +151,54 @@ itself. A parallel list would have been smaller to write and would drift silentl
 direction. The membership is pinned by `tests/unit/test_cli.py`.
 
 **Still open**: the machine install itself (`inv python.install-tools`, which upgrades every uv tool
-on the machine, so it is the user's call), the upgrade-path probe in the `UNVERIFIED` below, and the
-`agent-skills` question about `skill-authoring`'s last step.
+on the machine, so it is the user's call) and the `agent-skills` question about `skill-authoring`'s
+last step. The upgrade path was the third, and is answered below.
+
+## The upgrade path survives everything, and the real failure is elsewhere
+
+Probed 2026-09-08 against the same throwaway mirror — a `probepkg/` in the wheel, a `setup.toml` and
+a `config/frag.md` beside it outside the wheel, `Path(__file__).parent.parent` at runtime — in a
+redirected `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR` so nothing on the machine moved. Every row was run, not
+reasoned about; every one resolved the checkout and read both checkout-side files, including a
+`setup.toml` edited **after** the install to prove the anchor was live rather than copied.
+
+| operation                                           | anchor | checkout-side files |
+| --------------------------------------------------- | ------ | ------------------- |
+| `uv tool upgrade <pkg>` (no `--editable` passed)    | held   | read                |
+| `uv tool upgrade --all`                             | held   | read                |
+| `uv tool upgrade --reinstall <pkg>`                 | held   | read                |
+| `uv tool upgrade -p 3.13` (Python bump down)        | held   | read                |
+| `uv tool install --upgrade --python 3.14 …` (back)  | held   | read                |
+| a **newer uv** (0.12.10) upgrading a 0.11.19 env    | held   | read                |
+| a newer uv doing the Python bump on that env        | held   | read                |
+| an **older uv** (0.11.19) taking over a 0.12.10 env | held   | read                |
+
+**Two mechanisms make it robust, and neither one is uv at runtime.** The receipt records editability
+as data rather than as a flag of the moment —
+`requirements = [{ name = "…", editable = "/home/…/power-user-linux-setup" }]` — so
+`uv tool upgrade` re-applies it with nothing passed on the command line. And what the venv actually
+contains is a **bare-path `.pth`**: `_editable_impl_power_user_linux_setup.pth` holds the checkout
+path and nothing else, so resolution is CPython's own `site` machinery, with no import hook and no
+uv code in the path. A `uv self update` replaces a binary that is not involved when the tool runs.
+
+The `uv self update` half is not hypothetical here: this machine is on **0.11.19** and the current
+release is **0.12.10** (2026-09-04), so the pending update crosses a minor boundary. That is the
+boundary the table above tests, in both directions and from a clean slate created by each version.
+
+A Python bump rebuilds the venv rather than patching it — `pyvenv.cfg`'s `home` moves to the new
+interpreter and the `.pth` is rewritten to the same checkout path. `home` also points at uv's
+minor-version symlink (`cpython-3.14-linux-x86_64-gnu`), not the patch directory, so a 3.14.5 →
+3.14.6 refresh does not invalidate an existing tool venv at all.
+
+[PITFALL: **the failure this `UNVERIFIED` was guarding against does not exist; a different one does,
+and it is the checkout moving.** With the source directory renamed, the tool does not degrade — it
+dies at import with `ModuleNotFoundError: No module named 'tasks'` and a traceback naming the
+console script, never the missing path and never this repo. `tasks` is generic enough that the
+message reads as a broken Python install rather than as a moved directory. uv's own diagnosis is the
+good one and is on the wrong command: `uv tool upgrade` refuses with
+`Distribution not found at: file:///…/power-user-linux-setup`, exit 1 — the full path, but only for
+someone who already suspected the cause. Running `spowse` is what a person does; running
+`uv tool upgrade` is not.]
 
 ## The name
 
@@ -266,14 +312,14 @@ first collection this repo splits across the line, which is exactly why `AGENTS.
 worked example — the boundary is per task, and reading the namespace name alone gets it wrong.]
 
 [NEEDS CLARIFICATION: whether the shim should refuse to run when the checkout has moved or is
-missing. An editable install whose source directory is gone fails at import with a traceback, which
-is the worst available message for the most likely long-run failure — a repo that was moved or
-renamed. One early check naming the expected path costs a few lines and turns it into a sentence.]
-
-[UNVERIFIED: whether `uv tool install --editable` survives a `uv self update` or a Python bump on
-the tool venv. The probe covered install and invocation, not the upgrade path, and a tool that
-silently stops resolving its own checkout after an unrelated upgrade is exactly the failure this
-repo exists to prevent. Probe before shipping.]
+missing. This was speculative when written and the probe above has made it **the only failure mode
+left** — every upgrade path holds the anchor, so a moved or renamed checkout is what actually breaks
+`spowse`, and it breaks it with `ModuleNotFoundError: No module named 'tasks'`. The fix is small and
+the placement is the question: a `try/except ImportError` in the console-script path cannot work
+(the failure is the import of `tasks.cli` itself, before any of our code runs), so it has to be
+either a check inside `tasks/cli.py:main` for the checkout-side files it needs — which catches a
+partially-moved tree but not a missing one — or a generated wrapper that tests the path before
+exec'ing. Worth deciding now that it is no longer one risk among several.]
 
 ## Recommended direction
 
@@ -285,8 +331,9 @@ repo exists to prevent. Probe before shipping.]
 4. **Install it on this machine.** `inv python.install-tools` is the declared path and it upgrades
    every other uv tool as it goes, so it is the user's call rather than a side effect of this work.
    `inv ai.install-skills` applies the permission grant in the same way.
-5. **Probe the upgrade path**, per the `UNVERIFIED` above — a `uv self update` or a Python bump on
-   the tool environment, against a tool whose whole value is resolving a checkout it does not own.
+5. ~~Probe the upgrade path~~ — **done**, and it is clean in every combination tried, including
+   across the 0.11 → 0.12 uv boundary this machine has pending. What it turned up instead is that a
+   **moved checkout** is the one real failure, with the worst available message; decide the guard.
 6. **Answer the `agent-skills` question**, which decides whether the measured need was sixteen
    reaches or four. It does not change anything already built.
 7. **Not a self-contained wheel, and never the global invoke config.**
