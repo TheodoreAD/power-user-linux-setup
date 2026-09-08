@@ -3,7 +3,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import util
+from . import deploy, util
 
 _REPO_ROOT = Path(__file__).parent.parent
 _SETUP_TOML = _REPO_ROOT / "setup.toml"
@@ -43,6 +43,14 @@ def install_tools(c: Context):
             flags += " --editable"
         print(f"[{name}] installing: {package}{' + ' + ', '.join(extras) if extras else ''}")
         c.run(f"uv tool install --upgrade{flags} {package}")
+        # Seeded here so a declared config lands in the packages phase with its package, which
+        # `inv verify.all` at the end of that phase then requires to exist — the same call apt.py
+        # and tools.py already make for every other method. This was the one installer without it,
+        # and the gap stayed invisible while `act` was the only uv-tool package declaring
+        # `config_files`: it is tagged `workstation`, so containers exclude it and verify never
+        # looked. `python-keyring` declared one on 2026-09-05 with no tags, and every dev container
+        # build since has died on `~/.config/uv/uv.toml not found`.
+        deploy.apply_config_files(name, cfg)
         print(f"[{name}] ok")
 
 
