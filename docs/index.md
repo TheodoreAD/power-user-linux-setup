@@ -65,7 +65,7 @@ prompt. None of it needs a wizard, and all of it is yours to change.
 ## Quick start
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/master/install.sh \
+curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/install.sh \
   -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
 ```
 
@@ -77,7 +77,7 @@ applies GNOME settings. `--help` lists the options (`--dir`, `--ref`, `--exclude
 Two steps rather than `curl … | bash`, deliberately: a pipeline reports its _last_ command's status,
 so a failed download hands `bash` an empty stdin and the install exits 0 having done nothing. It
 also leaves no terminal for the setup run's own `sudo` prompt. Downloading first means you can read
-the script before you run it.
+the script before you run it, which is what pinning it to `stable` is for.
 
 ### Or, step by step
 

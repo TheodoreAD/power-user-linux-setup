@@ -29,7 +29,7 @@ be distribution-agnostic eventually, but only Ubuntu 24.04 (`noble numbat`) is t
 ## Quick start
 
 ```shell
-curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/master/install.sh \
+curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/install.sh \
   -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
 ```
 

@@ -5,7 +5,7 @@ set -euo pipefail
 # bootstrap.sh (uv + Python + invoke), then hands over to `inv setup` after asking.
 #
 # Usage — download, then run. Never `curl … | bash`:
-#   curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/master/install.sh \
+#   curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/stable/install.sh \
 #     -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
 #
 # The reason that is two steps rather than a pipe is measured, and written up once in
@@ -29,8 +29,8 @@ set -euo pipefail
 # Options:
 #   --dir <path>            where to clone (default: ~/projects/power-user-linux-setup). This
 #                           directory is permanent: see the note this script prints on the way out.
-#   --ref <git-ref>         git ref to shallow-clone (default: master). See the note below on why
-#                           this is not `stable` yet.
+#   --ref <git-ref>         git ref to shallow-clone (default: stable, the tag that tracks tested
+#                           commits). Use master for the newest work.
 #   --exclude-tags <tags>   comma-separated PULSE_EXCLUDE_TAGS for the `inv setup` run — e.g.
 #                           gui,desktop,gnome for a headless box. See docs/configuration.md.
 #   --bootstrap-only        stop after bootstrap.sh; print the `inv setup` command instead of
@@ -42,13 +42,13 @@ REPO_URL="https://github.com/TheodoreAD/power-user-linux-setup.git"
 
 CLONE_DIR="${HOME}/projects/power-user-linux-setup"
 
-# `stable` is where this belongs — it is the ref bootstrap-devcontainer.sh pins, moved forward only
-# on a green smoke test, and pinning is what lets someone read the script today and run the same
-# bytes tomorrow. It is not the default yet for a plain reason: `stable` is a *tag*, currently on a
-# commit from 2026-09-02, which predates this file. Both the raw URL above and a clone of that ref
-# would resolve to a tree with no install.sh in it. Move the tag past this commit and this line
-# (plus the URL in the header, README.md and docs/index.md) becomes a one-word change.
-REF="master"
+# `stable` rather than `master`, and it is a tag rather than a branch — the same ref
+# bootstrap-devcontainer.sh pins. Pinning is the point: it lets someone read this script today and
+# run the same bytes tomorrow, which is the only thing that makes a pasted one-liner inspectable at
+# all. The cost is that the tag has to be moved deliberately, and until it is, everything here
+# resolves to whatever commit it currently names — so a new file is not reachable through the raw
+# URL above until the tag moves past the commit that added it. `--ref master` gets the newest work.
+REF="stable"
 EXCLUDE_TAGS=""
 BOOTSTRAP_ONLY=false
 ASSUME_YES=false
