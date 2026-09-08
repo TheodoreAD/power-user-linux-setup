@@ -707,6 +707,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#two-entry-points-and-where-you-are-decides-which" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Two entry points, and where you are decides which
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2197,6 +2208,17 @@
     <ul class="md-nav__list" data-md-component="toc" data-md-scrollfix>
       
         <li class="md-nav__item">
+  <a href="#two-entry-points-and-where-you-are-decides-which" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Two entry points, and where you are decides which
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2290,7 +2312,7 @@
   
 
 
-<h1 id="task-index">Task index<a class="headerlink" href="#task-index" title="Permanent link">&para;</a></h1>
+<h1 id="task-index">Task index</h1>
 <p>Every command this repo publishes, with what it does. <code>inv --list</code> prints the same thing on a
 machine that already has PULSE installed; this page is for the rest of the time — deciding whether
 something exists before you clone, or finding the name of the task you half-remember.</p>
@@ -2306,6 +2328,44 @@ modify anything.</p>
 <p>Not every task is meant for everyday use. The ones a normal machine actually needs are in
 <a href="index.html">index.md</a>&rsquo;s quick start and maintenance sections; the rest exist for a specific situation
 — a corporate proxy, a WSL distro, a container build, a docs edit.</p>
+<h2 id="two-entry-points-and-where-you-are-decides-which">Two entry points, and where you are decides which</h2>
+<p>The same tasks are reachable two ways. They are one task set, not two commands:</p>
+<table>
+<thead>
+<tr>
+<th>you run</th>
+<th>from</th>
+<th>you get</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>inv …</code></td>
+<td>inside the checkout</td>
+<td>everything — machine administration plus this repo&rsquo;s own dev loop</td>
+</tr>
+<tr>
+<td><code>spowse …</code></td>
+<td>anywhere</td>
+<td>machine administration only</td>
+</tr>
+</tbody>
+</table>
+<p><code>spowse</code> — <strong>S</strong>ensible <strong>POW</strong>er-user <strong>SE</strong>tup, and <code>spouse</code> is the same command under the
+spelling your fingers reach for first — is installed by <code>inv python.install-tools</code> as a <code>uv tool</code>
+from this checkout. It carries PULSE&rsquo;s own collections and leaves out two things: the <code>quality</code>,
+<code>test</code>, <code>dev-env</code>, <code>docs</code>, <code>ci</code>, <code>deps</code>, <code>configs</code> and <code>agents</code> namespaces borrowed from
+<a href="https://github.com/TheodoreAD/repo-tasks">repo-tasks</a>, which only make sense while developing a
+repo, and this repo&rsquo;s own authoring tasks (<code>catalog.render-*</code>, <code>devcontainer.render-docs</code>, and the
+<code>allowlist</code> pipeline apart from <code>apply</code>, <code>status</code> and <code>check-coverage</code>). So <code>spowse --list</code> is a
+shorter, blunter answer to &ldquo;what can I do to this machine&rdquo;.</p>
+<p>It is installed <code>--editable</code>, deliberately: PULSE reads <code>setup.toml</code> and <code>config/</code> out of the
+checkout it was installed from, and that is what keeps <code>deploy.status</code> comparing your machine
+against a tree you can <code>git pull</code> rather than a frozen copy inside the tool. Move or delete the
+checkout and the shim stops working — reinstall it with <code>inv python.install-tools</code> from the new
+location.</p>
+<p>If you only ever work inside the checkout you never need it; <code>inv</code> does everything <code>spowse</code> does and
+more.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
 <p>Tasks that write to a live GNOME session (<code>gnome.configure</code>, <code>gnome.install-extensions</code>,
@@ -2879,7 +2939,7 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 </table>
 <!-- /PULSE::task-index -->
 
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — what <code>inv setup</code> runs, in order</li>
 <li><a href="updating.html">Updating and removing</a> — the tasks worth running after setup</li>
