@@ -65,6 +65,23 @@ prompt. None of it needs a wizard, and all of it is yours to change.
 ## Quick start
 
 ```shell
+curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/master/install.sh \
+  -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
+```
+
+It clones into `~/projects/power-user-linux-setup`, installs uv, Python and invoke, then asks before
+running `inv setup` — which is the step that installs apt packages, changes your login shell and
+applies GNOME settings. `--help` lists the options (`--dir`, `--ref`, `--exclude-tags`,
+`--bootstrap-only`, `--yes`).
+
+Two steps rather than `curl … | bash`, deliberately: a pipeline reports its _last_ command's status,
+so a failed download hands `bash` an empty stdin and the install exits 0 having done nothing. It
+also leaves no terminal for the setup run's own `sudo` prompt. Downloading first means you can read
+the script before you run it.
+
+### Or, step by step
+
+```shell
 cd ~
 mkdir -p projects
 cd projects
@@ -73,6 +90,9 @@ cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
 inv setup             # runs the full setup — see configuration.md for what that covers, phase by phase
 ```
+
+Either way the checkout is permanent: `spowse` is installed against it and `inv deploy.status`
+reports drift by comparing your home directory to it, so moving it later breaks both.
 
 `inv setup` does not cover everything — see **Manual steps** below for what still requires human
 input.

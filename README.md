@@ -29,6 +29,22 @@ be distribution-agnostic eventually, but only Ubuntu 24.04 (`noble numbat`) is t
 ## Quick start
 
 ```shell
+curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/master/install.sh \
+  -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
+```
+
+Clones into `~/projects/power-user-linux-setup`, installs uv/Python/invoke, then asks before running
+`inv setup`. Run it with `--help` for the options (`--dir`, `--ref`, `--exclude-tags`,
+`--bootstrap-only`, `--yes`).
+
+Two steps rather than `curl … | bash` on purpose — a pipeline reports its _last_ command's status,
+so a failed download hands `bash` an empty stdin and the install exits 0 having done nothing. It
+also lets you read the script first.
+
+<details>
+<summary>Or, step by step</summary>
+
+```shell
 cd ~
 mkdir -p projects
 cd projects
@@ -37,6 +53,11 @@ cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
 inv setup             # runs the full setup
 ```
+
+</details>
+
+Either way, keep the checkout where it lands: the `spowse` command is installed against it and
+`inv deploy.status` compares your home directory to it.
 
 ## Recommended hardware
 
