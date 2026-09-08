@@ -39,7 +39,7 @@ sessions that did read and edit files under the note are measured, one of them c
 it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
 the table.
 
-## What the note costs, measured across nine sessions
+## What the note costs, measured across ten sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
@@ -55,6 +55,7 @@ share of its own Bash calls.
 | `invoke-stubs`, 09-06  |   306 | **announced**  |              3% |              27% |     44% |            5% |
 | this repo, 09-07 (a)   |   201 | **announced**  |              6% |              23% |     45% |           12% |
 | this repo, 09-07 (b)   |   270 | **announced**  |          **0%** |           **2%** |  **7%** |            1% |
+| this repo, 09-07/08    |   212 | **announced**  |          **0%** |              17% |     33% |            1% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -216,8 +217,36 @@ That does not retire the narrow claim below — an announcement tracking the rul
 else is still consistent with both rows, since (a) and (b) announced the same thing and (b) is the
 only one that reached 0%. It does mean the table cannot separate the two explanations with any row
 it currently holds, and the row that would is one that **announces and does shell-shaped work**.
-Nothing has supplied one: the shell-shaped session of the same week, sample 14 of the corpus, did
-not announce and came in at 56% chaining and 42% truncation.
+
+**The tenth row is that row, and it arrived the next day.** Corpus sample 17: 212 calls over
+fourteen hours, announcing in its first message — _"Using Read/Edit/Write for files rather than Bash
+`cat`/`sed`, per `~/AGENTS.md`; searching with `rg`"_ — and then doing the most shell-shaped work in
+this table. It built and packaged a CLI: `uv tool install` probes, a throwaway package assembled and
+installed twice into a redirected tool directory, sixty candidate names screened against PATH, apt
+and PyPI in `for` loops, seventeen gate runs. If chained, filtered shell work were going to
+overwhelm an announcement, this is the session where it would.
+
+It did not. **File reads came in at 0% — zero `sed -n`, zero `cat`-view in 212 calls** — the second
+row to reach zero and the first to do it while working shell-first. The unopposed rules meanwhile
+landed mid-band: `chain` 33%, `head`/`tail` 17%, better than this table's middle and nowhere near
+row (b)'s 7% and 2%.
+
+**That is the separation the paragraph above said no row could make.** Task shape moved the
+unopposed counters — 7% to 33% on chaining, between two announcing sessions in the same repo two
+days apart — and left the announced counter at zero in both. The two explanations are therefore not
+interchangeable after all: **the announcement tracks the rule it names, and task shape governs the
+rest.** Three confirmations, no counter-example, and the confounder that made the claim untestable
+has now been observed moving on its own.
+
+[PITFALL: **the announced half is also the half with a mechanical substitute, and this row cannot
+separate those either.** `Read` with `offset`/`limit` genuinely replaces `sed -n`, so a session that
+has decided to use it needs no continuing discipline — the tool is simply there. Chaining and
+truncation have no drop-in replacement; they are habits with nothing to reach for instead. So "the
+announcement tracks the rule it names" and "the rule it names happens to be the one with a
+substitute" predict identical numbers across all ten rows. Distinguishing them needs an announcement
+about **chaining**, which nothing has yet produced — and unlike the shape confounder above, no
+session will produce one by accident, because the auto-mode note says nothing about chaining for
+anyone to announce a resolution to.]
 
 ## The note removes tools, and that settles half the question (2026-08-30)
 
@@ -332,7 +361,16 @@ the whole table, and most of them are `~/AGENTS.md`'s own cross-repo clause bein
 harness moved cwd out from under the session. As counted today the number is unreadable for any
 session that works in a scratchpad, which is every session that builds a throwaway venv — so the
 metric is measuring the harness, in the same way the search-tool counts were before the tool removal
-was found.]
+was found.
+
+**Second instance, 2026-09-08, row ten: `cd-own-repo` = 3, and all three follow a harness cwd
+reset.** The session built a throwaway package in the scratchpad exactly as predicted, the harness
+reported "Shell cwd was reset" after each probe, and the three calls are `~/AGENTS.md`'s own
+cross-repo clause being obeyed. Two things it adds. The prediction was specific and has now been met
+twice, so this is a reproducible property of the metric rather than one session's shape. And
+`git-C-own-repo` was **0%** in the same session, which rules out the flattering reading that these
+sessions simply reach for whichever directory-changing form is to hand — the banned habit stayed at
+zero while its prescribed alternative produced every hit.]
 
 [NEEDS CLARIFICATION: **`rg-replace-bundle` fired once, and what caught it was the detection
 signature rather than the prohibition.** `rg -rln` typed for `rg -ln` — the exact trap `~/AGENTS.md`

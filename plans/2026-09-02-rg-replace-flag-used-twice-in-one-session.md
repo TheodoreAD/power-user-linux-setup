@@ -312,9 +312,11 @@ nine occurrences in, **not one prevention has been observed from any wording, an
 amount of immediately prior awareness.** That is the strongest argument the `ask`-rule has yet had,
 and it arrived from the plan's own author.]
 
-[UNVERIFIED: whether these two belong in the corpus as a row as well. The session was mid-work when
-they happened and no `audit.py` run at a recorded boundary exists for it, so there are no rates —
-and a row without the instrument, the boundary and the shell is exactly what
-`plans/2026-09-02-agents-md-adherence-sample-corpus.md` resolved on 2026-09-07 to stop accepting.
-Recorded here as occurrences, which need no denominator; if that session is ever harvested properly,
-the row can cite them.]
+[DECISION: **they are in the corpus, as sample 17.** The condition this asked for was met a few
+hours later: that session was harvested at a recorded boundary (`2026-09-08T12:05:54+03:00`) with
+the instrument named (`9ae8772`) and `pipefail` confirmed, so the row carries all three things the
+corpus requires and `rg-replace-bundle = 2` sits in it as a scored MISS. The denominator turns out
+to matter here: **2 in 212 calls**, against roughly 2,590 `rg` invocations a week machine-wide at
+1.2%, so this session ran the trap at close to the machine's own rate rather than unusually hot —
+which is the context an occurrence count alone cannot give, and the reason to prefer the row over
+the tally.]
