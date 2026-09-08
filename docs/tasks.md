@@ -19,6 +19,33 @@ Not every task is meant for everyday use. The ones a normal machine actually nee
 [index.md](index.md)'s quick start and maintenance sections; the rest exist for a specific situation
 — a corporate proxy, a WSL distro, a container build, a docs edit.
 
+## Two entry points, and where you are decides which
+
+The same tasks are reachable two ways. They are one task set, not two commands:
+
+| you run    | from                | you get                                                           |
+| ---------- | ------------------- | ----------------------------------------------------------------- |
+| `inv …`    | inside the checkout | everything — machine administration plus this repo's own dev loop |
+| `spowse …` | anywhere            | machine administration only                                       |
+
+`spowse` — **S**ensible **POW**er-user **SE**tup, and `spouse` is the same command under the
+spelling your fingers reach for first — is installed by `inv python.install-tools` as a `uv tool`
+from this checkout. It carries PULSE's own collections and leaves out two things: the `quality`,
+`test`, `dev-env`, `docs`, `ci`, `deps`, `configs` and `agents` namespaces borrowed from
+[repo-tasks](https://github.com/TheodoreAD/repo-tasks), which only make sense while developing a
+repo, and this repo's own authoring tasks (`catalog.render-*`, `devcontainer.render-docs`, and the
+`allowlist` pipeline apart from `apply`, `status` and `check-coverage`). So `spowse --list` is a
+shorter, blunter answer to "what can I do to this machine".
+
+It is installed `--editable`, deliberately: PULSE reads `setup.toml` and `config/` out of the
+checkout it was installed from, and that is what keeps `deploy.status` comparing your machine
+against a tree you can `git pull` rather than a frozen copy inside the tool. Move or delete the
+checkout and the shim stops working — reinstall it with `inv python.install-tools` from the new
+location.
+
+If you only ever work inside the checkout you never need it; `inv` does everything `spowse` does and
+more.
+
 !!! warning
 
     Tasks that write to a live GNOME session (`gnome.configure`, `gnome.install-extensions`,

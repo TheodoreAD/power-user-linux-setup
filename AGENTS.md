@@ -132,6 +132,42 @@ install this machine has is declared in one reproducible, re-runnable place. Cau
 installed via a direct `uv tool install`, then corrected on the spot to go through `setup.toml` and
 `inv python.install-tools` instead.
 
+## Two entry points: `inv` here, `spowse` anywhere — and what a new task defaults to
+
+`inv` inside this checkout publishes everything. `spowse` (**S**ensible **POW**er-user **SE**tup;
+`spouse` is a second console script at the same entry point, for the spelling fingers reach for
+first) is a `uv tool` installed from this checkout by `inv python.install-tools`, and publishes
+**machine administration only** — no
+`quality`/`test`/`dev-env`/`docs`/`ci`/`deps`/`configs`/`agents` borrowed from `repo-tasks`, and
+none of this repo's own authoring tasks. `tasks/cli.py` builds it.
+
+**Both namespaces are derived from `tasks.namespace` by subtraction, never listed in parallel.** Two
+things do the subtracting, and each is recorded where it is created rather than in a list someone
+has to remember:
+
+- **Borrowed collections** — `tasks/__init__.py`'s `_add_borrowed()` records each name in
+  `BORROWED_COLLECTIONS` as it adds it. Publish a new `repo_tasks` collection through that helper
+  and the shim excludes it automatically.
+- **Development tasks** — `@util.dev_only`, applied directly under `@task`, on the task itself. A
+  collection left with no surviving tasks is dropped rather than published empty, which is what
+  makes `catalog` disappear without anything naming it.
+
+**So a new task ships in `spowse` unless you mark it**, which is the right default (most tasks here
+administer a machine) but means the decision is yours at the moment you add one. Ask whether the
+task acts on _this repo_ or on _the machine_: `catalog.render-packages` regenerates a docs table
+from `setup.toml` and is marked; `deploy.all` writes the home directory and is not. The line cuts
+inside collections, not just between them — `allowlist.apply`/`status`/`check-coverage` ship while
+the other six `allowlist` tasks are marked, because they write into `cli-allowlist/` in the
+checkout. `tests/unit/test_cli.py` pins the current membership, so a mistake here fails the gate
+rather than shipping.
+
+**The install is `--editable` and that is load-bearing, not stylistic.** PULSE reaches `setup.toml`
+and `config/` through `Path(__file__).parent.parent`; a non-editable `uv tool install` anchors that
+at the tool's own site-packages, where neither exists, and every read comes back missing with **exit
+0 and no error** (probed 2026-09-08). It is also what keeps `deploy.status` comparing the machine
+against a checkout you can `git pull` instead of a frozen copy. `setup.toml`'s `editable` field and
+`tests/unit/test_python.py` both exist for this.
+
 ## Post-install verification (`inv verify.all`)
 
 `tasks/verify.py` runs as the last step of `inv setup`'s (and `inv wsl.install`'s) `packages` phase
