@@ -19,8 +19,10 @@ one this module was imported out of — which is why the tool must be installed 
 anchor stays on the checkout instead of a copy inside the tool's own venv.
 """
 
+import sys
 from collections.abc import Callable
 from importlib.metadata import PackageNotFoundError, version
+from pathlib import Path
 from typing import TypeAlias, cast
 
 from invoke import Collection, Program, Task
@@ -28,6 +30,13 @@ from invoke import Collection, Program, Task
 from . import BORROWED_COLLECTIONS, namespace, util
 
 _DISTRIBUTION = "power-user-linux-setup"
+
+_REPO_ROOT = Path(__file__).parent.parent
+
+# The checkout-side inputs the machine-administration tasks ultimately read: `setup.toml` is the
+# manifest, `config/` holds the sources `deploy` writes into the home directory. Neither ships in
+# the wheel, deliberately — see the module docstring.
+_CHECKOUT_INPUTS = ("setup.toml", "config")
 
 # `Collection.tasks` and `.collections` are `Lexicon`s — dict subclasses invoke leaves unannotated,
 # so every value read out of one arrives as Unknown and `failOnWarnings` stops the gate. The two
@@ -80,5 +89,38 @@ def production_namespace(source: Collection | None = None) -> Collection:
 program = Program(namespace=production_namespace(), version=_version())
 
 
+def _require_checkout(root: Path | None = None) -> None:
+    """Fail with a sentence, rather than wherever the first task happens to read a missing file.
+
+    The shim is installed `--editable`, so it resolves the checkout at run time instead of carrying
+    a copy of it. Probed 2026-09-08: every *upgrade* path holds that anchor — `uv tool upgrade`,
+    `--all`, `--reinstall`, a Python bump, and a `uv self update` across the 0.11 → 0.12 boundary,
+    in both directions — which leaves a moved or gutted checkout as the only way this breaks.
+
+    Scope, because half the failure is out of reach from here: this catches a checkout that still
+    imports but no longer has its inputs. A checkout that is *gone* fails earlier and harder, in the
+    console script's own `from tasks.cli import main`, with a bare `No module named 'tasks'` that no
+    code of ours can intercept. `uv tool upgrade` is what names the path in that case, refusing with
+    `Distribution not found at: file:///…`.
+    """
+    root = _REPO_ROOT if root is None else root
+    missing = [name for name in _CHECKOUT_INPUTS if not (root / name).exists()]
+    if not missing:
+        return
+    # Not `_DISTRIBUTION`: the shim answers to two names, and the one the user typed is the one
+    # worth echoing back — the same reason `Program` is built without an explicit `binary`.
+    command = Path(sys.argv[0]).name or _DISTRIBUTION
+    raise SystemExit(
+        f"{command}: the power-user-linux-setup checkout this command reads is not intact.\n"
+        f"  expected at: {root}\n"
+        f"  missing:     {', '.join(missing)}\n"
+        "\n"
+        "This tool is installed with 'uv tool install --editable', so it resolves that path on\n"
+        "every run rather than carrying its own copy. If the repo moved, re-point the install:\n"
+        "  uv tool install --force --editable <path to the checkout>"
+    )
+
+
 def main() -> None:
+    _require_checkout()
     program.run()

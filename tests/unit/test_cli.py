@@ -6,6 +6,9 @@ one source, so the failure mode to guard is a *new* task arriving on the wrong s
 silently — which is why the subset relationship and the marker-count are asserted rather than only
 the current membership."""
 
+import sys
+
+import pytest
 from invoke import Collection, task
 
 import tasks
@@ -106,3 +109,57 @@ def test_program_is_built_with_a_bundled_namespace():
     """This is what makes the shim independent of cwd: invoke skips disk discovery entirely when it
     already has a namespace, so there is no `tasks/` directory to find and no `-r` to pass."""
     assert cli.program.namespace is not None
+
+
+def test_the_real_checkout_satisfies_the_guard():
+    """The guard runs on every invocation, so a false positive breaks the tool outright — and the
+    inputs it names are the ones an editable install resolves rather than carries."""
+    cli._require_checkout()
+
+
+def test_a_gutted_checkout_names_the_path_and_what_is_missing(tmp_path, monkeypatch):
+    """The whole point of the guard is the message. `No module named 'tasks'` names neither the path
+    nor this repo, which is what made a moved checkout the worst-diagnosed failure left."""
+    monkeypatch.setattr(sys, "argv", ["spowse", "deploy.status"])
+    with pytest.raises(SystemExit) as excinfo:
+        cli._require_checkout(tmp_path)
+    message = str(excinfo.value)
+    assert str(tmp_path) in message
+    assert "setup.toml" in message
+    assert "config" in message
+    # The re-point command is the actionable half — a message that only diagnoses is half a fix.
+    assert "uv tool install --force --editable" in message
+
+
+def test_the_message_echoes_the_name_the_user_typed(tmp_path, monkeypatch):
+    """Two console scripts share this entry point, so the distribution name would be wrong for both
+    — the same reason `Program` is built without an explicit `binary`."""
+    monkeypatch.setattr(sys, "argv", ["spouse"])
+    with pytest.raises(SystemExit) as excinfo:
+        cli._require_checkout(tmp_path)
+    assert str(excinfo.value).startswith("spouse:")
+
+
+def test_only_what_is_actually_missing_is_reported(tmp_path, monkeypatch):
+    """A half-present checkout is the case the guard can actually see, so it should not claim the
+    manifest is gone when only the config sources are."""
+    monkeypatch.setattr(sys, "argv", ["spowse"])
+    (tmp_path / "setup.toml").write_text("")
+    with pytest.raises(SystemExit) as excinfo:
+        cli._require_checkout(tmp_path)
+    missing_line = next(line for line in str(excinfo.value).splitlines() if "missing:" in line)
+    assert "config" in missing_line
+    assert "setup.toml" not in missing_line
+
+
+def test_the_guard_runs_before_invoke_gets_control(tmp_path, monkeypatch):
+    """Ordering is the feature: once `program.run()` has the terminal, the failure surfaces as
+    whatever the first task does with a missing file."""
+
+    def _explode() -> None:
+        raise AssertionError("invoke was handed control despite a broken checkout")
+
+    monkeypatch.setattr(cli, "_REPO_ROOT", tmp_path)
+    monkeypatch.setattr(cli.program, "run", _explode)
+    with pytest.raises(SystemExit):
+        cli.main()
