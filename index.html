@@ -581,6 +581,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#or-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Or, step by step
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2274,6 +2285,17 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
+  <a href="#or-step-by-step" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Or, step by step
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
   <a href="#environment-variables" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2400,14 +2422,28 @@ prompt. None of it needs a wizard, and all of it is yours to change.</p>
   <a href="claude-code.html#agentsagentsmd-global-instructions-declaratively-managed">Global instructions</a></li>
 </ul>
 <h2 id="quick-start">Quick start<a class="headerlink" href="#quick-start" title="Permanent link">&para;</a></h2>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a><span class="nb">cd</span><span class="w"> </span>~
-</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>projects
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a><span class="nb">cd</span><span class="w"> </span>projects
-</span><span id="__span-0-4"><a id="__codelineno-0-4" name="__codelineno-0-4" href="#__codelineno-0-4"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/TheodoreAD/power-user-linux-setup.git
-</span><span id="__span-0-5"><a id="__codelineno-0-5" name="__codelineno-0-5" href="#__codelineno-0-5"></a><span class="nb">cd</span><span class="w"> </span>power-user-linux-setup
-</span><span id="__span-0-6"><a id="__codelineno-0-6" name="__codelineno-0-6" href="#__codelineno-0-6"></a>./bootstrap.sh<span class="w">        </span><span class="c1"># installs uv + invoke</span>
-</span><span id="__span-0-7"><a id="__codelineno-0-7" name="__codelineno-0-7" href="#__codelineno-0-7"></a>inv<span class="w"> </span>setup<span class="w">             </span><span class="c1"># runs the full setup — see configuration.md for what that covers, phase by phase</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>curl<span class="w"> </span>-fsSL<span class="w"> </span>https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/master/install.sh<span class="w"> </span><span class="se">\</span>
+</span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a><span class="w">  </span>-o<span class="w"> </span>/tmp/pulse-install.sh<span class="w"> </span><span class="o">&amp;&amp;</span><span class="w"> </span>bash<span class="w"> </span>/tmp/pulse-install.sh
 </span></code></pre></div>
+<p>It clones into <code>~/projects/power-user-linux-setup</code>, installs uv, Python and invoke, then asks before
+running <code>inv setup</code> — which is the step that installs apt packages, changes your login shell and
+applies GNOME settings. <code>--help</code> lists the options (<code>--dir</code>, <code>--ref</code>, <code>--exclude-tags</code>,
+<code>--bootstrap-only</code>, <code>--yes</code>).</p>
+<p>Two steps rather than <code>curl … | bash</code>, deliberately: a pipeline reports its <em>last</em> command&rsquo;s status,
+so a failed download hands <code>bash</code> an empty stdin and the install exits 0 having done nothing. It
+also leaves no terminal for the setup run&rsquo;s own <code>sudo</code> prompt. Downloading first means you can read
+the script before you run it.</p>
+<h3 id="or-step-by-step">Or, step by step<a class="headerlink" href="#or-step-by-step" title="Permanent link">&para;</a></h3>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="nb">cd</span><span class="w"> </span>~
+</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>mkdir<span class="w"> </span>-p<span class="w"> </span>projects
+</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a><span class="nb">cd</span><span class="w"> </span>projects
+</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a>git<span class="w"> </span>clone<span class="w"> </span>https://github.com/TheodoreAD/power-user-linux-setup.git
+</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nb">cd</span><span class="w"> </span>power-user-linux-setup
+</span><span id="__span-1-6"><a id="__codelineno-1-6" name="__codelineno-1-6" href="#__codelineno-1-6"></a>./bootstrap.sh<span class="w">        </span><span class="c1"># installs uv + invoke</span>
+</span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>inv<span class="w"> </span>setup<span class="w">             </span><span class="c1"># runs the full setup — see configuration.md for what that covers, phase by phase</span>
+</span></code></pre></div>
+<p>Either way the checkout is permanent: <code>spowse</code> is installed against it and <code>inv deploy.status</code>
+reports drift by comparing your home directory to it, so moving it later breaks both.</p>
 <p><code>inv setup</code> does not cover everything — see <strong>Manual steps</strong> below for what still requires human
 input.</p>
 <p>On a restricted or corporate network, <code>bootstrap.sh</code> runs a network preflight before its first
@@ -2441,11 +2477,11 @@ that isn&rsquo;t — the same report as <code>inv net.check</code>, available wi
 </tr>
 </tbody>
 </table>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># Check what&#39;s missing before running setup</span>
-</span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>apt.install-repos<span class="w"> </span>apt.install-base<span class="w"> </span>apt.install-debs<span class="w"> </span>tools.install<span class="w"> </span>fonts.install
-</span><span id="__span-1-3"><a id="__codelineno-1-3" name="__codelineno-1-3" href="#__codelineno-1-3"></a>
-</span><span id="__span-1-4"><a id="__codelineno-1-4" name="__codelineno-1-4" href="#__codelineno-1-4"></a><span class="c1"># Headless / container install — no GUI or hardware-specific packages</span>
-</span><span id="__span-1-5"><a id="__codelineno-1-5" name="__codelineno-1-5" href="#__codelineno-1-5"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span><span class="k">$(</span>inv<span class="w"> </span>devcontainer.print-exclude-tags<span class="k">)</span><span class="w"> </span>inv<span class="w"> </span>setup
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a><span class="c1"># Check what&#39;s missing before running setup</span>
+</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a><span class="nv">PULSE_DRY_RUN</span><span class="o">=</span><span class="m">1</span><span class="w"> </span>inv<span class="w"> </span>apt.install-repos<span class="w"> </span>apt.install-base<span class="w"> </span>apt.install-debs<span class="w"> </span>tools.install<span class="w"> </span>fonts.install
+</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>
+</span><span id="__span-2-4"><a id="__codelineno-2-4" name="__codelineno-2-4" href="#__codelineno-2-4"></a><span class="c1"># Headless / container install — no GUI or hardware-specific packages</span>
+</span><span id="__span-2-5"><a id="__codelineno-2-5" name="__codelineno-2-5" href="#__codelineno-2-5"></a><span class="nv">PULSE_EXCLUDE_TAGS</span><span class="o">=</span><span class="k">$(</span>inv<span class="w"> </span>devcontainer.print-exclude-tags<span class="k">)</span><span class="w"> </span>inv<span class="w"> </span>setup
 </span></code></pre></div>
 <p>Curious what <code>inv setup</code> actually runs, phase by phase, or how config files and tags work under the
 hood? See <a href="configuration.html">How it works</a>.</p>
@@ -2499,9 +2535,9 @@ upgrades for you and what needs its own command (<code>deb-github</code> package
 nvm, uv tools), how to reclaim cache space, and how to remove a package including the files a plain
 <code>apt purge</code> leaves behind.</p>
 <p>The three worth knowing without reading it:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>inv<span class="w"> </span>apt.upgrade-debs<span class="w">   </span><span class="c1"># the packages apt cannot upgrade, because they came from a release artifact</span>
-</span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>inv<span class="w"> </span>verify.all<span class="w">         </span><span class="c1"># re-check that everything installed still actually runs</span>
-</span><span id="__span-2-3"><a id="__codelineno-2-3" name="__codelineno-2-3" href="#__codelineno-2-3"></a>inv<span class="w"> </span>clean.all<span class="w">          </span><span class="c1"># reclaim cache space, conservatively</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>inv<span class="w"> </span>apt.upgrade-debs<span class="w">   </span><span class="c1"># the packages apt cannot upgrade, because they came from a release artifact</span>
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>inv<span class="w"> </span>verify.all<span class="w">         </span><span class="c1"># re-check that everything installed still actually runs</span>
+</span><span id="__span-3-3"><a id="__codelineno-3-3" name="__codelineno-3-3" href="#__codelineno-3-3"></a>inv<span class="w"> </span>clean.all<span class="w">          </span><span class="c1"># reclaim cache space, conservatively</span>
 </span></code></pre></div>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
