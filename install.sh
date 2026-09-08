@@ -31,6 +31,9 @@ set -euo pipefail
 #                           directory is permanent: see the note this script prints on the way out.
 #   --ref <git-ref>         git ref to shallow-clone (default: stable, the tag that tracks tested
 #                           commits). Use master for the newest work.
+#   --repo-url <url|path>   clone from somewhere other than the canonical GitHub repo — a fork, a
+#                           corporate mirror, or a local path. The CI smoke test uses this to
+#                           install the commit under test rather than whatever is published.
 #   --exclude-tags <tags>   comma-separated PULSE_EXCLUDE_TAGS for the `inv setup` run — e.g.
 #                           gui,desktop,gnome for a headless box. See docs/configuration.md.
 #   --bootstrap-only        stop after bootstrap.sh; print the `inv setup` command instead of
@@ -67,6 +70,10 @@ while [ $# -gt 0 ]; do
       ;;
     --ref)
       REF="$2"
+      shift 2
+      ;;
+    --repo-url)
+      REPO_URL="$2"
       shift 2
       ;;
     --exclude-tags)
@@ -126,7 +133,9 @@ if [ -e "${CLONE_DIR}" ]; then
     exit 1
   fi
 else
-  echo "Cloning power-user-linux-setup@${REF} into ${CLONE_DIR}..."
+  # Naming the source rather than just the ref: with --repo-url this is the one line that says
+  # whose code is about to run, which matters more for an installer than for a build script.
+  echo "Cloning ${REPO_URL}@${REF} into ${CLONE_DIR}..."
   mkdir -p "$(dirname "${CLONE_DIR}")"
   git clone --branch "${REF}" --depth 1 "${REPO_URL}" "${CLONE_DIR}"
 fi
