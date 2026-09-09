@@ -1,11 +1,12 @@
 # `~/AGENTS.md` — rationale and evidence
 
 Companion to the [`config/agents-md/`](../config/agents-md/README.md) fragments, which are assembled
-into `~/.agents/AGENTS.md` on this machine, and copied from there to `~/AGENTS.md` and
-`~/.claude/CLAUDE.md` — `[packages.agents-md]` in `setup.toml`, redeployed by
-`inv deploy.all --name agents-md` or `inv tools.install`. The deployed file is never edited
-directly, and neither is any one fragment without checking that directory's `README.md` for which
-one owns the rule.
+into `~/.agents/AGENTS.md` on this machine, and copied from there into each installed agent's own
+instruction path (`~/AGENTS.md`, `~/.claude/CLAUDE.md`, `~/.copilot/copilot-instructions.md`, … —
+`setup.toml` owns the list, and a path whose agent is not installed is skipped rather than created)
+— `[packages.agents-md]` in `setup.toml`, redeployed by `inv deploy.all --name agents-md` or
+`inv tools.install`. The deployed file is never edited directly, and neither is any one fragment
+without checking that directory's `README.md` for which one owns the rule.
 
 **The real file moved from `~/AGENTS.md` to `~/.agents/AGENTS.md` on 2026-09-04**, because that is
 the path four verified agents read on their own (`contributing/ai-tooling.md`). `~/AGENTS.md` is a

@@ -11,10 +11,11 @@ the cross-tool convention, with each agent's own skills directory symlinked to i
 that don't read it natively.
 
 **The home directory works differently, and assuming it matches costs an edit.** The real file is
-`~/.agents/AGENTS.md` — the path four agents read natively — and `~/AGENTS.md` and
-`~/.claude/CLAUDE.md` are **copies** of it, not symlinks (verified 2026-09-09: three separate
-inodes, link count 1 each). So editing whichever one a session happens to open is not editing the
-original, and the next deploy overwrites it silently rather than refusing.
+`~/.agents/AGENTS.md` — the path four agents read natively — and `~/AGENTS.md`,
+`~/.claude/CLAUDE.md` and one path per installed agent are **copies** of it, not symlinks (verified
+2026-09-09: four distinct inodes here, link count 1 each). So editing whichever one a session
+happens to open is not editing the original, and the next deploy overwrites it silently rather than
+refusing.
 
 ### Where durable knowledge goes
 
