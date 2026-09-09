@@ -110,7 +110,7 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
     # config/p10k.zsh rather than embedding it. The content write itself goes through
     # tasks/deploy.py — the one writer for every path under ~ — so an edit made at the destination
     # is shown as a diff and asked about, never silently overwritten (which this function used to
-    # do, and which ate hand-edits to ~/AGENTS.md twice in one day). Only the symlink handling
+    # do, and which ate hand-edits to ~/.agents/AGENTS.md twice in one day). Only the symlink handling
     # stays here: creating/validating a symlink isn't a content write.
     if "dest" not in cfg:
         raise util.missing_fields(name, "dest")

@@ -121,7 +121,7 @@ max_nodes = 100
 global_option_prefixes = ["-C *", "-c *"]
 # 2026-08-25 prompt audit (session-bash-audit skill, references/research.md): under acceptEdits,
 # 67% of all permission prompts were the commit flow — `git add` alone 35 of 148, plus rm/restore/
-# reset/fetch that weren't registered at all. ~/AGENTS.md mandates many small commits, staging
+# reset/fetch that weren't registered at all. ~/.agents/AGENTS.md mandates many small commits, staging
 # right before each and fetching before every push, so the allowlist charged 2–4 prompts per
 # commit. Index-only verbs that cannot lose code render allow; `commit`/`push`/`stash` stay ask
 # (user decision 2026-08-25: commit and stash need a human), and every flag shape below that CAN
@@ -179,7 +179,7 @@ subcommands = [
   "clean",
   "reset",
   # unregistered until 2026-08-25 — every call prompted as "unmatched", fetch included, the one
-  # verb ~/AGENTS.md tells sessions to run before each push
+  # verb ~/.agents/AGENTS.md tells sessions to run before each push
   "fetch",
   "rm",
   "restore",

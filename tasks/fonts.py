@@ -344,7 +344,7 @@ def render_configs(c: Context):
     font lives in this repo and has to be rewritten rather than set — this is that half.
 
     Deliberately its own command, and deliberately not wired into `fix`/`check`/`precommit`: the
-    output is committed and reviewed like any other change (`~/AGENTS.md`, "Regenerating a file from
+    output is committed and reviewed like any other change (`~/.agents/AGENTS.md`, "Regenerating a file from
     a canonical source"). Run it after changing `[settings.fonts]`, commit the diff, then
     `inv deploy.all` to push the new files to `~`. `PULSE_DRY_RUN=1` reports without writing.
 

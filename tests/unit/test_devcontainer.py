@@ -248,7 +248,7 @@ def test_dev_container_docs_have_no_unrendered_drift():
     This is the drift protection that `.github/workflows/devcontainer.yml`'s `docs` job used to
     provide by running `inv devcontainer.render-docs` in CI and committing the result back to
     master. That job was deleted 2026-09-01: a CI job may not commit a generated file to a branch
-    (see ~/AGENTS.md's "Regenerating a file from a canonical source"). Detecting the drift is the
+    (see ~/.agents/AGENTS.md's "Regenerating a file from a canonical source"). Detecting the drift is the
     half worth keeping, and a test detects it without writing anything.
 
     Fix a failure by running `inv devcontainer.render-docs` and committing the result — the same

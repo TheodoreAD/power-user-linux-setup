@@ -1,7 +1,7 @@
-# `~/AGENTS.md` fragments
+# `~/.agents/AGENTS.md` fragments
 
-The assembled `~/AGENTS.md` is built from the fragments in this directory, in `order`. Each one owns
-a single subject, and contributes exactly the `##` cluster named after it:
+The assembled `~/.agents/AGENTS.md` is built from the fragments in this directory, in `order`. Each
+one owns a single subject, and contributes exactly the `##` cluster named after it:
 
 | order | fragment             | cluster                        |
 | ----- | -------------------- | ------------------------------ |
@@ -17,8 +17,8 @@ Each fragment contributes whole `##` sections; the assembler never merges at the
 cluster is split across two fragments. With one cluster per fragment that holds by construction.
 
 Design, rationale, and the rule-by-rule triage behind the split:
-`plans/2026-08-26-agent-artifact-authoring-decoupling.md`, "Design — the assembled `~/AGENTS.md`".
-Each rule's evidence and the admission criteria for a new one stay in
+`plans/2026-08-26-agent-artifact-authoring-decoupling.md`, "Design — the assembled
+`~/.agents/AGENTS.md`". Each rule's evidence and the admission criteria for a new one stay in
 `contributing/global-agents-md.md`.
 
 ## Which fragment a rule belongs in
@@ -66,8 +66,8 @@ for a machine that is configured correctly.
 
 ## Editing
 
-Edit a fragment, then `inv deploy.all --name agents-md`. Never edit `~/AGENTS.md` directly: it is
-regenerated in full from these fragments, so nothing at the destination is a source of truth.
+Edit a fragment, then `inv deploy.all --name agents-md`. Never edit `~/.agents/AGENTS.md` directly:
+it is regenerated in full from these fragments, so nothing at the destination is a source of truth.
 
 A hand-edit there is caught rather than clobbered — `deploy.classify` compares the file against what
 PULSE last wrote, and `deploy.deploy` prints the diff and asks, defaulting to keeping your version —

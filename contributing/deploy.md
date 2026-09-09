@@ -7,15 +7,15 @@ page keeps the reasoning that isn't visible from either — extracted from the n
 
 ## The problem was the writer, not detection
 
-`~/AGENTS.md` was found hand-edited-then-overwritten three times in two days (2026-08-22): twice in
-one session, once in an unrelated `scaffoldapy` session that added a rule to the deployed file via
-the Edit tool — an edit the next `inv tools.install` would have silently wiped, caught only by
-chance. The first design offered four detection mechanisms (a `PostToolUse` hook nagging the agent,
-a check in `inv verify.all`, a pre-push git hook, or a combination). The reframing that stuck: PULSE
-was deciding to overwrite a file in `~` without ever establishing whether it had put the current
-content there. Fix the writer so it cannot silently destroy, and the loss window closes — nothing is
-lost, only deferred until a human sees a diff and decides. Detection at a distance becomes a
-nice-to-have.
+`~/.agents/AGENTS.md` was found hand-edited-then-overwritten three times in two days (2026-08-22):
+twice in one session, once in an unrelated `scaffoldapy` session that added a rule to the deployed
+file via the Edit tool — an edit the next `inv tools.install` would have silently wiped, caught only
+by chance. The first design offered four detection mechanisms (a `PostToolUse` hook nagging the
+agent, a check in `inv verify.all`, a pre-push git hook, or a combination). The reframing that
+stuck: PULSE was deciding to overwrite a file in `~` without ever establishing whether it had put
+the current content there. Fix the writer so it cannot silently destroy, and the loss window closes
+— nothing is lost, only deferred until a human sees a diff and decides. Detection at a distance
+becomes a nice-to-have.
 
 The second half of the reframing: there were **too many ways to write into `~`** — three
 implementations of "deploy a whole file from a repo-side source" with four different answers to "the
@@ -25,15 +25,15 @@ have been exactly that) made the underlying problem worse while patching one sym
 
 **Dropped, not deferred:** the `PostToolUse` hook (its whole value once the writer can't destroy is
 catching the edit slightly earlier, at the cost of a fifth writer, a second mapping file, and a
-per-Edit interpreter startup machine-wide) and the pre-push git hook (`~/AGENTS.md`'s "Proposing an
-enforcement mechanism for agent behavior" — teach the agent what to run, don't fire behind its
-back). The hook mechanics were verified before being discarded, and are kept here so nobody
-re-researches them: `PostToolUse` with matcher `"Edit|Write"` may exit 0 and print
+per-Edit interpreter startup machine-wide) and the pre-push git hook (`~/.agents/AGENTS.md`'s
+"Proposing an enforcement mechanism for agent behavior" — teach the agent what to run, don't fire
+behind its back). The hook mechanics were verified before being discarded, and are kept here so
+nobody re-researches them: `PostToolUse` with matcher `"Edit|Write"` may exit 0 and print
 `{"hookSpecificOutput": {"hookEventName": "PostToolUse", "additionalContext": "..."}}` to inject a
 non-blocking instruction into the calling agent's context; printing nothing and exiting 0 is a valid
 no-op. Also relevant: Claude Code's built-in `Plan`/`Explore` subagents skip `CLAUDE.md`/
-`AGENTS.md` entirely, so no wording in `~/AGENTS.md` can reach them — another reason the fix had to
-be in the writer, not in instructions.
+`AGENTS.md` entirely, so no wording in `~/.agents/AGENTS.md` can reach them — another reason the fix
+had to be in the writer, not in instructions.
 
 ## One writer per ownership model, not one writer for everything
 
@@ -72,10 +72,10 @@ practice — 13 of 14 managed paths on the first machine classified `CLEAN` with
 
 - **Never in `setup.toml`.** That file is a tracked, git-shared _declaration_; per-machine runtime
   timestamps in it would churn the diff on every install on every machine, make `git blame` on the
-  declaration useless, and be exactly the auto-mutation of a tracked artifact `~/AGENTS.md`'s
-  "Regenerating a file from a canonical source" exists to prevent. `PULSE_STATE_DIR` already held
-  this kind of per-machine generated metadata (`ai.py`'s static-permissions manifest,
-  `allowlist.py`'s applied manifest).
+  declaration useless, and be exactly the auto-mutation of a tracked artifact
+  `~/.agents/AGENTS.md`'s "Regenerating a file from a canonical source" exists to prevent.
+  `PULSE_STATE_DIR` already held this kind of per-machine generated metadata (`ai.py`'s
+  static-permissions manifest, `allowlist.py`'s applied manifest).
 - **A hash, not a date.** "When did we last write this" cannot answer "has it been edited since";
   only the hash can. `deployed_at` is human-facing — never consulted by `classify()`.
 - **The `.pulse-source` marker stays.** It lives _inside_ the deployed skill directory, so it
@@ -146,7 +146,8 @@ a destructive question; `deploy.all` is the deliberate, human-invoked moment for
 - **`deploy.all` must show the diff before it asks, never just prompt.** Both real exercises of the
   mechanism before the writers were converted had the same value: telling a human _which_ files to
   look at before overwriting — five stale deployed sources after a task-rename pass, and a
-  `~/AGENTS.md` diff that was purely repo-side with nothing existing only at the destination.
+  `~/.agents/AGENTS.md` diff that was purely repo-side with nothing existing only at the
+  destination.
 - **Rename the in-flight task before it lands, not after.** `deploy.sync` was renamed to
   `deploy.all` by the task-naming pass while still unwritten — "deploy sync" doesn't read as an
   imperative and `deploy` is an action namespace like `verify`/`clean` (see the
@@ -158,5 +159,5 @@ a destructive question; `deploy.all` is the deliberate, human-invoked moment for
   and commits.
 - Telling the agent at _edit time_ that it dirtied a deployed file — only whoever next runs a PULSE
   task learns. Accepted: the actual harm was silent loss, which is closed; "port it back to the
-  repo" is ergonomics, and `~/AGENTS.md`'s own header already says it. Revisit a real-time hook only
-  if drift keeps happening after this, with evidence rather than on prediction.
+  repo" is ergonomics, and `~/.agents/AGENTS.md`'s own header already says it. Revisit a real-time
+  hook only if drift keeps happening after this, with evidence rather than on prediction.

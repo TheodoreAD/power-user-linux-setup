@@ -1,23 +1,24 @@
-# `~/AGENTS.md` — rationale and evidence
+# `~/.agents/AGENTS.md` — rationale and evidence
 
 Companion to the [`config/agents-md/`](../config/agents-md/README.md) fragments, which are assembled
 into `~/.agents/AGENTS.md` on this machine, and copied from there into each installed agent's own
-instruction path (`~/AGENTS.md`, `~/.claude/CLAUDE.md`, `~/.copilot/copilot-instructions.md`, … —
-`setup.toml` owns the list, and a path whose agent is not installed is skipped rather than created)
-— `[packages.agents-md]` in `setup.toml`, redeployed by `inv deploy.all --name agents-md` or
-`inv tools.install`. The deployed file is never edited directly, and neither is any one fragment
-without checking that directory's `README.md` for which one owns the rule.
+instruction path (`~/.agents/AGENTS.md`, `~/.claude/CLAUDE.md`,
+`~/.copilot/copilot-instructions.md`, … — `setup.toml` owns the list, and a path whose agent is not
+installed is skipped rather than created) — `[packages.agents-md]` in `setup.toml`, redeployed by
+`inv deploy.all --name agents-md` or `inv tools.install`. The deployed file is never edited
+directly, and neither is any one fragment without checking that directory's `README.md` for which
+one owns the rule.
 
 **The real file moved from `~/AGENTS.md` to `~/.agents/AGENTS.md` on 2026-09-04**, because that is
-the path four verified agents read on their own (`contributing/ai-tooling.md`). `~/AGENTS.md` is a
-**copy** of it, not a symlink, so a reference below that names the old path still finds the same
-bytes — but only the same bytes, and only until the next deploy. This page keeps calling it
-`~/AGENTS.md` where it means "the global instructions file", which is what the name has always meant
-here.
+the path four verified agents read on their own (`contributing/ai-tooling.md`).
+`~/.agents/AGENTS.md` is a **copy** of it, not a symlink, so a reference below that names the old
+path still finds the same bytes — but only the same bytes, and only until the next deploy. This page
+keeps calling it `~/.agents/AGENTS.md` where it means "the global instructions file", which is what
+the name has always meant here.
 
 [PITFALL: **the snippets on this page must be given `~/.agents/AGENTS.md`, and said otherwise until
 2026-09-09.** `deploy.lookup` resolves a registry entry by path and there is no symlink to follow,
-so `deploy.lookup("~/AGENTS.md")` returns `None` and every measurement below dies on
+so `deploy.lookup("~/.agents/AGENTS.md")` returns `None` and every measurement below dies on
 `AttributeError: 'NoneType' object has no attribute 'mechanism'` — not on the lookup, but one line
 later, which reads as a broken snippet rather than a wrong argument. `~/.claude/CLAUDE.md` returns
 `None` for the same reason. Caught while re-measuring the file for
@@ -27,16 +28,17 @@ That file is loaded whole into every session in every repo, so each rule there h
 always-loaded space: trigger + rule + one clause of why. Everything else about a rule — dated
 confirmations, reproductions, rejected alternatives, the story of how it was learned — lives here,
 under a heading matching the rule's own, so rule and evidence stay findable from each other by name.
-This file is deliberately exactly one reference hop from `~/AGENTS.md`; don't chain it onward to a
-third file (per Anthropic's skill-authoring guidance, files reached through nested references get
-partially read).
+This file is deliberately exactly one reference hop from `~/.agents/AGENTS.md`; don't chain it
+onward to a third file (per Anthropic's skill-authoring guidance, files reached through nested
+references get partially read).
 
 Design and research behind the split: the "Why the deployed file is shaped this way" section below
 (extracted from the now-retired `plans/2026-08-23-global-agents-md-leanness-pass.md`).
 
 ## Admitting a new rule
 
-A new rule enters `~/AGENTS.md` — i.e. one of the `config/agents-md/` fragments — only if it:
+A new rule enters `~/.agents/AGENTS.md` — i.e. one of the `config/agents-md/` fragments — only if
+it:
 
 1. **States its trigger** — the situation that fires it, named in its heading. A heading is a
    retrieval cue, not navigation; "Project conventions" is a topic, "sudo" is a trigger.
@@ -47,10 +49,11 @@ A new rule enters `~/AGENTS.md` — i.e. one of the `config/agents-md/` fragment
    under a matching heading.
 
 There is no word budget or mechanical gate; the external reference points for review are ≤200 lines
-and ≤15 rules. Tier placement: a rule whose miss is silent and expensive stays in `~/AGENTS.md`
-regardless of size pressure; a rule with a sharp, statable trigger whose miss is cheap and
-recoverable may live in a skill instead — but moving an existing rule out of the always-loaded set
-needs the same per-rule user approval as deleting it. Nothing in the file is deleted without asking.
+and ≤15 rules. Tier placement: a rule whose miss is silent and expensive stays in
+`~/.agents/AGENTS.md` regardless of size pressure; a rule with a sharp, statable trigger whose miss
+is cheap and recoverable may live in a skill instead — but moving an existing rule out of the
+always-loaded set needs the same per-rule user approval as deleting it. Nothing in the file is
+deleted without asking.
 
 The intake side of this — deciding whether a candidate is durable at all and which home (repo
 `AGENTS.md`, skill, plan, this file) it belongs to — is
@@ -94,9 +97,9 @@ structural choice:
   inline; concrete examples over abstract prose; degrees of freedom matched to fragility (`sudo -A`
   is low-freedom/exact, design rules are high-freedom/heuristic); and when a rule is observed being
   missed, **strengthen its language rather than lengthen its explanation**.
-- **Three tiers.** Tier 1, `~/AGENTS.md`: rules that can fire on any turn or whose miss is silent
-  and expensive — paid every session. Tier 2, a skill: sharp statable trigger, cheap recoverable
-  miss — kept small because skill descriptions under-trigger (`agent-skills`'
+- **Three tiers.** Tier 1, `~/.agents/AGENTS.md`: rules that can fire on any turn or whose miss is
+  silent and expensive — paid every session. Tier 2, a skill: sharp statable trigger, cheap
+  recoverable miss — kept small because skill descriptions under-trigger (`agent-skills`'
   `plans/2026-08-22-skill-trigger-quality-review.md`). Tier 3, this file: free until read.
 
 ## Re-measuring the deployed file
@@ -308,10 +311,11 @@ keeps findable from each other by name, no longer matched. Nothing else changed.
 Confirmed 2026-08-22: auto-memory is a separate `memory/` folder per project directory —
 `repo-tasks`, `power-user-linux-setup`, `scaffoldapy`, and the `*-polite-mcp` repos each had their
 own, none shared — so even a general cross-repo preference saved there is invisible everywhere else.
-The same session found ~30 accumulated entries, several duplicating `~/AGENTS.md` or existing skills
-verbatim; the full migration story is `plans/2026-08-22-memory-to-agents-md-migration-sweep.md`. The
-underlying reason `AGENTS.md` beats memory (reviewable, one source of truth instead of N per-project
-copies) applies across repos exactly as it does within one.
+The same session found ~30 accumulated entries, several duplicating `~/.agents/AGENTS.md` or
+existing skills verbatim; the full migration story is
+`plans/2026-08-22-memory-to-agents-md-migration-sweep.md`. The underlying reason `AGENTS.md` beats
+memory (reviewable, one source of truth instead of N per-project copies) applies across repos
+exactly as it does within one.
 
 Ruled absolute 2026-08-29, by the user: no memories, for any harness, for any project, for any
 reason — project data and user-wide practices must not be vendor-locked. The rule was rewritten
@@ -897,10 +901,10 @@ take care of the agents you let loose, they need to do the same thing"_.
 Two things that makes concrete, and both are in the rule:
 
 - **The delegation clause is not a corollary, it is where the failure happened.** The subagents did
-  exactly what they were told. `~/AGENTS.md` does not reach them ("Which sessions load this file"),
-  so a research prompt that omits the clone instruction is a prompt _for_ fetching, and the fault is
-  the prompt author's. That is why the clause is added to the paste-this list in that rule as well
-  as stated here.
+  exactly what they were told. `~/.agents/AGENTS.md` does not reach them ("Which sessions load this
+  file"), so a research prompt that omits the clone instruction is a prompt _for_ fetching, and the
+  fault is the prompt author's. That is why the clause is added to the paste-this list in that rule
+  as well as stated here.
 - **The `research-library` skill was not missing, and did not fire.** `skill-fitness usage`, same
   day: 14 auto-invocations across 1,188 transcripts, most recent that morning, zero explicit. Its
   description triggers on _working on the library_ ("adding to, or updating"), which is the moment
@@ -992,12 +996,12 @@ precommit hooks for devs. i see no reason to treat a dev differently from an age
 principle is broader than that one plan and outlives its retirement.
 
 **Measured 2026-09-02, and the principle held.** The rejection came with a revisit trigger: if the
-docs-commit CI shape recurred at a real rate once the `~/AGENTS.md` "About to commit" rule had been
-live a while, the hook design would be reopened. The rule deployed 2026-08-25; the sweep eight days
-later across all three repos, reading every failed log rather than counting runs, found **zero
-dprint reflow failures** — against 11 in the single day before the skill-level fix and 4 in the ~30
-hours after it. So teaching the rule is not merely the preferred lever here, it is the one observed
-to work, and that is now the strongest support this principle has.
+docs-commit CI shape recurred at a real rate once the `~/.agents/AGENTS.md` "About to commit" rule
+had been live a while, the hook design would be reopened. The rule deployed 2026-08-25; the sweep
+eight days later across all three repos, reading every failed log rather than counting runs, found
+**zero dprint reflow failures** — against 11 in the single day before the skill-level fix and 4 in
+the ~30 hours after it. So teaching the rule is not merely the preferred lever here, it is the one
+observed to work, and that is now the strongest support this principle has.
 
 Two things the sweep would have concluded wrongly if read carelessly, both worth carrying:
 

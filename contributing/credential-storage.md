@@ -68,8 +68,8 @@ than degrading**: docker checks the helper binary exists before selecting it
 helper is a `helm registry login` that dies when it execs.
 
 No PyPI wrapper exists (`docker-credential-helpers`, `docker-credential-secretservice` and
-`dockercredentialhelpers` all 404 on PyPI), so the `uv-tool` route `~/AGENTS.md` prefers was not
-available and `binary` was the next mechanism down. It is a declared
+`dockercredentialhelpers` all 404 on PyPI), so the `uv-tool` route `~/.agents/AGENTS.md` prefers was
+not available and `binary` was the next mechanism down. It is a declared
 `[packages.docker-credential-secretservice]` entry like anything else — the one cost paid for it was
 teaching the `binary` method `{version}` + `version_cmd`, which `archive` and `deb-url` already had.
 Upstream names the version in the asset filename, and `binary` skips when the command already

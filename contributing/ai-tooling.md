@@ -34,8 +34,8 @@ returns `~/.agents/skills` for all 19 without consulting `globalSkillsDir` — w
 builder and the cleanup scanner read `globalSkillsDir` directly.
 
 **The short-circuit is the correct half.** Three of the nine vendor-directory entries are agents
-this repo already sends `~/AGENTS.md` to, and all three were checked against the vendor's own
-source:
+this repo already sends `~/.agents/AGENTS.md` to, and all three were checked against the vendor's
+own source:
 
 | agent            | registry's `globalSkillsDir` | what the vendor's own source says                                                                                                               |
 | ---------------- | ---------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -133,9 +133,9 @@ the same trap `[packages.node]`'s own `verify_cmd` documents, and the reason `no
 exists.
 
 It reads `~/.gemini/GEMINI.md`, which is one of the four paths `[packages.agents-md]` symlinks to
-`~/AGENTS.md` — so installing it is enough to have it pick up this machine's instructions. It also
-reads `~/.agents/skills` directly, alongside its own `~/.gemini/skills`, so it picks up the skills
-too with nothing added to `[packages.agent-skills]` — see the skills-directory section above.
+`~/.agents/AGENTS.md` — so installing it is enough to have it pick up this machine's instructions.
+It also reads `~/.agents/skills` directly, alongside its own `~/.gemini/skills`, so it picks up the
+skills too with nothing added to `[packages.agent-skills]` — see the skills-directory section above.
 
 ## IDE extensions
 
@@ -179,10 +179,10 @@ gh copilot suggest "undo last git commit"
 ```
 
 Two PULSE-relevant details: it reads `~/.copilot/copilot-instructions.md`, which is symlinked to
-`~/AGENTS.md`, and it accepts `~/.agents/skills` as a personal-skills location in its own right, so
-it finds the installed skills whether or not it is named anywhere. It **is** the second agent in
-`[packages.agent-skills]`'s `agents` list, but that entry is a no-op rather than what makes the
-skills reach it — see the skills-directory section above. `inv ai.install-skills` checks for a
+`~/.agents/AGENTS.md`, and it accepts `~/.agents/skills` as a personal-skills location in its own
+right, so it finds the installed skills whether or not it is named anywhere. It **is** the second
+agent in `[packages.agent-skills]`'s `agents` list, but that entry is a no-op rather than what makes
+the skills reach it — see the skills-directory section above. `inv ai.install-skills` checks for a
 Copilot install but never writes its settings — see `docs/claude-code.md`.
 
 ### Cursor / Windsurf

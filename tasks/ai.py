@@ -120,7 +120,7 @@ def _remote_skill_prompt(label: str, entry_description: str | None) -> str:
 # that gate never fires here and the names went out on every run.
 #
 # PULSE runs it unattended from `inv ai.install-skills`, so the choice is PULSE's to make rather
-# than something to inherit — pinned off deliberately, per ~/AGENTS.md's rule that a feature which
+# than something to inherit — pinned off deliberately, per ~/.agents/AGENTS.md's rule that a feature which
 # phones home by default is a decision, not a default. Both names are honoured; DO_NOT_TRACK is the
 # cross-tool convention and DISABLE_TELEMETRY is the CLI's own, so setting both survives either
 # being dropped upstream.
@@ -642,7 +642,7 @@ _AGENTS_MD_FRAGMENTS = Path(__file__).parent.parent / "config" / "agents-md"
 
 
 def _labelled_rules() -> list[tuple[str, str, str]]:
-    """(fragment, rule, label) for every labelled rule across the ~/AGENTS.md fragments."""
+    """(fragment, rule, label) for every labelled rule across the ~/.agents/AGENTS.md fragments."""
     return [
         (path.name, m["rule"], m["label"])
         for path in sorted(_AGENTS_MD_FRAGMENTS.glob("*.md"))
@@ -674,7 +674,7 @@ def _stale_prerequisites(rules: list[tuple[str, str, str]], declared: set[str], 
 
 @task
 def check_rule_prerequisites(c: Context):
-    """Report ~/AGENTS.md rules whose declared prerequisite is no longer installed.
+    """Report ~/.agents/AGENTS.md rules whose declared prerequisite is no longer installed.
 
     A rule labelled `[needs direnv]` is only true while direnv is there. Disable
     `[packages.direnv]`, or exclude its tag, and the rule keeps asserting something false into
@@ -688,7 +688,7 @@ def check_rule_prerequisites(c: Context):
     """
     stale = _stale_prerequisites(_labelled_rules(), set(util.load_config()["packages"]), set(util.enabled_packages()))
     if not stale:
-        print("[ai] every [needs …] label in the ~/AGENTS.md fragments names an enabled package")
+        print("[ai] every [needs …] label in the ~/.agents/AGENTS.md fragments names an enabled package")
         return
 
     for line in stale:

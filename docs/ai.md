@@ -29,8 +29,8 @@ Two conventions do the work, and neither belongs to any one vendor:
   declares into `~/.agents/skills/`, once.
 
 Both halves live under `~/.agents/`, which is nobody's vendor directory — Goose, Warp, Cline and
-Kimi Code each read `~/.agents/AGENTS.md` on their own, and `~/AGENTS.md` is kept as a link to it so
-anything pointing at the older location still works.
+Kimi Code each read `~/.agents/AGENTS.md` on their own, and `~/.agents/AGENTS.md` is kept as a link
+to it so anything pointing at the older location still works.
 
 Each agent then reads that same content from wherever it happens to look:
 
@@ -54,9 +54,9 @@ that does not read the cross-tool location for either is the one PULSE installs.
 agent later and `inv deploy.all --name agents-md` links it in; `inv verify.all` then checks each
 link resolves to the file this repo deploys, rather than to some stale hand-made copy.
 
-`~/AGENTS.md` is the exception, declared as `always` in `setup.toml`: it is not a vendor path, its
-parent is your home directory, and it is created unconditionally so that anything still pointing at
-the old location keeps working.
+`~/.agents/AGENTS.md` is the exception, declared as `always` in `setup.toml`: it is not a vendor
+path, its parent is your home directory, and it is created unconditionally so that anything still
+pointing at the old location keeps working.
 
 ### It goes wider than the four, in a repo
 

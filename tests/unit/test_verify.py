@@ -10,17 +10,17 @@ from tasks import deploy, util, verify
 
 
 def test_resolve_wrapper_script_with_content_file_returns_deploy_kind():
-    cfg: util.PackageConfig = {"dest": "~/AGENTS.md", "content_file": "config/statusline-command.sh"}
+    cfg: util.PackageConfig = {"dest": "~/.agents/AGENTS.md", "content_file": "config/statusline-command.sh"}
     kind, target = verify._resolve("agents-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
-    assert (kind, target) == ("deploy", "~/AGENTS.md")
+    assert (kind, target) == ("deploy", "~/.agents/AGENTS.md")
 
 
 def test_resolve_wrapper_script_with_assembled_from_returns_deploy_kind():
     """An assembled destination has no `content_file`, and resolving it to an existence-only check
-    would silently drop ~/AGENTS.md's content verification — the one this function exists for."""
-    cfg: util.PackageConfig = {"dest": "~/AGENTS.md", "assembled_from": "agents_md"}
+    would silently drop ~/.agents/AGENTS.md's content verification — the one this function exists for."""
+    cfg: util.PackageConfig = {"dest": "~/.agents/AGENTS.md", "assembled_from": "agents_md"}
     kind, target = verify._resolve("agents-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
-    assert (kind, target) == ("deploy", "~/AGENTS.md")
+    assert (kind, target) == ("deploy", "~/.agents/AGENTS.md")
 
 
 def test_resolve_wrapper_script_without_content_file_falls_back_to_path():

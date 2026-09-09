@@ -91,7 +91,7 @@ suite keeps passing" is the benign case: in `scaffoldapy` the same config pull, 
 directory existed, broke collection outright (exit 2) because that repo has a second `tests/` tree
 under `template/`, and the fallback reached `template/tests/conftest.py`, which shadowed the real
 one (`ImportError: cannot import name 'BASE_ANSWERS' from 'conftest'`). Adopt the structure first,
-then pull the config (`~/AGENTS.md`, "Regenerating a file from a canonical source").
+then pull the config (`~/.agents/AGENTS.md`, "Regenerating a file from a canonical source").
 
 If this repo ever does grow a `tests/integration/` with its own `conftest.py`: an import from
 `conftest` then resolves to a _different file per tier_ — the root one from the unit tier, the

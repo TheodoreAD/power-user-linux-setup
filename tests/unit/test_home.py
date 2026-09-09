@@ -319,7 +319,7 @@ def test_the_real_registry_covers_every_writer_it_defines():
 def two_claims(monkeypatch):
     listed = [
         home.Claim(
-            target="~/AGENTS.md",
+            target="~/.agents/AGENTS.md",
             writer=home.Writer.WHOLE_FILE,
             authority=home.Authority.PULSE,
             tier=home.Tier.PUBLIC,
@@ -349,7 +349,7 @@ def test_the_task_filters_by_writer(two_claims, capsys):
 
     out = capsys.readouterr().out
     assert "dconf /org/gnome/x" in out
-    assert "~/AGENTS.md" not in out
+    assert "~/.agents/AGENTS.md" not in out
     assert "1 claim(s) of 2" in out
 
 

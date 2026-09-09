@@ -4,13 +4,13 @@ Cross-tool instructions for AI coding agents working in this repo (Claude Code, 
 that reads `AGENTS.md`). This repo's own `CLAUDE.md` is a plain symlink to `AGENTS.md` — not a file
 containing Claude Code's `@AGENTS.md` import directive — so Claude Code and any other harness that
 also happens to read a literal `CLAUDE.md` see byte-identical content, no special-case import syntax
-required (see `~/AGENTS.md`'s "Project conventions" for the full rationale).
+required (see `~/.agents/AGENTS.md`'s "Project conventions" for the full rationale).
 
-## Global conventions live in `~/AGENTS.md`
+## Global conventions live in `~/.agents/AGENTS.md`
 
-Anyone working in this repo already has `~/AGENTS.md` installed — this repo is literally what
-deploys it (`[packages.agents-md]` in `setup.toml`, symlinked from `~/.claude/CLAUDE.md` the same
-way this file symlinks from its own `CLAUDE.md`). It covers sudo/ssh askpass, the
+Anyone working in this repo already has `~/.agents/AGENTS.md` installed — this repo is literally
+what deploys it (`[packages.agents-md]` in `setup.toml`, symlinked from `~/.claude/CLAUDE.md` the
+same way this file symlinks from its own `CLAUDE.md`). It covers sudo/ssh askpass, the
 `AGENTS.md`-over-`CLAUDE.md` convention itself, cross-session memory policy, and Bash/allowlist
 discipline (don't `cd` out of a project, prefer several simple commands over one chained one).
 Nothing universal is repeated below — only what's specific to this repo.
@@ -44,9 +44,9 @@ globally, in `[packages.agents-md]` in `setup.toml` rather than repeated per-rep
 ## Deployed dotfiles are generated — never edit `~/<file>` directly
 
 Before editing any file under `~/` that this repo might have deployed (a dotfile, a shell config,
-`~/AGENTS.md`, anything that looks hand-editable), grep `setup.toml` for a `[packages.*]` entry that
-targets the path. **Grep the path itself, not a field name** — two different fields point at a
-deployed file: `dest` (the `wrapper-script` method) and `dst` (inside a `config_files` mapping,
+`~/.agents/AGENTS.md`, anything that looks hand-editable), grep `setup.toml` for a `[packages.*]`
+entry that targets the path. **Grep the path itself, not a field name** — two different fields point
+at a deployed file: `dest` (the `wrapper-script` method) and `dst` (inside a `config_files` mapping,
 which any method may declare). A grep for `dest` alone silently misses every `config_files` package.
 
 If an entry exists, the real place to edit is its repo-side source (`content_file`, or a
@@ -55,9 +55,9 @@ deployed path exists only on this machine: it never reaches the repo or the next
 PULSE writer (`inv tools.install`, `inv deploy.all`, `inv ai.install-skills`) now shows it as a diff
 and asks before overwriting it — until 2026-08-25 `inv tools.install` wiped it silently, caught live
 once only because the user asked "would this actually be installed?", not because anything failed
-loudly. `~/AGENTS.md` specifically is `[packages.agents-md]`, **assembled** from the fragments in
-`config/agents-md/` rather than copied from one file — edit the fragment that owns the rule (see
-that directory's `README.md`), never the deployed file.
+loudly. `~/.agents/AGENTS.md` specifically is `[packages.agents-md]`, **assembled** from the
+fragments in `config/agents-md/` rather than copied from one file — edit the fragment that owns the
+rule (see that directory's `README.md`), never the deployed file.
 
 **Re-deploy by running a task, not by hand-replicating its write logic — and not by calling a task's
 private writer from `python -c` either.** One command covers every mechanism:
@@ -72,11 +72,11 @@ inv deploy.all                          # everything this repo deploys under ~
 and records what it deployed so the next `deploy.status` can tell drift from a repo-side change.
 Confirmed live twice: 2026-08-23, `config/wezterm.lua` had no redeploy path at all (the install-time
 writer skips any destination that already exists) and a one-off `cp` was rejected with "there should
-be a pulse invoke task that deploys the wezterm config"; 2026-08-24, redeploying `~/AGENTS.md` by
-calling `tools._install_wrapper_script` from `python -c` — to avoid `inv tools.install` re-running
-every installer — was rejected the same way, and `deploy.all` is the result. The whole point of the
-repo is that every change this machine has is reproducible from a declared, re-runnable command; a
-manual copy or an ad-hoc Python call is a change nobody can re-run.
+be a pulse invoke task that deploys the wezterm config"; 2026-08-24, redeploying
+`~/.agents/AGENTS.md` by calling `tools._install_wrapper_script` from `python -c` — to avoid
+`inv tools.install` re-running every installer — was rejected the same way, and `deploy.all` is the
+result. The whole point of the repo is that every change this machine has is reproducible from a
+declared, re-runnable command; a manual copy or an ad-hoc Python call is a change nobody can re-run.
 
 **`deploy.status` covers only the whole files declared in `setup.toml` — 18% of the surface a config
 lifecycle could ever touch, and not even all of what `deploy.py` writes.** Before concluding that a
@@ -400,10 +400,10 @@ where the binary needs linking into `~/.local/bin`.
 When a design task is about _convergence_ across the `repo-tasks`/`*-polite-mcp`/`scaffoldapy`
 family specifically (shared tooling, shared config conventions, shared invoke tasks) — as opposed to
 a single repo's own internal architecture, where normal per-project judgment and "best tool per
-concern" still apply (see `~/AGENTS.md`) — default to one mandatory, identical composite every
-consumer repo uses unmodified, not a menu of leaf pieces each repo composes differently, even when
-real current repos already diverge. The fact that repos diverge is the problem needing fixed, not
-evidence flexibility should be preserved. If a naive mandatory version would break on some repos
+concern" still apply (see `~/.agents/AGENTS.md`) — default to one mandatory, identical composite
+every consumer repo uses unmodified, not a menu of leaf pieces each repo composes differently, even
+when real current repos already diverge. The fact that repos diverge is the problem needing fixed,
+not evidence flexibility should be preserved. If a naive mandatory version would break on some repos
 (missing config, missing file types), the fix is making the shared logic degrade gracefully (e.g.
 `shell_check` no-ops cleanly on a repo with zero `.sh` files), not exempting those repos from the
 shared composite. Don't propose "each repo picks what it needs" as the design without being asked

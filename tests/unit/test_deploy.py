@@ -620,7 +620,7 @@ def test_all_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeypatc
 
 
 # ---------------------------------------------------------------------------
-# Assembled destinations (~/AGENTS.md)
+# Assembled destinations (~/.agents/AGENTS.md)
 # ---------------------------------------------------------------------------
 
 
@@ -786,7 +786,7 @@ def test_a_hand_edited_assembled_file_is_not_overwritten_unasked(tmp_path, agent
 
 
 def test_assembled_from_naming_a_field_no_package_fills_raises(tmp_path, monkeypatch):
-    """A destination declared with no fragments anywhere would deploy an empty ~/AGENTS.md —
+    """A destination declared with no fragments anywhere would deploy an empty ~/.agents/AGENTS.md —
     louder to fail than to silently wipe every rule on the machine."""
     _stub_config(
         monkeypatch,
@@ -996,7 +996,7 @@ def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypa
 
 
 def test_deploy_all_writes_an_always_mirror_whose_parent_is_missing(tmp_path, monkeypatch):
-    """The `~/AGENTS.md` compatibility copy: no vendor owns it, so its parent is created."""
+    """The `~/.agents/AGENTS.md` compatibility copy: no vendor owns it, so its parent is created."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     compat = tmp_path / "home" / "AGENTS.md"
     (tmp_path / "config").mkdir(exist_ok=True)

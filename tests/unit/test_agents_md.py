@@ -1,6 +1,6 @@
-"""Content invariants for the `~/AGENTS.md` fragments and their evidence file.
+"""Content invariants for the `~/.agents/AGENTS.md` fragments and their evidence file.
 
-`config/agents-md/*.md` holds the rules that get assembled into `~/AGENTS.md`;
+`config/agents-md/*.md` holds the rules that get assembled into `~/.agents/AGENTS.md`;
 `contributing/global-agents-md.md` holds each rule's evidence "under a heading matching the rule's
 own, so rule and evidence stay findable from each other by name" (that file's own words). Nothing
 enforced that correspondence, so it drifted both ways: a rule was renamed and its evidence section

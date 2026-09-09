@@ -50,7 +50,7 @@ class Writer(StrEnum):
     """How the bytes get there — and therefore what "drift" could even mean for this claim."""
 
     # deploy.py, from a setup.toml declaration: wrapper-script content_file, assembled
-    # ~/AGENTS.md, config_files. In the registry, so `inv deploy.status` and `inv deploy.all`
+    # ~/.agents/AGENTS.md, config_files. In the registry, so `inv deploy.status` and `inv deploy.all`
     # see it and `inv verify.all` requires it to exist.
     WHOLE_FILE = "whole-file"
     # deploy.py, but with a destination decided at run time rather than declared — the systemd

@@ -11,7 +11,7 @@ the cross-tool convention, with each agent's own skills directory symlinked to i
 that don't read it natively.
 
 **The home directory works differently, and assuming it matches costs an edit.** The real file is
-`~/.agents/AGENTS.md` — the path four agents read natively — and `~/AGENTS.md`,
+`~/.agents/AGENTS.md` — the path four agents read natively — and `~/.agents/AGENTS.md`,
 `~/.claude/CLAUDE.md` and one path per installed agent are **copies** of it, not symlinks (verified
 2026-09-09: four distinct inodes here, link count 1 each). So editing whichever one a session
 happens to open is not editing the original, and the next deploy overwrites it silently rather than
@@ -20,8 +20,8 @@ refusing.
 ### Where durable knowledge goes
 
 Durable repo-specific knowledge → that repo's own `AGENTS.md` (or a `docs/*.md` it points to);
-durable cross-repo or personal preference → `~/AGENTS.md`; anything plan-shaped → `plans/`, per the
-`plan-docs` convention.
+durable cross-repo or personal preference → `~/.agents/AGENTS.md`; anything plan-shaped → `plans/`,
+per the `plan-docs` convention.
 
 **Never a harness's own memory store — not for durable content, not for perishable content, not as a
 staging area.** They are invisible to every other contributor, every other agent tool, every code

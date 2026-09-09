@@ -178,7 +178,7 @@ def test_purge_is_a_no_op_when_there_is_nothing_to_remove(docker_config):
 
 def test_configure_credential_store_leaves_plaintext_alone_by_default(docker_config, monkeypatch):
     """Removing a credential takes away access the user may not be able to get back, so the default
-    reports and stops. `~/AGENTS.md` reserves the opt-in flag shape for exactly this case."""
+    reports and stops. `~/.agents/AGENTS.md` reserves the opt-in flag shape for exactly this case."""
     monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
     docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
 

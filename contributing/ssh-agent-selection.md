@@ -67,7 +67,7 @@ it stays pending and says so, rather than silently prompting on every run.
 - **"Enumerate agents before asking a human for a secret."** That lesson — the first diagnosis in
   the incident was "the passphrase must be wrong", stated as a conclusion, on evidence that was
   entirely true and led nowhere — is a rule for agents rather than a note for this repo, and it
-  lives in `~/AGENTS.md`'s ssh section as "run `inv ssh.check` before anything else". A second copy
-  here would drift.
+  lives in `~/.agents/AGENTS.md`'s ssh section as "run `inv ssh.check` before anything else". A
+  second copy here would drift.
 - **The remaining open item.** `ssh.add` still cannot tell whether a human is present:
   `plans/2026-09-02-ssh-add-prompts-a-user-who-is-not-there.md`.

@@ -138,7 +138,7 @@ comparing content rather than by looking for a link, and `inv deploy.all` repair
 **The real file moved there on 2026-09-04**; it used to be `~/AGENTS.md`, which is now a copy of it.
 The reason is that `~/.agents/AGENTS.md` is a path several agents read on their own — Goose, Warp,
 Cline and Kimi Code, each verified against its own source or documentation — while nothing verified
-reads a bare `~/AGENTS.md`; that path worked only because every symlink pointed at it. See
+reads a bare `~/.agents/AGENTS.md`; that path worked only because every symlink pointed at it. See
 `docs/ai.md` and `contributing/ai-tooling.md`. Either path still works for reading or editing.
 
 **The file is assembled, not copied.** `[packages.agents-md]` sets `assembled_from = "agents_md"`,
@@ -265,12 +265,12 @@ of the `skills` task.
 
 The `npx` source was first validated end-to-end against a real package
 ([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
-long before this repo's own skills used it. Caveman itself ended up living in `~/AGENTS.md` instead
-(see "Caveman-style terse output" in `config/agents-md/collaboration.md`), not as an installed
-skill: a skill loads conditionally on a trigger, and this behaviour had to be unconditional and
-reach every agent tool, so the always-on `AGENTS.md` version replaced it outright. That test —
-unconditional and cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a skill — is
-now written up in the `skill-authoring` skill.
+long before this repo's own skills used it. Caveman itself ended up living in `~/.agents/AGENTS.md`
+instead (see "Caveman-style terse output" in `config/agents-md/collaboration.md`), not as an
+installed skill: a skill loads conditionally on a trigger, and this behaviour had to be
+unconditional and reach every agent tool, so the always-on `AGENTS.md` version replaced it outright.
+That test — unconditional and cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a
+skill — is now written up in the `skill-authoring` skill.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 
@@ -313,10 +313,10 @@ directories are an any-section list merged through their own manifest,
   a different explicit value → ask before replacing (declines by default). This machine's permission
   setup is built for `acceptEdits`, where the allow/ask rules decide and anything unmatched that
   isn't read-only prompts; `auto` mode replaces that with a classifier and, on top, instructs the
-  agent to prefer `cat`/`sed`/heredocs over the Read/Edit tools — the opposite of `~/AGENTS.md`. The
-  audit that settled this (3,956 Bash calls over four days, per-model chaining and truncation rates,
-  the `git -C` ask-rule bypass) and the mode comparison are in the `session-bash-audit` skill's
-  `references/research.md`; re-run the skill to re-measure.
+  agent to prefer `cat`/`sed`/heredocs over the Read/Edit tools — the opposite of
+  `~/.agents/AGENTS.md`. The audit that settled this (3,956 Bash calls over four days, per-model
+  chaining and truncation rates, the `git -C` ask-rule bypass) and the mode comparison are in the
+  `session-bash-audit` skill's `references/research.md`; re-run the skill to re-measure.
 - `claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]` →
   `permissions.additionalDirectories`, `~` expanded. The harness's own scratch locations — the
   per-session scratchpad and background-job tmp — are outside every repo, so under `acceptEdits`

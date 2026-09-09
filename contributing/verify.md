@@ -168,7 +168,7 @@ only _safe_ default for methods whose installed artifact isn't meant to be run s
 **`wrapper-script` was later strengthened from existence to content comparison** (2026-08-23):
 existence alone doesn't catch a deploy that landed stale or hand-edited content, only that
 _something_ is at `dest`. Confirmed as a real gap, not theoretical, the same session it was fixed —
-manually diffing `~/AGENTS.md` against `config/global-AGENTS.md` twice to confirm a redeploy
+manually diffing `~/.agents/AGENTS.md` against `config/global-AGENTS.md` twice to confirm a redeploy
 actually took (once after a fresh write, once again after `dprint` reflowed the source) is exactly
 the kind of check an agent shouldn't need to do by hand. Every `wrapper-script` entry in
 `setup.toml` declares `content_file` (no inline-`content` variant is actually in use), so

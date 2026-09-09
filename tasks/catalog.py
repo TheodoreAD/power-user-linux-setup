@@ -6,7 +6,7 @@ invisible from the site. Each is a table generated from the thing it describes.
 
 Generation only, never installation: nothing here reads or writes the machine. Same shape as
 `inv devcontainer.render-docs` (util.ensure_block with the HTML marker style, output committed, run
-deliberately rather than from the quality gate) — see ~/AGENTS.md's "Regenerating a file from a
+deliberately rather than from the quality gate) — see ~/.agents/AGENTS.md's "Regenerating a file from a
 canonical source".
 """
 

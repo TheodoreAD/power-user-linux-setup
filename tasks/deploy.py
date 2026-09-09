@@ -4,7 +4,7 @@ Every path this repo deploys under `~` goes through this module: the `wrapper-sc
 `content_file` (`~/.agents/AGENTS.md`, `askpass-zenity`, ...) and any package's `config_files`
 mappings (wezterm, terminator). Before this existed those were separate writers with different
 answers to "the destination already exists" — unconditional overwrite, skip-if-exists,
-diff-then-prompt — and the unconditional one silently ate hand-edits to `~/AGENTS.md` twice in one
+diff-then-prompt — and the unconditional one silently ate hand-edits to `~/.agents/AGENTS.md` twice in one
 day.
 
 **Files only.** Skill *directories* used to be deployed here too, under `~/.agents/skills/`; that
@@ -80,7 +80,7 @@ class Mechanism(StrEnum):
     # opposite policy.
     MANAGED_FILE = "managed-file"
     # One destination composed from several repo-side fragments rather than copied from a single
-    # source file — `~/AGENTS.md`, assembled from every `agents_md` fragment declared anywhere in
+    # source file — `~/.agents/AGENTS.md`, assembled from every `agents_md` fragment declared anywhere in
     # setup.toml. Everything else about it is a normal MANAGED file: same digest comparison, same
     # diff, same never-overwrite-what-we-can't-prove-we-wrote rule.
     ASSEMBLED = "assembled"
@@ -231,7 +231,7 @@ def assembled_entry(name: str, dest: Path, field: str) -> Managed:
     """
     parts = fragments(field)
     if not parts:
-        # An assembled destination with no fragments would deploy an empty file — for ~/AGENTS.md
+        # An assembled destination with no fragments would deploy an empty file — for ~/.agents/AGENTS.md
         # that is every rule on the machine, silently gone. Fail instead.
         raise util.missing_fields(name, f"at least one {field} fragment on some package")
     return Managed(

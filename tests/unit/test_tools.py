@@ -1,5 +1,5 @@
 """Unit tests for tasks/tools.py's _install_wrapper_script — the install-time writer for
-`content_file` packages such as ~/AGENTS.md. Since it delegates the content write to
+`content_file` packages such as ~/.agents/AGENTS.md. Since it delegates the content write to
 tasks/deploy.py, what's tested here is the contract at this call site: a fresh destination is
 created, a hand-edited one is never silently overwritten (the exact loss this conversion exists to
 close), and PULSE_ASSUME_YES restores the unattended overwrite. The symlink writer itself moved to
@@ -76,7 +76,7 @@ def test_install_wrapper_script_raises_when_dest_doesnt_match_after_write(tmp_pa
 
 
 def test_install_wrapper_script_never_silently_overwrites_a_hand_edit(tmp_path, monkeypatch, capsys):
-    # The regression this conversion exists to prevent: ~/AGENTS.md edited at the destination,
+    # The regression this conversion exists to prevent: ~/.agents/AGENTS.md edited at the destination,
     # then `inv tools.install` — which used to overwrite unconditionally. Non-tty, no --yes: the
     # edit survives, and the run says so instead of looking like a successful install.
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))

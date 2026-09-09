@@ -117,7 +117,7 @@ class StatusLine(TypedDict):
 
 class AgentsMdFragment(TypedDict, total=False):
     """One item of a package's `agents_md` list — a whole-`##`-section Markdown fragment of the
-    assembled `~/AGENTS.md`, plus where it sits in the document.
+    assembled `~/.agents/AGENTS.md`, plus where it sits in the document.
 
     `order` is sparse by convention (10, 20, 30 …) so a fragment can be inserted between two
     existing ones without renumbering; it defaults to 50 so an undeclared order lands after the

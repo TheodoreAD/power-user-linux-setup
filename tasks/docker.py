@@ -461,7 +461,7 @@ def configure_credential_store(c: Context, purge_plaintext: bool = False):
     does not migrate them — docker keeps reading the plaintext entry and it keeps working, which is
     the quiet half of the failure — and removing one without the user's say-so takes away access they
     may not be able to get back. `--purge-plaintext` is the deliberate removal, opt-in for the reason
-    `~/AGENTS.md` reserves an inverted flag shape for: this is the genuinely-destructive-by-default
+    `~/.agents/AGENTS.md` reserves an inverted flag shape for: this is the genuinely-destructive-by-default
     case, so it is `rm -i`'s shape rather than apt's `-y`. It runs only after the round trip has
     passed, so a machine whose store does not answer cannot lose a credential to it.
     """

@@ -882,7 +882,7 @@ def test_apply_static_permissions_dry_run_reports_each_tier_and_never_writes(mon
 
 # --- ai.check-rule-prerequisites -------------------------------------------------------------
 #
-# A `[needs direnv]` label on a ~/AGENTS.md rule is a claim that direnv is there. These cover the
+# A `[needs direnv]` label on a ~/.agents/AGENTS.md rule is a claim that direnv is there. These cover the
 # decision itself (_stale_prerequisites is pure) plus the label parsing that feeds it.
 
 

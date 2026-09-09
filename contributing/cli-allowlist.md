@@ -555,12 +555,12 @@ matching over every Bash call since the switch (373 calls; the script and the nu
 `session-bash-audit` skill's `references/research.md`) put **40% of calls at a prompt, and 67% of
 those prompts on the git commit flow**: `git add` (35), `git commit` (26),
 `git -C <other> add/commit` (18), `git push` (10), `git rm`/`restore --staged`/`reset -q` (10). The
-cause was the interaction of two things each correct on its own: `~/AGENTS.md` mandates many small
-single-concern commits, each staged right before it and `git fetch`ed before every push; and the
-pipeline's honest `write` verdict on `add` ("reversible with reset") rendered as `ask`. Two to four
-prompts per commit, multiplied by the commit count the instructions themselves drove up. `fetch`,
-`rm`, `restore`, `switch`, `mv` weren't even registered in `tools.toml`'s `[git]` list, so they
-prompted as unmatched.
+cause was the interaction of two things each correct on its own: `~/.agents/AGENTS.md` mandates many
+small single-concern commits, each staged right before it and `git fetch`ed before every push; and
+the pipeline's honest `write` verdict on `add` ("reversible with reset") rendered as `ask`. Two to
+four prompts per commit, multiplied by the commit count the instructions themselves drove up.
+`fetch`, `rm`, `restore`, `switch`, `mv` weren't even registered in `tools.toml`'s `[git]` list, so
+they prompted as unmatched.
 
 `mode_covered` can't express this (per tool, not per verb) and reclassifying can't either — `add`
 _is_ a write. The per-node knob the `review` docstring said didn't exist now does, on the render
