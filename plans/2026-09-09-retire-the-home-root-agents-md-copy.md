@@ -122,3 +122,23 @@ what this repo actually declares.
 
 `plans/` was left alone throughout — those are dated records of what was true when written, and
 rewriting their vocabulary is how a plan stops being evidence.
+
+## Migrated to
+
+- [`contributing/deploy.md`](../contributing/deploy.md), "Removing a destination:
+  `inv deploy.prune`" — why the removal grew a command instead of shipping an `rm`, the
+  `always`-flag lesson (retiring a destination can retire a config feature, and half of that is
+  worse than neither), and the three near-misses ordered by what caught each.
+- [`contributing/global-agents-md.md`](../contributing/global-agents-md.md), "Renaming a term across
+  this corpus" — the 95-mention sweep, the five bad replacements by shape, why the grep found four
+  and missed the fifth, and why the rename has to precede the removal.
+
+Deliberately not migrated:
+
+- **The confirmation that `~/AGENTS.md` was never a canonical path.** Already stated in the deployed
+  rules themselves, in `config/agents-md/agent-knowledge.md`, which is where a reader needs it.
+- **The three prune pitfalls as code contracts.** `deploy.py`'s `declared_paths()` docstring and
+  `prune()`'s own comments already carry each one at the site that must not regress; `contributing/`
+  keeps only the reasoning and the how-it-was-caught, which the code has no room for.
+- **The what-landed sequence.** Three commits with full messages say it better than a summary, and
+  `git log` is where a future session looks.

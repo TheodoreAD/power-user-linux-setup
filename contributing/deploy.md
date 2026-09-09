@@ -153,6 +153,63 @@ a destructive question; `deploy.all` is the deliberate, human-invoked moment for
   imperative and `deploy` is an action namespace like `verify`/`clean` (see the
   `invoke-task-conventions` skill).
 
+## Removing a destination: `inv deploy.prune`
+
+Dropping a destination from `setup.toml` stops it being rewritten and removes nothing. The stale
+file then outlives the declaration on every machine that ever had it, while a fresh machine never
+grows one — so `deploy.status` and `home.list-claims`, which both answer from the declaration, go on
+reporting a clean home directory that isn't. That is the same divergence this whole module exists to
+catch, arriving from the one direction the writers can't see.
+
+**It grew as a command rather than shipping as a one-off `rm`** during the `~/AGENTS.md` retirement,
+for the reason the repo exists: a manual deletion is a change nobody can re-run. It reuses the
+manifest instead of adding configuration — an orphan is a recorded path `setup.toml` no longer
+declares, and it is only deleted while it still matches the digest recorded when PULSE wrote it,
+which is the same rule `deploy()` follows before overwriting. So the command removes its own output
+and nothing else, and the rest is reported and kept.
+
+### Retiring a destination can retire a config feature, and half of that is worse than neither
+
+`~/AGENTS.md` was the only `always = true` destination on the machine. The flag was carried end to
+end — a field on `MirrorDest`, a branch in the table-vs-string parser, two conditionals deciding
+whether a missing parent directory means "create it" or "that agent isn't installed" — and with the
+declaration gone, every one of those was dead code along with the tests pinning it.
+
+**Removing the entry and keeping the mechanism is strictly worse than either whole option**: a
+documented config field that no declaration uses reads as supported, so the next person to want that
+behaviour finds a feature that has never been exercised. Check whether a destination you are
+retiring is the last user of anything before deciding the change is a one-line delete.
+
+### What a dry run caught, and what only a person could
+
+Three near-misses, and the order is the useful part — the first two were mechanical and the third
+was not.
+
+- **The manifest holds directories, not only files.** `~/.agents/skills/<name>` entries were written
+  by the skill copier this module deleted on 2026-09-07 and have been undeclared ever since, so
+  every one of them reached prune. Crashing on `read_bytes()` was the _good_ outcome: the `skills`
+  CLI owns those directories now, and a version that had handled directories gracefully would have
+  deleted live installed skills.
+- **Ownership cannot be decided from the registry alone.** `lookup()` answers False for
+  `~/.claude/CLAUDE.md` even while `setup.toml` declares it, because a mirror is neither a `dest`
+  nor a `dst` — so `declared_paths()` has to union the registry with the mirrors or every agent's
+  instruction file is an orphan.
+- **The third source has no declaration to union with, and that one shipped.** A run-time
+  destination — the PyCharm options directory found by glob, the corporate-only proxy unit — is
+  deliberately absent from `setup.toml`, because a declared destination is one `inv verify.all`
+  demands exist. `prune` was written without it and reported
+  `~/.config/JetBrains/…/options/editor-font.xml` as abandoned while `inv ide.configure-pycharm` was
+  maintaining it; on a machine with the proxy configured it would have offered to delete
+  `pulse-proxy.service`. The list now lives in `home.runtime_managed()` and both callers read it —
+  it had already been a literal inside `home.py`'s claim enumeration, and prune was written without
+  noticing, which is the second-place-to-forget this module keeps arguing against.
+
+[PITFALL: **that third one was invisible to every check that ran.** The gate was green, the dry run
+looked plausible, and the report was wrong in a way only someone who knew what the repo was _for_
+could see — the user asked why a font this setup deliberately configures was being called abandoned.
+Nothing in the test suite was positioned to ask that question, and nothing added since is either;
+what closed it was reading the report against the repo's purpose rather than against its fixtures.]
+
 ## Deliberately not built
 
 - Auto-porting a deployed edit back into the repo source. PULSE reports and asks; the human decides

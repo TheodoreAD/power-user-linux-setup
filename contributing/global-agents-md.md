@@ -139,6 +139,45 @@ print(f'{pw} of {tw} words ({pw*100//tw}%) in provenance sentences')
 "
 ```
 
+## Renaming a term across this corpus
+
+A find-and-replace over the fragments is the obvious way to retire a path or a term, and it is
+correct for almost every hit — the corpus is mostly prose shorthand citing a file by name, where
+nothing breaks either way and the gate has nothing to check. What it gets wrong is the small set of
+sentences that are _about_ the rename, and those are exactly the sentences worth having.
+
+Measured on the `~/AGENTS.md` retirement, 2026-09-09: **95 mentions across 34 files, five bad
+replacements.** The shapes, because they recur:
+
+- **A sentence recording that the thing moved** now says it moved from itself to itself. Three of
+  the five.
+- **A declaration that must keep the old value.** `setup.toml`'s `also_deploy_to` entry was
+  rewritten to equal its own `dest`, which would have had `deploy` copy the file over itself. That
+  file discusses both paths deliberately and was reverted from the sweep and edited by hand.
+- **A claim whose truth depended on the old path.** One sentence came out asserting that the
+  canonical path's parent is the home directory — false, and it was the premise the `always` flag
+  rested on.
+
+[PITFALL: **the four caught and the one missed differ by vocabulary, not by kind.** Four were found
+by grepping the sweep's diff for historical framing — _moved from_, _used to be_, _before that_. The
+fifth used none of those words: it was a paragraph written minutes earlier to explain the copies,
+and after the sweep the deployed rule read _the real file is `~/.agents/AGENTS.md`, and
+`~/.agents/AGENTS.md` is a copy of it_. It was caught by a later session's harness re-reading the
+deployed file, not by anything in this repo. So the grep is worth running and is not a gate; the
+paragraphs a rename most reliably corrupts are the ones that discuss the rename, and those are found
+by reading them.]
+
+**`plans/` is excluded from any such sweep**, deliberately. Those are dated records of what was true
+when written, and rewriting their vocabulary is how a plan stops being evidence.
+
+**Do the rename before the removal, in its own commit.** Keeping the file and keeping the shorthand
+were the same decision on this one: `contributing/` had chosen to go on saying `~/AGENTS.md` "where
+it means 'the global instructions file'", which reads fine while the file exists as a copy and
+becomes a dangling instruction the moment it does not — the deployed rules themselves said "durable
+cross-repo or personal preference → `~/AGENTS.md`", an instruction to write to a file that was about
+to be deleted. Removing the file while leaving the shorthand was the one combination strictly worse
+than doing nothing.
+
 ## Contents
 
 - [Bash & the CLI allowlist (cluster intro)](#bash--the-cli-allowlist-cluster-intro)
