@@ -1210,7 +1210,7 @@ if [ -n "${CLAUDECODE:-}" ]; then
 fi'''
 
 [packages.agents-md]
-description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; ~/AGENTS.md and ~/.claude/CLAUDE.md symlink to it"
+description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; copied from there to ~/AGENTS.md and ~/.claude/CLAUDE.md"
 method = "wrapper-script"
 tags = ["shell", "ai"]
 # The real file sits at the cross-tool path, not at ~/AGENTS.md, because that is the one four

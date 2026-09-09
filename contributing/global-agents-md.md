@@ -1,17 +1,26 @@
 # `~/AGENTS.md` — rationale and evidence
 
 Companion to the [`config/agents-md/`](../config/agents-md/README.md) fragments, which are assembled
-into `~/.agents/AGENTS.md` on this machine, with `~/AGENTS.md` and `~/.claude/CLAUDE.md` symlinked
-to it — `[packages.agents-md]` in `setup.toml`, redeployed by `inv deploy.all --name agents-md` or
-`inv tools.install`. The deployed file is never edited directly, and neither is any one fragment
-without checking that directory's `README.md` for which one owns the rule.
+into `~/.agents/AGENTS.md` on this machine, and copied from there to `~/AGENTS.md` and
+`~/.claude/CLAUDE.md` — `[packages.agents-md]` in `setup.toml`, redeployed by
+`inv deploy.all --name agents-md` or `inv tools.install`. The deployed file is never edited
+directly, and neither is any one fragment without checking that directory's `README.md` for which
+one owns the rule.
 
 **The real file moved from `~/AGENTS.md` to `~/.agents/AGENTS.md` on 2026-09-04**, because that is
 the path four verified agents read on their own (`contributing/ai-tooling.md`). `~/AGENTS.md` is a
-symlink to it, so every reference below that names the old path still resolves — and `deploy.lookup`
-follows a symlink to its target's registry entry, so the snippets work unchanged. This page keeps
-calling it `~/AGENTS.md` where it means "the global instructions file", which is what the name has
-always meant here.
+**copy** of it, not a symlink, so a reference below that names the old path still finds the same
+bytes — but only the same bytes, and only until the next deploy. This page keeps calling it
+`~/AGENTS.md` where it means "the global instructions file", which is what the name has always meant
+here.
+
+[PITFALL: **the snippets on this page must be given `~/.agents/AGENTS.md`, and said otherwise until
+2026-09-09.** `deploy.lookup` resolves a registry entry by path and there is no symlink to follow,
+so `deploy.lookup("~/AGENTS.md")` returns `None` and every measurement below dies on
+`AttributeError: 'NoneType' object has no attribute 'mechanism'` — not on the lookup, but one line
+later, which reads as a broken snippet rather than a wrong argument. `~/.claude/CLAUDE.md` returns
+`None` for the same reason. Caught while re-measuring the file for
+`plans/2026-08-26-agents-md-leanness-pass.md`.]
 
 That file is loaded whole into every session in every repo, so each rule there holds only what earns
 always-loaded space: trigger + rule + one clause of why. Everything else about a rule — dated
@@ -105,7 +114,7 @@ did not cause that (it moved rules, it did not add any); it made it visible. Tra
 python3 -c "
 import re
 from tasks import deploy
-m = deploy.lookup('~/AGENTS.md')
+m = deploy.lookup('~/.agents/AGENTS.md')
 secs = re.split(r'^## ', deploy.expected_bytes(m).decode(), flags=re.M)[1:]
 rows = [(len(s.split(chr(10), 1)[1].split()), s.split(chr(10), 1)[0]) for s in secs]
 for w, h in sorted(rows, reverse=True): print(f'{w:5d}  {h[:70]}')
@@ -116,7 +125,7 @@ print(f'--- {sum(w for w, _ in rows)} words in {len(rows)} sections')
 python3 -c "
 import re
 from tasks import deploy
-m = deploy.lookup('~/AGENTS.md')
+m = deploy.lookup('~/.agents/AGENTS.md')
 body = re.sub(r'\`\`\`.*?\`\`\`', '', deploy.expected_bytes(m).decode(), flags=re.S)
 sents = re.split(r'(?<=[.!?])\s+', body.replace(chr(10), ' '))
 prov = re.compile(r'2026-\d\d-\d\d|Confirmed|Reaffirmed|Validated|Observed as a real|Caught live|Concrete instance|Example:')

@@ -5,11 +5,16 @@
 `AGENTS.md` at the repo root is the real file — the cross-tool convention read by 30+ agents.
 `CLAUDE.md`, if present at all, is a plain **symlink** to it, never a file containing the
 `@AGENTS.md` import directive (Claude-Code-specific syntax other harnesses would read as literal
-text); `~/AGENTS.md` itself follows this, with `~/.claude/CLAUDE.md` symlinking to it. Nothing can
-be appended below a symlink's target, so a genuinely Claude-specific addendum goes in `AGENTS.md`
-itself or a separate `.claude/`-scoped file. Skills live in `.agents/skills/`, the cross-tool
-convention, with each agent's own skills directory symlinked to it for the agents that don't read it
-natively.
+text). Nothing can be appended below a symlink's target, so a genuinely Claude-specific addendum
+goes in `AGENTS.md` itself or a separate `.claude/`-scoped file. Skills live in `.agents/skills/`,
+the cross-tool convention, with each agent's own skills directory symlinked to it for the agents
+that don't read it natively.
+
+**The home directory works differently, and assuming it matches costs an edit.** The real file is
+`~/.agents/AGENTS.md` — the path four agents read natively — and `~/AGENTS.md` and
+`~/.claude/CLAUDE.md` are **copies** of it, not symlinks (verified 2026-09-09: three separate
+inodes, link count 1 each). So editing whichever one a session happens to open is not editing the
+original, and the next deploy overwrites it silently rather than refusing.
 
 ### Where durable knowledge goes
 
