@@ -1172,3 +1172,24 @@ def test_prune_writes_nothing_under_dry_run(tmp_path, monkeypatch, capsys):
 
     assert compat.is_file()
     assert "would delete" in capsys.readouterr().out
+
+
+def test_prune_never_touches_a_directory_the_manifest_still_records(tmp_path, monkeypatch, capsys):
+    """The manifest holds `~/.agents/skills/<name>` entries written by the skill copier deleted on
+    2026-09-07. They are undeclared, so they reach prune on every run — and the `skills` CLI owns
+    them now, which makes them exactly what it must not remove. A dry run found this by walking
+    into `read_bytes()` on one."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[])
+    skill_dir = tmp_path / "home" / ".agents" / "skills" / "research-library"
+    skill_dir.mkdir(parents=True)
+    (skill_dir / "SKILL.md").write_text("a skill someone else installs\n")
+    entries = deploy.load_manifest()
+    entries[str(skill_dir)] = entries[str(dest)].copy()
+    deploy._write_manifest(entries)
+
+    deploy.prune(MockContext(), yes=True)
+
+    assert skill_dir.is_dir()
+    assert (skill_dir / "SKILL.md").is_file()
+    assert "not a regular file" in capsys.readouterr().out

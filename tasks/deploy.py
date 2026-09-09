@@ -625,8 +625,14 @@ def declared_paths() -> set[Path]:
     return paths
 
 
-@task(help={"yes": "Delete without asking."})
-def prune(c: Context, yes: bool = False):
+@task(
+    help={
+        "name": "Only prune paths that were declared by this [packages.*] section.",
+        "path": "Only prune this one path.",
+        "yes": "Delete without asking.",
+    }
+)
+def prune(c: Context, name: str | None = None, path: str | None = None, yes: bool = False):
     """Delete home-directory files PULSE wrote that this repo no longer declares.
 
     Dropping a destination from `setup.toml` stops it being rewritten; it does not remove what is
@@ -641,34 +647,48 @@ def prune(c: Context, yes: bool = False):
     """
     declared = declared_paths()
     manifest = load_manifest()
-    orphans = [Path(p) for p in manifest if Path(p) not in declared]
+    only = Path(path).expanduser() if path else None
+    orphans = [
+        Path(p)
+        for p, entry in manifest.items()
+        if Path(p) not in declared and (name is None or entry["package"] == name) and (only is None or Path(p) == only)
+    ]
     if not orphans:
         print("[deploy] nothing to prune — every recorded path is still declared")
         return
 
-    for path in sorted(orphans):
-        entry = manifest[str(path)]
-        if not path.exists():
-            print(f"[deploy] {path}: already gone — dropping its record")
-            forget(path)
+    for orphan in sorted(orphans):
+        entry = manifest[str(orphan)]
+        if not orphan.exists():
+            verb = "would drop its record" if util.DRY_RUN else "dropping its record"
+            print(f"[deploy] {orphan}: already gone — {verb}")
+            forget(orphan)
             continue
-        if hashlib.sha256(path.read_bytes()).hexdigest() != entry["digest"]:
+        # Files only, and this is not defensive coding — the manifest really does hold directories.
+        # `~/.agents/skills/<name>` entries were written by the skill copier this module deleted on
+        # 2026-09-07, and they outlive it: undeclared ever since, so every one of them lands here.
+        # The `skills` CLI owns those directories now, which makes them precisely what this command
+        # must not touch. Caught by a dry run walking into `read_bytes()` on one.
+        if not orphan.is_file():
+            print(f"[deploy] {orphan}: skipped — not a regular file, so not this command's to remove")
+            continue
+        if hashlib.sha256(orphan.read_bytes()).hexdigest() != entry["digest"]:
             ui.warn(
-                f"{path} no longer matches what PULSE wrote, so it is not ours to delete.",
+                f"{orphan} no longer matches what PULSE wrote, so it is not ours to delete.",
                 "Move anything you want to keep out of it, then delete it yourself.",
             )
             continue
         if util.DRY_RUN:
-            print(f"[deploy] {path}: would delete (no longer declared by {entry['package']})")
+            print(f"[deploy] {orphan}: would delete (no longer declared by {entry['package']})")
             continue
         if not (yes or util.ASSUME_YES) and not util.confirm(
-            f"Delete {path}, no longer declared by {entry['package']}?", default=False
+            f"Delete {orphan}, no longer declared by {entry['package']}?", default=False
         ):
-            print(f"[deploy] {path}: left alone")
+            print(f"[deploy] {orphan}: left alone")
             continue
-        path.unlink()
-        forget(path)
-        print(f"[deploy] {path}: deleted — no longer declared by {entry['package']}")
+        orphan.unlink()
+        forget(orphan)
+        print(f"[deploy] {orphan}: deleted — no longer declared by {entry['package']}")
 
 
 # ---------------------------------------------------------------------------
