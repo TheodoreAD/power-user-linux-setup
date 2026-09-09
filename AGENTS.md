@@ -9,11 +9,12 @@ required (see `~/.agents/AGENTS.md`'s "Project conventions" for the full rationa
 ## Global conventions live in `~/.agents/AGENTS.md`
 
 Anyone working in this repo already has `~/.agents/AGENTS.md` installed — this repo is literally
-what deploys it (`[packages.agents-md]` in `setup.toml`, symlinked from `~/.claude/CLAUDE.md` the
-same way this file symlinks from its own `CLAUDE.md`). It covers sudo/ssh askpass, the
-`AGENTS.md`-over-`CLAUDE.md` convention itself, cross-session memory policy, and Bash/allowlist
-discipline (don't `cd` out of a project, prefer several simple commands over one chained one).
-Nothing universal is repeated below — only what's specific to this repo.
+what deploys it (`[packages.agents-md]` in `setup.toml`, and **copied** into `~/.claude/CLAUDE.md`
+and every other installed agent's own instruction path — unlike this file, which really is a symlink
+from its own `CLAUDE.md`; the home directory is the case where the two differ). It covers sudo/ssh
+askpass, the `AGENTS.md`-over-`CLAUDE.md` convention itself, cross-session memory policy, and
+Bash/allowlist discipline (don't `cd` out of a project, prefer several simple commands over one
+chained one). Nothing universal is repeated below — only what's specific to this repo.
 
 ## AI agent tooling (`tasks/ai.py`)
 
