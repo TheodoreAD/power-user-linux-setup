@@ -246,6 +246,64 @@ constraint that has to fire _before_ a design exists cannot live inside a rule a
 work goes, however closely the two are related. That is a different admission argument from "it is
 tier 1", and it is the one that made a 39th rule worth its bytes.]
 
+## Re-measured 2026-09-09 — both levers are spent, and the intake gate did not hold
+
+Run with the two commands in `contributing/global-agents-md.md`, so this compares like with like.
+
+[PITFALL: **those snippets no longer work as written.** `deploy.lookup("~/AGENTS.md")` returns
+`None` and the measurement dies on `AttributeError: 'NoneType' object has no attribute
+'mechanism'`
+— the real file moved to `~/.agents/AGENTS.md` on 2026-09-04, and `deploy.lookup` does not resolve
+the old spelling to it even though that page says it follows a symlink to its target's registry
+entry. Pass `~/.agents/AGENTS.md`. The page's own snippets need the same correction.]
+
+| measured   | 2026-08-26 (this plan's baseline) | 2026-09-09 | reference point |
+| ---------- | --------------------------------: | ---------: | --------------: |
+| body words |                             4,326 |  **8,860** |               — |
+| lines      |                               446 |    **817** |            ≤200 |
+| rules      |                                37 |     **40** |             ≤15 |
+
+**The file more than doubled in two weeks while this plan sat open, and three new rules account for
+almost none of it** — the growth is inside rules that already existed. Per cluster: Git & commits
+2,824 words, Bash & tool use 2,525, Research & design 1,184, Verification 1,038, Agent instructions
+& knowledge 828, Collaboration & output 461. Git & commits by itself is now larger than the entire
+file was when the 2026-08-23 pass landed it at ~2,500 words.
+
+**Provenance share is 2%** (188 of 8,987 words), and that settles which levers remain. The
+2026-08-23 pass worked by relocating evidence out of the deployed file; at 2% there is nothing left
+to relocate. Round 3's PITFALL already established that merging returns ~2% per cluster and is
+finished. So both of the levers this plan has used are genuinely exhausted, exactly as that entry
+predicted — which makes the doubling a measurement **of the intake gate**, the one thing it named as
+the remaining lever. The gate did not hold, and no round 4 changes that.
+
+### Parked from the 2026-09-09 session, not put to the user as additions
+
+Two candidates surfaced while wiring `install.sh`'s release gate. Both **extend** the same existing
+rule rather than taking a heading (`git.md`, "Force-pushing, or asking what a remote actually has"),
+which is the shape criterion 2 asks for. They are parked rather than proposed because admitting
+words to a file at four times its own line reference point trades a marginal new clause against
+every rule already in it — which is the bloat finding the file's own research section cites.
+
+- **A filtered ref query that returns nothing is not an absent ref.**
+  `git ls-remote --heads origin stable master` printed only `master`, and the natural read is that
+  `stable` does not exist; it existed as `refs/tags/stable`. Same shape as the
+  `gh run list --commit` seven-character trap the Verification cluster already carries — a filter
+  that cannot match prints empty and exits 0. Nearly sent the installer's default ref to a name
+  believed missing.
+- **Moving a release tag by hand publishes whatever is broken at that commit.** `stable` was moved
+  from `52cba6e` to `48f284a` to make `install.sh` reachable. `48f284a` carried a `verify.all`
+  regression dating to 2026-09-05, so every `bootstrap-devcontainer.sh` consumer pinned to that tag
+  broke on the move. `--force-with-lease` was used and is no defence: a lease protects against a
+  _concurrent_ change to the ref, never against the commit being bad. The job that would have caught
+  it was `workflow_dispatch`-only and had not run since 09-01.
+
+Two others were considered and rejected outright, recorded so they are not re-proposed.
+**`git clone
+--branch` takes a branch or tag and never a SHA, and `--depth 1` from a shallow repo
+fails** — the trigger is narrow (authoring a CI clone) and the miss is loud and immediate, so it is
+not tier 1. **`uv tool install --editable` survives upgrades** — repo-specific, and already recorded
+in this repo's `AGENTS.md`, its portability plan and `tasks/cli.py`'s docstring.
+
 ## Open questions
 
 ## Rules with no evidence section (measured 2026-08-30)
