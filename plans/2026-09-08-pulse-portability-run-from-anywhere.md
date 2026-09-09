@@ -1,6 +1,6 @@
 ---
-status: in-progress
-updated: 2026-09-08
+status: landed
+updated: 2026-09-10
 ---
 
 # A `uv tool` shim for PULSE's production tasks, and what to call it
@@ -150,9 +150,16 @@ borrowed collections by the code that adds them, development tasks by `@util.dev
 itself. A parallel list would have been smaller to write and would drift silently in the worse
 direction. The membership is pinned by `tests/unit/test_cli.py`.
 
-**Still open**: the machine install itself (`inv python.install-tools`, which upgrades every uv tool
-on the machine, so it is the user's call) and the `agent-skills` question about `skill-authoring`'s
-last step. The upgrade path was the third, and is answered below.
+**All three are now closed, 2026-09-08.** The upgrade path is answered below. The machine install
+ran through the declared path — `inv python.install-tools`, the user's call as recorded, and the
+feared side effect did not occur: all 15 uv tools reported `Checked N packages` with nothing to
+upgrade, so the run that was deferred because it upgrades everything upgraded nothing. `spowse`
+reinstalled editable, receipt intact, `--version` and `--list` both fine with the guard in place.
+
+The third, `skill-authoring`'s contested last step, is **not this repo's** — filed in `agent-skills`
+as `2026-09-08-skill-authoring-reinstall-step-is-contested.md` and owned there. It decides whether
+this plan's measured need was sixteen reaches or four, and changes nothing already built, so it does
+not hold this plan open.
 
 ## The upgrade path survives everything, and the real failure is elsewhere
 
