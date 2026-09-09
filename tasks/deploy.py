@@ -611,6 +611,66 @@ def all_(c: Context, name: str | None = None, yes: bool = False):
     _deploy_mirrors(entries)
 
 
+def declared_paths() -> set[Path]:
+    """Every home path this repo currently claims — registry destinations **and** mirrors.
+
+    The two halves are not interchangeable and forgetting the second is the dangerous mistake:
+    `lookup` answers False for `~/.claude/CLAUDE.md` even while `setup.toml` declares it, because
+    the registry is keyed on `dest`/`dst` and a mirror is neither. Anything deciding "is this path
+    still ours?" from the registry alone concludes that every agent's instruction file is orphaned.
+    """
+    paths = set(managed_paths())
+    for cfg in util.enabled_packages().values():
+        paths.update(mirror_dests(cfg))
+    return paths
+
+
+@task(help={"yes": "Delete without asking."})
+def prune(c: Context, yes: bool = False):
+    """Delete home-directory files PULSE wrote that this repo no longer declares.
+
+    Dropping a destination from `setup.toml` stops it being rewritten; it does not remove what is
+    already on the machine. That file then sits there stale forever, still the first thing
+    tab-completion offers, and invisible to `inv deploy.status` and `inv home.list-claims` alike
+    because both answer from the declaration. A new machine never grows it, so without this the two
+    diverge permanently — which is the drift this repo exists to catch.
+
+    Only ever deletes a file that still matches the digest recorded when PULSE wrote it. Anything
+    edited since is reported and kept, the same rule `deploy()` follows for overwriting: this
+    command removes its own output and nothing else. `PULSE_DRY_RUN=1` reports without deleting.
+    """
+    declared = declared_paths()
+    manifest = load_manifest()
+    orphans = [Path(p) for p in manifest if Path(p) not in declared]
+    if not orphans:
+        print("[deploy] nothing to prune — every recorded path is still declared")
+        return
+
+    for path in sorted(orphans):
+        entry = manifest[str(path)]
+        if not path.exists():
+            print(f"[deploy] {path}: already gone — dropping its record")
+            forget(path)
+            continue
+        if hashlib.sha256(path.read_bytes()).hexdigest() != entry["digest"]:
+            ui.warn(
+                f"{path} no longer matches what PULSE wrote, so it is not ours to delete.",
+                "Move anything you want to keep out of it, then delete it yourself.",
+            )
+            continue
+        if util.DRY_RUN:
+            print(f"[deploy] {path}: would delete (no longer declared by {entry['package']})")
+            continue
+        if not (yes or util.ASSUME_YES) and not util.confirm(
+            f"Delete {path}, no longer declared by {entry['package']}?", default=False
+        ):
+            print(f"[deploy] {path}: left alone")
+            continue
+        path.unlink()
+        forget(path)
+        print(f"[deploy] {path}: deleted — no longer declared by {entry['package']}")
+
+
 # ---------------------------------------------------------------------------
 # Mirrored destinations
 #

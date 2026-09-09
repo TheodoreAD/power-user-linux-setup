@@ -1078,3 +1078,97 @@ def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
 
     assert "would skip" in capsys.readouterr().out
     assert not vendor.parent.exists()
+
+
+# ---------------------------------------------------------------------------
+# prune — removing what this repo no longer declares
+# ---------------------------------------------------------------------------
+
+
+def _deployed_package(tmp_path, monkeypatch, *, dest, mirrors: list[str]) -> None:
+    """Deploy one wrapper-script package with mirrors, so the manifest records every path."""
+    (tmp_path / "config").mkdir(exist_ok=True)
+    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "dest": str(dest),
+                "content_file": "config/agents.md",
+                "also_deploy_to": mirrors,
+            }
+        },
+    )
+    deploy.all_(MockContext(), name="agents-md", yes=True)
+
+
+def test_declared_paths_includes_mirrors_not_just_the_registry(tmp_path, monkeypatch):
+    """The trap `prune` would otherwise fall into: `lookup` answers False for a mirror even while
+    setup.toml declares it, because the registry is keyed on `dest`/`dst`. Deciding "still ours?"
+    from the registry alone marks every agent's instruction file an orphan."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
+    vendor.parent.mkdir(parents=True)
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[str(vendor)])
+
+    assert deploy.lookup(vendor) is None, "precondition: the registry does not know about mirrors"
+    assert {dest, vendor} <= deploy.declared_paths()
+
+
+def test_prune_deletes_a_path_the_repo_stopped_declaring(tmp_path, monkeypatch, capsys):
+    """The `~/AGENTS.md` retirement: dropping the declaration stops the rewrite but leaves the
+    file, stale and invisible to both `deploy.status` and `home.list-claims`."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    compat = tmp_path / "home" / "AGENTS.md"
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[str(compat)])
+    assert compat.is_file()
+
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[])  # the declaration goes away
+    deploy.prune(MockContext(), yes=True)
+
+    assert not compat.exists()
+    assert str(compat) not in deploy.load_manifest()
+    assert "deleted" in capsys.readouterr().out
+
+
+def test_prune_leaves_every_still_declared_path_alone(tmp_path, monkeypatch):
+    """Including the mirrors, which is the whole reason `declared_paths` exists."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
+    vendor.parent.mkdir(parents=True)
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[str(vendor)])
+
+    deploy.prune(MockContext(), yes=True)
+
+    assert dest.is_file()
+    assert vendor.is_file()
+
+
+def test_prune_refuses_to_delete_a_file_edited_since_pulse_wrote_it(tmp_path, monkeypatch, capsys):
+    """Same rule `deploy()` follows for overwriting: this command removes its own output, and an
+    orphan someone has since put work into is not that."""
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    compat = tmp_path / "home" / "AGENTS.md"
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[str(compat)])
+    compat.write_text("something a human wrote here\n")
+
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[])
+    deploy.prune(MockContext(), yes=True)
+
+    assert compat.read_text() == "something a human wrote here\n"
+    assert "not ours to delete" in capsys.readouterr().out
+
+
+def test_prune_writes_nothing_under_dry_run(tmp_path, monkeypatch, capsys):
+    dest = tmp_path / "home" / ".agents" / "AGENTS.md"
+    compat = tmp_path / "home" / "AGENTS.md"
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[str(compat)])
+    _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[])
+    monkeypatch.setattr(util, "DRY_RUN", True)
+
+    deploy.prune(MockContext(), yes=True)
+
+    assert compat.is_file()
+    assert "would delete" in capsys.readouterr().out
