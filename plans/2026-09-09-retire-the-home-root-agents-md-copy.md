@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-09-09
 ---
 
@@ -67,12 +67,22 @@ the registry with the mirrors, because `lookup()` answers False for `~/.claude/C
 `setup.toml` declares it — deciding ownership from the registry alone marks every agent's
 instruction file an orphan. Both are pinned by tests.]
 
-[NEEDS CLARIFICATION: **a second orphan, and it is not this plan's to delete.**
-`~/.config/JetBrains/PyCharm2026.1/options/editor-font.xml` is recorded as deployed by `pycharm` and
-is no longer declared. Its digest still matches, so prune would remove it — and removing it resets
-an editor font that is currently set. Deleting someone's IDE config while retiring an unrelated path
-is not tidying. Left alone deliberately; `inv deploy.prune --path <that file>` is the whole fix if
-it is wanted.]
+[PITFALL: **the "second orphan" was not an orphan, and finding that out took a question rather than
+a test.** `~/.config/JetBrains/PyCharm2026.1/options/editor-font.xml` was reported as no longer
+declared and left alone as somebody's IDE config. It is neither: `inv ide.configure-pycharm`
+maintains it, and it is absent from `setup.toml` on purpose, because its path is a glob against
+whichever PyCharm is installed and a declared destination is one `inv verify.all` demands exist.
+`declared_paths()` had two of the three sources this repo has.
+
+The gap reached further than the one file — on a machine with the proxy configured, `prune` would
+have offered to delete `pulse-proxy.service`. The list now lives in `home.runtime_managed()` and
+both callers read it; it had already been a literal inside `home.py`'s claim enumeration, and prune
+was written without noticing, which is the second-place-to-forget this repo keeps arguing against.
+
+What makes this worth rereading is how it surfaced. The gate was green, the dry run looked
+plausible, and the report was wrong in a way only someone who knew what the repo was _for_ could see
+— the user asked why a font this setup deliberately configures was being called abandoned. Nothing
+in the test suite was positioned to ask that question.]
 
 [DECISION: **the shorthand went too, in its own commit before anything was removed.** 95 mentions
 across 34 files now name `~/.agents/AGENTS.md`, with `setup.toml` reverted from the sweep and edited
