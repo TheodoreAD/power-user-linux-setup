@@ -1193,3 +1193,22 @@ def test_prune_never_touches_a_directory_the_manifest_still_records(tmp_path, mo
     assert skill_dir.is_dir()
     assert (skill_dir / "SKILL.md").is_file()
     assert "not a regular file" in capsys.readouterr().out
+
+
+def test_declared_paths_includes_run_time_destinations(monkeypatch, tmp_path):
+    """The regression this exists for: prune shipped reading `editor-font.xml` as an orphan while
+    `inv ide.configure-pycharm` was actively maintaining it. Those destinations are discovered on
+    the machine rather than declared in setup.toml, so neither the registry nor the mirror list
+    knows them — and on a machine with the proxy configured the same gap reaches its systemd unit.
+    """
+    from tasks import home, ide  # noqa: PLC0415
+
+    monkeypatch.setattr(ide, "_pycharm_dir", lambda: tmp_path / "PyCharm2026.1")
+    _stub_config(monkeypatch, {})
+
+    declared = deploy.declared_paths()
+
+    runtime = [m.path for m in home.runtime_managed()]
+    assert runtime, "precondition: this machine's config yields at least one run-time destination"
+    assert set(runtime) <= declared
+    assert tmp_path / "PyCharm2026.1" / "options" / "editor-font.xml" in declared

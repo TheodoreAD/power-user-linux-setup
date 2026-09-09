@@ -612,16 +612,30 @@ def all_(c: Context, name: str | None = None, yes: bool = False):
 
 
 def declared_paths() -> set[Path]:
-    """Every home path this repo currently claims — registry destinations **and** mirrors.
+    """Every home path this repo currently claims, from all three sources it has.
 
-    The two halves are not interchangeable and forgetting the second is the dangerous mistake:
-    `lookup` answers False for `~/.claude/CLAUDE.md` even while `setup.toml` declares it, because
-    the registry is keyed on `dest`/`dst` and a mirror is neither. Anything deciding "is this path
-    still ours?" from the registry alone concludes that every agent's instruction file is orphaned.
+    None of the three is interchangeable with another, and each omission fails the same way — a
+    live file read as abandoned:
+
+    - **Registry destinations**, from `setup.toml`'s `dest`/`dst`.
+    - **Mirrors.** `lookup` answers False for `~/.claude/CLAUDE.md` even while `setup.toml`
+      declares it, because a mirror is neither field. Deciding ownership from the registry alone
+      marks every agent's instruction file an orphan.
+    - **Run-time destinations**, whose path is discovered on the machine rather than declared — the
+      PyCharm options directory found by glob, the corporate-only proxy unit. Deliberately absent
+      from `setup.toml`, because a declared destination is one `inv verify.all` demands exist.
+      Missing this third source is not hypothetical: `prune` shipped without it and reported
+      `editor-font.xml` as an orphan while `inv ide.configure-pycharm` was maintaining it.
     """
+    # Deferred: `home` imports this module, and so do the writing modules it aggregates. Read from
+    # there rather than re-listing them here, so this and `inv home.list-claims` cannot disagree
+    # about what PULSE owns — which is exactly how the third source came to be missing.
+    from . import home  # noqa: PLC0415
+
     paths = set(managed_paths())
     for cfg in util.enabled_packages().values():
         paths.update(mirror_dests(cfg))
+    paths.update(m.path for m in home.runtime_managed())
     return paths
 
 

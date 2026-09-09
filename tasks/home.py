@@ -253,6 +253,24 @@ def _mirror_claims() -> Iterator[Claim]:
             )
 
 
+def runtime_managed() -> list[deploy.Managed]:
+    """Whole-file destinations this repo writes whose path is decided at run time.
+
+    The one list, read from each writing module's own objects rather than restated, so the
+    inventory and the writer cannot disagree about a destination. Two things consume it and they
+    fail in opposite directions if it is wrong: `inv home.list-claims` under-reports what PULSE
+    owns, and `inv deploy.prune` mistakes a live file for an orphan and offers to delete it. The
+    second is why this is a function rather than a literal in one caller — it was a literal here,
+    and prune shipped without it, reading `editor-font.xml` as abandoned while
+    `inv ide.configure-pycharm` was actively maintaining it.
+
+    PyCharm's entries are glob-resolved against what is installed, so an absent PyCharm yields
+    nothing here, which is the right answer rather than rows reporting a file that was never going
+    to exist.
+    """
+    return [proxy.UNIT, proxy.ENV_MANAGED, *ide.managed_files()]
+
+
 def _undeclared_whole_file_claims() -> Iterator[Claim]:
     """Whole files deployed through deploy.py whose destination isn't in setup.toml.
 
@@ -268,7 +286,7 @@ def _undeclared_whole_file_claims() -> Iterator[Claim]:
     with no PyCharm here there are no claims, which is the right answer rather than two rows
     reporting a file absent that was never going to exist.
     """
-    for m in (proxy.UNIT, proxy.ENV_MANAGED, *ide.managed_files()):
+    for m in runtime_managed():
         yield Claim(
             target=_rel(m.path),
             writer=Writer.WHOLE_FILE_UNDECLARED,
