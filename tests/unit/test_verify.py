@@ -266,17 +266,3 @@ def test_mirror_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch):
     checks = verify._mirror_checks()
 
     assert [t for _, _, t in checks] == [str(present / "CLAUDE.md")]
-
-
-def test_mirror_checks_never_skip_an_always_destination(tmp_path, monkeypatch):
-    """`always = true` has no agent to be absent, so a missing file there is a real failure.
-
-    The installer creates that parent rather than reading its absence as "not installed", so
-    skipping the check would hide exactly the case the flag exists to make verifiable.
-    """
-    packages = {"agents-md": {"also_deploy_to": [{"path": str(tmp_path / "absent" / "AGENTS.md"), "always": True}]}}
-    monkeypatch.setattr(util, "enabled_packages", lambda: packages)
-
-    checks = verify._mirror_checks()
-
-    assert [t for _, _, t in checks] == [str(tmp_path / "absent" / "AGENTS.md")]

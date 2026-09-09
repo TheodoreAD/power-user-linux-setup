@@ -995,8 +995,9 @@ def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypa
     assert vendor.read_text() == "rules\n"
 
 
-def test_deploy_all_writes_an_always_mirror_whose_parent_is_missing(tmp_path, monkeypatch):
-    """The `~/.agents/AGENTS.md` compatibility copy: no vendor owns it, so its parent is created."""
+def test_deploy_all_creates_a_mirror_that_does_not_exist_yet(tmp_path, monkeypatch):
+    """Distinct from the case above, which replaces a symlink already sitting there: here nothing
+    is at the path and the parent exists only because deploying `dest` made it."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     compat = tmp_path / "home" / "AGENTS.md"
     (tmp_path / "config").mkdir(exist_ok=True)
@@ -1009,7 +1010,7 @@ def test_deploy_all_writes_an_always_mirror_whose_parent_is_missing(tmp_path, mo
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/agents.md",
-                "also_deploy_to": [{"path": str(compat), "always": True}],
+                "also_deploy_to": [str(compat)],
             }
         },
     )
@@ -1026,7 +1027,10 @@ def test_deploy_all_writes_no_mirror_under_dry_run(tmp_path, monkeypatch, capsys
     `1 path(s): 1 created` and nothing else, which understates the real run in the one output
     someone reads before deciding to trust it."""
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
-    compat = tmp_path / "home" / "AGENTS.md"
+    vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
+    # The vendor directory exists, because that is what "this agent is installed" means and it is
+    # the only case where a dry run has a write to predict. Nothing creates it during the run.
+    vendor.parent.mkdir(parents=True)
     (tmp_path / "config").mkdir(exist_ok=True)
     (tmp_path / "config" / "agents.md").write_text("rules\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
@@ -1038,16 +1042,16 @@ def test_deploy_all_writes_no_mirror_under_dry_run(tmp_path, monkeypatch, capsys
                 "method": "wrapper-script",
                 "dest": str(dest),
                 "content_file": "config/agents.md",
-                "also_deploy_to": [{"path": str(compat), "always": True}],
+                "also_deploy_to": [str(vendor)],
             }
         },
     )
 
     deploy.all_(MockContext(), name="agents-md", yes=True)
 
-    assert not compat.exists()
-    assert not compat.is_symlink()
-    assert f"{compat}: would write a copy of {dest}" in capsys.readouterr().out
+    assert not vendor.exists()
+    assert not vendor.is_symlink()
+    assert f"{vendor}: would write a copy of {dest}" in capsys.readouterr().out
 
 
 def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):

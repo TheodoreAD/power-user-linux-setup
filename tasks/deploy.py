@@ -31,7 +31,7 @@ from datetime import UTC, datetime
 from enum import StrEnum
 from functools import cached_property
 from pathlib import Path
-from typing import NamedTuple, TypedDict, cast
+from typing import TypedDict, cast
 
 from invoke import Context, Exit, task
 
@@ -641,47 +641,36 @@ def all_(c: Context, name: str | None = None, yes: bool = False):
 # ---------------------------------------------------------------------------
 
 
-class MirrorDest(NamedTuple):
-    """One declared mirror, and whether a missing parent directory means "skip" or "create"."""
-
-    path: Path
-    always: bool
-
-
-def mirror_dests(cfg: util.PackageConfig) -> list[MirrorDest]:
-    """`also_deploy_to`, as absolute paths each carrying its parent-directory rule.
+def mirror_dests(cfg: util.PackageConfig) -> list[Path]:
+    """`also_deploy_to`, as absolute paths.
 
     Accepts a bare string as well as a list: one destination is still the common case (a single
     wrapper script aliased under another name), and a list is what a file several agents each read
     from their own path needs — the instructions file is written into every installed agent's own
     instruction path. Same string-or-list shape as `omz_plugin`.
 
-    A **string** is a vendor path and is conditional: an absent `~/.codex/` means Codex isn't
-    installed, so the mirror is skipped rather than created (see `ensure_mirror`). A
-    **`{ path = ..., always = true }`** table opts out of that test, for a destination no vendor
-    owns. Those two cases need distinguishing rather than leaving it to whether the parent happens
-    to exist: `~/AGENTS.md`'s parent is the home directory, so the conditional test passes
-    vacuously and would create the file for the right reason by accident, recording nothing about
-    why. Verified 2026-09-04, four agents read the cross-tool `~/.agents/AGENTS.md` and none of them
-    owns that directory — PULSE does.
+    Every destination is a vendor path and is therefore conditional: an absent `~/.codex/` means
+    Codex isn't installed, so the mirror is skipped rather than created (see `ensure_mirror`). There
+    used to be a `{ path = ..., always = true }` table form that opted out of that test, for the one
+    destination no vendor owned — `~/AGENTS.md`, retired 2026-09-09. It never changed an outcome:
+    that path's parent is the home directory, so the conditional test it opted out of would have
+    passed anyway, which setup.toml's own comment conceded in the word "vacuously". The field
+    reference in setup.toml never documented the table form, so this is the code returning to the
+    schema rather than the schema losing anything.
     """
     declared = cfg.get("also_deploy_to")
     if not declared:
         return []
     entries = [declared] if isinstance(declared, str) else declared
-    return [_mirror_dest(e) for e in entries]
-
-
-def _mirror_dest(entry: str | dict[str, str | bool]) -> MirrorDest:
-    if isinstance(entry, str):
-        return MirrorDest(Path(entry).expanduser(), always=False)
-    path = entry.get("path")
-    if not isinstance(path, str):
-        # Covers the missing key and the wrong-typed value with one message: both mean the TOML
-        # author wrote a table that declares no destination, and both would otherwise reach `Path()`
-        # as a `None` or a mapping.
-        raise TypeError(f"also_deploy_to table needs a string `path`, got {entry!r}")
-    return MirrorDest(Path(path).expanduser(), always=bool(entry.get("always")))
+    for entry in entries:
+        # Kept from the table form's validation rather than dropped with it: a TOML author who
+        # writes anything but a string here would otherwise reach `Path()` with a mapping and get a
+        # message about `os.PathLike`, which says nothing about the field they got wrong.
+        # The annotation says `list[str]`; TOML at runtime says whatever the author typed, and this
+        # field carried a table form until 2026-09-09 that some setup.toml out there may still have.
+        if not isinstance(entry, str):  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError(f"also_deploy_to takes a path string or a list of them, got {entry!r}")
+    return [Path(entry).expanduser() for entry in entries]
 
 
 def mirror_ok(mirror: Path, dest: Path) -> bool:
@@ -719,7 +708,7 @@ def _replaceable(managed: Managed, mirror: Path) -> bool:
     return classify(replace(managed, path=mirror)) in (State.CLEAN, State.STALE)
 
 
-def ensure_mirror(name: str, dest_entry: MirrorDest, dest: Path, managed: Managed) -> None:
+def ensure_mirror(name: str, mirror: Path, dest: Path, managed: Managed) -> None:
     """Write `dest`'s bytes to the declared path, unless something else already lives there.
 
     **Never creates the parent directory of a vendor path.** A missing `~/.codex/` means Codex isn't
@@ -728,16 +717,10 @@ def ensure_mirror(name: str, dest_entry: MirrorDest, dest: Path, managed: Manage
     agents to install to. Says so rather than skipping silently, since "my rules didn't reach agent
     X" is otherwise a very quiet failure; installing that agent and re-running picks the file up.
 
-    An `always` destination is the exception and does create its parent, because that test asks a
-    question about a *vendor's* directory and there is no vendor to ask about — nobody owns
-    `~/.agents/`, PULSE creates it, so "is it there?" would only ever be answering about this repo's
-    own earlier run.
-
     Copies the deployed file's bytes rather than re-deriving them from the source, so a mirror can
     never disagree with the destination it mirrors even if assembly is non-deterministic for some
     future package. `write_bytes` for the same reason `_write` uses it: no newline translation.
     """
-    mirror = dest_entry.path
     if mirror_ok(mirror, dest):
         return
     if mirror.exists() or mirror.is_symlink():
@@ -751,10 +734,8 @@ def ensure_mirror(name: str, dest_entry: MirrorDest, dest: Path, managed: Manage
         mirror.unlink()
         print(f"[{name}] {mirror}: replaced a stale {was} this file")
     if not mirror.parent.is_dir():
-        if not dest_entry.always:
-            print(f"[{name}] {mirror}: skipped — {mirror.parent} doesn't exist (that agent isn't installed here)")
-            return
-        mirror.parent.mkdir(parents=True, exist_ok=True)
+        print(f"[{name}] {mirror}: skipped — {mirror.parent} doesn't exist (that agent isn't installed here)")
+        return
     data = dest.read_bytes()
     mirror.write_bytes(data)
     # Record it, or the next deploy cannot tell this copy from a file somebody else put there.
@@ -792,12 +773,12 @@ def _deploy_mirrors(entries: list[Managed]) -> None:
         seen.add(m.package)
         for mirror in mirror_dests(packages.get(m.package, {})):
             if util.DRY_RUN:
-                print(f"[{m.package}] {_mirror_plan(dest_entry=mirror, dest=m.path, managed=m)}")
+                print(f"[{m.package}] {_mirror_plan(mirror=mirror, dest=m.path, managed=m)}")
             else:
                 ensure_mirror(m.package, mirror, m.path, m)
 
 
-def _mirror_plan(*, dest_entry: MirrorDest, dest: Path, managed: Managed) -> str:
+def _mirror_plan(*, mirror: Path, dest: Path, managed: Managed) -> str:
     """One line saying what `ensure_mirror` would do, without doing it.
 
     Mirrors that function's branches in the same order rather than summarising, so a dry run
@@ -805,7 +786,6 @@ def _mirror_plan(*, dest_entry: MirrorDest, dest: Path, managed: Managed) -> str
     skipped because that agent isn't installed, would replace something this repo can prove it
     wrote, and would refuse to touch something it can't.
     """
-    mirror = dest_entry.path
     if mirror_ok(mirror, dest):
         return f"{mirror}: ok"
     if mirror.exists() or mirror.is_symlink():
@@ -813,7 +793,7 @@ def _mirror_plan(*, dest_entry: MirrorDest, dest: Path, managed: Managed) -> str
             return f"{mirror}: would leave alone — not a copy of {dest}"
         was = "symlink to" if mirror.is_symlink() else "copy of"
         return f"{mirror}: would replace a stale {was} this file"
-    if not mirror.parent.is_dir() and not dest_entry.always:
+    if not mirror.parent.is_dir():
         return f"{mirror}: would skip — {mirror.parent} doesn't exist (that agent isn't installed here)"
     return f"{mirror}: would write a copy of {dest}"
 

@@ -106,13 +106,10 @@ def test_an_also_deploy_to_is_its_own_claim(fake_home, monkeypatch):
     assert claims[0].writer == home.Writer.MIRROR
 
 
-def test_an_always_mirror_is_claimed_like_any_other(fake_home, monkeypatch):
-    """The registry must see a `{ path, always }` table, not choke on it or drop it.
-
-    It parsed the field itself before the table shape existed, which would have handed a mapping
-    straight to `Path()` — a claim silently missing from the one command that answers "is this path
-    PULSE-managed?".
-    """
+def test_every_mirror_in_a_list_is_claimed_and_points_at_the_same_source(fake_home, monkeypatch):
+    """The registry answers "is this path PULSE-managed?", so a mirror it fails to enumerate is a
+    path that reads as unowned. It parses through `deploy.mirror_dests` rather than re-reading the
+    field, which is what kept it correct when the `{ path, always }` table form was retired."""
     _stub_config(
         monkeypatch,
         {
@@ -121,7 +118,7 @@ def test_an_always_mirror_is_claimed_like_any_other(fake_home, monkeypatch):
                 "dest": str(fake_home / ".agents" / "AGENTS.md"),
                 "content_file": "config/statusline-command.sh",
                 "also_deploy_to": [
-                    {"path": str(fake_home / "AGENTS.md"), "always": True},
+                    str(fake_home / "AGENTS.md"),
                     str(fake_home / ".claude" / "CLAUDE.md"),
                 ],
             }

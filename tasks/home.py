@@ -236,12 +236,11 @@ def _mirror_claims() -> Iterator[Claim]:
         dest = cfg.get("dest")
         if not dest:
             continue
-        # Via deploy.mirror_dests rather than re-normalising here: `also_deploy_to` takes a string,
-        # a list, or a `{ path, always }` table, and a second copy of that parsing is a second place
-        # to forget a shape. It was one before the table existed, and a dict would have reached
-        # `Path()` as a mapping.
-        for mirror in deploy.mirror_dests(cfg):
-            path = mirror.path
+        # Via deploy.mirror_dests rather than re-normalising here: `also_deploy_to` takes a string
+        # or a list of them, and a second copy of that parsing is a second place to forget a shape.
+        # It also carried a `{ path, always }` table until 2026-09-09, which is exactly the kind of
+        # shape a second parser would have missed.
+        for path in deploy.mirror_dests(cfg):
             yield Claim(
                 target=_rel(path),
                 writer=Writer.MIRROR,

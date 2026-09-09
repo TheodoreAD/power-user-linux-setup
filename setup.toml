@@ -1210,14 +1210,14 @@ if [ -n "${CLAUDECODE:-}" ]; then
 fi'''
 
 [packages.agents-md]
-description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; copied from there to ~/AGENTS.md and ~/.claude/CLAUDE.md"
+description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; copied into each installed agent's own instruction path"
 method = "wrapper-script"
 tags = ["shell", "ai"]
-# The real file sits at the cross-tool path, not at ~/AGENTS.md, because that is the one four
-# verified agents read on their own: Goose, Warp, Cline and Kimi Code (sources and the reasoning are
-# in contributing/ai-tooling.md). ~/AGENTS.md is now a copy of it, so nothing that already points at
-# the old location breaks. Moved 2026-09-04; before that the real file was ~/AGENTS.md and no agent
-# read it directly — it worked only because every link pointed there.
+# The real file sits at the cross-tool path because that is the one four verified agents read on
+# their own: Goose, Warp, Cline and Kimi Code (sources and the reasoning are in
+# contributing/ai-tooling.md). Moved here from ~/AGENTS.md on 2026-09-04; before that the real file
+# was ~/AGENTS.md and no agent read it directly — it worked only because every link pointed there.
+# The compatibility copy left at the old path was retired 2026-09-09, see also_deploy_to below.
 dest = "~/.agents/AGENTS.md"
 # The canonical file, copied into every agent's own instruction path. A bare string is a vendor path
 # and is only written when that agent's config directory already exists — an absent ~/.codex means
@@ -1231,12 +1231,13 @@ dest = "~/.agents/AGENTS.md"
 # 2026-09-07), so they need no entry here at all and deliberately have none — this list is the
 # agents that cannot be pointed at the canonical path.
 #
-# `always = true` opts a destination out of that test, for a path no vendor owns. ~/AGENTS.md is
-# one: its parent is the home directory, so the conditional test would pass vacuously and record
-# nothing about why, and the flag is what makes "this is not an agent-installed check" explicit to
-# deploy, verify and home.list-claims alike.
+# ~/AGENTS.md was here until 2026-09-09, carrying a `{ path = ..., always = true }` table so it
+# could opt out of the parent-exists test. It is gone because no agent ever read it: it was a
+# compatibility copy kept at the 2026-09-04 move so references to the old location would not break,
+# and the home root is not a path any vendor owns. The table form went with it — it was the only
+# user, it never changed an outcome (that path's parent is the home directory, so the test it opted
+# out of would have passed anyway), and the field reference above never documented it.
 also_deploy_to = [
-  { path = "~/AGENTS.md", always = true },
   "~/.claude/CLAUDE.md",
   "~/.codex/AGENTS.md",
   "~/.copilot/copilot-instructions.md",

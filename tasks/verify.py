@@ -164,15 +164,14 @@ def _mirror_checks() -> list[tuple[str, str, str]]:
     exist are skipped for the same reason the installer skips creating them: that agent isn't
     installed, so its missing mirror is correct.
 
-    An `always` destination is never skipped, matching `deploy.ensure_mirror`: the installer creates
-    that parent rather than reading its absence as a verdict, so a missing file there is a real
-    failure and not a machine without that agent.
+    Every destination is a vendor path, so that test is the whole rule. The `always` opt-out this
+    used to carry went with `~/AGENTS.md` on 2026-09-09, its only user.
     """
     return [
-        (name, "mirror", str(mirror.path))
+        (name, "mirror", str(mirror))
         for name, cfg in util.enabled_packages().items()
         for mirror in deploy.mirror_dests(cfg)
-        if mirror.always or mirror.path.parent.is_dir()
+        if mirror.parent.is_dir()
     ]
 
 
@@ -180,7 +179,7 @@ def _mirror_source(mirror: Path) -> Path | None:
     """The deployed file `mirror` is supposed to be a copy of, or None if nothing declares it."""
     for cfg in util.enabled_packages().values():
         dest = cfg.get("dest")
-        if dest and any(m.path == mirror for m in deploy.mirror_dests(cfg)):
+        if dest and any(m == mirror for m in deploy.mirror_dests(cfg)):
             return Path(dest).expanduser()
     return None
 

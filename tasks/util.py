@@ -199,7 +199,7 @@ class PackageConfig(TypedDict, total=False):
     # a vendor path, written only when its parent directory already exists (that agent is
     # installed). A `{ path = ..., always = true }` table is a path no vendor owns — the cross-tool
     # `~/.agents/AGENTS.md` shape — which is written unconditionally, parent created.
-    also_deploy_to: str | list[str | dict[str, str | bool]]
+    also_deploy_to: str | list[str]
     # gnome-extension
     uuid: str
     ego_id: int

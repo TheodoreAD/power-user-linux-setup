@@ -14,6 +14,7 @@ being guarded is a tar invocation, so mocking the run would test nothing.
 
 import subprocess
 from pathlib import Path
+from typing import cast
 
 import pytest
 from invoke import Context, MockContext, Result
@@ -32,7 +33,7 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config.sh").write_text("echo hi\n")
 
 
-def _cfg(tmp_path, *, also_deploy_to: str | list[str | dict[str, str | bool]] | None = None) -> util.PackageConfig:
+def _cfg(tmp_path, *, also_deploy_to: str | list[str] | None = None) -> util.PackageConfig:
     cfg: util.PackageConfig = {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh"}
     if also_deploy_to is not None:
         cfg["also_deploy_to"] = also_deploy_to
@@ -189,47 +190,27 @@ def test_install_wrapper_script_writes_for_installed_agents_and_skips_the_rest(t
     assert not absent.parent.exists()
 
 
-def test_install_wrapper_script_creates_the_parent_of_an_always_mirror(tmp_path):
-    """`always = true` is for a path no vendor owns, so a missing parent is not a verdict.
+def test_mirror_dests_expands_every_declared_path(tmp_path):
+    """Every destination is a vendor path and therefore conditional. The `always = true` table form
+    that opted one out was retired with `~/AGENTS.md`, its only user, on 2026-09-09."""
+    dests = deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=[str(tmp_path / "a"), str(tmp_path / "b")]))
 
-    `~/.agents/` is created by this repo, so asking "does it exist?" only ever answers a question
-    about PULSE's own earlier run — the absent-agent rule has nothing to detect there.
-    """
-    mirror = tmp_path / "dot-agents" / "AGENTS.md"
-
-    tools._install_wrapper_script(
-        MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=[{"path": str(mirror), "always": True}])
-    )
-
-    assert mirror.read_text() == (tmp_path / "deployed.sh").read_text()
+    assert dests == [tmp_path / "a", tmp_path / "b"]
 
 
-def test_an_always_mirror_does_not_make_its_siblings_unconditional(tmp_path):
-    """The flag is per-destination: a vendor path in the same list keeps the absent-agent rule."""
-    always = tmp_path / "dot-agents" / "AGENTS.md"
-    vendor = tmp_path / "dot-codex" / "AGENTS.md"
-
-    tools._install_wrapper_script(
-        MockContext(),
-        "test-tool",
-        _cfg(tmp_path, also_deploy_to=[{"path": str(always), "always": True}, str(vendor)]),
-    )
-
-    assert always.is_file()
-    assert not vendor.parent.exists()
+def test_mirror_dests_accepts_a_bare_string(tmp_path):
+    """One destination is still the common case — a wrapper script aliased under another name."""
+    assert deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=str(tmp_path / "a"))) == [tmp_path / "a"]
 
 
-def test_mirror_dests_defaults_always_to_false_for_a_bare_string(tmp_path):
-    """A plain string must stay conditional — the flag is opt-in, never inferred."""
-    dests = deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=[str(tmp_path / "a"), {"path": str(tmp_path / "b")}]))
-
-    assert [d.always for d in dests] == [False, False]
-
-
-def test_mirror_dests_rejects_a_table_without_a_path(tmp_path):
-    """A typo'd key must fail loudly rather than silently declaring nothing."""
-    with pytest.raises(TypeError, match="string `path`"):
-        deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=[{"always": True}]))
+def test_mirror_dests_rejects_a_non_string_entry(tmp_path):
+    """Kept from the retired table form's validation: reaching `Path()` with a mapping reports on
+    `os.PathLike` and never names the field that is wrong. The cast is the point — this is TOML a
+    type checker never sees, which is why the runtime check has to exist at all."""
+    bad = cast("object", {"dest": str(tmp_path / "d.sh"), "also_deploy_to": [{"path": "x"}]})
+    cfg = cast("util.PackageConfig", bad)
+    with pytest.raises(TypeError, match="also_deploy_to takes a path string"):
+        deploy.mirror_dests(cfg)
 
 
 def test_a_dest_change_rewrites_the_old_real_file_as_a_mirror(tmp_path, capsys):
@@ -251,7 +232,7 @@ def test_a_dest_change_rewrites_the_old_real_file_as_a_mirror(tmp_path, capsys):
     moved: util.PackageConfig = {
         "dest": str(new),
         "content_file": "config.sh",
-        "also_deploy_to": [{"path": str(old), "always": True}],
+        "also_deploy_to": [str(old)],
     }
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
@@ -294,7 +275,7 @@ def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path,
     moved: util.PackageConfig = {
         "dest": str(new),
         "content_file": "config.sh",
-        "also_deploy_to": [{"path": str(old), "always": True}],
+        "also_deploy_to": [str(old)],
     }
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 

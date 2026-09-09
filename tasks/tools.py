@@ -141,7 +141,7 @@ def _install_wrapper_script(c: Context, name: str, cfg: util.PackageConfig) -> N
         # genuinely right — a false alarm on a healthy machine, which is how a report teaches people
         # to ignore it.
         ok = deploy.classify(managed) == deploy.State.CLEAN and all(
-            deploy.mirror_ok(mirror.path, dest) for mirror in mirrors if mirror.always or mirror.path.parent.is_dir()
+            deploy.mirror_ok(mirror, dest) for mirror in mirrors if mirror.parent.is_dir()
         )
         print(f"[{name}] {util.ok_label(ok)}")
         return
