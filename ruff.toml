@@ -67,6 +67,25 @@ ignore = [
 # above, so this adds no rule family and no dependency.
 "src" = { msg = "import the installed package, not the src/ path to it — they are two different modules at runtime" }
 
+# The same rule one level up: two distributions in one repo — a uv workspace's members, a repo with
+# several pyproject.toml files — import each other through their installed (editable) distributions,
+# never by putting a sibling's source directory on the path at runtime. A path insert is invisible to
+# the resolver, so the import works while the dependency is undeclared: nothing in the lock, nothing
+# in `uv sync`, and a wheel that fails on the machine that installs it rather than on the one that
+# built it.
+#
+# Both spellings a real repo reaches for, and `sys.path` catches every route ruff can see: the
+# attribute (`sys.path.insert`), the aliased module (`import sys as s; s.path.append`), and the
+# `from sys import path` that would otherwise smuggle it past — flagged at the import. Assigning
+# `os.environ["PYTHONPATH"]` and mutating a package's `__path__` are not expressible here and stay a
+# review matter.
+#
+# The exception the rule names is a framework doing it in its own code, and the one every repo here
+# runs is pytest: `prepend`/`append` import modes insert the rootdir permanently (`_pytest/pathlib.py`
+# says so in a comment), which is pytest's contract with itself, not this repo's code doing it.
+"sys.path" = { msg = "import from the installed distribution, never by path — a path insert leaves the dependency undeclared" }
+"site.addsitedir" = { msg = "import from the installed distribution — adding a site directory hides the dependency from the resolver" }
+
 [lint.isort]
 # No known-first-party: ruff auto-detects first-party imports from the project's own layout
 # (src/<pkg> or a flat top-level package) without needing it declared — confirmed empirically
