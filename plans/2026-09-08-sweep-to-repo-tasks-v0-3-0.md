@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-09
+status: landed
+updated: 2026-09-10
 source_repo: github.com-personal/repo-tasks
 source_session: e0a0f092-e55e-4429-95e5-1882a6b773be.jsonl
 source_moment: 2026-09-08T00:00:00Z
@@ -81,22 +81,42 @@ does not have it yet, so the risk was live here.
 links, so the bump will not turn the gate red on this account. The sequencing the checklist asked
 for is withdrawn.
 
-## Open questions
+## Answered by the run (2026-09-10)
 
-[NEEDS CLARIFICATION: does the pin bump want to be its own commit ahead of the config pull? The
-2026-09-05 sweep ran `inv deps.lock --package repo-tasks` first and the rest after, which is the
-ordering `contributing/consumer-sweep.md` now documents — but it landed as one sweep. Splitting it
-would make "the pin moved" and "the configs followed" separately revertible, which matters more now
-that the task-code half is three releases wide rather than a few commits.]
+**The pin does want its own commit, and the sweep wanted three rather than two.** It landed as
+`14d7796` (pin plus the generated `docs/tasks.md`), `846b6c7` (the three pulled configs) and
+`96df342` (the `hadolint-py` exclusion and its lock effect). The lock carried two unrelated concerns
+in one file, so the split needed the scratchpad procedure from the global rules — copy the finished
+file out, reduce it to one concern, gate, commit, restore — and each of the three states was gated
+on its own before its commit. That is what confirms a split actually decomposes rather than merely
+looking tidy.
 
-[NEEDS CLARIFICATION: the `hadolint-py` constraint is a dev-group edit and `configs.ensure-deps` is
-additive — it will not rewrite an entry already present, so this is a hand edit per `configs.diff`'s
-own next-steps output. Confirm that is still true rather than assuming.]
+**`docs/tasks.md` is not separable from the pin, which the plan did not anticipate.** It is
+generated from the live namespace, and v0.3.0 reworded a `configs.diff` docstring, so `test_catalog`
+fails on the pin alone. Any future consumer sweep here bumps the pin and regenerates in one commit.
 
-[NEEDS CLARIFICATION: `repo-tasks`' own `plans/2026-08-25-consumer-transitions.md` still carries an
-`[UNVERIFIED:]` that `configs.require_tool`'s preflight has never fired from a consumer's own CI.
-None of the four items above is a gate binary, so this sweep cannot answer it either — worth
-confirming that reading rather than hoping this run closes it.]
+**The `hadolint-py` reading was right.** `configs.ensure-deps` reported it `already present` and
+left the bare entry alone, exactly as the additive behaviour predicts; the constraint had to be
+typed by hand and `configs.diff`'s next-steps output is what says so. The reason behind the manifest
+entry, worth carrying because it is invisible from this side: 2.15.1.2's macOS universal2 wheel is a
+corrupt zip as published, and Linux is unaffected — so nothing in this repo's own gate could ever
+have caught it, and the constraint protects whoever resolves this lock on a Mac.
+
+**The `configs.require_tool` reading was also right, and this run did not close it.** None of the
+four items was a gate binary, so `repo-tasks`' open item about that preflight never firing from a
+consumer's CI stands untouched. Reported back rather than assumed.
+
+**The falsified link-check prediction held on the inside too.** The plan measured it from outside
+with the global v0.3.0 tool; `inv docs.link-check` run here after the bump, with the strict version
+actually installed, reports nothing.
+
+## Verification
+
+- `inv configs.diff` — `up to date`, so all four items are closed.
+- `inv quality.precommit` — PASS, 16 steps, run four times: once per commit state and once on the
+  finished tree.
+- `inv docs.link-check` — no output, exit 0.
+- `uv.lock` resolves `repo-tasks` at `0.3.0` (`46d28604`) and `hadolint-py` at `2.14.0.1`.
 
 ## Recommended direction
 
