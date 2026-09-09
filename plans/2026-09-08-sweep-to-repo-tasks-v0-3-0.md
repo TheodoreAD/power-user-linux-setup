@@ -140,3 +140,26 @@ is the step. That correction is also from the 2026-09-05 sweep.
 **Do not start from `repo-tasks`' sweep checklist.** Measured 2026-09-08, it named one of these four
 items; two more were found by reading source that morning and two only by running `configs.diff`
 against the installed tool. The command is the list.
+
+## Migrated to
+
+- [`contributing/repo-family-architecture.md`](../contributing/repo-family-architecture.md), "Taking
+  a `repo-tasks` bump here" — the one finding with no other home: the generated task index is not
+  separable from the pin, and why this repo is the only consumer exposed to it.
+- The store, filed for `repo-tasks` as `2026-09-10-power-user-linux-setup-swept-to-v0-3-0.md` — the
+  result reported back to `plans/2026-08-25-consumer-transitions.md`, which was waiting on this
+  repo, plus the two sweep-doc questions that are that repo's to answer.
+- The commits themselves, `14d7796`/`846b6c7`/`96df342`, which carry the reasoning for each of the
+  three concerns the lock's diff mixed together.
+
+Deliberately not migrated:
+
+- **The sweep sequence and the `configs.diff`-reads-the-pinned-tool pitfall.** Both are owned and
+  kept current by `repo-tasks`' `contributing/consumer-sweep.md`; a second copy here would be a
+  diverging authority, which the retirement rule's sibling-repo clause exists to prevent.
+- **The four-item drift table.** A snapshot of a moving target — that was the plan's own finding
+  about itself, and `inv configs.diff` regenerates the real answer in one command.
+- **The staged-`ci.yml` pitfall.** It described one tree at one moment in 2026-09-08 and had already
+  cleared by the time the sweep ran.
+- **The three-way commit split and its scratchpad procedure.** Already the global rule in
+  `~/.agents/AGENTS.md` under "Committing multi-part work"; this run was an instance, not a source.

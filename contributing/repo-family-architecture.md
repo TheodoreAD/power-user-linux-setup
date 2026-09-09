@@ -44,6 +44,25 @@ it composes `dev_env.setup` + `configs.pull` + `repo_tasks.stamp` internally, an
 is free to change without anything outside `repo-tasks` (a `scaffoldapy` `_tasks` hook, a human)
 noticing.
 
+### Taking a `repo-tasks` bump here: the pin and the generated docs index move together
+
+The sweep sequence itself — pin first, then `configs.pull`, because `configs.diff` run before the
+bump reads the _pinned_ `repo_tasks` and compares against the configs as they stood at the old
+commit — belongs to `repo-tasks` and is documented in its `contributing/consumer-sweep.md`. Don't
+duplicate it here; the one thing that page cannot know is below.
+
+**`docs/tasks.md` is generated from the live namespace, so it is not separable from the pin.** A
+bump that reworded any published task's docstring makes `test_catalog` fail on the pin commit alone
+— which reads as a broken bump rather than as a missing `inv catalog.render-tasks`. Confirmed
+2026-09-10 taking v0.3.0: a single reworded `configs.diff` docstring, one line of diff, one red
+test. Bump and regenerate in the same commit.
+
+This repo is the only consumer with that exposure, because it is the only one that builds its own
+collection rather than re-exporting `repo_tasks.ns` wholesale — and it is also the only one that
+pins in its own lock, so it is the only one where a task-code change arrives as a reviewable commit
+at all. The other two consumers take the global `uv tool` install and lag on pulled config files
+only.
+
 ### Task modules are stdlib + `invoke` only
 
 Every `repo_tasks` module and every PULSE `tasks/*.py` module imports stdlib plus `invoke` only —
