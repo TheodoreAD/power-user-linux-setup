@@ -33,7 +33,7 @@ dev = [
   "typing-extensions",
   "pytest-cov",
   "zizmor",
-  "hadolint-py",
+  "hadolint-py!=2.15.1.2",
   "pytest-socket",
   "pytest-timeout",
 ]
