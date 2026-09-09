@@ -967,6 +967,60 @@ are absolute and need no baseline) and only `"down"` ones skipped as `(new)`. **
 quoted from a run whose baseline predates the pattern is affected, in both directions** — re-read
 rather than re-trusted if an older sample's score is ever compared against a newer one.
 
+### Sample 18 — `power-user-linux-setup`, 297 calls, and the row where the split finally mattered
+
+`audit.py --session b494b3ef --until 2026-09-09T23:56:05+03:00 --compare 2026-09-06-zero-on-count.json`,
+instrument at **`9ae8772`**, `setopt` answering `pipefail`. **12/13.** Session start
+`2026-09-08T09:54:52.343Z`, transcript `b494b3ef-0114-4463-b5c6-c73187080e11.jsonl`. Thirty-eight
+hours across two days, auto mode active throughout: probing whether an editable `uv tool` install
+survives an upgrade, building `install.sh` and its CI, then retiring `~/AGENTS.md` end to end.
+
+| tag                     |    rate | vs baseline                   |
+| ----------------------- | ------: | ----------------------------- |
+| `chain`                 |     40% | −7pp, OK                      |
+| **`head/tail`**         | **24%** | −5pp, OK — **0 actually cut** |
+| **`exit-masked`**       | **17%** | **27 gate, 24 listing**       |
+| `search\|head`          |      7% | —                             |
+| `chain5`                |      4% | —                             |
+| `git-mutating-in-chain` |      3% | −3pp, OK                      |
+| **`echo-exit`**         |   **3** | **MISS**                      |
+| `heredoc`               |      2% | −8pp, OK                      |
+| `cat-view`              |      1% | −0pp, OK                      |
+| `sed-n`                 |      0% | −5pp, OK                      |
+| `cd-own-repo`           |       0 | OK                            |
+| `git-C-own-repo`        |       0 | OK                            |
+| `git-C-mutating`        |       0 | OK                            |
+| `rg-replace-bundle`     |       0 | OK                            |
+
+**This is the first row where `exit-masked`'s gate half is large, and it is what the split was added
+to answer.** Sample 17 had 0 gate against 12 listing and the question closed itself; here **27 of 51
+masked calls wrapped a gate or a suite**, against 9 messages telling the user the gate was green.
+Every one of those greens came from `inv quality.precommit 2>&1 | tail -N`. `pipefail` was in force,
+so the pipeline reported the gate's own status and all nine held — but this row is the one where
+that guarantee did work rather than being belt-and-braces over an unpiped run. The corpus now has
+both shapes at a non-trivial rate: 17 says the habit can be harmless because the gates were unpiped,
+18 says it can be harmless because the shell option caught it, and only the second is a guarantee
+that travels — the same command in CI, in a container, or on a machine without that `zshenv` snippet
+loses the status outright.
+
+**`0 actually cut` again, and at nearly double sample 17's volume** — 71 `head`/`tail` calls, none
+of them exiting 141 or 120. Two rows now, 108 calls between them, zero bytes lost. That is still not
+a finding about the corpus's older rows, which cannot be re-scored without their boundaries, but the
+argument that the rate is a proxy for data loss is now carrying two consecutive refutations at the
+only two measurements ever taken.
+
+**The single miss is `echo-exit`, three calls**, each an `echo "exit=$?"` appended to a probe whose
+status the tool already reports — twice while verifying a `curl` and a `diff` in the same breath as
+reading their output. Small, and worth recording precisely because the rest of the row is clean: a
+session that held `cd-own-repo`, `git-C-own-repo`, `git-C-mutating`, `sed-n` and `rg-replace` all at
+zero across 297 calls still reached for the one shape that adds a chain to learn what the harness
+prints anyway.
+
+**Chain at 40% is the highest in several rows and is not a regression to explain away.** Two-thirds
+of it is `git add … && git commit -m …`, which this session did fifteen times, and the corpus has
+argued before that the pathspec-commit form the global rules prefer is itself a chain by the
+instrument's definition. Worth separating in a future instrument change rather than in prose here.
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
