@@ -357,6 +357,14 @@ up retroactively — that's a stale-snapshot timing issue, not a reason to add m
 in. If `pytest`/`python` aren't resolving from `.venv/bin` in an agent session, the fix is a new
 session, not `source .venv/bin/activate` workarounds.
 
+**That gotcha is narrower than "dotfiles are not re-sourced", and the difference matters when you
+deploy one.** The Bash tool runs a bare `zsh -c` that first sources the snapshot, so `~/.zshrc` —
+which is where direnv's hook lives — is genuinely read once per session and an edit to it reaches
+nothing until the next one. `~/.zshenv` is read on **every** call regardless, so a `zsh.configure`
+snippet deployed mid-session is live on the next command and waiting for a restart waits for
+nothing. `contributing/session-environment.md` has the measured table and the `setopt login` trap
+that makes the shell look like something it is not.
+
 ## Code quality
 
 Before considering a change done, run:

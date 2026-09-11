@@ -35,6 +35,48 @@ launcher — dock-started, non-Chromium — has them too.
 **None of this holds without zsh as the login shell**, which is why that is stated as a prerequisite
 rather than left as a preference. See `docs/wsl.md`, "Assumptions this repo makes about WSL".
 
+## A deployed `zshenv` snippet reaches a running agent session, with no restart
+
+The consequence of the property above, stated because the opposite is the natural guess and it costs
+a session: **an agent's next Bash call picks up a `zshenv` change immediately.** Each call is a
+fresh `zsh -c`, and that reads `~/.zshenv` every time, so a session that stops and waits to be
+restarted waits for nothing. Observed 2026-09-05 deploying `export REPO_TASKS_RUN_REPORT=1` with
+`inv zsh.configure` and reading it back with `env` in the same session; a written report from that
+same work had predicted that "existing agent sessions keep the old environment until they're
+restarted", which is wrong in the expensive direction.
+
+**The wrong intuition is easy to reach because it is right about a neighbouring case.** An `export`
+typed _inside_ a Bash call dies with that call — which is why the global rules tell you to prefix
+`SSH_AUTH_SOCK` per call rather than export it. Both facts come from the same mechanism, a fresh
+shell per call, and they point in opposite directions: **what the shell sources every time persists;
+what a call sets does not.**
+
+### Which of the three files actually reaches a call
+
+Measured 2026-09-11 with `ZDOTDIR` pointed at a scratch directory holding one marker per startup
+file, so nothing real was touched:
+
+| invocation                         | `.zshenv` | `.zshrc` | `.zprofile` |
+| ---------------------------------- | --------- | -------- | ----------- |
+| `zsh -c` — what the Bash tool runs | **yes**   | no       | no          |
+| `zsh -l -c`                        | yes       | no       | **yes**     |
+| `zsh -i -c`                        | yes       | **yes**  | no          |
+
+So `zshenv` is the only one of the three with this property, and a snippet declared on the wrong
+field silently never reaches a running session — a symptom identical to the mistaken prediction
+above.
+
+[PITFALL: **`setopt` reports `login` inside an agent's Bash call, and concluding from that that
+`~/.zprofile` is re-read is wrong.** The harness invokes a bare `zsh -c` — no `-l`, no `-i` — that
+first sources a per-session shell snapshot, and that snapshot ends with a literal `setopt login`
+restoring the option state of the interactive shell it was captured from. So the flag is inherited
+state, not evidence about this shell's startup. The same confusion runs one level deeper: variables
+that only `~/.zshrc` sets (`ZSH`, `DIRENV_LOG_FORMAT`) and ones only `~/.zprofile` sets (the
+JetBrains Toolbox `PATH` entry) _are_ visible in an agent's environment, because the snapshot
+carries their values — while an **edit** to either file reaches nothing until a new session is
+started. Read a present value as "captured once", never as "read every call"; only `zshenv` is the
+second thing.]
+
 ## Why `~/.config/environment.d/` is not used
 
 Not an oversight, and not a rejection on taste. `man 5 environment.d` describes the systemd user
