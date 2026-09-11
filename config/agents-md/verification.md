@@ -17,8 +17,11 @@ composition rule:
 
 - **A non-zero exit after `| head` means `head` cut something off**, not that the command failed —
   141 for a `git log` killed by SIGPIPE, 1 for an `rg` with more matches than shown, 120 for a
-  Python script cut mid-write. That is the data loss the `head`/`tail` rule has been describing in
-  prose, now reported rather than argued. Count first (`rg -c`, `wc -l`) or run it whole.
+  Python script cut mid-write, and **141 again for a Python script that handles SIGPIPE**, which
+  every script under `~/.agents/skills/*/scripts/` now does. 120 has not gone anywhere: it is still
+  what any _other_ Python program does when cut, `inv` included. Four codes, one meaning — so read
+  the fact rather than the number. That is the data loss the `head`/`tail` rule has been describing
+  in prose, now reported rather than argued. Count first (`rg -c`, `wc -l`) or run it whole.
 - **`| rg` or `| grep` as the last stage returns 1 when nothing matched**, which is an answer and
   not a failure.
 

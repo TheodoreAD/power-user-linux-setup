@@ -1180,8 +1180,32 @@ re-read per call, so the change took effect in a session whose snapshot predated
 The bottom four are the cost, and they are why the rewrite is a fact rather than a prohibition: a
 `| head` now exits non-zero **exactly when it cut something off**, which is the data-loss event the
 rule has been describing in prose since it was written. A session that reads 141 as a broken command
-and retries is the failure this evidence page exists to prevent, so the replacement text names all
-three codes (141, 1, 120) and what each means.
+and retries is the failure this evidence page exists to prevent, so the replacement text names the
+codes and what each means.
+
+**The 120 clause went stale on 2026-09-08, for the family an agent session runs most.** Every entry
+point under `agent-skills`' `skills/*/scripts/` now installs
+`signal.signal(signal.SIGPIPE, signal.SIG_DFL)` in its `__main__` guard — 10 of 10 confirmed in the
+installed tree on 2026-09-11 — so a cut `plans.py`, `harvest.py`, `audit.py` or `library.py` dies on
+the signal and returns **141**, not 120. Measured on `audit.py --days 30 --samples 40`, whose output
+exceeds the 64 KB pipe buffer:
+
+| run                        | exit    | stderr                                                         |
+| -------------------------- | ------- | -------------------------------------------------------------- |
+| guard bypassed (as before) | **120** | `Exception ignored while flushing sys.stdout: BrokenPipeError` |
+| with the guard (now)       | **141** | clean                                                          |
+
+[PITFALL: **120 could not simply be swapped for 141, which is why the clause names four codes rather
+than three.** 120 is still what any _other_ Python program does when cut — which is most Python on
+this machine, `inv` included. Two of the nine real truncation events in the 30 days to 2026-09-08
+were `inv quality.precommit 2>&1 | head -20` at exit 120. So the honest edit adds the guarded case
+rather than replacing the general one, and the clause now says outright that the number is not the
+thing to read: four codes, one meaning.]
+
+The measurement worth keeping alongside it, since it is what the whole passage is about: over those
+same 30 days, **9,224 Bash calls were tagged `head`/`tail` and 9 of them actually cut output** —
+0.10%. The cost of the habit is the re-run and the masked exit code, not lost bytes. Recorded in
+`agent-skills`' `skills/session-bash-audit/references/research.md`.
 
 **The rate did not move, first sample 2026-09-05.** A 233-call session running entirely after the
 deploy scored `head/tail` at 28%, a point _above_ the post-deploy baseline, and missed on `chain`,
