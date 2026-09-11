@@ -348,3 +348,26 @@ half is covered, and a wrapper is one more thing that can drift from what `[proj
 6. **Answer the `agent-skills` question**, which decides whether the measured need was sixteen
    reaches or four. It does not change anything already built.
 7. **Not a self-contained wheel, and never the global invoke config.**
+
+## Migrated to
+
+- [`contributing/spowse-shim.md`](../contributing/spowse-shim.md), new — everything with no other
+  home: the measurement showing the portability half was already done, the editable-anchor probe
+  table across every `uv tool upgrade` shape, the moved-checkout failure and what
+  `_require_checkout` can and cannot reach, the name decision including why `pulse` was withdrawn,
+  and the three alternatives. `AGENTS.md`'s "Two entry points" section now points at it.
+- The `agent-skills` question about `skill-authoring`'s last step is already filed in that repo as
+  `2026-09-08-skill-authoring-reinstall-step-is-contested.md`, and the new page says the measured
+  rate should not be cited as this tool's justification until it is answered.
+
+Deliberately not migrated:
+
+- **The production/development boundary as a rule.** `AGENTS.md`'s "Two entry points" already
+  carries what a contributor adding a task needs, including the `allowlist` split as its worked
+  example. The new page keeps only why a collection-level filter could not express it.
+- **The `~/AGENTS.md` `inv -r` correction.** Landed in the deployed rules themselves as `199ed92`,
+  including both traps that look like the shortcut; the rule is the artifact, not a record of it.
+- **What `spowse --list` carries.** `docs/tasks.md` says it, and `tests/unit/test_cli.py` pins it,
+  so a third copy would be the one that goes stale.
+- **The what-landed commit table and the end-to-end verification transcript.** `git log` and the
+  gate are where those live.

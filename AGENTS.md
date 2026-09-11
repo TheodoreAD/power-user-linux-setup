@@ -169,6 +169,13 @@ at the tool's own site-packages, where neither exists, and every read comes back
 against a checkout you can `git pull` instead of a frozen copy. `setup.toml`'s `editable` field and
 `tests/unit/test_python.py` both exist for this.
 
+**Full writeup is [`contributing/spowse-shim.md`](contributing/spowse-shim.md)** — the measurement
+that showed the portability half was already done before anything was built, the probe table proving
+the editable anchor survives every `uv tool upgrade` shape (and the one failure that does bite, a
+moved checkout, which reports as `ModuleNotFoundError: No module named 'tasks'`), why the name is
+not `pulse`, and the two alternatives that lose. Read it before re-deriving this design or
+"simplifying" the per-task marker into a list.
+
 ## Post-install verification (`inv verify.all`)
 
 `tasks/verify.py` runs as the last step of `inv setup`'s (and `inv wsl.install`'s) `packages` phase
