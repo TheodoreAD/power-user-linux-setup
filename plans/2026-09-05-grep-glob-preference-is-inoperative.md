@@ -89,11 +89,11 @@ making, because the mode is being chosen to work around it.]
 
 ## Carried here 2026-09-12: the harness `Grep`/`Glob` hidden-path question
 
-`plans/2026-09-08-hidden-by-default-for-repo-searches.md` landed its reword scoped to the **Bash**
-spellings of `rg` and `fd`, because whether the harness's own `Grep`/`Glob` skip dot-directories on
-descent the same way could not be measured: both sessions that reached the question ran in auto
-mode, where `Grep` returns `No such tool available` and `Glob` is not offered either. Confirmed a
-third time 2026-09-12, from this session.
+The now-retired `plans/2026-09-08-hidden-by-default-for-repo-searches.md` landed its reword scoped
+to the **Bash** spellings of `rg` and `fd`, because whether the harness's own `Grep`/`Glob` skip
+dot-directories on descent the same way could not be measured: both sessions that reached the
+question ran in auto mode, where `Grep` returns `No such tool available` and `Glob` is not offered
+either. Confirmed a third time 2026-09-12, from this session.
 
 It lands here rather than in a new file because this plan owns the mode question the measurement is
 blocked on, and the blocker is the same one three times over.

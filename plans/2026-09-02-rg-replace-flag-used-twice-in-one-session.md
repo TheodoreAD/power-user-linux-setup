@@ -327,10 +327,11 @@ the tally.]
 ate `ln` as the replacement string, so the matched text was rewritten to `ln` and the file list that
 `-l` was asked for never appeared.
 
-It was filed as a `[DEFERRED:]` inside `plans/2026-09-08-hidden-by-default-for-repo-searches.md`,
-whose author noted it belonged to this clause rather than to that plan and kept it only so it would
-not be lost. Moved here on that plan's retirement, which is the mechanism working as intended: a
-deferred item blocks deletion until it has a home that stays.
+It was filed as a `[DEFERRED:]` inside the now-retired
+`plans/2026-09-08-hidden-by-default-for-repo-searches.md`, whose author noted it belonged to this
+clause rather than to that plan and kept it only so it would not be lost. Moved here on that plan's
+retirement, which is the mechanism working as intended: a deferred item blocks deletion until it has
+a home that stays.
 
 **It changes nothing about the tally's shape and confirms the detection signature.** The
 `~/.agents/AGENTS.md` table predicts this exact row (`rg -rln` → `-r` eats `ln` → rewritten lines
