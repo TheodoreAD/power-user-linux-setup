@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-12
 ---
 
