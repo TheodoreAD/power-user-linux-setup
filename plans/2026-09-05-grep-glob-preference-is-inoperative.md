@@ -87,6 +87,30 @@ to solve the web searches and retrievals, which now go through the model classif
 it is known whether that is denials, latency, or prompts, no recommendation about the mode is worth
 making, because the mode is being chosen to work around it.]
 
+## Carried here 2026-09-12: the harness `Grep`/`Glob` hidden-path question
+
+`plans/2026-09-08-hidden-by-default-for-repo-searches.md` landed its reword scoped to the **Bash**
+spellings of `rg` and `fd`, because whether the harness's own `Grep`/`Glob` skip dot-directories on
+descent the same way could not be measured: both sessions that reached the question ran in auto
+mode, where `Grep` returns `No such tool available` and `Glob` is not offered either. Confirmed a
+third time 2026-09-12, from this session.
+
+It lands here rather than in a new file because this plan owns the mode question the measurement is
+blocked on, and the blocker is the same one three times over.
+
+**The 96% figure above changes what the question is worth.** If auto governs 96% of Bash calls, then
+`Grep`/`Glob` are absent from almost every call that would exercise them, and a divergence between
+the harness tools and the Bash spellings is a defect in the 4% rather than in the common case. That
+is an argument for answering it cheaply and not for prioritising it: four calls from an
+`acceptEdits` session settle it, and until someone is in one there is nothing to run.
+
+[PITFALL: **the reword is the third rule now written against a Bash spelling while the harness asks
+for Bash anyway.** The `fd` clause, the `rg -r` clause and now the hidden-path clause all describe
+how to spell a Bash search — which is the one kind of wording auto mode's reminder does _not_ fight,
+since it asks for Bash and these say how to type it. Worth stating explicitly, because the routing
+table's "the mode, not the wording" verdict reads as covering all three and covers none of them:
+what it rules out is a rule telling the agent to reach for the harness tool instead.]
+
 ## Recommended direction
 
 Re-run every adherence figure in this cluster with per-call mode attribution before drawing anything

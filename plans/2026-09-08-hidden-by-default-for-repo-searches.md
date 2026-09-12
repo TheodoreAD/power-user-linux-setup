@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-08
+status: landed
+updated: 2026-09-12
 source_repo: github.com-personal/repo-tasks
 source_session: e0a0f092-e55e-4429-95e5-1882a6b773be.jsonl
 source_moment: 2026-09-08T00:00:00Z
@@ -115,39 +115,27 @@ a known-ignored file and is badly wrong as a default: `fd -t f -HI .` returns **
 against 144 for `-H`, because it disables `.gitignore` — the very mechanism this proposal wants to
 rely on. Any reword must keep `-H` and `-I` clearly apart; today they appear as a pair.]
 
-## Open questions
+## Answered (2026-09-12)
 
-[NEEDS CLARIFICATION: **rule or configuration?** `rg` has a config-file lever and `fd` has none,
-which makes a uniform mechanism impossible. `RIPGREP_CONFIG_PATH` (currently **unset** on this
-machine) points at a file of one argument per line, so `--hidden` and `--glob=!.git` could become
-machine-wide defaults. `fd` has no config file at all — only a global ignore file at
-`~/.config/fd/ignore` and no way to default `-H`. So the options are: teach both in `~/AGENTS.md`
-and configure neither; configure `rg` and teach `fd`, accepting that the two are set up differently;
-or an alias, which agents do not get in a non-interactive shell.]
+**Rule, not configuration — and the two questions collapse into one answer.** `RIPGREP_CONFIG_PATH`
+is parked rather than refused. It fails the least-surprise rule this corpus already states: a config
+file changes `rg` for the human, for every script on the machine and for every agent, invisibly, so
+`rg foo` behaves differently here than in its own documentation with nothing at the call site saying
+so — the same objection this corpus makes to harness hooks firing behind the agent's back. That `fd`
+has no config lever at all, so no uniform mechanism was ever available, only confirms the choice; it
+was not what decided it. Reconsider if the reword is measured and does not hold.
 
-[NEEDS CLARIFICATION: **does configuring `rg` violate this corpus's own least-surprise rule?**
-`~/AGENTS.md` says that when you change what a tool already does, the documented behaviour stays the
-default and the departure is opt-in — most sharply when other consumers inherit it. A
-`RIPGREP_CONFIG_PATH` file changes `rg` for the human, for every script on the machine, and for
-every agent, invisibly: a command that reads `rg foo` behaves differently here than in its own
-documentation, and nothing at the call site says so. That is the same objection this corpus makes to
-harness hooks that fire behind the agent's back. Against that: it is the only lever that cannot be
-forgotten, and this failure is specifically one of forgetting.]
+**`--glob '!.git'` unanchored is correct, re-measured on two repos 2026-09-12.** All six `.github/`
+files survive it and nothing under `.git/` leaks, because the glob matches the path component rather
+than a prefix. `'!.git/'` gives an identical count, so the trailing slash is optional rather than
+load-bearing — worth knowing only so nobody adds it thinking it is a fix.
 
-[NEEDS CLARIFICATION: is `--glob '!.git'` even the right spelling for the `rg` half, or should it be
-`--glob '!.git/'`? And does the exclusion need to be anchored, so a legitimately-tracked file named
-`.github/...` is not caught by a sloppy pattern? Cheap to settle by measurement — the table above
-used `--glob '!.git'` and produced exactly the 14 wanted files with the six `.github/workflows/`
-entries intact, so the unanchored form is correct here, but that is one repo.]
-
-[NEEDS CLARIFICATION: does this want to extend to the harness's own `Grep`/`Glob` tools, which are
-the preferred spelling in non-auto mode? They have their own hidden-file behaviour, and a rule that
-makes Bash `rg` see `.github` while `Grep` does not is worse than either answer alone. **Not
-measured, and not measurable from the session that raised this**: it ran in auto mode, where `Grep`
-is withdrawn (`No such tool available`) and `Glob` was not offered either, so neither could be
-probed. Whoever picks this up should run the same descent-versus-named pair through both tools from
-an ordinary session — it is four calls — before deciding whether the reword can speak for the
-harness tools too, or has to be scoped to the Bash spellings.]
+**The `Grep`/`Glob` half is handed to
+[`2026-09-05-grep-glob-preference-is-inoperative.md`](2026-09-05-grep-glob-preference-is-inoperative.md)**,
+which owns the mode question that blocks it. It was unmeasurable for the third time from this
+session, for the same reason as the first two: auto mode withdraws both tools. That plan's own 96%
+figure also resizes the question — the harness tools are absent from almost every call that would
+exercise them — so the reword ships scoped to the Bash spellings and says so in as many words.
 
 ## Recommended direction
 
@@ -177,10 +165,32 @@ and the harder one to undo, it changes behaviour for the human as well as the ag
 plan's whole sequencing argument is that a wording change and a mechanism change made together
 cannot be told apart afterwards.
 
-[DEFERRED: a second, unrelated instance from the same session, filed here only so it is not lost —
-`rg -rln --hidden '<pattern>' <path>` was typed while searching for this very plan, and `-r` ate
-`ln` as the replacement string, printing matches with the text rewritten to "ln" and no file list.
-The `~/AGENTS.md` `rg -r` table predicts this exactly, including the detection signature that caught
-it ("your own flag letters appearing where the matched text should be"). It belongs to that clause
-and to `agent-skills`' `2026-09-05-rg-replace-counter-matches-its-own-prose.md`, not to this plan —
-but it is a live occurrence with a transcript, and those are what that clause is judged on.]
+The `rg -rln` instance this plan was carrying — unrelated to hidden paths, kept here only so it
+would not be lost — has been moved to
+[`2026-09-02-rg-replace-flag-used-twice-in-one-session.md`](2026-09-02-rg-replace-flag-used-twice-in-one-session.md)
+as its tenth occurrence, which is the clause that owns it.
+
+## Migrated to
+
+- `config/agents-md/bash.md`, the `fd` clause — `-H` promoted from a reactive fix to the default
+  posture, `-H` and `-I` separated with their measured costs, `rg`'s non-optional `.git` exclusion
+  stated because a single sentence covering both tools would be wrong about one, and the
+  descent-versus-named remedy taught first because it costs no flag. Deployed with
+  `inv deploy.all --name agents-md`.
+- [`contributing/global-agents-md.md`](../contributing/global-agents-md.md), "Viewing, searching, or
+  editing files" → "Hidden paths" — the user's own words, the two-repo measurement table, the
+  `-I`-is-the-dangerous-one pitfall, the parked `RIPGREP_CONFIG_PATH` decision with its reasoning,
+  and the unmeasurability pitfall that rules out the audit-row-first sequencing.
+- [`2026-09-05-grep-glob-preference-is-inoperative.md`](2026-09-05-grep-glob-preference-is-inoperative.md)
+  — the harness `Grep`/`Glob` question, which that plan's mode blocker owns and whose 96% figure
+  resizes.
+- [`2026-09-02-rg-replace-flag-used-twice-in-one-session.md`](2026-09-02-rg-replace-flag-used-twice-in-one-session.md)
+  — the `rg -rln` instance this plan was only holding, as its tenth occurrence.
+
+Deliberately not migrated:
+
+- **The sibling relationship with the `fd`-clause-adherence plan.** That plan is still open and will
+  be read on its own; restating the pairing in a page it does not own would be a second authority on
+  one question.
+- **The `.github` trigger incident in full.** One sentence naming the shape — an empty result reads
+  like "already clean" — is what a reader needs; the repo it happened in is incidental.

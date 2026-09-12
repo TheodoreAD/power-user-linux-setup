@@ -320,3 +320,20 @@ to matter here: **2 in 212 calls**, against roughly 2,590 `rg` invocations a wee
 1.2%, so this session ran the trap at close to the machine's own rate rather than unusually hot —
 which is the context an occurrence count alone cannot give, and the reason to prefer the row over
 the tally.]
+
+## A tenth, 2026-09-08 — carried here from the hidden-paths plan on its retirement
+
+`rg -rln --hidden '<pattern>' <path>`, typed while searching for the hidden-paths plan itself. `-r`
+ate `ln` as the replacement string, so the matched text was rewritten to `ln` and the file list that
+`-l` was asked for never appeared.
+
+It was filed as a `[DEFERRED:]` inside `plans/2026-09-08-hidden-by-default-for-repo-searches.md`,
+whose author noted it belonged to this clause rather than to that plan and kept it only so it would
+not be lost. Moved here on that plan's retirement, which is the mechanism working as intended: a
+deferred item blocks deletion until it has a home that stays.
+
+**It changes nothing about the tally's shape and confirms the detection signature.** The
+`~/.agents/AGENTS.md` table predicts this exact row (`rg -rln` → `-r` eats `ln` → rewritten lines
+and no line numbers), and the session caught it by the documented tell — its own flag letters
+appearing where the matched text should be. So the wording continues to describe the failure
+accurately and continues not to prevent it, which is the finding this plan has been accumulating.
