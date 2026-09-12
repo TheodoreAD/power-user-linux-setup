@@ -95,26 +95,34 @@ skipping it schedules a red run that someone else reads.
 
 ### Writing the commit command
 
-**Keep backticks, `$` and `"` out of the message.** All three are live inside a double-quoted shell
-argument. Backticks and `$` make the shell _run_ or substitute something before git sees it. A
-double quote **ends** the argument, so the rest of your paragraph becomes shell words. What happens
-then is decided by punctuation you were not thinking about while writing prose — all three observed
-within one day: a commit landing **truncated** mid-sentence, a command **refusing to run at all**,
-and a pathspec silently becoming message text at exit 0 with no diagnostic. Single-quoting is not
-the escape: 73% of commit messages here contain an apostrophe against 25% containing a double quote,
-so it trades a rare failure for a frequent one. Commit messages are prose, not Markdown — name a
-command in plain words and nothing breaks. The tell is an error quoting **your own sentence** back
-at you. Check `git log -1` before retrying, since whether anything was committed differs per case.
-Same hazard in any other double-quoted body: `gh pr create --body`, `gh issue comment`.
+The command has one shape:
 
-**Keep the message where the user can read it: one inline `-m`, in its own call.** The approval
-prompt shows the _command_, and the message is what the user reads to decide, so anything displacing
-it from the prompt defeats the rule while looking like compliance. Three shapes do it, and each has
-been corrected here in turn: `git commit -F <file>` hides it behind a path, a chain buries it
-mid-command, and a series of `-m` flags runs them together into one unbroken line in the prompt even
-though git paragraphs them correctly in the finished commit. Put the blank lines inside one quoted
-argument instead. Reach for `-F` only when the message genuinely must contain a backtick; pathspec
-works either way.
+```shell
+git commit -m "subject line
+
+Body: what the change is for, what it beat, what it cost. Real blank lines,
+inside this one argument.
+
+Co-Authored-By: ..." -- path/one path/two
+```
+
+Its parts, in order, and each is load-bearing. **Its own call**, with nothing chained before or
+after it. **One `-m`**, never a series: git paragraphs several correctly, and the approval prompt
+runs them into one unbroken line. **One double-quoted argument** carrying the whole message. **The
+pathspec last**, after `--`.
+
+**The message is prose**, so name a command, flag or file in plain words rather than in backticks. A
+backtick or a `$` makes the shell run or substitute something before git sees it, and a `"` ends the
+argument, so the rest of your paragraph becomes shell words. Apostrophes are safe and single quotes
+are not the escape — they end the argument on the first one, and 73% of messages here have one.
+
+All of it serves one thing: the approval prompt shows the **command**, so the message is what the
+user reads to decide. `-F <file>` hides it behind a path, which is why that is the escape hatch for
+a message that genuinely must carry a backtick and nothing else.
+
+When it goes wrong the error quotes **your own sentence** back at you. Run `git log -1` before
+retrying, since whether anything was committed differs per case. Same shape, same reasons, for
+`gh pr create --body` and `gh issue comment`.
 
 ### Committing multi-part work
 

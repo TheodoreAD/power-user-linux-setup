@@ -1831,6 +1831,39 @@ as a queued next step. The full sweep and the two ways of miscounting it are rec
 are separate moments, and the message half had grown to four times the gate half — three admitted
 clauses, each from its own occurrence, stacked under a heading naming only the first moment.
 
+### Converted to a recipe, 2026-09-12 — the first rule whose form was chosen by criterion 4
+
+The criterion-4 audit classified this rule's failure as **wrong-shaped output**: the agent complies
+and writes a message, and the message then lands truncated, or displaced out of the approval prompt
+behind `-F`, a chain, or a series of `-m` flags. That is the row where a prohibition tests worse
+than no guidance at all, and this rule was almost entirely prohibitions — keep three characters out,
+don't use `-F`, don't chain, don't stack `-m` — accumulated one per correction across the three
+clauses below.
+
+The rule's own evidence had already recorded the predicted outcome twice, which is what made the
+classification easy: a session _"had the rule in context, followed its letter, and produced the
+outcome it forbids"_, and **_"satisfying a rule's stated test is not evidence of meeting its
+purpose."_** A prohibition list is exactly a stated test.
+
+It now opens with the command and names its parts in order — own call, one `-m`, one double-quoted
+argument, pathspec last — with the reasons attached to the parts rather than standing as separate
+bans. 310 → 228 words, and `git.md` 2,556 → 2,474.
+
+[PITFALL: **a banned-character list cannot be completed, and the session that converted this rule
+demonstrated it within the hour.** Writing a commit for the audit itself, it single-quoted the
+message, which contained `today's` — `(eval):15: unmatched '`, nothing committed. Not a fourth
+character to add: the rule already says single-quoting is not the escape and gives the 73% count.
+What failed is that a reader scanning a list of forbidden characters is not reading the shape of the
+argument, and the quote style is part of the shape. The recipe states it as a part; the prohibition
+list mentioned it in passing as a rejected alternative.]
+
+[UNVERIFIED: whether this moves `cut-message`, which stands at **6** in
+`~/.local/state/session-bash-audit/2026-09-12.json` — a baseline taken the same day, before the
+rewrite, with the same instrument. This is the first wording change in this file whose form was
+picked by a stated failure kind rather than by judgement, so it is also the first test of whether
+criterion 4 predicts better than judgement did. If the next count holds at 6, the four wordings that
+preceded it are the honest comparison and criterion 4 buys nothing here.]
+
 ### The backtick clause
 
 Admitted 2026-09-01, from one confirmed occurrence in this repo. A commit describing the `apt.py`
