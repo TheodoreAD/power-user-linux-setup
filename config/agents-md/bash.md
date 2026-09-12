@@ -87,6 +87,29 @@ returns 0 hits where `find` returns 7, because `.venv/` is both. `-H` for hidden
 ignore-files, `-HI` for a target that is both. A `fd` that comes back empty on a file you are sure
 exists wants those flags, not `find`.
 
+**`-H` and `-I` are not a pair, and treating them as one is what makes the safe flag look
+expensive.** `-H` adds the dot-files you would want searched and nothing else — measured on two
+repos, +11 and +6 files, all of them `.github/workflows/*`, `.envrc`, `.editorconfig` and the like.
+`-I` disables `.gitignore`, which is the mechanism doing the real work: `fd -t f -HI .` returns
+17,081 files against 152 for `-H`. Reach for `-I` only to find one file you know is ignored, never
+as a default.
+
+**A tree search cannot see into `.github`, `.claude` or any other dot-directory unless you say so,
+and both tools skip them on _descent_ only.** Name the hidden directory — or a file inside it — and
+no flag is needed: `rg 'uses: ' <repo>` finds nothing while `rg 'uses: ' <repo>/.github` finds every
+workflow. That is the cheaper of the two remedies and costs no flag at all. Otherwise:
+
+- **`fd -H`** — safe as written; `fd` excludes `.git/` by its own default rule, confirmed on two
+  repos.
+- **`rg --hidden --glob '!.git'`** — the exclusion is **not** optional and `.gitignore` will never
+  supply it, because git does not ignore its own directory. Bare `rg --hidden` walks `.git/objects`
+  and goes 146 files to 4,185. The unanchored `!.git` is correct: it matches the path component, so
+  `.github/` survives it intact.
+
+The miss is silent because the command is well-formed, the path exists, and both tools are behaving
+as documented — an empty result reads exactly like "already clean". (These are the Bash spellings;
+whether the harness's own `Grep`/`Glob` behave the same way is unmeasured.)
+
 `find` earns the call only when it is doing something `fd` cannot: acting on matches (`-exec`,
 `-delete`), selecting by time, size or permission, `-printf`, or running somewhere `fd` is not
 installed — inside a container, say. Measured over a week, **2 of 37 `find` calls qualified**, so

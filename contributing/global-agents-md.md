@@ -760,6 +760,72 @@ the **success** case — a `grep`→`rg` translation happens ~150 times a week, 
 constantly rather than only at the moment of the slip. If the next count holds at ~32, that argument
 is refuted and the `ask`-rule on the `rg -r` prefix is the fallback; the plan carries it.]
 
+### Hidden paths: why `-H` is the default posture, added 2026-09-12
+
+Raised by the user 2026-09-08, in their own words:
+
+> when using for repo searches, fd and rg should probably include hidden directories, and rely on
+> gitignore to avoid files that shouldn't be worked on, although i realize it might be easier said
+> than done.
+
+The trigger was a real miss in the same session: `rg 'uses: ' <template>` returned **nothing** while
+`template/.github/workflows/ci.yml` sat right there. An empty result reads exactly like "already
+clean", and it was caught only because a `fd` listing run moments later disagreed with the count.
+
+**The intuition holds and the cost is small.** Measured on two repos, 2026-09-08 and re-measured
+2026-09-12:
+
+| invocation                       | repo A     | repo B    | `.git/` | gitignored |
+| -------------------------------- | ---------- | --------- | ------- | ---------- |
+| `rg --files`                     | 130        | 146       | out     | out        |
+| `rg --files --hidden`            | **3,319**  | **4,185** | **IN**  | out        |
+| `rg --files --hidden -g '!.git'` | 144        | 152       | out     | out        |
+| `fd -t f .`                      | 130        | 146       | out     | out        |
+| `fd -t f -H .`                   | 144        | 152       | out     | out        |
+| `fd -t f -HI .`                  | **17,081** | —         | in      | **IN**     |
+
+Everything `--hidden` adds to a correctly-spelled search is something you would want searched —
+`.github/workflows/*`, `.envrc`, `.editorconfig`, `.dockerignore`. `.gitignore` does the rest
+exactly as the user proposed: `.venv/` stays out under `--hidden`, because it is ignored rather than
+merely hidden.
+
+**The two tools are not symmetric, which is why one sentence covering both would be wrong about
+one.** `fd` has its own default rule excluding `.git/` and needs nothing; `rg` has no such rule, so
+`--hidden` alone walks `.git/objects` for a 25-29x blow-up. Re-measured 2026-09-12: the unanchored
+`--glob '!.git'` is correct — it matches the path component, so all six `.github/` files survive and
+nothing under `.git/` leaks. `'!.git/'` gives an identical count, so the trailing slash is optional
+rather than load-bearing.
+
+[PITFALL: **`-I` is the dangerous flag, not `-H`, and the rule used to pair them.** The old wording
+recommended `-HI` "for a target that is both", which is right for a targeted lookup of a known-
+ignored file and badly wrong as a posture: `-I` disables the very `.gitignore` mechanism the whole
+proposal relies on. Pairing them is also what made the safe flag look expensive — `-H` costs six to
+eleven files, `-I` costs seventeen thousand.]
+
+[DECISION: **the reword only, not `RIPGREP_CONFIG_PATH`.** `rg` has a config-file lever and `fd` has
+none, so a uniform mechanism is impossible from the start — but the deciding argument is this
+corpus's own least-surprise rule: a config file changes `rg` for the human, for every script on the
+machine and for every agent, invisibly, so a command reading `rg foo` behaves differently here than
+in its own documentation and nothing at the call site says so. That is the same objection this
+corpus makes to harness hooks that fire behind the agent's back. Against it: it is the only lever
+that cannot be forgotten, and this failure is one of forgetting — so it is parked rather than
+refused, to be reconsidered if the reword is measured and does not hold.]
+
+[PITFALL: **this anti-pattern is close to unmeasurable from a transcript, so the audit-row-first
+sequencing used for the neighbouring `fd` clause does not transfer.** `rg foo src/` and
+`rg foo <dir-with-hidden-children>/` are the same string; whether the answer was under a
+dot-directory depends on a tree the transcript does not contain. Every existing `session-bash-audit`
+row keys on command _text_, which is sufficient for them and is not sufficient here. That is an
+argument for rewording on the evidence above, not for doing nothing.]
+
+**One question stays open and is scoped out of the wording deliberately.** Whether the harness's own
+`Grep`/`Glob` tools share this descent-versus-named behaviour is unmeasured: both sessions that
+reached the question ran in auto mode, where `Grep` is withdrawn (`No such tool available`) and
+`Glob` is not offered either, so neither could be probed — confirmed again 2026-09-12. A rule that
+makes Bash `rg` see `.github` while `Grep` silently does not would be worse than either answer
+alone, so the clause says "these are the Bash spellings" rather than speaking for tools nobody has
+tested. Four calls from an ordinary session would settle it.
+
 ## Running a command against a different repo than the session's project
 
 The hard no-writing clause was added 2026-08-30, on the user's instruction: "we don't act on other
