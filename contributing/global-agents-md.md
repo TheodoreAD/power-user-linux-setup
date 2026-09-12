@@ -201,6 +201,9 @@ than doing nothing.
 - [Proposing an enforcement mechanism for agent behavior](#proposing-an-enforcement-mechanism-for-agent-behavior)
 - [Naming around a collision](#naming-around-a-collision)
 - [Reading a command's result](#reading-a-commands-result)
+- [Probing whether a dependency is absent](#probing-whether-a-dependency-is-absent)
+- [Backgrounding a command](#backgrounding-a-command)
+- [Waiting for something to finish](#waiting-for-something-to-finish)
 - [Generalizing from a sample to a set](#generalizing-from-a-sample-to-a-set)
 - [Force-pushing, or asking what a remote actually has](#force-pushing-or-asking-what-a-remote-actually-has)
 - [Fragments are subjects, dependency is a label](#fragments-are-subjects-dependency-is-a-label)
@@ -1198,10 +1201,9 @@ that half-repeats the disambiguating word reads as awkward rather than clean.
 
 ## Reading a command's result
 
-Measured 2026-08-26, the backgrounding half: `nohup script.sh & disown` and `setsid script.sh &`
-both returned non-zero while the script's first statement, a file write, never happened — yet a
-plain `cmd &` plus `sleep` in the same call did run. Date moved here 2026-08-30; the rule keeps the
-two forms and the reason intermittence is what makes it dangerous.
+**Split out of one 674-word rule on 2026-09-12**, which carried four distinct triggers under a
+heading naming only the first. The evidence moved with its rule and nothing was dropped; the pipe
+subsection stays here because it is about reading a result.
 
 `basedpyright` hard-errors (exit 3) on a config error while still printing a clean
 `"0 errors, N warnings, 0 notes"` summary line — a real regression across three repos went unnoticed
@@ -1213,58 +1215,6 @@ reports a non-zero exit itself, so the advice produced a chain on every gate run
 already in the tool result (see "Composing a Bash call" above for the measurement). The rule's point
 — a pipe masks the exit code — survives; the prescribed remedy is now "don't pipe", not "add
 `echo $?`".
-
-Extended 2026-08-28 (`repo-tasks`) with the non-terminating-wait half, from a live incident rather
-than a hypothetical. A session ended four turns by backgrounding
-`until [ "$(gh run list --repo … --commit <sha> --limit 1 --json status --jq '.[0].status')" = "completed" ]; do sleep 20; done`
-to wait on CI. `gh run list --commit` matches only the full 40-char SHA and returns `[]` — exit 0,
-no diagnostic — for the 7-char abbreviation every one of them passed, so `.[0].status` was `null` on
-every iteration. Reproduced both directions on gh 2.97.0 while writing this: the abbreviation
-returns `[]`, the full SHA returns the run (`--branch main` also returns it, which is what made the
-empty result obviously wrong rather than plausibly "no run yet").
-
-Found 2026-08-28 by a `/session-harvest` process sweep: all four still alive, ~36 hours in, each
-with a `sleep` child seconds old, having issued on the order of 26,000 API calls between them. Two
-things make this worth a rule rather than a footnote about one CLI flag:
-
-- **The failure is unfalsifiable from inside.** A loop testing a condition that cannot be true has
-  no error path; it produces silence, and silence is what "still waiting" looks like. Contrast the
-  backgrounding failure above, which at least yields _wrong_ state to read.
-- **It made the session lie.** The turn closed with "CI is running; I'll report when it lands." That
-  was already false when written — nothing would ever land. The user's actual answer (CI green on
-  `863ede6`) was available immediately from `--branch`, and went unreported for a day and a half.
-
-The rule as written asks for two cheap things — bound the wait, and run the inner command once
-before wrapping it — because either alone would have caught this. Deliberately not a rule about
-`gh`: the shape is any poll whose predicate reads a filtered/parsed value that can come back empty.
-
-It names `gh run watch --exit-status` because the strongest form of a rule is the command that
-replaces the bad habit, not a warning about it (per the skill-authoring finding above: strengthen
-language rather than lengthen explanation). Verified 2026-08-28 against a finished run — returns
-immediately with `Run CI (33169261418) has already completed with 'success'` — so it degrades
-correctly in the case a hand-rolled `until` handles worst, the work already being done. Its help
-text was already sitting in this repo's own `cli-allowlist/help-cache/gh.json`,
-`gh run watch && notify-send` example included: the tool that would have prevented the incident was
-cached on disk the whole time and never consulted, which is why "About to author content, config, or
-a workaround from scratch" applies to a poll loop too.
-
-Swept the three repos for the pattern in committed code at the same time: none. `repo_tasks/ci.py`
-uses `gh run list --branch`, the correct filter, and no `until`/`while true` loop exists anywhere
-outside these two documentation quotes. The bug lived only in ad-hoc session shells — which is
-exactly why it belongs in an always-loaded instruction rather than a lint or a test.
-
-Extended 2026-08-30 with the absence-probe case, the same "convenient surface signal is not the
-signal" shape the section already carries. A `repo-tasks` session asked whether an ini key belonging
-to an uninstalled pytest plugin was harmless, and probed with
-`uv run --no-project --with pytest==9.1.1 pytest` from a shell with the repo's venv active. It
-reported `plugins: anyio-4.14.2, socket-0.8.1, cov-7.1.0` and passed — the hoped-for answer, and
-wrong: `--with` builds an ephemeral overlay **on top of** the active environment, so `sys.prefix`
-was the repo's own `.venv` and the probe measured a machine that had the package all along. The
-isolating form (`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python 3.11 --with …`) gave
-the opposite conclusion immediately — a hard error, exit 4. Two properties make it silent rather
-than merely wrong: the contaminated run passes, and AnyIO ships a `pytest11` entry point, so mere
-presence on the path registers it with nothing in the project naming it. The wrong answer had
-already been written into a plan before the user questioned the stated cause.
 
 ### The pipe half stopped being true, 2026-09-05
 
@@ -1376,6 +1326,69 @@ loss was survivable only because the question that baseline existed to answer ha
 answered and written down above. Filed against the skill as
 `agent-skills/2026-09-05-save-baseline-overwrites-silently.md`; until it is fixed, pass an explicit
 path to `--save-baseline`.]
+
+## Probing whether a dependency is absent
+
+Extended 2026-08-30 with the absence-probe case, the same "convenient surface signal is not the
+signal" shape the section already carries. A `repo-tasks` session asked whether an ini key belonging
+to an uninstalled pytest plugin was harmless, and probed with
+`uv run --no-project --with pytest==9.1.1 pytest` from a shell with the repo's venv active. It
+reported `plugins: anyio-4.14.2, socket-0.8.1, cov-7.1.0` and passed — the hoped-for answer, and
+wrong: `--with` builds an ephemeral overlay **on top of** the active environment, so `sys.prefix`
+was the repo's own `.venv` and the probe measured a machine that had the package all along. The
+isolating form (`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python 3.11 --with …`) gave
+the opposite conclusion immediately — a hard error, exit 4. Two properties make it silent rather
+than merely wrong: the contaminated run passes, and AnyIO ships a `pytest11` entry point, so mere
+presence on the path registers it with nothing in the project naming it. The wrong answer had
+already been written into a plan before the user questioned the stated cause.
+
+## Backgrounding a command
+
+Measured 2026-08-26, the backgrounding half: `nohup script.sh & disown` and `setsid script.sh &`
+both returned non-zero while the script's first statement, a file write, never happened — yet a
+plain `cmd &` plus `sleep` in the same call did run. Date moved here 2026-08-30; the rule keeps the
+two forms and the reason intermittence is what makes it dangerous.
+
+## Waiting for something to finish
+
+Extended 2026-08-28 (`repo-tasks`) with the non-terminating-wait half, from a live incident rather
+than a hypothetical. A session ended four turns by backgrounding
+`until [ "$(gh run list --repo … --commit <sha> --limit 1 --json status --jq '.[0].status')" = "completed" ]; do sleep 20; done`
+to wait on CI. `gh run list --commit` matches only the full 40-char SHA and returns `[]` — exit 0,
+no diagnostic — for the 7-char abbreviation every one of them passed, so `.[0].status` was `null` on
+every iteration. Reproduced both directions on gh 2.97.0 while writing this: the abbreviation
+returns `[]`, the full SHA returns the run (`--branch main` also returns it, which is what made the
+empty result obviously wrong rather than plausibly "no run yet").
+
+Found 2026-08-28 by a `/session-harvest` process sweep: all four still alive, ~36 hours in, each
+with a `sleep` child seconds old, having issued on the order of 26,000 API calls between them. Two
+things make this worth a rule rather than a footnote about one CLI flag:
+
+- **The failure is unfalsifiable from inside.** A loop testing a condition that cannot be true has
+  no error path; it produces silence, and silence is what "still waiting" looks like. Contrast the
+  backgrounding failure above, which at least yields _wrong_ state to read.
+- **It made the session lie.** The turn closed with "CI is running; I'll report when it lands." That
+  was already false when written — nothing would ever land. The user's actual answer (CI green on
+  `863ede6`) was available immediately from `--branch`, and went unreported for a day and a half.
+
+The rule as written asks for two cheap things — bound the wait, and run the inner command once
+before wrapping it — because either alone would have caught this. Deliberately not a rule about
+`gh`: the shape is any poll whose predicate reads a filtered/parsed value that can come back empty.
+
+It names `gh run watch --exit-status` because the strongest form of a rule is the command that
+replaces the bad habit, not a warning about it (per the skill-authoring finding above: strengthen
+language rather than lengthen explanation). Verified 2026-08-28 against a finished run — returns
+immediately with `Run CI (33169261418) has already completed with 'success'` — so it degrades
+correctly in the case a hand-rolled `until` handles worst, the work already being done. Its help
+text was already sitting in this repo's own `cli-allowlist/help-cache/gh.json`,
+`gh run watch && notify-send` example included: the tool that would have prevented the incident was
+cached on disk the whole time and never consulted, which is why "About to author content, config, or
+a workaround from scratch" applies to a poll loop too.
+
+Swept the three repos for the pattern in committed code at the same time: none. `repo_tasks/ci.py`
+uses `gh run list --branch`, the correct filter, and no `until`/`while true` loop exists anywhere
+outside these two documentation quotes. The bug lived only in ad-hoc session shells — which is
+exactly why it belongs in an always-loaded instruction rather than a lint or a test.
 
 ## Generalizing from a sample to a set
 

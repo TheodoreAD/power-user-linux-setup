@@ -7,51 +7,51 @@ it is non-zero, so a plain unpiped command already gives you the real answer; `e
 redirect-to-a-log add nothing. Assume a CLI's clean summary text and its exit code can disagree
 until verified otherwise.
 
-**A pipe used to lose that, and no longer does** — so anything you remember about `tail` masking an
-upstream failure is out of date. `[packages.claude-code]`'s `zshenv` snippet sets `PIPE_FAIL` in
-every shell the Bash tool runs, guarded on `CLAUDECODE` so nothing else on the machine changes, and
-a pipeline now reports the rightmost non-zero status rather than its last stage's:
-`inv quality.precommit 2>&1 | tail -3` fails when the gate fails. `setopt | rg pipefail` confirms it
-in any session that seems to behave otherwise. What replaces the old rule is a fact rather than a
-composition rule:
+**A pipe no longer loses that**, so anything you remember about `tail` masking an upstream failure
+is out of date: `[packages.claude-code]`'s `zshenv` snippet sets `PIPE_FAIL` in every shell the Bash
+tool runs, so a pipeline reports the rightmost non-zero status rather than its last stage's.
+`setopt | rg pipefail` confirms it in any session that seems to behave otherwise. Two consequences:
 
-- **A non-zero exit after `| head` means `head` cut something off**, not that the command failed —
-  141 for a `git log` killed by SIGPIPE, 1 for an `rg` with more matches than shown, 120 for a
-  Python script cut mid-write, and **141 again for a Python script that handles SIGPIPE**, which
-  every script under `~/.agents/skills/*/scripts/` now does. 120 has not gone anywhere: it is still
-  what any _other_ Python program does when cut, `inv` included. Four codes, one meaning — so read
-  the fact rather than the number. That is the data loss the `head`/`tail` rule has been describing
-  in prose, now reported rather than argued. Count first (`rg -c`, `wc -l`) or run it whole.
+- **A non-zero exit after `| head` means `head` cut something off**, not that the command failed.
+  Four different codes mean exactly that, depending on what was cut and by what — so read the fact
+  rather than the number. Count first (`rg -c`, `wc -l`) or run it whole.
 - **`| rg` or `| grep` as the last stage returns 1 when nothing matched**, which is an answer and
   not a failure.
 
-Same shape when probing whether a dependency is **absent**: `uv run --with …` layers an ephemeral
-overlay _over_ the active environment, so from a directory with a venv active the probe measures a
-machine that has the package — and it passes, which is the answer you were hoping for. Strip the
-environment (`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python <ver> --with <pkg> …`)
-and check `sys.prefix` if in doubt. A package registering a plugin through an entry point (pytest's
+### Probing whether a dependency is absent
+
+`uv run --with …` layers an ephemeral overlay _over_ the active environment, so from a directory
+with a venv active the probe measures a machine that **has** the package — and it passes, which is
+the answer you were hoping for. Strip the environment
+(`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python <ver> --with <pkg> …`) and check
+`sys.prefix` if in doubt. A package registering a plugin through an entry point (pytest's
 `pytest11`) needs nothing in the project to name it, so absence probes are exactly where
 contamination hides.
 
-Backgrounding from the shell can leave you reading state from a command that **never ran**:
-`nohup script.sh & disown` and `setsid script.sh &` both returned non-zero while the script's first
-statement, a file write, never happened — yet a plain `cmd &` plus `sleep` in the same call did run.
-Intermittent is the danger: the next call inspects processes or files as though the work happened,
-so the failure yields false evidence rather than an error, and a background write or delete that
-silently didn't happen looks exactly like one that did. Use the Bash tool's own `run_in_background`
-(it survives across turns and re-invokes you on exit); if something must be backgrounded anyway,
-have it write a marker the next call checks before trusting any result.
+### Backgrounding a command [Claude Code]
 
-A wait is only as sound as the value its condition tests, and a filter that can return _nothing_
-never satisfies one: `gh run list --commit <7-char-sha>` prints `[]` and exits 0 — `--commit`
-matches only the full 40-char SHA — so `.[0].status` is `null` forever and
+**Use the Bash tool's own `run_in_background`** — it survives across turns and re-invokes you on
+exit. Backgrounding from the shell instead can leave you reading state from a command that **never
+ran**: `nohup script.sh & disown` and `setsid script.sh &` both returned non-zero while the script's
+first statement, a file write, never happened — yet a plain `cmd &` plus `sleep` in the same call
+did run. Intermittent is what makes it dangerous: the next call inspects files or processes as
+though the work happened, so the failure yields false evidence rather than an error, and a
+background write that silently didn't happen looks exactly like one that did. If something must be
+backgrounded anyway, have it write a marker the next call checks before trusting any result.
+
+### Waiting for something to finish
+
+**Reach for the purpose-built waiter before hand-rolling a loop**:
+`gh run watch <run-id> --exit-status` blocks until a run finishes and turns failure into a non-zero
+exit, with the run-id from `gh run list --branch <branch>`.
+
+A hand-rolled wait is only as sound as the value its condition tests, and **a filter that can return
+_nothing_ never satisfies one**: `gh run list --commit <7-char-sha>` prints `[]` and exits 0,
+because `--commit` matches only the full 40-char SHA — so `.[0].status` is `null` forever and
 `until [ "$(…)" = "completed" ]` can never become true. Such a loop cannot fail, so it reports
-nothing, and "still running" and "will never finish" look identical. Before wrapping anything in a
-loop, run the inner command once and look at what it actually returns; bound the wait by an
-iteration count or deadline, and say so when it expires. Best is not to hand-roll the loop at all —
-reach for the purpose-built waiter first: `gh run watch <run-id> --exit-status` blocks until a run
-finishes and turns failure into a non-zero exit, and the run-id comes from
-`gh run list --branch <branch>`, the filter that actually matches.
+nothing, and "still running" and "will never finish" look identical. Run the inner command once and
+look at what it actually returns before wrapping it, bound the wait by an iteration count or
+deadline, and say so when it expires.
 
 ### Generalizing from a sample to a set
 
