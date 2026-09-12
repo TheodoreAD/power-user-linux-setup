@@ -57,3 +57,28 @@ way past. A fetch-and-checkout against a directory that may hold uncommitted wor
 wearing a git command, and this script's job is starting a machine rather than updating one that
 already started. Anything at the destination that is not a PULSE checkout is a refusal naming
 `--dir`, never a delete.
+
+## Never move `stable` by hand
+
+`publish-stable` in `.github/workflows/devcontainer.yml` is the only thing that should move the tag,
+and it is gated on three jobs. Moving it by hand publishes whatever is broken at that commit, to
+both consumers at once, because `install.sh` and `bootstrap-devcontainer.sh` pin the same ref.
+
+Done once, 2026-09-08, to get `install.sh` reachable before the gate existed. It carried a
+three-day-old `verify.all` regression to every `bootstrap-devcontainer.sh` consumer — `stable` went
+from a container-green commit with no installer on it to one that had the installer and the
+regression, so the one-liner started working and the container path broke in the same move. The two
+could only be fixed together: repair the installer, then let `publish-stable` move the tag itself.
+
+[PITFALL: **the breakage was three days old and nothing said so, which is the cost of a
+`workflow_dispatch`-only trigger rather than a cost of the hand-move.** The container build had been
+failing since 2026-09-05 and nobody dispatched it in between, so the hand-move was made against a
+`stable` whose health was simply unknown. The hand-move published it; the missing trigger is what
+made it invisible. Both halves are worth keeping separate, because only one of them is fixed.]
+
+[PITFALL: **the local tag can disagree with the remote indefinitely.** A plain `git fetch` never
+updates a tag that moved, so after `publish-stable` corrected `stable`, this machine's local ref
+still pointed at the hand-moved commit — confirmed 2026-09-12, four days later. Anything reading
+`git show stable:<file>` locally would have read the broken tree while looking authoritative. Ask
+the host (`git ls-remote --tags origin stable`) or force it (`git fetch origin --tags --force`)
+before trusting a local tag about what is published.]

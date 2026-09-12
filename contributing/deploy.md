@@ -148,6 +148,21 @@ a destructive question; `deploy.all` is the deliberate, human-invoked moment for
   look at before overwriting — five stale deployed sources after a task-rename pass, and a
   `~/.agents/AGENTS.md` diff that was purely repo-side with nothing existing only at the
   destination.
+- **The silent-wipe window was closed, and what closed it was a question rather than a failure.**
+  Until 2026-08-25 `inv tools.install` overwrote a hand-edited deployed path with no diff and no
+  prompt. It was caught live exactly once, and not by anything failing — the user asked "would this
+  actually be installed?" of a file they had edited. Every PULSE writer now classifies first and
+  asks; the reason this is worth recording is that nothing in the gate, the tests or the output
+  would have surfaced it, which is the same shape as the `prune` orphan above.
+- **Two rejections, a day apart, are why `deploy.all` exists as a task at all.** 2026-08-23:
+  `config/wezterm.lua` had no redeploy path whatsoever, because the install-time writer skips any
+  destination that already exists — a one-off `cp` was proposed and rejected with "there should be a
+  pulse invoke task that deploys the wezterm config". 2026-08-24: redeploying `~/.agents/AGENTS.md`
+  by calling `tools._install_wrapper_script` from `python -c`, specifically to avoid
+  `inv tools.install` re-running every installer, was rejected the same way. Both are the same
+  principle from two directions — a manual copy and an ad-hoc call into a private writer are equally
+  changes nobody can re-run, and the whole point of the repo is that every change this machine has
+  is reproducible from a declared command.
 - **Rename the in-flight task before it lands, not after.** `deploy.sync` was renamed to
   `deploy.all` by the task-naming pass while still unwritten — "deploy sync" doesn't read as an
   imperative and `deploy` is an action namespace like `verify`/`clean` (see the

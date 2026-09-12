@@ -30,9 +30,8 @@ skill (edit → gate → commit → **push** → re-install → verify) — the 
 remote, so an unpushed edit reaches nothing. Editing the installed copy under `~/.agents/skills/` is
 always wrong: it is overwritten by the next install and never leaves this machine. The
 `source = "local"` mechanism still exists as an escape hatch for a skill that genuinely cannot be
-published, and is deliberately unused — since 2026-09-07 it goes through the same `skills` CLI as
-everything else, handed an absolute directory path instead of a repo, rather than PULSE copying the
-tree itself.
+published, and is deliberately unused — it goes through the same `skills` CLI as everything else,
+handed an absolute directory path instead of a repo, rather than PULSE copying the tree itself.
 
 Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills`
 setup) isn't this repo's job anymore — see
@@ -54,11 +53,9 @@ If an entry exists, the real place to edit is its repo-side source (`content_fil
 `config_files` mapping's `src` — e.g. `config/<file>`), not the deployed path. A direct edit to the
 deployed path exists only on this machine: it never reaches the repo or the next machine, and every
 PULSE writer (`inv tools.install`, `inv deploy.all`, `inv ai.install-skills`) now shows it as a diff
-and asks before overwriting it — until 2026-08-25 `inv tools.install` wiped it silently, caught live
-once only because the user asked "would this actually be installed?", not because anything failed
-loudly. `~/.agents/AGENTS.md` specifically is `[packages.agents-md]`, **assembled** from the
-fragments in `config/agents-md/` rather than copied from one file — edit the fragment that owns the
-rule (see that directory's `README.md`), never the deployed file.
+and asks before overwriting it. `~/.agents/AGENTS.md` specifically is `[packages.agents-md]`,
+**assembled** from the fragments in `config/agents-md/` rather than copied from one file — edit the
+fragment that owns the rule (see that directory's `README.md`), never the deployed file.
 
 **Re-deploy by running a task, not by hand-replicating its write logic — and not by calling a task's
 private writer from `python -c` either.** One command covers every mechanism:
@@ -70,14 +67,10 @@ inv deploy.all                          # everything this repo deploys under ~
 ```
 
 `inv deploy.all` shows the diff before it asks, never overwrites content it can't prove it wrote,
-and records what it deployed so the next `deploy.status` can tell drift from a repo-side change.
-Confirmed live twice: 2026-08-23, `config/wezterm.lua` had no redeploy path at all (the install-time
-writer skips any destination that already exists) and a one-off `cp` was rejected with "there should
-be a pulse invoke task that deploys the wezterm config"; 2026-08-24, redeploying
-`~/.agents/AGENTS.md` by calling `tools._install_wrapper_script` from `python -c` — to avoid
-`inv tools.install` re-running every installer — was rejected the same way, and `deploy.all` is the
-result. The whole point of the repo is that every change this machine has is reproducible from a
-declared, re-runnable command; a manual copy or an ad-hoc Python call is a change nobody can re-run.
+and records what it deployed so the next `deploy.status` can tell drift from a repo-side change. A
+manual copy or an ad-hoc call into a task's private writer is a change nobody can re-run, which is
+the whole point of the repo; both have been proposed and rejected here, and
+[`contributing/deploy.md`](contributing/deploy.md) records when and why.
 
 **`deploy.status` covers only the whole files declared in `setup.toml` — 18% of the surface a config
 lifecycle could ever touch, and not even all of what `deploy.py` writes.** Before concluding that a
@@ -165,8 +158,8 @@ rather than shipping.
 **The install is `--editable` and that is load-bearing, not stylistic.** PULSE reaches `setup.toml`
 and `config/` through `Path(__file__).parent.parent`; a non-editable `uv tool install` anchors that
 at the tool's own site-packages, where neither exists, and every read comes back missing with **exit
-0 and no error** (probed 2026-09-08). It is also what keeps `deploy.status` comparing the machine
-against a checkout you can `git pull` instead of a frozen copy. `setup.toml`'s `editable` field and
+0 and no error**. It is also what keeps `deploy.status` comparing the machine against a checkout you
+can `git pull` instead of a frozen copy. `setup.toml`'s `editable` field and
 `tests/unit/test_python.py` both exist for this.
 
 **Full writeup is [`contributing/spowse-shim.md`](contributing/spowse-shim.md)** — the measurement
@@ -184,17 +177,13 @@ that it's present. No fallback chain: first failure aborts immediately, the deli
 `apt.py`'s `warn=True`-and-continue pattern.
 
 **It is not a read-only command — don't re-run it to re-read or filter its own output.** It invokes
-every installed package, and some of those open windows on the user's desktop: `freelens --version`
-launched the Freelens GUI and still exited 0, so the check passed silently while a window appeared
-(2026-08-28, caught by the user seeing two of them after two runs). Redirect the first run's output
-and grep that instead. To test one package's check, run that command on its own rather than the
-whole task.
+every installed package, and some of those open windows on the user's desktop while still exiting 0,
+so the check passes silently while a window appears. Redirect the first run's output and grep that
+instead. To test one package's check, run that command on its own rather than the whole task.
 
-The rest of the GUI-tagged set was audited on 2026-08-30 and is clean — the class is `freelens` and
-`telegram-desktop`, both fixed with a per-package `verify_cmd`. **Before adding a new GUI package,
-probe its check against a throwaway `Xvfb` display rather than the live session**;
-`contributing/verify.md`'s "Auditing the rest of the class, without launching anything" has the
-three commands and the result table.
+**Before adding a new GUI package, probe its check against a throwaway `Xvfb` display rather than
+the live session**; `contributing/verify.md`'s "Auditing the rest of the class, without launching
+anything" has the three commands, the result table, and which packages needed a `verify_cmd`.
 
 [`docs/dev-container.md`'s "Automated functional verification"
 section](docs/dev-container.md#automated-functional-verification-inv-verifyall) is the published
@@ -319,17 +308,15 @@ would confirm the past instead of gating the change. `git branch` rather than a 
 download — adopt, refuse, the no-terminal refusal — is covered hermetically in
 `tests/unit/test_install_sh.py` instead, so it runs in the local gate.
 
-[PITFALL: **moving `stable` by hand publishes whatever is broken at that commit.** Done once on
-2026-09-08 to get `install.sh` reachable, it carried a three-day-old `verify.all` regression to
-every `bootstrap-devcontainer.sh` consumer. Because the workflow is `workflow_dispatch`-only, the
-container build had been failing since 2026-09-05 with nothing to say so. Let `publish-stable` move
-the tag.]
+**Never move `stable` by hand — let `publish-stable` do it.** Both consumers pin that ref, so a
+hand-move publishes whatever is broken at that commit to both at once. It has been done once and it
+did exactly that. And a local tag is not evidence about what is published: a plain `git fetch` never
+updates a tag that moved, so check with `git ls-remote --tags origin stable`.
 
-**Why there are two clone-and-install scripts rather than one factored spine**, why the file is
-`install.sh` and not `bootstrap-remote.sh`, and why `sudo bash` is refused, are in
-[`contributing/install-entry-points.md`](contributing/install-entry-points.md). Read it before
-proposing to deduplicate the two — the shape is identical and all three of their decisions differ at
-every step, and the refactor spends a working release gate to save a file.
+[`contributing/install-entry-points.md`](contributing/install-entry-points.md) has that incident in
+full, plus why there are two clone-and-install scripts rather than one factored spine, why the file
+is `install.sh` and not `bootstrap-remote.sh`, and why `sudo bash` is refused. Read it before
+proposing to deduplicate the two.
 
 ## CLI permission allowlist pipeline
 
@@ -433,8 +420,8 @@ for it.
 
 ## Git workflow
 
-Direct, focused commits straight to `master` are the normal way to land changes here — the owner has
-bypass permissions on the PR-required branch protection rule specifically for this. Open a PR
-instead only when either (a) someone other than the owner is contributing, or (b) a batch of related
-commits is worth bundling behind a PR description for reviewability. Don't default to "always open a
-PR" — ask if unsure which case applies, don't assume the stricter workflow.
+`~/.agents/AGENTS.md` already covers the default: direct commits to `master`, and the "bypassing
+branch protection" message is expected rather than a problem. What is specific to this repo is when
+to open a PR anyway — either someone other than the owner is contributing, or a batch of related
+commits is worth bundling behind a description. Ask if unsure which applies; don't default to the
+stricter workflow.
