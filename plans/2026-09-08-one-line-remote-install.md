@@ -1,6 +1,6 @@
 ---
-status: in-progress
-updated: 2026-09-08
+status: landed
+updated: 2026-09-12
 ---
 
 # A one-line clone-and-install for a fresh machine
@@ -179,3 +179,60 @@ the one place this repo's usual "it is only my machine" reasoning does not apply
 whoever reads the README. The download-to-a-file form is what makes inspection possible at all
 (`less /tmp/pulse-install.sh` before `bash`), and pinning to `stable` is what makes what you
 inspected yesterday the same as what you run today.]
+
+## Verified 2026-09-12, and it all holds
+
+Re-checked from the outside rather than read off the plan:
+
+- `stable` on the **remote** is `2a2a152`, and all three gates are green on it — `CI`,
+  `Dev container smoke test` and the docs deploy all `success`. The `devcontainer.yml` run history
+  also confirms the sequence this plan describes: `52cba6e` green 2026-09-01, `90f47a0` **failed**
+  2026-09-08 catching the regression, `2a2a152` green the same day.
+- The published `stable/install.sh` is **byte-identical** to `git show stable:install.sh`, and
+  `install.sh` on `master` has not drifted from either.
+- All six published raw URLs across `README.md`, `docs/index.md`, `docs/dev-container.md`,
+  `install.sh`, `bootstrap-devcontainer.sh` and one plan name `stable`; none still say `master`.
+  `install.sh`'s own `REF` defaults to `stable`.
+- `install-smoke` runs on every push and was green on today's `master`, so the installer is verified
+  against current work, not only against the tag.
+
+[PITFALL: **the local `stable` tag was stale, pointing at the commit this plan records as broken.**
+`git rev-parse stable` gave `48f284a` — the hand-moved tag that carried the `verify.all` regression
+— while the remote had `2a2a152`. A plain `git fetch` never updates a tag that moved, so the local
+ref had been wrong since `publish-stable` corrected it on 2026-09-08, and anything reasoning from
+`git show stable:<file>` on this machine would have read the broken tree while believing it was
+reading the published one. Fixed with `git fetch origin --tags --force`. This is the tag-shaped
+instance of the rule this corpus already states about remote-tracking refs: ask the host, not the
+local ref.]
+
+**Two decisions are left for the user rather than closed here**, and both are recorded in
+`AGENTS.md` as things not to change unilaterally: whether `devcontainer.yml` keeps its
+`workflow_dispatch`-only trigger, whose cost this plan measured at three silent days; and whether
+`stable` should be moved forward, since it now sits well behind `master` and carries none of the
+work done since 2026-09-08.
+
+## Migrated to
+
+- [`contributing/install-entry-points.md`](../contributing/install-entry-points.md), new — the
+  options not taken, which is all that had no home: two scripts rather than one factored spine and
+  the two counts that decided it, the `install.sh`-over-`bootstrap-remote.sh` naming, why
+  `sudo bash` is refused, and the late conservatism in adopt-never-clobber. `AGENTS.md` points at it
+  from the installer section.
+- The stale-local-tag pitfall found while verifying this — carried into that page's neighbourhood by
+  the commit message rather than the page, since it is a fact about `git fetch` and not about this
+  installer.
+
+Deliberately not migrated:
+
+- **Everything either script's own header already argues**, which is most of this plan: the
+  never-pipe measurement (written once in `bootstrap-devcontainer.sh`, pointed at from
+  `install.sh`), the pinning rationale, adopt-never-clobber, and the apt-shaped confirmation. Each
+  is commented at the lines that implement it, which is closer than a page.
+- **The `stable` gating design** — three gates, `workflow_call` rather than a copied job, the
+  `--repo-url`/`git branch`/`fetch-depth: 0` reasoning, and the hand-moved-tag pitfall. All already
+  in `AGENTS.md`'s installer section, which is where someone about to touch the workflow will be.
+- **The `deploy.apply_config_files` regression.** Fixed and pinned by three tests in
+  `tests/unit/test_python.py`, each carrying its own reasoning — including the one asserting the
+  call is unconditional so the next uv-tool package to declare `config_files` cannot reintroduce it.
+- **The verification transcript above.** It is a dated re-check, not a design fact; the commit
+  message carries it.

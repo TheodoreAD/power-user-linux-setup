@@ -325,6 +325,12 @@ every `bootstrap-devcontainer.sh` consumer. Because the workflow is `workflow_di
 container build had been failing since 2026-09-05 with nothing to say so. Let `publish-stable` move
 the tag.]
 
+**Why there are two clone-and-install scripts rather than one factored spine**, why the file is
+`install.sh` and not `bootstrap-remote.sh`, and why `sudo bash` is refused, are in
+[`contributing/install-entry-points.md`](contributing/install-entry-points.md). Read it before
+proposing to deduplicate the two — the shape is identical and all three of their decisions differ at
+every step, and the refactor spends a working release gate to save a file.
+
 ## CLI permission allowlist pipeline
 
 `cli-allowlist/` (tracked, unlike the research dump it grew out of) keeps a
