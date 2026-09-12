@@ -32,6 +32,15 @@ keybindings) and belongs to it; **anything describing the work is a plain file a
 An existing memory entry is migrated to one of the three destinations above and deleted, not kept in
 sync.
 
+**Within a repo's own `AGENTS.md`, carry what an agent cannot discover by opening the file it is
+about to change**, and point at the implementation site for everything else. A comment at the
+implementing line is read exactly when it is relevant and cannot go stale against its own code; a
+copy in the instructions file can, is paid for in every session whether or not it is needed, and
+silently competes with the code it describes. Three things survive that test: the **cross-file
+invariant** nobody can see from one file (two scripts pinning one tag), the **discovery step** that
+says which file to open at all, and the rule that **fires while you are editing somewhere else
+entirely** — a marker a task needs, applied in a module that never mentions it.
+
 ### Choosing a mechanism for agent instructions, skills, or tools
 
 The artifact vocabulary is `AGENTS.md`, Agent Skills and MCP. Anything vendor-specific is admissible

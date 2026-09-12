@@ -366,6 +366,47 @@ than the work. Stating the mechanism instead of the prohibition is what previous
 reason its way to an exception, so the wording leads with the ban and names the three destinations
 that replace it.
 
+### The within-a-file half, added 2026-09-12
+
+The routing rule above answers _which file_. It said nothing about what belongs in a repo's
+`AGENTS.md` versus a comment at the line that implements it, and that gap is what a leanness pass on
+this repo's own instructions file measured.
+
+**Measured 2026-09-12**, on `power-user-linux-setup`'s `AGENTS.md`: 18 sections, 4,157 words, all of
+it genuine repo instructions — nothing wanting to be a skill by the tier test, and no 864-line
+problem like the deployed file has. The drift was in three mechanical categories, and the third is
+the one that produced the rule:
+
+| category                             | found                         | where it went                        |
+| ------------------------------------ | ----------------------------- | ------------------------------------ |
+| dated evidence inline                | 9 sentences across 5 sections | the `contributing/` page per topic   |
+| duplicates a global rule             | `Git workflow`                | trimmed to the half not covered      |
+| duplicates an implementation comment | 2 sections, ~315 words        | deleted; the comment already says it |
+
+The two large sections restated things the files an agent would actually be editing document
+themselves — `devcontainer.yml` and `install-smoke.yml` on what gates the `stable` tag, and
+`tasks/cli.py`'s module docstring on the namespace derivation. Each copy could go stale against its
+source independently, and the installer's had three sources.
+
+[PITFALL: **the rule that most looks like duplication is the one that must stay.** `AGENTS.md`
+restates that a new task ships in `spowse` unless marked `@util.dev_only` — which `tasks/cli.py`
+also explains, so it scans as a clean cut. It is not: the agent who needs that rule is adding a task
+to `deploy.py` or `apt.py` and has no reason to open `cli.py` at all. The decision fires at the
+moment they type `@task`, in a file that says nothing about it. Cutting it would have shipped a
+repo-authoring task to every machine, silently, which is exactly the failure the rule prevents.]
+
+**The estimate was wrong in the same direction twice, and by a lot.** The drift pass was predicted
+at ~400 words and delivered 152, because most evidence became a pointer rather than going away; the
+structural pass was predicted at 610 and delivered 315, because more content turned out to be
+genuinely non-duplicated once it was rewritten rather than scanned. **Scanning for duplication
+overcounts it** — the test is only decidable while writing the replacement, so quote a range or
+quote nothing.
+
+The inverse case is worth keeping too, because it is the clearest statement of what an always-loaded
+file is for: the largest section, at 536 words, was **left alone deliberately.** It opens with
+"before editing any file under `~/`, grep `setup.toml`" — a discovery instruction, where no
+implementation site can help, because the reader does not yet know which file to open.
+
 ## Choosing a mechanism for agent instructions, skills, or tools
 
 Admitted 2026-09-02, from the leanness pass's parked list, where it had waited since 2026-08-26 for
