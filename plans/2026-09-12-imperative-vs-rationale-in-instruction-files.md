@@ -293,7 +293,25 @@ It is **operable** — every rule classified without argument, and the boundary 
 It is **not universal**, per the decision above. And it found a mismatch with a measurement behind
 it on its first application, which is the outcome that justifies keeping it.
 
-[UNVERIFIED: whether acting on finding 1 moves anything. `cut-message` stands at 6 in the 2026-09-12
-baseline, so there is a rate to move, and it is the first change in this file whose form was chosen
-by a stated failure kind rather than by judgement. If a recipe-form rewrite leaves it at 6,
-criterion 4 predicts outcomes no better than the wording rewrites it was meant to improve on.]
+### Finding 1 landed the same day
+
+`Writing the commit command` now opens with the command and names its parts in order — own call, one
+`-m`, one double-quoted argument, pathspec last — with each reason attached to the part it explains
+instead of standing as a separate ban. Every claim survives, the 73% apostrophe count included. 310
+→ 228 words; `git.md` 2,556 → 2,474; hedged directives in that fragment 6.5% → 4.7%. The prediction
+and the number to judge it on are in `contributing/global-agents-md.md` under the rule's own
+heading.
+
+[PITFALL: **a banned-character list cannot be completed, and this session proved it within the
+hour.** Committing the audit itself, it single-quoted a message containing `today's` and got
+`(eval):15: unmatched '` with nothing committed — then reported it to the user as a _fourth_
+character at a different layer, which was wrong. `echo 'today's baseline'` reproduces it exactly:
+the rule already covers this and gives the 73% count as the reason single-quoting is not the escape.
+The real lesson is the one that argued for the rewrite: a reader scanning a list of forbidden
+characters is not reading the shape of the argument, and the quote style is part of the shape. The
+old form mentioned it in passing as a rejected alternative; the recipe states it as a part.]
+
+[UNVERIFIED: whether it moves `cut-message`, at **6** in the 2026-09-12 baseline. Re-run
+`inv ai.measure-instruction-shape` for the shape and `session-bash-audit --compare` against
+`2026-09-12.json` for the rate. Hold finding 2 until this is read: landing both leaves the next
+comparison unable to attribute a change to either.]
