@@ -69,19 +69,31 @@ reports.
 
 ### Searching a tree, by name or by content
 
-**`fd` over `find`, `rg` over `grep -r`**; a non-recursive `grep` stays fine. Translate rather than
-reach for the old spelling: `find <dir> -name '*.py'` is `fd -e py . <dir>`, and
-`find <dir> -iname '*plan*'` is `fd plan <dir>`. `find` earns the call only for what `fd` cannot do
-— acting on matches (`-exec`, `-delete`), selecting by time, size or permission, `-printf`, or a
-machine without `fd`, inside a container say. That covered **2 of 37 calls** measured over a week,
-so the exemption almost certainly does not cover yours.
+**`fd` over `find`, `rg` over `grep -r`.** A non-recursive `grep` stays fine. Translate rather than
+reach for the old spelling:
+
+- `find <dir> -name '*.py'` → `fd -e py . <dir>`
+- `find <dir> -iname '*plan*'` → `fd plan <dir>`
+
+`find` earns the call only for what `fd` cannot do:
+
+- acting on matches — `-exec`, `-delete`
+- selecting by time, size or permission
+- `-printf`
+- a machine without `fd`, inside a container say
+
+That covered **2 of 37 calls** measured over a week, so the exemption almost certainly does not
+cover yours.
 
 **Both tools skip a hidden path on _descent_ only, and the miss is silent.** The command is
-well-formed, the path exists, and an empty result reads exactly like "already clean". Naming the
-directory needs no flag at all — `rg 'uses: ' <repo>` finds nothing where
-`rg 'uses: ' <repo>/.github` finds every workflow. Otherwise `fd -H`, safe as written, or
-`rg --hidden --glob '!.git'`, where the exclusion is **not** optional because git does not ignore
-its own directory.
+well-formed, the path exists, and an empty result reads exactly like "already clean". Three ways
+through it:
+
+- **Name the directory**, which needs no flag at all. `rg 'uses: ' <repo>` finds nothing where
+  `rg 'uses: ' <repo>/.github` finds every workflow.
+- **`fd -H`**, safe as written.
+- **`rg --hidden --glob '!.git'`**, where the exclusion is **not** optional, because git does not
+  ignore its own directory.
 
 **`-H` and `-I` are not a pair**, and pairing them is what makes the safe flag look expensive. `-H`
 adds the dot-files you would want searched and nothing else. `-I` disables `.gitignore` and returns
