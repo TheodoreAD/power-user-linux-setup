@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-09
+status: landed
+updated: 2026-09-12
 source_repo: github.com-personal/agent-skills
 source_session: 70e28d42-9a4b-4f09-8f22-19112ce49d1b.jsonl
 source_moment: 2026-09-09T20:05:00Z
@@ -109,27 +109,24 @@ because it hides the message from the approval prompt. The rule's own escape hat
 `-F` only when the message genuinely must contain a backtick", and a quoted phrase does not
 qualify.]
 
-## Open questions
+## Answered (2026-09-11)
 
-[NEEDS CLARIFICATION: is the answer a third forbidden character, or a switch to single-quoting the
-`-m` argument? Single quotes make backticks, `$` **and** double quotes all inert in one move, and
-this session used them for every commit after the failure with no trouble. Against: an apostrophe
-then breaks the argument instead, and apostrophes in English prose are far commoner than double
-quotes — so it may trade a rare failure for a frequent one. Worth counting apostrophes versus
-quotation marks across the last month of commit messages before choosing.]
+**A third forbidden character, not a switch to single quotes — and the counting settled it.** Over
+the 830 commit messages in this repo in the month to 2026-09-11: **73% contain an apostrophe, 25%
+contain a double quote** (177 contain both). Single-quoting would make backticks, `$` and `"` all
+inert in one move and would break on three quarters of messages instead of a quarter, against a
+character that is much harder to write around — an apostrophe is ordinary English, a quotation mark
+has alternatives. The double-quoted argument stays and the third character joins the ban.
 
-[NEEDS CLARIFICATION: should this be a `session-bash-audit` pattern rather than only a rule? A
-`git commit -m` argument containing an unescaped quote character of the wrong kind is mechanically
-detectable, and the existing plan `2026-09-04-session-rule-adherence-evidence.md` in `agent-skills`
-already proposes exactly this for the `$` half — under "3. `$` in a commit message — a second
-candidate, and it fails loudly", with a `${{` instance from 2026-09-04. That makes two instances of
-one shape, so the two belong in one pattern rather than two.]
+**The audit-pattern question is `agent-skills`' to answer, not this repo's.** It is mechanically
+detectable, and that repo already proposes exactly this for the `$` half, so the two belong in one
+pattern rather than two. Recorded in the evidence section as a named open item rather than left
+implicit here, since this file is about to be deleted.
 
-[NEEDS CLARIFICATION: does the same hazard reach the other double-quoted bodies the section names —
-`gh pr create --body`, `gh issue comment`? Structurally yes, and the consequence there is worse than
-a truncated commit: a PR body or an issue comment is published at the moment it is created, so a
-truncated one is visible to whoever is reading the PR before anyone notices. Not observed, so it is
-reasoning rather than evidence.]
+**The `gh` half stays reasoning rather than evidence.** Structurally the hazard must reach
+`gh pr create --body` and `gh issue comment`, and the consequence there is worse because both are
+published at creation — but it has not been observed, and the rule already names both bodies, so
+nothing further is claimed.
 
 ## Recommended direction
 
@@ -141,3 +138,17 @@ Then decide the audit-pattern question with the `$` instance rather than separat
 covering "a quoting character loose in a `-m` argument" is one row, and it is the only row in that
 skill's set with a hard failure attached, so a measured rate also says how many commits were lost to
 it.
+
+## Migrated to
+
+- `config/agents-md/git.md`, the "About to commit" rule — one paragraph naming the three outcomes,
+  why the answer is not to switch quote styles, and `git log -1` as the first thing to run rather
+  than the retry. Deployed with `inv deploy.all --name agents-md`.
+- [`contributing/global-agents-md.md`](../contributing/global-agents-md.md), "About to commit" →
+  "The double quote, added 2026-09-11" — the three instances as a table, the apostrophe-versus-quote
+  count, the pitfall that the third instance was produced by knowing about the first two, and both
+  questions this plan could not close.
+
+Deliberately not migrated: the per-instance transcript detail — SHAs, the exact `(eval)` error
+strings, the amend that recovered the first one. The shape and the outcome are what a reader needs;
+the strings are in the commits and in the evidence table's summary of each.
