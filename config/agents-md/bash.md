@@ -114,57 +114,46 @@ missing after you asked for `-n`, a `-l` that printed lines, or hits from a path
 Any of those means `-r` ate the bundle — re-run without it rather than reading the output.
 Deliberate replacement is unaffected: spell it `--replace`, which no `grep` bundle can turn into.
 
-### Running a command against a different repo than the session's project
+### Writing to a repo other than the session's
+
+**Out entirely, not merely discouraged** — no edit and no commit, however small, however obviously
+correct, however much a skill's own instructions tell you to. File it instead:
+`python3 ~/.agents/skills/plan-docs/scripts/plans.py new <topic> --for <repo>` puts a plan in that
+repo's store mirror, outside every working tree, and the next session working there is offered it.
+Commit it in the store immediately and say where it went. The only exception is genuinely iterative
+work needing back-and-forth in that repo, which gets its own session there rather than a relay.
+
+The reason it is a hard line rather than a judgment call: a commit in someone else's tree is silent
+by construction — it looks routine in `git log`, and the session that owns the repo may push it
+without ever knowing it was not theirs. So a mutating `git -C <other repo> commit`/`push` prompting
+is a **stop**, not a checkpoint to click through; there is almost nothing legitimate on the far side
+of it.
+
+### Running a read-only command against a different repo
 
 Avoid needing to: keep a session focused on one project — substantial work in another repo belongs
-in its own session.
+in its own session. For the unavoidable quick one:
 
-**Writing to another repo is out entirely, not merely discouraged** — no edit and no commit, however
-small, however obviously correct, however much a skill's own instructions tell you to. File it
-instead: `python3 ~/.agents/skills/plan-docs/scripts/plans.py new <topic> --for <repo>` puts a plan
-in that repo's store mirror, outside every working tree, and the next session working there is
-offered it. Commit it in the store immediately and say where it went. The only exception is
-genuinely iterative work needing back-and-forth in that repo, which gets its own session there
-rather than a relay. The reason it is a hard line rather than a judgment call: a commit in someone
-else's tree is silent by construction — it looks routine in `git log`, and the session that owns the
-repo may push it without ever knowing it was not theirs.
-
-For the unavoidable quick **read-only** cross-repo command:
-
-- Whether cwd persists between Bash calls is not reliable either way: some calls end with the
-  harness resetting it to the primary directory ("Shell cwd was reset"), others leave it where a
-  `cd` put it — both observed in one session. Assume neither — scope by flag or by a single
-  `cd … && …` chain, and after that chain treat cwd as unknown until a call re-establishes it. The
-  tell that it stuck: `inv` answering `Can't find any collection named 'tasks'`, or `rg`/`pytest`
+- **Scope by flag, or by a single `cd … && …` chain** — never a bare command and a hope. Whether cwd
+  persists between Bash calls is not reliable either way, both behaviours having been observed in
+  one session, so after any such chain treat cwd as unknown until a call re-establishes it. The tell
+  that it stuck: `inv` answering `Can't find any collection named 'tasks'`, or `rg`/`pytest`
   reporting a path that "does not exist" which plainly does.
-- Prefer the tool's own directory-scoping option (`git -C <path>`, `ruff --config <path>`,
-  `basedpyright --project <path>`, the target repo's own `.venv/bin/pytest` by absolute path —
-  site-packages resolve from the interpreter, not cwd). Read-only `git -C` verbs are allowlisted; a
-  mutating one (`git -C x commit`/`push`) matches no rule and prompts — treat that prompt as a stop,
-  not a checkpoint to click through: by the rule above there is almost nothing legitimate on the far
-  side of it.
-- `inv` is the exception, and **for one reason rather than the two it looks like.** Discovery does
-  redirect: `inv -r <repo> <task>` points invoke's search at another checkout and runs the task from
-  anywhere — verified 2026-09-08, including a task that reads its own repo's files. What does not
-  redirect is what the task then shells out to: bare tool names (`pytest`, `ruff`, `basedpyright`)
-  resolve from PATH rather than from the `inv` that launched them, so an absolute
-  `<repo>/.venv/bin/inv` fixes nothing either. **So pick by what the task needs.** A task that
+- **Prefer the tool's own directory-scoping option**: `git -C <path>`, `ruff --config <path>`,
+  `basedpyright --project <path>`, or the target repo's own `.venv/bin/pytest` by absolute path,
+  since site-packages resolve from the interpreter rather than from cwd.
+- **`inv` is the exception, and which form you need depends on what the task does.** A task that
   drives the machine or reads its own repo (`deploy.status`, `ai.install-skills`, `verify.all`)
   takes `inv -r <repo> <task>` and needs no `cd`. A task that runs the target repo's own toolchain
   (`quality.precommit`, `test.unit`, anything under `docs`) needs
-  `cd <repo> && PATH="<repo>/.venv/bin:$PATH" inv <task>`, chained in one call — the `cd` for cwd,
-  which the linters read, and the PATH prefix for the tools. Expect a prompt either way: a leading
-  env assignment matches no rule's prefix, and a global option before the verb changes the prefix
-  the same way `git -C x push` does. A repo with no `inv` in its own venv still falls back to
-  `~/.local/bin`, where which of two uv tools owns the name varies.
-
-  `INVOKE_TASKS_SEARCH_ROOT` is not the shortcut it looks like — the config key is real and the
-  value is read after the collection has already loaded, so it fails exactly as if it were unset.
-  And never set `tasks.search_root` in `~/.invoke.yaml`: it replaces cwd as the start for **every**
-  repo on the machine, so one project gains a shortcut and all the others load the wrong tasks.
-- Never a bare `pytest`/`inv` against another repo: PATH stays the primary project's
-  direnv-activated `.venv/bin` (direnv hooks don't fire in non-interactive shells), so the command
-  silently runs the wrong repo's interpreter, dependencies, or tasks — and looks like it passed.
+  `cd <repo> && PATH="<repo>/.venv/bin:$PATH" inv <task>`, chained in one call — because what a task
+  shells out to resolves from PATH, not from the `inv` that launched it. Expect a prompt either way.
+- **Neither environment shortcut works**: `INVOKE_TASKS_SEARCH_ROOT` is read after the collection
+  has loaded, so it fails exactly as if unset, and `tasks.search_root` in `~/.invoke.yaml` replaces
+  cwd for **every** repo on the machine.
+- **Never a bare `pytest`/`inv` against another repo.** PATH stays the primary project's
+  direnv-activated `.venv/bin`, so the command silently runs the wrong repo's interpreter,
+  dependencies or tasks — and looks like it passed.
 
 ### Invoking a venv tool in the session's own project [needs direnv]
 

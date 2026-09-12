@@ -186,7 +186,8 @@ than doing nothing.
 - [Viewing or editing a file](#viewing-or-editing-a-file)
 - [Searching a tree, by name or by content](#searching-a-tree-by-name-or-by-content)
 - [Translating a `grep` invocation to `rg`](#translating-a-grep-invocation-to-rg)
-- [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
+- [Writing to a repo other than the session's](#writing-to-a-repo-other-than-the-sessions)
+- [Running a read-only command against a different repo](#running-a-read-only-command-against-a-different-repo)
 - [Changing `~/.claude/settings.json`](#changing-claudesettingsjson)
 - [git fetch/push needing an SSH key](#git-fetchpush-needing-an-ssh-key)
 - [A narrow check grows into design work](#a-narrow-check-grows-into-design-work)
@@ -899,7 +900,12 @@ checkable, not a device that raises adherence:
 | `rg -rlF`   | `rg -lF`  | `lF`      | regex, not fixed-string; lines, not files                  |
 | `rg -r p f` | `rg p f`  | `p`       | **`f` becomes the pattern and the whole tree is searched** |
 
-## Running a command against a different repo than the session's project
+## Writing to a repo other than the session's
+
+**Split out of one 655-word rule on 2026-09-12.** Writing to another repo and running a read-only
+command there are different situations with different answers, and the prohibition was buried inside
+a rule headed as being about running commands. The `git -C` evidence sits with the writing half
+because what it decides is whether a mutating prompt is a stop.
 
 The hard no-writing clause was added 2026-08-30, on the user's instruction: "we don't act on other
 repos any more, unless we have some very complex work that needs back and forth ... if something
@@ -923,6 +929,8 @@ The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are now rendered
 `cli-allowlist`'s `global_option_prefixes`, and the mutating ones are meant to prompt — the earlier
 "expect a one-off prompt" framing read as friction to minimize, and under auto mode the prompt never
 came at all (see the cluster intro above).
+
+## Running a read-only command against a different repo
 
 Confirmed directly 2026-08-22/23: running plain `inv`/`pytest` after `cd`-ing into a secondary repo
 silently exercised the primary repo's pinned dependency copy of a package under active development
