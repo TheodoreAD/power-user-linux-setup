@@ -51,15 +51,19 @@ it:
    grows, not only when it is written.
 3. **Puts its evidence here, not inline** — dated confirmations and reproductions go in this file
    under a matching heading.
-4. **Takes the form of the failure it answers**, named in its evidence section. The form that fixes
-   one kind of failure measurably backfires on another, so "what is the wrong behaviour here" is a
-   question to answer before writing the words rather than after. A **discipline** failure (the rule
-   is known and skipped under pressure) takes a prohibition, and soft guidance is the wrong form. A
-   **wrong-shaped output** takes a positive recipe stating what the output is, and a prohibition is
-   the wrong form — it is negotiated with rather than followed. An **omission** takes a structural
-   slot in whatever is already being produced, not a prose reminder near it. A **conditional**
-   behaviour takes a conditional keyed to something observable, not an unconditional rule plus
-   exemption clauses.
+4. **Takes the form of the failure it answers**, named in its evidence section — **where it answers
+   a behaviour at all.** Measured 2026-09-12 across all 47 rules: about twenty exist because the
+   agent cannot know something (`uv run --with` overlays the active environment,
+   `gh run list --commit` needs a full SHA), and another eight are stated preferences or
+   orientation. Neither has a form to get wrong, and forcing a label onto them is filling in a box.
+   For the rest, the form that fixes one kind of failure measurably backfires on another, so "what
+   is the wrong behaviour here" is a question to answer before writing the words rather than after.
+   A **discipline** failure (the rule is known and skipped under pressure) takes a prohibition, and
+   soft guidance is the wrong form. A **wrong-shaped output** takes a positive recipe stating what
+   the output is, and a prohibition is the wrong form — it is negotiated with rather than followed.
+   An **omission** takes a structural slot in whatever is already being produced, not a prose
+   reminder near it. A **conditional** behaviour takes a conditional keyed to something observable,
+   not an unconditional rule plus exemption clauses.
 
 There is no word budget or mechanical gate; the external reference points for review are ≤200 lines
 and ≤15 rules. Tier placement: a rule whose miss is silent and expensive stays in
@@ -109,6 +113,23 @@ two a given rule needs; it does not rank them.
 Measurement of where this corpus actually sits, against 182 community instruction files, is
 `plans/2026-09-12-imperative-vs-rationale-in-instruction-files.md`; re-run it with
 `inv ai.measure-instruction-shape`.
+
+**Applied to all 47 rules the day it was added**, which is what produced the scope clause above and
+one mismatch worth acting on. `Writing the commit command` answers a wrong-shaped-output failure —
+the message is written but lands truncated or displaced out of the approval prompt — and is almost
+entirely prohibitive, which is the combination the head-to-head tests score worst. Its own evidence
+records the predicted outcome twice: a session "had the rule in context, followed its letter, and
+produced the outcome it forbids", and "satisfying a rule's stated test is not evidence of meeting
+its purpose". Three corrections have each added another prohibition. The recipe form states what the
+command **is** rather than what it must avoid.
+
+Two smaller results from the same pass. `Composing a Bash call` and `Viewing or editing a file` are
+genuine discipline failures, correctly prohibitive, and missing the rationalization table and
+red-flags list that superpowers pairs with a prohibition — the one lever not yet tried against five
+wordings measured inert. And the omission row assumes an artefact with a slot, so it fits
+`Every commit has a body` (artefact: the message; slot: the body; tell: the agent scaled the message
+to the size of the diff) and does **not** fit `About to commit`, which is a step in a sequence and
+whose prose form measured to zero occurrences over eight days. Full classification in the plan.
 
 ### The extend-or-split clause, added 2026-09-12
 
