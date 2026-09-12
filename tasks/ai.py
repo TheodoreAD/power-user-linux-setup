@@ -6,7 +6,7 @@ from typing import cast
 
 from invoke import Context, Exit, task
 
-from . import node, ui, util
+from . import instruction_shape, node, ui, util
 
 # Its own constant rather than reaching into deploy's, matching fonts.py/python.py/system.py. Only
 # `source = "local"` needs it, to turn a repo-relative `path` into the absolute one the `skills` CLI
@@ -699,3 +699,54 @@ def check_rule_prerequisites(c: Context):
         "is gone — then redeploy with `inv deploy.all --name agents-md`."
     )
     raise Exit(code=1)
+
+
+@task
+@util.dev_only
+def measure_instruction_shape(c: Context, path: str | None = None, corpus: str | None = None):
+    """Report how much of an instruction file instructs, rather than how long it is.
+
+    Word count says a file is big; it does not say whether the words are carrying directives. This
+    reports directives per 100 words, mean sentence length, the share of directives that also carry
+    their own justification, and the share carrying a nuance clause — the four things
+    `plans/2026-09-12-imperative-vs-rationale-in-instruction-files.md` measured this file to be an
+    outlier on, against 182 community files.
+
+    Defaults to the deployed `~/.agents/AGENTS.md` plus this repo's own `AGENTS.md`. Pass `--corpus`
+    a directory of checkouts (the research library, say) to print mean and median rows to compare
+    against — the comparison is the point, since none of these numbers has a meaningful absolute
+    target.
+
+    Read-only. `--path` takes one file, for checking a fragment mid-edit.
+    """
+    if path:
+        targets = [Path(path).expanduser()]
+    else:
+        targets = [Path("~/.agents/AGENTS.md").expanduser(), _REPO_ROOT / "AGENTS.md"]
+
+    shapes = [shape for target in targets if target.is_file() and (shape := instruction_shape.measure_file(target))]
+    missing = [t for t in targets if not t.is_file()]
+    if not shapes:
+        ui.warn(f"[ai] nothing measurable in: {', '.join(str(t) for t in targets)}")
+        raise Exit(code=1)
+
+    print(instruction_shape.HEADER)
+    print("-" * len(instruction_shape.HEADER))
+    for shape in shapes:
+        print(instruction_shape.format_row(shape))
+
+    if corpus:
+        root = Path(corpus).expanduser()
+        if not root.is_dir():
+            ui.warn(f"[ai] --corpus is not a directory: {root}")
+            raise Exit(code=1)
+        compared = instruction_shape.measure_tree(root)
+        if not compared:
+            ui.warn(f"[ai] no measurable instruction files under {root}")
+        else:
+            print("-" * len(instruction_shape.HEADER))
+            for line in instruction_shape.summarise(compared):
+                print(line)
+
+    for target in missing:
+        print(f"[ai] skipped, not a file: {target}")
