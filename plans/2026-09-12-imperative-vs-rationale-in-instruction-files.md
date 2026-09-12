@@ -222,3 +222,78 @@ than this file has.]
 The remaining sentence-length gap is therefore real and mostly not reachable by form changes. 17.5
 against a 9.1–14.0 large-file range is claims per rule, which is the lever the user declined at the
 leanness pass's opening (`plans/2026-08-26-agents-md-leanness-pass.md`) and nothing here reopens.
+
+## The criterion-4 audit, all 47 rules, 2026-09-12
+
+Classified from the **incident** recorded in `contributing/global-agents-md.md`, not from the rule's
+current wording — the wording already encodes the form somebody chose, so reading it back is
+circular. The session running this audit wrote criterion 4 and rewrote most of these rules the same
+day, which is a reason to read incidents and not prose.
+
+### The headline: the taxonomy covers about a third of the file
+
+| failure kind the rule answers                    | rules | the four kinds? |
+| ------------------------------------------------ | ----: | --------------- |
+| **a non-obvious fact the agent cannot discover** |   ~20 | **no**          |
+| stated user preference, or orientation           |    ~8 | **no**          |
+| conditional behaviour                            |    ~5 | yes             |
+| discipline (knows it, skips it under pressure)   |    ~4 | yes             |
+| omission from an artefact already produced       |    ~2 | yes             |
+| wrong-shaped output                              |    ~2 | yes             |
+
+[DECISION: **criterion 4 is a partial criterion and must say so.** The largest category by a wide
+margin is a rule that exists because the agent cannot know something — `uv run --with` overlays the
+active environment, `gh run list --commit` matches only a full SHA, `rg -r` is `--replace`,
+`SUDO_ASKPASS` is set. That is not a failure of form at all; there is no prohibition-versus-recipe
+choice to get wrong, and forcing one of the four labels onto it would be filling in a box. It is
+also **exactly the category Gloaguen et al. found context files are good for** — "useful for
+specifying non-standard coding practices" — so the biggest group is the one with the most external
+support and the least to learn from criterion 4. The criterion applies where a rule answers a
+behaviour; it should say that rather than imply every rule has an answer.]
+
+### Three findings, in order of what they are worth
+
+**1. `Writing the commit command` is the mismatch the measurement predicts, and its own evidence
+already records the predicted failure.** The failure is wrong-shaped output: the agent complies and
+writes a message, but the message ends up truncated, or displaced out of the approval prompt behind
+`-F`, a chain, or a series of `-m` flags. Superpowers' table says a shaping failure takes a positive
+recipe and is made **worse** by a prohibition, and this rule is almost entirely prohibitive — keep
+these three characters out, don't use `-F`, don't chain, don't stack `-m`. The evidence file records
+the outcome that predicts: _"The session had the rule in context, followed its letter, and produced
+the outcome it forbids"_, and separately _"satisfying a rule's stated test is not evidence of
+meeting its purpose."_ Three corrections have each added another prohibition to a rule whose failure
+kind says prohibitions are the wrong lever. The recipe form states what the command **is** — one
+`git commit -m`, message in double quotes, prose with no backtick/`$`/`"`, blank lines inside the
+argument, pathspec last — and leaves nothing to negotiate.
+
+**2. The two discipline rules are correctly prohibitive and missing the half that makes prohibition
+work.** `Composing a Bash call` and `Viewing or editing a file` are genuine discipline failures by
+the strict test — the rule is known and skipped anyway. The sharpest instance is in this corpus
+already: a session _"had measured the harness's output ceiling, written 'there is no legitimate
+head/tail case left to carve out', committed it, and produced the shape forty minutes later."_
+Prohibition is the right form for that. What superpowers prescribes alongside it — a rationalization
+table and a red-flags list — is the one thing never tried here, against **five** wordings measured
+inert (four `head`/`tail` rewrites plus `PIPE_FAIL`). The standing
+`[DECISION: adherence, not wording]` rules out saying it louder, and a rationalization table is not
+louder; it is a different mechanism.
+
+**3. The omission cases split, and only one is a real mismatch.** `About to commit` looks like the
+omission row and is not: that row assumes a template with a slot, and "run the gate first" is a step
+in a sequence rather than a field in an artefact. Its prose form measured to **zero occurrences over
+eight days**, so nothing is wrong with it. `Every commit has a body` **is** the omission row — the
+artefact is the message, the slot is the body, and the recorded tell is that _"the agent scaled the
+message to the size of the diff."_ It is currently a floor with three guards and deliberately
+unenforced, which is the prose-reminder form the table calls wrong. Stating the message's shape as a
+contract is the change criterion 4 asks for, and it costs no enforcement mechanism.
+
+### What the audit says about criterion 4 itself
+
+It is **operable** — every rule classified without argument, and the boundary cases (is
+`About to commit` an omission?) resolved by reading the row's own assumption rather than by taste.
+It is **not universal**, per the decision above. And it found a mismatch with a measurement behind
+it on its first application, which is the outcome that justifies keeping it.
+
+[UNVERIFIED: whether acting on finding 1 moves anything. `cut-message` stands at 6 in the 2026-09-12
+baseline, so there is a rate to move, and it is the first change in this file whose form was chosen
+by a stated failure kind rather than by judgement. If a recipe-form rewrite leaves it at 6,
+criterion 4 predicts outcomes no better than the wording rewrites it was meant to improve on.]
