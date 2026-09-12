@@ -51,6 +51,15 @@ it:
    grows, not only when it is written.
 3. **Puts its evidence here, not inline** — dated confirmations and reproductions go in this file
    under a matching heading.
+4. **Takes the form of the failure it answers**, named in its evidence section. The form that fixes
+   one kind of failure measurably backfires on another, so "what is the wrong behaviour here" is a
+   question to answer before writing the words rather than after. A **discipline** failure (the rule
+   is known and skipped under pressure) takes a prohibition, and soft guidance is the wrong form. A
+   **wrong-shaped output** takes a positive recipe stating what the output is, and a prohibition is
+   the wrong form — it is negotiated with rather than followed. An **omission** takes a structural
+   slot in whatever is already being produced, not a prose reminder near it. A **conditional**
+   behaviour takes a conditional keyed to something observable, not an unconditional rule plus
+   exemption clauses.
 
 There is no word budget or mechanical gate; the external reference points for review are ≤200 lines
 and ≤15 rules. Tier placement: a rule whose miss is silent and expensive stays in
@@ -63,6 +72,43 @@ The intake side of this — deciding whether a candidate is durable at all and w
 `AGENTS.md`, skill, plan, this file) it belongs to — is
 `plans/2026-08-22-memory-to-agents-md-migration-sweep.md`'s taxonomy; these criteria are the
 admission gate for the candidates that taxonomy routes here.
+
+### Criterion 4, matching the form to the failure, added 2026-09-12
+
+From `obra/superpowers`' `writing-skills`, the fullest community treatment of how to word an
+instruction (679 lines; cloned in the research library). Its table is the only place in that corpus
+where the wording question is settled by a measurement rather than by taste, and the measurement is
+the reason this is a criterion rather than a note:
+
+> in head-to-head wording tests on dispatch-prompt guidance, the prohibition arm produced clearly
+> more of the unwanted content than the recipe arm (fully separated distributions), and trended
+> **worse than even the no-guidance control**
+
+That is a rule making its own problem worse, which is the failure mode nothing here would otherwise
+catch — a prohibition reads as strong, and a rule that is strong and backwards looks exactly like a
+rule that is strong. The mechanism they give: under a competing incentive an agent negotiates with
+"don't X", while a recipe leaves nothing to negotiate because the output either matches the stated
+shape or does not.
+
+Two clauses from the same page that bear on the hedging in this corpus, kept as guidance rather than
+promoted into the criterion because our own hedge rate sits inside the community range (6.5% of
+directives against a 3.3% mean, and `telegram-desktop` runs 16.2%):
+
+- **No nuance clauses.** Appending a single nuance clause to a recipe that had tested clean degraded
+  it from consistent to noisy. "Don't X unless it matters" reopens the negotiation; a real exception
+  belongs as its own conditional on an observable predicate.
+- **Exemption clauses don't scope.** "This limit doesn't apply to code blocks" still suppresses code
+  blocks. If part of the output must be exempt, restructure so the rule cannot reach it.
+
+This criterion is deliberately **not** a rule against explaining. Anthropic's own `skill-creator`
+asks for the opposite — "Prefer using the imperative form in instructions", and "Try to explain to
+the model why things are important **in lieu of** heavy-handed musty MUSTs" — which puts rationale
+as the substitute for MUST-stacking rather than as its competitor. Criterion 4 decides which of the
+two a given rule needs; it does not rank them.
+
+Measurement of where this corpus actually sits, against 182 community instruction files, is
+`plans/2026-09-12-imperative-vs-rationale-in-instruction-files.md`; re-run it with
+`inv ai.measure-instruction-shape`.
 
 ### The extend-or-split clause, added 2026-09-12
 
