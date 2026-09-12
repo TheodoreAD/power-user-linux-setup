@@ -2,21 +2,21 @@
 
 ### Setting up a repo's agent instructions and skills
 
-`AGENTS.md` at the repo root is the real file — the cross-tool convention read by 30+ agents.
+`AGENTS.md` at the repo root is the real file, the cross-tool convention read by 30+ agents.
 `CLAUDE.md`, if present at all, is a plain **symlink** to it, never a file containing the
-`@AGENTS.md` import directive (Claude-Code-specific syntax other harnesses would read as literal
-text). Nothing can be appended below a symlink's target, so a genuinely Claude-specific addendum
-goes in `AGENTS.md` itself or a separate `.claude/`-scoped file. Skills live in `.agents/skills/`,
-the cross-tool convention, with each agent's own skills directory symlinked to it for the agents
-that don't read it natively.
+`@AGENTS.md` import directive — that is Claude-Code-specific syntax other harnesses would read as
+literal text. Nothing can be appended below a symlink's target, so a genuinely Claude-specific
+addendum goes in `AGENTS.md` itself or a separate `.claude/`-scoped file. Skills live in
+`.agents/skills/`, the cross-tool convention, with each agent's own skills directory symlinked to it
+for the agents that don't read it natively.
 
 **The home directory works differently, and assuming it matches costs an edit.** The real file is
-`~/.agents/AGENTS.md` — the path four agents read natively — and every other place these rules
-appear is a **copy** of it, not a symlink: `~/.claude/CLAUDE.md`, plus one path per installed agent
-(verified 2026-09-09, three distinct inodes here, link count 1 each). So editing whichever one a
-session happens to open is not editing the original, and the next deploy overwrites it silently
-rather than refusing. There is deliberately nothing at `~/AGENTS.md` — retired 2026-09-09, because
-no agent ever read it.
+`~/.agents/AGENTS.md`, the path four agents read natively. Every other place these rules appear is a
+**copy** of it, not a symlink: `~/.claude/CLAUDE.md`, plus one path per installed agent (verified
+2026-09-09, three distinct inodes here, link count 1 each). So editing whichever one a session
+happens to open is not editing the original, and the next deploy overwrites it silently rather than
+refusing. There is deliberately nothing at `~/AGENTS.md`, retired 2026-09-09 because no agent ever
+read it.
 
 ### Where durable knowledge goes
 
@@ -34,7 +34,7 @@ sync.
 
 **Within a repo's own `AGENTS.md`, carry what an agent cannot discover by opening the file it is
 about to change**, and point at the implementation site for everything else. A comment at the
-implementing line is read exactly when it is relevant and cannot go stale against its own code; a
+implementing line is read exactly when it is relevant and cannot go stale against its own code. A
 copy in the instructions file can, is paid for in every session whether or not it is needed, and
 silently competes with the code it describes. Three things survive that test: the **cross-file
 invariant** nobody can see from one file (two scripts pinning one tag), the **discovery step** that
@@ -46,10 +46,10 @@ entirely** — a marker a task needs, applied in a module that never mentions it
 The artifact vocabulary is `AGENTS.md`, Agent Skills and MCP. Anything vendor-specific is admissible
 only as **harness plumbing** — something that makes one agent work better on this machine, like a
 `settings.json`, a hook or a keybinding — and never as a **carrier** for instructions or knowledge.
-That is the same line the memory-store rule above draws for one case; this is the general form, and
+That is the same line the memory-store rule above draws for one case. This is the general form, and
 it applies before a design exists rather than after.
 
-The miss is silent and expensive in the same way: a design built on a vendor mechanism reads as
+The miss is silent and expensive in the same way. A design built on a vendor mechanism reads as
 finished and works, right up until the harness changes or a second one is onboarded, and then the
 work inside it is thrown away rather than moved. Ask which of the two a mechanism is while choosing
 it.
@@ -57,7 +57,7 @@ it.
 ### Installing agent instructions and skills on this machine [needs setup.toml]
 
 `inv ai.install-skills` sets up `~`'s `.agents/skills/` and its `.claude/skills` symlink, and
-installs every skill declared in `setup.toml` (never overwriting existing content). A new Python
+installs every skill declared in `setup.toml`, never overwriting existing content. A new Python
 project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills` scaffold comes from
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time, not from a task run
 afterwards. The convention these implement is in "Agent instructions & knowledge" below.
@@ -65,20 +65,20 @@ afterwards. The convention these implement is in "Agent instructions & knowledge
 **Every skill on this machine is authored in `agent-skills`** — published as
 `TheodoreAD/agent-skills`, checked out alongside the other personal repos — not in
 `power-user-linux-setup`, which only installs them. To change one, edit it there and follow the
-`skill-authoring` skill's sequence; the step that gets skipped is the push, because the installer
+`skill-authoring` skill's sequence. The step that gets skipped is the push, because the installer
 clones from the remote, so a committed but unpushed edit reaches nothing. Never edit the copy under
-`~/.agents/skills/` — the next install overwrites it and it never leaves this machine.
+`~/.agents/skills/`: the next install overwrites it and it never leaves this machine.
 
 ### Which sessions load this file [Claude Code]
 
-Built-in `Plan`/`Explore` subagents never load it — Claude Code deliberately skips
-`CLAUDE.md`/`AGENTS.md` (every level) for those agent types. Every rule in this file reaches only
-the main session and custom subagents whose definitions don't override the system prompt; when a
+Built-in `Plan`/`Explore` subagents never load it. Claude Code deliberately skips
+`CLAUDE.md`/`AGENTS.md` at every level for those agent types. Every rule in this file reaches only
+the main session and custom subagents whose definitions don't override the system prompt. When a
 rule matters for a `Plan`/`Explore` task, restate it in that subagent's own prompt. The Bash rules
-always matter there (measured: subagents had the worst `sed -n`/`cd` rates of any session), so paste
-this into every `Plan`/`Explore`/`claude-code-guide` prompt: "Use Read/Grep/Glob for files, never
-`cat`/`sed -n`/`grep` via Bash. One Bash command per call, no `&&`/`;` chains, no `cd` — cwd is
-already the repo. Never pipe output through `| head`/`| tail`."
+always matter there, since subagents had the worst measured `sed -n`/`cd` rates of any session, so
+paste this into every `Plan`/`Explore`/`claude-code-guide` prompt: "Use Read/Grep/Glob for files,
+never `cat`/`sed -n`/`grep` via Bash. One Bash command per call, no `&&`/`;` chains, no `cd` — cwd
+is already the repo. Never pipe output through `| head`/`| tail`."
 
 **A research prompt needs one clause more**, for the same reason and with a worse measured rate:
 "Clone sources into `$RESEARCH_HOME` with the `research-library` skill and grep them locally; fetch
@@ -87,13 +87,13 @@ prompt asked for — see "About to fetch a page or file to learn how something w
 
 ### Writing conventions into a shareable skill or template
 
-Apply them to one real, already-working repo first — never straight from research to the shareable
+Apply them to one real, already-working repo first, never straight from research to the shareable
 artifact. A pilot surfaces what research can't: rules that are noise against a repo's deliberate
 style, and config footguns that would ship to every consumer verbatim.
 
 ### Proposing an enforcement mechanism for agent behavior
 
-Skills and instructions are the mainstay of directing agents — to correct a recurring agent
-behavior, prefer teaching the agent what to run over a mechanism that fires behind its back (a git
-hook, a harness hook, a CI auto-fix bot). Agents get the same standard as developers: they should
-know what to run, not be silently corrected.
+Skills and instructions are the mainstay of directing agents. To correct a recurring agent behavior,
+prefer teaching the agent what to run over a mechanism that fires behind its back — a git hook, a
+harness hook, a CI auto-fix bot. Agents get the same standard as developers: they should know what
+to run, not be silently corrected.
