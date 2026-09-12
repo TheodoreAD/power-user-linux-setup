@@ -162,7 +162,16 @@ def test_no_rule_carries_a_dated_confirmation_inline():
     three dialogs" earns its place, because it names the wrong move the reader is about to make and
     nobody takes a reference hop before making it. What does not earn its place is the dated
     attribution, which is provenance: it settles who confirmed what and when, a question no session
-    is asking mid-task, and instructions compete for attention with inline narrative.
+    is asking mid-task.
+
+    This docstring used to close on "instructions compete for attention with inline narrative",
+    citing arXiv 2601.03269. That attribution was wrong — corrected 2026-09-12 in
+    `contributing/global-agents-md.md`, which has the detail — and the claim is dropped rather than
+    re-sourced, because **no study measures incident narrative either way.** Gloaguen et al.
+    (arXiv 2602.11988) measured instructions, which are followed, and repository overviews, which
+    are not helpful; a narrated failure is neither. So the carve-out this test protects rests on an
+    argument, not a finding, and `plans/2026-09-12-imperative-vs-rationale-in-instruction-files.md`
+    keeps it open. The test is unaffected either way: its subject is the date.
     """
     # `\s+`, not a literal space: dprint reflows prose to 100 columns and will happily put the verb
     # at the end of one line and the date at the start of the next. A single-space pattern passed
