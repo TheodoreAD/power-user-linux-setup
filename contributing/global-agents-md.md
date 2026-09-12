@@ -43,8 +43,12 @@ it:
 1. **States its trigger** — the situation that fires it, named in its heading. A heading is a
    retrieval cue, not navigation; "Project conventions" is a topic, "sudo" is a trigger.
 2. **Doesn't duplicate an existing rule** — a variant extends the existing rule's section rather
-   than adding a new one. Overlapping near-duplicate rules are a measured driver of degraded
-   adherence, not just clutter.
+   than adding a new one, **but only while that rule's heading still names your trigger**. Once it
+   does not, the rule is carrying a second trigger and the variant is a split, not an extension:
+   give it its own heading and leave behind only what the original heading does name. Overlapping
+   near-duplicate rules are a measured driver of degraded adherence, not just clutter — and so is a
+   heading that no longer retrieves what sits under it. Criterion 1 is tested every time a rule
+   grows, not only when it is written.
 3. **Puts its evidence here, not inline** — dated confirmations and reproductions go in this file
    under a matching heading.
 
@@ -59,6 +63,50 @@ The intake side of this — deciding whether a candidate is durable at all and w
 `AGENTS.md`, skill, plan, this file) it belongs to — is
 `plans/2026-08-22-memory-to-agents-md-migration-sweep.md`'s taxonomy; these criteria are the
 admission gate for the candidates that taxonomy routes here.
+
+### The extend-or-split clause, added 2026-09-12
+
+Criterion 2's "a variant extends the existing rule's section" was unbounded, and that made criteria
+1 and 2 pull against each other with 2 winning every time. Each new finding went into the nearest
+existing rule because criterion 2 said to extend; criterion 1 was read as a test applied once, when
+the heading was first written. So a rule accumulated triggers its heading did not name, and nothing
+in the gate could see it happening — every individual admission was correct under the criteria as
+written.
+
+The trajectory is the measurement. Against the shape the 2026-08-23 pass landed (~2,500 body words,
+30 rules, 294 lines), the file stood at **9,292 body words, 40 rules, 873 lines** on 2026-09-12:
+**rules grew 33% while words grew 272%.** Growth arriving as rule size rather than rule count is the
+signature of extension-without-a-heading-test, and it is invisible to a review that counts rules.
+
+The split pass that followed found five rules carrying between two and four triggers each:
+
+| rule                                       | words | became                                                     |
+| ------------------------------------------ | ----- | ---------------------------------------------------------- |
+| Viewing, searching, or editing files       | 921   | viewing/editing · searching a tree · translating grep→rg   |
+| Reading a command's result                 | 674   | reading a result · absence probe · backgrounding · waiting |
+| Running a command against a different repo | 655   | writing to another repo · running a read-only command      |
+| About to commit                            | 547   | running the gate · writing the commit command              |
+| Composing a Bash call                      | 491   | trimmed; one trigger after all                             |
+
+After: **8,082 body words, 47 rules, 809 lines** — mean rule 232 → 171 words, rules over 400 words 8
+→ 3, with no rule deleted and none demoted. The per-rule evidence for each split is under the new
+headings below.
+
+**The second cost is worse than the padding, and only the split made it visible.** "Viewing,
+searching, or editing files" carried a `[Claude Code]` label that was true of its harness-tool half
+and wrong about `fd`/`rg`, which transfer to any machine — two-thirds of the biggest rule in the
+file mislabelled. A heading that stops naming its contents takes its label with it, so an
+over-extended rule does not merely cost bytes; it misroutes the triggers it absorbed.
+
+Two things the clause deliberately does not do. It tests the heading, not the word count:
+`git
+fetch/push needing an SSH key` (433 words) and `Unexplained git/file state in a working tree`
+(422 words) were left untouched because each is dense with imperatives under one trigger, and a
+leanness pass has to be able to return "already right". And it does not replace the
+≤200-line/≤15-rule reference points, which 809 lines is still four times over — the clause acts on
+where the next finding lands, which is the mechanism the growth came through, and that is the whole
+of what it claims. Measurement and the argument for the wording:
+`plans/2026-08-26-agents-md-leanness-pass.md`.
 
 ## Why the deployed file is shaped this way
 
