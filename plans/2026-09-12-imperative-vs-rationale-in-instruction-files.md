@@ -158,23 +158,20 @@ choice made per rule, it is a house voice applied to all of them.]
 Nothing here proposes trimming for its own sake, which this corpus has already tried three times and
 measured as spent (`plans/2026-08-26-agents-md-leanness-pass.md`).
 
-1. **Fix the citation first**, because it is a factual error rather than a judgement call: swap
-   `2601.03269` for `2602.11988` under "Evidence out of the deployed file", quote the
-   instructions-followed/overviews-unhelpful sentence, add the ID to the existing Gloaguen bullet,
-   and downgrade the SCALEDIF number to what it actually measured.
-2. **Adopt "match the form to the failure" as an intake question**, not as a trim. It is a criterion
-   the gate does not currently have: the criteria ask whether a rule states a trigger, duplicates,
-   and files its evidence — never what _kind_ of failure it is answering, which is what decides
-   between a prohibition, a recipe and a conditional. This is the highest-value finding here and it
-   costs no words in the deployed file.
-3. **Take the sentence length before the word count.** 23.0 against a 9.1–14.0 large-file range is
-   the metric most clearly out of band, and it is the one that can move without deleting a claim — a
-   directive and its justification in one 40-word sentence become a 12-word directive and a 12-word
-   reason, same content, both readable alone.
-4. **Leave hedging alone for now.** We are inside the observed range, and `superpowers`'
-   nuance-clause finding is about a clause appended to a recipe under test, not about an exemption
-   that records a real boundary. Revisit if 2 lands, since "express a real exception as its own
-   conditional on an observable predicate" is the same move.
+1. ~~Fix the citation first.~~ Done — `2601.03269` is gone from "Evidence out of the deployed file",
+   `2602.11988` carries the split with the instructions-followed/overviews-unhelpful sentence
+   quoted, and the SCALEDIF bullet says what its number actually measured.
+2. ~~Adopt "match the form to the failure" as an intake question.~~ Done — **criterion 4**, with the
+   prohibition-versus-recipe measurement under its own heading. The criteria had asked whether a
+   rule states a trigger, duplicates, and files its evidence, and never what _kind_ of failure it is
+   answering. Costs no words in the deployed file.
+3. ~~Take the sentence length before the word count.~~ Done across all six clusters as a
+   re-punctuation pass, not a trim: **23.0 → 17.9** mean sentence words, mixed 5.1% → 3.1%, hedged
+   6.5% → 4.5%, directives per 100 words 1.7 → **1.9**, on 8,058 → 8,012 words. Nothing was deleted;
+   the 46 words are connectives, verified against a word-level diff per fragment.
+4. ~~Leave hedging alone for now.~~ Overtaken — hedging fell to 4.5% as a side effect of 3, because
+   most nuance clauses were trailing a directive in the same sentence and splitting separated them.
+   No exemption was removed, so nothing was decided about the boundaries themselves.
 5. ~~Land the measurement script.~~ Done — `inv ai.measure-instruction-shape --corpus <dir>`, with
    the lexicon decisions pinned in `tests/unit/test_instruction_shape.py` rather than left to be
    re-argued. Re-measure with it after any of the above so the comparison stays like-for-like.
@@ -184,3 +181,25 @@ took `sorted(values)[n // 2]`; `statistics.median` averages the two middle value
 right answer for the corpus's even count of 182. Worth recording because a re-run that silently
 disagrees with a plan by four words reads as the corpus having changed. Every other figure
 reproduced to the decimal.]
+
+## Where it stands after the pass, 2026-09-12
+
+| metric                   | opened at |      now | community mean | large-file range |
+| ------------------------ | --------: | -------: | -------------: | ---------------: |
+| mean sentence words      |      23.0 | **17.9** |           11.5 |         9.1–14.0 |
+| directives per 100 words |       1.7 |  **1.9** |            3.4 |          2.0–4.1 |
+| mixed directives         |      5.1% | **3.1%** |           1.0% |         0.0–2.4% |
+| hedged directives        |      6.5% | **4.5%** |           3.3% |          0–16.2% |
+| body words               |     8,058 |    8,012 |            596 |      2,086–3,285 |
+
+Roughly half the sentence-length gap closed without deleting a claim, and directive density is now
+at the edge of the large-file range rather than below it. **The remaining half is not reachable by
+re-punctuation**, which is the honest limit of this lever: 17.9 against 9.1–14.0 needs either
+bullets (this file runs 1.2% bullet lines against a 68% mean) or fewer claims per rule, and neither
+was in scope here. Word count barely moved, and was never the target.
+
+[NEEDS CLARIFICATION: is the bullet share the next lever or a register the file should keep? It is
+the largest untouched difference against the community by far, and unlike sentence length it cannot
+be applied mechanically — a rule whose conditions genuinely interlock reads worse as a list. Worth
+one cluster as an experiment before deciding for the file, and `Searching a tree` is the natural
+candidate since its three rules are already near-enumerable.]
