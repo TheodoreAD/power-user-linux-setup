@@ -183,7 +183,9 @@ than doing nothing.
 - [Bash & the CLI allowlist (cluster intro)](#bash--the-cli-allowlist-cluster-intro)
 - [What this setup provisions (cluster intro, retired 2026-08-30)](#what-this-setup-provisions-cluster-intro-retired-2026-08-30)
 - [Composing a Bash call](#composing-a-bash-call)
-- [Viewing, searching, or editing files](#viewing-searching-or-editing-files)
+- [Viewing or editing a file](#viewing-or-editing-a-file)
+- [Searching a tree, by name or by content](#searching-a-tree-by-name-or-by-content)
+- [Translating a `grep` invocation to `rg`](#translating-a-grep-invocation-to-rg)
 - [Running a command against a different repo than the session's project](#running-a-command-against-a-different-repo-than-the-sessions-project)
 - [Changing `~/.claude/settings.json`](#changing-claudesettingsjson)
 - [git fetch/push needing an SSH key](#git-fetchpush-needing-an-ssh-key)
@@ -398,9 +400,13 @@ repo-authoring task to every machine, silently, which is exactly the failure the
 **The estimate was wrong in the same direction twice, and by a lot.** The drift pass was predicted
 at ~400 words and delivered 152, because most evidence became a pointer rather than going away; the
 structural pass was predicted at 610 and delivered 315, because more content turned out to be
-genuinely non-duplicated once it was rewritten rather than scanned. **Scanning for duplication
-overcounts it** — the test is only decidable while writing the replacement, so quote a range or
-quote nothing.
+genuinely non-duplicated once it was rewritten rather than scanned. A third, splitting the deployed
+file's largest rule the same day, predicted 350-450 words for the result and produced 525.
+
+**Three for three, always optimistic: scanning for reducible text overcounts it.** The test is only
+decidable while writing the replacement, because what reads as restatement while skimming turns out
+to be the one phrasing that carries a distinct trigger. So quote a range, say it is a floor, or
+quote nothing — and measure after, not before.
 
 The inverse case is worth keeping too, because it is the clearest statement of what an always-loaded
 file is for: the largest section, at 536 words, was **left alone deliberately.** It opens with
@@ -679,7 +685,13 @@ chains, saw the harness confirm `Shell cwd was reset` each time, and then wrote 
 defensively with an absolute `git -C`, including calls where cwd had never moved. So the clause ends
 on scope rather than on prohibition — a caution outliving the situation that justified it.
 
-## Viewing, searching, or editing files
+## Viewing or editing a file
+
+**Split out of "Viewing, searching, or editing files" on 2026-09-12.** That heading was a topic
+rather than a trigger — criterion 1 — and carried three of them at 921 words. It also carried a
+`[Claude Code]` label that was true of the harness-tool half and wrong about `fd`/`rg`, which
+transfer anywhere. The three rules now state their own triggers and the label sits only where it
+applies. The evidence below moved with its rule; nothing was dropped.
 
 The `; echo "EXIT=$?"` clause was cut to one sentence 2026-08-30, same round and same reason as
 above: the tool-reports-the-exit-code explanation now lives once, in "Reading a command's result".
@@ -710,19 +722,7 @@ tacked on to keep a 5,000-line log out of context. The clause names the substitu
 log, as a second call) and the reflexive `; echo "EXIT=$?"` that the tool makes redundant. The
 `session-bash-audit` script measures the shape as `redirect-then-filter`.
 
-The `rg -r` clause, added 2026-08-26 from a live occurrence. Retiring a plan file meant grepping
-every repo for inbound references; the call was written `rg -rn <pattern> <dir>`, reaching for
-`grep -r`'s recursive flag. `rg` is recursive by default and `-r` is `--replace`, so every hit
-printed with the matched text substituted — real paths came back as `plans/2026-08-25-n.md`. This is
-the failure mode the sibling "Reading a command's result" rule is about, one level worse: exit code
-0, seventeen hits, output that reads like a normal grep result. It was caught only because the
-mangled filename looked wrong; the same slip during a reference sweep that returned _zero_ hits
-would have read as "nothing to fix" and left dangling references behind. Placed as a clause on the
-existing `rg`-over-`grep -r` sentence rather than a new rule, because that sentence is what invites
-the flag to be carried across — criterion 2, a variant extends its rule. Considered and rejected: a
-`session-bash-audit` PATTERNS row instead. That skill can measure the rate, but the fix here is one
-clause at the exact point of confusion, and a single occurrence is not yet evidence of a rate worth
-a row ("rows with no stated cost teach nothing"). Worth adding there if it recurs.
+## Searching a tree, by name or by content
 
 ### The `fd` clause, and an exemption list that cost more than it protected, 2026-09-05
 
@@ -758,48 +758,6 @@ avoidable `find` calls are `find ~/plans …`, which route to `plans.py list` an
 rather than to `fd` — the `plan-docs` skill says so explicitly. A re-measurement that reads all 35
 as an `fd` question will attribute another skill's adherence to this clause's wording, in whichever
 direction the number happens to move.]
-
-### The `rg -r` clause rewritten as a translation, 2026-09-05
-
-It recurred, the row was added, and the row's first full read says the clause above was addressing
-the wrong shape. Seven days, 13,754 Bash calls: **32 real defective invocations across 21 sessions
-and 4 repos**, 1.2% of `rg` calls — `-rn` × 27, `-ril` × 3, `-rln` × 1, `-rl` × 1, and **not one
-bare `-r`**, which is the form the clause used as its worked example.
-
-[PITFALL: **"no bare `-r`" was first read here as proving the slip is a keystroke rather than a
-belief. That inference is wrong**, and it is worth recording because it was written into a plan and
-committed before it was caught. A `grep` user rarely wants recursion _alone_, so a believer bundles
-too — the absence of the bare form is what the belief hypothesis predicts, not evidence against it.
-The check that actually settles it is what `grep` is typed as in the same corpus: `grep -rn`
-118×/week, `grep -rln` 12×, `grep -rlF` 11×. Every defective `rg` bundle is a `grep` bundle in daily
-use, so this is one flag string carried over whole — a translation error, and translations are
-something wording can carry.]
-
-So the clause became **one edit — delete the `r`, keep every other letter** — with a table of the
-six real forms and what each silently drops, and a detection signature. Three defects it fixes, each
-identified rather than assumed: the worked example named a form that never occurs; it was a
-prohibition where this page's own `gh run watch` finding says the strongest rule is the command that
-replaces the habit; and it gave no way to recognise a mangled result, which is why all three
-occurrences on record were caught by the accident of the searched string being absent from its own
-output.
-
-[PITFALL: **bare `rg -r <pat> <path>` produces output that confirms the wrong belief instead of
-contradicting it**, which is probably why the habit is stable. `-r` takes `<pat>` as the
-replacement, so `<path>` becomes the pattern and — no path argument being left — rg searches the
-whole working directory. Probed 2026-09-05 in a directory holding the named file: fourteen hits
-**from a different file entirely**, each with the search term written over the match. Recursive,
-non-empty, containing the string searched for, exit 0. The corpus contains no instance of this form,
-so the rewritten clause covers a shape nobody has yet been caught by; it is included precisely
-because its output would be believed.]
-
-[UNVERIFIED: whether this moves the rate, and it is the first wording change in this file with a
-same-instrument baseline taken the same day (`2026-09-05-pipefail-live-rescored.json` — the
-_rescored_ one, for the reason given under "The pipe half stopped being true" below). The argument
-for trying wording at all, after the `head`/`tail` cluster spent four attempts proving it inert, is
-that those four restated one prohibition at four triggers while this one changes what is typed in
-the **success** case — a `grep`→`rg` translation happens ~150 times a week, so the rule is exercised
-constantly rather than only at the moment of the slip. If the next count holds at ~32, that argument
-is refuted and the `ask`-rule on the `rg -r` prefix is the fallback; the plan carries it.]
 
 ### Hidden paths: why `-H` is the default posture, added 2026-09-12
 
@@ -866,6 +824,77 @@ reached the question ran in auto mode, where `Grep` is withdrawn (`No such tool 
 makes Bash `rg` see `.github` while `Grep` silently does not would be worse than either answer
 alone, so the clause says "these are the Bash spellings" rather than speaking for tools nobody has
 tested. Four calls from an ordinary session would settle it.
+
+## Translating a `grep` invocation to `rg`
+
+The `rg -r` clause, added 2026-08-26 from a live occurrence. Retiring a plan file meant grepping
+every repo for inbound references; the call was written `rg -rn <pattern> <dir>`, reaching for
+`grep -r`'s recursive flag. `rg` is recursive by default and `-r` is `--replace`, so every hit
+printed with the matched text substituted — real paths came back as `plans/2026-08-25-n.md`. This is
+the failure mode the sibling "Reading a command's result" rule is about, one level worse: exit code
+0, seventeen hits, output that reads like a normal grep result. It was caught only because the
+mangled filename looked wrong; the same slip during a reference sweep that returned _zero_ hits
+would have read as "nothing to fix" and left dangling references behind. Placed as a clause on the
+existing `rg`-over-`grep -r` sentence rather than a new rule, because that sentence is what invites
+the flag to be carried across — criterion 2, a variant extends its rule. Considered and rejected: a
+`session-bash-audit` PATTERNS row instead. That skill can measure the rate, but the fix here is one
+clause at the exact point of confusion, and a single occurrence is not yet evidence of a rate worth
+a row ("rows with no stated cost teach nothing"). Worth adding there if it recurs.
+
+### The `rg -r` clause rewritten as a translation, 2026-09-05
+
+It recurred, the row was added, and the row's first full read says the clause above was addressing
+the wrong shape. Seven days, 13,754 Bash calls: **32 real defective invocations across 21 sessions
+and 4 repos**, 1.2% of `rg` calls — `-rn` × 27, `-ril` × 3, `-rln` × 1, `-rl` × 1, and **not one
+bare `-r`**, which is the form the clause used as its worked example.
+
+[PITFALL: **"no bare `-r`" was first read here as proving the slip is a keystroke rather than a
+belief. That inference is wrong**, and it is worth recording because it was written into a plan and
+committed before it was caught. A `grep` user rarely wants recursion _alone_, so a believer bundles
+too — the absence of the bare form is what the belief hypothesis predicts, not evidence against it.
+The check that actually settles it is what `grep` is typed as in the same corpus: `grep -rn`
+118×/week, `grep -rln` 12×, `grep -rlF` 11×. Every defective `rg` bundle is a `grep` bundle in daily
+use, so this is one flag string carried over whole — a translation error, and translations are
+something wording can carry.]
+
+So the clause became **one edit — delete the `r`, keep every other letter** — with a table of the
+six real forms and what each silently drops, and a detection signature. Three defects it fixes, each
+identified rather than assumed: the worked example named a form that never occurs; it was a
+prohibition where this page's own `gh run watch` finding says the strongest rule is the command that
+replaces the habit; and it gave no way to recognise a mangled result, which is why all three
+occurrences on record were caught by the accident of the searched string being absent from its own
+output.
+
+[PITFALL: **bare `rg -r <pat> <path>` produces output that confirms the wrong belief instead of
+contradicting it**, which is probably why the habit is stable. `-r` takes `<pat>` as the
+replacement, so `<path>` becomes the pattern and — no path argument being left — rg searches the
+whole working directory. Probed 2026-09-05 in a directory holding the named file: fourteen hits
+**from a different file entirely**, each with the search term written over the match. Recursive,
+non-empty, containing the string searched for, exit 0. The corpus contains no instance of this form,
+so the rewritten clause covers a shape nobody has yet been caught by; it is included precisely
+because its output would be believed.]
+
+[UNVERIFIED: whether this moves the rate, and it is the first wording change in this file with a
+same-instrument baseline taken the same day (`2026-09-05-pipefail-live-rescored.json` — the
+_rescored_ one, for the reason given under "The pipe half stopped being true" below). The argument
+for trying wording at all, after the `head`/`tail` cluster spent four attempts proving it inert, is
+that those four restated one prohibition at four triggers while this one changes what is typed in
+the **success** case — a `grep`→`rg` translation happens ~150 times a week, so the rule is exercised
+constantly rather than only at the moment of the slip. If the next count holds at ~32, that argument
+is refuted and the `ask`-rule on the `rg -r` prefix is the fallback; the plan carries it.]
+
+The six forms, kept here rather than in the rule because the rule's own plan records **nine
+occurrences and not one prevention from any wording** — so the table is evidence that the claim is
+checkable, not a device that raises adherence:
+
+| you type    | you meant | `-r` eats | what you actually get                                      |
+| ----------- | --------- | --------- | ---------------------------------------------------------- |
+| `rg -rn`    | `rg -n`   | `n`       | matches rewritten to `n`, **and no line numbers**          |
+| `rg -rl`    | `rg -l`   | `l`       | rewritten lines, **not** the file list you asked for       |
+| `rg -rln`   | `rg -ln`  | `ln`      | same, and no line numbers either                           |
+| `rg -ril`   | `rg -il`  | `il`      | **case-sensitive** search, and lines instead of files      |
+| `rg -rlF`   | `rg -lF`  | `lF`      | regex, not fixed-string; lines, not files                  |
+| `rg -r p f` | `rg p f`  | `p`       | **`f` becomes the pattern and the whole tree is searched** |
 
 ## Running a command against a different repo than the session's project
 

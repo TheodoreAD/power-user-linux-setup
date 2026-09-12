@@ -66,79 +66,53 @@ command's result"): a `tail -N` throws away the lines naming what failed, so the
 something is wrong is the one call that cannot tell you what. Redirect only when the log is
 genuinely needed later, then Grep/Read it as a second call.
 
-### Viewing, searching, or editing files [Claude Code]
+### Viewing or editing a file [Claude Code]
 
 Prefer the dedicated harness tool over its Bash equivalent: Read over `cat`/`sed -n`/`head`/`tail`,
-Grep/Glob over `grep`/`find`, Edit/Write over `sed -i`/heredocs — dedicated tools have their own
-permission gate and keep the whole result. Never pipe tool output through `| head`/`| tail` to save
-context: the harness already truncates large output and saves the full text to a file, so
-pre-truncating only loses data and forces a second run; if size is the worry, count first (`rg -c`,
-`wc -l`). That includes a log you did redirect to: Grep/Read _on the log_ as a second call — never
-`; rg … log | head` tacked onto the same one. And never append `; echo "EXIT=$?"` — it adds a chain
-for information the tool already reports. When shelling out to search anyway, use `rg` over
-`grep -r`; a non-recursive `grep` stays fine.
+Edit/Write over `sed -i`/heredocs — dedicated tools have their own permission gate and keep the
+whole result. Never pipe tool output through `| head`/`| tail` to save context: the harness already
+truncates large output and saves the full text to a file, so pre-truncating only loses data and
+forces a second run; if size is the worry, count first (`rg -c`, `wc -l`). That includes a log you
+did redirect to — Grep/Read _on the log_ as a second call, never `; rg … log | head` tacked onto the
+same one. And never append `; echo "EXIT=$?"`: it adds a chain for information the tool already
+reports.
 
-**Look files up with `fd`, and translate rather than reaching for `find`:**
-`find <dir> -name '*.py'` is `fd -e py . <dir>`, `find <dir> -iname '*plan*'` is `fd plan <dir>`.
-The `-not -path '*/.git/*'` and `-not -path '*/.venv/*'` exclusions come free, because `fd` reads
-`.gitignore` — which is also the one thing to know about it: **`fd` prints nothing rather than
-erroring for a target that is gitignored or under a dot-directory.** `fd activate <this repo>`
-returns 0 hits where `find` returns 7, because `.venv/` is both. `-H` for hidden, `-I` to ignore
-ignore-files, `-HI` for a target that is both. A `fd` that comes back empty on a file you are sure
-exists wants those flags, not `find`.
+### Searching a tree, by name or by content
 
-**`-H` and `-I` are not a pair, and treating them as one is what makes the safe flag look
-expensive.** `-H` adds the dot-files you would want searched and nothing else — measured on two
-repos, +11 and +6 files, all of them `.github/workflows/*`, `.envrc`, `.editorconfig` and the like.
-`-I` disables `.gitignore`, which is the mechanism doing the real work: `fd -t f -HI .` returns
-17,081 files against 152 for `-H`. Reach for `-I` only to find one file you know is ignored, never
-as a default.
+**`fd` over `find`, `rg` over `grep -r`**; a non-recursive `grep` stays fine. Translate rather than
+reach for the old spelling: `find <dir> -name '*.py'` is `fd -e py . <dir>`,
+`find <dir> -iname
+'*plan*'` is `fd plan <dir>`. `find` earns the call only for what `fd` cannot do
+— acting on matches (`-exec`, `-delete`), selecting by time, size or permission, `-printf`, or a
+machine without `fd`, inside a container say. That covered **2 of 37 calls** measured over a week,
+so the exemption almost certainly does not cover yours.
 
-**A tree search cannot see into `.github`, `.claude` or any other dot-directory unless you say so,
-and both tools skip them on _descent_ only.** Name the hidden directory — or a file inside it — and
-no flag is needed: `rg 'uses: ' <repo>` finds nothing while `rg 'uses: ' <repo>/.github` finds every
-workflow. That is the cheaper of the two remedies and costs no flag at all. Otherwise:
+**Both tools skip a hidden path on _descent_ only, and the miss is silent**: the command is
+well-formed, the path exists, and an empty result reads exactly like "already clean". Naming the
+directory needs no flag at all — `rg 'uses: ' <repo>` finds nothing where
+`rg 'uses: ' <repo>/.github` finds every workflow. Otherwise `fd -H`, safe as written, or
+`rg --hidden --glob '!.git'`, where the exclusion is **not** optional because git does not ignore
+its own directory.
 
-- **`fd -H`** — safe as written; `fd` excludes `.git/` by its own default rule, confirmed on two
-  repos.
-- **`rg --hidden --glob '!.git'`** — the exclusion is **not** optional and `.gitignore` will never
-  supply it, because git does not ignore its own directory. Bare `rg --hidden` walks `.git/objects`
-  and goes 146 files to 4,185. The unanchored `!.git` is correct: it matches the path component, so
-  `.github/` survives it intact.
+**`-H` and `-I` are not a pair**, and pairing them is what makes the safe flag look expensive. `-H`
+adds the dot-files you would want searched and nothing else; `-I` disables `.gitignore` and returns
+**17,081 files against 152**. Reach for `-I` only to find one file you know is ignored, never as a
+default.
 
-The miss is silent because the command is well-formed, the path exists, and both tools are behaving
-as documented — an empty result reads exactly like "already clean". (These are the Bash spellings;
-whether the harness's own `Grep`/`Glob` behave the same way is unmeasured.)
+### Translating a `grep` invocation to `rg`
 
-`find` earns the call only when it is doing something `fd` cannot: acting on matches (`-exec`,
-`-delete`), selecting by time, size or permission, `-printf`, or running somewhere `fd` is not
-installed — inside a container, say. Measured over a week, **2 of 37 `find` calls qualified**, so
-the exemption almost certainly does not cover yours.
+**One edit: delete the `r`, keep every other letter.** `rg` is recursive by default and its `-r` is
+`--replace`, which takes the next thing as a replacement string — so a carried-over `r` eats your
+flag bundle and nothing you asked for applies. Every such form exits 0 and none of them warns. The
+worst is a bare `-r`, and it is why the habit survives: rg searches for _the path you named_ across
+the whole working directory, prints hits from files you never named, and writes your pattern over
+each match — which reads exactly like the recursive search you wanted.
 
-**Translating a `grep` invocation to `rg` is one edit: delete the `r`, keep every other letter.**
-`rg` is recursive by default and its `-r` is `--replace`, which takes the next thing as a
-replacement string — so the `r` you carried over eats whatever follows it and the flags you asked
-for never apply. Every form below exits 0 and none of them warns:
-
-| you type    | you meant | `-r` eats | what you actually get                                      |
-| ----------- | --------- | --------- | ---------------------------------------------------------- |
-| `rg -rn`    | `rg -n`   | `n`       | matches rewritten to `n`, **and no line numbers**          |
-| `rg -rl`    | `rg -l`   | `l`       | rewritten lines, **not** the file list you asked for       |
-| `rg -rln`   | `rg -ln`  | `ln`      | same, and no line numbers either                           |
-| `rg -ril`   | `rg -il`  | `il`      | **case-sensitive** search, and lines instead of files      |
-| `rg -rlF`   | `rg -lF`  | `lF`      | regex, not fixed-string; lines, not files                  |
-| `rg -r p f` | `rg p f`  | `p`       | **`f` becomes the pattern and the whole tree is searched** |
-
-That last row is the one to know, because it is the reason the habit survives: a bare `-r` makes rg
-search for _the path you named_ across the entire working directory, print hits from files you never
-named, and write your pattern over each match — which reads exactly like the recursive search you
-wanted. Deliberate replacement is unaffected: spell it `--replace`, which no `grep` bundle can turn
-into.
-
-**The detection signature, since all three occurrences on record were caught by luck:** your own
-flag letters appearing where the matched text should be (`inv ai.n` for `inv ai.check-…`), line
-numbers missing after you asked for `-n`, a `-l` that printed lines, or hits from a path you did not
-name. Any of those means `-r` ate the bundle — re-run without it rather than reading the output.
+**The detection signature, since every occurrence on record was caught by luck:** your own flag
+letters appearing where the matched text should be (`inv ai.n` for `inv ai.check-…`), line numbers
+missing after you asked for `-n`, a `-l` that printed lines, or hits from a path you did not name.
+Any of those means `-r` ate the bundle — re-run without it rather than reading the output.
+Deliberate replacement is unaffected: spell it `--replace`, which no `grep` bundle can turn into.
 
 ### Running a command against a different repo than the session's project
 
