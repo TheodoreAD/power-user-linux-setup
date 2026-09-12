@@ -131,43 +131,29 @@ installed via a direct `uv tool install`, then corrected on the spot to go throu
 `inv` inside this checkout publishes everything. `spowse` (**S**ensible **POW**er-user **SE**tup;
 `spouse` is a second console script at the same entry point, for the spelling fingers reach for
 first) is a `uv tool` installed from this checkout by `inv python.install-tools`, and publishes
-**machine administration only** — no
-`quality`/`test`/`dev-env`/`docs`/`ci`/`deps`/`configs`/`agents` borrowed from `repo-tasks`, and
-none of this repo's own authoring tasks. `tasks/cli.py` builds it.
+**machine administration only**. Both namespaces are derived from `tasks.namespace` by subtraction
+rather than listed in parallel; `tasks/cli.py`'s module docstring explains the derivation, what does
+the subtracting, and why a parallel list drifts silently in the worse direction.
 
-**Both namespaces are derived from `tasks.namespace` by subtraction, never listed in parallel.** Two
-things do the subtracting, and each is recorded where it is created rather than in a list someone
-has to remember:
+**The half that fires while you are editing some other module: a new task ships in `spowse` unless
+you mark it `@util.dev_only`.** That is the right default — most tasks here administer a machine —
+but it makes the decision yours at the moment you type `@task`, in a file that says nothing about
+it. Ask whether the task acts on _this repo_ or on _the machine_: `catalog.render-packages`
+regenerates a docs table from `setup.toml` and is marked; `deploy.all` writes the home directory and
+is not. The line cuts inside collections, not only between them —
+`allowlist.apply`/`status`/`check-coverage` ship while the other six `allowlist` tasks are marked,
+because those write into `cli-allowlist/` in the checkout. `tests/unit/test_cli.py` pins the current
+membership, so a mistake fails the gate rather than shipping.
 
-- **Borrowed collections** — `tasks/__init__.py`'s `_add_borrowed()` records each name in
-  `BORROWED_COLLECTIONS` as it adds it. Publish a new `repo_tasks` collection through that helper
-  and the shim excludes it automatically.
-- **Development tasks** — `@util.dev_only`, applied directly under `@task`, on the task itself. A
-  collection left with no surviving tasks is dropped rather than published empty, which is what
-  makes `catalog` disappear without anything naming it.
+**The install is `--editable`, and that is load-bearing rather than stylistic**: PULSE reaches
+`setup.toml` and `config/` through `Path(__file__).parent.parent`, so a non-editable
+`uv tool install` anchors at the tool's own site-packages where neither exists, and every read comes
+back missing with **exit 0 and no error**.
 
-**So a new task ships in `spowse` unless you mark it**, which is the right default (most tasks here
-administer a machine) but means the decision is yours at the moment you add one. Ask whether the
-task acts on _this repo_ or on _the machine_: `catalog.render-packages` regenerates a docs table
-from `setup.toml` and is marked; `deploy.all` writes the home directory and is not. The line cuts
-inside collections, not just between them — `allowlist.apply`/`status`/`check-coverage` ship while
-the other six `allowlist` tasks are marked, because they write into `cli-allowlist/` in the
-checkout. `tests/unit/test_cli.py` pins the current membership, so a mistake here fails the gate
-rather than shipping.
-
-**The install is `--editable` and that is load-bearing, not stylistic.** PULSE reaches `setup.toml`
-and `config/` through `Path(__file__).parent.parent`; a non-editable `uv tool install` anchors that
-at the tool's own site-packages, where neither exists, and every read comes back missing with **exit
-0 and no error**. It is also what keeps `deploy.status` comparing the machine against a checkout you
-can `git pull` instead of a frozen copy. `setup.toml`'s `editable` field and
-`tests/unit/test_python.py` both exist for this.
-
-**Full writeup is [`contributing/spowse-shim.md`](contributing/spowse-shim.md)** — the measurement
-that showed the portability half was already done before anything was built, the probe table proving
-the editable anchor survives every `uv tool upgrade` shape (and the one failure that does bite, a
-moved checkout, which reports as `ModuleNotFoundError: No module named 'tasks'`), why the name is
-not `pulse`, and the two alternatives that lose. Read it before re-deriving this design or
-"simplifying" the per-task marker into a list.
+[`contributing/spowse-shim.md`](contributing/spowse-shim.md) has the rest: the probe table showing
+the editable anchor survives every `uv tool upgrade` shape, the one failure that does bite (a moved
+checkout, reported as `ModuleNotFoundError: No module named 'tasks'`), why the name is not `pulse`,
+and the alternatives that lose. Read it before "simplifying" the per-task marker into a list.
 
 ## Post-install verification (`inv verify.all`)
 
@@ -274,49 +260,33 @@ iteration; don't "fix" it by uncommenting the trigger without checking with the 
 ## The one-line installer, and what gates the `stable` tag
 
 `install.sh` is the distribution entry point — the line `README.md` and `docs/index.md` tell a
-person to paste onto a fresh machine. It clones, runs `bootstrap.sh`, then asks before `inv setup`
-(apt's shape: on by default, `--yes` to skip, `--bootstrap-only` to stop early).
+person to paste onto a fresh machine. It clones, runs `bootstrap.sh`, then asks before `inv setup`.
 
-**It is a download-then-run, never a `curl … | bash`, and that is measured rather than stylistic.**
-A pipeline reports its _last_ command's status, so a failed download hands `bash` an empty stdin and
-the whole thing exits 0 claiming success — written up once in `bootstrap-devcontainer.sh`'s header,
-pointed at rather than restated. Two consequences are specific to this script: `bootstrap.sh`'s
-repo-tasks question is `[ -t 0 ]`-guarded, so a pipe silently takes `setup.toml`'s default, and
-`util.ensure_sudo()` falls back to `sudo -v` owning the real terminal, which a pipe has none of.
-**With no terminal and no `--yes` the script exits 1** rather than running a machine setup because
-the question could not be shown.
+**Never write it as `curl … | bash`, anywhere.** A pipeline reports its _last_ command's status, so
+a failed download hands `bash` an empty stdin and the whole thing exits 0 claiming success. The
+measurement, and the two consequences specific to this script, are in `install.sh`'s own header and
+`bootstrap-devcontainer.sh`'s — this clause is here because the wrong form is easy to paste into a
+README without opening either file.
 
-Its clone destination is **permanent**: `spowse` is installed `--editable` against it and
-`deploy.status` compares the machine to it, so an existing checkout is adopted exactly as it stands
-— no fetch, no ref change — and anything else at that path is a refusal, never a delete.
+**Three things no single file can tell you**, which is the reason they are here and not in a
+comment:
 
-**`stable` is a tag shared by this script and `bootstrap-devcontainer.sh`**, and only
-`devcontainer.yml`'s `publish-stable` moves it, now gated on three jobs: the container `smoke-test`,
-`install-smoke` and `quality`. The latter two live in their own `workflow_call` files
-(`.github/workflows/install-smoke.yml`, `quality.yml`) precisely because `needs:` does not reach
-across workflows — `ci.yml` calls them for per-commit coverage and `devcontainer.yml` calls them as
-the release gate. **Do not copy either job into a second workflow**; a copy drifts, which is the
-same argument `tasks/cli.py` makes about parallel task lists. `docs` is deliberately not a gate: a
-documentation-site build failure does not change what a consumer of the tag installs.
+- **`stable` is shared.** `install.sh` and `bootstrap-devcontainer.sh` pin the same tag, so whatever
+  moves it moves both consumers at once. Only `devcontainer.yml`'s `publish-stable` should, and it
+  is gated on three jobs.
+- **Never move that tag by hand** — done once, and it published a regression to both consumers. And
+  a local tag is not evidence about what is published: a plain `git fetch` never updates a tag that
+  moved, so ask the host with `git ls-remote --tags origin stable`.
+- **The clone destination is permanent.** `spowse` is installed `--editable` against it and
+  `deploy.status` compares the machine to it, so the installer adopts an existing checkout exactly
+  as it stands, and refuses anything else at that path rather than deleting it.
 
-`install-smoke` installs **the commit under test**, not what is published — `--repo-url` points at
-the checkout and the clone takes a branch created at `HEAD`, because cloning `stable` from GitHub
-would confirm the past instead of gating the change. `git branch` rather than a SHA
-(`git clone
---branch` takes a branch or tag only), and `fetch-depth: 0` because
-`git clone --depth 1` from a shallow repo fails outright. Everything that happens _before_ a
-download — adopt, refuse, the no-terminal refusal — is covered hermetically in
-`tests/unit/test_install_sh.py` instead, so it runs in the local gate.
-
-**Never move `stable` by hand — let `publish-stable` do it.** Both consumers pin that ref, so a
-hand-move publishes whatever is broken at that commit to both at once. It has been done once and it
-did exactly that. And a local tag is not evidence about what is published: a plain `git fetch` never
-updates a tag that moved, so check with `git ls-remote --tags origin stable`.
-
-[`contributing/install-entry-points.md`](contributing/install-entry-points.md) has that incident in
-full, plus why there are two clone-and-install scripts rather than one factored spine, why the file
-is `install.sh` and not `bootstrap-remote.sh`, and why `sudo bash` is refused. Read it before
-proposing to deduplicate the two.
+Everything else is documented where it is implemented, and that is where to read it before changing
+it: `.github/workflows/devcontainer.yml` and `install-smoke.yml` each explain their own gating and
+why the job is a `workflow_call` rather than a copy, and
+[`contributing/install-entry-points.md`](contributing/install-entry-points.md) has the tag-move
+incident in full, why there are two scripts rather than one factored spine, why the file is called
+`install.sh`, and why `sudo bash` is refused.
 
 ## CLI permission allowlist pipeline
 
