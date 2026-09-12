@@ -130,13 +130,35 @@ structural choice:
   instruction-following literature found no consistent relationship between position and follow rate
   ([arXiv 2511.13900](https://arxiv.org/pdf/2511.13900),
   [arXiv 2510.10276](https://arxiv.org/html/2510.10276v1)) — don't reorder for primacy/recency.
-- **Merging near-duplicates.** Conflict between overlapping instructions is a primary driver of
-  degradation as instruction count grows ([arXiv 2510.14842](https://arxiv.org/abs/2510.14842),
-  SCALEDIF) — real but modest (~4–7pp), so dedup/merge is the change most likely to improve
-  adherence, worth doing without overselling.
-- **Evidence out of the deployed file.** Instructions compete for attention with inline narrative
-  ([arXiv 2601.03269](https://arxiv.org/html/2601.03269v1)) — relocating provenance here buys
-  adherence independent of the token saving. This file exists because of that finding.
+- **Merging near-duplicates.** Conflict between overlapping instructions is a driver of degradation
+  as instruction count grows ([arXiv 2510.14842](https://arxiv.org/abs/2510.14842), "Boosting
+  Instruction Following at Scale", SCALEDIF) — they attribute the decline to "the degree of tension
+  and conflict that arises as the number of instructions is increased". **The ~4–7pp figure this
+  page used to attach here is theirs but measures something else**: it is the gain from their own
+  Instruction Boosting method (up to 7 points at two instructions, 4 at ten), not the size of the
+  duplication penalty. Dedup/merge is still the safest change to make; the number was never evidence
+  for how much it buys.
+- **Evidence out of the deployed file.** Corrected 2026-09-12 — this bullet previously cited
+  [arXiv 2601.03269](https://arxiv.org/html/2601.03269v1) for "instructions compete for attention
+  with inline narrative", and said this file existed because of that finding. **That paper is "The
+  Instruction Gap: LLMs get lost in Following Instruction"**, on instruction compliance across 13
+  LLMs in enterprise RAG; its sentence is that instructions "often compete for attention with
+  lengthy knowledge snippets" — _retrieved documents_, not authored prose. The paraphrase swapped
+  the referent. What supports the split instead is Gloaguen et al. below: instructions are followed,
+  overviews are not helpful. Relocating provenance here is the same move applied to a third category
+  — incident narrative — which **no study measures either way**
+  (`plans/2026-09-12-imperative-vs-rationale-in-instruction-files.md`).
+- **Instructions are followed; descriptions are not.**
+  [arXiv 2602.11988](https://arxiv.org/abs/2602.11988), Gloaguen et al. 2026 (ETH Zurich, ICLR 2026
+  workshop) — the ID for the +4%/+19% measurement quoted in
+  `plans/2026-08-26-agents-md-leanness-pass.md`, which carried the numbers without one. From the v2
+  abstract: "while instructions in the context files are well followed by coding agents, repository
+  overviews, although popular and recommended by model providers, are not helpful … context files
+  are useful for specifying non-standard coding practices". The v1 abstract, still on
+  [the SRI Lab page](https://www.sri.inf.ethz.ch/publications/gloaguen2026agentsmd), puts the same
+  result the other way up: "unnecessary requirements from context files make tasks harder, and
+  human-written context files should describe only minimal requirements." Quote the version you mean
+  — the overviews sentence exists only in v2.
 - **What transfers from
   [skill authoring](https://platform.claude.com/docs/en/agents-and-tools/agent-skills/best-practices):**
   progressive disclosure (the deployed file is the overview, this file the on-demand detail);
