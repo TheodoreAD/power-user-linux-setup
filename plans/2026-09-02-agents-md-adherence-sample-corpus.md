@@ -1021,6 +1021,69 @@ of it is `git add … && git commit -m …`, which this session did fifteen time
 argued before that the pathspec-commit form the global rules prefer is itself a chain by the
 instrument's definition. Worth separating in a future instrument change rather than in prose here.
 
+### Sample 19 — `power-user-linux-setup`, 441 calls, and two tags that inverted against sample 18
+
+`audit.py --session 30c6413a --until 2026-09-12T12:02:42+03:00 --compare 2026-09-06.json`,
+instrument at **`9b69616`**, `setopt` answering `pipefail`. **12/17.** Session start
+`2026-09-09T21:09:49.355Z`, transcript `30c6413a-66ed-4f51-b8f5-eb3dddd550cc.jsonl`. Sixty-three
+hours across three days, auto mode throughout: absorbing five filed plans, a `repo-tasks` v0.3.0
+sweep, five plan retirements, three `agents-md` clauses, and leanness passes on both instruction
+files.
+
+| tag                     |    rate | vs baseline                    |
+| ----------------------- | ------: | ------------------------------ |
+| `chain`                 |     25% | −22pp, OK                      |
+| **`heredoc`**           | **18%** | **+7pp, MISS**                 |
+| **`sed-n`**             |  **9%** | **+4pp, MISS**                 |
+| `head/tail`             |      7% | −21pp, OK — **0 actually cut** |
+| `git-mutating-in-chain` |      5% | −1pp, OK                       |
+| `search\|head`          |      4% | —                              |
+| **`cat-view`**          |  **3%** | **+1pp, MISS**                 |
+| `exit-masked`           |      2% | **1 gate, 10 listing**         |
+| `chain5`                |      2% | —                              |
+| **`cd-own-repo`**       |   **1** | **MISS**                       |
+| **`echo-exit`**         |   **1** | **MISS**                       |
+| `git-C-own-repo`        |       0 | OK                             |
+| `git-add-all`           |       0 | OK                             |
+| `git-undo-relative`     |       0 | OK                             |
+| `store-write-by-git`    |       0 | OK                             |
+| `rg-replace-bundle`     |       0 | OK                             |
+
+**Two tags inverted against sample 18, which was the same repo, the same mode and the same model
+eight days earlier.** `heredoc` went 2% → 18% and `sed-n` 0% → 9%, while `chain` fell 40% → 25%,
+`head/tail` 24% → 7% and `exit-masked` 17% → 2%. Nothing about the wording changed in between for
+any of the five.
+
+**What differed is the kind of work, and it is the cleanest instance the corpus has.** Sample 18
+built `install.sh` and its CI — writing new files and running them. This session edited prose: exact
+string replacement inside large markdown files, ~40 times, for which `python3 - <<'PY'` with an
+asserted `count(old) == 1` is a genuinely better instrument than `Edit` (it fails loudly on an
+ambiguous anchor, and the same script can do several replacements atomically). The `sed -n` calls
+are the same shape one level down — reading a known line range out of a 1,100-line file to find an
+insertion point. So this row is not "the rules were ignored"; it is **a session whose task made two
+banned shapes the fitted tool**, which is the reading sample 16's spread left the corpus without a
+term for.
+
+[PITFALL: **the rule anticipated this exactly, and the clause it asks for went unsaid anyway.** The
+`bash` fragment's auto-mode paragraph says to keep using Read/Edit/Write and _"say once that you are
+doing so rather than silently diverging from a system instruction"_ — a clause written for the
+opposite direction, and equally owed here. This session diverged the other way, toward the harness's
+reminder and away from the rule, across 132 calls, and never said so once. A one-sentence
+acknowledgement is the cheapest thing in the whole corpus and it is the part that did not happen,
+which makes this a `not followed` row rather than a `wording is wrong` one — the wording named the
+situation and prescribed the remedy.]
+
+**The improvements are worth as much as the misses and have the same cause.** `exit-masked` at 2%
+with **one** gate call — against sample 18's 27 — is the corpus's best, and the single gate instance
+was a `git rm … && inv quality.precommit 2>&1 | tail -4` chain the session flagged about itself in
+the moment. `pipefail` was in force, so it held. `store-write-by-git` and `git-add-all` at 0 across
+a session that made ~30 commits and eight store writes is the parallel-session cluster working; so
+is `git-C-own-repo` at 0 while `git -C` was used correctly against two _other_ repos throughout.
+
+**`0 actually cut` for a third consecutive row**, 33 `head`/`tail` calls this time. The corpus now
+has three rows and 141 calls with zero bytes lost, which is past the point where the rate can be
+described as a proxy for data loss.
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
