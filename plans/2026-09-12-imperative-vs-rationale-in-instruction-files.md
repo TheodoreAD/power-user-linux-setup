@@ -198,8 +198,27 @@ re-punctuation**, which is the honest limit of this lever: 17.9 against 9.1–14
 bullets (this file runs 1.2% bullet lines against a 68% mean) or fewer claims per rule, and neither
 was in scope here. Word count barely moved, and was never the target.
 
-[NEEDS CLARIFICATION: is the bullet share the next lever or a register the file should keep? It is
-the largest untouched difference against the community by far, and unlike sentence length it cannot
-be applied mechanically — a rule whose conditions genuinely interlock reads worse as a list. Worth
-one cluster as an experiment before deciding for the file, and `Searching a tree` is the natural
-candidate since its three rules are already near-enumerable.]
+### The bullet experiment, run on `Searching a tree` — answered, rule by rule
+
+Converted the three places that genuinely enumerate: the `find`→`fd` translations, the four things
+`find` can still do, and the three ways past a hidden path. The prose around them stayed, because
+the silent-miss explanation and the `-H`-against-`-I` contrast are arguments rather than lists.
+
+| measured                 | before | after |
+| ------------------------ | -----: | ----: |
+| `bash.md` bullet share   |   3.8% | 10.0% |
+| `bash.md` sentence words |   16.8 |  15.4 |
+| assembled bullet share   |   1.2% |  2.8% |
+| assembled sentence words |   17.9 |  17.5 |
+
+[DECISION: **bullets are applied rule by rule where the content is already a list, and the 68%
+community share is not a target for this file.** One rule of roughly ten moved its fragment six
+points, so reaching 68% means enumerating rules whose conditions interlock — and a conditional
+broken into bullets loses the ordering that made it a rule rather than a menu. The experiment was
+worth running because it converts "we are 66 points off the norm" into a number per rule: about
+0.16pp of assembled bullet share per rule converted, which prices the rest of the gap at more rules
+than this file has.]
+
+The remaining sentence-length gap is therefore real and mostly not reachable by form changes. 17.5
+against a 9.1–14.0 large-file range is claims per rule, which is the lever the user declined at the
+leanness pass's opening (`plans/2026-08-26-agents-md-leanness-pass.md`) and nothing here reopens.
