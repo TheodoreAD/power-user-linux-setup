@@ -1595,6 +1595,54 @@ adherence corpus's "authoring a rule is not evidence of following it", one step 
 stating the purpose, which this section already did, and for naming the shapes that defeat it, which
 it now does three times over.
 
+### The double quote, added 2026-09-11
+
+The rule named backticks and `$` — the two characters that make the shell _run_ something — and
+missed the one that _ends_ the argument. Three instances inside about four hours, 2026-09-09 and
+2026-09-10, and they matter as a set because the outcome differs every time:
+
+| what followed the stray `"`       | outcome                                                         |
+| --------------------------------- | --------------------------------------------------------------- |
+| a `/`, so zsh read it as a path   | commit **landed truncated** mid-sentence, then `exit 127`       |
+| a `?`, so zsh globbed it          | **nothing committed**, `exit 1`, `no matches found`             |
+| a `--` pathspec after the message | commit landed, pathspec became message text, **exit 0, silent** |
+
+**The punctuation after the closing quote decides which one you get**, and that is not something an
+author can reason about while writing prose. So the failure is not "the commit lands truncated" — it
+is "the shell reinterprets the rest of your paragraph, and what it does next depends on characters
+you were not thinking about".
+
+[PITFALL: **the third instance was produced by knowing about the first two.** It was written while
+filing the other two, by a session that had just spent two paragraphs on the hazard. The message was
+single-quoted precisely to dodge the double quote, and then the pathspec form was appended from
+muscle memory still carrying its own `"` — which opened a quoted span rather than closing one, so
+`-- <path>` never became a pathspec. It produced **no diagnostic at all**, and was caught only
+because that session checked `git log -1` on principle. Knowing the hazard does not prevent the
+variant you are not watching for, which is why the rule's target is the quoting of the whole `-m`
+argument including what follows it, not "characters inside the message".]
+
+**Why not switch to single quotes**, which would make backticks, `$` and `"` all inert in one move:
+counted over the 830 commit messages in this repo in the month to 2026-09-11, **73% contain an
+apostrophe and 25% contain a double quote.** Single-quoting trades a failure that hits a quarter of
+messages for one that hits three quarters, and an apostrophe is far harder to write around than a
+quotation mark — so the double-quoted argument stays and the third character joins the ban.
+
+The practical tell is shared by all three: **the error quotes your own prose back at you**
+(`file name too long: <the rest of your paragraph>`), which reads like something wrong with a path
+rather than a quoting problem. Since whether a commit happened differs per case, `git log -1` is the
+first thing to run, not the retry.
+
+**Two things this does not settle**, both deliberately left:
+
+- Whether it should also be a `session-bash-audit` pattern. A `-m` argument carrying an unescaped
+  quote of the wrong kind is mechanically detectable, and `agent-skills` already proposes exactly
+  that for the `$` half — so the two belong in one pattern rather than two, and it is that repo's
+  call, not this one's.
+- Whether the same hazard reaches `gh pr create --body` and `gh issue comment`. Structurally it
+  must, and the consequence is worse — those are published at the moment they are created, so a
+  truncated one is visible before anyone notices. Not observed, so it is reasoning rather than
+  evidence; the rule already names both bodies.
+
 ## Committing multi-part work
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general

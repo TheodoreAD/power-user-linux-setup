@@ -101,6 +101,20 @@ only the lack of privilege made it harmless. Commit messages are prose, not Mark
 command in plain words and nothing breaks. Same hazard in any other double-quoted body —
 `gh pr create --body`, `gh issue comment`.
 
+**The double quote is the third character, and it is the one that does not announce itself.** It
+_ends_ the argument, so the rest of your paragraph becomes shell words — and what happens next is
+decided by punctuation you were not thinking about while writing prose. Three outcomes, all observed
+within one day: a `/` in the remainder let git commit a message **truncated** mid-sentence and then
+failed afterwards, which reads as a failed commit needing a retry; a `?` made zsh glob, find no
+match, and **refuse to run the command at all**; and a stray `"` before a `-- <path>` pathspec
+turned the pathspec into **message text**, committing at exit 0 with no diagnostic whatsoever. That
+last one was produced by single-quoting to avoid the first two, which is why the answer is not to
+switch quote styles: across the last month, 73% of commit messages here contain an apostrophe and
+25% a double quote, so single-quoting trades a rare failure for a frequent one. Keep the
+double-quoted argument and keep all three characters out of the prose. The tell, in every case, is
+an error quoting **your own sentence** back at you — so check `git log -1` before retrying, since
+whether anything was committed differs per case.
+
 **Then keep it where the user can read it: one inline `-m`, in its own call.** The approval prompt
 shows the _command_, and the message is what the user reads to decide, so anything displacing it
 from the prompt defeats the rule while looking like compliance. Three shapes do, and each has been
