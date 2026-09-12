@@ -562,6 +562,16 @@ clause records the one real ask-rule bypass found: `Bash(git push:*)` does not m
 
 ## Composing a Bash call
 
+**The user's own words on chaining, moved here 2026-09-12** when the rule was cut to its
+imperatives. Said 2026-09-01, on a `git add && scan && git commit -F … && git log` chain: _"i don't
+like this chaining at all, it obscures the commit message, which is what i want to read when i
+approve or not approve this."_ The rule states the consequence; this is where the instruction came
+from.
+
+The `git -C` half's measurement, for the same reason: it ran at **23% of all calls in one session
+that typed no `cd` at all**, which is the shape the rule compresses to "six times as often as the
+banned `cd` ever occurred". A rule that says a mistake is common needs somewhere to show it is.
+
 Rewritten 2026-08-24 from "prefer several simple calls" to "one command per call" with a closed list
 of two permitted chain shapes, after the audit measured 64–71% of Sonnet/Opus calls chained (13–24%
 five or more parts) with the previous wording in force. The earlier rationale was prompt friction

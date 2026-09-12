@@ -32,39 +32,30 @@ so rather than silently diverging from a system instruction.
 
 ### Composing a Bash call [Claude Code]
 
-One command per call. The costs of a chain are harness-side, not just prompts: one call keeps one
-whole output and one real exit code, while a chain's `$?` is its last command's and its output is
-one blob; and independent calls issued as separate tool-call blocks in one response already run in
-parallel, so gluing with `;`/`&&` gains nothing.
+**One command per call.** A chain hands you one blob of output and its last command's `$?`, while
+independent calls issued as separate tool-call blocks in one response already run in parallel — so
+gluing with `;`/`&&` gains nothing and loses the real exit code.
 
 **A chain also hides the thing being approved.** The prompt shows the whole compound command, so
-whatever the user actually needs to read — a commit message, the paths being deleted, the branch
-being pushed — sits in the middle of it instead of being the thing on screen. Said plainly by the
-user 2026-09-01 on a `git add && scan && git commit -F … && git log` chain: _"i don't like this
-chaining at all, it obscures the commit message, which is what i want to read when i approve or not
-approve this."_ Anything carrying content for a human to review goes in its own call.
-`echo "=== label ==="` between steps is the tell that a chain should have been several calls.
-Exactly one chain shape is fine: `cd <other repo> && <one command>` for a cross-repo step — and
-after it, treat cwd as unknown: it may persist or be reset, both observed on one build (see "Running
-a command against a different repo"). Never `cd` into the session's own repo as a matter of course —
-cwd already is it — but after a cross-repo chain, the next call that assumes the session repo
-(`inv`, `pytest`, a bare `rg`) either takes an absolute path or is itself a
-`cd <session repo> && …`.
+whatever the user needs to read — a commit message, the paths being deleted, the branch being pushed
+— sits in the middle of it instead of being the thing on screen. Anything carrying content for a
+human to review goes in its own call, and `echo "=== label ==="` between steps is the tell that a
+chain should have been several. **Exactly one chain shape is fine**:
+`cd <other repo> && <one command>` for a cross-repo step, after which treat cwd as unknown until a
+call re-establishes it.
 
-**`git -C <the session's own repo>` is the same mistake wearing the recommended flag**, and it is
-the commoner of the two by a wide margin: agents comply with the `cd` ban and then aim the
-directory-scoping option this rule recommends back at the repo they are already in — six times as
-often as the banned `cd` ever occurred, and in one session at 23% of all calls while that session
-typed no `cd` at all. Inside the session's own repo, run the bare command. `git -C` is for a target
-that genuinely is another repo, and a caution that outlives the cross-repo step which justified it
-is not caution any more.
+**Never `cd` into the session's own repo, and never `git -C` it either** — cwd already is it. The
+second is the commoner mistake by a wide margin: agents comply with the `cd` ban and then aim the
+directory-scoping option at the repo they are already standing in, **six times as often as the
+banned `cd` ever occurred**. `git -C` is for a target that genuinely is another repo, and a caution
+that outlives the cross-repo step which justified it is not caution any more.
 
-Run a gate or test plain — `inv quality.precommit`, `pytest` — never `2>&1 | tail -N`, never
-`> log 2>&1; echo $?` with a Read of the log afterwards. The cost is now the output rather than the
-exit code, since `PIPE_FAIL` carries a failing gate's status through the pipe (see "Reading a
-command's result"): a `tail -N` throws away the lines naming what failed, so the call that told you
-something is wrong is the one call that cannot tell you what. Redirect only when the log is
-genuinely needed later, then Grep/Read it as a second call.
+**Run a gate or test plain** — `inv quality.precommit`, `pytest` — never `2>&1 | tail -N`, never
+`> log 2>&1; echo $?` with a Read of the log afterwards. `PIPE_FAIL` already carries a failing
+gate's status through a pipe, so the cost is the output rather than the exit code: a `tail -N`
+throws away the lines naming what failed, which makes the call that told you something is wrong the
+one call that cannot tell you what. Redirect only when the log is genuinely needed later, then
+Grep/Read it as a second call.
 
 ### Viewing or editing a file [Claude Code]
 
