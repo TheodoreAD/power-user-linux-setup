@@ -14,9 +14,10 @@ does not strip the why, it **puts the why somewhere else and keeps the directive
 Measured rather than surveyed. The research library already held **182 measurable agent instruction
 files** (`AGENTS.md`/`CLAUDE.md`/`GEMINI.md`, incl. `openai/codex`, `git`, `telegram-desktop`,
 `sst/opencode`, `raycast/extensions`), so the comparison is against real files rather than against
-advice about files. Script: `instr_mix.py`, classifying each sentence independently for a directive
-(sentence-initial base-form verb, or a deontic modal) and for rationale/provenance (causal markers,
-dates, incident verbs). A sentence carrying both is the shape under test.
+advice about files. Landed as `inv ai.measure-instruction-shape` (`tasks/instruction_shape.py`),
+which reproduces every number below exactly; it classifies each sentence independently for a
+directive (sentence-initial base-form verb, or a deontic modal) and for rationale/provenance (causal
+markers, dates, incident verbs). A sentence carrying both is the shape under test.
 
 ## Evidence
 
@@ -24,7 +25,7 @@ dates, incident verbs). A sentence carrying both is the shape under test.
 
 | metric                                        | `~/.agents/AGENTS.md` | community mean | median | the 8 files over 2k words |
 | --------------------------------------------- | --------------------: | -------------: | -----: | ------------------------: |
-| body words                                    |             **8,058** |            596 |    373 |               2,086–3,285 |
+| body words                                    |             **8,058** |            596 |    369 |               2,086–3,285 |
 | directives per 100 words                      |               **1.7** |            3.4 |    3.0 |                   2.0–4.1 |
 | mean sentence words                           |              **23.0** |           11.5 |   10.7 |                  9.1–14.0 |
 | directive sentences also carrying rationale   |              **5.1%** |           1.0% |   0.0% |                  0.0–2.4% |
@@ -37,7 +38,7 @@ around them. At 1.7 directives per 100 words against a 3.4 mean it delivers **ha
 per unit of always-loaded context**, and it is below the floor of every large file in the corpus.
 
 [PITFALL: **size does not explain it, and that was the obvious way for this measurement to be
-wrong.** A 373-word median invites the objection that a 8,058-word file is being compared against
+wrong.** A 369-word median invites the objection that a 8,058-word file is being compared against
 sticky notes. Controlled: only 8 community files clear 2,000 words and the largest is 3,285, so
 `~/.agents/AGENTS.md` is **2.5× the largest agent instruction file in the corpus.** Within that
 large-file group every gap holds or widens — mean sentence length 9.1–14.0 against our 23.0,
@@ -174,5 +175,12 @@ measured as spent (`plans/2026-08-26-agents-md-leanness-pass.md`).
    nuance-clause finding is about a clause appended to a recipe under test, not about an exemption
    that records a real boundary. Revisit if 2 lands, since "express a real exception as its own
    conditional on an observable predicate" is the same move.
-5. Re-measure with `instr_mix.py` after any of the above, so this comparison stays like-for-like.
-   The script belongs in the repo if it is going to be re-run — it is currently a scratchpad file.
+5. ~~Land the measurement script.~~ Done — `inv ai.measure-instruction-shape --corpus <dir>`, with
+   the lexicon decisions pinned in `tests/unit/test_instruction_shape.py` rather than left to be
+   re-argued. Re-measure with it after any of the above so the comparison stays like-for-like.
+
+[PITFALL: **the median moved 373 → 369 on the port, and neither number was wrong.** The scratchpad
+took `sorted(values)[n // 2]`; `statistics.median` averages the two middle values, which is the
+right answer for the corpus's even count of 182. Worth recording because a re-run that silently
+disagrees with a plan by four words reads as the corpus having changed. Every other figure
+reproduced to the decimal.]
