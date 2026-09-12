@@ -217,6 +217,7 @@ than doing nothing.
 - [Verifying behavior in a repo with test coverage](#verifying-behavior-in-a-repo-with-test-coverage)
 - [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
 - [About to commit](#about-to-commit)
+- [Writing the commit command](#writing-the-commit-command)
 - [Committing multi-part work](#committing-multi-part-work)
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
 - [Something the user wrote looks like a typo or mental slip](#something-the-user-wrote-looks-like-a-typo-or-mental-slip)
@@ -1677,6 +1678,12 @@ failed log read, zero occurrences of the shape. The hook design stays parked as 
 as a queued next step. The full sweep and the two ways of miscounting it are recorded under
 "Proposing an enforcement mechanism for agent behavior".
 
+## Writing the commit command
+
+**Split out of "About to commit" on 2026-09-12.** Running the gate and writing the commit command
+are separate moments, and the message half had grown to four times the gate half — three admitted
+clauses, each from its own occurrence, stacked under a heading naming only the first moment.
+
 ### The backtick clause
 
 Admitted 2026-09-01, from one confirmed occurrence in this repo. A commit describing the `apt.py`
@@ -1801,6 +1808,16 @@ first thing to run, not the retry.
   evidence; the rule already names both bodies.
 
 ## Committing multi-part work
+
+**The commit-message-body floor is deliberately unenforced, moved here 2026-09-12.** The rule states
+the floor and stops; the argument for why nothing checks it was 90 words inside it. A `commit-msg`
+hook is the first thing anybody reaches for and is refused for the same reason every other
+behind-the-agent's-back mechanism is — see "Proposing an enforcement mechanism for agent behavior".
+That call was re-measured 2026-09-02 and the CI shape it would have caught has stopped occurring.
+
+The rule exists because two bare commits carrying only a `Co-Authored-By:` trailer passed unnoticed
+in the session that prompted it, which is why the rule names the trailer explicitly rather than
+saying "a body is required" and trusting the reader to notice `%b` was technically satisfied.
 
 Reaffirmed 2026-08-23 in `scaffoldapy` ("we should use granular commits, that should be a general
 rule") after a "want this split into three commits?" question — the second time the rule needed

@@ -93,87 +93,69 @@ the repo's own equivalent) — every commit, including a markdown-only one. "Jus
 these repos, all of them pushed from commits that skipped the gate. The gate is what CI runs;
 skipping it schedules a red run that someone else reads.
 
-**Write the message without backticks or `$`.** Both are live inside a double-quoted shell argument:
-backticks are command substitution, so the shell _runs_ what they enclose before git sees it and
-stores the output in their place. A message describing an apt fix ran `apt-get install -f -y` and
-`dpkg -i && rm` on the machine and committed two empty strings where the quoted commands belonged;
-only the lack of privilege made it harmless. Commit messages are prose, not Markdown — name a
-command in plain words and nothing breaks. Same hazard in any other double-quoted body —
-`gh pr create --body`, `gh issue comment`.
+### Writing the commit command
 
-**The double quote is the third character, and it is the one that does not announce itself.** It
-_ends_ the argument, so the rest of your paragraph becomes shell words — and what happens next is
-decided by punctuation you were not thinking about while writing prose. Three outcomes, all observed
-within one day: a `/` in the remainder let git commit a message **truncated** mid-sentence and then
-failed afterwards, which reads as a failed commit needing a retry; a `?` made zsh glob, find no
-match, and **refuse to run the command at all**; and a stray `"` before a `-- <path>` pathspec
-turned the pathspec into **message text**, committing at exit 0 with no diagnostic whatsoever. That
-last one was produced by single-quoting to avoid the first two, which is why the answer is not to
-switch quote styles: across the last month, 73% of commit messages here contain an apostrophe and
-25% a double quote, so single-quoting trades a rare failure for a frequent one. Keep the
-double-quoted argument and keep all three characters out of the prose. The tell, in every case, is
-an error quoting **your own sentence** back at you — so check `git log -1` before retrying, since
-whether anything was committed differs per case.
+**Keep backticks, `$` and `"` out of the message.** All three are live inside a double-quoted shell
+argument: backticks and `$` make the shell _run_ or substitute something before git sees it, and a
+double quote **ends** the argument, so the rest of your paragraph becomes shell words. What happens
+then is decided by punctuation you were not thinking about while writing prose — all three observed
+within one day: a commit landing **truncated** mid-sentence, a command **refusing to run at all**,
+and a pathspec silently becoming message text at exit 0 with no diagnostic. Single-quoting is not
+the escape: 73% of commit messages here contain an apostrophe against 25% containing a double quote,
+so it trades a rare failure for a frequent one. Commit messages are prose, not Markdown — name a
+command in plain words and nothing breaks. The tell is an error quoting **your own sentence** back
+at you, so check `git log -1` before retrying, since whether anything was committed differs per
+case. Same hazard in any other double-quoted body: `gh pr create --body`, `gh issue comment`.
 
-**Then keep it where the user can read it: one inline `-m`, in its own call.** The approval prompt
-shows the _command_, and the message is what the user reads to decide, so anything displacing it
-from the prompt defeats the rule while looking like compliance. Three shapes do, and each has been
-corrected here in turn: `git commit -F <file>` hides it behind a path; a chain buries it mid-command
-(see "Composing a Bash call", which owns that cost); and a series of `-m` flags runs them together
-into one unbroken line, even though git joins each into its own paragraph so the finished commit and
-`git log` show nothing wrong. Put the blank lines inside one quoted argument instead. Said by the
-user 2026-09-02, on a five-`-m` commit: _"it's hard to read a wall of text"_. Reach for `-F` only
-when the message genuinely must contain a backtick; pathspec works either way (see "Committing
-multi-part work").
+**Keep the message where the user can read it: one inline `-m`, in its own call.** The approval
+prompt shows the _command_, and the message is what the user reads to decide, so anything displacing
+it from the prompt defeats the rule while looking like compliance. Three shapes do it, and each has
+been corrected here in turn: `git commit -F <file>` hides it behind a path, a chain buries it
+mid-command, and a series of `-m` flags runs them together into one unbroken line in the prompt even
+though git paragraphs them correctly in the finished commit. Put the blank lines inside one quoted
+argument instead. Reach for `-F` only when the message genuinely must contain a backtick; pathspec
+works either way.
 
 ### Committing multi-part work
 
-**`git log` is how a future agent learns why a change happened, and here it cannot go and look
-instead**: parallel sessions share one working tree, so checking out an old commit moves a tree
-somebody else is working in. `git log` and `git show` are the only reads safe by construction, which
-makes the history the channel rather than the convenient record. Two things follow, and they are the
-whole of this rule.
+Parallel sessions share one working tree, so checking out an old commit moves a tree somebody else
+is working in: `git log` and `git show` are the only reads safe by construction, which makes the
+history the channel rather than the convenient record. Two things follow.
 
 **Split it into small single-concern commits**, even when the request was a single ask. A doc update
 commits separately from the code implementing it; a bug fix found mid-implementation folds into the
 commit introducing the correct behavior, never broken-then-fixed. Granularity is settled — ask only
 _whether_ to commit, never how to split.
 
-**And every commit has a body.** The subject says what changed; the body says what it is for, what
-it beat, and what it cost. A doc or plan commit is not exempt, and is the case where "the file
-already says it" is not merely weak but backwards: `git log` does not show the file, and `plan-docs`
-retires a plan by **deleting** it, so the file is deliberately temporary while its commit message is
-permanent. **A trailer is not a body** — `Co-Authored-By:` alone satisfies `%b`, which is exactly
-how two bare commits passed unnoticed in the session that prompted this rule.
+**And every commit has a body**, saying what the change is for, what it beat and what it cost. A doc
+or plan commit is not exempt, and is the case where "the file already says it" is backwards:
+`git
+log` does not show the file, and `plan-docs` retires a plan by **deleting** it, so the file is
+temporary while its message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone
+satisfies `%b`. It is a floor rather than a ceremony: a formatting fix's why is one clause, and
+padding reads as reasoning, which is worse than a bare subject. **One exception**, named so it is
+not discovered as an inconsistency: a plan filed into the plans store commits as
+`<repo>: <what it is>` with no body, because a filed plan _is_ its own description.
+`gh pr create
+--body` and `gh issue comment` get the full rule, not the exception.
 
-It is a floor, not a ceremony: a formatting fix's why is one clause, and demanding a paragraph for
-it teaches padding, which is worse than a bare subject because padding reads as reasoning. **Nothing
-enforces it** — a `commit-msg` hook is the first thing anybody reaches for and is refused for the
-same reason every other behind-the-agent's-back mechanism is (see "Proposing an enforcement
-mechanism"); that call was re-measured 2026-09-02 and the CI shape it would have caught has stopped
-occurring. **One exception, named so it is not discovered as an inconsistency:** a plan filed into
-the plans store commits as `<repo>: <what it is>` with no body, because a filed plan _is_ its own
-description and the commit is only its delivery. `gh pr create --body` and `gh issue comment` get
-the full rule, not the exception.
+**Stage each commit's paths immediately before that commit**, never ahead of time. `git commit`
+ships the whole index, so anything staged earlier — a `git rm` run while tidying, a `git mv` run
+while editing, a `git add` from a previous step — rides along under the next message. `git mv` is
+the one that gets missed, because `rm` and `add` read as staging while a rename reads as an edit.
+Committing by pathspec removes the risk entirely: `git commit -m "…" -- <path> <path>` takes the
+named paths whatever else sits in the index.
 
-When a quality gate run for unrelated work fixes formatting in a file you didn't mean to touch, keep
-the fix as its own tiny commit — reverting it just schedules the same CI failure for someone else to
-rediscover. Revert an incidental change only when the repo's CI would not enforce it (a stray
-content edit, not a formatting fix); that distinction is the line, not "did I mean to touch this
-file."
+**When two concerns land in the _same file_**, staging by path cannot separate them and
+`git add -p`/`-i` is unavailable here — which is not a reason to ship one fat commit. Copy the
+finished file to the scratchpad, edit it back down to just the first concern, verify that state
+passes the gate, commit, then restore the copy and commit the rest. The intermediate gate run is
+what catches a split that does not actually decompose.
 
-Stage each commit's paths immediately before that commit, never ahead of time. `git commit` ships
-the whole index, so anything staged earlier — a `git rm` run while tidying, a `git mv` run while
-editing, a `git add` from a previous step — rides along under the next message, and the split has to
-be rewritten. `git mv` is the one that gets missed: `rm` and `add` read as staging, a rename reads
-as an edit. What removes the risk entirely is committing by pathspec —
-`git commit -m "…" -- <path> <path>` takes the named paths whatever else sits in the index.
-
-When two concerns land in the _same file_, staging by path can't separate them and `git add -p`/`-i`
-is unavailable here — but that is not a reason to give up and ship one fat commit. Copy the finished
-file to the scratchpad, edit it back down to just the first concern, verify that state passes the
-gate (it has to: each commit should stand on its own), commit, then restore the copy and commit the
-rest. Cheap, and the intermediate gate run is what catches a split that doesn't actually decompose.
+When a gate run for unrelated work fixes formatting in a file you did not mean to touch, keep the
+fix as its own tiny commit — reverting it just schedules the same CI failure for someone else to
+rediscover. Revert an incidental change only where the repo's CI would not enforce it: a stray
+content edit, not a formatting fix.
 
 ### Regenerating a file from a canonical source
 
