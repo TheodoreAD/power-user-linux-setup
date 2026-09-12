@@ -601,3 +601,25 @@ the next finding will land inside whichever rule is nearest unless criterion 2 g
 criterion 1 implies — roughly, _extend the existing rule only while its heading still names your
 trigger; otherwise split it._ That wording is not proposed here, because the criteria are
 `contributing/global-agents-md.md`'s to change and this plan's job was to measure.
+
+### The clause landed 2026-09-12, in `contributing/global-agents-md.md`
+
+Criterion 2 now reads "a variant extends the existing rule's section rather than adding a new one,
+**but only while that rule's heading still names your trigger**" — once it does not, the rule is
+carrying a second trigger and the variant is a split. The criteria list gained one further sentence
+naming the failure the measurement found: **criterion 1 is tested every time a rule grows, not only
+when it is written.** That is the half the old wording omitted, and it is why every individual
+admission could be correct under the criteria while the file doubled.
+
+The evidence went in as `### The extend-or-split clause, added 2026-09-12` under "Admitting a new
+rule": the 33%-rules-against-272%-words trajectory, the five-rule split table, the before/after
+measurement, and the `[Claude Code]` mislabelling — which is the argument that made the clause worth
+its words, since an over-extended heading **misroutes** the triggers it absorbs rather than only
+padding them. The two deliberately-untouched rules are recorded there too, so the clause cannot be
+read as a word-count gate.
+
+[UNVERIFIED: whether the clause holds. It is a criteria change, so the only test is the next few
+admissions — does a finding that no longer fits its nearest heading get split, or extended anyway?
+Re-measure with the two commands in `contributing/global-agents-md.md` after the next handful and
+compare the rules/words growth ratio against the 33%-vs-272% this entry recorded. A ratio still that
+lopsided means the clause is being read past, not that it needs strengthening.]
