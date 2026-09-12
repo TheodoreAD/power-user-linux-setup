@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-02
+updated: 2026-09-12
 ---
 
 ## Context
@@ -542,3 +542,62 @@ session had already shipped and pushed the design it would have prevented. Argua
 evidence for admission and belongs in `contributing/global-agents-md.md`'s criteria. Kept as an
 observation rather than a proposal, which is how it was filed — it is that document's call, and this
 plan is where it waits because the intake gate is this plan's own subject.]
+
+## A pass ran, 2026-09-12 — and it confirms this plan's own closing warning
+
+**Measured before: 9,292 body words, 40 rules, 873 lines.** That is up from the 4,326 recorded when
+this plan was opened, so the file had **more than doubled in words while the plan tracking it sat
+untouched since 2026-09-02.** Nothing raised it: `absorb`'s retirement prompt fires on terminal
+plans, and an `in-progress` one has no equivalent.
+
+**After: 8,082 body words, 47 rules, 809 lines.** Mean rule 232 → 171; rules over 400 words 8 → 3.
+
+No demotions and no deletions, which this plan asked for and which happened to be the right answer
+anyway — every cut was a **split into real triggers** or a **move of evidence to the file that
+already holds evidence.**
+
+### The finding is about the intake gate, not the word count
+
+**Criteria 1 and 2 pull against each other, and 2 has been winning.** Criterion 2 says a variant
+extends the existing rule's section rather than adding a new one; criterion 1 says a heading must be
+a trigger. Every new finding therefore lands inside the nearest existing rule, and after enough of
+them the heading names one of the triggers its body now covers. That is exactly what the trajectory
+shows: **rules grew 33% while words grew 272%.**
+
+Five rules were carrying between two and four triggers each:
+
+| rule                                       | was | became                                                     |
+| ------------------------------------------ | --- | ---------------------------------------------------------- |
+| Viewing, searching, or editing files       | 921 | viewing/editing · searching a tree · translating grep→rg   |
+| Reading a command's result                 | 674 | reading a result · absence probe · backgrounding · waiting |
+| Running a command against a different repo | 655 | writing to another repo · running a read-only command      |
+| About to commit                            | 547 | running the gate · writing the commit command              |
+| Composing a Bash call                      | 491 | trimmed, one trigger after all                             |
+
+**The `[Claude Code]` label was wrong on two-thirds of the biggest rule** and only visible once
+split: true of the harness-tool half, false for `fd`/`rg`, which transfer anywhere.
+
+[PITFALL: **two rules were left alone deliberately, and one of them is protected in writing.**
+`git
+fetch/push needing an SSH key` (433w) and `Unexplained git/file state` (422w) are dense with
+imperatives and have no explanation to move. More than that, `tests/unit/test_agents_md.py`'s own
+docstring names the SSH rule's passage — "a session read the failure as a missing key, and had the
+user type a passphrase into three dialogs" — as the worked example of narrative that **earns its
+place**, "because it names the wrong move the reader is about to make and nobody takes a reference
+hop before making it". Cutting it to make a number would contradict a carve-out this corpus wrote
+down and tested. A leanness pass has to be able to return "already right".]
+
+[PITFALL: **estimating how much text is reducible was wrong three times in one day, always
+optimistic** — 400 against 152, 610 against 315, 350-450 against 525. Scanning overcounts, because
+what reads as restatement while skimming turns out to be the one phrasing carrying a distinct
+trigger. Written up under "Where durable knowledge goes" in `contributing/global-agents-md.md`;
+quote a range, call it a floor, or measure after instead.]
+
+### What this does not close
+
+This plan says it plainly and the pass proves it: **trimming while the intake gate stays open
+schedules the next pass.** 809 lines against a ≤200 reference point is still four times over, and
+the next finding will land inside whichever rule is nearest unless criterion 2 gains the clause
+criterion 1 implies — roughly, _extend the existing rule only while its heading still names your
+trigger; otherwise split it._ That wording is not proposed here, because the criteria are
+`contributing/global-agents-md.md`'s to change and this plan's job was to measure.
