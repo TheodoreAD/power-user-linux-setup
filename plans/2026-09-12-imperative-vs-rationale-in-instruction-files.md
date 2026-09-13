@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-12
+updated: 2026-09-13
 ---
 
 # Imperative against rationale: what the community does, and where this file sits
@@ -311,7 +311,68 @@ The real lesson is the one that argued for the rewrite: a reader scanning a list
 characters is not reading the shape of the argument, and the quote style is part of the shape. The
 old form mentioned it in passing as a rejected alternative; the recipe states it as a part.]
 
-[UNVERIFIED: whether it moves `cut-message`, at **6** in the 2026-09-12 baseline. Re-run
-`inv ai.measure-instruction-shape` for the shape and `session-bash-audit --compare` against
-`2026-09-12.json` for the rate. Hold finding 2 until this is read: landing both leaves the next
-comparison unable to attribute a change to either.]
+### The `cut-message` re-read, 2026-09-13
+
+Read exactly as prescribed — `audit.py --days 3 --compare 2026-09-12.json` — the row comes back at
+**3** against the baseline's 6. That reads as a halving fifteen hours after the rewrite landed, and
+it is not one. Three things have to be corrected before the number says anything, and two of them
+are properties of the instrument rather than of the file.
+
+**The two runs measure different corpora.** `cut-message` is an absolute count, and `--days` selects
+whole transcript _files_ by mtime rather than calls by timestamp. The baseline was saved at
+`days=6.0`, the prescribed re-read runs at `days=3`, and neither number is normalised by anything.
+So 6 and 3 were never comparable — and under mtime selection a resumed old session drags its whole
+history back inside the window regardless of either.
+
+**The row double-counts a resumed session.** Over `--days 7`, 649 of 9,012 calls — 7.2% — appear in
+more than one transcript, because a resumed session's file replays its parent's history. For
+`cut-message` that is 7 tag hits over **5 distinct calls**, two pairs sharing a timestamp and a
+byte-identical command across two session ids. The 2026-09-12 baseline's 6 carries the same
+inflation by an unknown amount. Filed for `agent-skills` as
+`2026-09-13-audit-counts-a-resumed-sessions-calls-twice.md`, with the dedupe-key question open.
+
+**The row has no denominator.** A count of cut messages says nothing without the count of messages
+that could have been cut. Against message-carrying calls — `git commit -m`, `gh pr create --body`,
+`gh issue comment --body`, a population containing all 7 hits and only 2 `-F` escapes — the corpus
+splits cleanly at the rewrite (`2f21557`, 2026-09-12T20:26:11Z):
+
+| window             | cut-message | message-carrying calls |  rate |
+| ------------------ | ----------: | ---------------------: | ----: |
+| before the rewrite |           7 |                    559 | 1.25% |
+| after the rewrite  |           0 |                     12 |     — |
+
+[DECISION: **the prediction is unread rather than confirmed, and the falsifier named at the handoff
+could not have fired.** Zero hits in 12 opportunities is what a 1.25% base rate produces by chance —
+expected count 0.15. Reading a real drop to zero at that base rate takes roughly **128
+message-carrying calls** after the rewrite, which at this corpus's 71-a-day working mean is about
+two active days. The stated falsifier — "a re-read that holds at 6 means criterion 4 predicts no
+better than the four wordings before it" — tested a count over a different window of a row that does
+not measure a rate, so it would have reported on the instrument either way.]
+
+[DECISION: **the re-read for this rule is against the denominator, not against the row.** Re-running
+`--compare` will keep producing a number that moves with which transcripts were touched. What
+answers the question is cut-message hits over message-carrying calls since `2f21557`, which the
+`--json` dump gives directly. The threshold is stated above so the next session can tell "not yet"
+from "no effect" without re-deriving it.]
+
+[UNVERIFIED: whether the rewrite moves `cut-message` at all. Unblocked at ~128 message-carrying
+calls after 2026-09-12T20:26:11Z; at 12 as of 2026-09-13T14:52+03:00. The shape half of the original
+tag is still owed — `inv ai.measure-instruction-shape` has not been re-run since finding 1 landed.]
+
+### What the re-read says about the hold on finding 2
+
+The two findings move **disjoint rows**. Finding 1 is the only change here that plausibly touches
+`cut-message`; finding 2's rationalization table targets `Composing a Bash call` and
+`Viewing or editing a file`, whose rows are `chain`, `head/tail`, `sed-n`, `cat-view`, `heredoc` and
+`exit-masked`. So the confound the handoff described — "unable to attribute a change to either" —
+does not hold between the rows themselves. What survives is the weaker and less testable version: a
+rationalization table plus a red-flags list is a word addition to an always-loaded file that this
+plan has already measured as delivering half the community's instruction per unit of context, and a
+dilution effect would land on every row at once, `cut-message` included.
+
+[NEEDS CLARIFICATION: land finding 2 now, or hold it the further ~two active days the `cut-message`
+denominator needs? Holding buys a clean reading of one row against a dilution hypothesis nothing in
+this corpus has measured, and costs the same two days of finding-2 evidence. Landing it now means
+any later `cut-message` movement carries an untestable alternative explanation. The size of finding
+2's addition is not yet drafted, which is the number that would settle it — a table that costs 40
+words is not the same decision as one that costs 200.]
