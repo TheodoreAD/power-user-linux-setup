@@ -1046,6 +1046,24 @@ unreadable. One occurrence in 197 Bash calls. **So the wording did not prevent i
 did catch it** — which is the split the clause was rewritten to produce, and one sample either way
 is not the rate question the tag above still owns.
 
+**Second occurrence, 2026-09-13, same shape and same catch.** A session drafting the rationalization
+table for the two Bash discipline rules typed
+`rg -rn 'Rationalization' <superpowers clone> --files-with-matches` while looking for the prescribed
+form. The `-r` took `n` as its replacement string, and the call returned a **correct-looking file
+list** — because the trailing `--files-with-matches` overrode the output mode, so the replacement
+never showed. That is the one variant the signature cannot see: the tell is "your own flag letters
+where the matched text should be", and here there was no matched text on screen at all. It was
+caught by reading the command back rather than by reading the output, and re-run as
+`rg -n 'Rationalization|rationalization' <file>`. Two occurrences in two days, both from sessions
+editing this rule, neither prevented by the wording.
+
+[UNVERIFIED: whether the signature needs a row for the silent variant. `-l`/`--files-with-matches`
+and `-c` both suppress the rewritten line, so a bundled `-r` under either produces output
+indistinguishable from the correct call. The existing signature lists "a `-l` that printed lines",
+which is the opposite failure and would not fire here. Against adding it: the rule's own plan
+records nine occurrences and not one prevention from any wording, and a longer signature is more
+wording. Worth deciding on the next count rather than now.]
+
 The six forms, kept here rather than in the rule because the rule's own plan records **nine
 occurrences and not one prevention from any wording** — so the table is evidence that the claim is
 checkable, not a device that raises adherence:
