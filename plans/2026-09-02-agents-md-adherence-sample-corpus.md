@@ -1,11 +1,11 @@
 ---
 status: idea
-updated: 2026-09-08
+updated: 2026-09-13
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Seventeen sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Twenty sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so were samples 8, 14 and 15 — they have rates but no baseline deltas.
@@ -159,6 +159,12 @@ The one verdict recorded as changed is sample 11's `chain`, which moves for the 
 | 15  | `agent-skills`           |   196 | skills + plans, ~11.5h          |         28% |           23% |               0% | —     |
 | 16  | `power-user-linux-setup` |   270 | plans, research, edits, ~6h     |      **2%** |            2% |               0% | 12/13 |
 | 17  | `power-user-linux-setup` |   212 | built a shim: code, tests, ~14h |         17% |            6% |               0% | 10/13 |
+| 18  | `power-user-linux-setup` |   297 | `install.sh` and its CI, ~38h   |         24% |       **17%** |               0% | 12/13 |
+| 19  | `power-user-linux-setup` |   441 | absorptions, leanness, ~63h     |          7% |            2% |               0% | 12/17 |
+| 20  | `repo-tasks`             |   152 | uv probes, plans, ~29h          |      **0%** |        **1%** |               0% | 14/17 |
+
+Rows 18–20 were added 2026-09-13; 18 and 19 had sections below but no row here, which is the drift
+this table is for.
 
 `†` = re-scored 2026-09-07 at the row's own `--until` boundary with the fixed instrument. **Every
 un-daggered row of 1–11 is a floor**, so `55%` on row 4 means "at least 55%" and a comparison
@@ -1084,6 +1090,48 @@ is `git-C-own-repo` at 0 while `git -C` was used correctly against two _other_ r
 has three rows and 141 calls with zero bytes lost, which is past the point where the rate can be
 described as a proxy for data loss.
 
+### Sample 20 — `repo-tasks`, 152 calls, the best `chain` the corpus has and part of it is an omission
+
+`audit.py --session 5de331c8 --until 2026-09-13T14:56:10+03:00 --compare 2026-09-12.json`, `setopt`
+answering `pipefail`. **14/17.** Transcript `5de331c8-e7f0-4bcb-a86f-c242683a382d.jsonl`, ~29 hours,
+12 sweep calls excluded: settling whether `repo-tasks`' stamp template should pin an interpreter,
+three isolated `uv tool install` probes, a read of uv's own source, and the plans that came out of
+it. Filed here by that session rather than written here, and absorbed 2026-09-13.
+
+| tag                  |   rate | note                                   |
+| -------------------- | -----: | -------------------------------------- |
+| **`chain`**          | **3%** | 5 calls — against 56% and 57% in 14/15 |
+| `head/tail`          |     0% |                                        |
+| `exit-masked`        |     1% | 2 calls, **0 wrapped a gate**          |
+| **`cat-view`**       | **2%** | 3 calls — MISS                         |
+| **`git-C-mutating`** |  **2** | MISS — both `git -C ~/plans push`      |
+| **`rg-replace`**     | **1%** | 2 calls, `-rn` twice — MISS            |
+| everything else      |     0% |                                        |
+
+Both masked calls were a read-only probe script printing its own exit code, so no green claim rested
+on a filter.
+
+**The 3% is an order of magnitude below samples 14 and 15, and part of the reason is that this
+session never ran the gate those chains are made of.** Both of those rows attribute their `chain`
+figure to one dominant shape — `git add <paths> && plans.py scan --mode staged` before every commit.
+This session made **8 commits and 2 pushes to a public repo and ran `plans.py scan` zero times**, in
+either mode, before any of them. So the two series are coupled and the corpus has been reading one
+without the other: a session that follows the confidentiality rule pays for it in `chain` and looks
+worse, while a session that skips the rule entirely scores 3% and looks like the best result to
+date.
+
+The scan did run eventually, during that session's own harvest and after both pushes: **0 hits over
+history against 61 private terms**, so nothing was exposed and the omission cost nothing this time.
+That is why it is a measurement finding rather than an incident.
+
+[PITFALL: **the omission is invisible to every instrument this corpus uses.** `audit.py` has no tag
+for a command that was not run, and a clean `scan --mode history` afterwards looks identical whether
+the gate ran before each commit or once at the end. It surfaced only because the session's harvest
+ran the scan for an unrelated reason and the session then noticed it had never run it during the
+work. A corpus measured this way cannot distinguish "ran the gate 8 times" from "never ran it", and
+the second scores better on the series it does measure — so `chain` is not a clean discipline series
+and no row's low figure can be read as discipline without checking the scan count behind it.]
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
@@ -1106,6 +1154,22 @@ The residual is one clause, and it is **deliberately not written here** because 
 user's call: neither the staging rule nor the chaining rule says the scan is its own call, so a
 session reconstructing the sequence has to derive that. Same shape as the truncation clause held
 open above.]
+
+[NEEDS CLARIFICATION: **sample 20 adds a third option to that residual which nobody has priced** —
+commit by pathspec and run the scan as its own call, which satisfies the staging rule, the chaining
+rule and the confidentiality rule and chains nothing. `git commit -m "…" -- <paths>` already takes
+the named paths whatever else sits in the index, so the `git add` the chain exists around is not
+needed at all. Whether that is what the rule should recommend is this repo's call rather than a
+sample's, and it is a recipe rather than a prohibition, which criterion 4 says is the right form for
+a shaping failure.]
+
+[NEEDS CLARIFICATION: **does the corpus want a `gate-skipped` row?** Sample 20's coupling is
+unmeasurable with what exists. `audit.py` has a `GATE_RE`, so the machinery is there, but a tag for
+a command that was **not** run needs the instrument to know which gates belong to which action — and
+that regex is separately known to have no term for `plans.py scan`, owned by `agent-skills`'
+`plans/2026-09-13-gate-re-has-no-term-for-the-confidentiality-scan.md`. Those two are one weakness
+from opposite sides: the regex misclassifies the scan when it runs and cannot see it when it does
+not. Worth deciding together rather than separately.]
 
 [NEEDS CLARIFICATION: **the gate may be the fix rather than the discipline.**
 `inv quality.precommit` prints ~45 lines on success, of which the informative part is the last four,
