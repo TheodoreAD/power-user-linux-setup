@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-08
+updated: 2026-09-13
 ---
 
 # `rg -r`: 32 defective calls a week, and never once the bare flag
@@ -338,3 +338,50 @@ a home that stays.
 and no line numbers), and the session caught it by the documented tell — its own flag letters
 appearing where the matched text should be. So the wording continues to describe the failure
 accurately and continues not to prevent it, which is the finding this plan has been accumulating.
+
+## Eleventh through fourteenth, 2026-09-12/13 — the tally is 14, and two of the four were invisible
+
+Four more in two days, from three sessions, recorded here 2026-09-13 after the last of them. The
+clause was rewritten on 2026-09-12 into "delete the `r`, keep every other letter" plus the detection
+signature, so all four are post-rewrite.
+
+| #  | call                                                    | session                  | how it surfaced    |
+| -- | ------------------------------------------------------- | ------------------------ | ------------------ |
+| 11 | `rg -rn 'compete for attention' <dir>`                  | `power-user-linux-setup` | signature          |
+| 12 | `rg -rn --files-with-matches 'UV_PYTHON' <dir>`         | `repo-tasks`             | **nothing to see** |
+| 13 | `rg -rn 'struct ToolPython' <dir>`                      | `repo-tasks`             | signature          |
+| 14 | `rg -rn 'Rationalization' <clone> --files-with-matches` | `power-user-linux-setup` | **nothing to see** |
+
+Rows 11 and 13 are the signature working exactly as documented —
+`instructions n with inline
+narrative` where a sentence should have been, `pub(crate) n {` where a
+struct declaration should have been. Both were recognised on sight and re-run.
+
+**Rows 12 and 14 are a variant this plan has not recorded before, and it defeats the signature by
+construction.** `--files-with-matches` overrides the output mode, so the rewritten line never
+appears and the call returns a **correct-looking file list**. The documented tell is "your own flag
+letters where the matched text should be", and there is no matched text on screen at all. Both were
+caught by reading the command back rather than the output — which is not something a signature can
+prescribe. `-c` has the same property.
+
+[PITFALL: **the `repo-tasks` session wrote up both of its occurrences as signature catches, and one
+of them structurally cannot have been.** Its filed sample says "both were caught by the exact
+detection signature the rule documents", with a parenthetical example drawn from row 13 only. Row 12
+carried `--files-with-matches`. That is not carelessness so much as the failure mode itself: a
+correct-looking result is indistinguishable from a correct one, including to the session writing up
+how it caught the error. Recorded rather than corrected in that sample, since the sample is now
+merged into the corpus plan and this is the clause that owns the shape.]
+
+**What this does to the plan's own question.** Ten occurrences and no prevention was already the
+finding; fourteen does not change it. What is new is that **two of the last four were in the
+suppressed-output form**, which is a higher share than any wording argument here has evidence for in
+either direction, and it is the one sub-shape where the detection half — the part this plan had been
+treating as the half that works — has nothing to offer.
+
+[UNVERIFIED: whether the signature should grow a row for `-l`/`--files-with-matches`/`-c`. Against:
+this plan's whole accumulated finding is that wording prevents none of these, and a longer signature
+is more wording, which the standing `[DECISION: adherence, not wording]` rules out saying louder.
+For: the existing signature lists "a `-l` that printed lines", which is the **opposite** failure and
+would not fire on rows 12 or 14, so the table is not merely inert here — it is wrong about this
+case. Decide on the next count rather than now. Evidence is in `contributing/global-agents-md.md`
+under this rule's heading.]
