@@ -1035,6 +1035,17 @@ the **success** case — a `grep`→`rg` translation happens ~150 times a week, 
 constantly rather than only at the moment of the slip. If the next count holds at ~32, that argument
 is refuted and the `ask`-rule on the `rg -r` prefix is the fallback; the plan carries it.]
 
+**First occurrence under the rewritten wording, 2026-09-12, and the detection signature is what
+caught it.** A session in this repo — one that had spent the day editing this very rule — typed
+`rg -rn 'compete for attention' <dir>` while checking how widely a corrected citation had spread.
+The output came back with every match rewritten to `n` (`instructions n with inline narrative`),
+which is the first row of the table above and the first item of the signature: your own flag letters
+where the matched text should be. It was recognised immediately and re-run without the `r`; the
+second run found a copy of the misattributed claim in a test docstring that the first had rendered
+unreadable. One occurrence in 197 Bash calls. **So the wording did not prevent it and the signature
+did catch it** — which is the split the clause was rewritten to produce, and one sample either way
+is not the rate question the tag above still owns.
+
 The six forms, kept here rather than in the rule because the rule's own plan records **nine
 occurrences and not one prevention from any wording** — so the table is evidence that the claim is
 checkable, not a device that raises adherence:
