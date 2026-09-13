@@ -184,19 +184,36 @@ reproduced to the decimal.]
 
 ## Where it stands after the pass, 2026-09-12
 
-| metric                   | opened at |      now | community mean | large-file range |
-| ------------------------ | --------: | -------: | -------------: | ---------------: |
-| mean sentence words      |      23.0 | **17.9** |           11.5 |         9.1–14.0 |
-| directives per 100 words |       1.7 |  **1.9** |            3.4 |          2.0–4.1 |
-| mixed directives         |      5.1% | **3.1%** |           1.0% |         0.0–2.4% |
-| hedged directives        |      6.5% | **4.5%** |           3.3% |          0–16.2% |
-| body words               |     8,058 |    8,012 |            596 |      2,086–3,285 |
+| metric                   | opened at |    09-12 |    09-13 | community mean | large-file range |
+| ------------------------ | --------: | -------: | -------: | -------------: | ---------------: |
+| mean sentence words      |      23.0 | **17.9** | **17.4** |           11.5 |         9.1–14.0 |
+| directives per 100 words |       1.7 |  **1.9** |  **1.9** |            3.4 |          2.0–4.1 |
+| mixed directives         |      5.1% | **3.1%** | **3.3%** |           1.0% |         0.0–2.4% |
+| hedged directives        |      6.5% | **4.5%** | **3.9%** |           3.3% |          0–16.2% |
+| body words               |     8,058 |    8,012 |    8,034 |            596 |      2,086–3,285 |
+| bullet share             |      1.2% |     2.8% |     2.7% |            68% |             0–72 |
 
 Roughly half the sentence-length gap closed without deleting a claim, and directive density is now
 at the edge of the large-file range rather than below it. **The remaining half is not reachable by
 re-punctuation**, which is the honest limit of this lever: 17.9 against 9.1–14.0 needs either
 bullets (this file runs 1.2% bullet lines against a 68% mean) or fewer claims per rule, and neither
 was in scope here. Word count barely moved, and was never the target.
+
+**The 09-13 column closes the shape half of finding 1's tag, and it took two landings to read.**
+Between the two columns the file lost finding 1's rewrite of `Writing the commit command` (310 → 228
+words, `git.md` 2,556 → 2,474) and gained a third `uv tool-install` trap (+110). Net +22 words, and
+sentence length went **down** 17.9 → 17.4 across both. Mixed directives drift up 0.2pp and hedged
+down 0.6pp, both inside the noise a two-rule change produces.
+
+[DECISION: **a rule can be added to this file without making its shape worse, and the lever that
+does it is the one already validated here.** The uv clause was first written in the file's ambient
+voice and measured at ~24 words a sentence, taking `research.md` 19.7 → 20.1 and its directive
+density 1.8 → 1.7. Re-punctuated before landing — nothing deleted, ten connectives gone — it lands
+the fragment at **19.2**, below where it stood before the rule existed, with the density back at
+1.8. So the sentence-length pass is not a one-off cleanup that decays as content arrives; it is a
+step that belongs in writing a rule, and the measurement is cheap enough to run per fragment while
+editing. That is the answer to the obvious objection to a re-punctuation pass, which is that the
+next ten rules undo it.]
 
 ### The bullet experiment, run on `Searching a tree` — answered, rule by rule
 
@@ -356,8 +373,9 @@ answers the question is cut-message hits over message-carrying calls since `2f21
 from "no effect" without re-deriving it.]
 
 [UNVERIFIED: whether the rewrite moves `cut-message` at all. Unblocked at ~128 message-carrying
-calls after 2026-09-12T20:26:11Z; at 12 as of 2026-09-13T14:52+03:00. The shape half of the original
-tag is still owed — `inv ai.measure-instruction-shape` has not been re-run since finding 1 landed.]
+calls after 2026-09-12T20:26:11Z; at 12 as of 2026-09-13T14:52+03:00. The shape half of this tag is
+**answered** — see the 09-13 column in "Where it stands after the pass" above; only the rate half
+remains.]
 
 ### What the re-read says about the hold on finding 2
 
