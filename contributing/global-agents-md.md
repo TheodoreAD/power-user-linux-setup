@@ -1046,23 +1046,36 @@ unreadable. One occurrence in 197 Bash calls. **So the wording did not prevent i
 did catch it** — which is the split the clause was rewritten to produce, and one sample either way
 is not the rate question the tag above still owns.
 
-**Second occurrence, 2026-09-13, same shape and same catch.** A session drafting the rationalization
-table for the two Bash discipline rules typed
-`rg -rn 'Rationalization' <superpowers clone> --files-with-matches` while looking for the prescribed
-form. The `-r` took `n` as its replacement string, and the call returned a **correct-looking file
-list** — because the trailing `--files-with-matches` overrode the output mode, so the replacement
-never showed. That is the one variant the signature cannot see: the tell is "your own flag letters
-where the matched text should be", and here there was no matched text on screen at all. It was
-caught by reading the command back rather than by reading the output, and re-run as
-`rg -n 'Rationalization|rationalization' <file>`. Two occurrences in two days, both from sessions
-editing this rule, neither prevented by the wording.
+**Three more occurrences across 2026-09-12/13, and the count above is a floor rather than a rate.**
+Two from a `repo-tasks` session reading a vendor clone, twenty minutes apart —
+`rg -rn --files-with-matches 'UV_PYTHON' <dir>` and `rg -rn 'struct ToolPython' <dir>` — recorded in
+`plans/2026-09-13-adherence-sample-a-session-that-skipped-the-scan.md`. One from a session in this
+repo drafting the discipline-rule tables:
+`rg -rn 'Rationalization' <superpowers clone> --files-with-matches`. So **four in two days**, from
+three sessions, of which only two were editing this rule — the sampling artefact that first reading
+suggested is not there, and the honest statement is that the wording prevented none of them.
 
-[UNVERIFIED: whether the signature needs a row for the silent variant. `-l`/`--files-with-matches`
-and `-c` both suppress the rewritten line, so a bundled `-r` under either produces output
+**The variant that matters is the one where the signature has nothing to fire on.** Two of the four
+carried `--files-with-matches`, which overrides the output mode, so the rewritten line never appears
+and the call returns a **correct-looking file list**. The documented tell is "your own flag letters
+where the matched text should be", and here there is no matched text on screen at all. Both were
+caught by reading the command back rather than the output. The `struct ToolPython` one is the
+signature working as designed — `pub(crate) n {` where a struct declaration should have been.
+
+[PITFALL: **the adherence sample records all its occurrences as signature catches, and one of them
+structurally cannot have been.** Its sentence is "both were caught by the exact detection signature
+the rule documents", with a parenthetical example drawn from the second call only. The first carried
+`--files-with-matches`. That is not a careless claim so much as the failure mode the row describes:
+a correct-looking result is indistinguishable from a correct one, including to the session writing
+up how it caught the error.]
+
+[UNVERIFIED: whether the signature needs a row for the suppressed-output variant. `-l` /
+`--files-with-matches` and `-c` both hide the rewritten line, so a bundled `-r` under either is
 indistinguishable from the correct call. The existing signature lists "a `-l` that printed lines",
-which is the opposite failure and would not fire here. Against adding it: the rule's own plan
-records nine occurrences and not one prevention from any wording, and a longer signature is more
-wording. Worth deciding on the next count rather than now.]
+which is the opposite failure and would not fire. Against adding it: this rule's plan records nine
+occurrences and not one prevention from any wording, so a longer signature is more of the lever that
+already spent. For it: two of the four occurrences here are that variant, which is a higher share
+than the wording question has evidence on either way. Decide on the next count.]
 
 The six forms, kept here rather than in the rule because the rule's own plan records **nine
 occurrences and not one prevention from any wording** — so the table is evidence that the claim is
