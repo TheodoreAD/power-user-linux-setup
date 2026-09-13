@@ -2178,6 +2178,48 @@ consequence spelled out: bumping the shared package's own dev/quality group chan
 project that merely depends on it, because PEP 735 groups aren't pulled in transitively the way
 `[project.dependencies]`/extras are.
 
+### The interpreter trap, added 2026-09-13
+
+Measured by a `repo-tasks` session on **uv 0.11.19** while settling whether its stamped bootstrap
+script should pass `--python`, filed here as a plan because writing into another repo's tree is out.
+Three probes, each with isolated `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR` so nothing on the machine moved:
+
+| probe                                                | uv reported, and chose                                           |
+| ---------------------------------------------------- | ---------------------------------------------------------------- |
+| a real git-URL target, `UV_PYTHON` unset             | `>=3.11` from `requires-python` metadata -> cpython 3.14.5       |
+| a package declaring `>=3.9,<3.10`, `UV_PYTHON` unset | `>=3.9, <3.10` from `requires-python` metadata -> cpython 3.9.25 |
+| the same package, `UV_PYTHON=3.14`                   | `3.14` from explicit request -> installed onto 3.14 regardless   |
+
+The third row printed **no warning of any kind**, checked by grepping the full verbose log for
+`warn`/`requires-python`/`incompatible` — the only warning in it was about the bin directory not
+being on PATH.
+
+**Read from source as well, which says why there is no warning rather than that there happens not to
+be one.** In the research library's `github.com--astral-sh--uv` clone, re-verified against 0.11.19
+on 2026-09-13: `crates/uv/src/commands/tool/common.rs`, `ToolPython::from_request` computes
+`requires_python` **only when `python_request.is_none()`** (the `if` at the top of the function), so
+an explicit request means the package's own floor is never fetched and there is nothing to compare
+against. Precedence below that is explicit request, then a version file discovered with
+`with_no_local(true)` and filtered on `intersects_requires_python`, then a request derived from
+`requires-python` itself. `crates/uv-static/src/env_vars.rs:107` documents `UV_PYTHON` as
+"Equivalent to the `--python` command-line argument", and `crates/uv-cli/src/lib.rs`'s
+`ToolInstallArgs::python` carries `env = EnvVars::UV_PYTHON`, which is why setting the variable and
+passing the flag are the same code path.
+
+[PITFALL: **the trap is invisible on this machine and live everywhere else.** `[packages.uv-env]`
+exports `UV_PYTHON="3.14"` into every shell, so every bare `uv tool install` here already resolves
+to 3.14 and the unset branch never runs locally. A consumer's CI is the ordinary case where it does.
+That is also the correction to `plans/2026-08-23-invoke-repo-tasks-tool-conflict.md`'s deferred
+item, which read `bootstrap.sh`'s `--python` as the thing keeping the two scripts in agreement: the
+agreement is real and the `zshenv` export is its cause, so the flag is belt-and-braces rather than
+load-bearing.]
+
+[DECISION: **stated as a fact rather than as a prohibition, per criterion 4.** This is the "the
+agent cannot know something" class the criterion exempts — the same class as the section's two
+existing traps and as the `uv run --with` rule. There is no behaviour to shape; the miss is that a
+pin reads as a floor. `repo-tasks` settled its own use of it as a won't-fix, declining to put a
+version in a template every consumer regenerates.]
+
 ## Installing a tool on this machine
 
 Measured 2026-08-26, both directions in one session, and moved here 2026-08-30: a search summary

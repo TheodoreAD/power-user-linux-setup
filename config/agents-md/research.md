@@ -66,12 +66,21 @@ that doesn't read as a diff against unchosen branches.
 
 ### Designing a uv tool-install or shared-dependency mechanism
 
-Two traps. `uv tool install --with-executables-from <dep> <pkg>` only adds _extra_ console scripts
+Three traps. `uv tool install --with-executables-from <dep> <pkg>` only adds _extra_ console scripts
 from `<dep>`, so a package with zero `[project.scripts]` of its own still fails to install as a
 tool. And `dependency-groups` (PEP 735) are per-project, never inherited through a regular
 dependency — a shared package that wants consumers to pick up its tool list needs an explicit
 mechanism, either a task editing the consumer's own `pyproject.toml` or an optional-dependencies
 extra.
+
+The third is which interpreter the tool lands on, and it fails silently in the direction nobody
+checks. With neither `--python` nor `UV_PYTHON` set, `uv tool install` derives the request from the
+target's own `requires-python` — through a git URL too, since it fetches the static metadata first —
+and takes the newest installed interpreter satisfying it. Set either one and uv never reads that
+metadata at all, so it installs against your version and warns about nothing when the package
+excludes it. **A version pinned into a shared installer is therefore not a floor; it is a silent
+override of every consumer's own floor.** A _local_ `.python-version` is ignored for tool installs,
+a global one honoured where it intersects `requires-python`.
 
 ### Adding a flag, or changing what a tool does by default
 
