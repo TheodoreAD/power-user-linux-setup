@@ -55,12 +55,14 @@ deliberate oddity — rather than asking for "fun", which every model reads as "
 "Sci-fi or high fantasy" are given as alternatives, so they are two directions to try rather than a
 blend to average. They are kept separate below; a hybrid reads as neither.
 
-[DECISION: **no steampunk means excluding it explicitly in every prompt, not merely omitting it.**
+[DECISION: **no steampunk means designing it out deliberately, not merely leaving it unmentioned.**
 "Brass", "gears", "Victorian", "clockwork" and "riveted copper" are strong attractors for anything
 described as both technical and fantastical, and models reach for them unprompted on exactly this
-brief. Each prompt below carries a negative clause. Also excluded for the same reason: circuit-board
-traces and glowing-blue-hologram-UI, which are the sci-fi equivalent — not asked against, but they
-are the generic default and will make every image look like stock art.]
+brief. Each direction's look is written to leave no room for them, and each direction's
+avoid-keywords name them; why they are no longer named inside the prompt text itself is in "Running
+the prompts on NightCafe". Also designed out for the same reason: circuit-board traces and
+glowing-blue-hologram-UI, which are the sci-fi equivalent — the generic default that will make every
+image look like stock art.]
 
 ### Palette, measured rather than described
 
@@ -80,7 +82,7 @@ values come from `classic`.
 
 The hex values in the first three rows are converted from the HSL. `config/p10k.zsh` colours are not
 checked. `mkdocs.yml` sets no logo or favicon (both are commented out), so the avatar and mark
-prompts below (B4 and C6) have a real, empty surface to fill.
+prompts below (A7, B4 and C6) have a real, empty surface to fill.
 
 Models follow hex codes loosely. Treat them as a hint and grade each output to the palette
 afterwards.
@@ -120,128 +122,241 @@ position. A prompt that asks the model to draw the marks directly is given too, 
 because it is recommended, but because comparing the two is the fastest way to see the failure above
 for yourself rather than taking it on trust.
 
+## Running the prompts on NightCafe
+
+[DECISION: **NightCafe is the generator, and its terms allow publishing what it produces.** Decided
+2026-09-13: the user already generates there and holds a large balance of credits. This answers the
+question the plan carried from 2026-09-02 — which model, and whether its licence permits use on a
+public site. NightCafe's Terms of Service, last updated 30 March 2026, transfer the intellectual
+property in a delivered artwork to the person who made it, for personal or commercial use; the
+condition is holding the rights to any input image, and text-to-image with no start image has none.
+Neither the terms nor NightCafe's commercial-use help page names an exception for any model. Two
+things this does not cover: NightCafe keeps a perpetual, royalty-free licence to show creations on
+its own site and social media, and the official logo SVGs composited in afterwards carry their own
+terms, which the first step of "Recommended direction" still collects.]
+
+### How a prompt is put together
+
+Every prompt below is pasted into NightCafe as one text in three parts: the prompt itself, then its
+direction's **look**, then the **shared tail**. The look carries a direction's materials and mood,
+so its prompts cannot drift apart on them. The tail is identical for every prompt in every
+direction:
+
+> Colour palette: slate near-black (#1e2129), surfaces slightly lighter (#272b35), cool blue
+> (#2094f3), and a single warm amber accent (#ff9100). The image contains no people, no writing and
+> no logos; any marking is an abstract shape, never a letter.
+
+The emblem prompts (A7, B4, C6) take the tail without a look: each look describes a rendered scene,
+and an emblem is flat vector.
+
+[DECISION: **the prompts describe the look they want instead of listing what to avoid, and keep one
+sentence against people, writing and logos.** Decided 2026-09-13, on moving to NightCafe. Every
+prompt used to end in a list — "no penguin, no brass, no gears, no hooded figures" — and on the
+models these long descriptions suit there is no negative-prompt field to move it to, so the list sat
+in the text the model reads. Describing the scene positively does not depend on how a given model
+handles negation, and nothing has been generated yet to say which way each one goes. People, writing
+and logos keep their sentence because the subjects invite them — a workstation implies someone at
+it, a terminal implies text, a grid of slots implies marks — and each makes an image unusable rather
+than merely off-style. Rejected: keeping the lists in the prose, and relying on a negative field the
+chosen models lack. Each direction still names avoid-keywords, for a model that does have one.]
+
+[UNVERIFIED: **that dropping the named exclusions keeps steampunk, holograms, neon and code rain
+out.** Each look is written to leave no room for them, but no image has been generated from the
+rewritten prompts. When an output shows one, add that single exclusion to its direction's look as a
+plain sentence, and note which model needed it.]
+
+### Choosing a model
+
+- **The prompts are written for models that read a long natural-language description** — on
+  NightCafe, Flux, Ideogram and Imagen among others. Those have no negative-prompt field.
+- **One model per direction**, chosen on its hero (step 1 of "Recommended direction") and kept for
+  every later prompt in that direction. The same prompt on two models is two styles, and a set in
+  two styles reads as two projects.
+- **On a Stable Diffusion-family model** — SD 1.x, SDXL, Coherent and Artistic, the ones NightCafe
+  gives a negative-prompt field — put the direction's avoid-keywords in that field as bare words.
+  NightCafe's own guidance is to write them without "no".
+- **Run several variations of every prompt** and choose among them. One image per prompt judges the
+  seed, not the prompt.
+
+### Sizes
+
+| surface       | prompts    | final size       | generate at                               |
+| ------------- | ---------- | ---------------- | ----------------------------------------- |
+| hero          | A1, B1, C2 | 1920×1080 (16:9) | 16:9                                      |
+| wide hero     | C1, C1S    | 2520×1080 (21:9) | 21:9, or 16:9 cropped top and bottom      |
+| slot grid     | A5, B5     | 1920×1080 (16:9) | 16:9                                      |
+| social card   | A3, B3, C3 | 1280×640 (2:1)   | 16:9, cropped top and bottom              |
+| card set      | A4, B6, C4 | 4 × 800×800      | 1:1, as one two-by-two sheet, then sliced |
+| avatar / mark | A7, B4, C6 | square           | 1:1                                       |
+| drift banner  | C5         | 2400×800 (3:1)   | 21:9, or 16:9, cropped top and bottom     |
+| extras        | A2, A6, B2 | —                | 16:9                                      |
+
+1280×640 is GitHub's recommended size for a repository's social preview, and an Open Graph card at
+1200×630 is a trim of it; A3 and B3 were first sized for the second. A card set is one sheet because
+four separate generations drift in angle, scale and lighting. Upscale an output that is smaller than
+its final size before cropping it.
+
+[UNVERIFIED: **which models and aspect ratios NightCafe offers today.** 21:9 on Flux PRO v1.1 comes
+from a search summary of NightCafe's own model page; the model list and the other presets are
+search-summary depth too, not checked in the app. Where a ratio is missing, generate at the nearest
+wider one and crop.]
+
 ## Direction A — sci-fi
 
 The metaphor that fits the project: a machine being **provisioned from a manifest**. Declarative,
 repeatable, one file deciding what exists.
 
-**A1 — front-page hero.**
+**A's look**, pasted after every A scene prompt:
+
+> Restrained hard-surface industrial design: matte machined metal and dark composite, plain
+> unornamented geometry, every seam precise. Light is structural — it runs along edges and seams
+> rather than hanging in the air as screens or interfaces. Cold instrument lighting, still air and
+> deep shadow, with the quiet of a science-fiction production still rather than an action scene.
+
+**Avoid-keywords**, for a negative-prompt field only: steampunk, brass, gears, clockwork, rivets,
+circuit board, hologram, lens flare, neon, text, letters, watermark, logo, person.
+
+**A1 — front-page hero, 16:9.**
 
 > A vast dim hangar interior, a single workstation deck at centre, seen from a low three-quarter
 > angle. Above the deck, a machine is being assembled out of nothing by planes of light — flat
 > geometric panels sliding into place along invisible rails, each one snapping to a grid. Half the
-> machine is complete and solid; the other half is still wireframe, mid-materialisation. Cold
-> instrument lighting, deep near-black background, one warm accent colour on the completed portion
-> only. Precise hard-surface industrial design, matte machined surfaces, no ornament. Cinematic,
-> restrained, wide aspect. No text, no lettering, no logos. Not steampunk, no brass, no gears, no
-> exposed circuit-board traces, no glowing blue holographic UI panels, no lens flare.
+> machine is complete and solid; the other half is still a fine wireframe, mid-materialisation. The
+> amber accent sits on the completed half only. Wide cinematic composition. _(+ A's look, + shared
+> tail)_
 
-**A2 — the manifest, as the thing that acts.**
+**A2 — the manifest, as the thing that acts, 16:9.**
 
 > A single sheet of dark translucent material floating upright in a void, dense with faint engraved
-> line-work in even columns — abstract marks, not readable letters. Beams project from the sheet
-> downward and outward, and where each beam lands a small precise object has been built: a lamp, a
-> tool, a folded terminal. Twelve objects, each different, arranged on an implied grid. The sheet is
-> lit from within, the objects lit only by their beams. Cool monochrome with a single warm accent.
-> Clean hard-surface rendering, high detail, shallow depth of field. No text, no legible symbols.
-> Not steampunk, no gears, no parchment, no scrolls, no circuit traces.
+> line-work in even columns of abstract marks. Beams project from the sheet downward and outward,
+> and where each beam lands a small precise object has been built: a lamp, a tool, a folded
+> terminal. Twelve objects, each different, arranged on an implied grid. The sheet is lit from
+> within, the objects only by their beams. High detail, shallow depth of field. _(+ A's look, +
+> shared tail)_
 
-**A3 — social / OG card, 1200×630.**
+**A3 — social / OG card, 2:1.**
 
-> Extreme close-up of a machined metal panel at a slight angle, filling the frame, with a single
-> narrow channel cut across it. Inside the channel, a line of small indicator elements lights up in
-> sequence from left to right, most already lit and a few still dark. Shallow angle, strong specular
-> highlight along one edge, everything else falling into near-black. Industrial product-photography
-> lighting, macro, very high detail. Composition leaves the left third empty and unlit for text to
-> be placed later. No text, no numbers, no logos. Not steampunk, no brass, no rivets, no circuit
-> board.
+> Extreme close-up of a seamless machined metal panel at a slight angle, with a single narrow
+> channel cut across the right two thirds of the frame. Inside the channel, a line of small
+> indicator lights comes on in sequence from left to right, most already lit and a few at the far
+> right still dark. Shallow angle, strong specular highlight along one edge, everything else falling
+> into near-black. Industrial product-photography lighting, macro, very high detail. The left third
+> of the frame is empty: unlit, featureless dark metal. _(+ A's look, + shared tail)_
 
-**A5 — slot variant of A1, the one to actually composite into.** The purpose of this prompt is a
-clean grid of empty, evenly-lit recesses; the scene is secondary and must not compete.
+**A5 — slot variant of A1, the one to actually composite into, 16:9.** The purpose of this prompt is
+a clean grid of empty, evenly-lit recesses; the scene is secondary and must not compete. It is seen
+straight-on, unlike A1, so flat official SVGs drop into the recesses without a perspective warp —
+the first version asked for a three-quarter angle and a grid square to the camera at once.
 
-> A vast dim hangar interior, low three-quarter angle, a dark machined bulkhead filling the centre
-> of the frame. Set into the bulkhead, a precise grid of twelve identical square recesses, four
-> across and three down, each one empty, each lit evenly from within by the same soft cold light,
-> all at the same depth and the same scale. The grid is unobstructed and square to the camera.
-> Around it the hangar falls away into deep near-black with one warm accent along a single
-> structural edge. Matte machined surfaces, hard-surface industrial design, no ornament, no clutter
-> in front of the grid. No text, no lettering, no symbols, no icons, no logos — the recesses must be
-> completely empty. Not steampunk, no brass, no gears, no circuit traces, no glowing blue
-> holographic UI, no lens flare.
+> A vast dim hangar interior seen straight-on, a dark machined bulkhead filling the centre of the
+> frame. Set into the bulkhead, a precise grid of twelve identical square recesses, four across and
+> three down, all at the same depth and the same scale, each lit evenly from within by the same soft
+> cold light. Every recess is completely empty, its back face smooth and blank. The grid is
+> unobstructed and square to the frame. Around it the hangar falls away into deep near-black, with
+> the amber accent along a single structural edge. Nothing stands in front of the grid. _(+ A's
+> look, + shared tail)_
 
-**A6 — direct variant, for comparison only, not recommended.** Expect mangled marks; the value is
-seeing how it fails.
+**A6 — direct variant, for comparison only, not recommended, 16:9.** Expect mangled marks; the value
+is seeing how it fails. It takes A's look and only the palette sentence of the tail, because the
+tail's second sentence forbids the very marks this prompt asks for. On a negative-prompt model,
+leave "logo" out of the avoid-keywords for the same reason.
 
-> A dark machined bulkhead filling the frame, into which are set twelve softly backlit emblems in a
-> four-by-three grid: a penguin, a two-coiled serpent, a whale carrying containers, a segmented
-> colour wheel, a bare human footprint, a crab, a gopher, a hexagon, a ship's helm, a branching
-> line, an angular monogram, a stylised terminal cursor. Each emblem is a flat single-colour inlay,
-> evenly lit, none overlapping. Precise industrial hard-surface rendering, near-black surround, one
-> warm accent. No text, no lettering, no wordmarks. Not steampunk, no gears, no circuit traces.
+> A dark machined bulkhead seen straight-on, filling the frame, into which are set twelve softly
+> backlit emblems in a four-by-three grid: a penguin, a two-coiled serpent, a whale carrying
+> containers, a segmented colour wheel, a bare human footprint, a crab, a gopher, a hexagon, a
+> ship's helm, a branching line, an angular monogram, a stylised terminal cursor. Each emblem is a
+> flat single-colour inlay, evenly lit, none overlapping, set in near-black. _(+ A's look, + the
+> tail's palette sentence only)_
 
-**A4 — the four use-case cards** (workstation / headless / container / WSL), as a consistent set.
+**A4 — the four use-case cards** (workstation / headless / container / WSL), as one 1:1 sheet.
 
-> A set of four square icons in one consistent style: an isometric solid object on a plain
-> near-black ground, each built from the same flat geometric panel language, each a different
-> silhouette — a desk-scale terminal, a bare rack unit, a sealed cube, a cube nested inside a larger
-> frame. Matte surfaces, one warm accent edge per object, no background detail, generous margin,
-> identical lighting and camera angle across all four. Minimal, precise, no text, no
-> icons-within-icons. Not steampunk, no gears, no glow effects.
+> A single square image divided into a precise two-by-two grid of four equal tiles with thin gaps,
+> the same isometric camera angle, lighting and scale in every tile. Each tile holds one solid
+> object on a plain near-black ground with generous margin, all four built from the same flat
+> geometric panel language. Top left: a desk-scale terminal. Top right: a bare rack unit. Bottom
+> left: a sealed cube. Bottom right: a cube nested inside a larger frame. Each object has one amber
+> accent edge; every face is otherwise plain and matte. _(+ A's look, + shared tail)_
+
+**A7 — repo avatar, 1:1, legible at 64px.** Added 2026-09-13: A had no avatar prompt, and building
+the direction out needs one. B4 and C6 do the same job in their directions.
+
+> A single bold emblem centred on a plain slate near-black square: a solid square block assembled
+> from four flat geometric panels, three already seated and the fourth, at the upper right, sliding
+> the last short distance into place along a thin guide line. The seated panels are cool blue, the
+> arriving panel amber. Flat vector shapes, thick and even, flat colour without gradients or fine
+> detail, generous margin, readable when reduced to sixty-four pixels. _(+ shared tail)_
 
 ## Direction B — high fantasy
 
 The metaphor: a **workshop where the tools arrange themselves** — a bound compendium, and a room
 that reads it. High fantasy read as craft and old precision, not as swords and dragons.
 
-**B1 — front-page hero.**
+**B's look**, pasted after every B scene prompt:
+
+> Painterly realism with precise draughtsmanship: fine deliberate stonework, worn oak, and the plain
+> hand tools and instruments of a pre-industrial craftsman, each placed with care. The mood is a
+> scholar's workroom at night — quiet, ordered and exact. Any light that seems magical is soft,
+> faint and orderly, like lamplight through thin paper. Deep shadow, cold grey stone and dark wood.
+
+**Avoid-keywords**, for a negative-prompt field only: steampunk, brass, gears, clockwork, goggles,
+wizard, robe, dragon, glowing runes, sparkles, text, letters, watermark, logo, person.
+
+**B1 — front-page hero, 16:9.**
 
 > A stone workshop interior at night, tall and narrow, lit by one cold source high above. Along both
 > walls, hundreds of tools and instruments hang in perfect ordered rows, each in its own outlined
-> recess. In the centre, an open book rests on a plain lectern; from its pages a faint ordered light
-> reaches out, and the recesses nearest it are filling — a tool forming in each, half-present. Deep
-> shadow, one warm accent from the book, everything else cold grey stone. Painterly realism, muted
-> palette, precise draughtsmanship, no clutter. No text, no readable writing on the pages. Not
-> steampunk, no brass, no gears, no clockwork, no wizard, no robes, no dragons, no glowing runes as
-> cliché neon.
+> recess. In the centre, an open book rests on a plain lectern, its pages ruled with faint abstract
+> marks; from them a faint ordered light reaches out, and the recesses nearest the book are filling
+> — a tool forming in each, half-present. The amber accent comes from the book; everything else is
+> cold grey stone. Uncluttered. _(+ B's look, + shared tail)_
 
-**B2 — the compendium.**
+**B2 — the compendium, 16:9.** First written with a muted earth palette and one cold accent; it now
+takes the project palette like every other prompt.
 
 > A heavy open book seen from directly above on a dark worn workbench, its two visible pages ruled
 > into neat columns of small abstract marks. Laid across and around the book, arranged with obvious
-> care, a set of real tools — calipers, a plane, a rule, a burin — each aligned to the grid of the
-> page beneath it, as though the page had specified where each belongs. Single raking light from the
-> left, deep shadows, aged paper, worn metal. Still-life realism, high detail, muted earth palette
-> with one cold accent. No legible text, no letters, no numerals. Not steampunk, no gears, no
-> goggles, no cogs, no magic sparkles.
+> care, a set of real hand tools — calipers, a plane, a rule, a burin — each aligned to the grid of
+> the page beneath it, as though the page had specified where each belongs. Single raking light from
+> the left, deep shadows, aged paper, worn steel. Still-life realism, high detail. _(+ B's look, +
+> shared tail)_
 
-**B5 — slot variant of B1, the one to actually composite into.** B1's tool-filled niches are the
-scene; this one empties them so real marks can go in.
+**B5 — slot variant of B1, the one to actually composite into, 16:9.** B1's tool-filled niches are
+the scene; this one empties them so real marks can go in.
 
-> A tall stone workshop wall at night, seen square-on and filling the frame. Cut into the stone, a
-> precise grid of twelve identical shallow niches, four across and three down, each one empty, each
-> lit by the same soft warm light from a source above and outside the frame. The stonework is fine
-> and deliberate, the niches perfectly regular and all at the same depth. Below and around the grid,
-> a plain worn workbench edge and deep shadow, no other objects. Painterly realism, muted cold grey
-> stone with one warm accent, precise draughtsmanship. No text, no carved letters, no runes, no
-> symbols, no icons — the niches must be completely empty. Not steampunk, no brass, no gears, no
-> clockwork, no glowing magic.
+> A tall stone workshop wall at night, seen straight-on and filling the frame. Cut into the stone, a
+> precise grid of twelve identical shallow niches, four across and three down, all at the same
+> depth, each lit by the same soft warm light from a source above and outside the frame. Every niche
+> is completely empty, its back face plain smooth stone. The stonework is fine and deliberate, the
+> niches perfectly regular. Below the grid, the bare edge of a worn workbench and deep shadow. _(+
+> B's look, + shared tail)_
 
-**B3 — social / OG card, 1200×630.**
+**B3 — social / OG card, 2:1.**
 
 > A dark stone wall filling the frame, into which a long horizontal row of small identical niches
-> has been cut with great precision. Most niches hold a small tool, perfectly placed; a few at the
-> right are still empty. Raking side light from the left, strong shadows inside each niche, the
-> right third of the frame falling into darkness with no detail, reserved for text. Painterly
-> realism, cold grey with one warm accent on the filled niches. No text, no carved letters, no
-> runes. Not steampunk, no brass, no gears.
+> has been cut with great precision across the left two thirds. Most niches hold a small hand tool,
+> perfectly placed, touched by the amber accent; a few at the right end of the row are still empty.
+> Raking side light from the left, strong shadows inside each niche. The right third of the frame is
+> plain stone falling away into featureless darkness. _(+ B's look, + shared tail)_
 
-**B4 — repo avatar, square, legible at 64px.**
+**B4 — repo avatar, 1:1, legible at 64px.**
 
-> A single simple emblem centred on a plain dark ground: a stylised open book whose two pages
-> resolve, at a glance, into a bracket-and-bracket shape. Extremely bold and simple, one warm accent
-> colour on near-black, no gradients, no fine detail, readable when reduced to a tiny square. Flat
-> vector look, thick even strokes, generous margin. No text, no letters. Not steampunk, no gears, no
-> filigree.
+> A single simple emblem centred on a plain slate near-black square: a stylised open book whose two
+> pages resolve, at a glance, into a bracket-and-bracket shape. Extremely bold and simple, thick
+> even strokes in amber, flat colour without gradients or fine detail, plain unadorned lines,
+> generous margin, readable when reduced to sixty-four pixels. _(+ shared tail)_
+
+**B6 — the four use-case cards, as one 1:1 sheet.** Added 2026-09-13: B had no card-set prompt, and
+building the direction out needs one. A4 and C4 do the same job in their directions, for the same
+four subjects — workstation, headless server, dev container, WSL.
+
+> A single square image divided into a precise two-by-two grid of four equal tiles with thin gaps,
+> the same three-quarter view, lighting and scale in every tile, each object standing on a plain
+> dark stone ground with generous margin. Top left: a complete craftsman's workbench, its tools laid
+> out in ordered rows. Top right: a tall closed cabinet of dark oak, doors shut, with one row of
+> small lamp-lit slits along its front. Bottom left: a sealed travelling chest with one side of
+> clear glass, through which the same ordered tools can be seen. Bottom right: a large open cabinet
+> with a smaller complete workbench standing inside it — one workshop housed inside another. One
+> amber accent in each tile, crisp enough to read at small size. _(+ B's look, + shared tail)_
 
 ## Direction C — what the project does, not what it runs on
 
@@ -286,39 +401,39 @@ terminal":
 
 The shared constraints above hold for C exactly as for A and B: no legible text in a generated
 image, real marks composited from official SVGs, a serious subject rendered precisely with one
-deliberate oddity, and steampunk excluded explicitly rather than merely omitted.
+deliberate oddity, and steampunk designed out rather than merely left unmentioned.
 
 [DECISION: **the accent is called "amber" in every prompt in this direction, never "orange" alone.**
 `#ff9100` sits on the amber side. Ubuntu's brand orange is redder, and a model told "orange accent"
 on a terminal and desktop subject drifts toward it. That puts one distro back in the centre of the
 image.]
 
-[DECISION: **the "power user" clichés are excluded explicitly**: hooded figures, green code rain,
-neon cyberpunk, RGB gaming lighting. The first brief excluded steampunk for the same reason. Models
-reach for these on the words "power user" and "terminal" without being asked, and every image then
-looks like stock art.]
+[DECISION: **the "power user" clichés are designed out deliberately**: hooded figures, green code
+rain, neon cyberpunk, RGB gaming lighting. The first brief did the same for steampunk. Models reach
+for these on the words "power user" and "terminal" without being asked, and every image then looks
+like stock art. They are named only in C's avoid-keywords; the prose keeps them out by describing
+what the scene is instead — see "Running the prompts on NightCafe".]
 
 [DECISION: **no frame shows a recognisable operating system.** No window decorations belonging to
 any one OS (traffic-light buttons, a taskbar, a top bar), no distro colours, no penguin. Windows in
 the images are frameless rectangles.]
 
-### The shared clause
+### C's look
 
-Every C prompt ends with this, verbatim. That keeps the set consistent and keeps the excluded
-defaults out:
+Pasted after every C scene prompt. It replaces the all-in-one clause C first ended each prompt with,
+whose palette is now the shared tail and whose exclusion list became the avoid-keywords below.
 
-> Colour palette: deep slate near-black background (#1e2129), panels slightly lighter (#272b35),
-> cool blue structural lines (#2094f3), and a single warm amber accent (#ff9100) reserved for the
-> one element that is changing. No text, no letters, no numbers, no logos, no trademarks. No
-> penguin, no operating-system branding, no recognisable window decorations, no taskbars. No people,
-> no hooded figures, no code rain, no neon cyberpunk, no RGB lighting. Not steampunk, no brass, no
-> gears. No circuit-board traces, no glowing holographic interface, no lens flare, no cartoon
-> mascots.
+> Frameless rectangular panes stand in for every window and screen. The amber accent is reserved for
+> the one element that is changing. Matte surfaces and an uncluttered composition.
 
-### The six C prompts
+**Avoid-keywords**, for a negative-prompt field only: penguin, operating system logo, taskbar,
+window buttons, hooded figure, code rain, cyberpunk, neon, RGB lighting, steampunk, brass, gears,
+circuit board, hologram, lens flare, mascot, text, letters, watermark, logo, person.
+
+### The C prompts
 
 Each lists its surface and size, the concept it carries, and where real type goes. Each ends with
-the shared clause above.
+C's look and the shared tail, except C6, which takes the tail alone.
 
 **C1 — the manifest becomes the machine; docs hero, 21:9 (2520×1080).** Concept: one file decides
 what exists. Type: upper-left third.
@@ -332,23 +447,23 @@ what exists. Type: upper-left third.
 > into place on an invisible grid. Most panes are already seated and calm in blue; the last one
 > arriving glows amber at its edges. The filaments never cross or tangle. Subtle background grid,
 > faint volumetric haze, thin consistent line weights, vector-adjacent rendering, generous empty
-> space across the upper left third. _(+ shared clause)_
+> space across the upper left third. _(+ C's look, + shared tail)_
 
 **C1S — slot variant of C1, the image the tool marks are composited into, 21:9.** A5 and B5 exist
 for the same job in their own directions. The composition is **straight-on rather than isometric**,
 so flat official SVGs drop into the tiles without a perspective warp.
 
-> Precise technical illustration, wide cinematic frame, straight-on orthographic view with no
-> perspective. In the lower left, a single upright document panel, softly edge-lit, ruled with faint
-> even rows of abstract marks that suggest structured configuration without being readable. From its
+> Precise technical illustration, wide cinematic frame, straight-on orthographic view, flat to the
+> viewer. In the lower left, a single upright document panel, softly edge-lit, ruled with faint even
+> rows of abstract marks that suggest structured configuration without being readable. From its
 > right edge, thin luminous blue filaments leave in orderly parallel bundles, split cleanly at small
 > junction nodes, and each one ends at one of twelve identical square tiles arranged in a precise
-> grid, four across and three down, filling the right half of the frame. Every tile is empty, the
-> same size, evenly lit from within by the same soft light, with a thin blue border. The filament
-> reaching the last tile, bottom right, glows amber. The grid is unobstructed and square to the
-> frame. Subtle background grid, thin consistent line weights, vector-adjacent rendering, generous
-> empty space across the upper left third. The tiles must be completely empty: no symbols, no icons.
-> _(+ shared clause)_
+> grid, four across and three down, filling the right half of the frame. Every tile is the same
+> size, evenly lit from within by the same soft light, with a thin blue border, and completely empty
+> and plain inside. The filament reaching the last tile, bottom right, glows amber. The grid is
+> unobstructed and square to the frame. Subtle background grid, thin consistent line weights,
+> vector-adjacent rendering, generous empty space across the upper left third. _(+ C's look, +
+> shared tail)_
 
 **C2 — one line, and it asks first; alternative hero, 16:9 (1920×1080).** Concept: one pasted line
 starts everything, and nothing irreversible happens without a yes. Type: upper right.
@@ -360,8 +475,8 @@ starts everything, and nothing irreversible happens without a yes. Type: upper r
 > into soft bokeh. The last line in the column is different: it has stopped, and a single amber
 > marker waits beside it for an answer. The screen is the only light source, spilling cool
 > blue-white onto a matte dark desk and the edge of a low-profile keyboard, with one faint amber
-> reflection from the waiting marker. The upper right of the frame falls away into darkness. _(+
-> shared clause)_
+> reflection from the waiting marker. The upper right of the frame falls away into darkness. _(+ C's
+> look, + shared tail)_
 
 **C3 — lose the machine, keep the setup; social preview, 2:1 (1280×640).** Concept: a hardware
 failure costs a machine, not a setup. This is the highest-payoff image, because every link to the
@@ -376,13 +491,12 @@ name has to be composited in.
 > layout of panes, lit in cool blue. A single thin amber filament arcs from the dead laptop to the
 > new screen and carries, at its midpoint, a small glowing document panel, the brightest object in
 > the frame. The left 45 percent of the frame is empty dark slate with a very faint grid. Calm and
-> precise rather than dramatic. _(+ shared clause)_
+> precise rather than dramatic. _(+ C's look, + shared tail)_
 
 **C4 — one manifest, four destinations; use-case card set, 4 × 1:1 (800×800 each).** Concept: the
 same manifest goes to every target, trimmed by tags. It replaces the Material icons on the four
-front-page cards, the same job A4 does for its own direction. Type: none, since the cards carry
-their titles in HTML. **Generate the set as one sheet and slice it**, because four separate
-generations drift in angle, scale and lighting.
+front-page cards, the same job A4 and B6 do for their own directions. Type: none, since the cards
+carry their titles in HTML. Generated as one sheet and sliced, like every card set.
 
 > A single square image divided into a precise two-by-two grid of four equal tiles with thin gaps,
 > the same isometric camera angle, lighting and scale in every tile. A thin blue filament enters
@@ -391,8 +505,8 @@ generations drift in angle, scale and lighting.
 > right: a bare rack-mounted server unit with no screen and one row of small status lights. Bottom
 > left: a sealed geometric cube with a faint seam, the same workspace panes glowing through one
 > translucent face. Bottom right: a large upright frameless window, inside which sits a smaller
-> complete workspace — one machine hosted inside another. Matte flat surfaces, minimal, no
-> background detail, generous margin in each tile. _(+ shared clause)_
+> complete workspace — one machine hosted inside another. Matte flat surfaces, minimal, plain
+> background, generous margin in each tile. _(+ C's look, + shared tail)_
 
 **C5 — drift, shown and not overwritten; front-page image, 3:1 (2400×800).** Concept:
 `deploy.status` compares the home directory with the repo, shows what drifted, and asks before
@@ -406,7 +520,7 @@ overwritten. Type: none inside the image. It sits beside a sentence set in HTML.
 > layers except one small tile on the lower layer, which has shifted slightly off its outline and
 > turned amber. A thin amber bracket links it to its outline above, pointing it out and waiting
 > rather than pulling it back. Everything else is calm and aligned. Thin even line weights,
-> vector-adjacent, subtle grid, generous margin on every side. _(+ shared clause)_
+> vector-adjacent, subtle grid, generous margin on every side. _(+ C's look, + shared tail)_
 
 **C6 — the mark; repo avatar and site favicon, 1:1, legible at 32px.** Concept: a signal that builds
 something, without an "L" and without a heartbeat. Type: none. **Generate this one only to explore
@@ -415,10 +529,10 @@ favicon size.
 
 > A single bold emblem centred on a plain deep slate square. One thick horizontal line crosses the
 > square; at its centre it rises into three small solid squares arranged as a precise ascending
-> step, then drops back to the line. The line and the first two squares are cool blue, the top
-> square amber. Flat vector, thick even strokes, no gradients, no outlines, no fine detail, generous
-> margin, readable when reduced to thirty-two pixels. Not a heartbeat, not a medical symbol, no
-> letters. _(+ shared clause)_
+> step, then drops back to the line. The squares are square-cornered and flat-topped, rising like a
+> small staircase. The line and the first two squares are cool blue, the top square amber. Flat
+> vector, thick even strokes, flat colour without gradients, outlines or fine detail, generous
+> margin, readable when reduced to thirty-two pixels. _(+ shared tail)_
 
 ### The installed-tool marks in direction C
 
@@ -453,25 +567,22 @@ into robot clichés.
 
 ## Open questions
 
-Both questions below gate every direction. Direction C added none of its own — it deliberately did
-not re-ask the licence question, and it is gated by it exactly as A and B are.
+One question is still open, and it gates nothing: generation can start. The generator and licence
+question this plan carried from 2026-09-02 is answered in "Running the prompts on NightCafe".
 
-[NEEDS CLARIFICATION: **whether the comparison set is now six images rather than four.** The
-2026-09-02 decision below settled a four-image comparison — A1 and B1 for the look, A5 and B5 for
-the slot grid — when there were two directions. C arrived with its own hero pair and its own slot
-variant, and nothing has said whether all three directions get built out, or whether the three
-heroes are compared and one wins. Raised by the 2026-09-13 merge, not by either brief.]
+[DECISION: **all three directions are built out in full, not narrowed on their heroes first.**
+Decided 2026-09-13, answering the question the merge of direction C raised. The comparison set is
+therefore six images — A1, B1 and C1-or-C2 for the look, A5, B5 and C1S for the slot grid — and
+every direction then continues through every surface, which is why A7 and B6 were added. This
+extends the 2026-09-02 answer below from two directions to three. Rejected: comparing the three
+heroes and building out only the winner, which is cheaper but judges a direction before its slot
+grid is visible.]
 
 [DECISION: **generate both directions, decided 2026-09-02.** The proposal was to run one hero from
 each and pick before building either out; the answer was to do both. So the comparison set is four
 images rather than two — A1 and B1 for the look, A5 and B5 for the slot grid that actually ships —
 and the choice is made with the compositing already visible rather than from the scene alone, which
 is the better comparison anyway since the grid is the part the front page depends on.]
-
-[NEEDS CLARIFICATION: **which model, and whether its licence permits this use.** The prompts are
-written model-agnostically, but wording that works well differs between them, and — more importantly
-— the output's licence and any attribution requirement have to be checked before an image goes into
-a public repo. Not a formality: this is imagery for a published site.]
 
 [NEEDS CLARIFICATION: **whether generated imagery is wanted on the docs pages at all, or only at the
 edges.** The prompts in every direction cover hero, social card, cards and avatar — all framing.
@@ -485,22 +596,27 @@ what the grid geometry has to suit — twelve marks of wildly different aspect r
 one square grid — and at least two (Tux, the Go gopher) carry attribution conditions that need a
 credits line somewhere before anything is published.
 
-**Grade every output to the measured palette** before judging it against the others. That applies to
-all three directions now the palette is a measurement rather than a description.
+Then take each direction through the same four steps, on NightCafe as "Running the prompts on
+NightCafe" describes:
 
-**A and B.** Generate four comparison images first, at the real palette: A1 and B1 for the look, A5
-and B5 for the slot grid. **Composite the twelve official SVGs into A5 and B5 before judging
-either** — an empty grid and a filled one are different pictures, and the filled one is what ships.
-Run A6 once alongside them, to see the direct-generation failure rather than to use it. Then build
-both directions out, in order of payoff: social card (every link to the repo renders it), hero,
-avatar, card set.
+1. **Pick the model on the hero.** Run A1, B1, or C1 and C2, on two or three models with several
+   variations each, and keep the model that holds the direction's look best; every later prompt in
+   that direction runs on it. For C, keep one of C1 and C2 at this step too. The lost first pass
+   mixed isometric illustration with photoreal close-ups, and a set in two styles reads as two
+   projects, so whichever hero survives sets the style for the rest of C.
+2. **The slot grid, with the marks composited in before judging it** — A5, B5, C1S. An empty grid
+   and a filled one are different pictures, and the filled one is what ships. Run A6 once beside A5,
+   to see the direct-generation failure rather than to use it.
+3. **The rest in order of payoff**: social card (A3, B3, C3 — every link to the repo renders it),
+   avatar (A7, B4, C6), card set (A4, B6, C4).
+4. **The extras last**: A2, B2 and C5.
 
-**C.** Generate C1 and C2 as a pair and keep one, then C1S, with the marks composited in before
-judging it. The lost first pass mixed isometric illustration with photoreal close-ups, and a set in
-two styles reads as two projects. Whichever hero survives sets the style for the other four images.
-Then order by payoff: social preview (C3), the hero (C1 or C2), the card sheet (C4), the mark (C6)
-and the front-page drift image (C5).
+**Grade every output to the measured palette** before judging it against the others.
 
-Keep the chosen prompts in this repo once they are settled — a prompt that produced a committed
-image is the only way that image can be regenerated or varied consistently later, and it belongs
-beside the image the same way a generator belongs beside its output.
+**Choose what the site uses with all three sets finished and side by side**, so that the choice is
+made with the compositing visible rather than from a scene alone.
+
+Keep the chosen prompts in this repo once they are settled, with the model each was run on — a
+prompt that produced a committed image is the only way that image can be regenerated or varied
+consistently later, the same prompt on another model is a different image, and it belongs beside the
+image the same way a generator belongs beside its output.
