@@ -2182,7 +2182,10 @@ project that merely depends on it, because PEP 735 groups aren't pulled in trans
 
 Measured by a `repo-tasks` session on **uv 0.11.19** while settling whether its stamped bootstrap
 script should pass `--python`, filed here as a plan because writing into another repo's tree is out.
-Three probes, each with isolated `UV_TOOL_DIR`/`UV_TOOL_BIN_DIR` so nothing on the machine moved:
+Session `5de331c8-e7f0-4bcb-a86f-c242683a382d.jsonl` under that repo's project directory; the
+distinctive phrase is "Should the stamp template pin an interpreter". Landed there as `6d30b1c` (a
+comment at `_INSTALL_CMD` in `selfinstall.py`) and `b9749f7`. Three probes, each with isolated
+`UV_TOOL_DIR`/`UV_TOOL_BIN_DIR` so nothing on the machine moved:
 
 | probe                                                | uv reported, and chose                                           |
 | ---------------------------------------------------- | ---------------------------------------------------------------- |

@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-08-23
+updated: 2026-09-13
 depends_on: [repo-tasks]
 ---
 
@@ -90,9 +90,12 @@ can recreate the split.
 - **Detection mechanism.** `uv tool list` output parsing is the obvious approach, but it's a
   human-readable format with no stability guarantee.
 
-  [NEEDS CLARIFICATION: does `uv tool list` have a machine-readable mode (or a stable-enough shape)
-  as of the current uv version, or is checking `~/.local/share/uv/tools/invoke/` for existence the
-  more honest test?]
+  [DECISION: **no machine-readable mode, as of uv 0.11.19** — checked 2026-09-12 by a `repo-tasks`
+  session that needed to read the listing programmatically for this same question. `uv tool list`
+  offers `--show-paths`, `--show-version-specifiers`, `--show-with`, `--show-extras`,
+  `--show-python` and `--outdated`, and nothing that emits JSON. So the directory-existence test is
+  the honest one, and parsing the listing is parsing a human-readable format with no stability
+  guarantee — which was the suspicion the question was raised on.]
 
 ## Recommended direction
 
@@ -101,15 +104,46 @@ Roughly five lines in each of the two real-machine paths, plus a decision on the
 1. Before installing either tool, detect whether the _other_ one is present as a separate uv tool.
 2. With a TTY, prompt (default yes to removing it, since leaving both is never what anyone wants).
    Without one, remove it and say so on stdout — never leave both installed silently.
-3. Mirror the same check in `repo-tasks`' `selfinstall.update`, so the human-facing update path
-   can't recreate the split either.
+3. ~~Mirror the same check in `repo-tasks`' `selfinstall.update`.~~ **Landed there 2026-09-12** as
+   `dbe84e4`, with five unit tests and a real-listing check. `inv repo-tasks.update` reports a
+   separately-installed `invoke` uv tool and prints `uv tool uninstall invoke` as a next step. It
+   deliberately does neither of the stronger things: not removing it, because that mutates machine
+   state outside the package's scope, and not refusing to install, because refusing would break the
+   one command that moves the global install.
+
+**So two of the three paths are settled and the remaining work is `bootstrap.sh`'s** — items 1 and 2
+above, which is the half with the open design questions rather than the half with the code.
+`repo-tasks`' side is a worked precedent for the message and the next-step shape, **not for the
+policy**: `update` can report and move on because the machine already has both tools, while
+`bootstrap.sh` is deciding which one to put there. The first open question above is therefore still
+open, and for its own stated reason — `update` runs after `repo-tasks` exists and `bootstrap.sh`'s
+check has to run before it does.
 
 Worth doing in the same pass, since it's the same "the machine's tool state disagrees with what
 every repo assumes" class of problem: `repo-tasks` grows an `inv repo-tasks.doctor` (or extends
 `repo-tasks.status`, which already exists for stamped-vs-installed drift) that reports the shadowing
 case explicitly. That turns the mislocalized `ImportError` above into one command with an answer.
 
-[DEFERRED: `bootstrap-repo-tasks.sh` also stamps `uv tool install` without `--python`, while
-`bootstrap.sh` passes `--python "${UV_PYTHON_DEFAULT}"`. Harmless on this machine today, where uv's
-default already matches `setup.toml`'s 3.14, but the two installers can diverge on a machine where
-it doesn't. Belongs to `repo-tasks`' stamp template, not here.]
+[DECISION: **`repo-tasks` declined to build that check, citing this plan.** Its reason is the
+cwd/shadowing pairing in Context above: a check answering only the shadowing half would leave the
+cwd half undiagnosed, and the two are hard to tell apart from the symptom. If `bootstrap.sh` ends up
+wanting such a check to compose against, that is the argument that reopens it — which is a decision
+this plan owns rather than `repo-tasks`.]
+
+[DECISION: **the `--python` deferred item is closed as a won't-fix with its premise corrected**,
+settled in `repo-tasks` 2026-09-12 (`6d30b1c`, `b9749f7`) and folded in here 2026-09-13. It read the
+stamped script's bare `uv tool install` as landing on "whatever interpreter uv happens to pick".
+Measured on uv 0.11.19, uv derives the request from the target's own `requires-python`, so a bare
+install cannot land below a package's floor — and the two installers agree on this machine because
+`[packages.uv-env]` exports `UV_PYTHON="3.14"` into every shell, not because of the flag. The
+`--python` in `bootstrap.sh` is belt-and-braces rather than load-bearing, which is a fine thing for
+a machine's own bootstrap to be. `repo-tasks` declined to put a version in a template every consumer
+regenerates, because an explicit request overrides a package's `requires-python` rather than
+narrowing it — now a rule in `~/.agents/AGENTS.md`, with the evidence under the matching heading in
+`contributing/global-agents-md.md`.]
+
+[NEEDS CLARIFICATION: does `UV_PYTHON_DEFAULT` still earn its own name now that `[packages.uv-env]`
+exports `UV_PYTHON` to the same value? `setup.toml` carries a comment about keeping
+`settings.uv_python_default` and that zshenv line in sync, and `tasks/python.py`'s `_UV_ENV_RE`
+exists to do that synchronisation. Two names for one number, kept aligned by a task, is the shape
+worth re-examining — not urgent, and not something `repo-tasks` has a view on.]
