@@ -370,9 +370,78 @@ rationalization table plus a red-flags list is a word addition to an always-load
 plan has already measured as delivering half the community's instruction per unit of context, and a
 dilution effect would land on every row at once, `cut-message` included.
 
-[NEEDS CLARIFICATION: land finding 2 now, or hold it the further ~two active days the `cut-message`
-denominator needs? Holding buys a clean reading of one row against a dilution hypothesis nothing in
-this corpus has measured, and costs the same two days of finding-2 evidence. Landing it now means
-any later `cut-message` movement carries an untestable alternative explanation. The size of finding
-2's addition is not yet drafted, which is the number that would settle it — a table that costs 40
-words is not the same decision as one that costs 200.]
+[DECISION: **draft finding 2 now, land it after the `cut-message` denominator arrives.** The user's
+answer, 2026-09-13. Drafting is the expensive half and it costs nothing to do early; deferring only
+the commit keeps the one row that could be confounded clean, for a delay of about two active days.
+The draft and its measured cost are below, so landing it later is an edit and a gate run rather than
+a rethink.]
+
+### Finding 2, drafted and costed — not landed, 2026-09-13
+
+Two tables, one per rule, each ending in a red-flags line rather than a separate section. Every row
+comes from an incident already recorded in `contributing/global-agents-md.md`; none is invented.
+
+Into `Composing a Bash call`, after the gate paragraph:
+
+| the excuse you are about to accept | what is actually true                                                                               |
+| ---------------------------------- | --------------------------------------------------------------------------------------------------- |
+| it is a friction cost, not a ban   | that clause is about approval prompts; the one output blob and the lost exit code are unconditional |
+| this is one logical step           | the prompt shows the whole chain, so what the user needs to read sits in the middle of it           |
+| cwd may have moved                 | it moved once, for the cross-repo step, and a caution outliving that is not caution                 |
+| I will label the parts with echo   | the label is the tell that this was several calls                                                   |
+
+**Red flags, in your own typing:** an `echo "=== "` between steps, a `git -C` aimed at the repo you
+are standing in, a `&&` before `git commit`.
+
+Into `Viewing or editing a file`, after the `echo "EXIT=$?"` sentence:
+
+| the excuse you are about to accept         | what is actually true                                                                   |
+| ------------------------------------------ | --------------------------------------------------------------------------------------- |
+| I am only discarding pytest progress       | `tail -N` discards the lines naming what failed, which is the one thing the run was for |
+| this log would flood the context           | the harness already truncates and saves the full text to a file whose path it gives you |
+| I measured it, there is no legitimate case | a session wrote that sentence, committed it, and produced the shape forty minutes later |
+
+**Red flags, in your own typing:** a `| tail` after a gate or a test, a `sed -n` on a file you could
+Read, a second run of the same command with a bigger `-N`.
+
+#### What it costs, measured rather than estimated
+
+Spliced into a copy of each file and measured with `inv ai.measure-instruction-shape --path`, which
+is what the landing run should reproduce:
+
+| file                           | words | d/100w | sentW | mix% | hedged% |
+| ------------------------------ | ----: | -----: | ----: | ---: | ------: |
+| `config/agents-md/bash.md`     | 1,908 |    1.9 |  15.4 |  3.2 |     5.6 |
+| the same, with both tables     | 1,967 |    1.8 |  15.6 |  3.2 |     5.6 |
+| deployed `~/.agents/AGENTS.md` | 7,924 |    1.9 |  17.5 |  3.3 |     3.9 |
+| the same, with both tables     | 7,983 |    1.9 |  17.5 |  3.3 |     3.9 |
+
+**59 words, 0.74% of the always-loaded file**, with every other metric unchanged to the printed
+precision. That is the cheap end of the range the hold was weighing — the dilution objection is
+answerable at this size, and would not be at 200.
+
+#### Three deviations from the prescribed form, each deliberate
+
+- **The red flags are one line, not a section.** Superpowers gives them their own `##` heading. This
+  file has no heading level below the rule, and a second heading per rule would double the rule
+  count the leanness plan is tracking.
+- **The rows come from recorded incidents, not from baseline testing.** Superpowers is explicit that
+  the table is built from excuses captured by running the scenario against a subagent without the
+  skill. Nothing here was captured that way.
+- **No "letter versus spirit" clause and no loophole list.** Both are prescribed alongside the table
+  and both are prohibitions, which the same page says a discipline failure tolerates — but this
+  corpus has five wordings measured inert on exactly these two rules, and adding prohibitions is the
+  lever that spent. The table and the red flags are the part that is a different mechanism.
+
+[NEEDS CLARIFICATION: is a table built from recorded incidents the same instrument as one built from
+baseline testing? The recorded incidents are what a session actually did, which is stronger evidence
+than an excuse it typed — but they are the corpus's own paraphrase, written afterwards, and
+superpowers' rows are verbatim agent speech. The one verbatim row here is the third in the second
+table, which quotes a session's committed sentence back at it. Testing the rest would mean running
+pressure scenarios against subagents, which this corpus has not done for any rule.]
+
+[UNVERIFIED: whether the table moves any of `chain`, `head/tail`, `sed-n`, `cat-view`, `heredoc` or
+`exit-masked`. Landing condition is the `cut-message` denominator above, not a date. Take a fresh
+baseline at the moment it lands, and note in that baseline's `--note` that the audit's
+absolute-count rows were still inflated by resumed transcripts unless `agent-skills` has shipped the
+dedupe by then.]
