@@ -104,6 +104,10 @@ Directions A and B keep that recognisability order. Direction C reorders the twe
 grid, because leading with a distro mark is exactly what its brief rules out — see "The
 installed-tool marks in direction C".
 
+**Only four of the twenty clear the licence bar set on 2026-09-13**, and most of the recognisable
+ones do not — see "Which marks may be used", which supersedes this list for anything that goes into
+an image.
+
 [DECISION: **the marks are composited from official SVGs, not drawn by the generator.** Two
 independent reasons, and either alone settles it. **They come out wrong** — a model renders a known
 logo the way it renders small type, at approximately the right shape with the proportions and the
@@ -118,9 +122,81 @@ asks for (Tux and the Go gopher both carry one) in a credits line.]
 
 This changes the prompts rather than replacing them: each direction below gets a **slot variant**
 whose whole job is to produce a scene with a legible, evenly-lit grid of empty recesses at a known
-position. A prompt that asks the model to draw the marks directly is given too, marked as such — not
-because it is recommended, but because comparing the two is the fastest way to see the failure above
-for yourself rather than taking it on trust.
+position. A prompt that asked the model to draw the marks directly, A6, was given too for
+comparison, and was withdrawn on 2026-09-13 by the licence audit below.
+
+## Which marks may be used
+
+Audited 2026-09-13, after the user set the bar: nothing with any licence risk goes into an image.
+Nobody can promise that about someone else's trademark, so the working rule is narrower and
+checkable.
+
+[DECISION: **a mark goes into an image only where its owner's published terms permit that use
+without asking, and attribution is the only condition.** Decided 2026-09-13 by the user. "That use"
+is the demanding one: the mark shown inside this project's own promotional artwork, beside other
+marks, on a public site. A mark whose terms need written permission, forbid combining it with other
+marks or showing it in marketing material, or reach the logo file only implicitly through a software
+licence, is left out — including where the use would probably be tolerated. Rejected: judging each
+owner's likely tolerance, and writing to owners for permission, which is slow and leaves the mark
+conditional until an answer arrives.]
+
+| tier        | means                                                                                                                                             | in an image |
+| ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------- | ----------- |
+| clear       | a licence that names the artwork permits use and modification, attribution at most; any trademark terms allow identifying the tool without asking | yes         |
+| conditional | permitted, but on a condition a composite may not meet, or by a licence that reaches the logo only implicitly                                     | no          |
+| excluded    | the owner requires written permission, or forbids this use outright                                                                               | no          |
+
+| mark                           | the owner's terms, in short                                                                                                                | tier        |
+| ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- |
+| Git                            | logo CC BY 3.0 by Jason Long; the Git trademark policy lets anyone identify Git as a component of an offering without permission           | clear       |
+| tmux                           | `logo/LICENSE` in the tmux repo is ISC, copyright Jason Long 2015; no trademark policy found                                               | clear       |
+| Tux                            | the common SVG is CC0 by Garrett LeSage over Larry Ewing's original, used with credit to Larry Ewing and The GIMP                          | clear       |
+| Go gopher                      | CC BY 4.0 by Renee French, licensed on go.dev/brand separately from Go's trademarks                                                        | clear       |
+| Zsh                            | CC BY-SA 4.0; its FAQ allows websites and promoting a project that uses Zsh, but share-alike may extend to a composite                     | conditional |
+| Rust                           | artwork CC BY per the Rust Foundation (simple-icons records CC BY-SA 4.0); its permitted uses cover saying software uses Rust, not artwork | conditional |
+| WezTerm                        | the icon sits in the MIT-licensed repo, drawn by its author, with no licence of its own                                                    | conditional |
+| oh-my-zsh, direnv, act, dprint | MIT repos; any logo in them is covered only implicitly                                                                                     | conditional |
+| bat, fd, btop, k9s             | MIT-or-Apache and Apache-2.0 repos; Apache-2.0 section 6 withholds trademark rights                                                        | conditional |
+| htop, eza, jq                  | GPL-2.0 and EUPL-1.2 are copyleft that may extend to a composite; jq's repo licence is not machine-readable                                | conditional |
+| Python                         | an unaltered logo may promote Python, but one combined with other graphic elements is a derived logo that needs PSF approval               | excluded    |
+| Docker                         | the logo needs Docker's authorisation, and may never appear in modified scenes or artwork                                                  | excluded    |
+| Go logo                        | use close to, within or around another logo needs review and approval                                                                      | excluded    |
+| Node.js                        | OpenJS: no logos on websites or marketing without written permission, and never combined with another mark                                 | excluded    |
+| Kubernetes, Helm               | Linux Foundation: the same two rules as OpenJS                                                                                             | excluded    |
+| GitHub                         | prior written permission, and no recolouring or combining                                                                                  | excluded    |
+| GNOME                          | explicit written permission for any logo use                                                                                               | excluded    |
+| Ubuntu                         | Canonical's permission for most logo uses                                                                                                  | excluded    |
+| Chrome, Google Cloud           | Google brand features need an approved permission request                                                                                  | excluded    |
+| Terraform                      | HashiCorp: a logo may only identify and link to the project; anything else needs written approval                                          | excluded    |
+| VS Code                        | never to promote your own product, and nothing added behind or around the icon                                                             | excluded    |
+| JetBrains                      | only as a link to JetBrains, secondary to your own brand, unaltered and without enhancement                                                | excluded    |
+| Claude Code                    | Anthropic: only in materials it has approved beforehand                                                                                    | excluded    |
+
+**Where each verdict came from.** simple-icons' data file in the research library gave each brand's
+source and guidelines links, and says itself that its licence data is incomplete — it recorded a
+licence for only Git and Rust. The tmux, WezTerm, Zsh and JetBrains licence texts were read as files
+through the GitHub API, and the OpenJS policy as its full PDF. Every other owner's terms came from
+fetching that owner's page, since none of them lives in a repo. A policy can change after
+2026-09-13.
+
+[UNVERIFIED: **three of the four clear verdicts rest on page summaries.** tmux's licence was read as
+a file. Git's logo page, Wikimedia Commons' Tux page and go.dev/brand were read through a
+summariser. Read those three pages in full before any image carrying their marks is published. The
+excluded verdicts need no such check, since each rests on one prohibiting sentence and a paraphrase
+cannot turn a prohibition into a permission.]
+
+**Credit lines**, required wherever an image with the mark is published:
+
+- Git Logo by Jason Long is licensed under the Creative Commons Attribution 3.0 Unported License.
+- tmux logo copyright (c) 2015 Jason Long, used under the ISC licence, whose permission notice is
+  reproduced with it.
+- Tux by Larry Ewing (lewing@isc.tamu.edu) and The GIMP; SVG by Garrett LeSage, CC0.
+- Go gopher by Renee French, licensed under Creative Commons Attribution 4.0.
+
+**Take each file from the owner's own source** — git-scm.com/community/logos, the `logo/` directory
+of the tmux repo, the Tux.svg page on Wikimedia Commons, go.dev/brand — not from an icon set.
+simple-icons' redrawn glyphs are CC0 as drawings, and its disclaimer is explicit that this gives no
+right to the brand.
 
 ## Running the prompts on NightCafe
 
@@ -189,7 +265,7 @@ plain sentence, and note which model needed it.]
 | card set      | A4, B6, C4 | 4 × 800×800      | 1:1, as one two-by-two sheet, then sliced |
 | avatar / mark | A7, B4, C6 | square           | 1:1                                       |
 | drift banner  | C5         | 2400×800 (3:1)   | 21:9, or 16:9, cropped top and bottom     |
-| extras        | A2, A6, B2 | —                | 16:9                                      |
+| extras        | A2, B2     | —                | 16:9                                      |
 
 1280×640 is GitHub's recommended size for a repository's social preview, and an Open Graph card at
 1200×630 is a trim of it; A3 and B3 were first sized for the second. A card set is one sheet because
@@ -256,17 +332,10 @@ the first version asked for a three-quarter angle and a grid square to the camer
 > the amber accent along a single structural edge. Nothing stands in front of the grid. _(+ A's
 > look, + shared tail)_
 
-**A6 — direct variant, for comparison only, not recommended, 16:9.** Expect mangled marks; the value
-is seeing how it fails. It takes A's look and only the palette sentence of the tail, because the
-tail's second sentence forbids the very marks this prompt asks for. On a negative-prompt model,
-leave "logo" out of the avoid-keywords for the same reason.
-
-> A dark machined bulkhead seen straight-on, filling the frame, into which are set twelve softly
-> backlit emblems in a four-by-three grid: a penguin, a two-coiled serpent, a whale carrying
-> containers, a segmented colour wheel, a bare human footprint, a crab, a gopher, a hexagon, a
-> ship's helm, a branching line, an angular monogram, a stylised terminal cursor. Each emblem is a
-> flat single-colour inlay, evenly lit, none overlapping, set in near-black. _(+ A's look, + the
-> tail's palette sentence only)_
+**A6 — withdrawn 2026-09-13.** It asked the model to draw approximations of twelve marks, to see the
+direct-generation failure for comparison. Most of those marks are excluded under "Which marks may be
+used", and a generated near-copy of an excluded mark is still a use of it — made on a platform that
+keeps a licence to display what it produces. The prompt text is in this file's history.
 
 **A4 — the four use-case cards** (workstation / headless / container / WSL), as one 1:1 sheet.
 
@@ -542,7 +611,9 @@ from C and keeping it only for the package catalog page. In a four-by-three grid
 the first row is **Python, Git, Docker, VS Code** and the second is **Claude Code, Rust, Go, Node**.
 The platform marks (Ubuntu, GNOME) take the last positions of the third row. The exact twelve are
 settled when the SVGs and their licence terms are collected, which is already the first step in
-"Recommended direction" below. A and B keep the recognisability order. The grid goes into C1S.]
+"Recommended direction" below. A and B keep the recognisability order. The grid goes into C1S.
+Collecting those terms on 2026-09-13 excluded most of the marks this ordering names — see "Which
+marks may be used". The principle still orders whatever clears, which puts Tux last.]
 
 ### Where C5 goes
 
@@ -567,8 +638,17 @@ into robot clichés.
 
 ## Open questions
 
-One question is still open, and it gates nothing: generation can start. The generator and licence
-question this plan carried from 2026-09-02 is answered in "Running the prompts on NightCafe".
+Two questions are open. The first gates the slot variants (A5, B5, C1S) and nothing else, so the
+heroes can be generated now. The generator and licence question this plan carried from 2026-09-02 is
+answered in "Running the prompts on NightCafe".
+
+[NEEDS CLARIFICATION: **what fills the logo grid now that four marks clear instead of twelve.** Git,
+tmux, Tux and the Go gopher are what the licence bar leaves, and only Git is a tool this project is
+recognised for. Three ways on: a four-slot grid of those marks; the slots holding neutral pictograms
+from an openly licensed icon set such as Lucide (ISC, its Feather-derived icons MIT) or Heroicons
+(MIT), both already in the research library, which carry no trademark at all; or no grid, with the
+installed tools named as text beside the image — a factual mention of a tool's name is allowed by
+every policy read, including the ones that exclude its logo. Raised by the 2026-09-13 audit.]
 
 [DECISION: **all three directions are built out in full, not narrowed on their heroes first.**
 Decided 2026-09-13, answering the question the merge of direction C raised. The comparison set is
@@ -591,10 +671,10 @@ mermaid, deliberately. Assume framing only unless asked otherwise.]
 
 ## Recommended direction
 
-**Collect the twelve SVGs and their licence terms as a first step, not a last one.** The mark set is
-what the grid geometry has to suit — twelve marks of wildly different aspect ratios do not sit in
-one square grid — and at least two (Tux, the Go gopher) carry attribution conditions that need a
-credits line somewhere before anything is published.
+**The licence terms were collected first, as planned, and they changed the grid.** Four marks clear
+"Which marks may be used"; settle what fills the grid before generating any slot variant, because a
+grid of four or of pictograms is a different composition from twelve logos of wildly different
+aspect ratios. Whatever ships carries the credit lines listed there.
 
 Then take each direction through the same four steps, on NightCafe as "Running the prompts on
 NightCafe" describes:
@@ -604,9 +684,9 @@ NightCafe" describes:
    that direction runs on it. For C, keep one of C1 and C2 at this step too. The lost first pass
    mixed isometric illustration with photoreal close-ups, and a set in two styles reads as two
    projects, so whichever hero survives sets the style for the rest of C.
-2. **The slot grid, with the marks composited in before judging it** — A5, B5, C1S. An empty grid
-   and a filled one are different pictures, and the filled one is what ships. Run A6 once beside A5,
-   to see the direct-generation failure rather than to use it.
+2. **The slot grid, with its contents composited in before judging it** — A5, B5, C1S, once the grid
+   question is answered and the prompts are resized to it. An empty grid and a filled one are
+   different pictures, and the filled one is what ships.
 3. **The rest in order of payoff**: social card (A3, B3, C3 — every link to the repo renders it),
    avatar (A7, B4, C6), card set (A4, B6, C4).
 4. **The extras last**: A2, B2 and C5.
