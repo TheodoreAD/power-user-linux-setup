@@ -197,14 +197,24 @@ structural choice:
   instruction-following literature found no consistent relationship between position and follow rate
   ([arXiv 2511.13900](https://arxiv.org/pdf/2511.13900),
   [arXiv 2510.10276](https://arxiv.org/html/2510.10276v1)) — don't reorder for primacy/recency.
-- **Merging near-duplicates.** Conflict between overlapping instructions is a driver of degradation
-  as instruction count grows ([arXiv 2510.14842](https://arxiv.org/abs/2510.14842), "Boosting
-  Instruction Following at Scale", SCALEDIF) — they attribute the decline to "the degree of tension
-  and conflict that arises as the number of instructions is increased". **The ~4–7pp figure this
-  page used to attach here is theirs but measures something else**: it is the gain from their own
-  Instruction Boosting method (up to 7 points at two instructions, 4 at ten), not the size of the
-  duplication penalty. Dedup/merge is still the safest change to make; the number was never evidence
-  for how much it buys.
+- **Conflict between instructions, which is not duplication.** Degradation as instruction count
+  grows is driven in part by "the degree of tension and conflict that arises as the number of
+  instructions is increased" ([arXiv 2510.14842](https://arxiv.org/abs/2510.14842), "Boosting
+  Instruction Following at Scale", SCALEDIF) — verbatim from its abstract, and the claim survives.
+  **What does not survive is attaching it to near-duplicates, which is how this bullet was headed
+  until 2026-09-13.** Their conflict is difficulty in satisfying a pair _together_, not semantic
+  overlap: a soft conflict is "a pair of instructions that are difficult, though not impossible, to
+  follow simultaneously", scored by sampling responses and counting how often at least one of a pair
+  went unfollowed. Their own illustration is three instructions that do not duplicate each other at
+  all — limits on word count, sentence count, and words per sentence — where "following any pair of
+  these instructions is easier than following all three". The paper never tests merging or
+  deduplicating anything, and its remedy is a post-generation Detect+Repair / Best-of-N loop, which
+  is not a lever available to whoever writes an instruction file. So what it supports is watching
+  for rules that are **hard to honour at the same time** — in this file, a nuance clause pulling
+  against its own directive, or interlocking conditionals — rather than rules that share vocabulary.
+  Dedup/merge may still be worth doing for token cost and clarity; it has no measurement behind it
+  here. The ~4–7pp figure this page attached in an earlier version is theirs and measures a third
+  thing again: the gain from Instruction Boosting, up to 7 points at two instructions and 4 at ten.
 - **Evidence out of the deployed file.** Corrected 2026-09-12 — this bullet previously cited
   [arXiv 2601.03269](https://arxiv.org/html/2601.03269v1) for "instructions compete for attention
   with inline narrative", and said this file existed because of that finding. **That paper is "The
@@ -851,7 +861,11 @@ The prohibition itself is untouched. Worth watching rather than assuming settled
 measured at 10–11% of Fable/Opus calls in the day a contradictory version was in force, so it is a
 rule with a known miss rate, and the finding below says to strengthen language rather than lengthen
 explanation when one is missed. What was removed here is neither: it is the third copy of an
-explanation, which is the driver the SCALEDIF result names.
+explanation — **not on SCALEDIF's authority**, which this sentence used to claim. That result is
+about pairs of instructions that are hard to satisfy together, not repeated prose; see "Conflict
+between instructions, which is not duplication" above, corrected 2026-09-13. The reason is this
+file's own and needs no paper: the same claim written out in three rules across two clusters is the
+configuration recorded under "Composing a Bash call" as having made models follow the wrong one.
 
 The `| head`/`| tail` clause, added 2026-08-24: 1,128 of 3,956 audited calls (29–32% for
 Sonnet/Opus) piped tool output through `head`/`tail`; 662 of those were `2>&1 | tail/head/grep`,
