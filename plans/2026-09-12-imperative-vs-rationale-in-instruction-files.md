@@ -119,12 +119,36 @@ has to be swapped, not quietly kept. Same class as this corpus's own recorded PI
 byte-exact, confidently wrong Codex finding: precision downstream of an unchecked premise reads as
 rigour.
 
-[UNVERIFIED: `arXiv 2510.14842` is "Boosting Instruction Following at Scale"; its "up to 7 points
-for two instructions and up to 4 points for ten" is **the gain from their Instruction Boosting
-method**, which this repo cites as the size of the near-duplicate conflict effect (~4–7pp). The
-direction is defensible — they do attribute degradation to "tension and conflict as the number of
-instructions is increased" — but the number is doing work it was not measured for. Needs the paper
-read rather than its abstract.]
+[DECISION: **`arXiv 2510.14842` was misattributed twice, and the second is the one that mattered.**
+Read in full 2026-09-13, not just its abstract, which is what the earlier tag asked for. The number
+was the known half: "up to 7 points for two instructions and up to 4 points for ten" is the gain
+from their Instruction Boosting method, already corrected here on 09-12. **The half nobody had
+checked is the word "conflict".** This page cited the paper under the heading "Merging
+near-duplicates", which reads their conflict as semantic overlap. It is not. A soft conflict is "a
+pair of instructions that are difficult, though not impossible, to follow simultaneously", scored by
+sampling responses and counting how often at least one of the pair went unfollowed — and their own
+illustration is three instructions that duplicate nothing: word count, sentence count, and words per
+sentence, where "following any pair of these instructions is easier than following all three". The
+paper never tests deduplication, and its remedy is a post-generation Detect+Repair / Best-of-N loop,
+which an instruction-file author cannot run. The quoted degradation sentence survives verbatim; the
+lever it was being used to justify does not.]
+
+[DECISION: **what the paper does support is more useful to this file than what it was cited for.**
+Pairs that are hard to honour together is a live shape here and duplication is not: the corpus
+measurement above puts hedged directives at 6.5% against a 3.3% mean, and superpowers' "no nuance
+clauses" and "exemption clauses don't scope" both describe a clause pulling against the directive it
+is attached to — which is a soft conflict in SCALEDIF's own sense, inside one sentence. That is a
+better reason to keep watching hedging than "we are closer to normal here than on the other four
+metrics", which is all this plan had.]
+
+[PITFALL: **two citations on this page, audited a day apart, were both wrong in the same way, and
+neither was wrong about its quote.** `2601.03269` swapped the referent of "compete for attention"
+from retrieved documents to authored prose; `2510.14842` swapped the referent of "conflict" from
+hard-to-satisfy pairs to near-duplicates. In both cases the sentence quoted is real and the paper is
+real, and the error is one noun downstream of it. A check that verifies the quote exists passes
+both. The check that catches it is asking what the paper's term _denotes_ and whether the remedy
+being justified is one the paper tested — the latter is what settled this one, since the answer was
+that they never tested any remedy an instruction-file author could apply.]
 
 ### The conflict this turns up, which is not ours to settle quietly
 
@@ -158,9 +182,13 @@ choice made per rule, it is a house voice applied to all of them.]
 Nothing here proposes trimming for its own sake, which this corpus has already tried three times and
 measured as spent (`plans/2026-08-26-agents-md-leanness-pass.md`).
 
-1. ~~Fix the citation first.~~ Done — `2601.03269` is gone from "Evidence out of the deployed file",
-   `2602.11988` carries the split with the instructions-followed/overviews-unhelpful sentence
-   quoted, and the SCALEDIF bullet says what its number actually measured.
+1. ~~Fix the citation first.~~ Done, in two passes — `2601.03269` is gone from "Evidence out of the
+   deployed file" and `2602.11988` carries the split with the instructions-followed /
+   overviews-unhelpful sentence quoted (09-12); the SCALEDIF bullet then lost both its number and
+   its heading, since the paper's "conflict" is not duplication and it tests no remedy an
+   instruction-file author can apply (09-13). A second SCALEDIF reference, under
+   `Viewing or editing a file`, was citing it for removing a repeated explanation and is corrected
+   to this file's own measurement instead.
 2. ~~Adopt "match the form to the failure" as an intake question.~~ Done — **criterion 4**, with the
    prohibition-versus-recipe measurement under its own heading. The criteria had asked whether a
    rule states a trigger, duplicates, and files its evidence, and never what _kind_ of failure it is
