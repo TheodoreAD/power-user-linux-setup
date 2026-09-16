@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-13
+updated: 2026-09-16
 ---
 
 # Image-generator prompts for this project
@@ -106,7 +106,8 @@ installed-tool marks in direction C".
 
 **Only four of the twenty clear the licence bar set on 2026-09-13**, and most of the recognisable
 ones do not — see "Which marks may be used", which supersedes this list for anything that goes into
-an image.
+an image. The grid now holds pictograms instead, and this list's real job is what goes in the **text
+beside** the image: naming a tool is allowed everywhere, including by the owners whose logo is not.
 
 [DECISION: **the marks are composited from official SVGs, not drawn by the generator.** Two
 independent reasons, and either alone settles it. **They come out wrong** — a model renders a known
@@ -118,7 +119,10 @@ governed by their owner's usage guidelines. Showing them to say "this is what ge
 ordinary and expected; shipping a generated _approximation_ of someone's trademark is worse on every
 axis than shipping the real file, which is downloadable, versioned and correct. So: generate the
 scene with deliberate empty slots, composite the real SVGs in, and keep the attribution each licence
-asks for (Tux and the Go gopher both carry one) in a credits line.]
+asks for (Tux and the Go gopher both carry one) in a credits line. **The licence audit of 2026-09-13
+then took the marks out of the images entirely**, and the empty-slot half of this decision is what
+survives it: the slots now hold the twelve pictograms named under "Which marks may be used",
+composited exactly the same way and credited the same way.]
 
 This changes the prompts rather than replacing them: each direction below gets a **slot variant**
 whose whole job is to produce a scene with a legible, evenly-lit grid of empty recesses at a known
@@ -321,8 +325,8 @@ circuit board, hologram, lens flare, neon, text, letters, watermark, logo, perso
 
 **A5 — slot variant of A1, the one to actually composite into, 16:9.** The purpose of this prompt is
 a clean grid of empty, evenly-lit recesses; the scene is secondary and must not compete. It is seen
-straight-on, unlike A1, so flat official SVGs drop into the recesses without a perspective warp —
-the first version asked for a three-quarter angle and a grid square to the camera at once.
+straight-on, unlike A1, so the flat pictogram SVGs drop into the recesses without a perspective warp
+— the first version asked for a three-quarter angle and a grid square to the camera at once.
 
 > A vast dim hangar interior seen straight-on, a dark machined bulkhead filling the centre of the
 > frame. Set into the bulkhead, a precise grid of twelve identical square recesses, four across and
@@ -469,8 +473,9 @@ terminal":
 | the machine comes with rules for its agents     | `config/agents-md/`, `cli-allowlist/`                  |
 
 The shared constraints above hold for C exactly as for A and B: no legible text in a generated
-image, real marks composited from official SVGs, a serious subject rendered precisely with one
-deliberate oddity, and steampunk designed out rather than merely left unmentioned.
+image, the grid's contents composited from real SVGs rather than drawn by the generator, a serious
+subject rendered precisely with one deliberate oddity, and steampunk designed out rather than merely
+left unmentioned.
 
 [DECISION: **the accent is called "amber" in every prompt in this direction, never "orange" alone.**
 `#ff9100` sits on the amber side. Ubuntu's brand orange is redder, and a model told "orange accent"
@@ -518,9 +523,9 @@ what exists. Type: upper-left third.
 > faint volumetric haze, thin consistent line weights, vector-adjacent rendering, generous empty
 > space across the upper left third. _(+ C's look, + shared tail)_
 
-**C1S — slot variant of C1, the image the tool marks are composited into, 21:9.** A5 and B5 exist
+**C1S — slot variant of C1, the image the pictograms are composited into, 21:9.** A5 and B5 exist
 for the same job in their own directions. The composition is **straight-on rather than isometric**,
-so flat official SVGs drop into the tiles without a perspective warp.
+so the flat pictogram SVGs drop into the tiles without a perspective warp.
 
 > Precise technical illustration, wide cinematic frame, straight-on orthographic view, flat to the
 > viewer. In the lower left, a single upright document panel, softly edge-lit, ruled with faint even
@@ -612,8 +617,10 @@ the first row is **Python, Git, Docker, VS Code** and the second is **Claude Cod
 The platform marks (Ubuntu, GNOME) take the last positions of the third row. The exact twelve are
 settled when the SVGs and their licence terms are collected, which is already the first step in
 "Recommended direction" below. A and B keep the recognisability order. The grid goes into C1S.
-Collecting those terms on 2026-09-13 excluded most of the marks this ordering names — see "Which
-marks may be used". The principle still orders whatever clears, which puts Tux last.]
+**Overtaken the same day**: collecting those terms excluded most of the marks this ordering names,
+and the grid now holds pictograms in every direction — see "Which marks may be used". What survives
+is the reason the ordering existed, which the pictograms satisfy outright: nothing in the grid puts
+a platform first, because nothing in it is a platform.]
 
 ### Where C5 goes
 
@@ -638,17 +645,31 @@ into robot clichés.
 
 ## Open questions
 
-Two questions are open. The first gates the slot variants (A5, B5, C1S) and nothing else, so the
-heroes can be generated now. The generator and licence question this plan carried from 2026-09-02 is
-answered in "Running the prompts on NightCafe".
+One question is open, and it gates nothing: every prompt in the plan can be generated now. The
+generator and licence question this plan carried from 2026-09-02 is answered in "Running the prompts
+on NightCafe", and what fills the grid is answered in "Which marks may be used".
 
-[NEEDS CLARIFICATION: **what fills the logo grid now that four marks clear instead of twelve.** Git,
-tmux, Tux and the Go gopher are what the licence bar leaves, and only Git is a tool this project is
-recognised for. Three ways on: a four-slot grid of those marks; the slots holding neutral pictograms
-from an openly licensed icon set such as Lucide (ISC, its Feather-derived icons MIT) or Heroicons
-(MIT), both already in the research library, which carry no trademark at all; or no grid, with the
-installed tools named as text beside the image — a factual mention of a tool's name is allowed by
-every policy read, including the ones that exclude its logo. Raised by the 2026-09-13 audit.]
+[DECISION: **the grid holds twelve neutral pictograms, and no third-party mark goes into any
+generated image.** Decided 2026-09-13 by the user, after the audit left four usable marks of which
+only Git is a tool this project is known for. Rejected: a four-slot grid of those four marks, and no
+grid at all. **The trade-off accepted:** a pictogram grid no longer answers "which tools do I get"
+by recognition — it shows what the project does instead — so that question is answered by naming the
+tools in text beside the image, which every policy read allows even where it excludes the logo. What
+the grid gains is twelve fillable tiles and no licence audit, ever again.]
+
+**The twelve pictograms**, each tied to something the repo actually does, in grid order:
+
+| row | the four tiles, left to right                                                                                 |
+| --- | ------------------------------------------------------------------------------------------------------------- |
+| 1   | `file-cog` one file decides · `package` what gets installed · `terminal` the shell · `git-branch` git tooling |
+| 2   | `monitor` workstation · `server` headless · `container` dev container · `keyboard` keybindings                |
+| 3   | `shield-check` permission rules · `bot` instructions for agents · `badge-check` verify · `network` preflight  |
+
+Those are [Lucide](https://lucide.dev) icon ids, all twelve confirmed present in the library clone
+at `$RESEARCH_HOME/repos/github.com--lucide-icons--lucide/icons`. They are stroke icons on a 24×24
+grid, so they take the palette directly: blue in every tile, amber in the one the filament reaches.
+Lucide is ISC and some of its icons derive from Feather (MIT), so the credits file carries both
+notices — "Copyright (c) 2026 Lucide Icons and Contributors" with the ISC permission notice.
 
 [DECISION: **all three directions are built out in full, not narrowed on their heroes first.**
 Decided 2026-09-13, answering the question the merge of direction C raised. The comparison set is
@@ -671,10 +692,11 @@ mermaid, deliberately. Assume framing only unless asked otherwise.]
 
 ## Recommended direction
 
-**The licence terms were collected first, as planned, and they changed the grid.** Four marks clear
-"Which marks may be used"; settle what fills the grid before generating any slot variant, because a
-grid of four or of pictograms is a different composition from twelve logos of wildly different
-aspect ratios. Whatever ships carries the credit lines listed there.
+**The licence terms were collected first, as planned, and they emptied the grid of logos.** It holds
+twelve pictograms instead, listed under "Which marks may be used" — so the first step is now to pull
+those twelve SVGs from the library clone, recolour them to the palette, and carry Lucide's notice in
+the credits file. Twelve stroke icons on one grid need none of the geometry work twelve logos of
+different aspect ratios would have.
 
 Then take each direction through the same four steps, on NightCafe as "Running the prompts on
 NightCafe" describes:
@@ -684,9 +706,8 @@ NightCafe" describes:
    that direction runs on it. For C, keep one of C1 and C2 at this step too. The lost first pass
    mixed isometric illustration with photoreal close-ups, and a set in two styles reads as two
    projects, so whichever hero survives sets the style for the rest of C.
-2. **The slot grid, with its contents composited in before judging it** — A5, B5, C1S, once the grid
-   question is answered and the prompts are resized to it. An empty grid and a filled one are
-   different pictures, and the filled one is what ships.
+2. **The slot grid, with the twelve pictograms composited in before judging it** — A5, B5, C1S. An
+   empty grid and a filled one are different pictures, and the filled one is what ships.
 3. **The rest in order of payoff**: social card (A3, B3, C3 — every link to the repo renders it),
    avatar (A7, B4, C6), card set (A4, B6, C4).
 4. **The extras last**: A2, B2 and C5.
