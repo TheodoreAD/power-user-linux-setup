@@ -170,6 +170,46 @@ real `--dir` flag and `inv <ns>.all` subcommand names) — were recorded with `r
 That leaves named, greppable (`rg "noqa: C901"`) deferred work rather than either ignoring the rule
 wholesale or forcing a same-session mass refactor of working automation code.
 
+## Raising `requires-python` is a ruff change before it is anything else
+
+The shipped `ruff.toml` declares no `target-version`, deliberately — each consumer's own
+`requires-python` decides its ruff floor, which is what lets one byte-identical file serve a 3.11
+library and a 3.14 application. The consequence nobody rehearses is that **editing that one field
+reconfigures both halves of ruff in the same commit**, and the gate then goes red on lint rather
+than on the type check everyone was braced for.
+
+Measured here 2026-09-18 raising `>=3.11` to `>=3.14`: **18 lint findings, 12 auto-fixed, 6 needing
+the unsafe fix**, and **0 from basedpyright** once its own `pythonVersion` was re-pulled. The
+findings are not defects — `UP040` asking for PEP 695's `type` statement, `UP047` for a generic's
+type parameters, `typing_extensions.override` collapsing into `typing.override` — they are upgrades
+that only became available at the new floor. `ingesta` hit the same shape on the same day in a
+different codebase, so the class generalizes even though the counts do not.
+
+**Two traps, and the second is the expensive one.**
+
+[PITFALL: **basedpyright does not move with the field; it is re-derived by `inv configs.pull`.**
+`pyrightconfig.json` carries a literal `"pythonVersion"` that the pull computes from
+`requires-python`, so between the edit and the pull the two checkers disagree — and the disagreement
+reads as nonsense rather than as staleness: the formatter emits PEP 758 `except` clauses at 3.14
+while the type checker calls them errors "prior to Python 3.14", and a `type` statement it accepts
+at 3.12 is rejected as needing 3.12 or newer. Run the pull, and read its diff: here it was that one
+field and nothing else, which is what makes it safe to take mid-change.]
+
+[PITFALL: **the formatter rewrites files whose own floor is lower, and nothing in the lint output
+names them.** A repo may hold scripts that deliberately run below its floor — this one has three, a
+zero-install network doctor and two container helpers invoked as a bare `python3` inside whatever
+image a test spins up. At a 3.14 target `ruff format` collapsed four `except (A, B):` clauses to PEP
+758's unparenthesized form, which is a SyntaxError on 3.12. The linter is refusable with a `# noqa`;
+the formatter simply applies, as part of `quality.fix`, with no finding to read. The three in
+`netdoctor.py` failed a parse guard that already existed; the fourth was in a file with no guard and
+would have shipped. The fix is `# fmt: skip` on the clause plus a test that parses every such script
+at the distro floor (`tests/unit/test_foreign_python_floor.py`) — never a ruff exclude, since
+`ruff.toml` is pulled byte-identical and serves every consumer.]
+
+So the order that works: edit the field, `inv configs.pull`, run the gate, read the auto-fixes as a
+diff rather than trusting them, and check the formatter's output against any file that runs
+somewhere you do not control.
+
 ## pytest and dprint
 
 **pytest**: marker registration via `markers = [...]` plus `--strict-markers`, matching Litestar's

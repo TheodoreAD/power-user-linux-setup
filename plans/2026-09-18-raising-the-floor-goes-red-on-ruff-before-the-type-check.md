@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-18
+status: landed
+updated: 2026-09-19
 source_repo: github.com-personal/repo-tasks
 source_moment: 2026-09-18T18:35:49+03:00
 source_plan:
@@ -64,3 +64,38 @@ Do step 2 as its own commit with the lint fixes it causes, not folded into the m
 
 The size is unknown for this repo and worth a dry run before budgeting — `ingesta` is a different
 codebase and its count says nothing about this one.
+
+## What happened, 2026-09-19
+
+**The prediction held exactly and undershot by one tool.** 18 lint findings, 12 auto-fixed, 6
+needing the unsafe fix and made by hand; the type check had nothing to say, as this plan said it
+would. `UP047` fired on the same shape it fired on in `ingesta` (a `TypeVar`-spelled generic), and
+`UP040` on the recursive `TypeAlias` pair.
+
+What this plan did not predict, and the reason the commit is larger than "the lint fixes it causes":
+
+- **basedpyright does not follow `requires-python` on its own.** `pyrightconfig.json` carries a
+  literal `pythonVersion` that `inv configs.pull` derives from the field, so between the edit and
+  the pull the two checkers contradict each other in a way that reads as nonsense rather than as
+  staleness. The pull's diff here was that one line and nothing else.
+- **`ruff format` rewrote four multi-exception `except` clauses to PEP 758's unparenthesized form,
+  which is a SyntaxError on 3.12.** Three were in `tasks/netdoctor.py`, whose floor is the distro's,
+  and its existing parse guard failed loudly. The fourth was in `tests/containers/fakecorp.py`,
+  which is invoked as a bare `python3` inside a container, had no guard, and would have shipped
+  broken. That asymmetry is the finding: the linter's suggestions are refusable and visible, the
+  formatter's are neither.
+
+So the shape generalizes past this plan's own subject — "read the auto-fixes as a diff" is not
+enough, because the formatter's changes are not findings and appear in no output.
+
+## Migrated to
+
+- `contributing/quality-tooling.md`, new section "Raising `requires-python` is a ruff change before
+  it is anything else" — the measurement, both pitfalls, and the order of operations that works.
+- `tasks/netdoctor.py`'s module docstring — why that file is formatter-hostile and what to do when a
+  formatter diff appears in it.
+- `tests/unit/test_foreign_python_floor.py` — the guard itself, generalized from netdoctor to every
+  script this repo runs on an interpreter it does not choose, with the incident in its docstring.
+
+Not migrated: the `ingesta` quotation and the `949607c` reference, which are evidence for a claim
+the rationale page now states in its own terms with this repo's own numbers.

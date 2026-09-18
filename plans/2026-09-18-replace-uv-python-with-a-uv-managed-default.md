@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-18
+status: in-progress
+updated: 2026-09-19
 source_repo: github.com-personal/repo-tasks
 source_session: 14237e4b-3a66-4207-8a3a-882552c86680.jsonl
 source_moment: 2026-09-18T09:40:00Z
@@ -168,6 +168,43 @@ artifact in the family was built against. Worth carrying into `contributing/` as
 adding any new machine-wide environment variable: if removing it would change how an artifact
 behaves on a stranger's machine, it is in the wrong place.]
 
+## What landed, 2026-09-19
+
+Steps 2 and 3 of the direction below, in this repo, plus the writer bug that had to be fixed first.
+
+- **`zsh.configure` could not take back a dropped field.** It visited only the dotfiles a package
+  still declared, so deleting `uv-env`'s `zshenv` would have left `export UV_PYTHON` in `~/.zshenv`
+  on every machine that had already run, with nothing left to remove it — the swap would have been
+  inert where it mattered most. Now keyed on the declaration as well as on the machine, with the
+  case under test.
+- **`[packages.uv-env]` stops exporting the variable**; `inv python.pin-default` writes
+  `~/.config/uv/.python-version` from `settings.uv_python_default` and runs in the packages phase,
+  ahead of `install-tools`. `set_default` re-applies it instead of rewriting a second copy of the
+  version into the file. Registered in `inv home.list-claims` as an EXTERNAL claim, the same class
+  as a `skills`-CLI install: uv writes it, on this repo's instruction and with this repo's value.
+- **`requires-python` is `>=3.14`**, matching the pin and the tier.
+
+Applied to this machine and re-measured here, not only in the source session — `uv run` on a PEP 723
+script declaring `==3.11.*` resolved **3.11.15** with the variable stripped and **3.14.5** with it
+still set, while an unconstrained script stayed on 3.14.5 either way. Both halves of the claim, on
+one machine, minutes apart.
+
+[PITFALL: **a session started before the swap still carries the old value, and the shell files are
+not where it comes from.** `~/.zshenv` loses the export the moment `inv zsh.configure` runs, and
+this session's Bash calls still reported `UV_PYTHON=3.14` afterwards — the value was inherited from
+the environment of the terminal Claude Code was launched in, which no dotfile edit reaches. So a
+probe run from an existing session measures the state before the change unless it strips the
+variable (`env -u UV_PYTHON …`), and a session that skipped that step would conclude the swap had
+not worked. Same shape as the launch-directory `PATH` inheritance recorded in
+`2026-09-18-direnv-never-fires-in-an-agent-bash-call.md`.]
+
+Step 3 cost more than a one-line edit, which the now-retired addendum plan
+`2026-09-18-raising-the-floor-goes-red-on-ruff-before-the-type-check.md` predicted and still
+undershot. Its content is in `contributing/quality-tooling.md`, "Raising `requires-python` is a ruff
+change before it is anything else" — the short version being that the floor raise reconfigures ruff
+in the same commit, the type checker follows only on `inv configs.pull`, and the formatter silently
+rewrites files whose own floor is lower.
+
 ## Still open
 
 Two of the merged plan's four questions are answered above — whether the variable needs to be
@@ -186,19 +223,20 @@ venvs and pin them", and the second is only worth it if something re-checks the 
 
 1. **Give the rule its home**, since it is blocked on a filing decision rather than on evidence, and
    every session that has to re-derive it pays for its absence. The user has now had to state it
-   twice out loud. Cheapest of the four and blocks nothing.
-2. **Swap the mechanism.** `[packages.uv-env]` stops exporting `UV_PYTHON`; the default becomes
-   `uv python pin --global` against `settings.uv_python_default`, applied by whichever task already
-   owns that setting. Keep the two in sync the way `inv python.set-default` already keeps
-   `uv_python_default` and the export in sync — the value has one home either way.
-3. **Fix this repo's own declaration** to `requires-python = ">=3.14"`, matching the pin it already
-   has and the tier it is in.
-4. **Then the per-repo venvs**, which are one `inv venv.recreate` each and are worth nothing until
-   step 2 stops them drifting back. **Tell the family it is safe to proceed**: six repos have plans
-   filed carrying the same caveat, that their pin does not hold until this lands — `agent-skills`,
+   twice out loud. Cheapest of the four and blocks nothing. **Still open** — it is the one step here
+   that is an editorial decision rather than a defect, and
+   `2026-08-29-python-floor-rule-in-the-global-agents-md.md` carries five open questions about the
+   rule's wording, not just about which fragment owns it.
+2. ~~**Swap the mechanism.**~~ **Done 2026-09-19** — see "What landed" above.
+3. ~~**Fix this repo's own declaration** to `requires-python = ">=3.14"`.~~ **Done 2026-09-19**, at
+   a cost the addendum plan only half predicted.
+4. **Then the per-repo venvs**, which are one `inv venv.recreate` each and were worth nothing until
+   step 2 landed. **The family can now be told it is safe to proceed**: six repos have plans filed
+   carrying the same caveat, that their pin does not hold until this lands — `agent-skills`,
    `invoke-stubs`, the three `*-polite-mcp` servers and `ingesta`. `repo-tasks` is already correct
    and had to be fixed with an explicit `--python` to get there, which is the measurement that
-   started this.
+   started this. **Each is another repo's session**, per the rule against writing into a tree this
+   one does not own, so what is owed from here is telling them rather than doing it.
 
 [UNVERIFIED: that `inv venv.recreate` in the six remaining repos would even pass their gates. It did
 in `repo-tasks` — full gate green on 3.11.15, 691 tests — but that repo is the one that has been
@@ -206,7 +244,10 @@ type-checking at its floor since 2026-08-30. A repo that has never had anything 
 exactly where the `typing.override` class of finding lives, and finding some is the expected outcome
 rather than a reason to stop.]
 
-[UNVERIFIED: that the deployed `~/.zshenv` loses the line cleanly, and that no other shell file,
-task or CI job on this machine sets `UV_PYTHON` independently. Only `~/.zshenv:14` was found, and
-only by grepping this repo plus that one file — a wider sweep of the deployed dotfiles is the check
-before calling it removed.]
+**Verified 2026-09-19, and the answer was yes with one correction.** The sweep — every shell startup
+file, `/etc/environment`, `~/.config`, `~/.local/bin`, `.github/` and `docker/` — found exactly one
+setter, `~/.zshenv:14`, and `inv zsh.configure` removed it cleanly once the writer bug above was
+fixed (dry run: one line of work, the rest `ok`). The correction is that removing it from the file
+does not remove it from a running session, per the pitfall above. `~/.agents/AGENTS.md`'s remaining
+hits are documentation of uv's behaviour, which stays true and is now more relevant rather than
+less.
