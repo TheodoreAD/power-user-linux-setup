@@ -1,5 +1,5 @@
 ---
-status: planned
+status: in-progress
 updated: 2026-09-18
 ---
 
@@ -71,6 +71,11 @@ about the update mechanism needs changing; only its discoverability does.]
 
 Four decisions were settled 2026-09-18; each is recorded at the subsection it shapes. The order
 below is the implementation order, because item 1 is what makes item 2 safe.
+
+**Items 1 and 2 landed 2026-09-18** — `b103ec7` (the task) and `16d6d4f` (the default flip, `--dev`,
+and the legacy adopt). Item 3 is the only thing outstanding, and it waits on a probe rather than on
+a decision. Item 4's `docs/wsl.md` row is the only entry in "Files touched" still unwritten, for the
+same reason.
 
 ### 1. `tasks/selfupdate.py`, published as the `self` collection
 
