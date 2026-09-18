@@ -123,10 +123,39 @@ accumulated `PATH` ever since. The duplicated `~/.local/bin` and go/JetBrains en
 restored baseline are the signature of that page's bug, which `typeset -U` fixed going forward but
 which nothing retroactively cleans out of an environment already captured.
 
-[UNVERIFIED: which shell that was, and whether anything still produces such a baseline now that
-`[packages.zsh-path]` sets `typeset -U path PATH`. Not worth chasing on its own — it predates this
-hook and survives it, and the restored baseline is only visible at all because `direnv export` from
-an `.envrc`-less directory prints it.]
+### Traced 2026-09-18: it is the launch directory, not a PULSE defect
+
+The session's own shell snapshot — `~/.claude/shell-snapshots/snapshot-zsh-*.sh`, the file the Bash
+tool replays — **ends** with a single top-level line:
+
+```sh
+export PATH=/home/…/ingesta/.venv/bin:/home/…/nvm/…/bin:/home/…/.local/bin:/home/…/.local/bin:…
+```
+
+`ingesta/.venv/bin` is **first**, which is direnv's own prepend. So the terminal Claude Code was
+launched from was sitting in `ingesta` with its `.envrc` active, and the snapshot captured that
+shell's `PATH` verbatim. Every later Bash call inherits it, and that is the baseline `direnv export`
+restores to when it unloads.
+
+The duplication in the same line — `~/.local/bin` three times, the go/JetBrains block four times —
+is the signature `contributing/session-environment.md` already describes, so the launching shell was
+itself several levels deep.
+
+[DECISION: **nothing in this repo is the cause, so nothing here is the fix.** The remedy is
+behavioural: start an agent session from a neutral directory, or from the repo whose venv you
+actually want, and the baseline is clean. A PULSE-side fix would have to strip `*/.venv/bin` out of
+`PATH` inside the `CLAUDECODE` guard before the direnv eval — a heuristic that guesses which entries
+were unwanted, applied to every session, to compensate for where one terminal happened to be. Not
+worth it against a cause this cheap to avoid.]
+
+[UNVERIFIED: **the ordering does not fully reconcile, and the gap is worth naming rather than
+papering over.** That `export PATH` is the snapshot's last line, and `setup.toml` describes the
+snapshot as replayed _after_ `~/.zshenv` — which would mean it clobbers the hook's prepend on every
+call. It measurably does not: a live call has `power-user-linux-setup/.venv/bin` first, and the
+snapshot has `ingesta` first, so the hook's work survives. The consistent reading is that the
+snapshot's `PATH` reaches a call as **inherited environment** rather than by being re-executed after
+`zshenv`, but that was not proven here. It matters only if someone later relies on the replay order
+for something other than `setopt`.]
 
 ## Design
 
