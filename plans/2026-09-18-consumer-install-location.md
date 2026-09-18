@@ -281,3 +281,32 @@ only decides the value of `CLONE_DIR`, and `bootstrap.sh` is indifferent to wher
 — but the boundary is worth knowing before trusting a green CI about a future change to the default.
 A break in default resolution that the unit tests miss would not be caught end to end. The same gap
 covers `--dev` and the legacy adopt, for the same reason and with the same argument.]
+
+## Migrated to
+
+Retired 2026-09-18, the same session that landed it. Three destinations, chosen by the question a
+reader would arrive with rather than one file per plan:
+
+- **[`contributing/install-entry-points.md`](../contributing/install-entry-points.md)**, new section
+  "Where the clone lands, and why it is not `~/projects`" — the flag-over-prompt decision, the
+  double-clone hazard the adopt logic did not cover, the probed fact that `git pull` does work in
+  the shallow tag clone, the whole `/mnt` guard episode including the `CLAUDE.md` symlink finding
+  that outlives it, and the two alternatives rejected outright.
+- **[`contributing/spowse-shim.md`](../contributing/spowse-shim.md)** — the `self.update` naming
+  decision, appended to "The name" because it reuses that section's own PulseAudio-collision
+  argument; and a `[PITFALL:]` on "`--editable` is load-bearing" recording that its rejection of
+  config-as-package-data answers a question about the _developer_, so the no-checkout consumer
+  install is still open on cost rather than settled on principle.
+- **`.github/workflows/install-smoke.yml`** — the coverage boundary, as a comment at the step that
+  creates it. It belongs where it is read at the moment it matters, not in a page someone would have
+  to already suspect.
+
+**Deliberately not migrated.** The reasoning for the destination itself is at `install.sh`'s
+`CLONE_DIR` assignment, in `AGENTS.md`'s one-line-installer section, and in `README.md` /
+`docs/index.md`; copying it into `contributing/` would create a second copy to drift. The task's
+behaviour is in `tasks/selfupdate.py` — its docstring carries why `git -C` is correct there and why
+the module is not `self.py`, and `_blocking_local_state`'s docstring carries why the refusals exist.
+"Files touched" and "Verification" are a verification log and go nowhere; the one durable fact in
+them, that `install-smoke` passed on `16d6d4f`, is in the workflow comment instead. The observation
+that PULSE already owned two of the three XDG legs under its own name was a nice argument for a
+decision now made, and is dropped rather than filed.

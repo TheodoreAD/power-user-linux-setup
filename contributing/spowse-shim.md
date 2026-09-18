@@ -43,6 +43,22 @@ reports drift against it. Freeze those into a wheel and `deploy.status` starts c
 against a copy nobody edits, so the drift model stops meaning anything. The tool has to stay
 anchored to the checkout, and `--editable` is what does that.
 
+[PITFALL: **that rejection answers a question about the developer, and it was later cited against a
+different user.** Re-examined 2026-09-18 while moving the clone destination. The drift model matters
+to somebody who _edits_ `config/`; a consumer overrides through
+`~/.config/power-user-linux-setup/overrides.toml` and never touches it, and for them "compare
+against the version I installed" is arguably the correct semantics rather than a degradation. So a
+non-editable `uv tool install power-user-linux-setup@git+…` with the config as package data — no
+clone at all, `uv tool upgrade` as the update path — is not refuted by the paragraph above, and it
+is the shape that matches "like every other user-wide tool" most literally.
+
+It still loses, on cost rather than on principle: two install shapes to maintain and test,
+`bootstrap.sh` and `tasks/netdoctor.py` still need a tree to run from before uv exists so the
+one-liner would keep cloning something anyway, and the consumer loses the ability to inspect or
+patch `config/` locally on a machine-setup tool. Revisit if consumer installs ever outnumber
+developer ones — but revisit it on those grounds, not by re-reading the paragraph above as though it
+had already settled the question.]
+
 ### The anchor survives every upgrade path tried
 
 Probed 2026-09-08 against the same mirror, every row run rather than reasoned about, including a
@@ -119,6 +135,21 @@ config and state directories to the full repo name to escape it. The command nam
 config namespace are different namespaces — but a repo that deliberately renamed away from `pulse`
 should not then name its binary `pulse`, and the shim's own natural config path is the occupied
 one.]
+
+[DECISION: **the same collision argument later named a task, not just the binary.**
+`spowse
+self.update` (2026-09-18) pulls the checkout the shim is anchored to. `pulse.update` was the
+obvious spelling and lost to the reasoning directly above — a repo that renamed its config and state
+directories away from `pulse` should not reintroduce the word as a namespace. `self.update` wins on
+the rule this repo applies to flags: match the surrounding ecosystem rather than invent a spelling,
+and `uv self update` / `rustup self update` is a shape every consumer of a user-wide tool has
+already met. `checkout.update` names the mechanism most literally and is the worst of the three for
+the reader it exists for, who has never thought of their install as a checkout.
+
+Its module is `tasks/selfupdate.py`, published under the shorter name. `tasks/self.py` with
+`from . import self` was probed and imports perfectly well — `self` is a convention, not a keyword —
+but it puts a name every Python reader parses as a parameter into `tasks/__init__.py`'s import list,
+for nothing. Renaming on publication is what that file already does for `testing` → `test`.]
 
 About sixty candidates were screened across six themes, filtered against PATH, apt and PyPI.
 `fettle` lost to a live PyPI package doing devcontainer scaffolding; `monty` lost to an active

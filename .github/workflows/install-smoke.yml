@@ -35,6 +35,13 @@ jobs:
           persist-credentials: false
           fetch-depth: 0
       - run: git branch ci-install-smoke
+      # `--dir` is what keeps the clone inside RUNNER_TEMP, and it is also this job's one blind spot:
+      # naming a destination means the *default* destination is never exercised here, nor is `--dev`
+      # or the adopt-the-old-default branch. Those are covered by tests/unit/test_install_sh.py
+      # against a stub bootstrap. The composition is sound — the default only decides the value of
+      # CLONE_DIR, and bootstrap.sh is indifferent to where the checkout sits — but a green run here
+      # is not evidence about a change to how that value is chosen. Said because the job's name
+      # invites the opposite reading.
       - name: Clone and bootstrap through install.sh
         run: |
           bash install.sh \

@@ -43,6 +43,69 @@ read by people who have never seen this repo's file naming — `install.sh` is w
 uses and what a person guesses. The `bootstrap-` prefix stays accurate for the two scripts that are
 bootstraps in this repo's internal sense, which is a narrower meaning than the word has outside it.]
 
+## Where the clone lands, and why it is not `~/projects`
+
+Moved to `~/.local/share/power-user-linux-setup` on 2026-09-18, with `--dev` as the opt-out. The
+reasoning is at the `CLONE_DIR` assignment in `install.sh` and does not need repeating; what a
+header cannot carry is what the move beat.
+
+[DECISION: **a flag, not a prompt, for the developer case.** The obvious alternative was to ask —
+`install.sh` is interactive already. It loses for a reason specific to this script: it asks exactly
+one question, immediately before the least reversible thing this repo does, and that question's
+weight is the whole point of the two-step download-then-run shape. A second question dilutes it. It
+would also need a defined answer under `--yes` and under no-TTY, where the existing prompt's design
+is to _refuse_ rather than guess — and "refuse because we could not ask where to clone" is a worse
+failure than any it prevents. The developer is the minority case and is about to clone a repo they
+intend to work on, which makes them the reader most likely to run `--help`.]
+
+[PITFALL: **a person who installed before the move, re-pasting the one-liner, is the case the
+adopt-never-clobber logic did not cover.** That logic tests one path. With the default moved, a
+re-run would clone a _second_ checkout at the new default and re-point `spowse` at it with
+`uv tool install --editable`, leaving the first on disk with nothing reading it while
+`inv deploy.status` quietly starts answering about a tree its owner never updates. Nothing errors
+and both checkouts look fine. Hence the legacy-adopt branch — and hence its guard: it fires only
+when no path was named, because a `--dir` is an instruction rather than a guess to second-guess.]
+
+[PITFALL: **`git pull` works in the shallow tag clone, and the reasoning that says it cannot is
+wrong.** `install.sh` clones `--branch stable --depth 1`, which leaves a detached HEAD, and this
+machine's own `~/.agents/AGENTS.md` warns that a plain `git fetch` never updates a moved tag — so
+"consumers cannot update by pulling" looks sound and is false. Probed 2026-09-18 against a local
+repo with a moved tag: such a clone's only refspec is `+refs/tags/stable:refs/tags/stable`,
+**forced**, so a pull updates the tag and fast-forwards the detached HEAD onto it. The AGENTS.md
+rule is about a clone whose refspec does not name the tag. Nothing about the update mechanism needed
+changing — only its discoverability, which is what `spowse self.update` is for.]
+
+### The `/mnt` guard that was designed and then deleted
+
+A refusal for clone destinations under `/mnt/` was planned, on the theory that a WSL user points
+`~/projects` at `/mnt/c/...` so a Windows editor can see it, and that a checkout there loses exec
+bits and case sensitivity. It was dropped 2026-09-18 without being built: the user ruled the premise
+out — this repo is not developed on NTFS and the projects directory stays in the Linux home.
+Recorded because the checking was done and should not be redone, and because one third of it
+survives the premise:
+
+- **Case-insensitivity was never a risk.** No two tracked paths in this repo differ only by case.
+- **A lost exec bit would not stop an install.** `install.sh` runs `bash ./bootstrap.sh`, naming the
+  interpreter, so none of the tracked `100755` files is invoked by path.
+- **`CLAUDE.md` is the repo's only tracked symlink** (mode `120000` → `AGENTS.md`), and deliberately
+  so — `AGENTS.md` requires a real symlink rather than a file carrying Claude Code's `@` import
+  syntax. **So this repo cannot be checked out anywhere symlinks do not work**, and that fails at
+  `git clone` rather than degrading. That is a property of the repo, not of any filesystem, and it
+  outlives the WSL question entirely.
+
+[DECISION: **deleted rather than carried as an open item.** An `[UNVERIFIED:]` tag describing a
+scenario that has been ruled out is a backlog entry nobody can ever close, and it would have been
+re-read as real work by every later session. The default flip loses nothing by the deletion: its
+argument never rested on filesystems, and what is gone is only the extra WSL-specific weight — with
+Windows paths ruled out, a WSL distro is just Linux and `~/.local/share` is right there for the same
+reasons it is right anywhere.]
+
+Two alternatives were rejected outright and are worth naming so they are not re-proposed.
+**Symlinking `~/projects/power-user-linux-setup` at the new location** gives one tree two paths, and
+which one the editable `.pth` recorded then decides what `Path(__file__).parent.parent` resolves to
+— a footgun bought for cosmetics. **Prompting for the destination** is the developer-prompt
+objection one step worse: it asks the majority case about a situation that does not apply to them.
+
 ## Never `sudo bash`, and it is worth stating because the simplification is obvious
 
 "Why not just tell people to `sudo bash install.sh`" is the first thing anyone proposes, and it is
