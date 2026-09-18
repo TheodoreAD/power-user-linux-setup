@@ -16,6 +16,15 @@ The shape is identical — clone a pinned ref, run `bootstrap.sh`, re-export `PA
 `inv setup` — so extracting a shared spine is the obvious move. It was rejected on two counts, and
 the second is the one that would not have been obvious later:
 
+[PITFALL: **since 2026-09-18 both scripts clone under `~/.local/share`, which makes the first bullet
+below read weaker than it is.** `install.sh`'s default moved off `~/projects` because the checkout
+is permanent runtime state rather than a repo anyone opens — the same reasoning that put
+`bootstrap-devcontainer.sh`'s there first. The two destinations are now siblings, so "the clone
+destination differs" is easy to misread as settled. It is not: one is `rm -rf`'d on every build
+because nothing in an image outlives it, and the other is adopted as it stands and refuses to be
+deleted, and `install.sh` additionally has to recognise its own previous default. That is more
+divergence than before, not less.]
+
 - **All three decisions differ at every step.** The clone destination is disposable in a container
   and permanent on a workstation; the tag defaults are `CONTAINER_EXCLUDE_TAGS` plus
   `PULSE_ASSUME_YES=1` in one and the machine's own defaults in the other; and one runs `inv setup`

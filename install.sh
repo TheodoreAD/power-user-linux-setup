@@ -27,8 +27,11 @@ set -euo pipefail
 # settings — and a line pasted from a README should say so before it starts.
 #
 # Options:
-#   --dir <path>            where to clone (default: ~/projects/power-user-linux-setup). This
+#   --dir <path>            where to clone (default: ~/.local/share/power-user-linux-setup). This
 #                           directory is permanent: see the note this script prints on the way out.
+#   --dev                   clone into ~/projects/power-user-linux-setup instead. For working on
+#                           PULSE itself: that is where your own repos live, under the per-directory
+#                           git identity `inv git.configure` writes for them.
 #   --ref <git-ref>         git ref to shallow-clone (default: stable, the tag that tracks tested
 #                           commits). Use master for the newest work.
 #   --repo-url <url|path>   clone from somewhere other than the canonical GitHub repo — a fork, a
@@ -43,7 +46,22 @@ set -euo pipefail
 
 REPO_URL="https://github.com/TheodoreAD/power-user-linux-setup.git"
 
-CLONE_DIR="${HOME}/projects/power-user-linux-setup"
+# The checkout is not a development artifact, which is what decides this path. `spowse` is installed
+# `uv tool install --editable` against it and resolves setup.toml and config/ out of it on every run,
+# and `inv deploy.status` reports drift by comparing your home directory to it — so it is permanent,
+# user-wide state that happens to be a git working tree. That is the ~/.local/share/<tool> shape this
+# repo's own XDG rule already sends Go and nvm to, and the directory bootstrap-devcontainer.sh
+# already clones into. ~/projects is where *your* repos live, under the per-directory git identity
+# `inv git.configure` writes; a repo you never open does not belong there. --dev is for when you do.
+CLONE_DIR="${HOME}/.local/share/power-user-linux-setup"
+
+# The default before 2026-09-18, and where --dev still puts it. Kept as a name rather than written
+# twice because the adopt branch below has to recognise it.
+DEV_CLONE_DIR="${HOME}/projects/power-user-linux-setup"
+
+# Whether the destination was *asked for* rather than defaulted. The adopt branch below must not
+# fire over a path somebody named — a --dir is an instruction, not a guess to second-guess.
+CLONE_DIR_CHOSEN=false
 
 # `stable` rather than `master`, and it is a tag rather than a branch — the same ref
 # bootstrap-devcontainer.sh pins. Pinning is the point: it lets someone read this script today and
@@ -66,7 +84,13 @@ while [ $# -gt 0 ]; do
   case "$1" in
     --dir)
       CLONE_DIR="$2"
+      CLONE_DIR_CHOSEN=true
       shift 2
+      ;;
+    --dev)
+      CLONE_DIR="${DEV_CLONE_DIR}"
+      CLONE_DIR_CHOSEN=true
+      shift
       ;;
     --ref)
       REF="$2"
@@ -118,12 +142,30 @@ if ! command -v git &> /dev/null; then
   fi
 fi
 
+is_pulse_checkout() {
+  [ -d "$1/.git" ] && [ -f "$1/setup.toml" ] && [ -f "$1/bootstrap.sh" ]
+}
+
+# A machine installed before the default moved must not grow a second checkout, and a re-pasted
+# one-liner is exactly what would give it one: clone into the new default, then re-point `spowse` at
+# it with `uv tool install --editable`. The first checkout would stay on disk with nothing reading
+# it, and `inv deploy.status` would start answering about a tree its owner never updates. So look
+# where the default used to point — but only when nothing was asked for, since a named --dir or
+# --dev is already the answer to this question.
+if [ "${CLONE_DIR_CHOSEN}" = false ] && [ ! -e "${CLONE_DIR}" ] && is_pulse_checkout "${DEV_CLONE_DIR}"; then
+  echo "Found an existing checkout at ${DEV_CLONE_DIR}, where the default used to point."
+  echo "Using that one rather than cloning a second copy at ${CLONE_DIR}."
+  echo "Pass --dir ${CLONE_DIR} if you would rather start again at the new location."
+  echo ""
+  CLONE_DIR="${DEV_CLONE_DIR}"
+fi
+
 # Adopt, never clobber. The container bootstrap `rm -rf`s its clone because nothing there outlives
 # the image; here the opposite holds, and destroying a checkout would take uncommitted work with it.
 # An existing PULSE checkout is used exactly as it stands — no fetch, no checkout, no ref change —
 # because this script's job is getting a machine started, not updating one that already is.
 if [ -e "${CLONE_DIR}" ]; then
-  if [ -d "${CLONE_DIR}/.git" ] && [ -f "${CLONE_DIR}/setup.toml" ] && [ -f "${CLONE_DIR}/bootstrap.sh" ]; then
+  if is_pulse_checkout "${CLONE_DIR}"; then
     echo "Using the checkout already at ${CLONE_DIR}."
     echo "Left exactly as it is — not fetched, and not switched to ${REF}."
     echo "Run 'git pull' there yourself if you want it newer."
@@ -166,6 +208,11 @@ echo ""
 echo "Keep it there. PULSE's own tools resolve this path at run time rather than copying it:"
 echo "the 'spowse' command is installed against it, and 'inv deploy.status' reports drift by"
 echo "comparing your home directory to it. Moving it later breaks both."
+echo ""
+# The path above is permanent but does not have to be memorable, and saying so here is what keeps
+# the first fact from reading as a chore. `self.update` resolves the same directory the shim does.
+echo "You will not need to type that path again — 'spowse self.update' pulls it from anywhere."
+echo "If you meant to work on PULSE itself, re-run with --dev to put it under ~/projects instead."
 
 if [ "${BOOTSTRAP_ONLY}" = true ]; then
   echo ""

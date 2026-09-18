@@ -56,7 +56,7 @@ def test_help_prints_the_options_and_exits_zero(home: Path):
     the block grows; this asserts the awk that replaced it still finds the whole block."""
     result = _run("--help", home=home)
     assert result.returncode == 0
-    for option in ("--dir", "--ref", "--repo-url", "--exclude-tags", "--bootstrap-only", "--yes"):
+    for option in ("--dir", "--dev", "--ref", "--repo-url", "--exclude-tags", "--bootstrap-only", "--yes"):
         assert option in result.stdout, option
     assert "Never `curl … | bash`" in result.stdout
 
@@ -170,3 +170,79 @@ def test_running_it_twice_adopts_rather_than_failing(home: Path, tmp_path: Path)
     assert second.returncode == 0, second.stderr
     assert "Cloning" in first.stdout
     assert "Left exactly as it is" in second.stdout
+
+
+# The clone destination: ~/.local/share by default since 2026-09-18, ~/projects behind --dev. The
+# checkout is permanent runtime state (`spowse` resolves it on every run), not a repo anyone opens,
+# so it belongs where every other multi-file user-wide install goes rather than in the workspace
+# `inv git.configure` writes per-directory git identities for.
+
+
+def test_the_default_destination_is_under_local_share(home: Path, tmp_path: Path):
+    origin = _make_origin(tmp_path / "origin")
+    result = _run("--repo-url", str(origin), "--ref", "trunk", "--bootstrap-only", home=home)
+
+    assert result.returncode == 0, result.stderr
+    assert (home / ".local/share/power-user-linux-setup/setup.toml").is_file()
+    assert not (home / "projects").exists()
+
+
+def test_dev_puts_it_under_projects_instead(home: Path, tmp_path: Path):
+    origin = _make_origin(tmp_path / "origin")
+    result = _run("--dev", "--repo-url", str(origin), "--ref", "trunk", "--bootstrap-only", home=home)
+
+    assert result.returncode == 0, result.stderr
+    assert (home / "projects/power-user-linux-setup/setup.toml").is_file()
+    assert not (home / ".local/share/power-user-linux-setup").exists()
+
+
+def test_a_checkout_at_the_old_default_is_adopted_rather_than_cloned_beside(home: Path, tmp_path: Path):
+    """The failure this prevents is silent: a second clone at the new default, `spowse` re-pointed at
+    it by `uv tool install --editable`, and the original left on disk with nothing reading it while
+    `inv deploy.status` answers about a tree its owner never updates."""
+    legacy = _write_checkout(home / "projects" / "power-user-linux-setup")
+    origin = _make_origin(tmp_path / "origin")
+
+    result = _run("--repo-url", str(origin), "--ref", "trunk", "--bootstrap-only", home=home)
+
+    assert result.returncode == 0, result.stderr
+    assert "where the default used to point" in result.stdout
+    assert str(legacy) in result.stdout
+    assert not (home / ".local/share/power-user-linux-setup").exists()
+
+
+def test_an_explicit_dir_is_not_overridden_by_a_checkout_at_the_old_default(home: Path, tmp_path: Path):
+    """A named path is an instruction. Adopting the legacy one over it would silently install
+    somewhere the user did not ask for, which is worse than the duplicate it is guarding against."""
+    _write_checkout(home / "projects" / "power-user-linux-setup")
+    origin = _make_origin(tmp_path / "origin")
+    target = tmp_path / "named"
+
+    result = _run("--dir", str(target), "--repo-url", str(origin), "--ref", "trunk", "--bootstrap-only", home=home)
+
+    assert result.returncode == 0, result.stderr
+    assert (target / "setup.toml").is_file()
+    assert "where the default used to point" not in result.stdout
+
+
+def test_a_non_checkout_at_the_old_default_is_ignored_rather_than_adopted(home: Path, tmp_path: Path):
+    """`~/projects/power-user-linux-setup` could be anything — an empty directory somebody made, or
+    an unpacked archive. Only the three markers make it a checkout worth adopting."""
+    stray = home / "projects" / "power-user-linux-setup"
+    stray.mkdir(parents=True)
+    (stray / "notes.txt").write_text("not a checkout")
+    origin = _make_origin(tmp_path / "origin")
+
+    result = _run("--repo-url", str(origin), "--ref", "trunk", "--bootstrap-only", home=home)
+
+    assert result.returncode == 0, result.stderr
+    assert (home / ".local/share/power-user-linux-setup/setup.toml").is_file()
+    assert (stray / "notes.txt").read_text() == "not a checkout"
+
+
+def test_the_outro_names_the_command_that_replaces_knowing_the_path(home: Path, tmp_path: Path):
+    """Moving the checkout somewhere nobody browses is only safe because the path stops being
+    something anyone has to remember."""
+    checkout = _write_checkout(tmp_path / "existing")
+    result = _run("--dir", str(checkout), "--bootstrap-only", home=home)
+    assert "spowse self.update" in result.stdout

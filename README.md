@@ -33,9 +33,14 @@ curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/s
   -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
 ```
 
-Clones into `~/projects/power-user-linux-setup`, installs uv/Python/invoke, then asks before running
-`inv setup`. Run it with `--help` for the options (`--dir`, `--ref`, `--exclude-tags`,
-`--bootstrap-only`, `--yes`).
+Clones into `~/.local/share/power-user-linux-setup`, installs uv/Python/invoke, then asks before
+running `inv setup`. Run it with `--help` for the options (`--dir`, `--dev`, `--ref`,
+`--exclude-tags`, `--bootstrap-only`, `--yes`).
+
+The checkout goes where every other multi-file user-wide install does, because that is what it is:
+`spowse` reads `setup.toml` and `config/` out of it on every run. Pass `--dev` to put it in
+`~/projects/power-user-linux-setup` instead, which is what you want if you are going to work on
+PULSE itself.
 
 Two steps rather than `curl … | bash` on purpose — a pipeline reports its _last_ command's status,
 so a failed download hands `bash` an empty stdin and the install exits 0 having done nothing. It
@@ -45,9 +50,8 @@ also lets you read the script first.
 <summary>Or, step by step</summary>
 
 ```shell
-cd ~
-mkdir -p projects
-cd projects
+mkdir -p ~/.local/share                     # or ~/projects, if you mean to work on PULSE itself
+cd ~/.local/share
 git clone https://github.com/TheodoreAD/power-user-linux-setup.git
 cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
@@ -57,7 +61,8 @@ inv setup             # runs the full setup
 </details>
 
 Either way, keep the checkout where it lands: the `spowse` command is installed against it and
-`inv deploy.status` compares your home directory to it.
+`inv deploy.status` compares your home directory to it. You will not need to type that path again —
+`spowse self.update` pulls it from anywhere.
 
 ## Recommended hardware
 

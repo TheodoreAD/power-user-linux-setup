@@ -69,10 +69,17 @@ curl -fsSL https://raw.githubusercontent.com/TheodoreAD/power-user-linux-setup/s
   -o /tmp/pulse-install.sh && bash /tmp/pulse-install.sh
 ```
 
-It clones into `~/projects/power-user-linux-setup`, installs uv, Python and invoke, then asks before
-running `inv setup` — which is the step that installs apt packages, changes your login shell and
-applies GNOME settings. `--help` lists the options (`--dir`, `--ref`, `--exclude-tags`,
+It clones into `~/.local/share/power-user-linux-setup`, installs uv, Python and invoke, then asks
+before running `inv setup` — which is the step that installs apt packages, changes your login shell
+and applies GNOME settings. `--help` lists the options (`--dir`, `--dev`, `--ref`, `--exclude-tags`,
 `--bootstrap-only`, `--yes`).
+
+That destination is where every other multi-file user-wide install goes on this machine, and the
+checkout belongs with them rather than in `~/projects`: you never open it, but `spowse` reads
+`setup.toml` and `config/` out of it on every run. Pass `--dev` to clone into
+`~/projects/power-user-linux-setup` instead — the right answer if you are going to work on PULSE
+itself, where the checkout wants to sit beside your other repos under the per-directory git identity
+[`inv git.configure`](git.md) writes for them.
 
 Two steps rather than `curl … | bash`, deliberately: a pipeline reports its _last_ command's status,
 so a failed download hands `bash` an empty stdin and the install exits 0 having done nothing. It
@@ -82,9 +89,8 @@ the script before you run it, which is what pinning it to `stable` is for.
 ### Or, step by step
 
 ```shell
-cd ~
-mkdir -p projects
-cd projects
+mkdir -p ~/.local/share                     # or ~/projects, if you mean to work on PULSE itself
+cd ~/.local/share
 git clone https://github.com/TheodoreAD/power-user-linux-setup.git
 cd power-user-linux-setup
 ./bootstrap.sh        # installs uv + invoke
@@ -92,7 +98,9 @@ inv setup             # runs the full setup — see configuration.md for what th
 ```
 
 Either way the checkout is permanent: `spowse` is installed against it and `inv deploy.status`
-reports drift by comparing your home directory to it, so moving it later breaks both.
+reports drift by comparing your home directory to it, so moving it later breaks both. Its path is
+not something you have to remember, though — [`spowse self.update`](updating.md#updating) pulls it
+from anywhere.
 
 `inv setup` does not cover everything — see **Manual steps** below for what still requires human
 input.

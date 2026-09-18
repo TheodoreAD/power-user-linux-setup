@@ -277,9 +277,14 @@ comment:
 - **Never move that tag by hand** — done once, and it published a regression to both consumers. And
   a local tag is not evidence about what is published: a plain `git fetch` never updates a tag that
   moved, so ask the host with `git ls-remote --tags origin stable`.
-- **The clone destination is permanent.** `spowse` is installed `--editable` against it and
-  `deploy.status` compares the machine to it, so the installer adopts an existing checkout exactly
-  as it stands, and refuses anything else at that path rather than deleting it.
+- **The clone destination is permanent, and it is `~/.local/share/power-user-linux-setup`.**
+  `spowse` is installed `--editable` against it and `deploy.status` compares the machine to it, so
+  the installer adopts an existing checkout exactly as it stands, and refuses anything else at that
+  path rather than deleting it. The default moved there from `~/projects/…` on 2026-09-18 because
+  the checkout is runtime state rather than a repo anyone opens; `--dev` is the developer's opt-out,
+  and `install.sh` adopts a checkout still sitting at the old default rather than cloning a second
+  one beside it. **Anything naming a clone path has to carry both** — a change that updates only the
+  new default leaves a machine installed last month unable to match either branch.
 
 Everything else is documented where it is implemented, and that is where to read it before changing
 it: `.github/workflows/devcontainer.yml` and `install-smoke.yml` each explain their own gating and
