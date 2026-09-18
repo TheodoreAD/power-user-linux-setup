@@ -7,12 +7,22 @@ from invoke import Context, task
 from . import deploy, util
 
 
-def _snippets(cfg: util.PackageConfig) -> list[tuple[str, str]]:
-    """The (dotfile name, snippet) pairs a package declares — one per zshrc/zshenv/zprofile field
-    it actually sets. Spelled out per field rather than `cfg.get(target)` in a loop over the
-    names: a TypedDict lookup only keeps its field type for a literal key."""
-    declared = (("zshrc", cfg.get("zshrc")), ("zshenv", cfg.get("zshenv")), ("zprofile", cfg.get("zprofile")))
-    return [(target, content) for target, content in declared if content]
+def _snippets(cfg: util.PackageConfig) -> list[tuple[str, str | None]]:
+    """One (dotfile name, snippet) pair per zsh dotfile, `None` where the package declares nothing
+    for that file.
+
+    All three are returned rather than only the declared ones, because a field *deleted* from
+    setup.toml has to be taken back out of the dotfile exactly the way a package that stopped
+    applying does — and the only evidence it was ever written is that the field is now absent.
+    Returning just the declared pairs made that removal unreachable: the loop never visited the
+    file, so the block outlived its declaration on every machine that had already run. Found when
+    `[packages.uv-env]` dropped its `export UV_PYTHON` (plans/2026-09-18-replace-uv-python-with-a-
+    uv-managed-default.md) and the export stayed in ~/.zshenv with nothing left to remove it.
+
+    Spelled out per field rather than `cfg.get(target)` in a loop over the names: a TypedDict
+    lookup only keeps its field type for a literal key.
+    """
+    return [("zshrc", cfg.get("zshrc")), ("zshenv", cfg.get("zshenv")), ("zprofile", cfg.get("zprofile"))]
 
 
 @task
@@ -88,12 +98,16 @@ def configure(c: Context):
     Removal is the other half and cannot be skipped: excluding a tag on a machine that already ran
     without the exclusion leaves the block behind, and nothing else on the machine would ever take
     it out. Only PULSE's own marker-delimited region goes; anything hand-written around it stays.
+
+    Two ways a block stops being wanted, and both are removals: the package stopped applying to this
+    machine, or it stopped declaring that field at all. The second is why `_snippets` yields every
+    dotfile rather than only the declared ones.
     """
     applies = util.enabled_packages()
     for name, cfg in util.load_config()["packages"].items():
         for target, content in _snippets(cfg):
             path = Path.home() / f".{target}"
-            if name in applies:
+            if content and name in applies:
                 _apply_snippet(path, name, target, content)
             else:
                 _drop_snippet(path, name, target)
@@ -112,16 +126,17 @@ def _apply_snippet(path: Path, name: str, target: str, content: str) -> None:
 
 
 def _drop_snippet(path: Path, name: str, target: str) -> None:
-    """Report or remove a block whose package no longer applies here."""
+    """Report or remove a block nothing declares any more — either the package stopped applying to
+    this machine, or it stopped declaring this dotfile."""
     if util.DRY_RUN:
         text = path.read_text() if path.exists() else ""
         # "MISSING" is what phases.probe() greps for to decide a phase still has work to do, and a
         # stale block is work — the word reads oddly for a removal, but the token is the protocol.
         if util.remove_block_text(text, name)[1]:
-            print(f"[{name}] .{target}: MISSING  (stale block — package no longer applies here)")
+            print(f"[{name}] .{target}: MISSING  (stale block — nothing declares it now)")
         return
     if util.remove_block(path, name):
-        print(f"[{name}] .{target}: removed — package no longer applies here")
+        print(f"[{name}] .{target}: removed — nothing declares it now")
 
 
 @task

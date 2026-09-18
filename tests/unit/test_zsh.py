@@ -106,6 +106,25 @@ def test_configure_dry_run_reports_a_stale_block_as_work_to_do(tmp_path, monkeyp
     assert "ASKPASS" in _zshenv(tmp_path), "a dry run must not write"
 
 
+def test_configure_removes_a_block_whose_field_was_dropped_from_setup_toml(tmp_path, monkeypatch):
+    """The other way a block stops being wanted, and the one nothing used to take back: the package
+    still applies here, it just no longer declares that dotfile. `[packages.uv-env]` dropped its
+    `export UV_PYTHON` on 2026-09-18 and kept its zshrc completions — before this, the export
+    stayed in ~/.zshenv on every machine that had already run, which would have left the swap it
+    was part of inert.
+    """
+    both: util.PackageConfig = {"zshenv": "export UV_PYTHON=3.14", "zshrc": "eval completions"}
+    _config(monkeypatch, {"uv-env": both})
+    zsh.configure(MockContext())
+    assert "UV_PYTHON" in _zshenv(tmp_path)
+
+    _config(monkeypatch, {"uv-env": {"zshrc": "eval completions"}})
+    zsh.configure(MockContext())
+
+    assert "UV_PYTHON" not in _zshenv(tmp_path)
+    assert "eval completions" in (tmp_path / ".zshrc").read_text(), "the surviving field stays"
+
+
 def test_path_is_marked_unique_before_anything_prepends_to_it():
     """~/.zshenv is read on every zsh invocation — the property the certs/proxy exports depend on —
     so an unguarded `PATH="x:$PATH"` grows the variable once per nested shell, without limit.
