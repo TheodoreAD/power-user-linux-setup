@@ -2223,13 +2223,21 @@ against. Precedence below that is explicit request, then a version file discover
 `ToolInstallArgs::python` carries `env = EnvVars::UV_PYTHON`, which is why setting the variable and
 passing the flag are the same code path.
 
-[PITFALL: **the trap is invisible on this machine and live everywhere else.** `[packages.uv-env]`
-exports `UV_PYTHON="3.14"` into every shell, so every bare `uv tool install` here already resolves
-to 3.14 and the unset branch never runs locally. A consumer's CI is the ordinary case where it does.
-That is also the correction to `plans/2026-08-23-invoke-repo-tasks-tool-conflict.md`'s deferred
-item, which read `bootstrap.sh`'s `--python` as the thing keeping the two scripts in agreement: the
-agreement is real and the `zshenv` export is its cause, so the flag is belt-and-braces rather than
-load-bearing.]
+[PITFALL: **the trap was invisible on this machine and live everywhere else, until 2026-09-18.**
+`[packages.uv-env]` exported `UV_PYTHON="3.14"` into every shell, so every bare `uv tool install`
+here resolved to 3.14 and the unset branch never ran locally. A consumer's CI was the ordinary case
+where it did. That is also the correction to `plans/2026-08-23-invoke-repo-tasks-tool-conflict.md`'s
+deferred item, which read `bootstrap.sh`'s `--python` as the thing keeping the two scripts in
+agreement: the agreement was real and the `zshenv` export was its cause, so the flag was
+belt-and-braces rather than load-bearing.
+
+**The export is gone** — `inv python.pin-default` writes uv's global pin
+(`~/.config/uv/.python-version`) instead, which the third row's precedence list above ranks _below_
+a package's own declaration rather than above it. Two consequences for anything written against the
+old state. This machine now runs the unset branch like everyone else, so the trap is reproducible
+here rather than only in a consumer's CI; and `bootstrap.sh`'s `--python` stopped being
+belt-and-braces the moment the export did, because it is now the only thing pinning the interpreter
+that installs invoke on a fresh machine.]
 
 [DECISION: **stated as a fact rather than as a prohibition, per criterion 4.** This is the "the
 agent cannot know something" class the criterion exempts — the same class as the section's two

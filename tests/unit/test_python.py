@@ -127,6 +127,61 @@ def test_seeding_is_unconditional_so_a_future_declaration_needs_no_edit_here(
     ]
 
 
+def test_pin_default_applies_the_setting_as_uvs_own_global_pin(monkeypatch: pytest.MonkeyPatch):
+    """The replacement for `export UV_PYTHON`. The variable is an *explicit* interpreter request to
+    uv, so it outranked every project's own declaration — measured on uv 0.11.19, a `uv tool
+    install` of a package excluding 3.14 landed on 3.14.5 with no warning of any kind. The pin is
+    the same default and yields wherever something declares otherwise."""
+    monkeypatch.setattr(util, "load_config", lambda: {"settings": {"uv_python_default": "3.14"}})
+    context = _FakeContext()
+
+    python_tasks.pin_default(context)
+
+    assert context.commands == ["uv python pin --global 3.14"]
+
+
+def test_pin_default_does_nothing_when_no_default_is_declared(monkeypatch: pytest.MonkeyPatch):
+    """`uv python pin --global` with no argument errors on a machine with no pin file, so an unset
+    setting has to stop before the call rather than pass an empty string into it."""
+    monkeypatch.setattr(util, "load_config", lambda: {"settings": {}})
+    context = _FakeContext()
+
+    python_tasks.pin_default(context)
+
+    assert context.commands == []
+
+
+def test_set_default_repins_and_no_longer_rewrites_a_shell_export(monkeypatch: pytest.MonkeyPatch, tmp_path: Path):
+    """setup.toml used to carry the same version twice — the setting and `[packages.uv-env]`'s
+    `export UV_PYTHON` — and this task's job was half keeping them equal. The export is gone, so a
+    UV_PYTHON anywhere in the file is now somebody else's text and must be left alone."""
+    setup_toml = tmp_path / "setup.toml"
+    setup_toml.write_text(
+        '[settings]\nuv_python_default = "3.14"\nuv_python_extra = ["3.11"]\n\n'
+        "[packages.something]\nzshenv = 'export UV_PYTHON=\"3.14\"'\n"
+    )
+    monkeypatch.setattr(python_tasks, "_SETUP_TOML", setup_toml)
+    settings = {"uv_python_default": "3.14", "uv_python_extra": ["3.11"], "uv_python_set_default": False}
+    monkeypatch.setattr(util, "load_config", lambda: {"settings": settings})
+    context = _FakeContext()
+
+    python_tasks.set_default(context, "3.15")
+
+    assert "uv python pin --global 3.15" in context.commands
+    text = setup_toml.read_text()
+    assert 'uv_python_default = "3.15"' in text
+    assert 'export UV_PYTHON="3.14"' in text, "an unrelated UV_PYTHON is not this task's to rewrite"
+
+
+def test_setup_toml_declares_no_uv_python_export_anywhere():
+    """The regression this swap exists to prevent coming back. A single `zshenv` line reinstating
+    the variable silently restores the override for every uv call on the machine, and nothing else
+    here would fail."""
+    for name, cfg in util.load_config()["packages"].items():
+        for field in ("zshenv", "zshrc", "zprofile"):
+            assert "UV_PYTHON" not in cfg.get(field, ""), f"[packages.{name}] {field} exports UV_PYTHON"
+
+
 def test_every_uv_tool_package_declaring_config_files_is_reachable_by_that_call():
     """A structural check on the real setup.toml rather than a fixture: if this list ever empties,
     the tests above are still green while guarding nothing, because no shipped package would

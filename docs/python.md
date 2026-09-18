@@ -28,8 +28,8 @@ uv_python_set_default = true
 ```
 
 Prefer `inv python.set-default <version>` (below) over hand-editing `uv_python_default` — it also
-keeps `uv_python_extra` and `[packages.uv-env]`'s `UV_PYTHON` value in sync, both of which otherwise
-have to be updated by hand alongside it.
+keeps `uv_python_extra` in sync and re-applies the machine's uv pin, both of which otherwise have to
+be done by hand alongside it.
 
 ## Python version shims
 
@@ -67,17 +67,37 @@ inv python.set-default 3.14
 ```
 
 Updates `uv_python_default` in `setup.toml`, moves the old default into `uv_python_extra` (so it
-stays installed rather than being dropped), keeps `[packages.uv-env]`'s `UV_PYTHON` value in sync,
-installs the new version if it isn't already managed, and re-points the unversioned
-`python`/`python3` shims at it (skipped if `uv_python_set_default` is `false`). Run
-`inv
-zsh.configure` afterward and open a new terminal to pick up the new `UV_PYTHON` shell default.
+stays installed rather than being dropped), installs the new version if it isn't already managed,
+re-applies the machine-wide uv pin, and re-points the unversioned `python`/`python3` shims at it
+(skipped if `uv_python_set_default` is `false`). No new terminal needed — uv reads the pin file on
+every invocation.
 
-## Shell default
+## Machine-wide default
 
-`UV_PYTHON` is set in `~/.zshenv` automatically by `inv zsh.configure` (or `inv setup`), sourced
-from the `[packages.uv-env]` entry in `setup.toml`. Project-level `.python-version` files override
-it automatically.
+`inv python.pin-default` (part of `inv setup`'s packages phase) applies `uv_python_default` with
+uv's own global pin:
+
+```shell
+uv python pin --global 3.14   # writes ~/.config/uv/.python-version
+```
+
+Anything that declares its own interpreter wins over it — a project's `.python-version`, a
+`requires-python` in a `pyproject.toml` or a PEP 723 script header, or an explicit `--python`. That
+is the point of the pin rather than a caveat about it: the default applies wherever nothing has an
+opinion, and yields wherever something does.
+
+!!! warning "This was an `export UV_PYTHON` until 2026-09-18, and the difference is not cosmetic"
+
+    uv treats the environment variable as an **explicit interpreter request** — documented in its
+    own source as "equivalent to the `--python` command-line argument" — which ranks it *above*
+    every project declaration rather than below. Measured on uv 0.11.19: a PEP 723 script asking
+    for `==3.11.*`, a project pinned `>=3.11,<3.12`, and a `uv tool install` of a package
+    excluding 3.14 all resolved to **3.14.5** with the variable set, and to 3.11.15 with the pin.
+    The `uv tool install` path printed no warning at all, so a tool was built against an
+    interpreter it had excluded and failed later at import, nowhere near this setting.
+
+    A machine that ran `inv setup` before that date still has `export UV_PYTHON` in its `~/.zshenv`.
+    `inv zsh.configure` takes it back out.
 
 ## System-wide tools
 

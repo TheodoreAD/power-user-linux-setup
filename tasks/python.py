@@ -9,7 +9,10 @@ _REPO_ROOT = Path(__file__).parent.parent
 _SETUP_TOML = _REPO_ROOT / "setup.toml"
 _DEFAULT_RE = re.compile(r'(?m)^(\s*uv_python_default\s*=\s*)"[^"]*"')
 _EXTRA_RE = re.compile(r"(?m)^(\s*uv_python_extra\s*=\s*)\[[^\]]*\]")
-_UV_ENV_RE = re.compile(r'(UV_PYTHON=")[^"]*(")')
+
+# Where `uv python pin --global` puts the machine's default. uv writes it, never this repo — the
+# path is here so `inv home.list-claims` can name it and docs can point at it.
+UV_GLOBAL_PIN = Path.home() / ".config" / "uv" / ".python-version"
 
 
 @task
@@ -89,15 +92,53 @@ def clean_cache_full(c: Context):
     print("[python.clean-cache-full] uv cache cleared")
 
 
+@task
+def pin_default(c: Context):
+    """Pin the machine-wide default Python to settings.uv_python_default, with uv's own global pin.
+
+    Replaces `export UV_PYTHON` (`[packages.uv-env]`'s zshenv snippet until 2026-09-18), which uv
+    reads as an **explicit interpreter request** and therefore ranks above everything a project
+    declares about itself. Measured on uv 0.11.19 — a PEP 723 script asking for `==3.11.*`, a
+    project pinned `>=3.11,<3.12`, and a `uv tool install` of a package excluding 3.14 all resolved
+    to 3.14.5 with the variable set, and to 3.11.15 with this pin instead. The default survives
+    every unconstrained case and yields in every declared one, which is the whole of the swap.
+
+    The `uv tool install` row is the one that cost something: it prints no warning at all, so a tool
+    was simply built against an interpreter it had excluded and failed later at import, nowhere near
+    this setting. See plans/2026-09-18-replace-uv-python-with-a-uv-managed-default.md.
+
+    Idempotent, and cheap enough to run in the packages phase every time: uv rewrites one line in
+    ~/.config/uv/.python-version.
+    """
+    if not util.command_exists("uv"):
+        raise RuntimeError("uv not found — run ./bootstrap.sh first")
+    version = util.load_config().get("settings", {}).get("uv_python_default", "")
+    if not version:
+        print("[python] settings.uv_python_default is unset — no global pin to apply")
+        return
+    if util.DRY_RUN:
+        current = UV_GLOBAL_PIN.read_text().strip() if UV_GLOBAL_PIN.exists() else None
+        ok = current == version
+        print(f"[python] global pin {version}: {util.ok_label(ok)}" + ("" if ok else f"  (currently {current})"))
+        return
+    _pin_global(c, version)
+
+
+def _pin_global(c: Context, version: str) -> None:
+    """The one place that writes the pin, so `set_default` and `pin_default` cannot disagree about
+    what applying the setting means."""
+    c.run(f"uv python pin --global {version}")
+
+
 @task(help={"version": "Python version to make the new default, e.g. 3.14"})
 def set_default(c: Context, version: str):
     """Change settings.uv_python_default in setup.toml and re-point the live python/python3
     shims at it (uv python install <version> --default, unless uv_python_set_default is false).
 
-    Swaps the old default into uv_python_extra (so it stays installed) and keeps
-    [packages.uv-env]'s UV_PYTHON zshenv value in sync — both previously had to be edited by
-    hand alongside uv_python_default. Run `inv zsh.configure` afterward and open a new terminal
-    to pick up the new UV_PYTHON shell default.
+    Swaps the old default into uv_python_extra (so it stays installed) and re-applies the uv global
+    pin (`python.pin-default`), which is what the setting actually means on this machine — both
+    previously had to be edited by hand alongside uv_python_default. No new terminal needed: uv
+    reads the pin file per invocation, unlike the `export UV_PYTHON` this replaced.
     """
     if not re.fullmatch(r"\d+\.\d+", version):
         raise ValueError(f"version must look like '3.14', got {version!r}")
@@ -125,14 +166,13 @@ def set_default(c: Context, version: str):
         raise RuntimeError("uv_python_default not found in setup.toml")
     text = _DEFAULT_RE.sub(rf'\1"{version}"', text, count=1)
     text = _EXTRA_RE.sub(rf"\g<1>{extras_literal}", text, count=1)
-    text = _UV_ENV_RE.sub(rf"\g<1>{version}\g<2>", text, count=1)
     _SETUP_TOML.write_text(text)
     print(f'[python] setup.toml: uv_python_default = "{version}", uv_python_extra = {extras_literal}')
 
     c.run(f"uv python install {version}")
+    _pin_global(c, version)
     if settings.get("uv_python_set_default", True):
         c.run(f"uv python install {version} --default")
         print(f"[python] python / python3 now point at {version}")
     else:
         print("[python] uv_python_set_default is false — python/python3 left system-owned")
-    print("[python] next: inv zsh.configure, then open a new terminal to pick up UV_PYTHON")

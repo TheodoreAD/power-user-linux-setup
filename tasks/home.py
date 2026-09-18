@@ -41,7 +41,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import certs, chrome, deploy, docker, fonts, git, gnome, ide, proxy, screenshot, ssh, system, util
+from . import certs, chrome, deploy, docker, fonts, git, gnome, ide, proxy, python, screenshot, ssh, system, util
 
 _HOME = Path.home()
 
@@ -701,6 +701,22 @@ def _external_claims() -> Iterator[Claim]:
             note="plaintext credential store; readable by anything running as this user",
             path=keyring_store,
         )
+
+    # The machine's default Python. uv writes the file, on this repo's instruction and with this
+    # repo's value — the same shape as the `skills` CLI above, which is why it is EXTERNAL rather
+    # than a deploy. Claimed as a file because that is what replaced `export UV_PYTHON`: the setting
+    # moved out of a shell block this registry already listed, and dropping off the surface entirely
+    # would read as PULSE having stopped deciding it.
+    yield Claim(
+        target=_rel(python.UV_GLOBAL_PIN),
+        writer=Writer.EXTERNAL,
+        authority=Authority.PULSE,
+        tier=Tier.PUBLIC,
+        owner="inv python.pin-default",
+        source="uv python pin --global <- setup.toml [settings] uv_python_default",
+        note="a project's own .python-version or requires-python outranks it, deliberately",
+        path=python.UV_GLOBAL_PIN,
+    )
 
     claude_skills = _HOME / ".claude" / "skills"
     yield Claim(

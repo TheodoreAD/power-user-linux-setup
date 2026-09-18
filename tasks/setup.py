@@ -15,6 +15,10 @@ PACKAGES_PHASE = [
     # package that tools.install is what puts on PATH, and this task is a no-op without it.
     docker.configure_credential_store,
     system.install_apparmor_profiles,
+    # Before install_tools, not after: the pin is what an unconstrained `uv tool install` resolves
+    # against, so applying it second would leave the first run of a fresh machine choosing its own
+    # interpreter for every tool that declares no upper bound.
+    python.pin_default,
     python.install_tools,
     node.install,
     # After node.install: the `skills` CLI it installs globally is what ai.install_skills runs.

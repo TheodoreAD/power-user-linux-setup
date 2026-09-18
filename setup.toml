@@ -255,8 +255,11 @@
 # Default Python for all uv tool installs — uv downloads it if not already managed.
 # Read by bootstrap.sh via grep; keep the value on the same line as the key.
 # Override per-package with a python field in the [packages.X] section.
+# Applied to the machine by `inv python.pin-default` as uv's own global pin
+# (~/.config/uv/.python-version), which a project's own declaration outranks — that is the point,
+# and it is why this is no longer an exported UV_PYTHON. See docs/python.md.
 # Change with `inv python.set-default <version>` rather than hand-editing — it also keeps
-# uv_python_extra and [packages.uv-env]'s UV_PYTHON value in sync. See docs/python.md.
+# uv_python_extra in sync and re-applies the pin.
 uv_python_default = "3.14"
 # Additional Python versions for uv to install and manage (e.g. for project virtualenvs).
 # Read by bootstrap.sh; each version is installed but not set as default.
@@ -2023,9 +2026,14 @@ method = "uv-tool"
 package = "zensical"
 
 [packages.uv-env]
-description = "UV_PYTHON shell default and completions — keep UV_PYTHON in sync with settings.uv_python_default"
+description = "uv shell completions — the machine's default Python is a uv global pin, see inv python.pin-default"
 method = "zsh"
-zshenv = 'export UV_PYTHON="3.14"'
+# `zshenv = 'export UV_PYTHON="3.14"'` lived here until 2026-09-18. uv reads that variable as an
+# explicit interpreter request, ranked above anything a project declares, so it silently overrode
+# every consumer's own floor — including on the `uv tool install` path, which warns about nothing.
+# `inv python.pin-default` writes ~/.config/uv/.python-version instead: same default, yielded
+# wherever something declares otherwise. plans/2026-09-18-replace-uv-python-with-a-uv-managed-
+# default.md has the measurements. `inv zsh.configure` takes the old export back out.
 zshrc = """
 eval "$(uv generate-shell-completion zsh)"
 eval "$(uvx --generate-shell-completion zsh)"

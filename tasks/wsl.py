@@ -568,6 +568,8 @@ def install(c: Context, wslg: str = "auto", docker: bool = False, dns: str = "au
             apt.install_base,
             apt.install_debs,
             tools.install,
+            # Before install_tools — see the same ordering note in tasks/setup.py.
+            python.pin_default,
             python.install_tools,
             node.install,
             # After node.install — see the same ordering note in tasks/setup.py.
