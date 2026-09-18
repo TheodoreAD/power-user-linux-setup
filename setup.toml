@@ -1203,10 +1203,47 @@ claude_permissions_allow = ["WebSearch"]
 #
 # The two lines are complementary rather than redundant. PIPE_FAIL makes `inv quality.check 2>&1 |
 # tail -3` exit non-zero on a red run; report mode makes those three lines say which command failed.
+#
+# The direnv line is the third thing under the same guard and exists for the same reason as the
+# first two: a property of the harness's shell that only a per-call hook can reach. direnv's real
+# hook lives in ~/.zshrc, which the Bash tool sources from a snapshot captured once per session — so
+# it never re-runs, and the environment an agent gets is whatever direnv had activated at capture
+# time, frozen. That is not nothing, which is what makes it dangerous: it is the session's ORIGIN
+# repo's venv, so a bare `ruff` in a different repo succeeds and returns the wrong repo's tool at
+# that repo's pinned version. Measured 2026-09-18 — a session in this repo, standing in
+# olx-polite-mcp, still resolved ruff to power-user-linux-setup/.venv/bin/ruff.
+#
+# `direnv export zsh` emits the transition from the current environment to the one $PWD deserves, in
+# both directions: it loads a repo's .envrc on entry and emits `unset DIRENV_DIR` plus the restored
+# PATH when the new directory has no .envrc at all. Both rows measured on direnv 2.32.1, at ~21ms a
+# call. `uv run <tool>` was the alternative and is rejected: permission rules match a literal command
+# prefix, so `uv run pytest` matches none of the `Bash(pytest:*)` grants and every venv-tool call
+# would start prompting — and the skills this machine publishes run on machines that need not have
+# uv at all.
+#
+# DIRENV_LOG_FORMAT= rather than a 2>/dev/null redirect, because it silences direnv's own output
+# completely and one mechanism beats two doing the same job. The cost is accepted deliberately: a
+# repo whose .envrc is not yet allowed — every fresh clone — now gives no venv and no explanation,
+# and `inv dev-env.setup` is the remedy, which runs `direnv allow` and already is the documented
+# once-after-cloning step. Unsilenced, the alternative is a red direnv error on EVERY Bash call in
+# that repo.
+#
+# `if command -v` rather than a trailing `&&`, for the reason the PIPE_FAIL block above already
+# gives: ~/.zshenv is read on every zsh invocation, so a false `&&` leaves its last status non-zero
+# in every shell. The guard is not decorative either — direnv is [packages.direnv], a separate
+# package a tag profile can exclude, while this snippet ships with claude-code.
+#
+# What it does NOT fix, so nobody reads more into it: `cd <other repo> && <command>` in a single call
+# is unaffected, because ~/.zshenv is sourced at shell startup, before the command's own cd runs.
+# ~/.agents/AGENTS.md's cross-repo section sanctions exactly that shape, and its advice — the tool's
+# own directory-scoping option, or the target's .venv/bin by absolute path — stays correct.
 zshenv = '''
 if [ -n "${CLAUDECODE:-}" ]; then
   setopt PIPE_FAIL
   export REPO_TASKS_RUN_REPORT=1
+  if command -v direnv > /dev/null 2>&1; then
+    eval "$(DIRENV_LOG_FORMAT= direnv export zsh)"
+  fi
 fi'''
 
 [packages.agents-md]

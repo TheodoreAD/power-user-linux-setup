@@ -77,6 +77,45 @@ carries their values — while an **edit** to either file reaches nothing until 
 started. Read a present value as "captured once", never as "read every call"; only `zshenv` is the
 second thing.]
 
+## The first thing built to exploit the per-call property: direnv
+
+`[packages.claude-code]`'s snippet runs `eval "$(DIRENV_LOG_FORMAT= direnv export zsh)"` on every
+Bash call. It is here rather than in `~/.zshrc`, where direnv's own hook lives, for exactly the
+reason the table above gives: `~/.zshrc` is read once per session from the snapshot, so direnv's
+hook never re-runs and the environment an agent gets is frozen at capture time.
+
+**Frozen is worse than absent, which is the finding that motivated it.** What is frozen is the
+session's _origin_ repo's fully activated venv, so a bare `ruff` in a different repo succeeds and
+returns the wrong repo's tool at that repo's pinned version. Measured 2026-09-18: a session in this
+repo, standing in `olx-polite-mcp`, still resolved `ruff` to
+`power-user-linux-setup/.venv/bin/ruff`. A session filed from a repo with no `.envrc` had reported
+the failure as "direnv never fires", which is the same mechanism observed where the frozen
+environment happened to be empty.
+
+What the export does, all measured on direnv 2.32.1 at roughly 21 ms a call:
+
+| cwd                                  | result                                                               |
+| ------------------------------------ | -------------------------------------------------------------------- |
+| a repo with an allowed `.envrc`      | loads it — `DIRENV_DIR`, `VIRTUAL_ENV` and `PATH` become that repo's |
+| a directory with no `.envrc`         | **unloads** — emits `unset DIRENV_DIR` and restores the prior `PATH` |
+| a repo whose `.envrc` is not allowed | unloads the previous env, silently                                   |
+
+The unload row is half the value and is easy to miss: without it, moving to a directory with no
+`.envrc` would keep the last repo's venv rather than dropping it.
+
+**The gap, stated so nobody reads more into the fix than is there**: `cd <other repo> && <command>`
+in a single call is unaffected, because `~/.zshenv` is sourced at shell startup, before the
+command's own `cd`. `~/.agents/AGENTS.md`'s cross-repo section sanctions that shape and its advice
+is unchanged; only its stated reason moved.
+
+[PITFALL: **silencing direnv is deliberate and has a cost worth knowing before someone "fixes" it.**
+`DIRENV_LOG_FORMAT=` suppresses direnv's own output entirely, including the error for an `.envrc`
+that has not been allowed — the ordinary state of a fresh clone. An agent there gets
+`command not
+found` and no explanation. Unsilenced, the alternative is a red direnv error on
+**every** Bash call in that repo, which is the noise that gets a mechanism switched off.
+`inv dev-env.setup` runs `direnv allow` and is what `~/.agents/AGENTS.md` now names as the remedy.]
+
 ## Why `~/.config/environment.d/` is not used
 
 Not an oversight, and not a rejection on taste. `man 5 environment.d` describes the systemd user
