@@ -1179,6 +1179,53 @@ fetches and searches, which are not Bash calls at all and so are invisible to ev
 session whose work is gate-running and multi-repo reads has more opportunities to chain in a hundred
 calls than this one had in its whole run.]
 
+### Sample 22 — `power-user-linux-setup`, 185 calls, and `chain` inverts against sample 21 in the same repo
+
+`audit.py --session 4296eac1 --until 2026-09-18T19:28:57+03:00`, no `--compare` (no baseline to
+hand, so this row carries rates and no deltas), `setopt` answering `pipefail`. Transcript
+`4296eac1-732f-4827-874f-59063bcf404f.jsonl`, ~9 hours in one sitting, no compaction, 9 sweep calls
+excluded: designing and landing a consumer install-location change, adding a task, absorbing six
+filed plans and merging two pairs, and deploying a `zshenv` change with a live verification pass.
+
+| tag                     |    rate | note                                                        |
+| ----------------------- | ------: | ----------------------------------------------------------- |
+| **`chain`**             | **46%** | 85 calls — second-worst in the corpus                       |
+| `chain5`                |     11% | 21 calls                                                    |
+| `head/tail`             |     25% | 47 calls, **1** actually cut (exit 141)                     |
+| `exit-masked`           |     11% | 20 calls — 3 wrapped a gate, 17 a listing                   |
+| `sed-n`                 |      5% | 10 calls — MISS                                             |
+| `cat-view`              |      4% | 8 calls — MISS                                              |
+| `cd-own-repo`           |      4% | 7 calls — MISS                                              |
+| `git-mutating-in-chain` |     11% | 21 calls                                                    |
+| `search\|head`          |     12% | 22 calls                                                    |
+| `git-C-mutating`        |       3 | all three in throwaway probe repos — genuinely another repo |
+| `git-C-own-repo`        |      0% | OK                                                          |
+| everything else         |      0% | `git-add-all`, `git-undo-relative`, `store-write-by-git` OK |
+
+**Same repo as sample 21, five days later, and `chain` goes 2% → 46%.** That is the largest swing
+between two rows of the same repo the corpus holds, and it is not the auto-mode note: both sessions
+ran under it and both announced. The 3 masked gate calls stood on real exit codes — `pipefail` was
+in force — so the four green-gate claims this session made all hold, and `exit-masked` is a style
+finding here rather than a correctness one.
+
+[PITFALL: **the obvious cause is wrong, and checking it is what stopped a false number reaching this
+file.** The session's own reading was that repeated harness cwd resets (7 of them, printed as
+`Shell cwd was reset to …`) had bred defensive `cd <own repo> && …` prefixes. An `rg -c` over the
+transcript appeared to confirm it at **166** calls. Deduping by `tool_use` id instead gives **15**
+calls opening with `cd` and **5** into the session's own repo — the raw grep had been counting the
+string inside tool _results_, inside quoted prose in the session's own messages, and inside the
+skill bodies loaded into context, none of which are calls. `cd` was never the driver; the real one
+is `git add … && git status --short` pairs and multi-step probe scripts. **Any count taken off a
+transcript with a line-oriented grep is an upper bound on a different question**, and this corpus is
+exactly where such a number would have been believed.]
+
+**What actually drove it is a shape nothing in `~/AGENTS.md` names.** 21 of the 85 chains were
+`git-mutating-in-chain` — staging and then immediately reading back `git status --short`, which the
+session did before nearly every commit as a check that the right paths were staged. That is careful
+behaviour producing a bad rate, the same tension sample 20 raised for the confidentiality scan and
+sample 21 resolved by separating the calls. The resolution is identical here and was not applied:
+the read-back is a second call, not a `&&`.
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not

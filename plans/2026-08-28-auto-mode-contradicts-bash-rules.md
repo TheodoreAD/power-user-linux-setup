@@ -56,6 +56,8 @@ share of its own Bash calls.
 | this repo, 09-07 (a)   |   201 | **announced**  |              6% |              23% |     45% |           12% |
 | this repo, 09-07 (b)   |   270 | **announced**  |          **0%** |           **2%** |  **7%** |            1% |
 | this repo, 09-07/08    |   212 | **announced**  |          **0%** |              17% |     33% |            1% |
+| `repo-tasks`, 09-13/18 |   196 | **announced**  |          **9%** |              16% |     27% |            1% |
+| this repo, 09-18       |   185 | **announced**  |         **10%** |              25% | **46%** |            0% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -247,6 +249,38 @@ substitute" predict identical numbers across all ten rows. Distinguishing them n
 about **chaining**, which nothing has yet produced — and unlike the shape confounder above, no
 session will produce one by accident, because the auto-mode note says nothing about chaining for
 anyone to announce a resolution to.]
+
+### Announcing does not survive session length (2026-09-18, two rows)
+
+Merged from `2026-09-18-auto-mode-row-announcing-does-not-survive-session-length.md`, filed from
+`repo-tasks` by a session that could not edit this repo, plus a second row measured the same day
+here and confirming it. The earlier announcing rows are the plan's evidence that saying it out loud
+works — `invoke-stubs` announced once and posted the lowest file-read column of any announcing row.
+These two are the counter-case, and they agree with each other rather than with that one.
+
+**Both announced once, at the top, exactly as `~/AGENTS.md` prescribes, and both drifted anyway.**
+The `repo-tasks` row put `cat-view` at **9% (18 calls)** — its only regressed row against the
+`2026-09-12` baseline, +8pp, and the row the note is about. This repo's 09-18 row reached the same
+place by a different split: `cat-view` 4% (8) plus `sed-n` 5% (10), **18 Bash file reads in 185
+calls**, in a session whose own first substantive message was "Using Read/Grep-style dedicated tools
+for files despite auto mode's note — per my global instructions."
+
+So the variable is not whether the session announces. It is how long the session runs: an
+announcement is made once and then competes, for hours, with a system note repeated in context. The
+short announcing rows look like compliance and the long ones do not, and nothing in the announcement
+itself distinguishes them.
+
+[PITFALL: **the drift is not random — every instance is a reach for output expected to be long.**
+Both rows split the same way sample 21 did: the Bash views were `sed -n` over line ranges of a large
+file and `head`/`tail` over command output, never a small whole file. That is the shape
+`~/AGENTS.md` already answers by telling you to count first (`rg -c`, `wc -l`) rather than cut —
+which means the rule that would prevent this is not the auto-mode rule, and a session fighting the
+note is looking at the wrong instruction while it drifts.]
+
+[PITFALL: the `repo-tasks` row's baseline carries `"instrument": null`, and two `audit.py` commits
+landed between it and that run (`adaad81`, `26f823b`). Neither touches how `cat-view` is counted, so
+its +8pp stands; treat that row's other deltas as approximate. This repo's 09-18 row was measured
+without `--compare` at all, so it carries rates and no deltas.]
 
 ## The note removes tools, and that settles half the question (2026-08-30)
 

@@ -1,5 +1,5 @@
 ---
-status: planned
+status: in-progress
 updated: 2026-09-18
 source_repo: github.com-personal/freshful-polite-mcp
 source_moment: 2026-09-18T12:05:00Z
@@ -148,14 +148,23 @@ actually want, and the baseline is clean. A PULSE-side fix would have to strip `
 were unwanted, applied to every session, to compensate for where one terminal happened to be. Not
 worth it against a cause this cheap to avoid.]
 
-[UNVERIFIED: **the ordering does not fully reconcile, and the gap is worth naming rather than
-papering over.** That `export PATH` is the snapshot's last line, and `setup.toml` describes the
-snapshot as replayed _after_ `~/.zshenv` — which would mean it clobbers the hook's prepend on every
-call. It measurably does not: a live call has `power-user-linux-setup/.venv/bin` first, and the
-snapshot has `ingesta` first, so the hook's work survives. The consistent reading is that the
-snapshot's `PATH` reaches a call as **inherited environment** rather than by being re-executed after
-`zshenv`, but that was not proven here. It matters only if someone later relies on the replay order
-for something other than `setopt`.]
+[UNVERIFIED: **the ordering does not reconcile, and the comfortable explanation has now been refuted
+rather than left open.** That `export PATH` is the snapshot's **last** line and leads with
+`ingesta/.venv/bin`; `setup.toml` describes the snapshot as replayed _after_ `~/.zshenv`, which
+would have it clobber the hook's prepend on every call. It measurably does not — a live call leads
+with `power-user-linux-setup/.venv/bin`.
+
+The comfortable reading was that the snapshot's `PATH` merely arrives as **inherited environment**
+and is never re-executed in the call. **That is false**: `type pkill` in a live call answers
+`pkill is a shell function from …/shell-snapshots/snapshot-zsh-*.sh`, so the file genuinely is
+sourced in that shell — and the function it names is defined on the line immediately above the
+`PATH` export, so execution reached at least that far. So the snapshot runs, its last line assigns a
+`PATH` the hook's prepend is absent from, and the prepend is nonetheless there afterwards. One of
+those three is not what it appears to be.
+
+Left open deliberately rather than guessed at a second time. It changes nothing about the hook,
+which is verified working in every direction that matters; it matters if someone later leans on the
+replay order for anything beyond `setopt`, and the first guess at it was wrong.]
 
 ## Design
 
