@@ -79,10 +79,10 @@ second thing.]
 
 ## The first thing built to exploit the per-call property: direnv
 
-`[packages.claude-code]`'s snippet runs `eval "$(DIRENV_LOG_FORMAT= direnv export zsh)"` on every
-Bash call. It is here rather than in `~/.zshrc`, where direnv's own hook lives, for exactly the
-reason the table above gives: `~/.zshrc` is read once per session from the snapshot, so direnv's
-hook never re-runs and the environment an agent gets is frozen at capture time.
+`[packages.claude-code]`'s snippet runs `eval "$(direnv export zsh 2> /dev/null)"` on every Bash
+call. It is here rather than in `~/.zshrc`, where direnv's own hook lives, for exactly the reason
+the table above gives: `~/.zshrc` is read once per session from the snapshot, so direnv's hook never
+re-runs and the environment an agent gets is frozen at capture time.
 
 **Frozen is worse than absent, which is the finding that motivated it.** What is frozen is the
 session's _origin_ repo's fully activated venv, so a bare `ruff` in a different repo succeeds and
@@ -108,13 +108,19 @@ in a single call is unaffected, because `~/.zshenv` is sourced at shell startup,
 command's own `cd`. `~/.agents/AGENTS.md`'s cross-repo section sanctions that shape and its advice
 is unchanged; only its stated reason moved.
 
-[PITFALL: **silencing direnv is deliberate and has a cost worth knowing before someone "fixes" it.**
-`DIRENV_LOG_FORMAT=` suppresses direnv's own output entirely, including the error for an `.envrc`
-that has not been allowed — the ordinary state of a fresh clone. An agent there gets
-`command not
-found` and no explanation. Unsilenced, the alternative is a red direnv error on
+[PITFALL: **`DIRENV_LOG_FORMAT=` does not silence the blocked-`.envrc` error, and believing it does
+costs a deploy.** The empty log format suppresses direnv's ordinary loading/export lines and nothing
+else. This snippet shipped with it first, on a measurement that had looked clean, and the red error
+appeared on every Bash call in a repo whose `.envrc` was not allowed. Confirmed in isolation
+afterwards: `zsh -fc` with the variable explicitly empty still errors, while the redirect is silent
+and still loads an allowed repo. The redirect is the mechanism; the log format was never doing this
+job.]
+
+[PITFALL: **silencing it at all is deliberate and has a cost worth knowing before someone "fixes"
+it.** An un-allowed `.envrc` is the ordinary state of a fresh clone, and an agent there now gets
+`command not found` with no explanation. Unsilenced, the alternative is a red direnv error on
 **every** Bash call in that repo, which is the noise that gets a mechanism switched off.
-`inv dev-env.setup` runs `direnv allow` and is what `~/.agents/AGENTS.md` now names as the remedy.]
+`inv dev-env.setup` runs `direnv allow` and is what `~/.agents/AGENTS.md` names as the remedy.]
 
 ## Why `~/.config/environment.d/` is not used
 

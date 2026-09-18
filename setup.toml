@@ -1221,12 +1221,17 @@ claude_permissions_allow = ["WebSearch"]
 # would start prompting — and the skills this machine publishes run on machines that need not have
 # uv at all.
 #
-# DIRENV_LOG_FORMAT= rather than a 2>/dev/null redirect, because it silences direnv's own output
-# completely and one mechanism beats two doing the same job. The cost is accepted deliberately: a
-# repo whose .envrc is not yet allowed — every fresh clone — now gives no venv and no explanation,
-# and `inv dev-env.setup` is the remedy, which runs `direnv allow` and already is the documented
-# once-after-cloning step. Unsilenced, the alternative is a red direnv error on EVERY Bash call in
-# that repo.
+# `2>/dev/null` rather than DIRENV_LOG_FORMAT=, and the difference is not stylistic: **the empty log
+# format does not suppress the blocked-.envrc error.** It silences direnv's ordinary "loading"/
+# "export" log lines and nothing else, so a repo whose .envrc has not been allowed still printed a
+# red error on every Bash call with it set. Measured both ways 2026-09-18, after deploying the log
+# format first and watching the error appear anyway — an isolated `zsh -fc` with DIRENV_LOG_FORMAT
+# explicitly empty still errors, and the redirect is silent while still loading an allowed repo.
+#
+# The silence is accepted deliberately: a repo whose .envrc is not yet allowed — every fresh clone —
+# gives no venv and no explanation, and `inv dev-env.setup` is the remedy, which runs `direnv allow`
+# and already is the documented once-after-cloning step. Unsilenced, the alternative is a red direnv
+# error on EVERY Bash call in that repo, which is the noise that gets a mechanism switched off.
 #
 # `if command -v` rather than a trailing `&&`, for the reason the PIPE_FAIL block above already
 # gives: ~/.zshenv is read on every zsh invocation, so a false `&&` leaves its last status non-zero
@@ -1242,7 +1247,7 @@ if [ -n "${CLAUDECODE:-}" ]; then
   setopt PIPE_FAIL
   export REPO_TASKS_RUN_REPORT=1
   if command -v direnv > /dev/null 2>&1; then
-    eval "$(DIRENV_LOG_FORMAT= direnv export zsh)"
+    eval "$(direnv export zsh 2> /dev/null)"
   fi
 fi'''
 

@@ -114,10 +114,19 @@ Three things follow, and only the first was already known:
 3. **`PATH` carries a third repo's venv too** — `ingesta/.venv/bin`, second, in a session that never
    went near it. So the frozen environment is not even a clean snapshot of one repo.
 
-[UNVERIFIED: why `ingesta` is on that `PATH` at all. The snapshot is captured once per session and
-`~/.agents/AGENTS.md` already documents that, which accounts for the freezing; it does not account
-for a repo the session never visited. Worth establishing before any shell-side fix, because whatever
-put it there will still be there afterwards.]
+The mechanism for that third repo was already written down — `contributing/session-environment.md`'s
+"Why the duplicated `PATH` was ours" records that `~/.zshenv` is read on every invocation, so each
+nested shell appended another copy of everything, "four in a login shell, five in a `zsh -c` started
+from it, and whatever the session held at the moment `gnome-session` imported it". A shell somewhere
+in that chain was standing in `ingesta` with its venv active, and the entry has ridden the
+accumulated `PATH` ever since. The duplicated `~/.local/bin` and go/JetBrains entries in the same
+restored baseline are the signature of that page's bug, which `typeset -U` fixed going forward but
+which nothing retroactively cleans out of an environment already captured.
+
+[UNVERIFIED: which shell that was, and whether anything still produces such a baseline now that
+`[packages.zsh-path]` sets `typeset -U path PATH`. Not worth chasing on its own — it predates this
+hook and survives it, and the restored baseline is only visible at all because `direnv export` from
+an `.envrc`-less directory prints it.]
 
 ## Design
 
@@ -160,7 +169,7 @@ if [ -n "${CLAUDECODE:-}" ]; then
   setopt PIPE_FAIL
   export REPO_TASKS_RUN_REPORT=1
   if command -v direnv > /dev/null 2>&1; then
-    eval "$(DIRENV_LOG_FORMAT= direnv export zsh)"
+    eval "$(direnv export zsh 2> /dev/null)"
   fi
 fi
 ```
@@ -171,10 +180,19 @@ side is false leaves the file's last status non-zero in **every** shell. The gua
 optional either — direnv is `[packages.direnv]`, a separate package a tag profile can exclude, while
 this snippet ships with `[packages.claude-code]`.]
 
-[DECISION: **`DIRENV_LOG_FORMAT=` rather than `2>/dev/null`.** Measured: the empty log format
-silences direnv's own output completely, the redirect would be a second mechanism doing the same
-job, and one of them would eventually be removed as redundant by someone who did not know which. The
-cost is real and is accepted below.]
+[PITFALL: **this shipped with `DIRENV_LOG_FORMAT=` first, on a measurement that was wrong, and the
+verification pass caught it.** The reasoning was that the empty log format silences direnv's own
+output completely and that a redirect would be a second mechanism doing the same job. It is not: the
+empty format suppresses direnv's ordinary loading/export lines and **not** the blocked-`.envrc`
+error, so the first deploy printed a red error on every Bash call in a repo whose `.envrc` was not
+allowed. Confirmed in isolation afterwards — `zsh -fc` with the variable explicitly empty still
+errors, while `2>/dev/null` is silent and still loads an allowed repo.
+
+Two things worth keeping from how it slipped through. The original measurement ran the command
+**after** the hook had already set `DIRENV_DIR` for that directory, so direnv had nothing left to
+re-evaluate and said nothing — a clean result that was an artefact of the probe's own ordering. And
+the failure was only visible because the verification ran against a directory with a deliberately
+blocked `.envrc`; every row that used an allowed repo passed either way.]
 
 ### What silencing costs, and why it is still right
 
