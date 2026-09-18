@@ -31,6 +31,7 @@ from . import (
     proxy,
     python,
     screenshot,
+    selfupdate,
     setup,
     ssh,
     system,
@@ -113,6 +114,11 @@ namespace = Collection(
     Collection.from_module(proxy),
     Collection.from_module(python),
     Collection.from_module(screenshot),
+    # Published as `self` rather than `selfupdate`, so the command reads the way every other
+    # user-wide tool's does — `uv self update`, `rustup self update`. The module is not named
+    # `self.py` for the reason its own docstring gives; this is the same rename-on-publication the
+    # borrowed `testing` -> `test` collection below uses.
+    Collection.from_module(selfupdate, name="self"),
     Collection.from_module(ssh),
     Collection.from_module(system),
     Collection.from_module(tools),

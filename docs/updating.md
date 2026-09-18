@@ -35,8 +35,22 @@ after installing or removing something by hand. See
 decides what to check. Note that it _invokes_ each package, so a GUI-tagged one may briefly open a
 window.
 
-**To pick up changes to this repo itself** — a new package, a changed dotfile — pull and re-run
-`inv setup`. Phases that are already complete offer to skip, so a re-run is cheap; and
+**To pick up changes to this repo itself** — a new package, a changed dotfile:
+
+```shell
+spowse self.update      # from anywhere; `inv self.update` inside the checkout does the same
+```
+
+It pulls the checkout `spowse` reads its own inputs out of, reports what moved, and then offers
+`inv setup` to apply it — pulling alone changes nothing about the machine. You do not need to know
+where that checkout is, which is the point: it is wherever `install.sh` put it, and the command
+resolves it the same way every other task does.
+
+It only fast-forwards, and it refuses a checkout with uncommitted changes or with commits its
+upstream does not have. That never happens to an installed machine and is routine on one where PULSE
+is being developed, where `git pull` in your own checkout is the right command anyway.
+
+Phases that are already complete offer to skip, so the `inv setup` re-run is cheap; and
 `inv deploy.status` shows which deployed files have drifted before you change anything, with
 `inv deploy.all` to push repo-side changes back out. See
 [How it works](configuration.md#install-never-clobbers-redeploy-is-a-separate-deliberate-command).

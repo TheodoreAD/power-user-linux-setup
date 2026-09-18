@@ -43,6 +43,9 @@ against a tree you can `git pull` rather than a frozen copy inside the tool. Mov
 checkout and the shim stops working — reinstall it with `inv python.install-tools` from the new
 location.
 
+That also means the checkout is the thing that has to be updated, and `spowse self.update` is how —
+from anywhere, without needing to know where it is. See [Updating](updating.md#updating).
+
 If you only ever work inside the checkout you never need it; `inv` does everything `spowse` does and
 more.
 
@@ -164,6 +167,7 @@ more.
 | `inv screenshot.enable`                 | Bind PrtSc/Shift+PrtSc to Flameshot (save + clipboard, no dialog), disabling the matching GNOME defaults.                                                                                              |
 | `inv screenshot.render-docs`            | Regenerate docs/shortcuts.md's table from this module's own keybinding data.                                                                                                                           |
 | `inv screenshot.status`                 | Show current screenshot shortcut state: GNOME defaults vs the Flameshot bindings.                                                                                                                      |
+| `inv self.update`                       | Pull the power-user-linux-setup checkout this command reads, and report what moved.                                                                                                                    |
 | `inv setup`                             | Run full machine setup, in phases (system, packages, shell, desktop) — delegates to wsl.install under WSL.                                                                                             |
 | `inv ssh.add`                           | Add this machine's SSH keys to the agent, skipping any it already holds.                                                                                                                               |
 | `inv ssh.check`                         | Diagnose which ssh-agent this shell talks to and whether it holds the declared keys.                                                                                                                   |
