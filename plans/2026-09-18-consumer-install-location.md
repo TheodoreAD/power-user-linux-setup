@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-09-18
 ---
 
@@ -72,10 +72,9 @@ about the update mechanism needs changing; only its discoverability does.]
 Four decisions were settled 2026-09-18; each is recorded at the subsection it shapes. The order
 below is the implementation order, because item 1 is what makes item 2 safe.
 
-**Items 1 and 2 landed 2026-09-18** — `b103ec7` (the task) and `16d6d4f` (the default flip, `--dev`,
-and the legacy adopt). Item 3 is the only thing outstanding, and it waits on a probe rather than on
-a decision. Item 4's `docs/wsl.md` row is the only entry in "Files touched" still unwritten, for the
-same reason.
+**All of it landed 2026-09-18** — `b103ec7` (the task) and `16d6d4f` (the default flip, `--dev`, the
+legacy adopt, and the docs). Item 3 was dropped the same day rather than built, on the user's answer
+to the premise it rested on; the subsection records why and what was learned on the way past.
 
 ### 1. `tasks/selfupdate.py`, published as the `self` collection
 
@@ -154,22 +153,39 @@ about a tree they never updated. So: when neither `--dir` nor `--dev` was passed
 does not exist, check the legacy path, adopt it if it is a valid checkout, and say which one was
 adopted and why.]
 
-### 3. Refuse a clone destination under `/mnt/`
+### 3. No `/mnt/` guard — dropped, not deferred
 
-[UNVERIFIED: the WSL failure shape is reasoned from DrvFs behaviour, not measured. A WSL user
-commonly symlinks or bind-mounts `~/projects` to `/mnt/c/Users/<name>/projects` so a Windows editor
-can see it. A PULSE checkout landing there becomes a runtime dependency on a filesystem with no
-reliable exec bits, case-insensitive paths, and a per-read cost — and nothing currently says so.
-Probe it inside a real WSL distro before implementing the guard; the rest of this plan does not
-depend on the answer.]
+[DECISION: **the guard was designed against a premise about how this machine is used, and the
+premise is false.** Stated by the user 2026-09-18: this repo will not be developed on NTFS, and
+`~/projects` will not be a symlink to a Windows location — the projects directory lives in the Linux
+home. That is the whole of what the guard was protecting against, so there is nothing left to guard
+and nothing to probe. Deleted rather than carried as an open item: an `[UNVERIFIED:]` tag on a
+scenario that has been ruled out is a backlog entry nobody can ever close.]
 
-Resolve the destination (following symlinks) before testing it, since the whole failure mode is a
-`~/projects` that _is_ a link. Refuse rather than warn if the probe confirms the exec-bit loss, warn
-if it is only slow.
+Worth keeping, because it was checked rather than assumed and a future session should not re-derive
+it. The claim was three things stacked, and measuring the repo dissolved most of it before the
+question of a distro ever arose:
 
-Whichever way the probe goes, `~/.local/share` is always distro-native, which is a second
-WSL-specific argument for the default flip: a WSL distro is nearly always a consumer install, and
-`docs/wsl.md` sends people to the same Quick start as everyone else.
+- **Case-insensitivity was never a risk here.** No two tracked paths in this repo differ only by
+  case, so there is nothing for NTFS's case folding to collide.
+- **A lost exec bit would not stop an install.** `install.sh` runs `bash ./bootstrap.sh`, naming the
+  interpreter, so none of the five tracked `100755` files is invoked by path. (One of those five,
+  `docs/extra/extra.css`, is executable by accident — a stylesheet with no reason to be.)
+- **The sharp edge was somewhere else entirely, and was missed when this item was written.**
+  `CLAUDE.md` is the repo's only tracked symlink, mode `120000` → `AGENTS.md`, and it is deliberate:
+  `AGENTS.md` requires a plain symlink rather than a file carrying Claude Code's `@` import syntax.
+  A filesystem that cannot create symlinks fails `git clone` at checkout, before anything else runs
+  — a hard error rather than the slow-and-degraded shape this item was written about.
+
+The last of those is the one that outlives the WSL question, since it is a property of the repo
+rather than of any filesystem: **this repo cannot be checked out anywhere symlinks do not work.**
+Nothing currently says so anywhere, and nothing needs to while every target is Linux.
+
+The default flip does not lose anything by this. Its argument never rested on filesystems — the
+checkout is runtime state, the XDG rule already covers that shape, `bootstrap-devcontainer.sh` got
+there first, and `~/projects` is the git-identity workspace. What is gone is the _extra_
+WSL-specific weight this item added: with Windows paths ruled out, a WSL distro is just Linux, and
+`~/.local/share` is right there for exactly the same reasons it is right anywhere else.
 
 ### 4. What is deliberately not changed
 
@@ -216,35 +232,52 @@ ever outnumber developer ones.]
 
 ## Files touched
 
-| file                                   | change                                                                                       |
-| -------------------------------------- | -------------------------------------------------------------------------------------------- |
-| `tasks/selfupdate.py`                  | new — the `update` task                                                                      |
-| `tasks/__init__.py`                    | import it, `add_collection(..., name="self")`                                                |
-| `install.sh`                           | new default, `--dev`, explicit-`--dir` tracking, legacy adopt, `/mnt/` guard, header + outro |
-| `tests/unit/test_install_sh.py`        | new default, `--dev`, legacy adopt, `--dir` not overridden by legacy, `/mnt/` refusal        |
-| `tests/unit/test_cli.py`               | `self.update` in the pinned `spowse` namespace membership                                    |
-| `tests/unit/test_selfupdate.py`        | new — dirty-tree and ahead-of-upstream refusals, the pyproject-changed message               |
-| `docs/tasks.md`                        | regenerated by `inv catalog.render-tasks`; prose section on the two entry points             |
-| `docs/updating.md`                     | "pull and re-run `inv setup`" becomes `spowse self.update`                                   |
-| `docs/index.md`                        | Quick start clone path, and the step-by-step block                                           |
-| `README.md`                            | the clone path line                                                                          |
-| `docs/wsl.md`                          | only if the `/mnt/` guard lands                                                              |
-| `AGENTS.md`                            | "The one-line installer" section: the new default and `self.update`                          |
-| `contributing/install-entry-points.md` | a sentence on why two scripts still stand now both destinations are under `~/.local/share`   |
+| file                                   | change                                                                                     |
+| -------------------------------------- | ------------------------------------------------------------------------------------------ |
+| `tasks/selfupdate.py`                  | new — the `update` task                                                                    |
+| `tasks/__init__.py`                    | import it, `add_collection(..., name="self")`                                              |
+| `install.sh`                           | new default, `--dev`, explicit-`--dir` tracking, legacy adopt, header + outro              |
+| `tests/unit/test_install_sh.py`        | new default, `--dev`, legacy adopt, `--dir` not overridden by legacy, non-checkout ignored |
+| `tests/unit/test_cli.py`               | `self.update` in the pinned `spowse` namespace membership                                  |
+| `tests/unit/test_selfupdate.py`        | new — dirty-tree and ahead-of-upstream refusals, the pyproject-changed message             |
+| `docs/tasks.md`                        | regenerated by `inv catalog.render-tasks`; prose section on the two entry points           |
+| `docs/updating.md`                     | "pull and re-run `inv setup`" becomes `spowse self.update`                                 |
+| `docs/index.md`                        | Quick start clone path, and the step-by-step block                                         |
+| `README.md`                            | the clone path line                                                                        |
+| `AGENTS.md`                            | "The one-line installer" section: the new default and `self.update`                        |
+| `contributing/install-entry-points.md` | a sentence on why two scripts still stand now both destinations are under `~/.local/share` |
 
 Run the `invoke-task-conventions` skill before writing `tasks/selfupdate.py` — the name is settled,
 the wiring traps it covers are not.
 
 ## Verification
 
-- `inv quality.precommit` — includes `pytest`, `basedpyright`, `shellcheck`/`shfmt` over
-  `install.sh`, and the generated-docs guard that catches a stale `docs/tasks.md`.
-- **A real `install.sh` run into a scratch directory**, `--repo-url` pointing at the local checkout,
-  the way `install-smoke.yml` does it: once with no flags (new default), once with `--dev`, and once
-  with a pre-existing legacy checkout to prove it adopts rather than forking.
-- **`spowse --list` and `inv deploy.status` against a checkout at the new path**, since both are
-  what the location has to keep working. Run from an unrelated cwd.
-- **`spowse self.update` against that scratch checkout** — a clean one pulls, a dirtied one refuses.
-- **The `/mnt/` claim, in a real WSL distro**, before the guard is written. Nothing else waits on
-  it.
-- This machine's own install is not part of any of the above and is not migrated.
+What was actually run, 2026-09-18, rather than what was planned to be:
+
+- `inv quality.precommit` clean on every commit — `pytest`, `basedpyright`, `shellcheck`/`shfmt`
+  over `install.sh`, and the generated-docs guard that catches a stale `docs/tasks.md`.
+- **`install.sh` driven end to end into `tmp_path`** by `tests/unit/test_install_sh.py`,
+  `--repo-url` pointing at a real git repo built in the same directory: no flags (new default),
+  `--dev`, a pre-existing legacy checkout adopted, a named `--dir` not overridden by one, and a
+  non-checkout at the old default ignored rather than adopted.
+- **Both new guards checked by disabling them and re-running**, since a passing test proves nothing
+  on its own: the dirty-tree refusal and the legacy adopt each failed their own test with the branch
+  short-circuited, and passed again with it restored.
+- **`inv self.update` against this checkout while it was genuinely dirty** — refused, and ran no
+  `git pull`.
+- **`spowse --list` and `spowse deploy.status` from an unrelated directory**, proving the editable
+  anchor still resolves from outside the checkout.
+- This machine's own install was not migrated and is not part of any of the above.
+
+- **The real `bootstrap.sh`, in CI**, which is where it belongs: locally it would install Python
+  versions and run `uv tool install --force` over this machine's own `inv`/`repo-tasks`, mutating
+  the developer machine for no extra coverage of the branches that changed. `install-smoke / smoke`
+  runs it against the commit under test — `--repo-url` at the checkout, a branch cut at `HEAD` — and
+  passed on `16d6d4f` as a job inside CI run `35341331495`.
+
+[PITFALL: **the smoke job passes `--dir`, so no single run covers the new default together with the
+real `bootstrap.sh`.** The two halves are each proven and the composition is sound — the default
+only decides the value of `CLONE_DIR`, and `bootstrap.sh` is indifferent to where the checkout sits
+— but the boundary is worth knowing before trusting a green CI about a future change to the default.
+A break in default resolution that the unit tests miss would not be caught end to end. The same gap
+covers `--dev` and the legacy adopt, for the same reason and with the same argument.]
