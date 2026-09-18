@@ -10,9 +10,19 @@ source_plan:
 ## Context
 
 The always-loaded instructions file tells agents to reach for the bare command because direnv has
-already put `.venv/bin` on `PATH`. It has not. direnv's hook never fires in the shell the Bash tool
-runs, so in an agent session the bare command **never** resolves into the venv — not sometimes, not
-usually-but-check, never.
+already put `.venv/bin` on `PATH`. direnv's hook does not fire in the shell the Bash tool runs, so
+nothing re-evaluates `.envrc` as an agent moves between directories.
+
+[PITFALL: **this file originally said the bare command "never" resolves into the venv, and that is
+measurably false — the truth is worse.** Corrected 2026-09-18 by measuring a session in
+`power-user-linux-setup` rather than in the filing repo. The environment is **frozen at session
+start**: whatever direnv had activated when the shell snapshot was captured is carried verbatim for
+the whole session and never updated. So the bare command does resolve into a venv — the **session's
+origin repo's** venv. That is right while you are in that repo, which is most of a session, and
+silently wrong the moment you are not. The original claim generalised from a session filed out of
+`freshful-polite-mcp`, a repo with no `.envrc`, where the frozen environment was simply empty and
+the failure therefore surfaced as an honest `not found`. See "Measured again, in a repo that does
+have `.envrc`" below.]
 
 The rule, under "Invoking a venv tool in the session's own project [needs direnv]":
 
@@ -71,6 +81,44 @@ succeeds against the wrong version and reports a green gate.
 
 The user's own words on being shown it, 2026-09-18: _"the direnv thing is a problem"_.
 
+### Measured again, in a repo that does have `.envrc`
+
+A session in `power-user-linux-setup`, 2026-09-18, which has an `.envrc` and is `direnv allow`ed
+(`direnv status`: `Found RC allowed true`). Standing in the repo itself:
+
+```
+DIRENV_DIR=-/home/…/power-user-linux-setup
+VIRTUAL_ENV=/home/…/power-user-linux-setup/.venv
+which -a ruff -> …/power-user-linux-setup/.venv/bin/ruff
+                 …/ingesta/.venv/bin/ruff
+```
+
+So the environment **is** there, and every bare command in that session — `pytest`, `inv`, `ruff` —
+had been resolving correctly all along. Then the same session, one `cd` away, in `olx-polite-mcp`,
+which has its own `.envrc` and its own venv:
+
+```
+cwd=/home/…/olx-polite-mcp
+DIRENV_DIR=-/home/…/power-user-linux-setup     # unchanged
+VIRTUAL_ENV=/home/…/power-user-linux-setup/.venv  # unchanged
+which ruff -> /home/…/power-user-linux-setup/.venv/bin/ruff
+```
+
+Three things follow, and only the first was already known:
+
+1. **The hook does not fire per call.** `cd` into a different `.envrc` repo changes nothing.
+2. **What is frozen is not nothing.** It is the origin repo's fully activated environment, so the
+   bare command succeeds and returns _a_ tool — the wrong repo's, with that repo's pinned version.
+   This is the silent-wrong-interpreter outcome `~/.agents/AGENTS.md`'s cross-repo section warns
+   about, reproduced here as a plain measurement rather than a hypothetical.
+3. **`PATH` carries a third repo's venv too** — `ingesta/.venv/bin`, second, in a session that never
+   went near it. So the frozen environment is not even a clean snapshot of one repo.
+
+[UNVERIFIED: why `ingesta` is on that `PATH` at all. The snapshot is captured once per session and
+`~/.agents/AGENTS.md` already documents that, which accounts for the freezing; it does not account
+for a repo the session never visited. Worth establishing before any shell-side fix, because whatever
+put it there will still be there afterwards.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: fix the shell, or fix the instruction? These are different projects. Making
@@ -104,9 +152,16 @@ Do the instruction fix now and the shell fix deliberately, in that order — the
 today and every agent session on this machine reads it.
 
 For the wording, the rule should end on the command that replaces the habit rather than on a
-premise: in an agent session, `uv run <tool>` is the default for a venv tool, and `which` is worth
-running only when something surprising happens. That also makes it consistent with the cross-repo
-section's parenthesis instead of contradicting it.
+premise: in an agent session, `uv run <tool>` is the default for a venv tool. That also makes it
+consistent with the cross-repo section's parenthesis instead of contradicting it.
+
+[PITFALL: **the original wording of this section said `which` is "worth running only when something
+surprising happens", and the correction above makes that the one sentence not to write.** `which`
+does not fail in the interesting case. It returns a real, plausible, absolute path to a real tool —
+belonging to whichever repo the session started in — and nothing about the answer says so. A reader
+told to trust `which` until surprised will never be surprised, because the wrong answer looks
+exactly like the right one. If the rule mentions `which` at all it has to say what to compare the
+answer _against_: the repo you are standing in.]
 
 Then decide the shell question on its own merits. If the hook is made to fire, this rule gets
 rewritten a second time, which is cheap and is the right order: an instruction that matches reality
