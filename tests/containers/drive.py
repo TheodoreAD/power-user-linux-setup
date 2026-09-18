@@ -44,7 +44,7 @@ def _rules(specs: list[str]) -> list[Rule]:
 
 def _drive(
     master: int,
-    proc: "subprocess.Popen[bytes]",
+    proc: subprocess.Popen[bytes],
     log: BinaryIO,
     rules: list[Rule],
     timeout: float,

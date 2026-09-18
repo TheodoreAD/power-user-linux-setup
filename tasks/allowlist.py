@@ -524,7 +524,7 @@ def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
         result = subprocess.run(
             cmd, capture_output=True, text=True, timeout=timeout, env=env, stdin=subprocess.DEVNULL, check=False
         )
-    except (subprocess.TimeoutExpired, FileNotFoundError):
+    except subprocess.TimeoutExpired, FileNotFoundError:
         return ""
     return (result.stdout + result.stderr).strip()
 
@@ -960,7 +960,7 @@ def _classify_via_claude(prompt: str, model: str, schema: str = _SCHEMA) -> Verd
     try:
         envelope = cast(_ClaudeEnvelope, util.parse_json(result.stdout))
         return envelope["structured_output"]["classifications"]
-    except (json.JSONDecodeError, KeyError, TypeError):
+    except json.JSONDecodeError, KeyError, TypeError:
         return None
 
 

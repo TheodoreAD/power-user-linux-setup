@@ -903,7 +903,7 @@ def _has_pulse_block(target: Path) -> bool:
     """
     try:
         return "PULSE::" in target.read_text()
-    except (OSError, UnicodeDecodeError):
+    except OSError, UnicodeDecodeError:
         return False
 
 

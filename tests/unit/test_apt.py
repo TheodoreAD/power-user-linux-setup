@@ -16,10 +16,10 @@ caused the abort in the first place. See tests/README.md.
 import io
 import sys
 from collections.abc import Sequence
+from typing import override
 
 import pytest
 from invoke import Context, Exit, Result, UnexpectedExit
-from typing_extensions import override  # typing.override is 3.12+; this repo's floor is 3.11
 
 from tasks import apt, deploy, util
 

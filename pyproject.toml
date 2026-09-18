@@ -1,7 +1,12 @@
 [project]
 name = "power-user-linux-setup"
 version = "0.1.0"
-requires-python = ">=3.11"
+# Application tier, not library tier: nothing resolves this project into anyone else's environment
+# — `spowse` is installed from a checkout, and `bootstrap.sh` installs the interpreter it needs. So
+# the floor is the version this repo actually develops on, which .python-version has pinned at 3.14
+# since long before the declaration caught up. The family's other repos are libraries and stay at
+# 3.11. See plans/2026-09-18-replace-uv-python-with-a-uv-managed-default.md.
+requires-python = ">=3.14"
 # `invoke` is a real dependency, not a dev one: `spowse` is installed with `uv tool install`, whose
 # environment resolves `dependencies` and nothing else, and `tasks/cli.py` imports invoke at module
 # scope. In the dev group it resolved fine for `inv` in the checkout and left the shim unable to
@@ -28,9 +33,6 @@ dev = [
   "invoke-stubs @ git+https://github.com/TheodoreAD/invoke-stubs",
   "actionlint-py",
   "act-bin",
-  # `typing_extensions.override` for the test suite's Context subclass — `typing.override` is
-  # 3.12+ and requires-python still says 3.11.
-  "typing-extensions",
   "pytest-cov",
   "zizmor",
   "hadolint-py!=2.15.1.2",

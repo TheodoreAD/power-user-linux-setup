@@ -11,10 +11,10 @@ declaration behind it.
 
 from collections.abc import Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 from invoke import Context, Result, UnexpectedExit
-from typing_extensions import override  # typing.override is 3.12+; this repo's floor is 3.11
 
 from tasks import python as python_tasks
 from tasks import util

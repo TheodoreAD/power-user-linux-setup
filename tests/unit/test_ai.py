@@ -11,10 +11,10 @@ _install_skill and the only thing that differs is the argument.
 
 import json
 from pathlib import Path
+from typing import override
 
 import pytest
 from invoke import Context, MockContext, Result
-from typing_extensions import override  # typing.override is 3.12+; this repo's floor is 3.11
 
 from tasks import ai, deploy, ui, util
 

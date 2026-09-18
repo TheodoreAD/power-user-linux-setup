@@ -13,7 +13,7 @@
   // A repo wanting a second version checked (a CI matrix) passes `inv quality.type-check
   // --python-version=X.Y`, which overrides this. See
   // plans/2026-08-29-python-floor-in-the-shipped-configs.md.
-  "pythonVersion": "3.11",
+  "pythonVersion": "3.14",
   // `include`, not `exclude`: scopes basedpyright to this project's own code by construction,
   // instead of an ever-growing "don't check this" blocklist that has to be kept in sync by hand as
   // new non-source content (docs, generated caches, example snippets, ...) gets added — the

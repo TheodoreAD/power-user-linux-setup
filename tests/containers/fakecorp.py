@@ -5,6 +5,12 @@
   :443   a TLS server presenting a self-signed "Corp Root Inspection CA" certificate
 
 Point /etc/hosts at 127.0.0.1 for whichever hostname you want to look intercepted.
+
+Run as a bare `python3` inside a container (see tests/containers/README.md), so like
+`tasks/netdoctor.py` it has to parse on an interpreter this repo does not choose — stdlib only, and
+no syntax past 3.12. ruff targets this repo's own 3.14 floor and its formatter will rewrite an
+`except (A, B):` to PEP 758's unparenthesized form unasked, which is why one clause below carries a
+`# fmt: skip`. `tests/unit/test_foreign_python_floor.py` is what catches the next one.
 """
 
 import socket
@@ -78,7 +84,7 @@ def tls_server(crt: str, key: str) -> None:
             with context.wrap_socket(conn, server_side=True) as tls:
                 tls.recv(4096)
                 tls.sendall(b"HTTP/1.1 200 OK\r\nContent-Length: 0\r\n\r\n")
-        except (OSError, ssl.SSLError):
+        except (OSError, ssl.SSLError):  # fmt: skip
             pass
 
 

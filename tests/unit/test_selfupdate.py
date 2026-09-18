@@ -11,10 +11,10 @@ pulled code immediately through its `.pth`, but its resolved dependency set was 
 
 from collections.abc import Mapping, Sequence
 from pathlib import Path
+from typing import override
 
 import pytest
 from invoke import Context, Result, UnexpectedExit
-from typing_extensions import override  # typing.override is 3.12+; this repo's floor is 3.11
 
 from tasks import selfupdate, ui, util
 

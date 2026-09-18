@@ -245,7 +245,7 @@ def _capture(args: list[str]) -> str | None:
     """
     try:
         result = subprocess.run(args, capture_output=True, text=True, errors="replace", timeout=60, check=False)
-    except (OSError, subprocess.SubprocessError):
+    except OSError, subprocess.SubprocessError:
         return None
     return result.stdout if result.returncode == 0 else None
 

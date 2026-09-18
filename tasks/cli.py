@@ -23,7 +23,7 @@ import sys
 from collections.abc import Callable
 from importlib.metadata import PackageNotFoundError, version
 from pathlib import Path
-from typing import TypeAlias, cast
+from typing import cast
 
 from invoke import Collection, Program, Task
 
@@ -41,7 +41,7 @@ _CHECKOUT_INPUTS = ("setup.toml", "config")
 # `Collection.tasks` and `.collections` are `Lexicon`s — dict subclasses invoke leaves unannotated,
 # so every value read out of one arrives as Unknown and `failOnWarnings` stops the gate. The two
 # readers below are the only places this module touches them.
-AnyTask: TypeAlias = Task[Callable[..., object]]
+type AnyTask = Task[Callable[..., object]]
 
 
 def _tasks_of(collection: Collection) -> dict[str, AnyTask]:

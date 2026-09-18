@@ -12,7 +12,7 @@ from dataclasses import dataclass
 from enum import StrEnum
 from functools import cache
 from pathlib import Path
-from typing import NotRequired, Required, TypeAlias, TypedDict, TypeVar, cast, overload
+from typing import NotRequired, Required, TypedDict, cast, overload
 
 from invoke import Context
 
@@ -48,10 +48,8 @@ _CONFIG_PATH = Path(__file__).parent.parent / "setup.toml"
 # readable off either the raw function or the resulting Task.
 _DEV_ONLY_ATTR = "_pulse_dev_only"
 
-_TaskFn = TypeVar("_TaskFn", bound=Callable[..., object])
 
-
-def dev_only(fn: _TaskFn) -> _TaskFn:
+def dev_only[TaskFn: Callable[..., object]](fn: TaskFn) -> TaskFn:
     """Mark a task as repo-development-only. Apply *under* `@task`, closest to the function."""
     setattr(fn, _DEV_ONLY_ATTR, True)
     return fn
@@ -83,10 +81,10 @@ CLAUDE_SETTINGS = Path.home() / ".claude" / "settings.json"
 # treat every one as optional at runtime via `.get()`.
 # ---------------------------------------------------------------------------
 
-# A JSON document — recursive alias, spelled with `TypeAlias` because the 3.11 floor predates
-# PEP 695's `type` statement.
-Json: TypeAlias = "dict[str, Json] | list[Json] | str | int | float | bool | None"
-JsonObject: TypeAlias = dict[str, Json]
+# A JSON document. PEP 695's `type` statement is lazily evaluated, so the recursion needs no string
+# body — that spelling was the 3.11 floor's workaround, and the floor moved to 3.14 on 2026-09-18.
+type Json = dict[str, Json] | list[Json] | str | int | float | bool | None
+type JsonObject = dict[str, Json]
 
 
 class PathMapping(TypedDict):
@@ -1050,7 +1048,7 @@ def sudo_state() -> SudoState:
 
 
 _sudo_ready = False
-_sudo_keepalive: "threading.Thread | None" = None
+_sudo_keepalive: threading.Thread | None = None
 _sudo_keepalive_stop = threading.Event()
 
 # How often the keepalive re-stamps sudo's credential cache. sudo's own default timeout is 15

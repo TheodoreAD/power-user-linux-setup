@@ -16,6 +16,15 @@ later). It also imports nothing from `tasks/`: `python3 tasks/netdoctor.py` exec
 directly, without importing the `tasks` package (which would pull in invoke). The dependency runs
 one way — `tasks/*.py` may import this module, never the reverse.
 
+**The repo's own floor rose to 3.14 on 2026-09-18 and this module's did not, which makes the
+toolchain a hazard here rather than a help.** ruff takes its target from `requires-python`, so at
+that floor both halves of it will propose syntax this file cannot use: the linter *suggests* it (a
+UP rule, refusable with `# noqa`) and the formatter *applies* it unasked. The formatter is the one
+that bites — it rewrote three `except (A, B):` clauses to PEP 758's unparenthesized form, which is
+3.14-only, and nothing in the lint output mentioned it. Those three carry `# fmt: skip`; the
+`test_netdoctor_parses_as_the_system_python` unit test is what catches the next one. Read a
+formatter diff in this file as a defect until proven otherwise.
+
 The question it answers is deliberately narrower than "is the internet up". It is: *which of the
 specific hosts a PULSE run needs are reachable, by which route, and when one isn't, what is the
 next command to type.* A corporate network that blocks pypi.org while allowing github.com is
@@ -85,10 +94,14 @@ _URL_RE = re.compile(r"https?://([A-Za-z0-9.-]+\.[A-Za-z]{2,})(?::(\d+))?")
 
 DEFAULT_TIMEOUT = 4.0
 
-# A JSON document. Spelled with `TypeAlias` and a string body because the alias is recursive, and
-# because PEP 695's `type` statement is newer than this module's Python floor.
-Json: TypeAlias = "dict[str, Json] | list[Json] | str | int | float | bool | None"
-JsonObject: TypeAlias = "dict[str, Json]"
+# A JSON document, spelled with `TypeAlias` and a string body because the alias is recursive.
+#
+# The noqa is the lint half of the floor mismatch the docstring describes: UP040 asks for PEP 695's
+# `type` statement, which is legal at this module's own 3.12 floor but only just — taking it would
+# make the file a SyntaxError on anything older, and Debian 12 still ships 3.11. Parsing below its
+# own floor is worth more here than modern syntax.
+Json: TypeAlias = "dict[str, Json] | list[Json] | str | int | float | bool | None"  # noqa: UP040
+JsonObject: TypeAlias = "dict[str, Json]"  # noqa: UP040
 
 
 # ---------------------------------------------------------------------------
@@ -372,7 +385,7 @@ def _http_head(sock: socket.socket, endpoint: Endpoint, via_proxy: bool = False)
     if date_match:
         try:
             date_value = parsedate_to_datetime(date_match.group(1).strip()).timestamp()
-        except (TypeError, ValueError):
+        except (TypeError, ValueError):  # fmt: skip
             date_value = None
     return status, date_value
 
@@ -435,7 +448,7 @@ def _run(argv: list[str], timeout: float = 5.0) -> str:
             timeout=timeout,
             check=False,
         )
-    except (OSError, subprocess.SubprocessError):
+    except (OSError, subprocess.SubprocessError):  # fmt: skip
         return ""
     return result.stdout.decode("utf-8", "replace")
 
@@ -552,7 +565,7 @@ def pac_proxies(url: str, timeout: float) -> list[str]:
         conn.request("GET", path)
         body = conn.getresponse().read(200_000).decode("utf-8", "replace")
         conn.close()
-    except (OSError, http.client.HTTPException):
+    except (OSError, http.client.HTTPException):  # fmt: skip
         return []
     return pac_proxy_addresses(body)
 

@@ -324,9 +324,7 @@ def test_netdoctor_imports_only_the_standard_library():
     assert imported <= set(sys.stdlib_module_names), sorted(imported - set(sys.stdlib_module_names))
 
 
-def test_netdoctor_parses_as_the_system_python():
-    """Ubuntu 24.04 — this repo's target — ships Python 3.12, and this has to run on it before uv
-    can install anything newer. Syntax only; CI runs the module itself under a real 3.12, which is
-    the check that actually proves it (a newer *API* is invisible to the parser)."""
-    source = (_REPO_ROOT / "tasks" / "netdoctor.py").read_text()
-    ast.parse(source, feature_version=(3, 12))
+# The parse-at-3.12 half of this constraint moved to tests/unit/test_foreign_python_floor.py on
+# 2026-09-19, when raising this repo's floor to 3.14 turned the formatter into a hazard for every
+# script that runs on a distro's own interpreter — netdoctor is no longer the only one, and one
+# guard covering all three is what keeps the next such file from being the unguarded one.
