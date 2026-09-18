@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-13
+updated: 2026-09-18
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
@@ -140,31 +140,32 @@ The one verdict recorded as changed is sample 11's `chain`, which moves for the 
 
 ### The corpus at a glance
 
-| #   | session repo             | calls | shape                           | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
-| --- | ------------------------ | ----: | ------------------------------- | ----------: | ------------: | ---------------: | ----- |
-| 1   | `agent-skills`           |   331 | code, one repo, ten hours       |         24% |           19% |          **23%** | 9/11  |
-| 2   | `ingesta`                |   137 | prose/gate-heavy, ten hours     |         45% |           28% |               0% | —     |
-| 3   | `agent-skills`           |   157 | prose, one repo, one day        |         38% |           27% |               0% | 9/11  |
-| 4   | `power-user-linux-setup` |   350 | documentation, whole day        |     **55%** |           32% |               0% | 7/11  |
-| 5   | `ingesta`                |    84 | domain research + plan writing  |         35% |            8% |               0% | 10/11 |
-| 6†  | `agent-skills`           |   216 | tooling, the rule itself        |         47% |       **38%** |               0% | 6/11  |
-| 7†  | `ingesta`                |   129 | code + plans, fourteen hours    |         38% |           28% |               0% | —     |
-| 8†  | `power-user-linux-setup` |   220 | code + docs + vendor research   |         28% |           18% |               0% | —     |
-| 9   | `repo-tasks`             |   202 | shared gate, plans, ~12h        |     **15%** |       **10%** |               0% | 10/11 |
-| 10  | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h       |         23% |           20% |               1% | 8/11  |
-| 11† | `ingesta`                |   228 | domain safety rules, one repo   |         27% |           12% |               0% | 9/11  |
-| 12  | `ingesta`                |   183 | announced the rule, ~6h         |      **5%** |            8% |               0% | —     |
-| 13  | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h      |         17% |            1% |               0% | 10/13 |
-| 14  | `repo-tasks`             |   372 | a detection rule + plans, ~8h   |         42% |           25% |          **19%** | —     |
-| 15  | `agent-skills`           |   196 | skills + plans, ~11.5h          |         28% |           23% |               0% | —     |
-| 16  | `power-user-linux-setup` |   270 | plans, research, edits, ~6h     |      **2%** |            2% |               0% | 12/13 |
-| 17  | `power-user-linux-setup` |   212 | built a shim: code, tests, ~14h |         17% |            6% |               0% | 10/13 |
-| 18  | `power-user-linux-setup` |   297 | `install.sh` and its CI, ~38h   |         24% |       **17%** |               0% | 12/13 |
-| 19  | `power-user-linux-setup` |   441 | absorptions, leanness, ~63h     |          7% |            2% |               0% | 12/17 |
-| 20  | `repo-tasks`             |   152 | uv probes, plans, ~29h          |      **0%** |        **1%** |               0% | 14/17 |
+| #   | session repo             | calls | shape                            | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
+| --- | ------------------------ | ----: | -------------------------------- | ----------: | ------------: | ---------------: | ----- |
+| 1   | `agent-skills`           |   331 | code, one repo, ten hours        |         24% |           19% |          **23%** | 9/11  |
+| 2   | `ingesta`                |   137 | prose/gate-heavy, ten hours      |         45% |           28% |               0% | —     |
+| 3   | `agent-skills`           |   157 | prose, one repo, one day         |         38% |           27% |               0% | 9/11  |
+| 4   | `power-user-linux-setup` |   350 | documentation, whole day         |     **55%** |           32% |               0% | 7/11  |
+| 5   | `ingesta`                |    84 | domain research + plan writing   |         35% |            8% |               0% | 10/11 |
+| 6†  | `agent-skills`           |   216 | tooling, the rule itself         |         47% |       **38%** |               0% | 6/11  |
+| 7†  | `ingesta`                |   129 | code + plans, fourteen hours     |         38% |           28% |               0% | —     |
+| 8†  | `power-user-linux-setup` |   220 | code + docs + vendor research    |         28% |           18% |               0% | —     |
+| 9   | `repo-tasks`             |   202 | shared gate, plans, ~12h         |     **15%** |       **10%** |               0% | 10/11 |
+| 10  | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h        |         23% |           20% |               1% | 8/11  |
+| 11† | `ingesta`                |   228 | domain safety rules, one repo    |         27% |           12% |               0% | 9/11  |
+| 12  | `ingesta`                |   183 | announced the rule, ~6h          |      **5%** |            8% |               0% | —     |
+| 13  | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h       |         17% |            1% |               0% | 10/13 |
+| 14  | `repo-tasks`             |   372 | a detection rule + plans, ~8h    |         42% |           25% |          **19%** | —     |
+| 15  | `agent-skills`           |   196 | skills + plans, ~11.5h           |         28% |           23% |               0% | —     |
+| 16  | `power-user-linux-setup` |   270 | plans, research, edits, ~6h      |      **2%** |            2% |               0% | 12/13 |
+| 17  | `power-user-linux-setup` |   212 | built a shim: code, tests, ~14h  |         17% |            6% |               0% | 10/13 |
+| 18  | `power-user-linux-setup` |   297 | `install.sh` and its CI, ~38h    |         24% |       **17%** |               0% | 12/13 |
+| 19  | `power-user-linux-setup` |   441 | absorptions, leanness, ~63h      |          7% |            2% |               0% | 12/17 |
+| 20  | `repo-tasks`             |   152 | uv probes, plans, ~29h           |      **0%** |        **1%** |               0% | 14/17 |
+| 21  | `power-user-linux-setup` |   102 | imagery plan, licence audit, ~5d |          1% |        **0%** |               0% | 17/17 |
 
 Rows 18–20 were added 2026-09-13; 18 and 19 had sections below but no row here, which is the drift
-this table is for.
+this table is for. Row 21 was added 2026-09-18.
 
 `†` = re-scored 2026-09-07 at the row's own `--until` boundary with the fixed instrument. **Every
 un-daggered row of 1–11 is a floor**, so `55%` on row 4 means "at least 55%" and a comparison
@@ -175,6 +176,11 @@ be higher.
 Sample 5 is the only one from a project repo rather than a tooling repo, and the only one whose task
 was domain research rather than work on the tooling itself. Samples 7, 8, 14 and 15 have no score
 because they were run without `--compare`.
+
+**Sample 21 beats it on three series and does not take the title**, because at 102 calls it is the
+second-smallest row here and a rate over 102 calls is not the same evidence as one over 270. Read
+them together rather than ranked: 16 is the best large row, 21 the first row with a clean
+`exit-masked` and the first to meet every expectation.
 
 **Sample 16 is the best row the corpus has, by a margin no earlier row approaches** — `head/tail` at
 2% against a previous best of 5%, `chain` at 7% against a range of 21–64%, `sed-n` and
@@ -1131,6 +1137,47 @@ ran the scan for an unrelated reason and the session then noticed it had never r
 work. A corpus measured this way cannot distinguish "ran the gate 8 times" from "never ran it", and
 the second scores better on the series it does measure — so `chain` is not a clean discipline series
 and no row's low figure can be read as discipline without checking the scan count behind it.]
+
+### Sample 21 — `power-user-linux-setup`, 102 calls, the corpus's first clean `exit-masked`
+
+`audit.py --session 81f41ac7 --until 2026-09-18T13:23:11+03:00 --compare 2026-09-12.json`, `setopt`
+answering `pipefail`. **17/17**, the first row to meet every expectation. Transcript
+`81f41ac7-aec7-45e2-8d84-aad642024a13.jsonl`, ~5 days of wall clock with long idle gaps and no
+compaction, 11 sweep calls excluded: absorbing a filed imagery plan and merging it into the repo's
+own, rewriting about twenty prompts for one named generator, auditing the licence of twenty tool
+logos against their owners' pages, and filing a process design for another repo.
+
+| tag               |   rate | note                                                   |
+| ----------------- | -----: | ------------------------------------------------------ |
+| **`chain`**       | **2%** | 2 calls — the corpus's best                            |
+| `head/tail`       |     1% | 1 call, 0 cut — `gh run watch` piped to `tail -20`     |
+| **`exit-masked`** | **0%** | the corpus's first zero                                |
+| `sed-n`           |     1% | 1 call — MISS                                          |
+| `cat-view`        |     1% | 1 call, `head -12` over a licence file — MISS          |
+| `rg-replace`      |     2% | 2 calls, both deliberate replacement; one spelled `-r` |
+| everything else   |     0% |                                                        |
+
+**Sample 20's coupling claim does not survive this row.** That sample read 3% `chain` off a session
+that ran `plans.py scan` zero times, and concluded the confidentiality rule and the chain series are
+coupled — a session that follows the rule pays for it in `chain`. This one ran the staged scan
+before **all five** of its commits and the gate five times, and still came in at **2%**, because
+staging and scanning went as separate calls rather than `git add … && plans.py scan`. So the
+coupling is a property of one habit, not of the rule, and `chain` is readable as discipline again
+once the scan count is printed beside it.
+
+**Auto mode ran for the whole session, and its pull is visible at exactly three calls.** The
+harness's note asks for Bash in place of the dedicated tools and withdraws `Grep`; the session said
+once that it would keep using Read/Edit/Write, then produced three Bash views out of 102 calls — a
+`sed -n` over five ranges of one plan, a `head -12` over a licence file, and the `| tail -20` above.
+`plans/2026-08-28-auto-mode-contradicts-bash-rules.md` owns that contradiction; this is the smallest
+drift any auto-mode row has shown. All three were reaches for output the session expected to be
+long, which is the shape the rule answers by counting first rather than by cutting.
+
+[PITFALL: **a row this clean is partly a property of the work, not only of the session.** 102 calls
+is the second-smallest population in the corpus, and the session's middle third was web research —
+fetches and searches, which are not Bash calls at all and so are invisible to every series here. A
+session whose work is gate-running and multi-repo reads has more opportunities to chain in a hundred
+calls than this one had in its whole run.]
 
 ## Open questions
 
