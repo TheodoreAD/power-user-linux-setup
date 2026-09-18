@@ -1,5 +1,5 @@
 ---
-status: idea
+status: planned
 updated: 2026-09-18
 source_repo: github.com-personal/freshful-polite-mcp
 source_moment: 2026-09-18T12:05:00Z
@@ -119,58 +119,144 @@ Three things follow, and only the first was already known:
 for a repo the session never visited. Worth establishing before any shell-side fix, because whatever
 put it there will still be there afterwards.]
 
-## Open questions
+## Design
 
-[NEEDS CLARIFICATION: fix the shell, or fix the instruction? These are different projects. Making
-direnv actually fire for Bash-tool calls means exporting its environment in whatever `zshenv`
-snippet the harness's shell sources — plausible, since `[packages.claude-code]` already ships one
-for `PIPE_FAIL`, guarded on `CLAUDECODE`. Fixing the instruction means rewriting the rule to say
-"always `uv run` in an agent session" and deleting the premise. The second is a five-minute edit
-that is true immediately; the first removes the friction the rule was trying to spare and is the
-better end state.]
+**Fix the shell, not the instruction.** Settled by the user 2026-09-18, against this plan's own
+earlier preference for rewriting the rule to say `uv run`:
 
-[NEEDS CLARIFICATION: if the shell is fixed, is `direnv export zsh` the right mechanism, and is it
-safe to run per-call? It reads `.envrc` and emits an environment; it also refuses an unauthorised
-directory, which is the common case for a freshly cloned repo and would need to fail quietly rather
-than noisily. `direnv exec <dir> <cmd>` is the per-command alternative and needs no hook at all, but
-it changes the shape of every command an agent types, which is the thing the rule was avoiding.]
+> uv run breaks our allowlist rules and has its own complexity, and also not all systems that use
+> our skills necessarily use uv in all projects. unless this is our last resort, try to get direnv
+> to be more reactive, somehow, and also see how we can avoid keeping an incorrect env when
+> switching directories into another place with a different direnv setup or none at all.
 
-[NEEDS CLARIFICATION: does fixing the hook break the cross-repo rule that depends on it? "Running a
-command against a different repo" warns that a bare `pytest`/`inv` against another repo silently
-runs the primary project's interpreter, and its stated reason is that direnv does not fire. If
-direnv starts firing per-call on cwd, that failure mode changes shape — possibly for the better,
-possibly into something subtler. Re-read that section as part of this change rather than after it.]
+[DECISION: **`uv run` is rejected as the standing instruction, and the allowlist reason is the one
+that settles it.** Every rule in `~/.claude/settings.json` matches on a literal command prefix, so
+`uv run pytest` matches none of the `Bash(pytest:*)`-shaped grants and every venv-tool call would
+start prompting. The other two reasons stand on their own: `uv run` carries its own resolution
+behaviour, and the skills this machine publishes are used on machines that need not have uv at all,
+so a rule written around uv is a rule that stops being true off this box.]
 
-[NEEDS CLARIFICATION: how many repos are actually affected, and is a missing `.envrc` a separate
-defect? 7 of the personal repos have one; `freshful-polite-mcp` does not, while its own `AGENTS.md`
-claims "direnv auto-activates it". That repo's own drift is being fixed in that repo. Worth a sweep
-to see whether others make the same claim without the file.]
+### The mechanism, measured rather than reasoned about
 
-## Recommended direction
+`eval "$(direnv export zsh)"` in `~/.zshenv`, guarded on `CLAUDECODE`, declared through
+`[packages.claude-code]` beside the `PIPE_FAIL` snippet that already relies on the same property —
+`setup.toml` documents it at the block: each Bash call is a non-interactive `zsh -c`, so `~/.zshenv`
+is read **every** call while `~/.zshrc`, where direnv's real hook lives, is read once per session.
 
-Do the instruction fix now and the shell fix deliberately, in that order — the instruction is wrong
-today and every agent session on this machine reads it.
+All four rows measured 2026-09-18 on direnv 2.32.1, from a session whose frozen environment belonged
+to `power-user-linux-setup`:
 
-For the wording, the rule should end on the command that replaces the habit rather than on a
-premise: in an agent session, `uv run <tool>` is the default for a venv tool. That also makes it
-consistent with the cross-repo section's parenthesis instead of contradicting it.
+| scenario                                                        | result                                                                       |
+| --------------------------------------------------------------- | ---------------------------------------------------------------------------- |
+| cwd is another repo with an allowed `.envrc` (`olx-polite-mcp`) | **switches** — `DIRENV_DIR`, `VIRTUAL_ENV` and `ruff` all become that repo's |
+| cwd has no `.envrc`                                             | **unloads** — emits `unset DIRENV_DIR` and restores the prior `PATH`         |
+| cwd has a blocked `.envrc`                                      | unloads the previous env; writes a red error to stderr unless silenced       |
+| cost                                                            | ~21 ms per call (five runs in 0.105 s)                                       |
 
-[PITFALL: **the original wording of this section said `which` is "worth running only when something
-surprising happens", and the correction above makes that the one sentence not to write.** `which`
-does not fail in the interesting case. It returns a real, plausible, absolute path to a real tool —
-belonging to whichever repo the session started in — and nothing about the answer says so. A reader
-told to trust `which` until surprised will never be surprised, because the wrong answer looks
-exactly like the right one. If the rule mentions `which` at all it has to say what to compare the
-answer _against_: the repo you are standing in.]
+The first two rows are the two halves of the ask, and both are satisfied by the same one line.
 
-Then decide the shell question on its own merits. If the hook is made to fire, this rule gets
-rewritten a second time, which is cheap and is the right order: an instruction that matches reality
-today beats one that anticipates a change nobody has made.
+```sh
+if [ -n "${CLAUDECODE:-}" ]; then
+  setopt PIPE_FAIL
+  export REPO_TASKS_RUN_REPORT=1
+  if command -v direnv > /dev/null 2>&1; then
+    eval "$(DIRENV_LOG_FORMAT= direnv export zsh)"
+  fi
+fi
+```
 
-Filed from a session in `freshful-polite-mcp`, which cannot edit this repo.
+[PITFALL: **the `command -v` guard must be an `if`, not a `&&`.** `setup.toml` already records why
+for the existing block: `~/.zshenv` is read on every zsh invocation, so a trailing `&&` whose left
+side is false leaves the file's last status non-zero in **every** shell. The guard itself is not
+optional either — direnv is `[packages.direnv]`, a separate package a tag profile can exclude, while
+this snippet ships with `[packages.claude-code]`.]
+
+[DECISION: **`DIRENV_LOG_FORMAT=` rather than `2>/dev/null`.** Measured: the empty log format
+silences direnv's own output completely, the redirect would be a second mechanism doing the same
+job, and one of them would eventually be removed as redundant by someone who did not know which. The
+cost is real and is accepted below.]
+
+### What silencing costs, and why it is still right
+
+A blocked `.envrc` — the state of every freshly cloned repo until someone runs `direnv allow` — now
+produces no venv and no explanation. The agent sees `command not found`, which is at least honest,
+where the unsilenced alternative is a red direnv error on **every** Bash call in that repo.
+
+That is acceptable only because the remedy already exists and is already documented:
+`inv
+dev-env.setup` runs `uv sync` and `direnv allow` together, and `tests/README.md` names it as
+the once-after-cloning step. The instruction change this plan still owes is therefore small — not
+"use `uv run`", but "if a venv tool is missing, run `inv dev-env.setup`".
+
+### The gap this does not close
+
+[PITFALL: **`cd <other repo> && <command>` in one call is unaffected, and that is the shape
+`~/.agents/AGENTS.md` sanctions for cross-repo work.** `~/.zshenv` is sourced at shell startup,
+before the command's own `cd` runs, so the export resolves the _starting_ directory. Measured: from
+`power-user-linux-setup`, `zsh -c 'eval "$(direnv export zsh)"; cd …/olx-polite-mcp && which ruff'`
+still answers with `power-user-linux-setup`'s `ruff`. The cross-repo section's existing advice — use
+the tool's own directory-scoping option, or the target repo's `.venv/bin` by absolute path — stays
+correct, and only its stated reason changes.]
+
+That also answers this plan's third question in the safe direction: the hook makes the _bare command
+in another repo's cwd_ better rather than subtler, because that case now resolves to the repo you
+are standing in. Nothing that section warns about becomes wrong; one sentence of its reasoning does.
+
+### The `ingesta` entry, explained
+
+Running `direnv export zsh` from a directory with no `.envrc` prints the `PATH` it would restore to,
+and that baseline **already contains `ingesta/.venv/bin`** — along with `~/.local/bin` three times
+and `go/bin` twice. So direnv did not add it and the hook will not remove it: it is in the
+environment the session snapshot captured, before any `.envrc` was applied.
+
+[DECISION: **that is a separate defect and is not fixed here.** It predates the hook and survives
+it. Worth its own plan once someone establishes how a never-visited repo's venv reached a captured
+snapshot — the duplication in the same `PATH` suggests accumulation across shells rather than
+anything direnv did.]
+
+### How many repos are affected
+
+Swept 2026-09-18 across `~/projects/github.com-personal`, 22 git repos:
+
+- **7 have an `.envrc`** — `agent-skills`, `ingesta`, `invoke-stubs`, `olx-polite-mcp`,
+  `power-user-linux-setup`, `repo-tasks`, `scaffoldapy`. These are the ones the hook helps.
+- **2 have a venv and claim direnv in their own `AGENTS.md` while having no `.envrc`** —
+  `freshful-polite-mcp` (already known, being fixed in that repo) and **`temu-polite-mcp`**, which
+  this plan did not know about. A missing `.envrc` is a separate defect from the hook, and the hook
+  does not paper over it: those two get `command not found` either way until the file exists.
+- `invoke-stubs` has the file and does not claim it — the harmless direction.
+
+## Files touched
+
+| file                                      | change                                                                                  |
+| ----------------------------------------- | --------------------------------------------------------------------------------------- |
+| `setup.toml`, `[packages.claude-code]`    | the `direnv export` line inside the existing `CLAUDECODE` guard                         |
+| `config/agents-md/` (the owning fragment) | the venv-tool rule stops asserting the bare command resolves; names `inv dev-env.setup` |
+| `config/agents-md/` (cross-repo section)  | one sentence of reasoning, per the gap above — the advice itself is unchanged           |
+| `contributing/session-environment.md`     | the measured table: what the hook does per scenario, and the `cd … && …` gap it leaves  |
+
+Deployed by `inv zsh.configure` for the snippet and `inv deploy.all --name agents-md` for the rules.
+Neither is a file to edit under `~` by hand.
+
+[PITFALL: **this change is live for every parallel session on the next command, with no restart.**
+`~/.zshenv` is read per call, which is the property the whole design rests on and is also what makes
+deploying it mid-session an action with reach beyond this one. `contributing/session-environment.md`
+already records the measured difference between `~/.zshenv` and `~/.zshrc` here; this is the first
+change to exploit it deliberately.]
 
 ## Verification
 
-Not started. The check is the measurement above, re-run after whichever fix lands: from a Bash call
-in a repo with `.envrc`, `echo $DIRENV_DIR` and `which ruff`. For the instruction-only fix, the
-verification is instead that the rule no longer asserts the bare command resolves.
+Re-run the measurement that produced the table above, from a Bash call rather than reasoned about:
+
+- **In a repo with an allowed `.envrc`**: `echo $DIRENV_DIR` names _that_ repo, and `which ruff`
+  resolves inside its `.venv`.
+- **After a plain `cd` to a second such repo** (the harness's own tracked cwd, not a chained `cd`):
+  both answers change to the second repo. This is the row that did not work before.
+- **In a directory with no `.envrc`**: `DIRENV_DIR` is unset and no repo's `.venv/bin` is on `PATH`.
+- **In a repo with a blocked `.envrc`**: no direnv output on any call, and `inv dev-env.setup` is
+  what resolves it.
+- **The status trap**: `zsh -c 'true'` still exits 0 on a machine with no direnv installed, which is
+  what the `if` guard is for and what a `&&` would break.
+
+Filed from a session in `freshful-polite-mcp`, which cannot edit this repo; the design above was
+settled and measured here.
