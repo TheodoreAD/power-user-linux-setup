@@ -206,9 +206,20 @@ would have shipped. The fix is `# fmt: skip` on the clause plus a test that pars
 at the distro floor (`tests/unit/test_foreign_python_floor.py`) — never a ruff exclude, since
 `ruff.toml` is pulled byte-identical and serves every consumer.]
 
+[PITFALL: **the gate cannot see a CI job that runs this repo's code on an interpreter CI picked.**
+The two above are about files with a lower floor; this one is about ordinary `tasks/` code at the
+repo's own floor, loaded by something that chose its own Python. `ci.yml`'s `runtime-guardrail`
+installed bare `invoke` with no `--python`, so uv derived the request from invoke's own
+`requires-python` and took the runner's preinstalled 3.12 — which was harmless for as long as the
+declared floor was 3.11, and became a `SyntaxError` on the push that raised it. Nothing local could
+have caught it: the gate runs on the project venv, every unit test passed, and the failure arrived
+from a runner minutes after the push. Grep the workflows for an unpinned `uv tool install` before
+raising a floor, and pin such a job from the same `setup.toml` line `bootstrap.sh` greps rather than
+from a literal.]
+
 So the order that works: edit the field, `inv configs.pull`, run the gate, read the auto-fixes as a
-diff rather than trusting them, and check the formatter's output against any file that runs
-somewhere you do not control.
+diff rather than trusting them, check the formatter's output against any file that runs somewhere
+you do not control — and then watch the first CI run, because one class of this only appears there.
 
 ## pytest and dprint
 

@@ -198,6 +198,15 @@ variable (`env -u UV_PYTHON …`), and a session that skipped that step would co
 not worked. Same shape as the launch-directory `PATH` inheritance recorded in
 `2026-09-18-direnv-never-fires-in-an-agent-bash-call.md`.]
 
+[PITFALL: **the floor raise broke CI in a way nothing local could catch, and the fix was a one-line
+pin.** `ci.yml`'s `runtime-guardrail` job installed bare `invoke` with no `--python`, so uv took the
+runner's preinstalled 3.12 and had been loading `tasks/` a whole floor below the declaration for as
+long as the declaration said 3.11. The green local gate, 738 passing tests and a clean
+`install-smoke` all said nothing, because every one of them runs on the project's own venv. Fixed in
+`1122c6b` by reading the version from the same `setup.toml` line `bootstrap.sh` greps. Third
+instance of one class in a day — code running on an interpreter this repo does not choose — after
+`netdoctor.py` and `tests/containers/fakecorp.py`.]
+
 Step 3 cost more than a one-line edit, which the now-retired addendum plan
 `2026-09-18-raising-the-floor-goes-red-on-ruff-before-the-type-check.md` predicted and still
 undershot. Its content is in `contributing/quality-tooling.md`, "Raising `requires-python` is a ruff
