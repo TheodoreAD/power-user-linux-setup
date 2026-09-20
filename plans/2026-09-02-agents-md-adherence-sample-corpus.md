@@ -165,12 +165,18 @@ The one verdict recorded as changed is sample 11's `chain`, which moves for the 
 | 21  | `power-user-linux-setup` |   102 | imagery plan, licence audit, ~5d   |          1% |        **0%** |               0% | 17/17 |
 | 22  | `power-user-linux-setup` |   185 | install location, absorptions, ~9h |         25% |           11% |               0% | —     |
 | 23  | `freshful-polite-mcp`    |   139 | shopping flow, then three fixes    |          2% |            1% |               0% | —     |
+| 24‡ | `power-user-linux-setup` |   206 | uv pin swap, floor raise, a rule   |         49% |           29% |               0% | —     |
 
 Rows 18–20 were added 2026-09-13; 18 and 19 had sections below but no row here, which is the drift
 this table is for. Row 21 was added 2026-09-18. **Row 22 was that same drift again** — its section
 landed 2026-09-18 with no row here, and the row was written on 2026-09-20 by a session that had come
 to add a different one. Row 23 is the corpus's first from a `*-polite-mcp` repo, and its `chain` and
 `head/tail` are the lowest pair any row has.
+
+`‡` = **filed mid-session, so the figures are a prefix** rather than a finished session's. Row 24 is
+the only one, and it carries the mark because sample 23's own pitfall is that a prefix read as a
+whole gets patterns wrong in the direction that reads clean. Re-measure it to a real boundary before
+comparing it against anything, and drop the mark when you do.
 
 `†` = re-scored 2026-09-07 at the row's own `--until` boundary with the fixed instrument. **Every
 un-daggered row of 1–11 is a floor**, so `55%` on row 4 means "at least 55%" and a comparison
@@ -1286,6 +1292,58 @@ The same session, in its first half, filed
 `agent-skills/2026-09-18-scan-mode-tree-used-as-the-commit-gate.md` about a rule it had just broken
 — and then broke three more in its second half. "Authoring a rule is not evidence of following it",
 met again a few hours apart inside one session rather than across two.
+
+### Sample 24 — `power-user-linux-setup`, 206 calls, the session that wrote a rule into the file it was breaking
+
+`audit.py --session 70f5fe13 --until 2026-09-20T21:15:40+03:00`, `setopt` answering `pipefail`.
+Transcript `70f5fe13-9f1a-40f4-84ac-5ce4fd98a163.jsonl`, ~2 days, auto mode, announced. The session
+replaced the machine-wide `UV_PYTHON` export with a uv global pin, raised this repo's floor to 3.14
+and absorbed the fallout, added the Python version floor rule to `config/agents-md/research.md`, and
+merged sample 23 into this file.
+
+**A prefix, and it says so.** The boundary is mid-session — the row was filed while the session was
+still running, on a deliberate choice between a caveated row now and no row at all. Sample 23's
+second pitfall, merged into this file hours earlier by this same session, is exactly what that
+risks.
+
+| tag                     |    rate | note                                                                                                                                 |
+| ----------------------- | ------: | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **`chain`**             | **63%** | 129 calls — third-worst of 24 rows, against a 66% record                                                                             |
+| `chain5`                |      9% | 18 calls                                                                                                                             |
+| `head/tail`             | **49%** | 101 calls, **0** actually cut (no exit 141/120)                                                                                      |
+| `exit-masked`           |     29% | 59 calls — **14 wrapped a gate**, 45 a listing                                                                                       |
+| `sed-n`                 |     11% | 22 calls — MISS; sample 11 still holds the record at 16%                                                                             |
+| `heredoc`               |      4% | 8 calls — MISS                                                                                                                       |
+| `cat-view`              |      2% | 4 calls — MISS                                                                                                                       |
+| `cd-own-repo`           |      1% | 2 calls — both re-establishing cwd after a drift to a tmp dir                                                                        |
+| `git-mutating-in-chain` |      9% | 19 calls                                                                                                                             |
+| `search\|head`          |     22% | 45 calls                                                                                                                             |
+| `redirect-then-filter`  |      2% | 4 calls                                                                                                                              |
+| everything else         |      0% | `git-C-own-repo`, `git-add-all`, `git-undo-relative`, `store-write-by-git`, `rg-replace`, `grep-r`, `find` OK; `cut-message` 0 of 11 |
+
+`pipefail` was in force, so the 14 masked gate calls stood on real exit codes and **every green-gate
+claim this session made holds** — no re-run owed. `exit-masked` is a style finding here, not a
+correctness one.
+
+[PITFALL: **"authoring a rule is not evidence of following it" has a third instance, and this is the
+sharpest one yet.** Samples 6 and 23 each broke a rule they had just written. This session did that
+to _this corpus_ and to the instructions file at once: it merged sample 23 — whose whole finding is
+that tool-substitution violations cluster in implementation work — and then produced 22 `sed -n`, 8
+heredocs and 4 `cat` views of its own, in a session that was overwhelmingly implementation. It also
+ran 19 `git add … && plans.py scan` chains, the shape sample 21 resolved by separating the calls and
+sample 22 recorded as unapplied. Three rows now say the resolution and no session has applied it.]
+
+[PITFALL: **auto mode is the available excuse and it does not cover this.** The mode's note asks for
+Bash over the dedicated tools, and `~/.agents/AGENTS.md` answers it in advance: keep using
+Read/Edit/Write, and say once that you are doing so. This session said it, in its first response,
+and then substituted anyway 34 times. So the rule was not merely unread — it was read, acknowledged
+aloud, and then not followed, which is the discipline failure criterion 4 says takes a prohibition
+rather than guidance. The sentence is already a prohibition.]
+
+The `head/tail` number wants reading with its second column: 101 calls, **none** of which cut
+anything. That is the habit measured with no data lost, and it is the cheapest rate in the corpus to
+move — the rule asks for the command to be run plain, and nothing about this session needed the
+filter.
 
 ## Open questions
 
