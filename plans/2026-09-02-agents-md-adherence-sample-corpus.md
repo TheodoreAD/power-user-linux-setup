@@ -140,32 +140,37 @@ The one verdict recorded as changed is sample 11's `chain`, which moves for the 
 
 ### The corpus at a glance
 
-| #   | session repo             | calls | shape                            | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
-| --- | ------------------------ | ----: | -------------------------------- | ----------: | ------------: | ---------------: | ----- |
-| 1   | `agent-skills`           |   331 | code, one repo, ten hours        |         24% |           19% |          **23%** | 9/11  |
-| 2   | `ingesta`                |   137 | prose/gate-heavy, ten hours      |         45% |           28% |               0% | —     |
-| 3   | `agent-skills`           |   157 | prose, one repo, one day         |         38% |           27% |               0% | 9/11  |
-| 4   | `power-user-linux-setup` |   350 | documentation, whole day         |     **55%** |           32% |               0% | 7/11  |
-| 5   | `ingesta`                |    84 | domain research + plan writing   |         35% |            8% |               0% | 10/11 |
-| 6†  | `agent-skills`           |   216 | tooling, the rule itself         |         47% |       **38%** |               0% | 6/11  |
-| 7†  | `ingesta`                |   129 | code + plans, fourteen hours     |         38% |           28% |               0% | —     |
-| 8†  | `power-user-linux-setup` |   220 | code + docs + vendor research    |         28% |           18% |               0% | —     |
-| 9   | `repo-tasks`             |   202 | shared gate, plans, ~12h         |     **15%** |       **10%** |               0% | 10/11 |
-| 10  | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h        |         23% |           20% |               1% | 8/11  |
-| 11† | `ingesta`                |   228 | domain safety rules, one repo    |         27% |           12% |               0% | 9/11  |
-| 12  | `ingesta`                |   183 | announced the rule, ~6h          |      **5%** |            8% |               0% | —     |
-| 13  | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h       |         17% |            1% |               0% | 10/13 |
-| 14  | `repo-tasks`             |   372 | a detection rule + plans, ~8h    |         42% |           25% |          **19%** | —     |
-| 15  | `agent-skills`           |   196 | skills + plans, ~11.5h           |         28% |           23% |               0% | —     |
-| 16  | `power-user-linux-setup` |   270 | plans, research, edits, ~6h      |      **2%** |            2% |               0% | 12/13 |
-| 17  | `power-user-linux-setup` |   212 | built a shim: code, tests, ~14h  |         17% |            6% |               0% | 10/13 |
-| 18  | `power-user-linux-setup` |   297 | `install.sh` and its CI, ~38h    |         24% |       **17%** |               0% | 12/13 |
-| 19  | `power-user-linux-setup` |   441 | absorptions, leanness, ~63h      |          7% |            2% |               0% | 12/17 |
-| 20  | `repo-tasks`             |   152 | uv probes, plans, ~29h           |      **0%** |        **1%** |               0% | 14/17 |
-| 21  | `power-user-linux-setup` |   102 | imagery plan, licence audit, ~5d |          1% |        **0%** |               0% | 17/17 |
+| #   | session repo             | calls | shape                              | `head/tail` | `exit-masked` | `git-C-own-repo` | score |
+| --- | ------------------------ | ----: | ---------------------------------- | ----------: | ------------: | ---------------: | ----- |
+| 1   | `agent-skills`           |   331 | code, one repo, ten hours          |         24% |           19% |          **23%** | 9/11  |
+| 2   | `ingesta`                |   137 | prose/gate-heavy, ten hours        |         45% |           28% |               0% | —     |
+| 3   | `agent-skills`           |   157 | prose, one repo, one day           |         38% |           27% |               0% | 9/11  |
+| 4   | `power-user-linux-setup` |   350 | documentation, whole day           |     **55%** |           32% |               0% | 7/11  |
+| 5   | `ingesta`                |    84 | domain research + plan writing     |         35% |            8% |               0% | 10/11 |
+| 6†  | `agent-skills`           |   216 | tooling, the rule itself           |         47% |       **38%** |               0% | 6/11  |
+| 7†  | `ingesta`                |   129 | code + plans, fourteen hours       |         38% |           28% |               0% | —     |
+| 8†  | `power-user-linux-setup` |   220 | code + docs + vendor research      |         28% |           18% |               0% | —     |
+| 9   | `repo-tasks`             |   202 | shared gate, plans, ~12h           |     **15%** |       **10%** |               0% | 10/11 |
+| 10  | `power-user-linux-setup` |   355 | docs gate, CI, deps, ~15h          |         23% |           20% |               1% | 8/11  |
+| 11† | `ingesta`                |   228 | domain safety rules, one repo      |         27% |           12% |               0% | 9/11  |
+| 12  | `ingesta`                |   183 | announced the rule, ~6h            |      **5%** |            8% |               0% | —     |
+| 13  | `power-user-linux-setup` |   174 | corporate cert/proxy, ~13h         |         17% |            1% |               0% | 10/13 |
+| 14  | `repo-tasks`             |   372 | a detection rule + plans, ~8h      |         42% |           25% |          **19%** | —     |
+| 15  | `agent-skills`           |   196 | skills + plans, ~11.5h             |         28% |           23% |               0% | —     |
+| 16  | `power-user-linux-setup` |   270 | plans, research, edits, ~6h        |      **2%** |            2% |               0% | 12/13 |
+| 17  | `power-user-linux-setup` |   212 | built a shim: code, tests, ~14h    |         17% |            6% |               0% | 10/13 |
+| 18  | `power-user-linux-setup` |   297 | `install.sh` and its CI, ~38h      |         24% |       **17%** |               0% | 12/13 |
+| 19  | `power-user-linux-setup` |   441 | absorptions, leanness, ~63h        |          7% |            2% |               0% | 12/17 |
+| 20  | `repo-tasks`             |   152 | uv probes, plans, ~29h             |      **0%** |        **1%** |               0% | 14/17 |
+| 21  | `power-user-linux-setup` |   102 | imagery plan, licence audit, ~5d   |          1% |        **0%** |               0% | 17/17 |
+| 22  | `power-user-linux-setup` |   185 | install location, absorptions, ~9h |         25% |           11% |               0% | —     |
+| 23  | `freshful-polite-mcp`    |   139 | shopping flow, then three fixes    |          2% |            1% |               0% | —     |
 
 Rows 18–20 were added 2026-09-13; 18 and 19 had sections below but no row here, which is the drift
-this table is for. Row 21 was added 2026-09-18.
+this table is for. Row 21 was added 2026-09-18. **Row 22 was that same drift again** — its section
+landed 2026-09-18 with no row here, and the row was written on 2026-09-20 by a session that had come
+to add a different one. Row 23 is the corpus's first from a `*-polite-mcp` repo, and its `chain` and
+`head/tail` are the lowest pair any row has.
 
 `†` = re-scored 2026-09-07 at the row's own `--until` boundary with the fixed instrument. **Every
 un-daggered row of 1–11 is a floor**, so `55%` on row 4 means "at least 55%" and a comparison
@@ -1226,6 +1231,62 @@ behaviour producing a bad rate, the same tension sample 20 raised for the confid
 sample 21 resolved by separating the calls. The resolution is identical here and was not applied:
 the read-back is a second call, not a `&&`.
 
+### Sample 23 — `freshful-polite-mcp`, 139 calls, and the first row whose two halves are different sessions
+
+**Merged 2026-09-20 from `2026-09-20-adherence-sample-two-phases-different-patterns.md`**, filed for
+this repo from a session in `freshful-polite-mcp` that could not edit this tree. The name is
+recorded so `plans.py archive --file` can find the merged-away file; the sample was renumbered from
+that file's "row 17", which was its author's count rather than this corpus's.
+
+`audit.py --session 2888f600 --until 2026-09-20T20:08:08+03:00`. Transcript
+`2888f600-fe6e-4cd8-aa7f-fcd46bc4c81d.jsonl`, 2026-09-06 to 2026-09-20, boundary excluding the
+harvest's own inspections. **The corpus's first row from a `*-polite-mcp` repo.**
+
+| tag             | rate | note                                                       |
+| --------------- | ---: | ---------------------------------------------------------- |
+| `chain`         |   4% | —                                                          |
+| `head/tail`     |   2% | 3 calls                                                    |
+| `exit-masked`   |   1% | 0 gate, 1 listing — no re-run owed, `m` was 0              |
+| `cat-view`      |   1% | 2 calls — MISS                                             |
+| `heredoc`       |   1% | 1 call — MISS                                              |
+| `cut-message`   |   0% | of 10 message-carrying calls                               |
+| everything else |   0% | `cd-own-repo`, `git-C-own-repo`, `git-add-all`, `sed-n` OK |
+
+The one masked call was `uv run python spike_order_shape.py 2>&1 | tail -20`, ~4 KB of JSON key
+names — a listing, classified correctly, and no green claim rested on it.
+
+**The observation worth more than the row: the two phases differ in pattern _composition_, not just
+in rate.** The session was harvested twice, and the first boundary falls cleanly between two kinds
+of work:
+
+| phase                                       | calls | chain | head/tail | cat-view | heredoc | exit-masked |
+| ------------------------------------------- | ----: | ----: | --------: | -------- | ------- | ----------- |
+| 1 — interactive shopping flow, then harvest |    35 |    9% |         2 | **0**    | **0**   | **0**       |
+| 2 — implementation: three bug fixes         |   104 |    3% |         1 | **2**    | **1**   | **1**       |
+| whole session                               |   139 |    4% |         3 | 2        | 1       | 1           |
+
+Every tool-substitution violation — `cat .envrc`, `head -20` on a `.py` file, a `python3 - <<'PY'`
+doing a replace-all `Edit` does natively — is in phase 2, and none in phase 1. The chain rate moved
+the other way, falling as the absolute count rose.
+
+[PITFALL: **a rate survives averaging and composition does not.** Row 23 reads as a good session —
+4% chain, 2% head/tail, every parallel-session row clean — and it is, on the patterns this table
+tracks. What the table cannot show is that the three rules the session actually broke were broken
+exclusively in its second half, and that they are a different _kind_ of rule: not "compose the
+command differently" but "you had a dedicated tool and reached for Bash anyway". A session doing
+inspection never trips those, because inspection is what Bash is for.]
+
+[PITFALL: **reading a prefix as a smaller version of the whole, in its sharper form.** That failure
+is already documented for these rows; here the first harvest filed nothing, but had it filed row 23
+at its own boundary it would have recorded `chain=9% head/tail=6% cat-view=0% heredoc=0%` — three of
+the four wrong about the finished session, and **both zeroes wrong in the direction that reads as
+clean**.]
+
+The same session, in its first half, filed
+`agent-skills/2026-09-18-scan-mode-tree-used-as-the-commit-gate.md` about a rule it had just broken
+— and then broke three more in its second half. "Authoring a rule is not evidence of following it",
+met again a few hours apart inside one session rather than across two.
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
@@ -1339,6 +1400,23 @@ about a machine the instrument never saw. A gate-only version of the row fails t
 `head/tail` scores the habit instead, from output loss, which holds on every machine; a test in that
 repo pins the absence so it reads as a decision rather than an omission. This machine is exactly the
 case that motivates it — see the `PIPE_FAIL` pitfall above.]
+
+[NEEDS CLARIFICATION: **should the table carry a composition column, or is that the wrong shape?**
+Raised by sample 23. A per-row list of which rules were actually broken is more informative than the
+rates and does not average — but the table's value is that rows are comparable, and a free-text
+column is not. One option is a fixed tool-substitution sub-total (`cat-view` + `sed-n` + `heredoc`)
+beside the existing rates, which stays comparable and would have separated sample 23's two phases.]
+
+[NEEDS CLARIFICATION: **is a phase split worth recording routinely, or only when a session is
+harvested twice?** Sample 23's was visible for free because two boundaries already existed. Deriving
+one for every session means picking a split point, and there is no principled one — a session's
+phases are a judgement, not a field. Possibly the honest version is that a sample gets a phase split
+only when something else already produced one.]
+
+[DEFERRED: **whether the tool-substitution rules correlate with implementation work generally**, or
+whether sample 23 is one session. n=1 for the composition claim. The corpus has twenty-two prior
+rows and the transcripts are all still there, so it is answerable by re-running the audit per row
+and splitting on nothing more than call index — but that is its own pass, not a filing.]
 
 ## Recommended direction
 
