@@ -81,6 +81,29 @@ version, and says nothing when the package excludes it. **So a version pinned in
 installer is not a floor. It is a silent override of every consumer's own floor.** A _local_
 `.python-version` is ignored here; a global one is honoured where it intersects `requires-python`.
 
+### Setting or changing a Python project's version floor
+
+One question decides it — **who picks the interpreter this code will run on** — and the three
+answers each have their own declaration:
+
+- **Nothing does: it meets an ambient `python3`.** A skill script, anything a consumer runs
+  directly. Floor **3.11**, standard library only, and a version guard at the top of the file
+  _before_ any 3.11-only import, failing with a sentence that names the requirement. There is no
+  resolver to enforce it, so the repo develops at that floor and its ordinary test run is the check.
+- **A resolver does, bounded by what you declare.** A library, a shared dependency, or anything
+  installed with `uv tool install` — which reads `requires-python` like any other resolver, so an
+  installed tool is a library for this purpose. Declare `requires-python = ">=3.11"`.
+- **You do.** An application you deploy, or tooling nothing resolves into anyone else's environment:
+  the newest stable release, 3.14 today.
+
+Emit a `.python-version` matching the floor in every case — a repo without one states its intent to
+nobody, and it is the file a venv is rebuilt from.
+
+Developing _above_ your own declared floor is the failure this prevents, and it produces no error
+anywhere: the type checker derives its version from the same `requires-python` you set, so both then
+describe an interpreter neither was asked to check, and the break lands on a consumer's machine at
+install time. A floor is only enforced where something actually runs at it.
+
 ### Adding a flag, or changing what a tool does by default
 
 Match the surrounding ecosystem's shape, checking the wrapped CLI's own flags too, rather than

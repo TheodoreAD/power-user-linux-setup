@@ -1336,6 +1336,71 @@ config-file footguns that would have silently misconfigured every repo copying t
 A skill built straight from research, with no pilot step, would have shipped all of these to every
 consumer.
 
+## Setting or changing a Python project's version floor
+
+Added 2026-09-20, after the rule had been stated to three separate sessions — 2026-08-29,
+2026-09-13, 2026-09-18 — and enforced by nothing. **A rule restated three times with nothing
+carrying it is the signal, not the statement**, and the third statement asked for the exercise that
+settled the tiers rather than restating them again. The user's own words on the hard case:
+
+> we need users to be able to use our skills without uv or any special system setup. we expect them
+> to have at least python 3.11, that is the basic requirement, otherwise the toml configs fall
+> apart.
+
+**The axis is not "library or application".** It is _what stands between the code and the
+interpreter_, which is the question with a mechanical answer — our own resolver at deploy time, the
+consumer's resolver, their `uv tool install`, or nothing at all. The middle two collapse, since
+`uv tool install` reads `requires-python` like any resolver, so an installed tool needs no special
+case. The fourth is the only genuinely different one and is where the skills live. Full tier table,
+including which repo sits in which tier and what a generator has to emit, is `scaffoldapy`'s
+`plans/2026-09-18-python-version-tier-rules.md`.
+
+Three measurements, and the first is why the rule is worded as a recipe rather than as a caution:
+
+- **Developing above the declared floor produces no error at all**, because `configs.pull` derives
+  `pythonVersion` from `requires-python` and both then describe an interpreter neither was asked to
+  check. `repo-tasks` recorded it three times over in `plans/2026-08-25-consumer-transitions.md` —
+  three consumers using `typing.override` (3.12+) under a declared 3.11 floor, two of them in code
+  that shipped in a wheel.
+- **ruff infers its target from `requires-python` when `target-version` is absent; basedpyright does
+  not.** Measured 2026-08-29 in a scratch project: `def identity[T](value: T) -> T` passes under
+  `>=3.12` and fails under `>=3.11` with the same `ruff.toml`, while basedpyright reported 0 errors
+  on the same tree because it validates against the interpreter it finds. One of the two static
+  checkers silently agrees with a floor nothing runs at.
+- **The ambient tier was already inconsistent when the rule was written.** Measured 2026-09-18
+  across `agent-skills`' twelve scripts: all twelve compile under 3.9, and two carry an unguarded
+  `import tomllib`, so they die on 3.10 with `ModuleNotFoundError` — a traceback that does not
+  mention 3.11. That is the whole reason the version guard is in the rule rather than left implied.
+
+[PITFALL: **"what does bare `python3` run" has at least three answers on one machine**, which is
+what makes the ambient tier a tier rather than an oversight — the distro's interpreter, whatever
+venv is active in the directory it was invoked from, and whatever a harness put on `PATH`. Measured
+in one session: 3.11.15 inside `repo-tasks`, 3.14.5 in any other personal repo, 3.12.3 with none
+active. A first attempt at that measurement returned 3.11.15 from inside a repo whose `.envrc` had
+put `.venv/bin` on `PATH`, and would have been written down as "Ubuntu 24.04 ships 3.11", which is
+false.]
+
+[DECISION: **`research.md`, as its own heading rather than an extension of "Designing a uv
+tool-install or shared-dependency mechanism".** That neighbour is the nearest existing rule and
+names the same field, but its heading names a different trigger — designing an installer, not
+choosing a floor — so the extend-or-split clause makes this a split. The cluster is imperfect and
+was argued about when the plan was written: a version floor is a project-shape decision rather than
+a tool choice, and none of the seven subjects is a clean fit. `research.md` wins because the
+decision is made at the same moment as the rest of that cluster's, while a project is being
+designed.]
+
+[DECISION: **the application tier states the principle and the number — "the newest stable release,
+3.14 today".** Settled with the user 2026-09-20. A literal `3.14` goes stale the year 3.15 ships
+with nothing to prompt anyone back to it; the principle alone leaves an agent to look up what the
+newest stable is, and guess. Carrying both means the rule survives and still hands over something
+copyable.]
+
+[DECISION: **the ambient case is in the global file, compressed, rather than pushed down to
+`agent-skills`' own `AGENTS.md`.** Settled with the user 2026-09-20 on the tier-placement rule
+above: a miss that is silent and expensive stays in the always-loaded set regardless of size
+pressure, and the ambient tier is the one with no resolver, no declaration and nothing mechanical
+enforcing it — the tier where the miss had already happened twice before anyone looked.]
+
 ## Adding a flag, or changing what a tool does by default
 
 The bypass-flag clause's originating incident (2026-08-23): a `--force` on `inv ai.install-skills`
