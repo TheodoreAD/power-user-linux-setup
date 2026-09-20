@@ -48,3 +48,21 @@ def test_the_guarded_set_still_matches_what_the_repo_runs_this_way():
     script added to `tests/containers/` inherits the same exposure and none of the protection."""
     helpers = {f"tests/containers/{path.name}" for path in (_REPO_ROOT / "tests" / "containers").glob("*.py")}
     assert helpers <= set(_FOREIGN_SCRIPTS), sorted(helpers - set(_FOREIGN_SCRIPTS))
+
+
+def test_the_zero_install_guardrail_job_pins_its_interpreter():
+    """The cross-file invariant that `tasks/` is *not* in the set above — and it only holds because
+    two files agree.
+
+    `bootstrap.sh` installs invoke with `--python "${UV_PYTHON_DEFAULT}"`, so on a real machine
+    `tasks/` is loaded at this repo's own floor. CI's `runtime-guardrail` job re-creates that path
+    with bare `invoke` to prove the repo_tasks-absent case still works, and for as long as it
+    installed unpinned it was quietly doing so on the runner's preinstalled 3.12. That cost nothing
+    while the declared floor was 3.11 and killed the job on the commit that raised it to 3.14 — a
+    SyntaxError on a PEP 758 `except` clause, from a file nothing else in the gate reads below the
+    floor. Pin it there and `tasks/` never has to parse below its own declaration.
+    """
+    workflow = (_REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text()
+    install = [line for line in workflow.splitlines() if "uv tool install" in line and "invoke" in line]
+    assert install, "runtime-guardrail no longer installs invoke — check this test still describes the job"
+    assert all("--python" in line for line in install), install

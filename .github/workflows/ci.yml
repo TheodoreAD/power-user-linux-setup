@@ -54,7 +54,14 @@ jobs:
         with:
           persist-credentials: false
       - uses: astral-sh/setup-uv@v10.0.1
-      - run: uv tool install --force invoke
+      # Pinned from the same setup.toml line bootstrap.sh greps, because this job stands in for the
+      # zero-install path and that path passes --python. Unpinned, uv derives the request from
+      # invoke's own requires-python and takes the runner's preinstalled 3.12 — which ran tasks/ a
+      # whole floor below this repo's own, invisibly, until the floor was declared on 2026-09-20 and
+      # the job died on a PEP 758 except clause. The interpreter was never what this job is about.
+      - run: |
+          version=$(grep '^\s*uv_python_default\s*=' setup.toml | sed 's/.*"\(.*\)".*/\1/')
+          uv tool install --python "${version}" --force invoke
       - run: echo "${HOME}/.local/bin" >> "${GITHUB_PATH}"
       - run: inv --list
       - run: PULSE_DRY_RUN=1 inv apt.install-repos apt.install-base apt.install-debs tools.install fonts.install
