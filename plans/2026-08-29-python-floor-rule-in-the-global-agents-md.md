@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-08-29
+status: landed
+updated: 2026-09-20
 repo: git@github.com:TheodoreAD/power-user-linux-setup.git
 ---
 
@@ -64,6 +64,13 @@ The wording guidance survives the change and still applies: state it without nam
 specific repos — "a project other people install" rather than a list — since the admission criteria
 push away from rules that name this setup.
 
+**Settled 2026-09-20: `research.md`, as its own heading.** Its nearest neighbour there, "Designing a
+uv tool-install or shared-dependency mechanism", names the same field and was the extension
+candidate, but its heading names a different trigger — designing an installer, not choosing a floor
+— so the extend-or-split clause makes this a split rather than an extension. The cluster is still
+imperfect for the reason above; `research.md` wins because a floor is chosen at the same moment as
+the rest of that cluster's decisions, while a project is being designed.
+
 ## Evidence for `contributing/global-agents-md.md`
 
 Measured 2026-08-29 in a scratch project, and independently reproducing what `ingesta`'s plan found:
@@ -97,48 +104,60 @@ non-isolated-environment trap as `uv run --with`, hit again in a different tool 
 rule in `~/AGENTS.md`'s "Reading a command's result", with the measurement in
 `contributing/global-agents-md.md` under the same heading.]
 
-## Open questions
+## The answers, 2026-09-20
 
-[NEEDS CLARIFICATION: does the rule mean **write 3.11-compatible syntax** (defensive: the script
-runs anywhere, including a 22.04 machine's 3.10, and simply must not use newer syntax) or **declare
-`requires-python = ">=3.11"` and stop supporting 22.04** (a support statement)? For a packaged
-library the two coincide. For `agent-skills`' stdlib scripts, run as a bare `python3`, they do not,
-and they produce different code and different failure modes. The first is unverifiable by any tool
-the family runs, since nothing type-checks a bare stdlib script against a version it never runs on;
-the second is checkable but has no field to put the declaration in. The distro table that motivated
-the question — 3.12 on 24.04, 3.10 on 22.04 — is real but is only the floor for the _system_
-reading, not for a script invoked inside an active venv, which is the common case for an agent
-session.]
+All five were open because the rule had never been worked through as categories. The user did that
+on 2026-09-18, in `scaffoldapy`'s `plans/2026-09-18-python-version-tier-rules.md`, which answered
+three of them outright; the last two were settled with the user while writing the rule.
 
-[NEEDS CLARIFICATION: if the floor is a syntax rule, what enforces it for skills? `repo-tasks`'
-shipped `ruff.toml` infers its target from `requires-python`, and `agent-skills`' scripts are not a
-package, so there is nothing to infer from — measured in `repo-tasks` 2026-08-29: with the field
-absent the linter resolves to no version at all and accepts the newest syntax, while the formatter
-falls back to 3.10. **A skills repo therefore gets the most permissive linting of anything in the
-family**, the exact opposite of what a floor intends. The cheapest fix is a `requires-python` in
-that repo purely so ruff has something to infer from — a small lie told to a linter to get a true
-check, worth weighing against stating the rule and accepting it is unenforced.]
+**Syntax rule or support statement — both, and the tier says which.** Where a resolver stands
+between the code and the interpreter, `requires-python` binds and the declaration _is_ the rule.
+Where nothing does — a script meeting an ambient `python3` — there is no field to declare, so the
+floor is carried by writing 3.11-compatible code plus a version guard that fails with a sentence
+naming the requirement. The two readings were never in competition; they belong to different tiers.
 
-[NEEDS CLARIFICATION: does the floor apply per-script or per-repo? A skill only ever run by an agent
-on this machine has different exposure from one shipped for others to install, and `agent-skills`
-holds both kinds.]
+**What enforces it for skills: the repo develops at the floor**, so the ordinary `pytest` run is the
+check, with nothing separate to keep alive. Stated as a general rule in the tier plan — _a repo
+whose shipped artifacts run on an interpreter it does not choose develops at those artifacts'
+floor._ That also disposes of the `requires-python`-as-a-lie-to-ruff idea: developing at the floor
+gets a true check without telling the linter anything untrue.
 
-[NEEDS CLARIFICATION: does the skills reading belong in this rule's wording in `~/AGENTS.md`, or one
-level down in `agent-skills`' own `AGENTS.md`? The global rule could stay short and state the
-principle. Against: the ambiguity is in the global sentence itself, and whoever reads that sentence
-is the person who needs the answer.]
+**Per-repo, derived from the artifact**, not per-script. `agent-skills` is its own tier for exactly
+this reason rather than being an exception to the library tier.
 
-[NEEDS CLARIFICATION: does "applications start on 3.14" mean the current stable at the time the
-project is generated, or the literal number 3.14? The first is what makes the rule survive 2027; the
-second is what a generated `requires-python` can actually contain. Probably: the rule says "current
-stable", and each project records the number it was generated with.]
+**The skills reading is in the global rule, compressed** — three lines rather than the tier plan's
+four numbered rules. Decided with the user 2026-09-20 on the admission criteria's own tier-placement
+clause: the ambient case has no resolver, no declaration and nothing mechanical enforcing it, which
+makes its miss silent and expensive, and that is the test for staying in the always-loaded file.
+
+**"Applications start on 3.14" means the newest stable, and the rule carries the number too** — "the
+newest stable release, 3.14 today". Decided with the user 2026-09-20. The literal alone goes stale
+the year 3.15 ships with nothing to prompt anyone back; the principle alone leaves an agent to look
+up what the newest stable is, and guess.
 
 ## Recommended direction
 
-1. Add one trigger-named rule to whichever `config/agents-md/` fragment ends up owning it — trigger
-   - rule + one clause of why, per those files' shape. Settle the cluster question above first; it
-     is a real question now rather than the lookup it was when this plan was written.
-2. Put the three measurements above in `contributing/global-agents-md.md` under a matching heading.
-3. `inv deploy.all --name agents-md`, then confirm the deployed `~/AGENTS.md` carries it.
+1. ~~Add one trigger-named rule to whichever `config/agents-md/` fragment ends up owning it.~~
+   **Done 2026-09-20** — `config/agents-md/research.md`, "Setting or changing a Python project's
+   version floor", written as a recipe per criterion 4 because the failure is a wrong-shaped output
+   (the declaration itself) rather than a discipline lapse.
+2. ~~Put the three measurements above in `contributing/global-agents-md.md`.~~ **Done**, under a
+   matching heading, with the two 2026-09-18 measurements the tier work added.
+3. ~~`inv deploy.all --name agents-md`, then confirm.~~ **Done** — line 662 of the assembled
+   `~/.agents/AGENTS.md` and of both copies (`~/.claude/CLAUDE.md`,
+   `~/.copilot/copilot-instructions.md`); `inv ai.check-rule-prerequisites` clean.
 4. The mechanism that makes a project _declare_ its tier is not this repo's — it belongs to
-   `scaffoldapy`, per `ingesta`'s plan. This rule is the statement, not the enforcement.
+   `scaffoldapy`, per `ingesta`'s plan. This rule is the statement, not the enforcement. **Still
+   open there**, as step 2 of that repo's tier-rules plan.
+
+## Migrated to
+
+- `config/agents-md/research.md` — the rule itself, which is what this plan existed to produce.
+- `contributing/global-agents-md.md`, "Setting or changing a Python project's version floor" — the
+  axis, the three measurements (including the two this plan did not have), the bare-`python3`
+  pitfall, and the three decisions: fragment choice, principle-plus-number, and keeping the ambient
+  case in the always-loaded file.
+
+Not migrated: the tier table itself, which is `scaffoldapy`'s
+`plans/2026-09-18-python-version-tier-rules.md` and stays there — that repo owns the generation-time
+question, and a second copy here would diverge from the one that is kept current.

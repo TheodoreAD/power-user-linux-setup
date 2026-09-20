@@ -22,8 +22,9 @@ Two plans here already own halves of this and both have sat at `status: idea` si
 
 - [`2026-08-30-uv-run-destroys-the-project-venv.md`](2026-08-30-uv-run-destroys-the-project-venv.md)
   — the mechanism, measured: `UV_PYTHON` outranks a project's `.python-version`.
-- [`2026-08-29-python-floor-rule-in-the-global-agents-md.md`](2026-08-29-python-floor-rule-in-the-global-agents-md.md)
-  — the rule's permanent home, blocked on which fragment owns it.
+- the rule's permanent home, then blocked on which fragment owns it — landed 2026-09-20 as
+  `config/agents-md/research.md`'s "Setting or changing a Python project's version floor", and that
+  plan is retired.
 
 **This one adds what neither has: how far it has actually spread, and what to do about it.**
 
@@ -218,9 +219,8 @@ rewrites files whose own floor is lower.
 
 Two of the merged plan's four questions are answered above — whether the variable needs to be
 machine-wide (no, a uv-managed pin replaces it) and which tier this repo is in (application, 3.14).
-A third answered itself: the rule's permanent home does **not** block on any of this, since
-`2026-08-29-python-floor-rule-in-the-global-agents-md.md` is blocked on an editorial question about
-fragment ownership and the rule is true either way. One remains.
+A third answered itself: the rule's permanent home never blocked on any of this, and it landed
+2026-09-20 (step 1 below). One remains.
 
 [NEEDS CLARIFICATION: **is a per-repo `.python-version` worth having once the variable is gone?**
 `repo-tasks` has `inv venv.pin` / `venv.check` / `venv.recreate` already, and those are the working
@@ -230,12 +230,11 @@ venvs and pin them", and the second is only worth it if something re-checks the 
 
 ## Recommended direction
 
-1. **Give the rule its home**, since it is blocked on a filing decision rather than on evidence, and
-   every session that has to re-derive it pays for its absence. The user has now had to state it
-   twice out loud. Cheapest of the four and blocks nothing. **Still open** — it is the one step here
-   that is an editorial decision rather than a defect, and
-   `2026-08-29-python-floor-rule-in-the-global-agents-md.md` carries five open questions about the
-   rule's wording, not just about which fragment owns it.
+1. ~~**Give the rule its home.**~~ **Done 2026-09-20** — `config/agents-md/research.md`, "Setting or
+   changing a Python project's version floor", deployed to `~/.agents/AGENTS.md` and both copies.
+   Its five open questions turned out to be four answered by the user's own tier settlement of
+   2026-09-18 and one genuine pair of editorial choices, settled at the time of writing. Evidence
+   and the three decisions are in `contributing/global-agents-md.md` under the same heading.
 2. ~~**Swap the mechanism.**~~ **Done 2026-09-19** — see "What landed" above.
 3. ~~**Fix this repo's own declaration** to `requires-python = ">=3.14"`.~~ **Done 2026-09-19**, at
    a cost the addendum plan only half predicted.
