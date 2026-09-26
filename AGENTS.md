@@ -141,9 +141,10 @@ but it makes the decision yours at the moment you type `@task`, in a file that s
 it. Ask whether the task acts on _this repo_ or on _the machine_: `catalog.render-packages`
 regenerates a docs table from `setup.toml` and is marked; `deploy.all` writes the home directory and
 is not. The line cuts inside collections, not only between them —
-`allowlist.apply`/`status`/`check-coverage` ship while the other six `allowlist` tasks are marked,
-because those write into `cli-allowlist/` in the checkout. `tests/unit/test_cli.py` pins the current
-membership, so a mistake fails the gate rather than shipping.
+`allowlist.apply`/`status`/`check-coverage`/`check-claude` ship while the other six `allowlist`
+tasks are marked, because those write into `cli-allowlist/` in the checkout.
+`tests/unit/test_cli.py` pins the current membership, so a mistake fails the gate rather than
+shipping.
 
 **The install is `--editable`, and that is load-bearing rather than stylistic**: PULSE reaches
 `setup.toml` and `config/` through `Path(__file__).parent.parent`, so a non-editable
@@ -311,6 +312,15 @@ that before re-deriving this architecture from scratch or "fixing" something tha
 deliberate tradeoff** (why there's no PreToolUse hook, why dangerous/write tiers render as `ask`
 rather than `deny`, why `--bare` isn't used for the classify step, why the `apply` manifest lives
 outside the repo).
+
+**Every Bash command rule has one source: `cli-allowlist/tools.toml`.** Written there in
+`tasks/permission_rules.py`'s harness-neutral grammar and rendered per harness, never in a harness's
+own syntax. That fires while you are editing `setup.toml`: its `claude_permissions_*` fields are for
+Claude settings that are not command rules (`Read(...)` grants,
+`Bash(dangerouslyDisableSandbox:true)`), and a `Bash(<command> ...)` added there is a second source
+nothing renders for any other harness. **After a Claude Code upgrade, or any change to an override
+in `tools.toml`, run `inv allowlist.check-claude`** — the installed binary's matching has changed
+silently before, and only this live check sees it.
 
 ## Running the test suite
 
