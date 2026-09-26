@@ -79,10 +79,11 @@ def test_machine_administration_tasks_are_present():
 
 
 def test_the_allowlist_collection_keeps_only_its_machine_facing_tasks():
-    """`apply` writes ~/.claude/settings.json, and `status`/`check-coverage` answer "what would
-    apply do" without needing the repo. The other six write into cli-allowlist/ in the checkout."""
+    """`apply` writes ~/.claude/settings.json, `status`/`check-coverage` answer "what would apply
+    do", and `check-claude` asks whether this machine's Claude Code reads it as intended — none of
+    them needs the repo. The other six write into cli-allowlist/ in the checkout."""
     published = cli._collections_of(cli.production_namespace())["allowlist"]
-    assert set(cli._tasks_of(published)) == {"apply", "status", "check-coverage"}
+    assert set(cli._tasks_of(published)) == {"apply", "status", "check-coverage", "check-claude"}
 
 
 def test_dev_only_marks_the_function_and_survives_the_task_wrapper():

@@ -19,6 +19,8 @@ tradeoffs rather than TODOs: `contributing/cli-allowlist.md`.
     inv allowlist.status     quick table: installed/stale/unreviewed
     inv allowlist.check-coverage  every node-with-children's child has its own renderable rule —
                               apply already refuses to run when this finds anything
+    inv allowlist.check-claude    live: the installed Claude Code loads the rendered rules without
+                              a warning and matches a fixed table of commands as assumed
 
 `render` only prints — `apply` is the only task that writes anywhere, and it only ever touches
 `~/.claude/settings.json`'s `permissions` block (see its docstring for the merge safety design).
@@ -35,6 +37,7 @@ import sys
 import tempfile
 import textwrap
 from collections.abc import Mapping
+from concurrent.futures import ThreadPoolExecutor
 from datetime import UTC, datetime
 from enum import StrEnum
 from pathlib import Path
@@ -1901,6 +1904,138 @@ def check_coverage(c: Context):
         return
     _print_coverage_gaps(gaps)
     raise RuntimeError(f"{len(gaps)} coverage gap(s) — see output above")
+
+
+# ---------------------------------------------------------------------------
+# check-claude: the rendered rules against the installed Claude Code binary, live. The harness's
+# matching changes between releases without notice (2.1.282 began loading rules it had skipped;
+# 2.1.283 began warning about them), and neither the unit suite nor `render` can see that.
+# ---------------------------------------------------------------------------
+
+
+@dataclasses.dataclass(frozen=True)
+class _Probe:
+    """One command and whether the rendered rules should let it run without a prompt. `{other}`
+    is a throwaway repository the probe run adds to the repo-directory list."""
+
+    command: str
+    runs: bool
+    why: str
+
+
+_CLAUDE_PROBES = (
+    _Probe("git reset -q HEAD", True, "allow override on an index-only verb"),
+    _Probe("git reset HEAD --hard", False, "carve-out, flag last"),
+    _Probe("git reset -q --hard HEAD", False, "carve-out, flag in the middle"),
+    _Probe("git restore --staged probe.txt", True, "an allowed extension is not shadowed by its verb's ask"),
+    _Probe("git -C {other} status", True, "repo-directory option, enumerated"),
+    _Probe("git -C {other} reset HEAD --hard", False, "a carve-out holds under -C"),
+    _Probe("git -C {other} -c core.fsmonitor=true status", False, "-c never rides a -C allow"),
+    _Probe("inv probe.status", True, "read-only-by-name convention"),
+    _Probe("inv -c probe probe.status", False, "code-loading core option is guarded"),
+)
+# Every startup diagnostic Claude Code prints about a permission rule starts this way ("Permission
+# allow rule (<file>): ..."), whatever the complaint — so a new kind of warning fails the check too.
+_RULE_WARNING = re.compile(r"Permission \w+ rule \(.*")
+_PROBE_BUDGET_USD = "0.10"
+
+
+def _probe_claude(probe_cmd: str, cwd: Path, settings: Path, debug: Path, model: str) -> bool | None:
+    """Run one command through `claude -p` with only `settings` loaded. True if it ran, False if
+    the harness would have asked, None if the model never attempted that exact command. Raises if
+    `claude` itself fails, which is a finding about the rules, not an inconclusive probe."""
+    prompt = (
+        "Call the Bash tool exactly once with exactly this command string, byte for byte, "
+        f"no changes, no other tool calls:\n\n{probe_cmd}\n\nThen reply with one word: DONE."
+    )
+    # --safe-mode and --setting-sources project (a throwaway cwd with none) load no settings but
+    # `settings`; manual mode with nobody to answer turns every would-be prompt into a denial.
+    result = subprocess.run(
+        [
+            *("claude", "-p", prompt, "--model", model, "--safe-mode", "--setting-sources", "project"),
+            *("--settings", str(settings), "--permission-mode", "manual", "--permission-prompts", "none"),
+            *("--tools", "Bash", "--output-format", "stream-json", "--verbose", "--no-session-persistence"),
+            *("--max-budget-usd", _PROBE_BUDGET_USD, "--debug-file", str(debug)),
+        ],
+        capture_output=True,
+        text=True,
+        timeout=_CLASSIFY_TIMEOUT,
+        cwd=cwd,
+        stdin=subprocess.DEVNULL,
+        check=False,
+    )
+    if result.returncode != 0:
+        # e.g. "Settings file exceeds the 2MiB limit" — the harness refusing the rules outright.
+        raise RuntimeError(f"claude exited {result.returncode}: {result.stderr.strip()[-500:]}")
+    attempted: set[str] = set()
+    denied: set[str] = set()
+    for line in result.stdout.splitlines():
+        try:
+            event = cast(dict[str, object], json.loads(line))
+        except json.JSONDecodeError:
+            continue
+        if event.get("type") == "assistant":
+            message = cast(dict[str, list[dict[str, object]]], event.get("message", {}))
+            for block in message.get("content", []):
+                if block.get("type") == "tool_use":
+                    attempted.add(str(cast(dict[str, object], block.get("input", {})).get("command")))
+        elif event.get("type") == "result":
+            for denial in cast(list[dict[str, dict[str, object]]], event.get("permission_denials", [])):
+                denied.add(str(denial.get("tool_input", {}).get("command")))
+    if probe_cmd not in attempted:
+        return None
+    return probe_cmd not in denied
+
+
+def _init_probe_repo(path: Path) -> None:
+    identity = ["-c", "user.name=probe", "-c", "user.email=probe@invalid"]
+    subprocess.run(["git", "init", "-q", str(path)], check=True)
+    subprocess.run(["git", "-C", str(path), *identity, "commit", "-q", "--allow-empty", "-m", "probe"], check=True)
+
+
+@task
+def check_claude(c: Context, model: str = "haiku"):
+    """Does the installed Claude Code load the rendered rules without a warning, and match them
+    the way the renderer assumes? Runs the whole rule set `apply` would write, isolated from every
+    settings file, against a fixed table of commands in throwaway repositories — each through a
+    real `claude -p` (Haiku, about $0.005 a probe) — and fails on any permission-rule warning in
+    its debug log or any probe that runs when it should ask, or asks when it should run.
+
+    Run it after a Claude Code upgrade, and after changing tools.toml's overrides. It inspects and
+    never writes outside a temporary directory."""
+    if not util.command_exists("claude"):
+        raise RuntimeError("claude CLI not found — nothing to check")
+    with tempfile.TemporaryDirectory(prefix="pulse-check-claude-") as tmp:
+        root = Path(tmp)
+        work, other = root / "work", root / "other"
+        _init_probe_repo(work)
+        _init_probe_repo(other)
+        repo_dirs = [*_repo_dir_spellings(_find_repos(_repo_roots())), str(other)]
+        allow, ask = _compute_claude_rules(_load_all_rules(), repo_dirs)
+        settings = root / "settings.json"
+        settings.write_text(json.dumps({"permissions": {"allow": allow, "ask": ask}}), encoding="utf-8")
+        print(f"[allowlist] probing Claude Code with {len(allow)} allow / {len(ask)} ask rule(s)")
+
+        jobs = [(p, p.command.format(other=other), root / f"debug-{i}.log") for i, p in enumerate(_CLAUDE_PROBES)]
+        with ThreadPoolExecutor(max_workers=6) as pool:
+            futures = [pool.submit(_probe_claude, cmd, work, settings, log, model) for _, cmd, log in jobs]
+            outcomes = [f.result() for f in futures]
+
+        failures = 0
+        for (probe, command, _), ran in zip(jobs, outcomes, strict=True):
+            expected = "runs" if probe.runs else "asks"
+            actual = {True: "runs", False: "asks", None: "NOT ATTEMPTED"}[ran]
+            ok = actual == expected
+            failures += not ok
+            print(f"  {'ok  ' if ok else 'FAIL'} {actual:13} {command}  ({probe.why})")
+        warnings = sorted(
+            {m.group(0) for _, _, log in jobs if log.exists() for m in _RULE_WARNING.finditer(log.read_text())}
+        )
+        for warning in warnings:
+            print(f"  WARN {warning}")
+    if failures or warnings:
+        raise RuntimeError(f"{failures} probe(s) failed, {len(warnings)} rule warning(s) — see output above")
+    print(f"[allowlist] Claude Code matches the rendered rules as assumed ({len(jobs)} probes, no warnings)")
 
 
 # ---------------------------------------------------------------------------
