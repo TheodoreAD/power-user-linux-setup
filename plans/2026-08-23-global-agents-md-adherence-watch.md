@@ -882,3 +882,57 @@ transcript.** `heredoc=0%` while the session wrote a scratch script with `cat > 
 zero), so the rates above are a **floor**. Read every 0% in this watch's tables as "the instrument
 found none", not "there were none" — and the tell is a zero on a row the session has a specific
 reason to expect a hit on.]
+
+### Session 20 — `power-user-linux-setup`, 2026-09-21 to 09-26: auto mode, and the worst file-reading rates since session 18
+
+`f7cff2a9-fb4a-4b46-93f5-903a0e24d1a3`, 87 Bash calls to the harvest boundary, five days elapsed
+across a rate-limit interruption. A research-and-planning session: no source file changed, twelve
+plan commits, two repos pushed.
+
+| row                 | this session | vs session 19 | note                                       |
+| ------------------- | ------------ | ------------- | ------------------------------------------ |
+| `chain`             | **41%** (36) | +30pp         | mostly `cd <research clone> && rg …`       |
+| `head/tail`         | **28%** (24) | +19pp         | **0 actually cut output** (no 141/120)     |
+| `search\|head`      | 20% (17)     | —             |                                            |
+| `sed-n`             | 6% (5)       | +6pp          | `setup.toml`, `arg.cpp`, its own plan file |
+| `cat-view`          | 2% (2)       | +2pp          | `head -40`, `tail -20` to read plan files  |
+| `exit-masked`       | 3% (3)       | −3pp          | **0 wrapped a gate**, 3 a listing          |
+| `rg-replace`        | 1% (1)       | =             | one `rg -rn`, see below                    |
+| `cd-own-repo`       | 0%           | =             |                                            |
+| `git-C-own-repo`    | 0%           | =             |                                            |
+| `git-add-all`       | 0%           | =             |                                            |
+| `git-undo-relative` | 0%           | =             |                                            |
+
+Three green-gate claims, every one from an **unpiped** `inv quality.precommit`. `exit-masked`'s
+three calls were all `library.py add`/`update` behind `tail`, so no claim rested on a masked exit
+and no re-run was owed — the split answered it without needing the `pipefail` check.
+
+**The context this sample exists to record: auto mode was active for the whole session**, and its
+system note prescribed the opposite of the rules being measured — _"read files with `cat`, `head`,
+or `sed -n`, search with `grep` and `find`"_ — while withdrawing `Grep`. That is exactly what
+`plans/2026-08-28-auto-mode-contradicts-bash-rules.md` predicts, and this is the cleanest instance
+the watch has: `sed-n` and `cat-view` both moved off 0%, and `head/tail` and `chain` rose together,
+in a session whose subject had nothing to do with either.
+
+[PITFALL: **the mitigation clause exists and the session never invoked it.** `bash.md`'s auto-mode
+rule says to keep using Read/Edit/Write and _"say once that you are doing so rather than silently
+diverging from a system instruction"_. This session said it **zero** times and diverged toward Bash
+instead — so the clause did not fail, it was never reached. That is a different failure from a
+reworded rule not landing: the rule names a speech act, and nothing prompts a speech act. Worth
+noting before a sixth rewording is proposed, per the standing `[DECISION: adherence, not wording]`.]
+
+[DECISION: **`head/tail` cut nothing, and that is reported as mitigation rather than as an excuse.**
+All 24 calls exited 0, so no output was truncated and no second run was forced — the cost this
+session actually paid for the rule was zero. The rule still earns its place on the calls where the
+count is not known in advance, which is why the row stays a miss; but a watch that reports 28%
+without the `0 actually cut` column overstates what happened here. The column was added for exactly
+this case and this is the first sample where it carries the whole difference.]
+
+[PITFALL: **the `rg -rn` shape fired once and was caught in-session by its own documented detection
+signature — a first for this watch.**
+`plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md` records the signature as "your own
+flag letters appearing where the matched text should be"; here the output came back as
+`EXTERNAL_SKILL_PATTERN = "n**/SKILL.md"`, the `n` from `-rn` substituted into a skills path, and
+the session recognised it, said so, and re-ran without `-r`. Every prior occurrence in that plan was
+caught by luck. One instance is not a trend, but it is the first evidence the signature works as
+written rather than only as a post-hoc explanation.]

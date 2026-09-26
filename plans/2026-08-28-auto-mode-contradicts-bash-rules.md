@@ -39,25 +39,26 @@ sessions that did read and edit files under the note are measured, one of them c
 it and diverged anyway, and one announced the resolution out loud and produced the worst rates in
 the table.
 
-## What the note costs, measured across ten sessions
+## What the note costs, measured across thirteen sessions
 
 Counted from session transcripts with `session-bash-audit`, not recalled. Each row is one session's
 share of its own Bash calls.
 
-| session                | calls | under the note | Bash file reads | `\| head`/`tail` | chained | heredoc edits |
-| ---------------------- | ----: | -------------- | --------------: | ---------------: | ------: | ------------: |
-| this repo, 2026-08-28  |     — | yes            |               — |                — |       — |             — |
-| `repo-tasks`, 08-29/30 |   133 | yes            |             12% |               0% |       — |             — |
-| `agent-skills`, 08-30  |   110 | **refused it** |             ~8% |               4% |       — |             — |
-| `ingesta`, 08-30       |   228 | yes            |              5% |              36% |     22% |           20% |
-| `ingesta`, 08-31/09-01 |   306 | **announced**  |         **18%** |          **46%** | **57%** |       **30%** |
-| `ingesta`, 09-05/06    |   183 | **announced**  |         **15%** |               5% |     21% |            0% |
-| `invoke-stubs`, 09-06  |   306 | **announced**  |              3% |              27% |     44% |            5% |
-| this repo, 09-07 (a)   |   201 | **announced**  |              6% |              23% |     45% |           12% |
-| this repo, 09-07 (b)   |   270 | **announced**  |          **0%** |           **2%** |  **7%** |            1% |
-| this repo, 09-07/08    |   212 | **announced**  |          **0%** |              17% |     33% |            1% |
-| `repo-tasks`, 09-13/18 |   196 | **announced**  |          **9%** |              16% |     27% |            1% |
-| this repo, 09-18       |   185 | **announced**  |         **10%** |              25% | **46%** |            0% |
+| session                | calls | under the note    | Bash file reads | `\| head`/`tail` | chained | heredoc edits |
+| ---------------------- | ----: | ----------------- | --------------: | ---------------: | ------: | ------------: |
+| this repo, 2026-08-28  |     — | yes               |               — |                — |       — |             — |
+| `repo-tasks`, 08-29/30 |   133 | yes               |             12% |               0% |       — |             — |
+| `agent-skills`, 08-30  |   110 | **refused it**    |             ~8% |               4% |       — |             — |
+| `ingesta`, 08-30       |   228 | yes               |              5% |              36% |     22% |           20% |
+| `ingesta`, 08-31/09-01 |   306 | **announced**     |         **18%** |          **46%** | **57%** |       **30%** |
+| `ingesta`, 09-05/06    |   183 | **announced**     |         **15%** |               5% |     21% |            0% |
+| `invoke-stubs`, 09-06  |   306 | **announced**     |              3% |              27% |     44% |            5% |
+| this repo, 09-07 (a)   |   201 | **announced**     |              6% |              23% |     45% |           12% |
+| this repo, 09-07 (b)   |   270 | **announced**     |          **0%** |           **2%** |  **7%** |            1% |
+| this repo, 09-07/08    |   212 | **announced**     |          **0%** |              17% |     33% |            1% |
+| `repo-tasks`, 09-13/18 |   196 | **announced**     |          **9%** |              16% |     27% |            1% |
+| this repo, 09-18       |   185 | **announced**     |         **10%** |              25% | **46%** |            0% |
+| this repo, 09-21/26    |    87 | **never said it** |              8% |              28% | **41%** |            0% |
 
 The 2026-08-28 row is the original observation: no file work happened under the note, so it measures
 nothing about reads.
@@ -481,3 +482,55 @@ user-initiated, a rule telling agents to ignore it would be overriding a deliber
 
 Whatever that sentence says, it does not address the chaining divergence, which has no external
 cause and needs its own audit.
+
+## 2026-09-26 — the clause was not reached, which is a different failure from not working
+
+Session `f7cff2a9` in this repo, auto mode active for its whole five-day span, 87 Bash calls. It is
+recorded as session 20 in `plans/2026-08-23-global-agents-md-adherence-watch.md`, and what it adds
+here is the shape of the miss rather than another set of rates.
+
+**It made the announcement zero times.** Every instance above — the refusal, the watch's session 10
+— stated the override and then diverged anyway, which is why the clause was written down as "at best
+half of one". This session never stated it, and the rates moved exactly as the contradiction
+predicts:
+
+| row         | this session | the rule it contradicts                      |
+| ----------- | ------------ | -------------------------------------------- |
+| `head/tail` | 28% (24)     | never pipe tool output through `head`/`tail` |
+| `sed-n`     | 6% (5)       | Read over `sed -n`                           |
+| `cat-view`  | 2% (2)       | Read over `cat`/`head`/`tail`                |
+| `chain`     | 41% (36)     | one command per call                         |
+
+`sed-n` and `cat-view` both came off 0%, in a session whose subject — evaluating four third-party
+tools — had nothing to do with either rule.
+
+[DECISION: **so the announcement clause has now failed in both available ways, and they need
+different fixes.** Reached-and-ineffective is an adherence problem, which the standing
+`[DECISION: adherence, not wording]` already covers. **Unreached is not**: the clause asks for a
+speech act, and nothing in a session prompts a speech act — there is no tool call, no gate, no
+output to read. A rule whose only trigger is remembering to speak has no trigger. That is worth
+knowing before the sentence this plan is still drafting gets written, because the draft above is
+another sentence of the same kind.]
+
+Two things this session got right, which narrow what the eventual rule has to say:
+
+- **`Grep` being absent caused no confusion.** Every search went through `rg` via Bash with the
+  `rg`-over-`grep` preference intact, which is exactly what the paragraph above prescribes. The
+  prescription works; it just was not what went wrong.
+- **Read, Edit and Write were used throughout for edits**, so the divergence was confined to
+  _reading and searching_. The auto-mode note names both, and only one of them took. Worth recording
+  because a rule written as "keep using the dedicated tools" treats them as one behaviour and the
+  evidence says they separate.
+
+[PITFALL: **the divergence cost nothing measurable this time, and reporting that honestly is what
+keeps the row credible.** All 24 `head`/`tail` calls exited 0 — nothing was truncated, no second run
+was forced, and no claim rested on a cut result. The rule still earns its place on the calls where
+the output size is not known in advance; but a session that reports 28% as a harm it did not suffer
+invites the next reader to discount the whole table. The `0 actually cut output` column exists for
+this and this is the first sample where it carries the entire difference.]
+
+The chaining figure — 41%, the highest the watch has recorded since session 18 — still has no
+external cause. Most of it is the sanctioned cross-repo form (`cd <research clone> && rg …`, reading
+vendor clones outside this repo), which `bash.md` explicitly permits; whether that exemption is
+doing more work than intended is the audit the line above this section asks for, and this session is
+a usable sample for it.

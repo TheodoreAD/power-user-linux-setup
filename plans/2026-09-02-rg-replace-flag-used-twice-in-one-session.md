@@ -385,3 +385,43 @@ For: the existing signature lists "a `-l` that printed lines", which is the **op
 would not fire on rows 12 or 14, so the table is not merely inert here — it is wrong about this
 case. Decide on the next count rather than now. Evidence is in `contributing/global-agents-md.md`
 under this rule's heading.]
+
+### Row 15, 2026-09-26 — the first occurrence the signature demonstrably caught
+
+`power-user-linux-setup`, session `f7cff2a9`, searching a vendor clone for where an agent reads
+skills:
+
+```shell
+rg -rn --no-heading -g '*.ts' '\.agents/skills|agents/skills|claude/skills|skills/' \
+  packages/core/src packages/opencode/src
+```
+
+Two hits came back, both with the pattern overwritten by the replacement string `n` — the letter
+`-r` consumed from the `-rn` bundle:
+
+```
+packages/opencode/src/skill/index.ts:const EXTERNAL_SKILL_PATTERN = "n**/SKILL.md"
+packages/core/src/v1/config/skills.ts:    description: "URLs to fetch skills from (e.g., https://example.com/.well-known/n)"
+```
+
+The session recognised it from the documented signature, said so to the user in the same turn, and
+re-ran without `-r` — which returned the real answer
+(`EXTERNAL_SKILL_PATTERN = "skills/**/SKILL.md"`, and the `.agents`/`.claude` constants the search
+was actually for).
+
+[DECISION: **this is evidence for the detection half and against nothing.** Rows 12 and 14
+established that the signature cannot fire on the suppressed-output forms; this is the ordinary
+visible-output form, where the signature says to look for "your own flag letters appearing where the
+matched text should be" — and a literal `n` sitting inside a path is exactly that. Every prior catch
+in this plan was luck or a command re-read; this one was the table working as written, in-session,
+on the first look at the output. So the answer to the open question above is narrower than it was:
+the signature is sound for the form it covers, and the gap is only the forms that print nothing. A
+row for `-l`/`-c` would still be more wording for a case detection cannot reach.]
+
+[PITFALL: **the same session then produced the opposite result one call later, and that is the more
+useful half.** A second search — `rg -n 'data|XDG|home' packages/opencode/src/global/index.ts` — was
+written correctly and returned nothing, because the path did not exist; the session read the empty
+result as "no matches" and moved on to a different file. No `-r` involved, no signature to fire, and
+the same outcome as a defective call: a well-formed search, a plausible empty answer, and a wrong
+conclusion available for free. Fifteen occurrences of one flag shape have made this plan about `-r`,
+and the class is wider than the flag.]
