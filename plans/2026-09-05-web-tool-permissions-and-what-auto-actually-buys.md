@@ -425,3 +425,12 @@ In order, because each step makes the next one honest:
    first, and aligned with the sandbox's `allowedDomains` rather than substituting for them.
 4. **Only then revisit `claude_default_mode`.** The mode question is downstream of all of this and
    cannot be answered while the friction is what decides it.
+
+## Attachments
+
+- `sandbox_probe.py` — committed, 5 KB, attached 2026-09-26. The script behind the 2026-09-26 probe
+  table: `claude -p` per command with a sandbox block loaded through `--settings`, verdict from
+  `permission_denials`, first output line shown so a sandbox refusal reads apart from a prompt.
+  Lint-fixed after attaching. Re-run it with `SANDBOX` set to the final block once the filter and
+  profile are installed; its probe repos go under `~/.local/state/pulse-sbx-probe`, deliberately
+  outside Claude's own temp dir, and it does not remove them.
