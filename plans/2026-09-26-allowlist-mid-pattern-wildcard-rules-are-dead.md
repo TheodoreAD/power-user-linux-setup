@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-09-26
 ---
 
@@ -200,3 +200,18 @@ reason the renderers differ.
   (which removes the rules that moved out of `setup.toml`).
 - `inv allowlist.check-claude` green on Claude Code 2.1.283, and a fresh session showing no
   permission-rule warnings at startup.
+
+## Migrated to
+
+- `contributing/cli-allowlist.md`: "How each harness matches" (the measured Claude Code and VS Code
+  Copilot semantics above), the `repo_dir_options` section (the `-C` decision, the three designs
+  that lost, the sandbox probe, the 2 MiB cap), and the `allow_overrides` section (the dead
+  carve-outs, the `restore --staged` shadowing, residual flag clusters).
+- `docs/cli-allowlist.md`: the one-source model and when to run `inv allowlist.check-claude`.
+- `cli-allowlist/tools.toml` header and `tasks/permission_rules.py` docstrings: the grammar and each
+  knob, at the implementing lines.
+- `plans/2026-09-05-web-tool-permissions-and-what-auto-actually-buys.md`: the sandbox probe table
+  and the phantom-file pitfall, which are open work there.
+
+Not migrated: the per-commit build log and the size estimates for the withdrawn per-repository
+design, which git history keeps (commits f92d099, 11a9149, c724175).
