@@ -321,6 +321,60 @@ it.]
 This makes the sandbox the owner of a second job, so enabling it now removes prompts that the
 allowlist deliberately stopped trying to remove.
 
+## Re-checked against the docs and changelog, 2026-09-26 (Claude Code 2.1.283)
+
+Read in full: code.claude.com/docs/en/sandboxing and /permissions, plus every sandbox entry in the
+Claude Code changelog. What moved since 2026-09-05:
+
+- **The placeholder files are by design, with no exemption.** The page's "Protected paths" section
+  lists what the sandbox denies writes to inside writable directories — `.claude` settings and
+  `skills`/`agents`/`commands`/`hooks`, `.mcp.json`, and in the working directory only shell startup
+  files, `.gitconfig`, `.vscode`, `.idea`, `.git/hooks`, `.git/config` — and its Troubleshooting
+  entry says that on Linux a not-yet-existing protected path gets a read-only placeholder while a
+  sandboxed command runs, removed afterwards ("Stale sandbox mask files left by a killed session" in
+  `claude doctor` when cleanup is skipped). "There is no way to exempt one of these paths." So the
+  `git status` noise above is permanent for sandboxed commands in the session's own repository. No
+  upstream issue about it was found (`gh search issues --repo anthropics/claude-code`).
+- **The seccomp filter is still optional and separate**:
+  `npm install -g
+  @anthropic-ai/sandbox-runtime`. Not installed (npm globals here: `skills` only),
+  so the docker.sock escape stands until it is. `[packages.node].global_packages` is where it would
+  be declared.
+- **Default writable set** is the working directory, the per-user temp dir, and every
+  `permissions.additionalDirectories` entry — which here already include `~/plans` and
+  `/tmp/claude-1000` (and `~/.claude/jobs`). So the drafted `allowWrite` shrinks: `~/plans` is
+  covered; `~/plans-sensitive` is not.
+- **`docker` is documented as incompatible with the sandbox**; the fix the docs give is
+  `sandbox.excludedCommands: ["docker *"]`, which runs it outside under the normal permission rules.
+- **User-wide enabling needs `sandbox.enabled` in `~/.claude/settings.json`.** `/sandbox` saves only
+  to the current project's `.claude/settings.local.json`. So the `claude_sandbox` field and an
+  `_apply_declared_sandbox()` in `tasks/ai.py` remain necessary, as below.
+- **The AppArmor profile now has a canonical form in the docs** (`/etc/apparmor.d/bwrap`,
+  `profile bwrap /usr/bin/bwrap flags=(unconfined) { userns, ... }`), which PULSE's existing
+  `apparmor-profile` method can own, ending the dependency on `claude-desktop`'s postinst.
+- **HTTPS git through the proxy works** (changelog: "Fixed sandboxed `git` asking credential helpers
+  to store the sandbox proxy's login"). SSH is still undocumented, and every remote here is SSH.
+
+## Decisions parked for the user, 2026-09-26
+
+The user stopped here deliberately: this is a larger change to the system than it looked, and each
+of these wants thought before anything is installed.
+
+[NEEDS CLARIFICATION: **the placeholder files in `git status`.** Options on the table: deploy
+root-anchored entries (`/.bashrc`, `/.gitconfig`, `/.idea`, `/.vscode`, `/.mcp.json`, ...) to the
+global git excludes file through PULSE, at the cost of also hiding a genuinely new untracked file at
+one of those exact paths (tracked files are unaffected); accept the noise and tell agents in
+`AGENTS.md`; or report upstream first.]
+
+[NEEDS CLARIFICATION: **`docker` under the sandbox.** Exclude it (`excludedCommands: ["docker
+*"]`,
+running under the normal permission rules, where the read-only docker verbs are already allowed), or
+leave it sandboxed and let every docker call go through the unsandboxed-retry prompt.]
+
+[NEEDS CLARIFICATION: **whether and when to install.** The seccomp package is a user-level npm
+global; the AppArmor profile needs a `sudo -A` password dialog. Nothing is installed or declared
+yet; the order in "Recommended direction" below still holds.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: whether `WebFetch` should be allowlisted at all before the sandbox is on.
