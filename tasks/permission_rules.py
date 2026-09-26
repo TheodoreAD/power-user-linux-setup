@@ -18,7 +18,7 @@ read — see contributing/cli-allowlist.md's "How each harness matches".
 """
 
 import re
-from collections.abc import Iterable, Sequence
+from collections.abc import Iterable
 from dataclasses import dataclass
 from enum import StrEnum
 from itertools import pairwise
@@ -52,7 +52,8 @@ class Rule:
     """One allow/ask decision about the commands a pattern matches.
 
     `repo_dir_options` names options that take a repository directory and may sit between the
-    tool and its verb (git's `-C`); each renderer spells those its own way. `mode_covered` marks an
+    tool and its verb (git's `-C`); a renderer spells those its own way, or not at all where the
+    harness can't say "one argument" safely. `mode_covered` marks an
     ask a harness's permission mode may already gate more precisely than a pattern can — Claude
     Code's `acceptEdits` does, for in-scope `mkdir`/`rm`/..., so its renderer drops it."""
 
@@ -97,15 +98,15 @@ def claude_inner_wildcard(pattern: str) -> bool:
     return "*" in words[:-1]
 
 
-def claude_patterns(rule: Rule, repo_dirs: Sequence[str] = ()) -> list[str]:
-    """A rule's `Bash(...)` patterns. A repository-directory option is rendered once per known
-    directory rather than as a wildcard: a `*` there is exactly the warned-about shape."""
-    heads = [rule.tool] + [f"{rule.tool} {opt} {d}" for opt in rule.repo_dir_options for d in repo_dirs]
-    bodies = _claude_bodies(rule.tokens)
-    return [f"Bash({head} {body})" if body else f"Bash({head})" for head in heads for body in bodies]
+def claude_patterns(rule: Rule) -> list[str]:
+    """A rule's `Bash(...)` patterns. `repo_dir_options` is not rendered: Claude's syntax has no
+    "one argument", so `git -C * status` is the warned-about shape and lets `-c <program>` ride
+    along, and one rule per repository hit the 2 MiB settings cap. Claude Code's Bash sandbox runs
+    `git -C <repo> <read>` with no rule at all (measured 2026-09-26), so that is where it belongs."""
+    return [f"Bash({rule.tool} {body})" if body else f"Bash({rule.tool})" for body in _claude_bodies(rule.tokens)]
 
 
-def render_claude(rules: Iterable[Rule], repo_dirs: Sequence[str] = ()) -> tuple[list[str], list[str]]:
+def render_claude(rules: Iterable[Rule]) -> tuple[list[str], list[str]]:
     """(allow, ask) pattern lists for `~/.claude/settings.json`, de-duplicated in first-seen order.
 
     Raises on an allow pattern with an inner wildcard: it would print a warning on every session
@@ -116,7 +117,7 @@ def render_claude(rules: Iterable[Rule], repo_dirs: Sequence[str] = ()) -> tuple
     for rule in rules:
         if rule.decision is Decision.ASK and rule.mode_covered:
             continue
-        for pattern in claude_patterns(rule, repo_dirs):
+        for pattern in claude_patterns(rule):
             if rule.decision is Decision.ALLOW and claude_inner_wildcard(pattern):
                 raise RuleSyntaxError(f"{pattern}: Claude Code warns about a wildcard before the last word")
             (allow if rule.decision is Decision.ALLOW else ask)[pattern] = None

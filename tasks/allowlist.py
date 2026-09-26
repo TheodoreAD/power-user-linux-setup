@@ -46,7 +46,6 @@ from typing import NotRequired, TypedDict, cast
 from invoke import Context, task
 
 from . import permission_rules, util
-from .git import PROJECTS_ROOT
 
 
 class Classification(StrEnum):
@@ -97,7 +96,6 @@ class ToolConfig(TypedDict, total=False):
     mode_covered: bool
     cloud_cli: bool
     repo_dir_options: list[str]
-    repo_dir_verbs: list[str]
     overrides_only: bool
     aliases: list[str]
     allow_overrides: list[str]
@@ -1508,6 +1506,7 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
     """One reviewed tool's rules — the per-tool body of _build_rules, which documents every knob."""
     allow, ask = permission_rules.Decision.ALLOW, permission_rules.Decision.ASK
     mode_covered = bool(cfg.get("mode_covered"))
+    repo_opts = tuple(cfg.get("repo_dir_options", []))
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
     extended = [body.split() for body in allow_overrides]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
@@ -1534,7 +1533,7 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
         words = [] if path == _NO_SUBCOMMANDS_KEY else path.split()
         tokens = (*words, permission_rules.ANY_ARGS)
         if classification == Classification.READ_ONLY and not is_cloud_cli:
-            out.append(permission_rules.Rule(name, allow, tokens, _repo_opts_for(tokens, cfg) if words else ()))
+            out.append(permission_rules.Rule(name, allow, tokens, repo_opts if words else ()))
         elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
             classification == Classification.READ_ONLY and is_cloud_cli
         ):
@@ -1545,96 +1544,20 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
 
 
 def _override_rules(name: str, cfg: ToolConfig) -> list[permission_rules.Rule]:
-    """A tool's `allow_overrides`/`ask_overrides`. Both get the repo-directory variants — node
+    """A tool's `allow_overrides`/`ask_overrides`. Both carry the repo-directory options — node
     asks don't, since an unmatched `git -C <repo> push` prompts anyway, but a carve-out has to
     hold under `-C` exactly as it does without it or the `-C` allow would carry the flag through."""
+    repo_opts = tuple(cfg.get("repo_dir_options", []))
     bodies = [(permission_rules.Decision.ALLOW, b) for b in cfg.get("allow_overrides", [])]
     bodies += [(permission_rules.Decision.ASK, b) for b in cfg.get("ask_overrides", [])]
-    out: list[permission_rules.Rule] = []
-    for decision, body in bodies:
-        tokens = _override_tokens(body)
-        out.append(permission_rules.Rule(name, decision, tokens, _repo_opts_for(tokens, cfg)))
-    return out
+    return [permission_rules.Rule(name, decision, _override_tokens(body), repo_opts) for decision, body in bodies]
 
 
-def _repo_opts_for(tokens: tuple[str, ...], cfg: ToolConfig) -> tuple[str, ...]:
-    """The repo-directory options a rule gets: all of them, unless `repo_dir_verbs` narrows the
-    rules that get any to those starting with one of its verbs (the size lever — see tools.toml)."""
-    options = tuple(cfg.get("repo_dir_options", []))
-    verbs = cfg.get("repo_dir_verbs")
-    if not options or verbs is None:
-        return options
-    return options if any(list(tokens[: len(v.split())]) == v.split() for v in verbs) else ()
-
-
-def _repo_roots() -> list[Path]:
-    """Where the repositories an agent points `git -C` at live on this machine. Measured over
-    every transcript here (2026-09-26): 1,077 of those calls targeted ~/projects, 769 the two plans
-    stores, 181 the research library; every other absolute or `~/` target together, 6."""
-    home = Path.home()
-    plans = Path(os.environ.get("PLANS_HOME", home / "plans")).expanduser()
-    return [
-        PROJECTS_ROOT,
-        Path(os.environ.get("RESEARCH_HOME", home / "research")).expanduser() / "repos",
-        plans,
-        Path(os.environ.get("PLANS_SENSITIVE_HOME", f"{plans}-sensitive")).expanduser(),
-    ]
-
-
-def _find_repos(roots: list[Path], max_depth: int = 4) -> list[Path]:
-    """Every git working tree at or under `roots`, stopping at the first `.git` on each path (a
-    repo's own subdirectories are not separate targets) and never following a symlink, which
-    would list one repository under two paths."""
-    found: list[Path] = []
-    frontier = [(root, 0) for root in roots if root.is_dir() and not root.is_symlink()]
-    while frontier:
-        path, depth = frontier.pop()
-        if (path / ".git").exists():
-            found.append(path)
-            continue
-        if depth == max_depth:
-            continue
-        try:
-            children = sorted(path.iterdir())
-        except OSError:
-            continue
-        frontier.extend(
-            (child, depth + 1)
-            for child in children
-            if child.is_dir() and not child.is_symlink() and not child.name.startswith(".")
-        )
-    return sorted(found)
-
-
-def _repo_dir_spellings(repos: list[Path]) -> list[str]:
-    """How an agent writes each repository after `-C`: absolute (1,713 calls measured) or
-    `~/`-relative (320). `../<name>` was 11 calls ever and is not generated. A path Claude's
-    pattern syntax can't carry literally — whitespace, or a `*` it would read as a wildcard — is
-    skipped rather than half-matched."""
-    home = Path.home()
-    spellings: list[str] = []
-    for repo in repos:
-        if any(ch.isspace() or ch == "*" for ch in str(repo)):
-            continue
-        spellings.append(str(repo))
-        if repo.is_relative_to(home):
-            spellings.append(f"~/{repo.relative_to(home).as_posix()}")
-    return spellings
-
-
-def _compute_claude_rules(
-    rules: dict[str, RuleEntry], repo_dirs: list[str] | None = None
-) -> tuple[list[str], list[str]]:
-    """(allow, ask) `Bash(...)` patterns for Claude Code, from _build_rules.
-
-    A repo-directory option (git's `-C`) is expanded over every repository on this machine rather
-    than globbed: any standalone `*` before git's verb makes Claude Code warn at every startup, and
-    lets `-c core.fsmonitor=<program>` ride along unprompted (both confirmed live, 2026-09-26). About
-    20k rules measured at ~1 s and no prompt tokens against a one-rule baseline. The set is machine
-    state, so a repository cloned since the last `apply` prompts on `git -C` until the next one."""
-    if repo_dirs is None:
-        repo_dirs = _repo_dir_spellings(_find_repos(_repo_roots()))
-    return permission_rules.render_claude(_build_rules(rules), repo_dirs)
+def _compute_claude_rules(rules: dict[str, RuleEntry]) -> tuple[list[str], list[str]]:
+    """(allow, ask) `Bash(...)` patterns for Claude Code, from _build_rules. Its renderer leaves
+    repo-directory options out — see permission_rules.claude_patterns for why, and for where
+    cross-repo `git -C` reads are handled instead."""
+    return permission_rules.render_claude(_build_rules(rules))
 
 
 def _coverage_gaps(
@@ -1916,7 +1839,7 @@ def check_coverage(c: Context):
 @dataclasses.dataclass(frozen=True)
 class _Probe:
     """One command and whether the rendered rules should let it run without a prompt. `{other}`
-    is a throwaway repository the probe run adds to the repo-directory list."""
+    is a second throwaway repository beside the one the probe runs in."""
 
     command: str
     runs: bool
@@ -1928,9 +1851,9 @@ _CLAUDE_PROBES = (
     _Probe("git reset HEAD --hard", False, "carve-out, flag last"),
     _Probe("git reset -q --hard HEAD", False, "carve-out, flag in the middle"),
     _Probe("git restore --staged probe.txt", True, "an allowed extension is not shadowed by its verb's ask"),
-    _Probe("git -C {other} status", True, "repo-directory option, enumerated"),
-    _Probe("git -C {other} reset HEAD --hard", False, "a carve-out holds under -C"),
-    _Probe("git -C {other} -c core.fsmonitor=true status", False, "-c never rides a -C allow"),
+    # No -C rule is rendered for Claude on purpose; outside the sandbox this must keep prompting,
+    # and if it ever stops, Claude Code's built-in read-only set has grown a -C form.
+    _Probe("git -C {other} status", False, "no -C rule outside the sandbox"),
     _Probe("inv probe.status", True, "read-only-by-name convention"),
     _Probe("inv -c probe probe.status", False, "code-loading core option is guarded"),
 )
@@ -1962,6 +1885,9 @@ def _probe_claude(probe_cmd: str, cwd: Path, settings: Path, debug: Path, model:
         timeout=_CLASSIFY_TIMEOUT,
         cwd=cwd,
         stdin=subprocess.DEVNULL,
+        # Run from inside an agent session, the child would load that session's environment file
+        # (its direnv export) — a probe should see the machine, not the caller's project.
+        env={k: v for k, v in os.environ.items() if k != "CLAUDE_ENV_FILE"},
         check=False,
     )
     if result.returncode != 0:
@@ -2010,8 +1936,7 @@ def check_claude(c: Context, model: str = "haiku"):
         work, other = root / "work", root / "other"
         _init_probe_repo(work)
         _init_probe_repo(other)
-        repo_dirs = [*_repo_dir_spellings(_find_repos(_repo_roots())), str(other)]
-        allow, ask = _compute_claude_rules(_load_all_rules(), repo_dirs)
+        allow, ask = _compute_claude_rules(_load_all_rules())
         settings = root / "settings.json"
         settings.write_text(json.dumps({"permissions": {"allow": allow, "ask": ask}}), encoding="utf-8")
         print(f"[allowlist] probing Claude Code with {len(allow)} allow / {len(ask)} ask rule(s)")

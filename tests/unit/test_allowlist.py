@@ -366,7 +366,6 @@ def stub_registry(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
     def stub(registry: allowlist.Registry, caches: dict[str, allowlist.CacheEntry] | None = None) -> None:
         monkeypatch.setattr(allowlist, "_load_registry", lambda: registry)
         monkeypatch.setattr(allowlist, "_load_cache", (caches or {}).get)
-        monkeypatch.setattr(allowlist, "_repo_roots", list)  # never walk the real home directory
 
     return stub
 
@@ -446,7 +445,7 @@ def test_compute_claude_rules_overrides_ignored_for_unreviewed_tool(stub_registr
     assert allowlist._compute_claude_rules(rules) == ([], [])
 
 
-def test_compute_claude_rules_repo_dir_options_cover_allows_and_carve_outs_not_node_asks(stub_registry):
+def test_repo_dir_options_reach_copilot_allows_and_carve_outs_not_node_asks(stub_registry):
     cfg: allowlist.ToolConfig = {
         "repo_dir_options": ["-C"],
         "allow_overrides": ["reset"],
@@ -454,49 +453,25 @@ def test_compute_claude_rules_repo_dir_options_cover_allows_and_carve_outs_not_n
     }
     stub_registry({"git": cfg})
     rules = {"git": _rule_entry({"status": _rule_node("read_only"), "push": _rule_node("dangerous")})}
-    allow, ask = allowlist._compute_claude_rules(rules, repo_dirs=["/p/a"])
-    assert allow == [
-        "Bash(git status *)",
-        "Bash(git -C /p/a status *)",
-        "Bash(git reset *)",
-        "Bash(git -C /p/a reset *)",
-    ]
-    # The carve-out must hold under `-C` exactly as without it, or `git -C /p/a reset HEAD -x`
-    # would ride the `-C` allow. A node ask needs no variant: unmatched `-C` forms prompt anyway.
-    assert "Bash(git -C /p/a reset * -x)" in ask
-    assert "Bash(git -C /p/a push *)" not in ask
+    keys = {k: v for k, v in permission_rules.render_copilot(allowlist._build_rules(rules)).items() if "-C" in k}
+    # The carve-out must hold under `-C` exactly as without it, or `git -C x reset HEAD -x` would
+    # ride the `-C` allow. A node ask needs no variant: an unmatched `-C` form prompts anyway.
+    assert sorted(keys.values()) == [False, True, True]
+    assert not [k for k in keys if "push" in k]
 
 
-def test_compute_claude_rules_repo_dir_verbs_narrow_which_rules_get_variants(stub_registry):
-    cfg: allowlist.ToolConfig = {
-        "repo_dir_options": ["-C"],
-        "repo_dir_verbs": ["status", "remote get-url"],
-        "allow_overrides": ["reset"],
-        "ask_overrides": ["reset ... -x"],
-    }
-    stub_registry({"git": cfg})
-    nodes = {verb: _rule_node("read_only") for verb in ("status", "log", "remote get-url")}
-    allow, ask = allowlist._compute_claude_rules({"git": _rule_entry(nodes)}, repo_dirs=["/p/a"])
-    assert [p for p in allow + ask if " -C " in p] == [
-        "Bash(git -C /p/a remote get-url *)",
-        "Bash(git -C /p/a status *)",
-    ]
+def test_repo_dir_options_render_nothing_for_claude(stub_registry):
+    # Claude Code's Bash sandbox covers `git -C <repo> <read>`; no rule shape here is safe.
+    stub_registry({"git": {"repo_dir_options": ["-C"]}})
+    rules = {"git": _rule_entry({"status": _rule_node("read_only")})}
+    assert allowlist._compute_claude_rules(rules) == (["Bash(git status *)"], [])
 
 
-def test_real_registry_fits_the_settings_budget_on_a_machine_with_300_repos():
-    # Claude Code rejects a settings file over 2 MiB outright; every allowed git verb across ~280
-    # repositories came to 2.7 MB before repo_dir_verbs. Paths as long as real ones.
-    repos = [f"/home/someone/projects/github.com-someone/project-{n:03d}" for n in range(300)]
-    repo_dirs = [spelling for r in repos for spelling in (r, r.replace("/home/someone", "~"))]
-    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules(), repo_dirs=repo_dirs)
+def test_real_registry_fits_the_settings_budget():
+    # Claude Code rejects a settings file over 2 MiB outright, with every setting in it.
+    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules())
     size = len(json.dumps({"permissions": {"allow": allow, "ask": ask}}, indent=2).encode())
-    assert size < allowlist.util.CLAUDE_SETTINGS_BUDGET * 0.9, size
-
-
-def test_compute_claude_rules_repo_dir_options_skip_a_flat_tool(stub_registry):
-    stub_registry({"flat": {"no_subcommands": True, "repo_dir_options": ["-C"]}})
-    rules = {"flat": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("read_only")})}
-    assert allowlist._compute_claude_rules(rules, repo_dirs=["/p/a"]) == (["Bash(flat *)"], [])
+    assert size < allowlist.util.CLAUDE_SETTINGS_BUDGET * 0.5, size
 
 
 def test_build_rules_overrides_only_ignores_classification_and_review(stub_registry):
@@ -524,42 +499,12 @@ def test_real_registry_renders_for_claude_without_any_warned_shape():
     # The whole tracked rule set, through the real renderer: no colon-star suffix anywhere (a
     # mid-pattern `*` beside one is read literally), and render_claude itself raises on an allow
     # with a standalone `*` before its last word (Claude warns about that at every startup).
-    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules(), repo_dirs=["/p/a", "~/p/a"])
-    assert "Bash(git -C ~/p/a status *)" in allow
+    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules())
     assert not [p for p in allow + ask if ":*" in p]
     # Every glob-widened allow has its code-loading guard: `inv -c <module> x.status` must prompt.
     for program in ("inv", "spowse", "spouse"):
         assert f"Bash({program} *.status)" in allow
         assert {f"Bash({program} -c*)", f"Bash({program} * -c*)", f"Bash({program} * -r*)"} <= set(ask)
-
-
-@pytest.fixture
-def repo_tree(tmp_path: Path) -> Path:
-    """root/{org/repo, org/nested/deep, plain} plus the shapes discovery must not list."""
-    for repo in ("org/repo", "org/nested/deep", "plain"):
-        (tmp_path / "root" / repo / ".git").mkdir(parents=True)
-    (tmp_path / "root" / "org" / "repo" / "sub" / ".git").mkdir(parents=True)  # a repo's own subtree
-    (tmp_path / "root" / "wt").mkdir()
-    (tmp_path / "root" / "wt" / ".git").write_text("gitdir: elsewhere\n", encoding="utf-8")  # a worktree
-    (tmp_path / "root" / ".hidden" / "r" / ".git").mkdir(parents=True)
-    (tmp_path / "root" / "link").symlink_to(tmp_path / "root" / "plain")
-    return tmp_path / "root"
-
-
-def test_find_repos_stops_at_each_repo_and_skips_hidden_and_symlinks(repo_tree: Path):
-    found = allowlist._find_repos([repo_tree, repo_tree / "missing"])
-    assert [p.relative_to(repo_tree).as_posix() for p in found] == ["org/nested/deep", "org/repo", "plain", "wt"]
-
-
-def test_find_repos_lists_a_root_that_is_itself_a_repo(repo_tree: Path):
-    # A plans store is a repository at its own root.
-    assert allowlist._find_repos([repo_tree / "plain"]) == [repo_tree / "plain"]
-
-
-def test_repo_dir_spellings_absolute_and_home_relative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
-    monkeypatch.setenv("HOME", str(tmp_path))
-    repos = [tmp_path / "p" / "a", Path("/elsewhere/b"), tmp_path / "has space", tmp_path / "glob*"]
-    assert allowlist._repo_dir_spellings(repos) == [str(tmp_path / "p" / "a"), "~/p/a", "/elsewhere/b"]
 
 
 def test_coverage_gaps_none_when_every_child_has_own_rule():

@@ -62,13 +62,10 @@ def test_claude_patterns_never_use_the_colon_star_suffix():
         assert not any(":*" in p for p in claude_patterns(_rule(body)))
 
 
-def test_claude_patterns_enumerate_repo_dirs_instead_of_globbing_them():
-    rule = _rule("status ...", repo_dir_options=("-C",))
-    assert claude_patterns(rule, ["/p/a", "~/p/a"]) == [
-        "Bash(git status *)",
-        "Bash(git -C /p/a status *)",
-        "Bash(git -C ~/p/a status *)",
-    ]
+def test_claude_patterns_leave_repo_dir_options_out():
+    # A `*` for the directory warns at every startup and lets `-c <program>` ride along; one rule
+    # per repository overran the 2 MiB settings cap. The sandbox is where cross-repo reads go.
+    assert claude_patterns(_rule("status ...", repo_dir_options=("-C",))) == ["Bash(git status *)"]
 
 
 @pytest.mark.parametrize(
