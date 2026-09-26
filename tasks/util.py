@@ -829,14 +829,28 @@ def load_claude_settings() -> ClaudeSettings:
     return cast(ClaudeSettings, load_json(CLAUDE_SETTINGS)) if CLAUDE_SETTINGS.exists() else {}
 
 
+# Claude Code refuses a settings file over 2 MiB outright ("Settings file exceeds the 2MiB limit",
+# exit 1, 2.1.283) — every setting in it lost, not just the excess. Half the cap leaves room for
+# growth between writes, and is where a write is refused rather than risked.
+CLAUDE_SETTINGS_BUDGET = 1024 * 1024
+
+
 def write_claude_settings(settings: ClaudeSettings) -> None:
     """Backup CLAUDE_SETTINGS (if present) then overwrite it with `settings`. Shared by
     tasks/ai.py and tasks/allowlist.py, which each merge their own slice of permissions into the
-    same file and must never clobber the other's — see their callers for the merge logic."""
+    same file and must never clobber the other's — see their callers for the merge logic.
+
+    Raises instead of writing past CLAUDE_SETTINGS_BUDGET."""
+    text = json.dumps(settings, indent=2) + "\n"
+    if len(text.encode()) > CLAUDE_SETTINGS_BUDGET:
+        raise RuntimeError(
+            f"refusing to write {CLAUDE_SETTINGS}: {len(text.encode()):,} bytes is over the "
+            f"{CLAUDE_SETTINGS_BUDGET:,}-byte budget (Claude Code rejects the whole file past 2 MiB)"
+        )
     if CLAUDE_SETTINGS.exists():
         CLAUDE_SETTINGS.with_suffix(".json.bak").write_text(CLAUDE_SETTINGS.read_text())
     CLAUDE_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-    CLAUDE_SETTINGS.write_text(json.dumps(settings, indent=2) + "\n")
+    CLAUDE_SETTINGS.write_text(text)
 
 
 def _excluded_tags() -> set[str]:

@@ -13,7 +13,8 @@ tradeoffs rather than TODOs: `contributing/cli-allowlist.md`.
                               per subcommand node and per risk-relevant flag, incrementally —
                               only new/changed nodes (by content hash) are ever re-sent
     inv allowlist.review     human gate: shows what's new/changed, marks it reviewed
-    inv allowlist.render     deterministic: reviewed rules -> Claude or Copilot rule syntax
+    inv allowlist.render     deterministic: reviewed rules -> harness-neutral rules
+                              (tasks/permission_rules.py) -> Claude or Copilot rule syntax
     inv allowlist.apply      deterministic: merges reviewed Claude rules into ~/.claude/settings.json
     inv allowlist.status     quick table: installed/stale/unreviewed
     inv allowlist.check-coverage  every node-with-children's child has its own renderable rule —
@@ -93,6 +94,7 @@ class ToolConfig(TypedDict, total=False):
     mode_covered: bool
     cloud_cli: bool
     repo_dir_options: list[str]
+    repo_dir_verbs: list[str]
     overrides_only: bool
     aliases: list[str]
     allow_overrides: list[str]
@@ -1504,7 +1506,6 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
     allow, ask = permission_rules.Decision.ALLOW, permission_rules.Decision.ASK
     mode_covered = bool(cfg.get("mode_covered"))
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
-    repo_opts = tuple(cfg.get("repo_dir_options", []))
     extended = [body.split() for body in allow_overrides]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
     # top-level service-group command, classified on what *that* does with no args (usually
@@ -1530,7 +1531,7 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
         words = [] if path == _NO_SUBCOMMANDS_KEY else path.split()
         tokens = (*words, permission_rules.ANY_ARGS)
         if classification == Classification.READ_ONLY and not is_cloud_cli:
-            out.append(permission_rules.Rule(name, allow, tokens, repo_opts if words else ()))
+            out.append(permission_rules.Rule(name, allow, tokens, _repo_opts_for(tokens, cfg) if words else ()))
         elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
             classification == Classification.READ_ONLY and is_cloud_cli
         ):
@@ -1544,12 +1545,23 @@ def _override_rules(name: str, cfg: ToolConfig) -> list[permission_rules.Rule]:
     """A tool's `allow_overrides`/`ask_overrides`. Both get the repo-directory variants — node
     asks don't, since an unmatched `git -C <repo> push` prompts anyway, but a carve-out has to
     hold under `-C` exactly as it does without it or the `-C` allow would carry the flag through."""
-    repo_opts = tuple(cfg.get("repo_dir_options", []))
-    allow, ask = permission_rules.Decision.ALLOW, permission_rules.Decision.ASK
-    return [
-        *(permission_rules.Rule(name, allow, _override_tokens(b), repo_opts) for b in cfg.get("allow_overrides", [])),
-        *(permission_rules.Rule(name, ask, _override_tokens(b), repo_opts) for b in cfg.get("ask_overrides", [])),
-    ]
+    bodies = [(permission_rules.Decision.ALLOW, b) for b in cfg.get("allow_overrides", [])]
+    bodies += [(permission_rules.Decision.ASK, b) for b in cfg.get("ask_overrides", [])]
+    out: list[permission_rules.Rule] = []
+    for decision, body in bodies:
+        tokens = _override_tokens(body)
+        out.append(permission_rules.Rule(name, decision, tokens, _repo_opts_for(tokens, cfg)))
+    return out
+
+
+def _repo_opts_for(tokens: tuple[str, ...], cfg: ToolConfig) -> tuple[str, ...]:
+    """The repo-directory options a rule gets: all of them, unless `repo_dir_verbs` narrows the
+    rules that get any to those starting with one of its verbs (the size lever — see tools.toml)."""
+    options = tuple(cfg.get("repo_dir_options", []))
+    verbs = cfg.get("repo_dir_verbs")
+    if not options or verbs is None:
+        return options
+    return options if any(list(tokens[: len(v.split())]) == v.split() for v in verbs) else ()
 
 
 def _repo_roots() -> list[Path]:

@@ -54,6 +54,8 @@
 #                     this machine, because any `*` there is a warned-about shape that also lets
 #                     `-c core.fsmonitor=<program>` through. Never list `-c` here: allowing it is
 #                     arbitrary code execution by design.
+#   repo_dir_verbs   when set, only rules for these verbs get the repo_dir_options variants —
+#                     the size lever, since Claude's variants multiply by repository.
 #   overrides_only   true = the tool's rules are its overrides and nothing else: never extracted
 #                     or classified, rendered without the review gate because this table is itself
 #                     the hand-reviewed artifact. For a tool whose own verdict is meaningless as a
@@ -128,6 +130,26 @@ max_nodes = 100
 # `git -C <repo> status` is the commonest cross-repo shape agents write (2,000+ calls on this machine
 # by 2026-09-26). Claude Code's built-in read-only set covers no `-C` form at all.
 repo_dir_options = ["-C"]
+# Only these verbs get the `-C` variants. Claude takes one rule per repository per verb, and
+# Claude Code rejects a settings file over 2 MiB: every allowed verb across ~280 repositories came
+# to 2.7 MB. These are the allowed verbs agents actually wrote after `git -C` across every
+# transcript here (tallied 2026-09-26: status, log, add, show and fetch lead by far; `commit` and
+# `push` are as common but prompt by design). `rm`/`reset`/`restore` are left out on purpose: each
+# would need its code-losing carve-outs repeated per repository too.
+repo_dir_verbs = [
+  "status",
+  "log",
+  "show",
+  "add",
+  "fetch",
+  "rev-parse",
+  "diff",
+  "remote get-url",
+  "remote show",
+  "ls-files",
+  "grep",
+  "blame",
+]
 # 2026-08-25 prompt audit (session-bash-audit skill, references/research.md): under acceptEdits,
 # 67% of all permission prompts were the commit flow — `git add` alone 35 of 148, plus rm/restore/
 # reset/fetch that weren't registered at all. ~/.agents/AGENTS.md mandates many small commits, staging

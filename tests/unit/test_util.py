@@ -130,6 +130,19 @@ def test_remove_block_on_a_missing_file_is_not_an_error(tmp_path):
     assert util.remove_block(tmp_path / "never-created", "mine") is False
 
 
+def test_write_claude_settings_refuses_past_the_budget_and_leaves_the_file_alone(monkeypatch, tmp_path):
+    # Claude Code rejects a settings file over 2 MiB whole, so an oversized write would lose every
+    # setting in it, not just the rules that pushed it over.
+    settings_file = tmp_path / "settings.json"
+    settings_file.write_text('{"theme": "dark"}\n', encoding="utf-8")
+    monkeypatch.setattr(util, "CLAUDE_SETTINGS", settings_file)
+    monkeypatch.setattr(util, "CLAUDE_SETTINGS_BUDGET", 64)
+    with pytest.raises(RuntimeError, match="over the 64-byte budget"):
+        util.write_claude_settings({"permissions": {"allow": ["Bash(x *)"] * 10}})
+    assert settings_file.read_text(encoding="utf-8") == '{"theme": "dark"}\n'
+    assert not settings_file.with_suffix(".json.bak").exists()
+
+
 def test_packages_by_method_filters_by_method_and_enabled(monkeypatch):
     monkeypatch.setattr(
         util,

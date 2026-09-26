@@ -467,6 +467,32 @@ def test_compute_claude_rules_repo_dir_options_cover_allows_and_carve_outs_not_n
     assert "Bash(git -C /p/a push *)" not in ask
 
 
+def test_compute_claude_rules_repo_dir_verbs_narrow_which_rules_get_variants(stub_registry):
+    cfg: allowlist.ToolConfig = {
+        "repo_dir_options": ["-C"],
+        "repo_dir_verbs": ["status", "remote get-url"],
+        "allow_overrides": ["reset"],
+        "ask_overrides": ["reset ... -x"],
+    }
+    stub_registry({"git": cfg})
+    nodes = {verb: _rule_node("read_only") for verb in ("status", "log", "remote get-url")}
+    allow, ask = allowlist._compute_claude_rules({"git": _rule_entry(nodes)}, repo_dirs=["/p/a"])
+    assert [p for p in allow + ask if " -C " in p] == [
+        "Bash(git -C /p/a remote get-url *)",
+        "Bash(git -C /p/a status *)",
+    ]
+
+
+def test_real_registry_fits_the_settings_budget_on_a_machine_with_300_repos():
+    # Claude Code rejects a settings file over 2 MiB outright; every allowed git verb across ~280
+    # repositories came to 2.7 MB before repo_dir_verbs. Paths as long as real ones.
+    repos = [f"/home/someone/projects/github.com-someone/project-{n:03d}" for n in range(300)]
+    repo_dirs = [spelling for r in repos for spelling in (r, r.replace("/home/someone", "~"))]
+    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules(), repo_dirs=repo_dirs)
+    size = len(json.dumps({"permissions": {"allow": allow, "ask": ask}}, indent=2).encode())
+    assert size < allowlist.util.CLAUDE_SETTINGS_BUDGET * 0.9, size
+
+
 def test_compute_claude_rules_repo_dir_options_skip_a_flat_tool(stub_registry):
     stub_registry({"flat": {"no_subcommands": True, "repo_dir_options": ["-C"]}})
     rules = {"flat": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("read_only")})}
