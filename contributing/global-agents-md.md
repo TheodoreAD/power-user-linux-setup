@@ -1132,9 +1132,11 @@ framing under which one gets made.
 The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are rendered as allow rules by
 `cli-allowlist`, and the mutating ones are meant to prompt — the earlier "expect a one-off prompt"
 framing read as friction to minimize, and under auto mode the prompt never came at all (see the
-cluster intro above). The allow rules only started matching on 2026-09-26: the `git -C * status:*`
-form they were first written in never matched anything, and they are now one rule per repository on
-the machine (`repo_dir_options` in `contributing/cli-allowlist.md`).
+cluster intro above). Those allow rules never matched anything: the `git -C * status:*` form they
+were written in is read with a literal `*` by Claude Code, and no form of the rule is both safe and
+warning-free. On 2026-09-26 they were withdrawn for Claude in favour of its Bash sandbox, which runs
+cross-repo reads unprompted (`repo_dir_options` in `contributing/cli-allowlist.md`). Until the
+sandbox is on, `git -C` reads prompt.
 
 ## Running a read-only command against a different repo
 

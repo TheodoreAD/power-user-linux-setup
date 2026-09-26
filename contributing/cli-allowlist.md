@@ -534,32 +534,44 @@ and the transcript audit behind the decision are in the `session-bash-audit` ski
   Code's own default instead of an explicit rule. `apply`'s manifest diff removed the six old `ask`
   rules cleanly on the next run — no hand edit. Copilot has no such mode, so its renderer keeps
   those asks.
-- **`repo_dir_options = ["-C"]`** and **`repo_dir_verbs`** (`git`). Every rendered rule assumes the
-  subcommand is the second word; `git -C <path> status` isn't, so it matches nothing and prompts —
-  the most common unmatched git shape in the transcripts, and Claude Code's built-in read-only set
-  covers no `-C` form either (not even `git -C . status`, measured). The option gets a variant of
-  every allow rule and ask override for the listed verbs; node asks get none, since an unmatched
-  `git -C x push` prompts anyway. Copilot's renderer says "exactly one argument" as a regex.
-  **Claude's renderer enumerates the repositories on this machine** — the projects root, the
-  research library and both plans stores, absolute and `~/` spelling, which together are 99% of the
-  `-C` calls ever made here — and renders one rule per repository and verb.
+- **`repo_dir_options = ["-C"]`** (`git`). Every rendered rule assumes the subcommand is the second
+  word; `git -C <path> status` isn't, so it matches nothing and prompts — the most common unmatched
+  git shape in the transcripts, and Claude Code's built-in read-only set covers no `-C` form either
+  (not even `git -C . status`, measured). The option marks every allow rule and ask override as also
+  valid behind `-C <dir>`; node asks aren't marked, since an unmatched `git -C x push` prompts
+  anyway. **Copilot's renderer** says "exactly one argument" as a regex. **Claude's renders nothing
+  for it, deliberately**, and cross-repo reads are left to Claude Code's Bash sandbox.
 
-  That is the third design, and the two before it are worth knowing. **2026-08-24 to 2026-09-26:
-  `global_option_prefixes = ["-C *", "-c *"]`**, rendered as `Bash(git -C * status:*)`. It never
-  matched anything: Claude Code skipped rules with a mid-pattern `*` and a trailing `:*` until
-  2.1.282, then loaded them reading the `*` literally, and warned about all 54 from 2.1.283. **A
-  working glob was then rejected** because every form of it — `git -C * status`, `../*`, `~/*`,
-  `*/*`, an absolute root followed by `/*` — draws a warning at every startup, and the `*` lets
-  `-c core.fsmonitor=<program>` through without a prompt (both confirmed live). `-c` itself is never
-  listed: allowing it is arbitrary code execution by construction.
+  That is the fourth design, and all three before it are worth knowing, because each looks like the
+  obvious fix. **2026-08-24 to 2026-09-26: `global_option_prefixes = ["-C *", "-c *"]`**, rendered
+  as `Bash(git -C * status:*)`. It never matched anything: Claude Code skipped rules with a
+  mid-pattern `*` and a trailing `:*` until 2.1.282, then loaded them reading the `*` literally, and
+  warned about all 54 from 2.1.283. **A working glob** was rejected because every form of it —
+  `git -C * status`, `../*`, `~/*`, `*/*`, an absolute root followed by `/*` — draws a warning at
+  every startup, and the `*` lets `-c core.fsmonitor=<program>` through without a prompt (both
+  confirmed live). **One rule per repository** found on the machine (projects root, research
+  library, plans stores; absolute and `~/` spelling) worked with no warning, and was built and then
+  withdrawn the same day: across 279 repositories it rendered 2.7 MB, and **Claude Code rejects a
+  settings file over 2 MiB outright**, losing every setting in it. Narrowed to the verbs agents
+  actually use after `-C` it came to 626 KB, workable but large, stale for every repository cloned
+  since the last `apply`, and made redundant by the next option. `-c` itself is never listed:
+  allowing it is arbitrary code execution by construction.
 
-  **The size cap is what `repo_dir_verbs` is for.** Claude Code rejects a settings file over 2 MiB
-  with every setting in it, not just the rules. Every allowed git verb across 279 repositories came
-  to 2.7 MB; the verbs agents actually write after `-C` bring it to about 626 KB.
-  `util.write_claude_settings` refuses to write past 1 MiB, and a unit test pins the tracked rules
-  under that for a 300-repository machine. Rule count as such is cheap — 25k extra rules measured at
-  about +1 s and zero prompt tokens — so bytes, not rules, are the budget. The set is machine state:
-  a repository cloned after the last `apply` prompts on `git -C` until the next one.
+  **The sandbox answer, probed 2026-09-26** with the drafted block from
+  `plans/2026-09-05-web-tool-permissions-and-what-auto-actually-buys.md` loaded and no `-C` rules:
+  `git -C <other repo> status` and `log` run without a prompt; `git -C <other repo> add` runs and
+  fails with `Read-only file system` (a real session then retries unsandboxed, which the declared
+  `Bash(dangerouslyDisableSandbox:true)` ask turns into a prompt); `-c core.fsmonitor=…` still
+  prompts; and the ask carve-outs still prompt. So the boundary moves from pattern text to the OS,
+  and the ask rules keep their meaning. Enabling the sandbox is that plan's work, with its open
+  questions and one found here — inside the sandbox the session's own working directory holds
+  placeholder device files (`.bashrc`, `.gitconfig`, `.gitmodules`, `.idea`, `.vscode`, `.mcp.json`,
+  `.claude/`) that `git status` lists as untracked. Until then, cross-repo git prompts, as it always
+  has.
+
+  **Bytes are the budget, not rules.** 25k extra rules measured at about +1 s and zero prompt
+  tokens, but the file cap is hard, so `util.write_claude_settings` refuses to write past 1 MiB and
+  a unit test pins the tracked rules under half of that.
 
 Under `auto` mode the picture differs: the classifier, not the prompt, catches an unmatched
 `git -C x push`, and it approved all 81 of those calls in the audit window — one of the reasons the
@@ -678,10 +690,9 @@ freshly-set-up install) — this was a preference call, not a fix.
   still needs manual copy-paste from `render --target=copilot`. Both renderers read the same rules,
   so the parent-with-children skip, the overrides and the carve-outs reach Copilot too; VS Code's
   precedence was confirmed from its source ("How each harness matches").
-- **No Windows path spellings for `git -C`.** `_repo_dir_spellings` is the one place to add `C:\…`,
-  `C:/…` and `/c/…`; nothing on this machine runs Claude Code on Windows.
-- **No sandboxing integration** (`/sandbox`, OS-level filesystem/network isolation) — a stronger,
-  orthogonal control considered out of scope for this pass.
+- **The Bash sandbox is not on yet**, and it is what Claude's cross-repo `git -C` reads now rely on
+  (see `repo_dir_options` above). Enabling it is
+  `plans/2026-09-05-web-tool-permissions-and-what-auto-actually-buys.md`.
 - **No PreToolUse hook** — see the `render`/`apply` section above for why this was a deliberate
   rejection, not a TODO.
 - **No node-level review override beyond `needs_review`.** `reconfirm` closes this gap specifically
