@@ -170,6 +170,8 @@ ask_overrides = [
   "rm ... --force",
   "rm ... -rf",
   "rm ... -fr",
+  "rm ... -qf",
+  "rm ... -fq",
 ]
 subcommands = [
   "status",
