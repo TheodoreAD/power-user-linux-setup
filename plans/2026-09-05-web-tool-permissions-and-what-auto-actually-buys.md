@@ -293,9 +293,10 @@ narrower one breaks.]
 
 ## Probed 2026-09-26: the sandbox now also carries cross-repo `git -C`
 
-`plans/2026-09-26-allowlist-mid-pattern-wildcard-rules-are-dead.md` needed somewhere for
-`git -C <repo> <read>` to run unprompted. No Claude rule shape is both safe and warning-free, and
-one rule per repository overran the 2 MiB settings cap, so the allowlist now renders nothing for
+The 2026-09-26 allowlist rework (plan since retired; the reasoning is in
+`contributing/cli-allowlist.md`, section "`mode_covered` and `repo_dir_options`") needed somewhere
+for `git -C <repo> <read>` to run unprompted. No Claude rule shape is both safe and warning-free,
+and one rule per repository overran the 2 MiB settings cap, so the allowlist now renders nothing for
 `-C` and relies on this sandbox. Probed with this plan's block through `claude -p --settings`
 (manual mode, nobody to answer, no `-C` rules, throwaway repos outside Claude's temp directory):
 
