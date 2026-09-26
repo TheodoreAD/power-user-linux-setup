@@ -40,7 +40,7 @@ from typing import NotRequired, TypedDict, cast
 
 from invoke import Context, task
 
-from . import util
+from . import permission_rules, util
 
 
 class Classification(StrEnum):
@@ -90,7 +90,6 @@ class ToolConfig(TypedDict, total=False):
     no_subcommands: bool
     mode_covered: bool
     cloud_cli: bool
-    global_option_prefixes: list[str]
     allow_overrides: list[str]
     ask_overrides: list[str]
 
@@ -1429,85 +1428,65 @@ def review(c: Context, apply_all: bool = False, only: str | None = None, tool: s
             print(f"  -> {name} left unreviewed")
 
 
-def _compute_claude_rules(rules: dict[str, RuleEntry]) -> tuple[list[str], list[str]]:
-    """Reviewed rules -> (allow patterns, ask patterns). Shared by `render` (prints it) and
-    `apply` (merges it into ~/.claude/settings.json) so the two can never drift apart. Per-flag
-    ratings aren't rendered into rules here: Claude's Bash permission rules are literal-prefix
-    globs, and flags can appear in any order/position in a real invocation, so there's no clean
-    prefix-based way to carve out just "this subcommand, except with --force" — that data stays
-    analysis/review-only until there's an actual consumer that can act on it (e.g. a future
-    PreToolUse hook, deliberately not built yet — see contributing/cli-allowlist.md).
+def _build_rules(rules: dict[str, RuleEntry]) -> list[permission_rules.Rule]:
+    """Reviewed rules -> harness-neutral `Rule`s, the one source every harness renderer reads.
+    `render` and `apply` both go through here, so what is printed and what is applied can never
+    drift apart. Per-flag ratings aren't turned into rules: flags appear in any order in a real
+    invocation, so "this subcommand, except with --force" has no general pattern — that data stays
+    analysis/review-only, apart from the hand-picked `ask_overrides` below.
 
     Any node that has children of its own is skipped entirely, regardless of its own
     classification — deliberately, not an oversight. Its own verdict describes what happens when
     it's invoked *bare* (`docker network` with no further args just lists/describes, same as any
     other read_only command), but real usage always goes through a child (`docker network rm`,
     `docker network create`), each of which already gets its own independently-correct rule.
-    Rendering a rule for the bare parent too is pure noise at best: Claude Code's permission
-    precedence is deny > ask > allow with no specificity tiebreak (confirmed against the actual
-    docs, not assumed), so a stricter rule for a child always wins over a looser allow for its
-    parent regardless — the omitted allow rule was never doing anything a more specific one wasn't
-    already doing more correctly. But for a `write`/`dangerous` parent it's actively harmful, not
-    just noise: that same no-specificity-tiebreak precedence means the parent's `ask` rule
-    unconditionally shadows a correctly-classified `read_only` child's `allow` rule (confirmed
-    live: `gh run` classified `dangerous` was shadowing `gh run view`/`gh run list`'s own
-    `read_only` `allow` rules, forcing a prompt every time despite the more specific rule being
-    exactly right). Skipping every parent-with-children rule, not just read_only ones, fixes that
-    for every recursed tool where a parent verb is riskier than one of its own children (also hit
-    `docker`, `git`, `go`, `helm`, `kubectl` — not a gh-specific bug). The rare case of the bare
-    parent actually being invoked with no subcommand falls through to Claude's own default behavior
-    instead (typically still a prompt), not silent approval and not silent denial.
+    Both harnesses resolve with no specificity tiebreak — Claude Code checks deny > ask > allow,
+    VS Code checks every `false` before any `true` — so a stricter rule for a child always wins
+    over a looser allow for its parent regardless. For a `write`/`dangerous` parent, rendering it
+    anyway is actively harmful: its ask unconditionally shadows a correctly-classified `read_only`
+    child's allow (confirmed live: `gh run` classified `dangerous` shadowed `gh run view`/`gh run
+    list`; the same shape hit `docker`, `git`, `go`, `helm`, `kubectl`). The rare bare invocation of
+    such a parent falls through to the harness's own default — typically a prompt, not silent
+    approval and not silent denial.
 
-    Two per-tool registry knobs shape the output without touching the classification itself (the
-    verdict stays on disk, reviewed, and reportable — only what `render`/`apply` do with it
-    changes; see tools.toml's header and contributing/cli-allowlist.md "render / apply"):
+    Per-tool registry knobs shape the output without touching the classification itself (the
+    verdict stays on disk, reviewed, and reportable; see tools.toml's header and
+    contributing/cli-allowlist.md "render / apply"):
 
-    - `mode_covered` — the tool's write/dangerous verdict is *not* rendered as an `ask` rule,
-      because the active permission mode already gates it more precisely than a prefix rule can.
-      `acceptEdits` auto-approves `mkdir`/`cp`/`rm`/... on paths inside the working directory or
-      `additionalDirectories` and still prompts outside them; an explicit `ask` rule beats that
-      mode grant (ask > allow, no specificity tiebreak — the same precedence documented below), so
-      rendering one would re-prompt for every in-scope `mkdir`. Read-only nodes of such a tool
-      still render as `allow` normally.
-    - `global_option_prefixes` — extra `allow` patterns for read_only subcommand nodes, one per
-      prefix, so `git -C <path> status` matches `Bash(git -C * status:*)` instead of falling
-      through to a prompt just because a global option sits between the tool and its verb.
-      Deliberately allow-only: an `ask` variant would be redundant (an unmatched mutating
-      subcommand prompts anyway in every mode that prompts), and a mid-pattern `*` spans any
-      number of arguments, so the allow side is an accepted, documented hole (`git -C x commit -m
-      status` also matches) taken in exchange for friction-free cross-repo reads.
-    - `allow_overrides` / `ask_overrides` — hand-picked rule bodies (the tool name is implied:
-      `"add"` renders `Bash(git add:*)`) emitted regardless of any node's verdict. An
-      `allow_overrides` entry that names a node path replaces that node's own generated rule; any
-      other entry (`"restore --staged"`, `"reset * --hard"`) is simply added. Allow entries also
-      get the `global_option_prefixes` variants. This is the per-verb escape hatch `review`'s
-      docstring says the classification side doesn't have: `git add` *is* a write, and stays one
-      on disk, but a write that only touches the index and can't lose code is not worth a prompt
-      per commit — while a flag that can (`reset --hard`) gets its own ask rule, which wins by the
-      same ask > allow precedence. `ask_overrides` is where the flag-shaped carve-outs the per-flag
-      ratings can't express go, as literal prefix patterns.
+    - `mode_covered` — the tool's ask rules are marked so Claude's renderer drops them: its
+      `acceptEdits` mode auto-approves `mkdir`/`cp`/`rm`/... inside the working directories and
+      prompts outside them, and an explicit ask would beat that grant and re-prompt every in-scope
+      `mkdir`. Copilot has no such mode, so its renderer keeps them.
+    - `allow_overrides` / `ask_overrides` — hand-picked pattern bodies (the tool name is implied,
+      and trailing arguments always are too: `"add"` means `add ...`) emitted regardless of any
+      node's verdict. An allow override naming a node replaces that node's own rule, and one
+      *extending* a node (`restore --staged` under `restore`) suppresses that node's ask, which
+      would otherwise win and prompt for the allowed form every time (confirmed live 2026-09-26).
+      `git add` *is* a write and stays one on disk, but an index-only write that can't lose code is
+      not worth a prompt per commit, while a flag that can (`reset ... --hard`) gets its own ask,
+      which beats the allow by the same no-tiebreak precedence.
     """
     registry = _load_registry()
-    allow: list[str] = []
-    ask: list[str] = []
+    out: list[permission_rules.Rule] = []
     for name, entry in sorted(rules.items()):
-        if not entry["reviewed"]:
-            continue
-        tool_allow, tool_ask = _tool_claude_rules(name, entry, registry.get(name, {}))
-        allow.extend(tool_allow)
-        ask.extend(tool_ask)
-    return allow, ask
+        if entry["reviewed"]:
+            out.extend(_tool_rules(name, entry, registry.get(name, {})))
+    return out
 
 
-def _tool_claude_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> tuple[list[str], list[str]]:
-    """One reviewed tool's (allow, ask) patterns — the per-tool body of _compute_claude_rules,
-    which documents every knob applied here."""
-    allow: list[str] = []
-    ask: list[str] = []
+def _override_tokens(body: str) -> tuple[str, ...]:
+    """An override body is a prefix: trailing arguments are always allowed after it."""
+    tokens = permission_rules.parse(body)
+    return tokens if tokens and tokens[-1] == permission_rules.ANY_ARGS else (*tokens, permission_rules.ANY_ARGS)
+
+
+def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission_rules.Rule]:
+    """One reviewed tool's rules — the per-tool body of _build_rules, which documents every knob."""
+    allow, ask = permission_rules.Decision.ALLOW, permission_rules.Decision.ASK
     mode_covered = bool(cfg.get("mode_covered"))
-    global_prefixes: list[str] = cfg.get("global_option_prefixes", [])
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
     ask_overrides: list[str] = cfg.get("ask_overrides", [])
+    extended = [body.split() for body in allow_overrides]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
     # top-level service-group command, classified on what *that* does with no args (usually
     # "shows help/lists things"), never on what its real subcommands do. That's the wrong
@@ -1522,27 +1501,31 @@ def _tool_claude_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> tuple[li
     is_cloud_cli = bool(cfg.get("cloud_cli"))
     cache = _load_cache(name)
     cache_nodes = cache["nodes"] if cache else {}
+    out: list[permission_rules.Rule] = []
     for path, v in sorted(entry["nodes"].items()):
         classification = v["classification"]
         if (cache_node := cache_nodes.get(path)) and cache_node["children"]:
             continue
         if path in allow_overrides:
             continue  # rendered from the override list below, whatever the verdict says
-        pattern = f"Bash({name}:*)" if path == _NO_SUBCOMMANDS_KEY else f"Bash({name} {path}:*)"
+        words = [] if path == _NO_SUBCOMMANDS_KEY else path.split()
+        tokens = (*words, permission_rules.ANY_ARGS)
         if classification == Classification.READ_ONLY and not is_cloud_cli:
-            allow.append(pattern)
-            if path != _NO_SUBCOMMANDS_KEY:
-                allow.extend(f"Bash({name} {prefix} {path}:*)" for prefix in global_prefixes)
+            out.append(permission_rules.Rule(name, allow, tokens))
         elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
             classification == Classification.READ_ONLY and is_cloud_cli
         ):
-            if not mode_covered:
-                ask.append(pattern)
-    for body in allow_overrides:
-        allow.append(f"Bash({name} {body}:*)")
-        allow.extend(f"Bash({name} {prefix} {body}:*)" for prefix in global_prefixes)
-    ask.extend(f"Bash({name} {body}:*)" for body in ask_overrides)
-    return allow, ask
+            if any(o[: len(words)] == words for o in extended):
+                continue  # an allow override extends this node; its ask would shadow that allow
+            out.append(permission_rules.Rule(name, ask, tokens, mode_covered=mode_covered))
+    out.extend(permission_rules.Rule(name, allow, _override_tokens(body)) for body in allow_overrides)
+    out.extend(permission_rules.Rule(name, ask, _override_tokens(body)) for body in ask_overrides)
+    return out
+
+
+def _compute_claude_rules(rules: dict[str, RuleEntry]) -> tuple[list[str], list[str]]:
+    """(allow, ask) `Bash(...)` patterns for Claude Code, from _build_rules."""
+    return permission_rules.render_claude(_build_rules(rules))
 
 
 def _coverage_gaps(
@@ -1593,17 +1576,7 @@ def _render_claude(rules: dict[str, RuleEntry]) -> str:
 
 
 def _render_copilot(rules: dict[str, RuleEntry]) -> str:
-    auto_approve: dict[str, bool] = {}
-    for name, entry in sorted(rules.items()):
-        if not entry["reviewed"]:
-            continue
-        for path, v in sorted(entry["nodes"].items()):
-            key = (
-                f"/^{re.escape(name)}\\b.*/"
-                if path == _NO_SUBCOMMANDS_KEY
-                else f"/^{re.escape(name)} {re.escape(path)}\\b.*/"
-            )
-            auto_approve[key] = v["classification"] == Classification.READ_ONLY
+    auto_approve = permission_rules.render_copilot(_build_rules(rules))
     return json.dumps({"chat.tools.terminal.autoApprove": auto_approve}, indent=2)
 
 

@@ -7,10 +7,13 @@ calls of their own). See tests/README.md.
 """
 
 import json
+from collections.abc import Callable
 from pathlib import Path
 from typing import cast
 
-from tasks import allowlist
+import pytest
+
+from tasks import allowlist, permission_rules
 
 _REPO_ROOT = Path(__file__).parents[2]  # tests/unit/<this file> → repo root
 _RULES_DIR = _REPO_ROOT / "cli-allowlist" / "rules"
@@ -356,90 +359,99 @@ def test_merge_rule_sets_detects_rule_moving_from_allow_to_ask():
     assert not removed_ask
 
 
-def _stub_registry(monkeypatch, registry: allowlist.Registry, caches: dict[str, allowlist.CacheEntry] | None = None):
-    monkeypatch.setattr(allowlist, "_load_registry", lambda: registry)
-    monkeypatch.setattr(allowlist, "_load_cache", (caches or {}).get)
+@pytest.fixture
+def stub_registry(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
+    """Replace tools.toml and the help cache with in-memory ones for one test."""
+
+    def stub(registry: allowlist.Registry, caches: dict[str, allowlist.CacheEntry] | None = None) -> None:
+        monkeypatch.setattr(allowlist, "_load_registry", lambda: registry)
+        monkeypatch.setattr(allowlist, "_load_cache", (caches or {}).get)
+
+    return stub
 
 
-def test_compute_claude_rules_mode_covered_drops_ask_but_keeps_classification(monkeypatch):
+def test_compute_claude_rules_mode_covered_drops_ask_but_keeps_classification(stub_registry):
     # acceptEdits already gates in-scope mkdir; an explicit ask rule would beat that grant and
     # re-prompt every time. The verdict on disk stays "write" — only the rendered output changes.
-    _stub_registry(monkeypatch, {"mkdir": {"no_subcommands": True, "mode_covered": True}})
+    stub_registry({"mkdir": {"no_subcommands": True, "mode_covered": True}})
     rules = {"mkdir": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("write")})}
-    allow, ask = allowlist._compute_claude_rules(rules)
-    assert allow == []
-    assert ask == []
+    assert allowlist._compute_claude_rules(rules) == ([], [])
     assert rules["mkdir"]["nodes"][allowlist._NO_SUBCOMMANDS_KEY]["classification"] == "write"
 
 
-def test_compute_claude_rules_without_mode_covered_still_renders_ask(monkeypatch):
-    _stub_registry(monkeypatch, {"mkdir": {"no_subcommands": True}})
+def test_render_copilot_keeps_mode_covered_ask(stub_registry):
+    # Copilot has no acceptEdits-style mode to defer to, so the honest verdict stays a `false`.
+    stub_registry({"mkdir": {"no_subcommands": True, "mode_covered": True}})
     rules = {"mkdir": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("write")})}
-    assert allowlist._compute_claude_rules(rules) == ([], ["Bash(mkdir:*)"])
+    rendered = permission_rules.render_copilot(allowlist._build_rules(rules))
+    assert list(rendered.values()) == [False]
 
 
-def test_compute_claude_rules_mode_covered_keeps_read_only_allow(monkeypatch):
+def test_compute_claude_rules_without_mode_covered_still_renders_ask(stub_registry):
+    stub_registry({"mkdir": {"no_subcommands": True}})
+    rules = {"mkdir": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("write")})}
+    assert allowlist._compute_claude_rules(rules) == ([], ["Bash(mkdir *)"])
+
+
+def test_compute_claude_rules_mode_covered_keeps_read_only_allow(stub_registry):
     # mode_covered only suppresses the ask side; a read_only node of the same tool is unaffected.
-    _stub_registry(monkeypatch, {"tool": {"mode_covered": True}})
+    stub_registry({"tool": {"mode_covered": True}})
     rules = {"tool": _rule_entry({"list": _rule_node("read_only"), "wipe": _rule_node("dangerous")})}
-    assert allowlist._compute_claude_rules(rules) == (["Bash(tool list:*)"], [])
+    assert allowlist._compute_claude_rules(rules) == (["Bash(tool list *)"], [])
 
 
-def test_compute_claude_rules_global_option_prefixes_add_allow_variants_for_read_only_only(monkeypatch):
-    _stub_registry(monkeypatch, {"git": {"global_option_prefixes": ["-C *", "-c *"]}})
-    rules = {"git": _rule_entry({"status": _rule_node("read_only"), "push": _rule_node("dangerous")})}
-    allow, ask = allowlist._compute_claude_rules(rules)
-    assert allow == ["Bash(git status:*)", "Bash(git -C * status:*)", "Bash(git -c * status:*)"]
-    # No ask variant: an unmatched `git -C x push` prompts anyway in every mode that prompts.
-    assert ask == ["Bash(git push:*)"]
-
-
-def test_compute_claude_rules_global_option_prefixes_ignored_for_no_subcommands_tool(monkeypatch):
-    # `Bash(tool -x * *:*)` would be meaningless — the prefix shape only applies between a tool
-    # and a real subcommand.
-    _stub_registry(monkeypatch, {"flat": {"no_subcommands": True, "global_option_prefixes": ["-x *"]}})
-    rules = {"flat": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("read_only")})}
-    assert allowlist._compute_claude_rules(rules) == (["Bash(flat:*)"], [])
-
-
-def test_compute_claude_rules_allow_override_replaces_node_ask_and_gets_prefix_variants(monkeypatch):
-    # `git add` is honestly `write` on disk; the override only changes what render emits — an
-    # allow instead of the ask, with the same -C/-c variants a read_only node would get.
-    _stub_registry(monkeypatch, {"git": {"global_option_prefixes": ["-C *"], "allow_overrides": ["add"]}})
+def test_compute_claude_rules_allow_override_replaces_node_ask(stub_registry):
+    # `git add` is honestly `write` on disk; the override only changes what render emits.
+    stub_registry({"git": {"allow_overrides": ["add"]}})
     rules = {"git": _rule_entry({"add": _rule_node("write"), "push": _rule_node("dangerous")})}
-    allow, ask = allowlist._compute_claude_rules(rules)
-    assert allow == ["Bash(git add:*)", "Bash(git -C * add:*)"]
-    assert ask == ["Bash(git push:*)"]
+    assert allowlist._compute_claude_rules(rules) == (["Bash(git add *)"], ["Bash(git push *)"])
     assert rules["git"]["nodes"]["add"]["classification"] == "write"
 
 
-def test_compute_claude_rules_ask_overrides_render_verbatim_alongside_allow_override(monkeypatch):
-    # An allow for the verb plus ask rules for its code-losing flag shapes: ask > allow with no
-    # specificity tiebreak means `git reset --hard` prompts while `git reset -q` doesn't. The
-    # `* --hard` form is what closes the flag-order hole (`git reset -q --hard`).
-    cfg: allowlist.ToolConfig = {
-        "allow_overrides": ["reset", "restore --staged"],
-        "ask_overrides": ["reset --hard", "reset * --hard"],
-    }
-    _stub_registry(monkeypatch, {"git": cfg})
-    rules = {"git": _rule_entry({"reset": _rule_node("write"), "restore": _rule_node("write")})}
+def test_compute_claude_rules_ask_overrides_carve_flags_out_of_an_allowed_verb(stub_registry):
+    # An allow for the verb plus asks for its code-losing flag, wherever the flag sits: ask beats
+    # allow with no specificity tiebreak, so `git reset HEAD --hard` prompts and `git reset -q`
+    # doesn't. Written `reset * --hard:*` until 2026-09-26, which matched nothing at all.
+    stub_registry({"git": {"allow_overrides": ["reset"], "ask_overrides": ["reset ... --hard"]}})
+    rules = {"git": _rule_entry({"reset": _rule_node("write")})}
+    assert allowlist._compute_claude_rules(rules) == (
+        ["Bash(git reset *)"],
+        ["Bash(git reset --hard *)", "Bash(git reset * --hard)", "Bash(git reset * --hard *)"],
+    )
+
+
+def test_compute_claude_rules_allow_override_extending_a_node_suppresses_its_ask(stub_registry):
+    # `Bash(git restore:*)` as ask beat `Bash(git restore --staged:*)` as allow, so the allowed
+    # form prompted every time (confirmed live 2026-09-26). The destructive shapes of the allowed
+    # extension stay covered by their own ask overrides.
+    stub_registry({"git": {"allow_overrides": ["restore --staged"], "ask_overrides": ["restore --staged ... -W"]}})
+    rules = {"git": _rule_entry({"restore": _rule_node("write"), "push": _rule_node("dangerous")})}
     allow, ask = allowlist._compute_claude_rules(rules)
-    assert allow == ["Bash(git reset:*)", "Bash(git restore --staged:*)"]
-    # `restore` itself (bare form discards worktree changes) keeps its generated ask.
-    assert ask == ["Bash(git restore:*)", "Bash(git reset --hard:*)", "Bash(git reset * --hard:*)"]
+    assert allow == ["Bash(git restore --staged *)"]
+    assert "Bash(git restore *)" not in ask
+    assert "Bash(git push *)" in ask
 
 
-def test_compute_claude_rules_allow_override_on_read_only_node_does_not_duplicate(monkeypatch):
-    _stub_registry(monkeypatch, {"git": {"allow_overrides": ["fetch"]}})
+def test_compute_claude_rules_allow_override_on_read_only_node_does_not_duplicate(stub_registry):
+    stub_registry({"git": {"allow_overrides": ["fetch"]}})
     rules = {"git": _rule_entry({"fetch": _rule_node("read_only")})}
-    assert allowlist._compute_claude_rules(rules) == (["Bash(git fetch:*)"], [])
+    assert allowlist._compute_claude_rules(rules) == (["Bash(git fetch *)"], [])
 
 
-def test_compute_claude_rules_overrides_ignored_for_unreviewed_tool(monkeypatch):
+def test_compute_claude_rules_overrides_ignored_for_unreviewed_tool(stub_registry):
     # The review gate stays the gate: overrides shape a reviewed tool's output, they don't bypass it.
-    _stub_registry(monkeypatch, {"git": {"allow_overrides": ["add"]}})
+    stub_registry({"git": {"allow_overrides": ["add"]}})
     rules = {"git": _rule_entry({"add": _rule_node("write")}, reviewed=False)}
     assert allowlist._compute_claude_rules(rules) == ([], [])
+
+
+def test_real_registry_renders_for_claude_without_any_warned_shape():
+    # The whole tracked rule set, through the real renderer: no colon-star suffix anywhere (a
+    # mid-pattern `*` beside one is read literally), and render_claude itself raises on an allow
+    # with a standalone `*` before its last word (Claude warns about that at every startup).
+    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules())
+    assert allow
+    assert not [p for p in allow + ask if ":*" in p]
 
 
 def test_coverage_gaps_none_when_every_child_has_own_rule():

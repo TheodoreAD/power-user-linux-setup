@@ -47,25 +47,22 @@
 #                     mode that doesn't grant them (default/manual) the command falls through to
 #                     Claude Code's own prompt anyway — nothing becomes silently allowed. Read-only
 #                     nodes still render as `allow`. Flip it off to get the prefix `ask` rule back.
-#   global_option_prefixes
-#                    list of option shapes that can sit between the tool and its subcommand
-#                     (git's `-C <path>`, `-c <key>=<val>`): for every read_only subcommand node,
-#                     render an extra allow rule per prefix — `Bash(git -C * status:*)` — so a
-#                     directory-scoped read doesn't prompt just because the verb isn't the second
-#                     word. Allow-only by design; the mid-pattern `*` spans any number of
-#                     arguments, an accepted hole documented in contributing/cli-allowlist.md.
 #   allow_overrides / ask_overrides
-#                    hand-picked rule bodies rendered regardless of the classified verdict (tool
-#                     name implied: "add" -> `Bash(git add:*)`). An allow entry naming a node path
-#                     replaces that node's own generated rule and also gets the
-#                     global_option_prefixes variants; any other entry is added as-is. The verdict
-#                     on disk is untouched, still reviewed, still reported by `status`. For verbs
-#                     whose honest `write` verdict isn't worth a prompt (index-only git ops that
-#                     can't lose code) and for the flag shapes that *can* (`reset --hard`), which
-#                     the per-flag ratings can't render but a literal ask pattern can — ask > allow
-#                     with no specificity tiebreak, so the narrower ask wins. `* --flag` forms close
-#                     the flag-order hole (`git reset -q --hard`); the mid-pattern `*` spans any
-#                     number of arguments. See contributing/cli-allowlist.md "allow_overrides".
+#                    hand-picked pattern bodies rendered regardless of the classified verdict, in
+#                     tasks/permission_rules.py's harness-neutral grammar: the tool name is
+#                     implied, and so are trailing arguments ("add" means `git add ...`); `...` is
+#                     zero or more arguments anywhere; a word containing `*` is exactly one
+#                     argument. Each harness renderer spells a body its own way — never write
+#                     Claude's `Bash(...)` or Copilot's regex syntax here. An allow entry naming a
+#                     node path replaces that node's own generated rule, and one extending a node
+#                     (`restore --staged` under `restore`) suppresses that node's ask, which would
+#                     otherwise shadow it. The verdict on disk is untouched, still reviewed, still
+#                     reported by `status`. For verbs whose honest `write` verdict isn't worth a
+#                     prompt (index-only git ops that can't lose code) and for the flag shapes that
+#                     *can* (`reset ... --hard`: the flag first, last or in the middle), which the
+#                     per-flag ratings can't render but an ask pattern can — ask beats allow with no
+#                     specificity tiebreak, so the narrower ask wins. See contributing/
+#                     cli-allowlist.md "allow_overrides".
 #
 # Tree discovery can surface a node that isn't actually a real command — a discovery regex
 # matching a sample-output table row, a deprecated/plugin subcommand whose --help silently echoes
@@ -116,9 +113,6 @@
 help_flag = "-h" # not --help: that renders through `man`, which depends on git-man being installed
 max_depth = 2 # real per-verb risk lives one level down: remote add/rm, stash pop/drop, worktree remove
 max_nodes = 100
-# cross-repo reads from an agent session (`git -C <other repo> status`) were the single most common
-# unmatched git shape in a 4-day transcript audit (2026-08-24); `-c` covers the same for one-off config
-global_option_prefixes = ["-C *", "-c *"]
 # 2026-08-25 prompt audit (session-bash-audit skill, references/research.md): under acceptEdits,
 # 67% of all permission prompts were the commit flow — `git add` alone 35 of 148, plus rm/restore/
 # reset/fetch that weren't registered at all. ~/.agents/AGENTS.md mandates many small commits, staging
@@ -130,24 +124,15 @@ global_option_prefixes = ["-C *", "-c *"]
 # (unmatched), never to an allow.
 allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]
 ask_overrides = [
-  "reset --hard",
-  "reset * --hard",
-  "reset --merge",
-  "reset * --merge",
-  "reset --keep",
-  "reset * --keep",
-  "restore --staged --worktree",
-  "restore --staged * --worktree",
-  "restore --staged -W",
-  "restore --staged * -W",
-  "rm -f",
-  "rm * -f",
-  "rm --force",
-  "rm * --force",
-  "rm -rf",
-  "rm * -rf",
-  "rm -fr",
-  "rm * -fr",
+  "reset ... --hard",
+  "reset ... --merge",
+  "reset ... --keep",
+  "restore --staged ... --worktree",
+  "restore --staged ... -W",
+  "rm ... -f",
+  "rm ... --force",
+  "rm ... -rf",
+  "rm ... -fr",
 ]
 subcommands = [
   "status",
