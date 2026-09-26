@@ -366,6 +366,7 @@ def stub_registry(monkeypatch: pytest.MonkeyPatch) -> Callable[..., None]:
     def stub(registry: allowlist.Registry, caches: dict[str, allowlist.CacheEntry] | None = None) -> None:
         monkeypatch.setattr(allowlist, "_load_registry", lambda: registry)
         monkeypatch.setattr(allowlist, "_load_cache", (caches or {}).get)
+        monkeypatch.setattr(allowlist, "_repo_roots", list)  # never walk the real home directory
 
     return stub
 
@@ -445,13 +446,69 @@ def test_compute_claude_rules_overrides_ignored_for_unreviewed_tool(stub_registr
     assert allowlist._compute_claude_rules(rules) == ([], [])
 
 
+def test_compute_claude_rules_repo_dir_options_cover_allows_and_carve_outs_not_node_asks(stub_registry):
+    cfg: allowlist.ToolConfig = {
+        "repo_dir_options": ["-C"],
+        "allow_overrides": ["reset"],
+        "ask_overrides": ["reset ... -x"],
+    }
+    stub_registry({"git": cfg})
+    rules = {"git": _rule_entry({"status": _rule_node("read_only"), "push": _rule_node("dangerous")})}
+    allow, ask = allowlist._compute_claude_rules(rules, repo_dirs=["/p/a"])
+    assert allow == [
+        "Bash(git status *)",
+        "Bash(git -C /p/a status *)",
+        "Bash(git reset *)",
+        "Bash(git -C /p/a reset *)",
+    ]
+    # The carve-out must hold under `-C` exactly as without it, or `git -C /p/a reset HEAD -x`
+    # would ride the `-C` allow. A node ask needs no variant: unmatched `-C` forms prompt anyway.
+    assert "Bash(git -C /p/a reset * -x)" in ask
+    assert "Bash(git -C /p/a push *)" not in ask
+
+
+def test_compute_claude_rules_repo_dir_options_skip_a_flat_tool(stub_registry):
+    stub_registry({"flat": {"no_subcommands": True, "repo_dir_options": ["-C"]}})
+    rules = {"flat": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("read_only")})}
+    assert allowlist._compute_claude_rules(rules, repo_dirs=["/p/a"]) == (["Bash(flat *)"], [])
+
+
 def test_real_registry_renders_for_claude_without_any_warned_shape():
     # The whole tracked rule set, through the real renderer: no colon-star suffix anywhere (a
     # mid-pattern `*` beside one is read literally), and render_claude itself raises on an allow
     # with a standalone `*` before its last word (Claude warns about that at every startup).
-    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules())
-    assert allow
+    allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules(), repo_dirs=["/p/a", "~/p/a"])
+    assert "Bash(git -C ~/p/a status *)" in allow
     assert not [p for p in allow + ask if ":*" in p]
+
+
+@pytest.fixture
+def repo_tree(tmp_path: Path) -> Path:
+    """root/{org/repo, org/nested/deep, plain} plus the shapes discovery must not list."""
+    for repo in ("org/repo", "org/nested/deep", "plain"):
+        (tmp_path / "root" / repo / ".git").mkdir(parents=True)
+    (tmp_path / "root" / "org" / "repo" / "sub" / ".git").mkdir(parents=True)  # a repo's own subtree
+    (tmp_path / "root" / "wt").mkdir()
+    (tmp_path / "root" / "wt" / ".git").write_text("gitdir: elsewhere\n", encoding="utf-8")  # a worktree
+    (tmp_path / "root" / ".hidden" / "r" / ".git").mkdir(parents=True)
+    (tmp_path / "root" / "link").symlink_to(tmp_path / "root" / "plain")
+    return tmp_path / "root"
+
+
+def test_find_repos_stops_at_each_repo_and_skips_hidden_and_symlinks(repo_tree: Path):
+    found = allowlist._find_repos([repo_tree, repo_tree / "missing"])
+    assert [p.relative_to(repo_tree).as_posix() for p in found] == ["org/nested/deep", "org/repo", "plain", "wt"]
+
+
+def test_find_repos_lists_a_root_that_is_itself_a_repo(repo_tree: Path):
+    # A plans store is a repository at its own root.
+    assert allowlist._find_repos([repo_tree / "plain"]) == [repo_tree / "plain"]
+
+
+def test_repo_dir_spellings_absolute_and_home_relative(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv("HOME", str(tmp_path))
+    repos = [tmp_path / "p" / "a", Path("/elsewhere/b"), tmp_path / "has space", tmp_path / "glob*"]
+    assert allowlist._repo_dir_spellings(repos) == [str(tmp_path / "p" / "a"), "~/p/a", "/elsewhere/b"]
 
 
 def test_coverage_gaps_none_when_every_child_has_own_rule():

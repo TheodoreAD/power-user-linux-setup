@@ -41,6 +41,7 @@ from typing import NotRequired, TypedDict, cast
 from invoke import Context, task
 
 from . import permission_rules, util
+from .git import PROJECTS_ROOT
 
 
 class Classification(StrEnum):
@@ -90,6 +91,7 @@ class ToolConfig(TypedDict, total=False):
     no_subcommands: bool
     mode_covered: bool
     cloud_cli: bool
+    repo_dir_options: list[str]
     allow_overrides: list[str]
     ask_overrides: list[str]
 
@@ -1486,6 +1488,7 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
     mode_covered = bool(cfg.get("mode_covered"))
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
     ask_overrides: list[str] = cfg.get("ask_overrides", [])
+    repo_opts = tuple(cfg.get("repo_dir_options", []))
     extended = [body.split() for body in allow_overrides]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
     # top-level service-group command, classified on what *that* does with no args (usually
@@ -1511,21 +1514,88 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
         words = [] if path == _NO_SUBCOMMANDS_KEY else path.split()
         tokens = (*words, permission_rules.ANY_ARGS)
         if classification == Classification.READ_ONLY and not is_cloud_cli:
-            out.append(permission_rules.Rule(name, allow, tokens))
+            out.append(permission_rules.Rule(name, allow, tokens, repo_opts if words else ()))
         elif classification in (Classification.WRITE, Classification.DANGEROUS) or (
             classification == Classification.READ_ONLY and is_cloud_cli
         ):
             if any(o[: len(words)] == words for o in extended):
                 continue  # an allow override extends this node; its ask would shadow that allow
             out.append(permission_rules.Rule(name, ask, tokens, mode_covered=mode_covered))
-    out.extend(permission_rules.Rule(name, allow, _override_tokens(body)) for body in allow_overrides)
-    out.extend(permission_rules.Rule(name, ask, _override_tokens(body)) for body in ask_overrides)
+    # Node asks get no repo-directory variants: an unmatched `git -C <repo> push` prompts anyway.
+    # Ask overrides do, because each carves out of an allow that has them.
+    out.extend(permission_rules.Rule(name, allow, _override_tokens(body), repo_opts) for body in allow_overrides)
+    out.extend(permission_rules.Rule(name, ask, _override_tokens(body), repo_opts) for body in ask_overrides)
     return out
 
 
-def _compute_claude_rules(rules: dict[str, RuleEntry]) -> tuple[list[str], list[str]]:
-    """(allow, ask) `Bash(...)` patterns for Claude Code, from _build_rules."""
-    return permission_rules.render_claude(_build_rules(rules))
+def _repo_roots() -> list[Path]:
+    """Where the repositories an agent points `git -C` at live on this machine. Measured over
+    every transcript here (2026-09-26): 1,077 of those calls targeted ~/projects, 769 the two plans
+    stores, 181 the research library; every other absolute or `~/` target together, 6."""
+    home = Path.home()
+    plans = Path(os.environ.get("PLANS_HOME", home / "plans")).expanduser()
+    return [
+        PROJECTS_ROOT,
+        Path(os.environ.get("RESEARCH_HOME", home / "research")).expanduser() / "repos",
+        plans,
+        Path(os.environ.get("PLANS_SENSITIVE_HOME", f"{plans}-sensitive")).expanduser(),
+    ]
+
+
+def _find_repos(roots: list[Path], max_depth: int = 4) -> list[Path]:
+    """Every git working tree at or under `roots`, stopping at the first `.git` on each path (a
+    repo's own subdirectories are not separate targets) and never following a symlink, which
+    would list one repository under two paths."""
+    found: list[Path] = []
+    frontier = [(root, 0) for root in roots if root.is_dir() and not root.is_symlink()]
+    while frontier:
+        path, depth = frontier.pop()
+        if (path / ".git").exists():
+            found.append(path)
+            continue
+        if depth == max_depth:
+            continue
+        try:
+            children = sorted(path.iterdir())
+        except OSError:
+            continue
+        frontier.extend(
+            (child, depth + 1)
+            for child in children
+            if child.is_dir() and not child.is_symlink() and not child.name.startswith(".")
+        )
+    return sorted(found)
+
+
+def _repo_dir_spellings(repos: list[Path]) -> list[str]:
+    """How an agent writes each repository after `-C`: absolute (1,713 calls measured) or
+    `~/`-relative (320). `../<name>` was 11 calls ever and is not generated. A path Claude's
+    pattern syntax can't carry literally — whitespace, or a `*` it would read as a wildcard — is
+    skipped rather than half-matched."""
+    home = Path.home()
+    spellings: list[str] = []
+    for repo in repos:
+        if any(ch.isspace() or ch == "*" for ch in str(repo)):
+            continue
+        spellings.append(str(repo))
+        if repo.is_relative_to(home):
+            spellings.append(f"~/{repo.relative_to(home).as_posix()}")
+    return spellings
+
+
+def _compute_claude_rules(
+    rules: dict[str, RuleEntry], repo_dirs: list[str] | None = None
+) -> tuple[list[str], list[str]]:
+    """(allow, ask) `Bash(...)` patterns for Claude Code, from _build_rules.
+
+    A repo-directory option (git's `-C`) is expanded over every repository on this machine rather
+    than globbed: any standalone `*` before git's verb makes Claude Code warn at every startup, and
+    lets `-c core.fsmonitor=<program>` ride along unprompted (both confirmed live, 2026-09-26). About
+    20k rules measured at ~1 s and no prompt tokens against a one-rule baseline. The set is machine
+    state, so a repository cloned since the last `apply` prompts on `git -C` until the next one."""
+    if repo_dirs is None:
+        repo_dirs = _repo_dir_spellings(_find_repos(_repo_roots()))
+    return permission_rules.render_claude(_build_rules(rules), repo_dirs)
 
 
 def _coverage_gaps(

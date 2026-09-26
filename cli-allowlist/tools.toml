@@ -47,6 +47,13 @@
 #                     mode that doesn't grant them (default/manual) the command falls through to
 #                     Claude Code's own prompt anyway — nothing becomes silently allowed. Read-only
 #                     nodes still render as `allow`. Flip it off to get the prefix `ask` rule back.
+#   repo_dir_options options that take a repository directory and may precede the verb (git's
+#                     `-C`). Every allow rule and ask override of the tool gets a variant with the
+#                     option in front; each harness renderer spells the directory its own way —
+#                     Copilot as exactly one argument, Claude as one rule per repository found on
+#                     this machine, because any `*` there is a warned-about shape that also lets
+#                     `-c core.fsmonitor=<program>` through. Never list `-c` here: allowing it is
+#                     arbitrary code execution by design.
 #   allow_overrides / ask_overrides
 #                    hand-picked pattern bodies rendered regardless of the classified verdict, in
 #                     tasks/permission_rules.py's harness-neutral grammar: the tool name is
@@ -113,6 +120,9 @@
 help_flag = "-h" # not --help: that renders through `man`, which depends on git-man being installed
 max_depth = 2 # real per-verb risk lives one level down: remote add/rm, stash pop/drop, worktree remove
 max_nodes = 100
+# `git -C <repo> status` is the commonest cross-repo shape agents write (2,000+ calls on this machine
+# by 2026-09-26). Claude Code's built-in read-only set covers no `-C` form at all.
+repo_dir_options = ["-C"]
 # 2026-08-25 prompt audit (session-bash-audit skill, references/research.md): under acceptEdits,
 # 67% of all permission prompts were the commit flow — `git add` alone 35 of 148, plus rm/restore/
 # reset/fetch that weren't registered at all. ~/.agents/AGENTS.md mandates many small commits, staging
