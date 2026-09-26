@@ -47,9 +47,46 @@ Two rules from this repo that apply directly and are easy to miss here:
   symlinked into `~/.local/bin`, never a `~/.llama.cpp`. The models directory is the awkward part —
   tens of gigabytes is not obviously `~/.local/share` material, and it is the one path here whose
   size argues for a deliberate location rather than a default.
+
 - **`spowse` vs `inv`**: any new task here administers a machine rather than this repo, so it ships
   in `spowse` and must **not** be marked `@util.dev_only`. `tests/unit/test_cli.py` pins membership,
   so getting it wrong fails the gate rather than shipping.
+
+### The router-mode flags, verified against the clone 2026-09-26
+
+Read from `common/arg.cpp` in `$RESEARCH_HOME/repos/github.com--ggml-org--llama.cpp`, not from a
+report. Every flag the design depends on exists, with these exact spellings:
+
+| flag                                         | line            | what it does                                                     |
+| -------------------------------------------- | --------------- | ---------------------------------------------------------------- |
+| `--models-dir PATH`                          | `3629`          | the router's model directory — **default: disabled**             |
+| `--models-preset PATH`                       | `3636`          | **an INI file of model presets** — default: disabled             |
+| `--models-max N`                             | `3643`          | max models resident at once; `0` = unlimited                     |
+| `--models-autoload` / `--no-models-autoload` | `3650`          | load on demand or not                                            |
+| `--sleep-idle-seconds SECONDS`               | `3797`          | release after idle; `-1` disables, and it **rejects 0 and < -1** |
+| `--api-key KEY` / `--api-key-file FNAME`     | `3479` / `3490` | inbound auth — the reason this beat Ollama                       |
+| `--ssl-key-file FNAME`                       | `3507`          | TLS                                                              |
+| `-cmoe, --cpu-moe` / `-ncmoe, --n-cpu-moe N` | `2756` / `2763` | MoE expert offload to system RAM                                 |
+
+Two findings from reading it that change how this gets declared, and both make the job easier than
+the table above assumed:
+
+[DECISION: **the systemd unit carries `Environment=` lines, not a long `ExecStart`.** Every router
+flag has a matching `LLAMA_ARG_*` environment variable declared via `.set_env(...)` —
+`LLAMA_ARG_MODELS_DIR`, `LLAMA_ARG_MODELS_PRESET`, `LLAMA_ARG_MODELS_MAX`,
+`LLAMA_ARG_MODELS_AUTOLOAD`. So the unit stays short and each setting is one greppable line, rather
+than a single command string where a change is a diff nobody can read.]
+
+[DECISION: **`--models-preset` is the declarable surface, and it solves the config half outright.**
+It takes an **INI file**, which is a plain text file this repo can hold as a repo-side source and
+deploy through a `config_files` mapping like any other dotfile — diffable, reviewable, and visible
+to `inv deploy.status`. That is the property LiteLLM was praised for above and 9Router was rejected
+for, and llama.cpp has it natively. The model _weights_ stay undeclared, which is correct: they are
+bulk data, not configuration.]
+
+So the two halves separate cleanly — **an INI file of presets is configuration and gets deployed;
+the GGUF files are data and get fetched by a deliberate standalone task.** That mirrors the repo's
+existing rule for regenerated files: run it explicitly, never wire it into routine setup.
 
 ## The two-machine problem — the real design question
 
@@ -126,10 +163,12 @@ assumption, not a measurement. Worth a week of real use before the install plan 
 `idea` — and cheap to test, since OpenCode's Copilot login is built in and needs none of this plan's
 infrastructure.]
 
-[NEEDS CLARIFICATION: **where do the models live, and who downloads them?** Tens of gigabytes of
-GGUF is not a `setup.toml` download, and a first-run fetch inside a systemd unit is the kind of
-surprise this repo exists to avoid. Probably a separate deliberate task, like the regeneration rule:
-run explicitly, never wired into routine setup.]
+[NEEDS CLARIFICATION: **where do the models live, and who downloads them?** Narrowed 2026-09-26 by
+the `--models-preset` finding above: the _configuration_ half is settled (an INI file, deployed like
+any dotfile), so what is left is only the weights. Tens of gigabytes of GGUF is not a `setup.toml`
+download, and a first-run fetch inside a systemd unit is the kind of surprise this repo exists to
+avoid. A separate deliberate task, run explicitly. What remains undecided is the **path** — it is
+bulk data rather than application state, so `~/.local/share` is arguable rather than obvious.]
 
 ## Recommended direction
 
