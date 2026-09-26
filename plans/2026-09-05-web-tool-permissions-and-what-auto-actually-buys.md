@@ -291,6 +291,35 @@ question is answered, since the answer may change the block.]
 better, but the list can only be found by running with the broad entry first and watching what a
 narrower one breaks.]
 
+## Probed 2026-09-26: the sandbox now also carries cross-repo `git -C`
+
+`plans/2026-09-26-allowlist-mid-pattern-wildcard-rules-are-dead.md` needed somewhere for
+`git -C <repo> <read>` to run unprompted. No Claude rule shape is both safe and warning-free, and
+one rule per repository overran the 2 MiB settings cap, so the allowlist now renders nothing for
+`-C` and relies on this sandbox. Probed with this plan's block through `claude -p --settings`
+(manual mode, nobody to answer, no `-C` rules, throwaway repos outside Claude's temp directory):
+
+| command                                     | sandbox on                          | sandbox off |
+| ------------------------------------------- | ----------------------------------- | ----------- |
+| `git -C <other> status` / `log`             | runs, no prompt                     | prompts     |
+| `git -C <other> add x`, `touch <other>/x`   | runs, fails `Read-only file system` | prompts     |
+| `git -C <other> -c core.fsmonitor=… status` | prompts                             | prompts     |
+| `git reset HEAD --hard` under an ask rule   | prompts                             | prompts     |
+| `curl` to an unlisted host                  | blocked, `deny network-outbound`    | —           |
+
+A directory under `/tmp/claude-1000` is writable from inside the sandbox, so a write test placed
+there passes and proves nothing; probe outside it.
+
+[PITFALL: **inside the sandbox the session's own working directory holds placeholder device files**
+— `.bashrc`, `.gitconfig`, `.gitmodules`, `.idea`, `.vscode`, `.mcp.json`, `.claude/`, each a
+`crw-rw-rw- nobody nogroup` node — and `git status` lists all of them as untracked. Not seen with
+`git -C` into another repository. Noise in every status an agent reads, and a hazard for any broad
+stage. Needs an answer before enabling: an upstream setting, a global excludes entry, or accepting
+it.]
+
+This makes the sandbox the owner of a second job, so enabling it now removes prompts that the
+allowlist deliberately stopped trying to remove.
+
 ## Open questions
 
 [NEEDS CLARIFICATION: whether `WebFetch` should be allowlisted at all before the sandbox is on.
