@@ -1849,6 +1849,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#one-source-one-rendering-per-harness" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One source, one rendering per harness
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#operating-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2230,6 +2241,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#one-source-one-rendering-per-harness" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        One source, one rendering per harness
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#operating-it" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2368,6 +2390,18 @@ covered just as much as anything PULSE explicitly installs.</p>
 <p>Both <code>write</code> and <code>dangerous</code> classifications render as <code>ask</code> rules, never <code>deny</code> — you always still
 get a real, interactively-approvable prompt for anything risky; only genuinely safe, read-only
 commands get pre-approved.</p>
+<h2 id="one-source-one-rendering-per-harness">One source, one rendering per harness<a class="headerlink" href="#one-source-one-rendering-per-harness" title="Permanent link">&para;</a></h2>
+<p>The pipeline never writes a harness&rsquo;s own rule syntax by hand. Classifications and the hand-picked
+overrides in <code>cli-allowlist/tools.toml</code> become harness-neutral rules (<code>tasks/permission_rules.py</code>),
+and each harness gets a renderer that spells them as precisely as that harness allows. The harnesses
+genuinely disagree: Copilot takes regular expressions and can say &ldquo;exactly one argument&rdquo;; Claude
+Code&rsquo;s <code>*</code> matches any text, spaces included, and it warns at startup about some shapes. So a rule
+like &ldquo;<code>git -C &lt;repo&gt; status</code>&rdquo; is one precise regex for Copilot and no rule at all for Claude, whose
+syntax can&rsquo;t say it safely — Claude Code&rsquo;s Bash sandbox is what lets those cross-repo reads run.
+This is also where a harness changing its matching gets absorbed: a new release costs a renderer
+change, not a rewrite of the rule list.</p>
+<p>Every Bash command rule lives there, including the hand-written ones for <code>inv</code> and <code>spowse</code>.
+<code>setup.toml</code> keeps only Claude settings that aren&rsquo;t command rules (file read grants and the like).</p>
 <h2 id="operating-it">Operating it<a class="headerlink" href="#operating-it" title="Permanent link">&para;</a></h2>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a><span class="c1"># after installing a new tool, or periodically (e.g. after apt upgrade):</span>
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>inv<span class="w"> </span>allowlist.extract
@@ -2378,11 +2412,19 @@ commands get pre-approved.</p>
 </span><span id="__span-1-7"><a id="__codelineno-1-7" name="__codelineno-1-7" href="#__codelineno-1-7"></a>
 </span><span id="__span-1-8"><a id="__codelineno-1-8" name="__codelineno-1-8" href="#__codelineno-1-8"></a>inv<span class="w"> </span>allowlist.status<span class="w">                        </span><span class="c1"># what&#39;s tracked, stale, or still unreviewed</span>
 </span><span id="__span-1-9"><a id="__codelineno-1-9" name="__codelineno-1-9" href="#__codelineno-1-9"></a>inv<span class="w"> </span>allowlist.check-coverage<span class="w">                </span><span class="c1"># every node-with-children&#39;s child has its own rule</span>
-</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>inv<span class="w"> </span>allowlist.render<span class="w"> </span>--target<span class="o">=</span>copilot<span class="w">       </span><span class="c1"># Copilot&#39;s format instead — still print-only, no apply yet</span>
-</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>inv<span class="w"> </span>allowlist.check-man-deps<span class="w">                </span><span class="c1"># re-check for new man-page dependencies</span>
+</span><span id="__span-1-10"><a id="__codelineno-1-10" name="__codelineno-1-10" href="#__codelineno-1-10"></a>inv<span class="w"> </span>allowlist.check-claude<span class="w">                  </span><span class="c1"># live: does the installed Claude Code read the rules right?</span>
+</span><span id="__span-1-11"><a id="__codelineno-1-11" name="__codelineno-1-11" href="#__codelineno-1-11"></a>inv<span class="w"> </span>allowlist.render<span class="w"> </span>--target<span class="o">=</span>copilot<span class="w">       </span><span class="c1"># Copilot&#39;s format instead — still print-only, no apply yet</span>
+</span><span id="__span-1-12"><a id="__codelineno-1-12" name="__codelineno-1-12" href="#__codelineno-1-12"></a>inv<span class="w"> </span>allowlist.check-man-deps<span class="w">                </span><span class="c1"># re-check for new man-page dependencies</span>
 </span></code></pre></div>
+<p><strong>Run <code>inv allowlist.check-claude</code> after every Claude Code upgrade</strong>, and after changing an override
+in <code>tools.toml</code>. It loads the exact rule set <code>apply</code> would write into a real <code>claude -p</code> (Haiku,
+about five cents), runs a fixed table of commands in throwaway repositories, and fails on any
+permission-rule warning, on any command that runs when it should prompt or the reverse, and on
+Claude refusing the settings outright. The unit suite cannot see any of those, because they are
+facts about the installed binary.</p>
 <p><code>apply</code> only ever touches the <code>permissions</code> block of <code>~/.claude/settings.json</code> — everything else
-(<code>theme</code>, <code>effortLevel</code>, &hellip;) is read, kept, and written back unchanged. Copilot support
+(<code>theme</code>, <code>effortLevel</code>, &hellip;) is read, kept, and written back unchanged. It refuses to write past 1
+MiB, half the 2 MiB beyond which Claude Code rejects the whole file. Copilot support
 (<code>render --target=copilot</code>) is print-only today — copy its output into your own Copilot config by
 hand, there&rsquo;s no <code>apply</code> equivalent yet.</p>
 <p>Adding a custom tool to the pipeline (or extending recursion into a tool&rsquo;s subcommand tree) is done
