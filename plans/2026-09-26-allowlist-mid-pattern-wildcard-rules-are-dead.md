@@ -91,7 +91,7 @@ reason the rules are generated in Python at all.
 ### 1. A harness-neutral rule model, `tasks/permission_rules.py`
 
 A new pure module, the functional core. `allowlist.py` keeps the I/O: loading `rules/*.json` and
-`tools.toml`, discovering repos, writing settings.
+`tools.toml`, writing settings.
 
 - **Source grammar**, used by `tools.toml` overrides and by nothing harness-specific. A pattern is
   space-separated tokens after the tool name:
@@ -104,8 +104,8 @@ A new pure module, the functional core. `allowlist.py` keeps the I/O: loading `r
 - **Claude renderer**: each `...` expands to "absent" and "`*`"; a trailing `...` to "absent" and
   "`*`". It never emits `:*`. A single-argument glob renders as its text, which in Claude's syntax
   can span arguments. That is a widening, so every tool with a glob in an allow rule must declare
-  ask guards for its code-loading options (see §4). A repo-directory option renders **one rule per
-  known repository and spelling** (absolute and `~/`) and never as a wildcard.
+  ask guards for its code-loading options (see §4). A repo-directory option renders nothing (see
+  §3).
 - **Copilot renderer**: regex keys anchored `^…$`. `...` becomes `(?:\s+\S+)*`, a glob becomes `\S*`
   pieces, a repo-directory option becomes `(?:\s+-C\s+\S+)*` after the tool name. `allow` → `true`,
   `ask` → `false`. Still print-only.
@@ -134,22 +134,22 @@ things:
   carve-out holds under `git -C <repo>` exactly as it does without it. Node ask rules get no
   variants: an unmatched `git -C <repo> push` prompts anyway.
 
-### 3. `git -C`: enumerate repositories, never glob
+### 3. `git -C`: nothing for Claude; the Bash sandbox carries it
 
-`tools.toml` `[git]` drops `global_option_prefixes = ["-C *", "-c *"]` for
-`repo_dir_options = ["-C"]`. `-c` is gone for good, since allowing it is the code-execution shape.
-For Claude, `allowlist.py` discovers repositories at render time under the projects root
-(`tasks/git.py`'s `PROJECTS_ROOT`), `$RESEARCH_HOME/repos`, `$PLANS_HOME` and its sensitive sibling,
-not following symlinks, stopping at each `.git`. It renders each rule once per repo in absolute and
-`~/` spelling. That comes to roughly 110 repos × 2 spellings × 90 rules, about 20k rules, well
-inside what was measured. `../` spellings (11 uses ever) are not generated.
+[DECISION: **Claude's renderer emits nothing for `repo_dir_options`**, settled with the user
+2026-09-26 after three designs lost. The `-C *`/`-c *` prefixes never matched. A glob in any form
+warns at every startup and lets `-c core.fsmonitor=<program>` through. One rule per repository was
+built (commits f92d099, 11a9149) and worked warning-free, but rendered 2.7 MB across 279
+repositories, and Claude Code rejects a settings file over 2 MiB whole; narrowed to the used verbs
+it was still 626 KB and stale for every new clone. The Bash sandbox runs
+`git -C <repo> status`/`log` with no rule at all and still prompts for `-c` and for the carve-outs
+(probed, recorded in `plans/2026-09-05-web-tool-permissions-and-what-auto-actually-buys.md`), so it
+is the right layer. Until it is enabled, cross-repo git prompts, as it always has. Copilot keeps
+`-C` as one regex.]
 
-The rendered set is machine state: a newly cloned repo prompts on `git -C` until the next
-`inv allowlist.apply`. The paths never enter the repository: `render` prints to stdout, `apply`
-writes `~/.claude/settings.json`, and tests use fake paths.
-
-[DEFERRED: Windows path spellings (`C:\…`, `C:/…`, `/c/…`). The spelling function is the one place
-to add them; nothing on this machine runs Claude Code on Windows.]
+[PITFALL: **Claude Code rejects a settings file over 2 MiB outright** (`claude` exits 1, "Settings
+file exceeds the 2MiB limit"), losing every setting, not just the rules. Found by `check-claude`
+before anything was applied. `util.write_claude_settings` now refuses past 1 MiB.]
 
 ### 4. One source: the `inv`/`spowse` rules move into `tools.toml`
 
