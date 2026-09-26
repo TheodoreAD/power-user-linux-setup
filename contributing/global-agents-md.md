@@ -1129,10 +1129,12 @@ repo has no signal distinguishing it from its own work, and the natural next act
 Size is not what makes a cross-repo write dangerous, and "it was only two lines" is exactly the
 framing under which one gets made.
 
-The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are now rendered as allow rules by
-`cli-allowlist`'s `global_option_prefixes`, and the mutating ones are meant to prompt — the earlier
-"expect a one-off prompt" framing read as friction to minimize, and under auto mode the prompt never
-came at all (see the cluster intro above).
+The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are rendered as allow rules by
+`cli-allowlist`, and the mutating ones are meant to prompt — the earlier "expect a one-off prompt"
+framing read as friction to minimize, and under auto mode the prompt never came at all (see the
+cluster intro above). The allow rules only started matching on 2026-09-26: the `git -C * status:*`
+form they were first written in never matched anything, and they are now one rule per repository on
+the machine (`repo_dir_options` in `contributing/cli-allowlist.md`).
 
 ## Running a read-only command against a different repo
 

@@ -49,6 +49,20 @@ Both `write` and `dangerous` classifications render as `ask` rules, never `deny`
 get a real, interactively-approvable prompt for anything risky; only genuinely safe, read-only
 commands get pre-approved.
 
+## One source, one rendering per harness
+
+The pipeline never writes a harness's own rule syntax by hand. Classifications and the hand-picked
+overrides in `cli-allowlist/tools.toml` become harness-neutral rules (`tasks/permission_rules.py`),
+and each harness gets a renderer that spells them as precisely as that harness allows. The harnesses
+genuinely disagree: Copilot takes regular expressions and can say "exactly one argument"; Claude
+Code's `*` matches any text, spaces included, and it warns at startup about some shapes. So a rule
+like "`git -C <repo> status`" is one regex for Copilot and one rule per repository on this machine
+for Claude. This is also where a harness changing its matching gets absorbed: a new release costs a
+renderer change, not a rewrite of the rule list.
+
+Every Bash command rule lives there, including the hand-written ones for `inv` and `spowse`.
+`setup.toml` keeps only Claude settings that aren't command rules (file read grants and the like).
+
 ## Operating it
 
 ```shell
@@ -61,14 +75,24 @@ inv allowlist.apply       # merge into ~/.claude/settings.json
 
 inv allowlist.status                        # what's tracked, stale, or still unreviewed
 inv allowlist.check-coverage                # every node-with-children's child has its own rule
+inv allowlist.check-claude                  # live: does the installed Claude Code read the rules right?
 inv allowlist.render --target=copilot       # Copilot's format instead — still print-only, no apply yet
 inv allowlist.check-man-deps                # re-check for new man-page dependencies
 ```
 
+**Run `inv allowlist.check-claude` after every Claude Code upgrade**, and after changing an override
+in `tools.toml`. It loads the exact rule set `apply` would write into a real `claude -p` (Haiku,
+about five cents), runs a fixed table of commands in throwaway repositories, and fails on any
+permission-rule warning, on any command that runs when it should prompt or the reverse, and on
+Claude refusing the settings outright. The unit suite cannot see any of those, because they are
+facts about the installed binary.
+
 `apply` only ever touches the `permissions` block of `~/.claude/settings.json` — everything else
-(`theme`, `effortLevel`, ...) is read, kept, and written back unchanged. Copilot support
-(`render --target=copilot`) is print-only today — copy its output into your own Copilot config by
-hand, there's no `apply` equivalent yet.
+(`theme`, `effortLevel`, ...) is read, kept, and written back unchanged. It refuses to write past 1
+MiB, half the 2 MiB beyond which Claude Code rejects the whole file. Re-run it after cloning a
+repository: `git -C <repo>` rules are generated per repository found on the machine, so a new clone
+prompts until then. Copilot support (`render --target=copilot`) is print-only today — copy its
+output into your own Copilot config by hand, there's no `apply` equivalent yet.
 
 Adding a custom tool to the pipeline (or extending recursion into a tool's subcommand tree) is done
 by editing `cli-allowlist/tools.toml`, then re-running `extract`/`classify`/`review`/`apply`.

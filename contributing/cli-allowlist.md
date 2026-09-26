@@ -420,13 +420,13 @@ instead of running to the edge and wrapping back to column 0.
 
 ### `render` / `apply` — where the classified data goes
 
-`render --target=claude|copilot` is pure, deterministic, output-only: turns the reviewed subset of
-`rules/*.json` into Claude `Bash(...)` glob-prefix rules or Copilot
-`chat.tools.terminal.autoApprove` regex rules — one rule per node, using its full path
-(`Bash(docker network rm:*)` for a depth-2 node, same as `Bash(git status:*)` for a depth-1 one —
-the pattern-building code doesn't need to know how deep a node is, a path is just a path). Per-flag
-ratings aren't rendered here at all — see the "important limitation" note above. It never writes
-anywhere by itself.
+`render --target=claude|copilot` is pure, deterministic, output-only. `_build_rules` turns the
+reviewed subset of `rules/*.json`, plus `tools.toml`'s overrides, into harness-neutral rules
+(`tasks/permission_rules.py`): one per node, using its full path (`docker network rm ...` for a
+depth-2 node, same as `git status ...` for a depth-1 one — a path is just a path). A renderer per
+harness then spells them: Claude `Bash(...)` patterns, or Copilot `chat.tools.terminal.autoApprove`
+regex keys. Per-flag ratings aren't rendered here at all — see the "important limitation" note
+above. It never writes anywhere by itself.
 
 One deliberate exception to "one rule per node": **any** node that has children of its own (checked
 against `help-cache/<tool>.json`'s `children` list, not `rules/`, since that's where tree structure
@@ -515,12 +515,12 @@ that didn't seem worth the added complexity of a custom interception script. Wha
 dangerous-tier commands still surface a real, interactively-approvable prompt instead of running
 silently — plain `ask` rules already get that.
 
-### `mode_covered` and `global_option_prefixes` — shaping output without touching verdicts
+### `mode_covered` and `repo_dir_options` — shaping output without touching verdicts
 
-Both are `tools.toml` registry fields read only by `_compute_claude_rules`; the classification on
-disk is untouched, still reviewed, still reported by `status`. They exist because the machine's
-default permission mode moved from `auto` to `acceptEdits` on 2026-08-24 (dogfooding; the design
-comparison and the transcript audit behind the decision are in the `session-bash-audit` skill's
+Both are `tools.toml` registry fields read only by `_build_rules`; the classification on disk is
+untouched, still reviewed, still reported by `status`. They exist because the machine's default
+permission mode moved from `auto` to `acceptEdits` on 2026-08-24 (dogfooding; the design comparison
+and the transcript audit behind the decision are in the `session-bash-audit` skill's
 `references/research.md`), and two facts about that mode interact with prefix rules:
 
 - **`mode_covered = true`** (`cp`, `mv`, `rm`, `rmdir`, `mkdir`, `touch`). `acceptEdits`
@@ -532,16 +532,34 @@ comparison and the transcript audit behind the decision are in the `session-bash
   the rendered `ask`. Under `default`/manual mode nothing is silently opened up: an unmatched
   non-read-only command prompts anyway; the difference is only that the prompt comes from Claude
   Code's own default instead of an explicit rule. `apply`'s manifest diff removed the six old `ask`
-  rules cleanly on the next run — no hand edit.
-- **`global_option_prefixes = ["-C *", "-c *"]`** (`git`). Every rendered rule assumes the
-  subcommand is the second word; `git -C <path> status` isn't, so it matched nothing and prompted —
-  the most common unmatched git shape in the 4-day transcript audit (81 `git -C` calls). The field
-  emits an extra `allow` per prefix for each read_only leaf: `Bash(git -C * status:*)`. Allow-only:
-  an `ask` twin would be redundant (unmatched `git -C x push` already prompts in every mode that
-  prompts), and Claude Code's mid-pattern `*` spans any number of arguments, so the allow side has a
-  known hole — `git -C x commit -m status` also matches `Bash(git -C * status:*)`. Chosen with eyes
-  open (2026-08-24) over accepting a prompt on every cross-repo read; revisit if the rule syntax
-  ever gains a single-argument wildcard.
+  rules cleanly on the next run — no hand edit. Copilot has no such mode, so its renderer keeps
+  those asks.
+- **`repo_dir_options = ["-C"]`** and **`repo_dir_verbs`** (`git`). Every rendered rule assumes the
+  subcommand is the second word; `git -C <path> status` isn't, so it matches nothing and prompts —
+  the most common unmatched git shape in the transcripts, and Claude Code's built-in read-only set
+  covers no `-C` form either (not even `git -C . status`, measured). The option gets a variant of
+  every allow rule and ask override for the listed verbs; node asks get none, since an unmatched
+  `git -C x push` prompts anyway. Copilot's renderer says "exactly one argument" as a regex.
+  **Claude's renderer enumerates the repositories on this machine** — the projects root, the
+  research library and both plans stores, absolute and `~/` spelling, which together are 99% of the
+  `-C` calls ever made here — and renders one rule per repository and verb.
+
+  That is the third design, and the two before it are worth knowing. **2026-08-24 to 2026-09-26:
+  `global_option_prefixes = ["-C *", "-c *"]`**, rendered as `Bash(git -C * status:*)`. It never
+  matched anything: Claude Code skipped rules with a mid-pattern `*` and a trailing `:*` until
+  2.1.282, then loaded them reading the `*` literally, and warned about all 54 from 2.1.283. **A
+  working glob was then rejected** because every form of it — `git -C * status`, `../*`, `~/*`,
+  `*/*`, an absolute root followed by `/*` — draws a warning at every startup, and the `*` lets
+  `-c core.fsmonitor=<program>` through without a prompt (both confirmed live). `-c` itself is never
+  listed: allowing it is arbitrary code execution by construction.
+
+  **The size cap is what `repo_dir_verbs` is for.** Claude Code rejects a settings file over 2 MiB
+  with every setting in it, not just the rules. Every allowed git verb across 279 repositories came
+  to 2.7 MB; the verbs agents actually write after `-C` bring it to about 626 KB.
+  `util.write_claude_settings` refuses to write past 1 MiB, and a unit test pins the tracked rules
+  under that for a 300-repository machine. Rule count as such is cheap — 25k extra rules measured at
+  about +1 s and zero prompt tokens — so bytes, not rules, are the budget. The set is machine state:
+  a repository cloned after the last `apply` prompts on `git -C` until the next one.
 
 Under `auto` mode the picture differs: the classifier, not the prompt, catches an unmatched
 `git -C x push`, and it approved all 81 of those calls in the audit window — one of the reasons the
@@ -565,18 +583,27 @@ they prompted as unmatched.
 `mode_covered` can't express this (per tool, not per verb) and reclassifying can't either — `add`
 _is_ a write. The per-node knob the `review` docstring said didn't exist now does, on the render
 side only: `allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]` renders those as
-`allow` (with the `global_option_prefixes` variants, so `git -C ../other add` stops prompting too),
-suppressing the node's own generated `ask`; the verdict on disk is untouched. The line is "can this
-lose uncommitted code": `commit` and `stash` stay `ask` (user decision, 2026-08-25 — commit is the
-checkpoint, stash hides work), and every flag shape that can discard work gets a literal `ask` entry
-in `ask_overrides` — `reset --hard/--merge/--keep`, `restore --staged --worktree`/`-W`, `rm -f`/
-`--force`/`-rf` — each in two forms, `verb --flag` and `verb * --flag`, because the mid-pattern `*`
-spans any number of arguments and so closes the flag-order hole (`git reset -q --hard` matches
-`Bash(git reset * --hard:*)`). This is the first real consumer of "the per-flag data can't be
-rendered as prefix rules": it still can't in general, but a hand-picked list of code-losing flags
-per verb can, because `ask` beats `allow` with no specificity tiebreak. Residual, accepted:
-single-letter clusters (`git rm -qf`), `-S` for `--staged`, `-W` written before `--staged` — every
-one falls through to a prompt, never to an allow, so the hole is friction, not exposure.
+`allow`, suppressing the node's own generated `ask` — and, since 2026-09-26, the ask of any node an
+override _extends_: `Bash(git restore:*)` as ask had been beating the `restore --staged` allow, so
+unstaging prompted every time (confirmed live). The verdict on disk is untouched. The line is "can
+this lose uncommitted code": `commit` and `stash` stay `ask` (user decision, 2026-08-25 — commit is
+the checkpoint, stash hides work), and every flag shape that can discard work gets an
+`ask_overrides` entry — `reset ... --hard/--merge/--keep`, `restore --staged ... --worktree`/`-W`,
+`rm ... -f/--force/-rf/-fr/-qf/-fq`. The `...` is the neutral grammar's "zero or more arguments",
+which Claude's renderer spells three ways (`reset --hard *`, `reset * --hard`, `reset * --hard *`)
+so the flag is caught first, last or in the middle.
+
+**Until 2026-09-26 the flag-last half of this never worked.** It was written `reset * --hard` and
+rendered `Bash(git reset * --hard:*)`, which Claude Code first skipped and then, from 2.1.282, read
+with a literal `*` — so `git reset HEAD --hard` and `git rm x -f` matched the verb's allow and ran
+unprompted (confirmed live). This is the first real consumer of "the per-flag data can't be rendered
+as prefix rules": it still can't in general, but a hand-picked list of code-losing flags per verb
+can, because `ask` beats `allow` with no specificity tiebreak.
+
+Residual shapes, and which way each fails. `-S` for `--staged` and `-W` written before `--staged`
+don't match the `restore --staged` allow, so they prompt: friction, not exposure. **Flag clusters
+beyond the listed ones do not**: `git rm -rqf x` matches the `rm` allow and no carve-out, so it
+runs. Rare enough in agent output to leave, and the reason `-qf`/`-fq` are listed explicitly.
 
 `review` gained `--tool=<name>` at the same time. Re-registering verbs re-pends the whole `git`
 tree, and `--apply-all` without a tool filter would have marked `sed` and `inv` reviewed too — the
@@ -593,6 +620,49 @@ they're harmless to execute either way) triggered real permission prompts. Confi
 watching the session, since a silent auto-approval and an instantly-approved prompt look identical
 from the agent's own side.
 
+Since 2026-09-26 the same question has a repeatable answer that needs nobody watching:
+`inv allowlist.check-claude` runs `claude -p` in manual mode with nobody to answer, where every
+would-be prompt becomes a `permission_denials` entry in the JSON output, so "ran" and "would have
+asked" are finally distinguishable from the agent's side.
+
+## How each harness matches
+
+The reason the renderers differ. All of it measured on 2026-09-26, and none of it guessed from
+syntax — the harnesses change, which is what `check-claude` exists to catch.
+
+**Claude Code** (2.1.283; docs at code.claude.com/docs/en/permissions, which has no public repo,
+plus about 50 live probes: `claude -p` with only the rules under test,
+`--permission-mode manual
+--permission-prompts none`, verdict from `permission_denials`, warnings
+from `--debug-file`):
+
+- `*` matches any text including spaces — so it can never mean "one argument" — but **not the empty
+  string between two spaces**: `Bash(git reset * --hard)` misses `git reset --hard`. Zero-or-more
+  arguments therefore takes two spellings.
+- A trailing `*` also matches the bare command, but only while it is the rule's only wildcard.
+- `:*` is a wildcard only at the very end. With another `*` anywhere in the rule, the middle `*` is
+  literal and the rule never matches (loaded that way since 2.1.282, warned about since 2.1.283).
+- An **allow** rule with a standalone `*` before git's subcommand warns at every startup, naming
+  `-c` and `--exec-path` as the danger; every path glob in that position warns too. Ask rules never
+  warn, and `inv *.status` (a `*` glued to text) doesn't.
+- Precedence is deny > ask > allow with no specificity tiebreak (`git restore:*` as ask beats
+  `git restore --staged:*` as allow).
+- Built-in read-only commands run with no rule, `git status`/`git log` included — but no `git -C`
+  form, and `additionalDirectories` doesn't change that (it does for `ls ../other`).
+- Rule count is cheap (25k extra rules: about +1 s, zero prompt tokens), but **a settings file over
+  2 MiB is rejected whole**: `claude` exits 1 with "Settings file exceeds the 2MiB limit".
+
+**VS Code Copilot** (`chat.tools.terminal.autoApprove`; read from `microsoft/vscode` source,
+`commandLineAutoApprover.ts` and `commandLineAutoApproveAnalyzer.ts`, cloned into `$RESEARCH_HOME`):
+
+- A key is `/regex/flags` (not anchored — the renderer anchors `^…$` itself) or a plain string,
+  which is a `^<escaped>\b` prefix with no wildcards at all.
+- `false` is checked before `true`, so any matching `false` wins: the same no-tiebreak precedence as
+  Claude, which is why the parent-with-children skip applies to both renderers.
+- The command line is parsed with tree-sitter and every sub-command must be approved separately; a
+  leading `VAR=value` is always denied.
+- VS Code's own defaults already allow read-only git with any number of `-C <dir>` after `git`.
+
 ## Retention policy note
 
 While reviewing the global `~/.claude/settings.json` for this work, `cleanupPeriodDays` (governs how
@@ -605,10 +675,11 @@ freshly-set-up install) — this was a preference call, not a fix.
 ## Known gaps / deliberately not built
 
 - **`apply` only targets Claude's `settings.json`.** Copilot's `chat.tools.terminal.autoApprove`
-  still needs manual copy-paste from `render --target=copilot`. The read_only-parent-with-children
-  omission (see `render`/`apply` above) is Claude-specific for the same reason — it leans on a
-  verified deny > ask > allow, no-specificity-tiebreak precedence that hasn't been confirmed for
-  Copilot's own rule resolution, so `_render_copilot` doesn't apply the same skip.
+  still needs manual copy-paste from `render --target=copilot`. Both renderers read the same rules,
+  so the parent-with-children skip, the overrides and the carve-outs reach Copilot too; VS Code's
+  precedence was confirmed from its source ("How each harness matches").
+- **No Windows path spellings for `git -C`.** `_repo_dir_spellings` is the one place to add `C:\…`,
+  `C:/…` and `/c/…`; nothing on this machine runs Claude Code on Windows.
 - **No sandboxing integration** (`/sandbox`, OS-level filesystem/network isolation) — a stronger,
   orthogonal control considered out of scope for this pass.
 - **No PreToolUse hook** — see the `render`/`apply` section above for why this was a deliberate
