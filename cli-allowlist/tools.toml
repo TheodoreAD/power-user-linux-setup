@@ -54,6 +54,11 @@
 #                     this machine, because any `*` there is a warned-about shape that also lets
 #                     `-c core.fsmonitor=<program>` through. Never list `-c` here: allowing it is
 #                     arbitrary code execution by design.
+#   overrides_only   true = the tool's rules are its overrides and nothing else: never extracted
+#                     or classified, rendered without the review gate because this table is itself
+#                     the hand-reviewed artifact. For a tool whose own verdict is meaningless as a
+#                     rule (`inv` runs whatever tasks.py says) and would shadow every allow below.
+#   aliases          other command names for the same program; every rule renders under each.
 #   allow_overrides / ask_overrides
 #                    hand-picked pattern bodies rendered regardless of the classified verdict, in
 #                     tasks/permission_rules.py's harness-neutral grammar: the tool name is
@@ -441,6 +446,80 @@ no_subcommands = true
 # output at all, so there's no subcommand tree to discover here the way there is for git/docker —
 # same "arbitrary user-defined script" shape as `npm run`, already precedented in this file.
 no_subcommands = true
+# Its rules are hand-authored below, not classified: `inv` alone is `write` (it runs whatever a
+# repo's tasks.py says), and a reviewed verdict would render as an `inv ...` ask that shadows every
+# allow here. Moved from setup.toml's [packages.repo-tasks] on 2026-09-26, so this file is the one
+# source of Bash rules; the reasoning moved with them.
+overrides_only = true
+allow_overrides = [
+  # repo-tasks' `quality.*` and `test.*` namespaces are identical across every consumer repo by
+  # design (repo-tasks' README "Design": no per-repo allowances), local-only and reversible:
+  # git-tracked file edits, no network/publish/push. Unlike dist.publish, docker.push,
+  # version.bump, ... which run arbitrary per-repo tasks and keep their prompt. `test.*` since
+  # repo-tasks moved its test tasks out of `quality.*` (2026-08-24).
+  "quality.*",
+  "test.*",
+  # invoke's own listing flag (2026-08-25 prompt audit: the commonest non-quality inv call).
+  "--list",
+  "-l",
+  # Read-only by naming convention (user decision 2026-08-25): the `invoke-task-conventions`
+  # skill's rule 2 makes these names mean "inspect, never mutate", and this is where that
+  # convention becomes load-bearing: a mutating task named `x.check` would run unprompted. Each
+  # glob is one argument for a harness that can say so (Copilot); Claude's `*` spans arguments,
+  # so `inv deploy.all --name x.status` also matches there, an accepted hole, and so would a core
+  # option that loads code, which is what the ask guards below are for.
+  "*.status",
+  "*.check",
+  "*.diff",
+  "*.list",
+  "*.show",
+  "*.print-*",
+  "*.check-*",
+  "*.list-*",
+  "*-check",
+]
+# invoke core options that load and execute Python from a path the command names: a collection
+# module (-c/--collection), a search root holding a tasks.py (-r/--search-root), a config file,
+# which may be .py (-f/--config). Without these, `inv -c /tmp/x a.status` would ride the
+# `*.status` allow on Claude. Short forms are globbed so `-cpath` is caught too.
+ask_overrides = [
+  "... -c*",
+  "... --collection*",
+  "... -r*",
+  "... --search-root*",
+  "... -f*",
+  "... --config*",
+]
+
+[spowse]
+# PULSE's own CLI (setup.toml [packages.spowse]), an invoke Program, so the same convention grant
+# and the same code-loading guards as [inv]. Two differences, both deliberate: no `quality.*`/
+# `test.*`, because the shim does not publish them; and nothing broader, because `spowse setup`
+# installs a machine and `spowse deploy.all` writes the home directory. `spouse` is the same entry
+# point under the spelling fingers reach for first.
+overrides_only = true
+aliases = ["spouse"]
+allow_overrides = [
+  "--list",
+  "-l",
+  "*.status",
+  "*.check",
+  "*.diff",
+  "*.list",
+  "*.show",
+  "*.print-*",
+  "*.check-*",
+  "*.list-*",
+  "*-check",
+]
+ask_overrides = [
+  "... -c*",
+  "... --collection*",
+  "... -r*",
+  "... --search-root*",
+  "... -f*",
+  "... --config*",
+]
 
 [jq]
 no_subcommands = true

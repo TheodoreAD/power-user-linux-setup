@@ -23,6 +23,7 @@ tradeoffs rather than TODOs: `contributing/cli-allowlist.md`.
 `~/.claude/settings.json`'s `permissions` block (see its docstring for the merge safety design).
 """
 
+import dataclasses
 import hashlib
 import json
 import os
@@ -92,6 +93,8 @@ class ToolConfig(TypedDict, total=False):
     mode_covered: bool
     cloud_cli: bool
     repo_dir_options: list[str]
+    overrides_only: bool
+    aliases: list[str]
     allow_overrides: list[str]
     ask_overrides: list[str]
 
@@ -807,6 +810,9 @@ def _extract_one(name: str, cfg: ToolConfig | None, force: bool) -> None:
     if cfg is None:
         print(f"[allowlist] {name}: not in tools.toml — skipping")
         return
+    if cfg.get("overrides_only"):
+        print(f"[allowlist] {name}: hand-authored rules only (overrides_only) — nothing to extract")
+        return
     # shell_prefix tools (nvm) are shell functions, not binaries — `which` can't see them,
     # so existence is judged by whether the extraction call actually produces output instead.
     if not cfg.get("shell_prefix") and not util.command_exists(name):
@@ -1144,6 +1150,9 @@ def classify(c: Context, tool: str | None = None, force: bool = False, model: st
     names = [tool] if tool else sorted(registry)
 
     for name in names:
+        if registry.get(name, {}).get("overrides_only"):
+            print(f"[allowlist] {name}: hand-authored rules only (overrides_only) — nothing to classify")
+            continue
         cached = _load_cache(name)
         if cached is None:
             print(f"[allowlist] {name}: no extracted help — run `inv allowlist.extract --tool={name}` first")
@@ -1469,10 +1478,18 @@ def _build_rules(rules: dict[str, RuleEntry]) -> list[permission_rules.Rule]:
       which beats the allow by the same no-tiebreak precedence.
     """
     registry = _load_registry()
+    hand_authored = {name for name, cfg in registry.items() if cfg.get("overrides_only")}
     out: list[permission_rules.Rule] = []
-    for name, entry in sorted(rules.items()):
-        if entry["reviewed"]:
-            out.extend(_tool_rules(name, entry, registry.get(name, {})))
+    for name in sorted(set(rules) | hand_authored):
+        cfg = registry.get(name, {})
+        if name in hand_authored:
+            tool_rules = _override_rules(name, cfg)
+        elif rules[name]["reviewed"]:
+            tool_rules = _tool_rules(name, rules[name], cfg)
+        else:
+            continue
+        for alias in (name, *cfg.get("aliases", [])):
+            out.extend(dataclasses.replace(rule, tool=alias) for rule in tool_rules)
     return out
 
 
@@ -1487,7 +1504,6 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
     allow, ask = permission_rules.Decision.ALLOW, permission_rules.Decision.ASK
     mode_covered = bool(cfg.get("mode_covered"))
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
-    ask_overrides: list[str] = cfg.get("ask_overrides", [])
     repo_opts = tuple(cfg.get("repo_dir_options", []))
     extended = [body.split() for body in allow_overrides]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
@@ -1521,11 +1537,19 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
             if any(o[: len(words)] == words for o in extended):
                 continue  # an allow override extends this node; its ask would shadow that allow
             out.append(permission_rules.Rule(name, ask, tokens, mode_covered=mode_covered))
-    # Node asks get no repo-directory variants: an unmatched `git -C <repo> push` prompts anyway.
-    # Ask overrides do, because each carves out of an allow that has them.
-    out.extend(permission_rules.Rule(name, allow, _override_tokens(body), repo_opts) for body in allow_overrides)
-    out.extend(permission_rules.Rule(name, ask, _override_tokens(body), repo_opts) for body in ask_overrides)
-    return out
+    return out + _override_rules(name, cfg)
+
+
+def _override_rules(name: str, cfg: ToolConfig) -> list[permission_rules.Rule]:
+    """A tool's `allow_overrides`/`ask_overrides`. Both get the repo-directory variants — node
+    asks don't, since an unmatched `git -C <repo> push` prompts anyway, but a carve-out has to
+    hold under `-C` exactly as it does without it or the `-C` allow would carry the flag through."""
+    repo_opts = tuple(cfg.get("repo_dir_options", []))
+    allow, ask = permission_rules.Decision.ALLOW, permission_rules.Decision.ASK
+    return [
+        *(permission_rules.Rule(name, allow, _override_tokens(b), repo_opts) for b in cfg.get("allow_overrides", [])),
+        *(permission_rules.Rule(name, ask, _override_tokens(b), repo_opts) for b in cfg.get("ask_overrides", [])),
+    ]
 
 
 def _repo_roots() -> list[Path]:
@@ -1640,6 +1664,13 @@ def _print_coverage_gaps(gaps: list[tuple[str, str, str, str]]) -> None:
         print(f"[allowlist] COVERAGE GAP: {tool} {parent!r} has child {child!r} with no rule of its own ({reason})")
 
 
+def _unreviewed(rules: dict[str, RuleEntry]) -> list[str]:
+    """Tools whose classification renders nothing until reviewed. A hand-authored tool's rules
+    render without review, so it isn't one, whatever its stale rules file says."""
+    registry = _load_registry()
+    return [n for n, e in rules.items() if not e["reviewed"] and not registry.get(n, {}).get("overrides_only")]
+
+
 def _render_claude(rules: dict[str, RuleEntry]) -> str:
     allow, ask = _compute_claude_rules(rules)
     return json.dumps({"permissions": {"allow": allow, "ask": ask}}, indent=2)
@@ -1659,7 +1690,7 @@ def render(c: Context, target: str = "claude", out: str | None = None):
     `dangerous` entries always render as still-prompting (Claude `ask` / Copilot `false`), never
     as a hard deny — the point is a visible, still-approvable prompt, not a block."""
     rules = _load_all_rules()
-    unreviewed = [name for name, entry in rules.items() if not entry["reviewed"]]
+    unreviewed = _unreviewed(rules)
     if unreviewed:
         joined = ", ".join(sorted(unreviewed))
         print(f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded from output: {joined}")
@@ -1726,7 +1757,7 @@ def apply(c: Context):
     regenerated each run, nothing else is.
     """
     rules = _load_all_rules()
-    unreviewed = [name for name, entry in rules.items() if not entry["reviewed"]]
+    unreviewed = _unreviewed(rules)
     if unreviewed:
         print(
             f"[allowlist] note: {len(unreviewed)} tool(s) not yet reviewed, excluded: {', '.join(sorted(unreviewed))}"
@@ -1795,6 +1826,9 @@ def status(c: Context):  # noqa: C901
 
     for name in sorted(registry):
         cfg = registry[name]
+        if cfg.get("overrides_only"):
+            print(f"[allowlist] {name}: hand-authored rules only (overrides_only)")
+            continue
         if not cfg.get("shell_prefix") and not util.command_exists(name):
             print(f"[allowlist] {name}: not installed")
             continue

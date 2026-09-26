@@ -473,6 +473,27 @@ def test_compute_claude_rules_repo_dir_options_skip_a_flat_tool(stub_registry):
     assert allowlist._compute_claude_rules(rules, repo_dirs=["/p/a"]) == (["Bash(flat *)"], [])
 
 
+def test_build_rules_overrides_only_ignores_classification_and_review(stub_registry):
+    # `inv` classified `write` and never reviewed: its own verdict would render as an `inv ...`
+    # ask shadowing every allow below it, so a hand-authored tool renders its overrides alone.
+    stub_registry({"inv": {"overrides_only": True, "allow_overrides": ["*.status"], "ask_overrides": ["... -c*"]}})
+    rules = {"inv": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("write")}, reviewed=False)}
+    assert allowlist._compute_claude_rules(rules) == (
+        ["Bash(inv *.status)", "Bash(inv *.status *)"],
+        ["Bash(inv -c*)", "Bash(inv * -c*)"],
+    )
+
+
+def test_build_rules_overrides_only_needs_no_rules_file(stub_registry):
+    stub_registry({"spowse": {"overrides_only": True, "allow_overrides": ["--list"]}})
+    assert allowlist._compute_claude_rules({}) == (["Bash(spowse --list *)"], [])
+
+
+def test_build_rules_aliases_render_every_rule_under_each_name(stub_registry):
+    stub_registry({"spowse": {"overrides_only": True, "aliases": ["spouse"], "allow_overrides": ["--list"]}})
+    assert allowlist._compute_claude_rules({}) == (["Bash(spowse --list *)", "Bash(spouse --list *)"], [])
+
+
 def test_real_registry_renders_for_claude_without_any_warned_shape():
     # The whole tracked rule set, through the real renderer: no colon-star suffix anywhere (a
     # mid-pattern `*` beside one is read literally), and render_claude itself raises on an allow
@@ -480,6 +501,10 @@ def test_real_registry_renders_for_claude_without_any_warned_shape():
     allow, ask = allowlist._compute_claude_rules(allowlist._load_all_rules(), repo_dirs=["/p/a", "~/p/a"])
     assert "Bash(git -C ~/p/a status *)" in allow
     assert not [p for p in allow + ask if ":*" in p]
+    # Every glob-widened allow has its code-loading guard: `inv -c <module> x.status` must prompt.
+    for program in ("inv", "spowse", "spouse"):
+        assert f"Bash({program} *.status)" in allow
+        assert {f"Bash({program} -c*)", f"Bash({program} * -c*)", f"Bash({program} * -r*)"} <= set(ask)
 
 
 @pytest.fixture
