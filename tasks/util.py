@@ -170,6 +170,7 @@ class PackageConfig(TypedDict, total=False):
     version_url: str
     download_page: str
     download_url: str
+    checksum_url: str
     extract_to: str
     install_dir: str
     strip_components: int

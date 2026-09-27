@@ -1,6 +1,8 @@
+import hashlib
 import shutil
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
+from urllib.parse import urlparse
 
 from invoke import Context, task
 
@@ -58,13 +60,59 @@ def _resolve_url_version(c: Context, name: str, url: str, cfg: util.PackageConfi
     """
     if "{version}" not in url:
         return url
+    return url.format(version=_version(c, name, cfg, field))
+
+
+def _version(c: Context, name: str, cfg: util.PackageConfig, field: str) -> str:
+    """The upstream version string, from `version_cmd` or `version_url`. `field` names the setting
+    whose `{version}` asked for it, so a missing source is reported against the right key."""
     if version_cmd := cfg.get("version_cmd"):
-        version = c.run(version_cmd, hide=True).stdout.strip()
-    elif version_url := cfg.get("version_url"):
-        version = c.run(f"curl -fsSL {version_url} | head -1", hide=True).stdout.strip()
+        return c.run(version_cmd, hide=True).stdout.strip()
+    if version_url := cfg.get("version_url"):
+        return c.run(f"curl -fsSL {version_url} | head -1", hide=True).stdout.strip()
+    raise util.missing_fields(name, f"version_cmd or version_url ({field} has {{version}})")
+
+
+def _archive_urls(c: Context, name: str, cfg: util.PackageConfig, download: str) -> tuple[str, str | None]:
+    """`download_url` and the optional `checksum_url`, with `{version}` filled in from one lookup.
+
+    One lookup rather than two calls to _resolve_url_version: `version_cmd` is usually a GitHub
+    releases API call, and a release published between two calls would pair one version's tarball
+    with the next version's checksum list — a mismatch that reads exactly like a corrupt download.
+    """
+    checksum = cfg.get("checksum_url")
+    templated = [(f, t) for f, t in (("download_url", download), ("checksum_url", checksum)) if t and "{version}" in t]
+    if not templated:
+        return download, checksum
+    version = _version(c, name, cfg, templated[0][0])
+    return download.format(version=version), checksum.format(version=version) if checksum else None
+
+
+def _verify_checksum(c: Context, name: str, archive: Path, url: str, checksum_url: str) -> None:
+    """Refuse the download unless its sha256 matches the upstream's published checksum list.
+
+    Reads the common `<sha256>  <filename>` format (sha256sum's own, which goreleaser and most
+    GitHub releases publish), matched on the asset's filename from `url`; a file holding one bare
+    hash is accepted too. A checksum fetched from the same release defends against a corrupted or
+    truncated download, not against a compromised release — that needs a signature, which every
+    project does differently. Raises rather than warning: an archive that fails this is not
+    installed, the same first-failure-aborts stance as `inv verify.all`.
+    """
+    listing = c.run(f'curl -fsSL "{checksum_url}"', hide=True).stdout
+    asset = PurePosixPath(urlparse(url).path).name
+    lines = [line.split() for line in listing.splitlines() if line.strip()]
+    if len(lines) == 1 and len(lines[0]) == 1:
+        expected = lines[0][0]
     else:
-        raise util.missing_fields(name, f"version_cmd or version_url ({field} has {{version}})")
-    return url.format(version=version)
+        expected = next((parts[0] for parts in lines if len(parts) == 2 and parts[1].lstrip("*") == asset), None)
+    if expected is None:
+        raise RuntimeError(f"[{name}] {checksum_url} lists no checksum for {asset} — not installing")
+    actual = hashlib.sha256(archive.read_bytes()).hexdigest()
+    if actual != expected.lower():
+        raise RuntimeError(
+            f"[{name}] sha256 mismatch for {asset}: published {expected}, downloaded {actual} — not installing"
+        )
+    print(f"[{name}] sha256 verified")
 
 
 def _install_binary(c: Context, name: str, cfg: util.PackageConfig) -> None:
@@ -159,9 +207,9 @@ def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  #
         print(f"[{name}] already installed")
         return
 
-    if "download_url" not in cfg:
+    if not (download := cfg.get("download_url")):
         raise util.missing_fields(name, "download_url")
-    url = _resolve_url_version(c, name, cfg["download_url"], cfg, "download_url")
+    url, checksum_url = _archive_urls(c, name, cfg, download)
 
     print(f"[{name}] installing...")
     # Downloaded to a file rather than piped into tar, because tar can only auto-detect an
@@ -173,6 +221,8 @@ def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  #
     with TemporaryDirectory(prefix="pulse-archive-") as tmp:
         tarball = Path(tmp) / "archive"
         c.run(f'curl -fsSL "{url}" -o {tarball}')
+        if checksum_url:
+            _verify_checksum(c, name, tarball, url, checksum_url)
         if bin_pick := cfg.get("bin_pick"):
             dest = Path.home() / ".local" / "bin" / bin_pick
             dest.parent.mkdir(parents=True, exist_ok=True)

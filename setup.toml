@@ -101,6 +101,10 @@
 #                 version_cmd exactly like deb-url above (see [packages.atuin]), or
 #                 {version} + version_url (fetch latest version string via `curl | head -1`
 #                 instead of a custom command)
+#   checksum_url  optional URL to the release's sha256 list (`<sha256>  <filename>` lines, or one
+#                 bare hash), same {version} as download_url. The download is refused unless its
+#                 sha256 matches the line for its filename — a corrupt or truncated download, not a
+#                 compromised release, is what this catches
 #   extract_to    directory to extract into (creates <name> subdirectory)
 #   install_dir   expected post-extract path; removed and re-extracted if missing
 #   strip_components  path components to strip on extract (default: 1 with bin_pick, 0 with install_dir)

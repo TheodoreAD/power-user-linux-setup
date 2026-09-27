@@ -12,6 +12,7 @@ gzip/xz/bzip2 itself. These run the real shell against real tarballs over file:/
 being guarded is a tar invocation, so mocking the run would test nothing.
 """
 
+import hashlib
 import subprocess
 from pathlib import Path
 from typing import (
@@ -329,8 +330,8 @@ class _ShellContext(Context):
 
     @override
     def run(self, command: str, **kwargs: object) -> Result:
-        subprocess.run(command, shell=True, check=True)
-        return Result(command=command, exited=0)
+        done = subprocess.run(command, shell=True, check=True, capture_output=True, text=True)
+        return Result(command=command, stdout=done.stdout, exited=0)
 
 
 def _tarball(tmp_path: Path, name: str, flag: str) -> Path:
@@ -372,6 +373,79 @@ def test_install_archive_leaves_no_download_behind(tmp_path):
     tools._install_archive(_ShellContext(), "t", _archive_cfg(install_dir, _tarball(tmp_path, "a.tar.xz", "J")))
 
     assert sorted(p.name for p in install_dir.iterdir()) == ["binary"]
+
+
+def _checksummed(tmp_path: Path, archive: Path, listing: str) -> util.PackageConfig:
+    sums = tmp_path / "checksums.txt"
+    sums.write_text(listing)
+    return {**_archive_cfg(tmp_path / "installed", archive), "checksum_url": sums.as_uri()}
+
+
+def _sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def test_install_archive_installs_when_the_published_checksum_matches(tmp_path):
+    archive = _tarball(tmp_path, "tool_1.0_linux_amd64.tar.gz", "z")
+    listing = f"{'0' * 64}  tool_1.0_darwin_arm64.tar.gz\n{_sha256(archive)}  {archive.name}\n"
+
+    tools._install_archive(_ShellContext(), "t", _checksummed(tmp_path, archive, listing))
+
+    assert (tmp_path / "installed" / "binary").read_text() == "payload\n"
+
+
+def test_install_archive_refuses_a_download_whose_checksum_differs(tmp_path):
+    """The case the field exists for: nothing may be extracted from bytes that fail the check."""
+    archive = _tarball(tmp_path, "tool.tar.gz", "z")
+
+    with pytest.raises(RuntimeError, match=r"sha256 mismatch for tool\.tar\.gz"):
+        tools._install_archive(_ShellContext(), "t", _checksummed(tmp_path, archive, f"{'0' * 64}  tool.tar.gz\n"))
+
+    assert not (tmp_path / "installed").exists()
+
+
+def test_install_archive_refuses_when_the_list_does_not_name_the_asset(tmp_path):
+    """A list with no line for this file is not a pass — a renamed asset would otherwise skip the
+    check silently while the field still reads as protection."""
+    archive = _tarball(tmp_path, "tool.tar.gz", "z")
+
+    cfg = _checksummed(tmp_path, archive, f"{_sha256(archive)}  other.tar.gz\n")
+
+    with pytest.raises(RuntimeError, match=r"lists no checksum for tool\.tar\.gz"):
+        tools._install_archive(_ShellContext(), "t", cfg)
+
+
+@pytest.mark.parametrize(
+    "line",
+    [
+        pytest.param("{sha}\n", id="bare-hash"),  # dl.google.com's Go sums
+        pytest.param("{sha} *{name}\n", id="binary-mode-star"),  # atuin's and JetBrains' sums
+    ],
+)
+def test_install_archive_accepts_the_other_published_sum_formats(tmp_path, line):
+    archive = _tarball(tmp_path, "tool.tar.gz", "z")
+
+    listing = line.format(sha=_sha256(archive), name=archive.name)
+    tools._install_archive(_ShellContext(), "t", _checksummed(tmp_path, archive, listing))
+
+    assert (tmp_path / "installed" / "binary").exists()
+
+
+def test_archive_urls_resolve_the_version_once_for_both(tmp_path):
+    """Two lookups could straddle a release and pair one version's tarball with the next one's
+    checksum list — a mismatch indistinguishable from corruption. MockContext answers each command
+    once, so a second lookup would raise."""
+    cfg: util.PackageConfig = {
+        "version_cmd": "latest",
+        "download_url": "https://e/v{version}/tool_{version}.tar.gz",
+        "checksum_url": "https://e/v{version}/checksums.txt",
+    }
+    context = MockContext(run={"latest": Result(stdout="1.2.3\n")}, repeat=False)
+
+    assert tools._archive_urls(context, "t", cfg, cfg["download_url"]) == (
+        "https://e/v1.2.3/tool_1.2.3.tar.gz",
+        "https://e/v1.2.3/checksums.txt",
+    )
 
 
 def test_resolve_url_version_leaves_a_url_with_no_placeholder_alone():
