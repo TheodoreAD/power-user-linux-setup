@@ -2312,7 +2312,7 @@
   
 
 
-<h1 id="task-index">Task index</h1>
+<h1 id="task-index">Task index<a class="headerlink" href="#task-index" title="Permanent link">&para;</a></h1>
 <p>Every command this repo publishes, with what it does. <code>inv --list</code> prints the same thing on a
 machine that already has PULSE installed; this page is for the rest of the time — deciding whether
 something exists before you clone, or finding the name of the task you half-remember.</p>
@@ -2328,7 +2328,7 @@ modify anything.</p>
 <p>Not every task is meant for everyday use. The ones a normal machine actually needs are in
 <a href="index.html">index.md</a>&rsquo;s quick start and maintenance sections; the rest exist for a specific situation
 — a corporate proxy, a WSL distro, a container build, a docs edit.</p>
-<h2 id="two-entry-points-and-where-you-are-decides-which">Two entry points, and where you are decides which</h2>
+<h2 id="two-entry-points-and-where-you-are-decides-which">Two entry points, and where you are decides which<a class="headerlink" href="#two-entry-points-and-where-you-are-decides-which" title="Permanent link">&para;</a></h2>
 <p>The same tasks are reachable two ways. They are one task set, not two commands:</p>
 <table>
 <thead>
@@ -2534,6 +2534,10 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 <td>Fully wipe apt/uv/npm/cargo caches (each self-skips if that tool isn&rsquo;t installed)</td>
 </tr>
 <tr>
+<td><code>inv configs.check-include</code></td>
+<td>Report tracked Python that no pyrightconfig.json <code>include</code> entry covers — code basedpyright never checks, and nothing else says so.</td>
+</tr>
+<tr>
 <td><code>inv configs.diff</code></td>
 <td>Show what <code>configs.pull</code> would change, plus any repo-tasks-quality entry this project&rsquo;s dependency-groups.dev is missing or declares without the manifest&rsquo;s version constraint, without writing…</td>
 </tr>
@@ -2564,6 +2568,10 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 <tr>
 <td><code>inv deps.check</code></td>
 <td>Check uv.lock is up-to-date with pyproject.toml, read-only, no .venv needed.</td>
+</tr>
+<tr>
+<td><code>inv deps.check-currency</code></td>
+<td>Report which <code>repo-tasks-quality</code> entries this project&rsquo;s lock holds behind their latest release.</td>
 </tr>
 <tr>
 <td><code>inv deps.export</code></td>
@@ -2628,6 +2636,14 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 <tr>
 <td><code>inv docs.clean</code></td>
 <td>Remove the built docs site (site/).</td>
+</tr>
+<tr>
+<td><code>inv docs.generate</code></td>
+<td>Render this package&rsquo;s generated documentation blocks into the files that carry their markers.</td>
+</tr>
+<tr>
+<td><code>inv docs.generate-check</code></td>
+<td>Fail if a generated block is out of date.</td>
 </tr>
 <tr>
 <td><code>inv docs.link-check</code></td>
@@ -2759,7 +2775,7 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 </tr>
 <tr>
 <td><code>inv quality.fix</code></td>
-<td>Fix everything auto-fixable: ruff &ndash;fix, ruff format, dprint fmt, shfmt -w.</td>
+<td>Fix everything auto-fixable: generate the docs blocks, then ruff &ndash;fix, ruff format, dprint fmt, shfmt -w.</td>
 </tr>
 <tr>
 <td><code>inv quality.format-apply</code></td>
@@ -2961,7 +2977,7 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 </table>
 <!-- /PULSE::task-index -->
 
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="configuration.html">How it works</a> — what <code>inv setup</code> runs, in order</li>
 <li><a href="updating.html">Updating and removing</a> — the tasks worth running after setup</li>
