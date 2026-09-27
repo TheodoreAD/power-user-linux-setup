@@ -2067,6 +2067,39 @@ claude_permissions_allow = [
   "Read(//home/tdumitrescu/research/**)",
 ]
 
+[packages.gog]
+description = """
+General CLI for a personal Google account — Gmail, Calendar, Drive, Tasks and Contacts — with --json
+and --plain output for agents. Installing it starts no OAuth flow: authorizing an account needs a
+Google Cloud project, a consent screen and a Desktop OAuth client, which is a separate one-time
+bootstrap, not this entry's job.
+"""
+method = "archive"
+tags = ["cli", "google"]
+check_cmd = "gog"
+version_cmd = "curl -fsSL https://api.github.com/repos/openclaw/gogcli/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
+download_url = "https://github.com/openclaw/gogcli/releases/download/v{version}/gogcli_{version}_linux_amd64.tar.gz"
+# Not bin_in_root: the tarball stores the binary as `./gog`, and that path's bare-name extract
+# (`tar -x … gog`) does not match a `./`-prefixed member. The default strip path's `*/gog` pattern
+# does, and stripping one component drops the `.` — checked against v0.42.0's tarball 2026-09-28.
+bin_pick = "gog"
+zshrc = "source <(gog completion zsh)"
+
+[packages.gmailctl]
+description = """
+Gmail filters as code: a Jsonnet config with diff, test and apply against the account. Like gog, it
+needs its own one-time OAuth authorization (`gmailctl init`), which installing it does not start.
+"""
+method = "archive"
+tags = ["cli", "google"]
+check_cmd = "gmailctl"
+verify_cmd = "gmailctl version" # version is a subcommand
+version_cmd = "curl -fsSL https://api.github.com/repos/mbrt/gmailctl/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
+download_url = "https://github.com/mbrt/gmailctl/releases/download/v{version}/gmailctl_{version}_linux_amd64.tar.gz"
+bin_pick = "gmailctl"
+bin_in_root = true
+zshrc = "source <(gmailctl completion zsh)"
+
 [packages.plan-store]
 description = """
 The plans store at ~/plans — where the `plan-conveyor` skill files plans for repos that cannot hold
