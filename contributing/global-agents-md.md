@@ -483,6 +483,36 @@ genuinely cannot do the job", which reads as a preference among available tools 
 of them being gone. Full sample history is in
 `plans/2026-08-28-auto-mode-contradicts-bash-rules.md`.
 
+### A classifier denial is context-dependent, and the rule said the opposite of what applied
+
+Added 2026-09-28. On 2026-09-27 an `invoke-stubs` session in auto mode was denied
+`plans.py new no-ci-on-a-repo-whose-push-is-a-release` twice, `[Irreversible Local Destruction]`,
+for a command that creates one markdown file. The denial text forbids reaching the same outcome
+another way, so the finding went unrecorded in that repo. The rule above told that session a prompt
+is "friction, never a prohibition", which is true of the allowlist and false of this.
+
+The filed report guessed that the bare `new` form was the trigger, since `--for` calls passed. Its
+transcript says otherwise:
+
+- There were exactly two denials of `new`, both with the same topic and the `agent-skills` checkout
+  path. The first came 35 seconds after the classifier denied an `rm -r … && git -C …` chain.
+- The same topic under the installed path was not denied; it failed on a missing config instead.
+- A later "denial" of a `--for` call was an artefact of reading the transcript: its output mentioned
+  the classifier because the plan it created was about the classifier.
+
+The discriminating probe ran in this repo on 2026-09-28, in auto mode, with no rule covering
+`plans.py` in `settings.json`. Both the installed path and the checkout path, bare `new` with that
+same topic, were **approved**. So the command text is not the trigger.
+
+The docs agree (code.claude.com, `permission-modes`, "How the classifier evaluates actions"): the
+classifier sees user messages, non-read-only tool calls and CLAUDE.md. The `auto-mode-config` page
+says a narrow Bash allow rule resolves before the classifier runs.
+
+[PITFALL: **counting denials by searching a transcript's tool results for "classifier" over-counts
+once the session starts discussing the classifier.** The first pass reported five denials where
+there were three, because plan output and commit messages about the denial contained the word. Match
+the denial sentence, `denied by the Claude Code auto mode classifier`, not the noun.]
+
 ## A narrow check grows into design work
 
 Corrected 2026-08-30 — the rule's mechanism contradicted the user. It said to "suggest or move into

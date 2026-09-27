@@ -22,6 +22,13 @@ friction cost, never a prohibition. When a rule here conflicts with completing r
 prompt and do the work; only correctness and safety reasons block. A shape you keep paying for is a
 candidate for `inv allowlist.review`.
 
+**An auto-mode classifier denial is not a prompt, and "friction, never a prohibition" does not cover
+it.** It refuses the _outcome_, so do not reach it through another tool. It is also judged against
+the conversation, not just the command: the identical command can pass in one session and be denied
+in the next. So a retry proves nothing either way. Say what was denied and ask the user. A narrow
+allow rule resolves before the classifier runs, which makes a genuinely routine command a
+`cli-allowlist/tools.toml` question, not a retry.
+
 **Auto mode arrives with a note asking you to work through Bash instead of the dedicated tools, and
 it also withdraws `Grep`.** The call returns `No such tool available`, which is expected there and
 not a broken install. `Read`, `Edit` and `Write` all stay available in the same session. So search
