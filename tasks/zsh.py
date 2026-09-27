@@ -104,13 +104,63 @@ def configure(c: Context):
     dotfile rather than only the declared ones.
     """
     applies = util.enabled_packages()
+    gone: set[str] = set()
     for name, cfg in util.load_config()["packages"].items():
         for target, content in _snippets(cfg):
             path = Path.home() / f".{target}"
+            before = _exported(path)
             if content and name in applies:
                 _apply_snippet(path, name, target, content)
             else:
                 _drop_snippet(path, name, target)
+            gone |= before - _exported(path)
+    _clear_lingering_exports(c, gone)
+
+
+_EXPORT = re.compile(r"^\s*export\s+([A-Za-z_][A-Za-z0-9_]*)=", re.MULTILINE)
+
+
+def _exported(path: Path) -> set[str]:
+    """Every variable name a dotfile exports, whoever wrote the line — so an export that moved from
+    one block to another, or that a human also sets, never reads as removed."""
+    return set(_EXPORT.findall(path.read_text())) if path.exists() else set()
+
+
+def _clear_lingering_exports(c: Context, gone: set[str]) -> None:
+    """Take removed exports out of the systemd user manager's environment, and say what that leaves.
+
+    Deleting an export from a dotfile does not delete it from the machine. At login GNOME imports the
+    login shell's environment into the systemd user manager, and **a re-login does not reset it**:
+    the manager is per-user, not per-session, and runs until every session of that user has ended.
+    A new GNOME login's own session is started by that manager, so it inherits the stale variable
+    too. Measured 2026-09-28: `UV_PYTHON=3.14`, removed from the dotfiles on 09-19, was in the
+    manager (running since 08-28) and in the `gnome-session`, `gnome-shell` and terminal of a login
+    made that morning. A long-lived Claude daemon was holding the previous session open, which is
+    enough to keep the manager alive.
+
+    So `unset-environment` is the fix that reaches the next login and every unit started after it,
+    not a partial one, and "log out and back in" alone is advice that fails silently. It cannot touch
+    a process that is already running. That includes background agent sessions under an old daemon,
+    so the message names the restart that finishes it. It edits systemd's environment table only,
+    not the gsettings/dconf/extension state this repo's rules keep tasks away from.
+    """
+    if not gone or util.DRY_RUN:
+        return
+    result = c.run("systemctl --user show-environment", hide=True, warn=True)
+    if not result.ok:
+        return  # no systemd user manager (a container, WSL without systemd): no session to outlive
+    live = {line.split("=", 1)[0] for line in result.stdout.splitlines() if "=" in line}
+    lingering = sorted(gone & live)
+    if not lingering:
+        return
+    c.run(f"systemctl --user unset-environment {' '.join(lingering)}", hide=True, warn=True)
+    for var in lingering:
+        print(
+            f"[zsh] {var} is no longer exported and was still in the systemd user environment — "
+            f"unset there, so your next login and new services no longer inherit it. Processes "
+            f"already running keep their copy until restarted, including background agent sessions "
+            f"under a Claude daemon started before this."
+        )
 
 
 def _apply_snippet(path: Path, name: str, target: str, content: str) -> None:
