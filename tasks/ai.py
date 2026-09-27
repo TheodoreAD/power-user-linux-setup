@@ -586,9 +586,10 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
 
 @task
 def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill: str | None = None):  # noqa: A002
-    """Ensure .agents/skills exists with .claude/skills symlinked to it, then install every
-    skill declared via a `skills` field anywhere in setup.toml — local repo paths symlinked in,
-    remote GitHub sources fetched via the `skills` CLI (see [packages.node].global_packages).
+    """Ensure .agents/skills exists, then install every skill declared via a `skills` field
+    anywhere in setup.toml through the `skills` CLI (see [packages.node].global_packages), which
+    also makes each skill's own .claude/skills link — see _ensure_agents_skills for why this task
+    no longer links the whole directory.
     On the default (global) run, also merges every declared `claude_permissions_allow` rule and
     `claude_additional_directories` entry into ~/.claude/settings.json, syncs the declared
     `claude_default_mode`, `claude_skill_listing_budget_fraction` and `claude_statusline` values
