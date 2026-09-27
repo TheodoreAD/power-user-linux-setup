@@ -325,6 +325,29 @@ def test_install_debs_fails_the_run_when_a_download_404s(monkeypatch):
 
 
 @pytest.mark.usefixtures("_debs")
+def test_install_debs_never_installs_a_deb_that_failed_its_checksum(monkeypatch):
+    """A failed `checksum_url` check is a failed download: reported, that package skipped, the run
+    failed at the end — and dpkg never sees the bytes."""
+    checked: util.PackageConfig = {**_GITHUB_DEB, "checksum_url": "https://e/{version}/sums.txt"}
+    _deb_packages(monkeypatch, {"tool": checked}, {})
+    seen: list[str] = []
+
+    def mismatch(_c: object, name: str, _path: object, asset: str, url: str) -> None:
+        seen.append(url)
+        raise RuntimeError(f"[{name}] sha256 mismatch for {asset}")
+
+    monkeypatch.setattr(util, "verify_sha256", mismatch)
+    c = _FakeContext()
+
+    with pytest.raises(Exit) as excinfo:
+        apt.install_debs(c)
+
+    assert "[tool]" in str(excinfo.value)
+    assert seen == ["https://e/1.0/sums.txt"], "the checksum URL takes the same {version} as the asset"
+    assert not any("dpkg" in cmd and "-i" in cmd for cmd in c.commands)
+
+
+@pytest.mark.usefixtures("_debs")
 def test_install_debs_does_not_fail_on_a_package_dpkg_left_unconfigured(monkeypatch):
     """The distinction the whole change rests on. `dpkg -i` exits non-zero for a .deb whose
     dependencies are not on the system yet — google-chrome-stable on a fresh machine — and the

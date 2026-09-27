@@ -1,4 +1,3 @@
-import hashlib
 import shutil
 from pathlib import Path, PurePosixPath
 from tempfile import TemporaryDirectory
@@ -86,33 +85,6 @@ def _archive_urls(c: Context, name: str, cfg: util.PackageConfig, download: str)
         return download, checksum
     version = _version(c, name, cfg, templated[0][0])
     return download.format(version=version), checksum.format(version=version) if checksum else None
-
-
-def _verify_checksum(c: Context, name: str, archive: Path, url: str, checksum_url: str) -> None:
-    """Refuse the download unless its sha256 matches the upstream's published checksum list.
-
-    Reads the common `<sha256>  <filename>` format (sha256sum's own, which goreleaser and most
-    GitHub releases publish), matched on the asset's filename from `url`; a file holding one bare
-    hash is accepted too. A checksum fetched from the same release defends against a corrupted or
-    truncated download, not against a compromised release — that needs a signature, which every
-    project does differently. Raises rather than warning: an archive that fails this is not
-    installed, the same first-failure-aborts stance as `inv verify.all`.
-    """
-    listing = c.run(f'curl -fsSL "{checksum_url}"', hide=True).stdout
-    asset = PurePosixPath(urlparse(url).path).name
-    lines = [line.split() for line in listing.splitlines() if line.strip()]
-    if len(lines) == 1 and len(lines[0]) == 1:
-        expected = lines[0][0]
-    else:
-        expected = next((parts[0] for parts in lines if len(parts) == 2 and parts[1].lstrip("*") == asset), None)
-    if expected is None:
-        raise RuntimeError(f"[{name}] {checksum_url} lists no checksum for {asset} — not installing")
-    actual = hashlib.sha256(archive.read_bytes()).hexdigest()
-    if actual != expected.lower():
-        raise RuntimeError(
-            f"[{name}] sha256 mismatch for {asset}: published {expected}, downloaded {actual} — not installing"
-        )
-    print(f"[{name}] sha256 verified")
 
 
 def _install_binary(c: Context, name: str, cfg: util.PackageConfig) -> None:
@@ -222,7 +194,9 @@ def _install_archive(c: Context, name: str, cfg: util.PackageConfig) -> None:  #
         tarball = Path(tmp) / "archive"
         c.run(f'curl -fsSL "{url}" -o {tarball}')
         if checksum_url:
-            _verify_checksum(c, name, tarball, url, checksum_url)
+            # Raised rather than reported: an archive failing it is not installed, the same
+            # first-failure-aborts stance as `inv verify.all`.
+            util.verify_sha256(c, name, tarball, PurePosixPath(urlparse(url).path).name, checksum_url)
         if bin_pick := cfg.get("bin_pick"):
             dest = Path.home() / ".local" / "bin" / bin_pick
             dest.parent.mkdir(parents=True, exist_ok=True)

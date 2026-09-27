@@ -75,6 +75,9 @@
 #   asset         release asset filename; supports {version} templating (version = tag, minus any
 #                 leading "v" the resolver strips). If the asset is a .zip (some CI artifacts wrap
 #                 the .deb), it's unzipped to a scratch dir and whatever .deb is inside is installed.
+#   checksum_url  optional full URL to the release's sha256 list, same {version} as asset — see
+#                 the archive method's field below. A mismatch reports FAILED and skips this one
+#                 package, like a failed download, instead of aborting the phase
 #   check_cmd     binary name to check for already-installed (default: section name)
 #
 # deb-url sections:

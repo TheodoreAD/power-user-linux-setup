@@ -1,3 +1,4 @@
+import hashlib
 import json
 import os
 import pwd
@@ -362,6 +363,34 @@ def missing_fields(name: str, *keys: str) -> RuntimeError:
     method requires. The caller's own `if "x" not in cfg or ...: raise` guard is what narrows
     `PackageConfig` for the checker; this just spells the message once."""
     return RuntimeError(f"[{name}] setup.toml section is missing required field(s): {', '.join(keys)}")
+
+
+def verify_sha256(c: Context, name: str, downloaded: Path, asset: str, checksum_url: str) -> None:
+    """Raise unless `downloaded`'s sha256 matches the line for `asset` in the upstream's published
+    checksum list — a package's `checksum_url`, shared by the `archive` and `deb-github` methods.
+
+    Reads sha256sum's format in both spellings (`<sha256>  <file>`, and `<sha256> *<file>` for
+    binary mode), which goreleaser and most release pipelines publish, and a file holding one bare
+    hash. A list that does not name the asset fails rather than passes, so a renamed asset cannot
+    quietly skip the check. A checksum fetched from the same release catches a corrupt or truncated
+    download, not a compromised release: that needs a signature, which every project does
+    differently. Each caller decides what a failure costs — the archive method lets it abort, apt's
+    deb methods report it and skip the one package, as they do for a failed download.
+    """
+    listing = c.run(f'curl -fsSL "{checksum_url}"', hide=True).stdout
+    lines = [line.split() for line in listing.splitlines() if line.strip()]
+    if len(lines) == 1 and len(lines[0]) == 1:
+        expected = lines[0][0]
+    else:
+        expected = next((parts[0] for parts in lines if len(parts) == 2 and parts[1].lstrip("*") == asset), None)
+    if expected is None:
+        raise RuntimeError(f"[{name}] {checksum_url} lists no checksum for {asset} — not installing")
+    actual = hashlib.sha256(downloaded.read_bytes()).hexdigest()
+    if actual != expected.lower():
+        raise RuntimeError(
+            f"[{name}] sha256 mismatch for {asset}: published {expected}, downloaded {actual} — not installing"
+        )
+    print(f"[{name}] sha256 verified")
 
 
 def ok_label(ok: bool) -> str:

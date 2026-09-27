@@ -321,6 +321,14 @@ def _dpkg_install(c: Context, name: str, cfg: util.PackageConfig, version: str) 
     if not result.ok:
         print(f"[{name}] FAILED: download of {asset}")
         return DebOutcome.FAILED
+    if checksum_url := cfg.get("checksum_url"):
+        try:
+            util.verify_sha256(c, name, Path(downloaded), asset, checksum_url.format(version=version))
+        except RuntimeError as err:
+            # Reported and skipped like a failed download, not raised: one bad .deb is one package.
+            print(f"[{name}] FAILED: {str(err).removeprefix(f'[{name}] ')}")
+            c.run(f"rm -f {downloaded}", warn=True)
+            return DebOutcome.FAILED
 
     if downloaded.endswith(".zip"):
         extract_dir = f"/tmp/{name}-deb-extract"
