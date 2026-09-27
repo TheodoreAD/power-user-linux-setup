@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-27
+status: landed
+updated: 2026-09-28
 source_repo: github.com-personal/invoke-stubs
 source_session: 65f8437a-a90e-41c6-9b1f-9b43d713ed9b.jsonl
 source_moment: 2026-09-27T19:47:51Z
@@ -63,15 +63,30 @@ allowlist rule matches on literal command prefix. That part is the documented mo
 
 ## Open questions
 
-[NEEDS CLARIFICATION: is an allowlist entry even the right response, or does this want reporting
-upstream and nothing else? An `allow` rule does not obviously override a classifier denial — the two
-are different gates — and adding one on that assumption would look like a fix while changing
-nothing. Worth establishing which gate wins before writing any rule.]
+[DECISION: the allow rule wins. code.claude.com's `auto-mode-config` page says narrow Bash allow
+rules "resolve … before the classifier runs". No `plans.py` rule is added now, though. The denial
+was context-driven (see below), two denials in one session is no pattern, and a blanket `plans.py`
+rule would also wave through `push`, which publishes.]
 
-[NEEDS CLARIFICATION: does the classifier key on the literal token `new`, on the script path, or on
-proximity to the preceding `rm -r` denial? Three invocations of the same interpreter and script
-passed between the two denials, which rules out the path alone. A two-minute probe — the same script
-with a harmless subcommand, then `new` again in a fresh session — would separate the remaining two.]
+[DECISION: neither the token nor the path; context. Probed 2026-09-28 in auto mode, with no rule
+covering `plans.py`. The exact denied command, bare `new no-ci-on-a-repo-whose-push-is-a-release`,
+was approved under both the installed and the checkout path. The docs say the classifier sees user
+messages, non-read-only tool calls and CLAUDE.md.]
+
+[PITFALL: the Evidence list above over-counts. The transcript holds exactly two denials of `new`,
+both that topic under the checkout path, and one of the `rm -r` chain. The same topic under the
+installed path was not denied; it failed on a missing config. No `--for` call was denied. Searching
+tool results for "classifier" miscounts once the session's own plans discuss the classifier.]
+
+## Migrated to
+
+- **The rule fix**: `config/agents-md/bash.md`, "The permission model in force", `ef0a47e`,
+  deployed. A classifier denial is not a prompt, is judged in context, gets reported and asked about
+  rather than retried, and the durable fix for a routine command is an allow rule in `tools.toml`.
+- **The evidence and the probe**: `contributing/global-agents-md.md`, the section "A classifier
+  denial is context-dependent, and the rule said the opposite of what applied", with the
+  over-counting pitfall.
+- Not done: an allow rule for `plans.py`, for the reason in the first DECISION above.
 
 ## Recommended direction
 
