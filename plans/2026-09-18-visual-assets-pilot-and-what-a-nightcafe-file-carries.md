@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-18
+updated: 2026-09-28
 source_repo: github.com-personal/agent-skills
 source_session: 7edc112d-9033-4253-b9ff-0c75fd61c23e.jsonl
 source_moment: 2026-09-18T14:40:00+03:00
@@ -38,30 +38,48 @@ case contested with `repo-pitch`, and no false positive on any should-not-trigge
   needs or records which candidate was kept**. `openai/codex`'s `imagegen` sample states the
   opposite policy outright — _"Discarded variants do not need to be kept unless requested."_
 
-## The one question only this repo can answer
+## What a NightCafe download carries: nothing
 
-**Does a real NightCafe download already carry the record?** Major generators now embed a signed
-C2PA manifest (tool, model, timestamp) and Stable-Diffusion-family pipelines write the prompt,
-negative prompt, seed, sampler and model into a PNG text chunk. NightCafe runs SD-family models. If
-that holds for the user's own downloads, then `model`, `generated` and possibly `prompt` in the
-manifest's `tried` blocks are **read from the file** rather than typed, and the only thing the
-handoff genuinely needs from the user is **why this one and not that one**.
+**Answered 2026-09-20**, in the `agent-skills` session that wrote the design, from three creation
+links the user supplied. The answer **refutes** the premise this section was written on. The plan
+had expected the file to carry a C2PA manifest or an SD-style text chunk, so that `model`,
+`generated` and `prompt` could be read from it; that claim was search-summary depth. Merged here
+2026-09-28 from the filed `2026-09-22-nightcafe-metadata-answered-start-with-style-reference.md`,
+which is now deleted.
 
-That changes the design's §2 and §4, so it is worth answering before anything is scripted, and it
-needs exactly one file that only this machine's user has.
+- **The delivered file carries no provenance at all.** It is a JPEG, not a PNG. Walked segment by
+  segment: `FF D8 FF DB`, straight from start-of-image to a quantisation table, with no EXIF, no
+  XMP, no JUMBF/C2PA and no text chunk. Requesting the untransformed original with `?tr=orig-true`
+  returns a larger file (627,995 bytes against 310,931). Its only extra segments are a JFIF header
+  and a comment reading `CREATOR: gd-jpeg v1.0 (using IJG JPEG v6…)`. **The served file is a GD
+  re-encode**, which is where any generator metadata was lost.
+- **So prompt, seed and model cannot be read from the download.** The creation page carries the
+  prompt, the model and the aspect ratio publicly, but **no seed**. A batch therefore has to be
+  recorded when the prompt is handed out, not reconstructed at triage from the files.
+- **Two hosts, two access rules.** `images.nightcafe.studio` serves a plain unauthenticated request
+  (stdlib `urllib` is enough). `creator.nightcafe.studio` refuses one with 403 and needs a
+  browser-shaped fetch. A fetch script downloads bytes and must not plan to scrape the page.
+- **Durability holds**: a three-year-old creation still resolves with its prompt and model, which is
+  what the design's "the generator is the archive" decision rests on.
+- **1600 on the long edge is what came back**, for a 1:1 creation at the account's `High` initial
+  resolution, in both URL forms.
 
-[UNVERIFIED: **the claim above is search-summary depth and no better.** The searches behind it
-returned mostly metadata-remover SEO pages. Do not write it into any skill until a real file is
-read.]
-
-**The check, and the constraint on it.** No `exiftool`, no `c2patool` and no Pillow are installed on
-this machine (verified 2026-09-18), so a stdlib PNG chunk walk is the only zero-install route: read
-the 8-byte signature, then each chunk's length and 4-byte type, and print the types with the
-contents of any `tEXt`/`iTXt`/`zTXt`. A `caBX` chunk is the C2PA manifest's container — its presence
-is detectable this way, and **its signature is not verifiable without `c2patool`**, so a check must
-not claim the credential is valid, only that one is there.
+So the design's §2 and §4 keep the user typing the record at handoff, and what matters most is still
+**why this one and not that one**.
 
 ## Open questions
+
+[NEEDS CLARIFICATION: **does NightCafe offer a start image or style reference on the models in use,
+and at what strength?** This is now the question that decides whether "one theme, variations per
+module" is a procedure or a hope. The user's stated direction is a banner-sized evocative scene per
+repo, with variations for bare metal, WSL and dev container. NightCafe's terms discuss input images
+explicitly, so the feature exists in some form. Which models accept one is unchecked, and only the
+account holder can see it inside the app.]
+
+[NEEDS CLARIFICATION: **what a 16:9 generation returns, and what the upscale step produces.** The
+1600 ceiling above was measured on a square creation. It matters only if a docs site appears:
+`agent-skills`' design cut the hero and the oversized targets, and every surface that renders today
+fits inside 1600 with no upscale.]
 
 [NEEDS CLARIFICATION: **where tried-but-not-kept images live.** Not in git — binary churn that is
 not an asset. The candidates named in the design are `plans.py attach --local` (already copies a
@@ -75,8 +93,8 @@ beside `_brand.yml` which has a schema and consumers; `assets/`, `docs/assets/` 
 
 ## Recommended direction
 
-1. **Dump one real NightCafe download's metadata** and answer the question above. It is the cheapest
-   step and the only one that can change the design.
+1. **Answer the style-reference question, in the app.** The metadata dump that used to be step 1 is
+   done (above), and this is now the step that can change the design.
 2. **Write this repo's manifest by hand** — its real slots are the social preview, the docs hero,
    the card set, the logomark and the drift banner — with the prompt files beside it, joined and
    paste-ready rather than composed from three parts at use time.
