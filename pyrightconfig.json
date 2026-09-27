@@ -21,9 +21,11 @@
   // Confirmed equivalent (0 errors, identical warning count) to the old `exclude: [defaults, ...]`
   // shape it replaced, both here and in `power-user-linux-setup`'s own config.
   //
-  // Same fixed list for every consumer's `pyrightconfig.json`, not parameterized per repo:
-  // `src`/`tests` (library layout) + `tasks` (`tasks/` in a flat-layout repo like
-  // `power-user-linux-setup`, and every consumer's own `tasks.py` entry point) together.
+  // The same three entries for every consumer: `src`/`tests` (library layout) + `tasks` (`tasks/`
+  // in a flat-layout repo like `power-user-linux-setup`, and every consumer's own `tasks.py` entry
+  // point) together. A repo with another top-level tree declares it in `repo-tasks.toml`'s
+  // `[pyright] extra-include` and `configs.pull` appends it here; `inv configs.check-include`
+  // reports tracked Python no entry covers. Keep this array on one line: the derivation edits it.
   // Spelled with a trailing `*` on purpose: a *literal* include path that doesn't exist is a hard
   // config error (exit 3, "File or directory ... does not exist"), not a silent no-op, and neither
   // `tests/**` nor `./tests` escapes that — only a glob in the last segment does. Measured
