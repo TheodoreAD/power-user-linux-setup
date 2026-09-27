@@ -944,3 +944,28 @@ flag letters appearing where the matched text should be"; here the output came b
 the session recognised it, said so, and re-ran without `-r`. Every prior occurrence in that plan was
 caught by luck. One instance is not a trend, but it is the first evidence the signature works as
 written rather than only as a post-hoc explanation.]
+
+### Session 21 — `power-user-linux-setup`, 2026-09-27/28: clean on every counted row, and a miss no row counts
+
+`b73129dd-6136-41c3-a026-8e871581bc14`, 355 Bash calls to the harvest boundary, auto mode throughout
+(transcript `permissionMode`), an absorb-and-implement session: 14 plans absorbed, 12 landed,
+roughly 30 commits pushed. Measured with the agent-skills checkout's `audit.py`, no model judged
+against the `2026-09-12` baseline (`claude-opus-5-5` is not in it).
+
+Every counted row is 0 except `chain` 1 and `bash-c` 1 (a `zsh -ic` completion probe), with **0
+`exit-masked`** across ten green-gate claims. The auto-mode clause that session 20 never reached was
+said once, at the first turn, and Read/Edit/Write were used throughout. One `sed -i` rewrote a test
+file; the `sed-i` row exists but the session view does not print it, which is filed for
+`agent-skills` as `2026-09-28-session-view-omits-sed-i.md`.
+
+[PITFALL: **the miss that mattered is one no row measures: refs derived rather than read.** Three
+times the session typed a full 40-character SHA it had not been given: once completing `97cdd4c`,
+once for `9010a83`, once for `413ec4f` inside a parallel batch that also invented a run ID. Each
+`gh run list --commit` then returned `[]` and the run-id `watch` a 404. The third time, the same
+batch deleted a plan and pushed a retirement commit (`3ff8aec`) whose message says "CI is green"
+before any run had been read. CI turned out green, so the claim holds by luck. The rule exists twice
+in `~/.agents/AGENTS.md` ("Every ref you hand git is one you read, never one you derived";
+"`--commit` matches only the full 40-char SHA") and was **not followed, repeatedly, with the rule in
+context** — a measurement question per the watch's standing decision, not a rewording one. The
+enabling shape is batching dependent calls in one parallel response, where a later call cannot see
+an earlier one's output and the only way to fill its argument is to invent it.]
