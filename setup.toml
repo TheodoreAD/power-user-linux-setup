@@ -1043,6 +1043,7 @@ tags = ["shell", "search", "interactive"]
 check_cmd = "atuin"
 version_cmd = "curl -fsSL https://api.github.com/repos/atuinsh/atuin/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 download_url = "https://github.com/atuinsh/atuin/releases/download/v{version}/atuin-x86_64-unknown-linux-gnu.tar.gz"
+checksum_url = "https://github.com/atuinsh/atuin/releases/download/v{version}/atuin-x86_64-unknown-linux-gnu.tar.gz.sha256"
 bin_pick = "atuin"
 bin_in_root = true
 zshrc = """
@@ -1631,6 +1632,7 @@ check_cmd = "helm"
 verify_cmd = "helm version" # --version is not a recognized flag; version is a subcommand
 version_cmd = "curl -fsSL https://api.github.com/repos/helm/helm/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 download_url = "https://get.helm.sh/helm-v{version}-linux-amd64.tar.gz"
+checksum_url = "https://get.helm.sh/helm-v{version}-linux-amd64.tar.gz.sha256sum"
 bin_pick = "helm"
 
 [packages.kind]
@@ -1648,6 +1650,7 @@ tags = ["k8s", "dev"]
 check_cmd = "tilt"
 version_cmd = "curl -fsSL https://api.github.com/repos/tilt-dev/tilt/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 download_url = "https://github.com/tilt-dev/tilt/releases/download/v{version}/tilt.{version}.linux.x86_64.tar.gz"
+checksum_url = "https://github.com/tilt-dev/tilt/releases/download/v{version}/checksums.txt"
 bin_pick = "tilt"
 bin_in_root = true
 zshrc = "source <(tilt completion zsh)"
@@ -1752,6 +1755,7 @@ tags = ["dev", "ide", "gui"]
 check_path = "~/.local/share/jetbrains-toolbox/jetbrains-toolbox"
 version_cmd = "curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' | python3 -c \"import json,sys; lnk=json.load(sys.stdin)['TBA'][0]['downloads']['linux']['link']; print(lnk.rsplit('/',1)[1].replace('jetbrains-toolbox-','').replace('.tar.gz',''))\""
 download_url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-{version}.tar.gz"
+checksum_url = "https://download.jetbrains.com/toolbox/jetbrains-toolbox-{version}.tar.gz.sha256"
 extract_to = "~/.local/share/jetbrains-toolbox"
 install_dir = "~/.local/share/jetbrains-toolbox"
 strip_components = 2
@@ -1880,6 +1884,9 @@ check_cmd = "go"
 verify_cmd = "~/.local/share/go/bin/go version"
 version_url = "https://go.dev/VERSION?m=text"
 download_url = "https://go.dev/dl/{version}.linux-amd64.tar.gz"
+# From dl.google.com, not go.dev: go.dev answers `<file>.sha256` with an HTML redirect page and a
+# 200, which curl -f accepts — _verify_checksum would then refuse it as naming no checksum.
+checksum_url = "https://dl.google.com/go/{version}.linux-amd64.tar.gz.sha256"
 extract_to = "~/.local/share"
 install_dir = "~/.local/share/go"
 # The symlink this repo's own XDG rule has always called for ("multi-file runtimes install to
@@ -2083,6 +2090,7 @@ tags = ["cli", "google"]
 check_cmd = "gog"
 version_cmd = "curl -fsSL https://api.github.com/repos/openclaw/gogcli/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 download_url = "https://github.com/openclaw/gogcli/releases/download/v{version}/gogcli_{version}_linux_amd64.tar.gz"
+checksum_url = "https://github.com/openclaw/gogcli/releases/download/v{version}/checksums.txt"
 # Not bin_in_root: the tarball stores the binary as `./gog`, and that path's bare-name extract
 # (`tar -x … gog`) does not match a `./`-prefixed member. The default strip path's `*/gog` pattern
 # does, and stripping one component drops the `.` — checked against v0.42.0's tarball 2026-09-28.
@@ -2100,6 +2108,7 @@ check_cmd = "gmailctl"
 verify_cmd = "gmailctl version" # version is a subcommand
 version_cmd = "curl -fsSL https://api.github.com/repos/mbrt/gmailctl/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
 download_url = "https://github.com/mbrt/gmailctl/releases/download/v{version}/gmailctl_{version}_linux_amd64.tar.gz"
+checksum_url = "https://github.com/mbrt/gmailctl/releases/download/v{version}/checksums.txt"
 bin_pick = "gmailctl"
 bin_in_root = true
 zshrc = "source <(gmailctl completion zsh)"
