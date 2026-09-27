@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-28
 source_repo: github.com-personal/invoke-stubs
 source_session: 76d98521-8e7c-4524-bb4f-4caeb36e8cb0.jsonl
@@ -68,6 +68,12 @@ In the block agent shells already run, when the inherited `SSH_AUTH_SOCK` does n
 `ssh-add -l`, run the same keyring/gcr selection loop `~/.zprofile` uses for login shells. A healthy
 shell is untouched, since the loop runs only after that probe fails. This fixes pushes whatever the
 daemon's age, including in the window between a re-login and whenever the old daemon is stopped.
+
+**Landed 2026-09-28** as `[packages.ssh]`'s `zshenv`, beside the `zprofile` loop it mirrors rather
+than inside `[packages.claude-code]`'s block, so the socket list stays in one package;
+`tests/unit/test_ssh.py` pins all three copies and runs the snippet against real throwaway agents.
+Verified live: a nested agent shell handed `/run/user/1000/wezterm/agent.2955010` came up on
+`keyring/ssh` and `git ls-remote origin` succeeded.
 
 ### 2. At login, report an old daemon and print how to stop it
 
