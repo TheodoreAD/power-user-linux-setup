@@ -13,8 +13,8 @@ installs from publish one beside the tarball — `gog` and `gmailctl` (added 202
 `checksums.txt`, and gog also a `SIGNING-MANIFEST.json`. `package_health.py github <owner/repo>`
 already lists a release's checksum and signature files, so the data is easy to find.
 
-Raised by the absorbed `2026-09-27-install-gog-and-gmailctl.md` and deliberately kept out of it: it
-changes every archive package, not two.
+Raised by the now-retired `2026-09-27-install-gog-and-gmailctl.md` and deliberately kept out of it:
+it changes every archive package, not two.
 
 ## Open questions
 

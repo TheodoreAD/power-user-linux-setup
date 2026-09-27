@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-27
+status: landed
+updated: 2026-09-28
 source_repo: github.com-personal/agent-skills
 source_session: a953b16f-c02c-45d9-99e8-21a7277c781d.jsonl
 source_moment: 2026-09-27
@@ -45,24 +45,22 @@ GitHub releases API, plus `download_url` with `{version}` and `bin_pick`.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: checksum verification. `setup.toml` has no checksum field (no `sha256` or
-`checksum` anywhere in it on 2026-09-27). Both tools publish `checksums.txt`, and gog also publishes
-a signing manifest. Is verifying a published checksum worth adding to the `archive` method as an
-optional `checksum_url`? It would benefit every GitHub-release package, not only these two. The
-check has to be against a file fetched from the same release, and it defends against a corrupted
-download rather than a compromised release.]
+[DECISION: checksum verification is out of scope for this install, because it changes every archive
+package. It moved to `plans/2026-09-28-archive-method-checksum-verification.md`.]
 
-[NEEDS CLARIFICATION: the tarball layout. Confirm whether each binary sits at the archive root
-(`bin_in_root = true`, like tilt) or under a directory (`bin_pick` alone, like helm). Download one
-of each and list it before writing the entries.]
+[PITFALL: the two tarballs differ, and `bin_in_root` cannot extract gog. gmailctl stores a bare
+`gmailctl` at the root, so it takes `bin_in_root = true`. gog stores `./gog`, and the `bin_in_root`
+extract (`tar -x … gog`) fails with "Not found in archive". So gog takes the default strip path,
+whose `*/gog` pattern matches `./gog` and whose one stripped component is the `.`. Found by listing
+and extracting the v0.42.0 and v0.12.0 tarballs, 2026-09-28.]
 
-[NEEDS CLARIFICATION: the `go install` alternative. Go is installed through `[packages.go]`, and
-`go install github.com/openclaw/gogcli/cmd/gog@latest` would work too. The archive route is
-preferred because it needs no toolchain on a fresh machine and matches the published, checksummed
-artifact. Confirm the preference.]
+[DECISION: the archive route, not `go install`. It needs no toolchain on a fresh machine and
+installs the published artifact.]
 
-[NEEDS CLARIFICATION: shell completion. Check whether either tool offers `completion zsh`, like
-`tilt` does in its `zshrc` line.]
+[DECISION: both offer `completion zsh`, and both entries carry a `zshrc` completion line.]
+
+[DECISION: enabled by default, tagged `["cli", "google"]`. Installing either binary authorizes
+nothing, so its presence on a machine with no Google account costs only disk space.]
 
 ## Recommended direction
 
@@ -81,3 +79,14 @@ artifact. Confirm the preference.]
    `agent-skills`. Installing a binary should never start an OAuth flow.
 3. Verify with `inv` for these two packages, then `gog --version` and `gmailctl version` from a
    fresh shell.
+
+## Migrated to
+
+- **The entries**: `[packages.gog]` and `[packages.gmailctl]` in `setup.toml`, `389bb01`. The gog
+  entry's comment carries the tarball-layout pitfall, and the commit body carries the other
+  decisions.
+- **Verified 2026-09-28** on this machine. `inv tools.install` installed only these two. From
+  `PATH`, `gog --version` printed `v0.42.0` and `gmailctl version` printed `0.12.0`. After
+  `inv zsh.configure`, an interactive zsh has `_gog` and `_gmailctl` defined.
+- **Checksums**: `plans/2026-09-28-archive-method-checksum-verification.md`.
+- **Auth bootstrap**: not this repo's job. It stays with the Google-stack work in the `source_plan`.

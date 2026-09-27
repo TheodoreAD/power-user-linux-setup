@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-26
+status: landed
+updated: 2026-09-28
 source_repo: github.com-personal/repo-tasks
 source_session: a9904181-df08-4eb5-945e-8aab9336d457.jsonl
 source_moment: 2026-09-26
@@ -71,13 +71,20 @@ Two things to know before pinning:
   `inv
   quality.workflow-check` before calling it done.
 
-[NEEDS CLARIFICATION: does the audit belong in its own workflow file here, or as a job inside the
-existing `quality.yml`? Every other repo in the family uses a separate file, which is the default
-and keeps the family uniform. This repo is the one with five workflows already and its own opinions
-about what runs when, so it is the one place the question is real rather than rhetorical. The
-reusable workflow is called at job level either way, so both shapes are a `uses:` on a job — the
-choice is about where a reader looks for it and what triggers it.]
+[DECISION: its own `security.yml`, not a job in `quality.yml`. This repo's `AGENTS.md` makes family
+convergence strict: one identical composite in every consumer, and every other consumer uses a
+separate file. There is also a reason specific to this repo: `quality.yml` is what `publish-stable`
+requires before moving the `stable` tag, and an OSV advisory landing upstream should not block a
+release of unchanged code. Settled 2026-09-28.]
 
-[DEFERRED: whether this repo's own `setup.toml` should install anything the reusable workflow needs.
-Not looked at from the filing side, and it may well be nothing — the reusable workflow brings its
-own tooling. Check before assuming either way.]
+[DECISION: nothing to install. The reusable workflow sets up uv itself and runs `uv audit --locked`
+against `uv.lock`, so neither `setup.toml` nor a dependency group has to provide anything. Checked
+2026-09-28.]
+
+## Migrated to
+
+- **The caller**: `.github/workflows/security.yml`, `dfb5792`, pinned `d17c607`. Its header comment
+  carries both decisions above. The first real run, 36353514913 on `97cdd4c`, passed: the audit job
+  finished in 43s.
+- **The masking risk named above** (tools on `PATH` machine-wide): answered by that CI run, not by
+  the local gate.

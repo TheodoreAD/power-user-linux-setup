@@ -30,6 +30,14 @@ and the caveman register.]
 - Close as `landed` once a handful of sessions pass with no rule regressions; a clean watch leaves
   nothing to migrate.
 
+[DEFERRED: watch the reworded "Installing a tool on this machine" rule (`cba4941`, 2026-09-28). It
+now names `package_health.py pypi <name> --upstream <owner/repo>` in place of a PyPI JSON `curl`.
+The miss it answers: a research subagent briefed from the old wording hand-rolled the fetch on
+2026-09-27 and had to be redirected. The check is a later session judging a PyPI wrapper, or a
+subagent briefed from the rule, and whether it calls the script or `curl`s `pypi.org/pypi`. No
+instrument counts this today, since `session-bash-audit` tags no registry fetch, so it is read by
+hand.]
+
 ## Observed misses
 
 ### Session 1 — `repo-tasks`, 2026-08-24 (long implementation session)

@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-27
+status: landed
+updated: 2026-09-28
 ---
 
 # The plan-docs paths this repo still names, after the plan-conveyor rename
@@ -64,3 +64,17 @@ commit, not this one's.]
 The fragment edit first, then `inv deploy.all --name agents-md`, then `setup.toml`. Removing the
 fallback is last and belongs to the other repo — leaving it in place costs nothing but a note on the
 first run from an unmigrated machine.
+
+## Migrated to
+
+- **The fix**: `da6da06` (2026-09-28). The plan named two places; there were nine. The other seven
+  were the `home.list-claims` footer, `contributing/home-claims.md`, the archive command in
+  `contributing/ssh-agent-selection.md`, `docs/claude-code.md`, the generated `docs/packages.md`,
+  and two more fragments (`bash.md`, `collaboration.md`, `agent-knowledge.md`). The commit body
+  lists them. The `setup.toml` path was description text, not an executed command, so nothing was
+  failing outright.
+- **Removing the fallback**: filed for `agent-skills` as
+  `2026-09-28-remove-the-plan-docs-config-fallback.md`, carrying the PITFALL above. The fallback
+  guards `[private] extra`, so it has to be removed carefully.
+- Deliberately not renamed: the dated history in `contributing/global-agents-md.md`, and
+  `tests/unit/test_ai.py`'s fixture skill names. Neither refers to the live skill.

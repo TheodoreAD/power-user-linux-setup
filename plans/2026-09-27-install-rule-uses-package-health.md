@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-27
+status: landed
+updated: 2026-09-28
 source_repo: github.com-personal/agent-skills
 source_session: a953b16f-c02c-45d9-99e8-21a7277c781d.jsonl
 source_moment: 2026-09-27
@@ -48,11 +48,14 @@ it covers only the PyPI route of the install methods `setup.toml` actually uses.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: how much of the per-source command list belongs in the rule, rather than
-behind a pointer to the skill. A command per route keeps the rule actionable at the moment it fires.
-A single "run `package_health.py <source> …`; see the research-library skill" line stays short and
-can't drift from the script's CLI. The rule's own admission criteria are in
-`contributing/global-agents-md.md`; check against them.]
+[DECISION: the full `pypi` command in a code block, plus one sentence naming the `github`, `npm` and
+`apt` routes. The rule fires at the moment of installing, and the subcommands are registry names
+with little room to drift, so a bare pointer to the skill would give up actionability for no drift
+protection. Settled 2026-09-28.]
+
+[DECISION: no `[needs agent-skills]` label, despite step 2 below. `tests/unit/test_agents_md.py`
+parses one trailing label per heading, so a second one breaks the evidence matching. The rule's core
+claim is about `setup.toml`, so `[needs setup.toml]` stays the label.]
 
 ## Recommended direction
 
@@ -74,3 +77,12 @@ can't drift from the script's CLI. The rule's own admission criteria are in
 - In a fresh session, asking "should I install X via its PyPI wrapper?" leads to a
   `package_health.py` call, not a `curl`. That is the repro from the Evidence section, checked where
   it happened.
+
+## Migrated to
+
+- **The rule**: `config/agents-md/research.md`, `cba4941`, deployed 2026-09-28. The deployed
+  `~/.agents/AGENTS.md` and `~/.claude/CLAUDE.md` each carry `package_health.py pypi` once and no
+  `pypi.org/pypi`, which covers the first verification line.
+- **The fresh-session check**: this session could not run it. It moved to
+  `plans/2026-08-23-global-agents-md-adherence-watch.md` as a DEFERRED watch item, since that plan
+  owns "is a rule followed".

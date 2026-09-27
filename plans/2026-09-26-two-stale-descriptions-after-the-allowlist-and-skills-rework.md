@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-26
+status: landed
+updated: 2026-09-28
 source_repo: github.com-personal/agent-skills
 source_session: 8db05b10-386d-41aa-884b-890e81fdada7.jsonl
 source_moment: 2026-09-26T19:14:00Z
@@ -30,3 +30,10 @@ allowlist. Nothing was written to this tree.
 ## Recommended direction
 
 Reword both to match the code. Each is one or two sentences.
+
+## Migrated to
+
+- `install_skills`' docstring: `ec0f79f`, which also corrects "local repo paths symlinked in" (every
+  source goes through the `skills` CLI) and regenerates `docs/tasks.md`.
+- The `inv` section of `contributing/cli-allowlist.md`: `268877b`, now pointing at
+  `cli-allowlist/tools.toml`'s `[inv]` entry.
