@@ -783,9 +783,11 @@ forever, which is the failure mode that gets lived with rather than noticed.
 
 Fixed the same way as `sed`: `cli-allowlist/rules/inv.json` carries `"reviewed": false` plus a
 `note` that `review()` prints inline at the confirm prompt, so the next reviewer sees why before
-deciding rather than re-approving by habit. Rules for `inv` stay hand-maintained in
-`~/.claude/settings.json` — today just `Bash(inv quality.*)` as `allow`; a genuinely impactful
-namespace worth gating gets its own explicit `ask` rule there, not a blanket one.
+deciding rather than re-approving by habit. Rules for `inv` stay hand-authored, in
+`cli-allowlist/tools.toml`'s `[inv]` entry (`overrides_only`, with `allow_overrides` covering
+`quality.*`, `test.*`, `--list` and the read-only-by-name globs; moved there from `setup.toml` on
+2026-09-26 so that file is the one source of Bash rules). A genuinely impactful namespace worth
+gating gets its own explicit override there, not a blanket one.
 
 `pytest`, registered in the same batch, needs none of this: it classified `read_only`, renders
 `Bash(pytest:*)` as `allow`, and shadows nothing.
