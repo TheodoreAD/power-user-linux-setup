@@ -96,3 +96,19 @@ unreleased work. The next sweep's `check-currency` picks it up.]
 - The original repro, `inv deps.check-currency`, re-run in this repo after the sweep: 2 of 14
   behind, down from 8. The two are `hadolint-py` (the false positive above) and `invoke-stubs` (the
   branch that moved mid-sweep).
+
+## Migrated to
+
+- **The zizmor decision**: the comment beside the first `self-repository` suppression in
+  `.github/workflows/ci.yml`, plus `repo-tasks`' own plan for the family-wide fix (absorbed there as
+  `plans/2026-09-28-zizmor-self-repository-audit-conflicts-with-actionlint-and-act.md`).
+- **The `plans/` pyright exclusion**: the comment above `[pyright]` in `repo-tasks.toml`.
+- **The `hadolint-py` false positive**: `repo-tasks`, filed as
+  `2026-09-28-check-currency-ignores-the-manifest-constraint.md`.
+- **The whole sweep and why it is one commit**: the body of `4190053`.
+- **The `invoke-stubs` DEFERRED item**: needs no plan of its own. `repo-tasks`'
+  `contributing/consumer-sweep.md` runs `inv deps.check-currency` on every sweep, and that is the
+  step that reports it.
+
+Not migrated: the catalog-test failure and the pin-before-diff order. `repo-tasks`' sweep doc
+already covers both, and `tests/unit/test_catalog.py`'s docstring covers the first as well.
