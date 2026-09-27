@@ -119,6 +119,13 @@ whichever agent actually holds keys, and only starts keychain when neither deskt
 supersedes the hand-written keychain block this page used to recommend; if you still have one,
 delete it — two of them means the last one wins, which is how a shell ends up on the empty agent.
 
+An AI agent's shell is not a login shell and never reads `~/.zprofile`, so `[packages.ssh]` also
+writes a `zshenv` snippet that runs the same desktop-socket loop in Claude Code's shells (those with
+`CLAUDECODE` set) when the inherited agent answers nothing. That covers a background session started
+by a Claude daemon older than your current login, which still carries the previous login's WezTerm
+agent link. Keychain is left out of that path: a file read on every command should not start an
+agent.
+
 **Why it matters (2026-08-28):** after a reboot, a shell pinned to keychain's empty agent failed
 `git push` with `Permission denied (publickey)` while all three keys sat unlocked in GNOME's. The
 symptom chain — publickey denied, so "no key loaded", so `ssh-add`, so a passphrase prompt — points
