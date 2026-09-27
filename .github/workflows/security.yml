@@ -1,0 +1,36 @@
+name: Security
+
+# A separate workflow from CI on purpose: a failure here means this repo's dependency set has a known
+# advisory, not that its code is wrong. GitHub gives every workflow its own check run, name and
+# badge, so a green CI beside a red Security reads as exactly that, with nothing to configure.
+# Folding the audit into ci.yml or quality.yml would lose the distinction and put a network call
+# inside the gate that devcontainer.yml's publish-stable requires before moving the `stable` tag.
+#
+# The audit is defined once for the whole repo-tasks family and called rather than copied, so there
+# is no per-repo drift for anyone to track; this file matches every other consumer's caller. The job
+# installs nothing — `uv audit --locked` reads uv.lock and queries OSV — so nothing in setup.toml or
+# this repo's dependency groups has to provide it.
+#
+# Push-triggered, deliberately not scheduled. A red scheduled run needs a reader, and an unwatched
+# scheduled job looks like coverage without being it. The gap is real and accepted: an advisory
+# landing in a week with no pushes is not seen until the next one.
+
+on:
+  push:
+    branches: [master]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # Pinned to a commit, not @main: a moving ref would change this repo's audit the moment the
+  # upstream default branch moved. The trailing comment is the readable version — this commit
+  # predates repo-tasks' first release tag, so the date is what there is to name. Bump both together
+  # when that workflow changes; repo-tasks' `inv consumers.diff` reports a pin behind it.
+  audit:
+    uses: TheodoreAD/repo-tasks/.github/workflows/security-reusable.yml@d17c60715e2a7fd63cf22874255c6923277b7859 # 2026-08-31
