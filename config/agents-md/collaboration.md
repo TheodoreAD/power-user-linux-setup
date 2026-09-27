@@ -3,9 +3,9 @@
 ### A narrow check grows into design work [Claude Code]
 
 When a "just check/confirm X" request starts revealing design decisions with real trade-offs,
-proactively write the design into a `plans/*.md` file, per the `plan-docs` convention, rather than
-continuing to edit inline. Scope grows one incremental step at a time and is easy to miss, so don't
-wait for the user to notice. **Don't reach for plan mode.** It stores the plan outside the
+proactively write the design into a `plans/*.md` file, per the `plan-conveyor` convention, rather
+than continuing to edit inline. Scope grows one incremental step at a time and is easy to miss, so
+don't wait for the user to notice. **Don't reach for plan mode.** It stores the plan outside the
 directories this machine's work actually uses, which is the stated objection to it. "Implement and
 document ..." is clear approval to execute for real, state-changing commands included. The caution
 is editing ahead of an agreed plan, not avoiding real changes once one is approved.

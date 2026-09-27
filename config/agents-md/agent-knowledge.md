@@ -22,7 +22,7 @@ read it.
 
 Durable repo-specific knowledge → that repo's own `AGENTS.md` (or a `docs/*.md` it points to);
 durable cross-repo or personal preference → `~/.agents/AGENTS.md`; anything plan-shaped → `plans/`,
-per the `plan-docs` convention.
+per the `plan-conveyor` convention.
 
 **Never a harness's own memory store — not for durable content, not for perishable content, not as a
 staging area.** They are invisible to every other contributor, every other agent tool, every code

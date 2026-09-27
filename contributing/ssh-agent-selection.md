@@ -6,7 +6,8 @@ two-agent table, the symptom chain and what to run. This page holds the alternat
 rejected, which is the part a future reader will otherwise re-derive.
 
 Migrated 2026-09-02 from the retired `plans/2026-08-28-ssh-add-and-askpass-friction.md`
-(`python3 ~/.agents/skills/plan-docs/scripts/plans.py archive --search "keychain"` reads it back).
+(`python3 ~/.agents/skills/plan-conveyor/scripts/plans.py archive --search "keychain"` reads it
+back).
 
 ## Keychain stays installed, and stays in the login path
 

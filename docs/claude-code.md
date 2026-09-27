@@ -337,7 +337,7 @@ listing of every skill's name and description, capped at `context_window_tokens 
 times this fraction. At the stock `0.01` that is 8,000 characters on a 200k-window model — against a
 real listing on this machine of 18,109 characters over 30 entries. When it overflows, user and
 project skills are demoted to name-only in ascending order of decayed usage, and the description is
-**dropped whole rather than shortened**: a skill listed as `- plan-docs` with nothing after it
+**dropped whole rather than shortened**: a skill listed as `- plan-conveyor` with nothing after it
 cannot be matched against a request, which is also what keeps it at the bottom of the ranking that
 demoted it. Nothing errors, and the only visible sign is in `claude --debug-file`.
 

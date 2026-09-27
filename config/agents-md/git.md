@@ -47,14 +47,14 @@ Check it mechanically rather than by reading carefully. The agent writing the se
 that does not know it is doing something wrong.
 
 ```shell
-python3 ~/.agents/skills/plan-docs/scripts/plans.py scan --mode staged   # before the commit
-python3 ~/.agents/skills/plan-docs/scripts/plans.py scan --mode history  # what is already published
+python3 ~/.agents/skills/plan-conveyor/scripts/plans.py scan --mode staged   # before the commit
+python3 ~/.agents/skills/plan-conveyor/scripts/plans.py scan --mode history  # what is already published
 ```
 
 It derives the forbidden names from this machine's own project roots, so nothing has to be listed
 anywhere — a list of clients is itself the thing that must not be written down in a public repo. An
 employer with no clone here has no directory to derive from. Add it to `[private] extra` in
-`~/.config/plan-docs/config.toml` by hand, once.
+`~/.config/plan-conveyor/config.toml` by hand, once.
 
 A hit in **pushed** history is not an edit to make quietly. Redacting the working tree changes
 nothing about what is published. Report it, name the commits, and let the user decide — purging
@@ -137,8 +137,8 @@ _whether_ to commit, never how to split.
 
 **And every commit has a body**, saying what the change is for, what it beat and what it cost. A doc
 or plan commit is not exempt, and is the case where "the file already says it" is backwards:
-`git log` does not show the file, and `plan-docs` retires a plan by **deleting** it, so the file is
-temporary while its message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone
+`git log` does not show the file, and `plan-conveyor` retires a plan by **deleting** it, so the file
+is temporary while its message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone
 satisfies `%b`. It is a floor rather than a ceremony: a formatting fix's why is one clause, and
 padding reads as reasoning, which is worse than a bare subject. **One exception**, named so it is
 not discovered as an inconsistency: a plan filed into the plans store commits as

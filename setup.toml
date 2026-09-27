@@ -1096,8 +1096,8 @@ claude_default_mode = "acceptEdits"
 # The budget is `context_window_tokens * 4 * fraction` CHARACTERS, so the stock 0.01 is 8,000 on a
 # 200k-window model — and this machine's real listing measured 18,109 characters over 30 entries on
 # 2026-08-31. On overflow, user and project skills are demoted to name-only in ascending order of
-# decayed usage: the description is dropped whole, not shortened, and a skill listed as `- plan-docs`
-# cannot be matched against a request. 0.03 gives 24,000 characters, clearing today's listing with
+# decayed usage: the description is dropped whole, not shortened, and a skill listed as
+# `- plan-conveyor` cannot be matched against a request. 0.03 gives 24,000 characters, clearing today's listing with
 # room to grow by a third; 0.02 would not even clear it.
 #
 # This is insurance, not a repair: 11 truncated listings have ever been recorded here, 2 of them in a
@@ -2069,7 +2069,7 @@ claude_permissions_allow = [
 
 [packages.plan-store]
 description = """
-The plans store at ~/plans — where the `plan-docs` skill files plans for repos that cannot hold
+The plans store at ~/plans — where the `plan-conveyor` skill files plans for repos that cannot hold
 their own. Most repos this user works in belong to an employer or a client, where adding a plans/
 directory is not available; those route here instead, each repo's path under ~/projects mirrored at
 whatever depth it sits. Repos under github.com-personal/ keep committing their own plans/ and are
@@ -2077,10 +2077,10 @@ unaffected.
 
 Like [packages.research-library], this entry carries only the machinery the skill assumes — the
 PLANS_HOME export and the file grant below. The store itself is created by the skill's own
-installer (`python3 ~/.agents/skills/plan-docs/scripts/plans.py install`), which makes it a local
-git repository with **no remote**: one personal remote accumulating several employers' internal
-architecture is the specific outcome that design avoids. Routing lives in
-~/.config/plan-docs/config.toml, not here.
+installer (`python3 ~/.agents/skills/plan-conveyor/scripts/plans.py install`), which makes it a
+local git repository with **no remote**: one personal remote accumulating several employers'
+internal architecture is the specific outcome that design avoids. Routing lives in
+~/.config/plan-conveyor/config.toml, not here.
 """
 method = "zsh"
 tags = ["dev"]

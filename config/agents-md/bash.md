@@ -119,10 +119,11 @@ replacement is unaffected: spell it `--replace`, which no `grep` bundle can turn
 
 **Out entirely, not merely discouraged.** No edit and no commit, however small, however obviously
 correct, however much a skill's own instructions tell you to. File it instead:
-`python3 ~/.agents/skills/plan-docs/scripts/plans.py new <topic> --for <repo>` puts a plan in that
-repo's store mirror, outside every working tree, and the next session working there is offered it.
-Commit it in the store immediately and say where it went. The only exception is genuinely iterative
-work needing back-and-forth in that repo, which gets its own session there rather than a relay.
+`python3 ~/.agents/skills/plan-conveyor/scripts/plans.py new <topic> --for <repo>` puts a plan in
+that repo's store mirror, outside every working tree, and the next session working there is offered
+it. Commit it in the store immediately and say where it went. The only exception is genuinely
+iterative work needing back-and-forth in that repo, which gets its own session there rather than a
+relay.
 
 The reason it is a hard line rather than a judgment call: a commit in someone else's tree is silent
 by construction. It looks routine in `git log`, and the session that owns the repo may push it

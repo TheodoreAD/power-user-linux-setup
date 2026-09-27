@@ -828,7 +828,7 @@ def _print_summary(selected: list[Claim], everything: list[Claim]) -> None:
             "the rest are invisible to `inv deploy.status`."
         )
     print(f"[home] {len(SYSTEM_TARGETS)} further target(s) outside ~ are written by this repo and out of scope here.")
-    print("[home] skill-written config (~/.config/plan-docs, ~/.config/tasks-md) is deliberately not claimed:")
+    print("[home] skill-written config (~/.config/plan-conveyor, ~/.config/tasks-md) is deliberately not claimed:")
     print("[home]   this repo declares the skill, not the skill's config — see contributing/home-claims.md.")
 
 

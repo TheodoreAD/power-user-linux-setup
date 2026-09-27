@@ -272,7 +272,7 @@ real keyring this file is the latter.
   `certs.check`/`install --from-windows`, inside a directory the registry already claims. Claiming
   it would be claiming a cache, and the same argument as "the contents of an installed tree"
   applies: the destination is the claim.
-- **Skill-written config** — `~/.config/plan-docs/config.toml`,
+- **Skill-written config** — `~/.config/plan-conveyor/config.toml`,
   `~/.config/tasks-md/workspaces.json`, `~/.beads-planning`. This repo declares the _skill_; the
   skill's own config is `agent-skills`' business, and hard-coding another repo's paths here would
   rot silently the first time one of them moves. The footer says so rather than leaving the gap
