@@ -2900,7 +2900,7 @@ listing of every skill&rsquo;s name and description, capped at <code>context_win
 times this fraction. At the stock <code>0.01</code> that is 8,000 characters on a 200k-window model — against a
 real listing on this machine of 18,109 characters over 30 entries. When it overflows, user and
 project skills are demoted to name-only in ascending order of decayed usage, and the description is
-<strong>dropped whole rather than shortened</strong>: a skill listed as <code>- plan-docs</code> with nothing after it
+<strong>dropped whole rather than shortened</strong>: a skill listed as <code>- plan-conveyor</code> with nothing after it
 cannot be matched against a request, which is also what keeps it at the bottom of the ranking that
 demoted it. Nothing errors, and the only visible sign is in <code>claude --debug-file</code>.</p>
 <p><code>0.03</code> gives 24,000 characters, clearing today&rsquo;s listing with room to grow by a third; <code>0.02</code> would
