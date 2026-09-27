@@ -33,9 +33,9 @@ def agent_label(code: int) -> str:
 def desktop_sockets(runtime_dir: str | None) -> list[Path]:
     """The well-known desktop agent sockets, in the order ~/.zprofile tries them.
 
-    Kept in step with `[packages.ssh]`'s zprofile snippet in setup.toml: gnome-keyring first,
-    gcr second. Both are usually the same agent reached by two paths, but only one of them
-    exists on some sessions.
+    Kept in step with `[packages.ssh]`'s zprofile and zshenv snippets in setup.toml, which
+    tests/unit/test_ssh.py pins: gnome-keyring first, gcr second. Both are usually the same agent
+    reached by two paths, but only one of them exists on some sessions.
     """
     if not runtime_dir:
         return []

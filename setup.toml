@@ -534,6 +534,31 @@ if ! ssh-add -l >/dev/null 2>&1; then
   eval "$(keychain --nogui --quick --quiet --lockwait 0 --agents ssh --eval --confhost)"
 fi
 """
+# The same desktop-socket loop for agent shells, which are non-login `zsh -c` calls that never read
+# ~/.zprofile, so whatever SSH_AUTH_SOCK they inherit is never re-chosen. Every background Claude
+# session is a child of one long-lived `claude daemon run`, and that daemon outlives a re-login. On
+# 2026-09-28 one started from a WezTerm window two days earlier still carried
+# /run/user/1000/wezterm/agent.<pid> after the user logged out and back in: WezTerm names that link
+# after its GUI process, the GUI died at logout, and every push from a background session failed
+# "Permission denied (publickey)" while both desktop agents held every key. It recurs at every
+# re-login, not only after a dotfile change.
+#
+# The probe costs ~3ms against a live agent and less against a dead one, so a healthy shell pays one
+# `ssh-add -l` per Bash call and runs nothing else. keychain is deliberately not here: starting an
+# agent from a file read on every call is not a fallback, and a shell with no desktop agent keeps
+# whatever it inherited. Guarded on CLAUDECODE for the reason [packages.claude-code]'s block gives —
+# cron, IDE task runners and every other `zsh -c` keep what they were handed. `if` rather than a
+# trailing `&&`, so ~/.zshenv's last status stays zero in a shell the condition does not hold for.
+zshenv = """
+if [ -n "${CLAUDECODE:-}" ] && ! ssh-add -l >/dev/null 2>&1; then
+  for _pulse_sock in "${XDG_RUNTIME_DIR}/keyring/ssh" "${XDG_RUNTIME_DIR}/gcr/ssh"; do
+    [ -S "${_pulse_sock}" ] || continue
+    SSH_AUTH_SOCK="${_pulse_sock}" ssh-add -l >/dev/null 2>&1 || continue
+    export SSH_AUTH_SOCK="${_pulse_sock}"
+    break
+  done
+  unset _pulse_sock
+fi"""
 
 [packages.openssh-server]
 description = """
