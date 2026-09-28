@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-09-28
 source_repo: github.com-personal/invoke-stubs
 source_session: 76d98521-8e7c-4524-bb4f-4caeb36e8cb0.jsonl
@@ -34,3 +34,14 @@ Extend the existing section by one bullet beside "Name the directory": naming wo
 path, not a gitignored one. There, `rg --no-ignore` and `fd -I`, which is the one case where `-I`
 earns its place (the section already says "only to find one file you know is ignored"). No new
 heading, so the rule count is unchanged.
+
+## Migrated to
+
+- **The rule:** `config/agents-md/bash.md`, "Searching a tree, by name or by content". It is one
+  clause on the "Name the directory" bullet (`234faa9`), and it has been deployed.
+- **The evidence and the decision:** `contributing/global-agents-md.md`, "Gitignored directories
+  stay ignored when named, added 2026-09-28". That section also has a reproduction against this
+  repo's `.venv`, and it adds one finding the plan did not have: a named **file** is searched
+  anyway, so only a named directory is affected.
+
+Nothing was left out.
