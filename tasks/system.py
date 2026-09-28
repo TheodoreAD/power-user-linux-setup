@@ -152,25 +152,34 @@ def disable_ipv6(c: Context):
     print(f"[sysctl] IPv6 disabled ({status.value})")
 
 
+def _owned_dropin(c: Context, path: Path, name: str, content: str) -> tuple[str, bool]:
+    """The whole text a PULSE-owned drop-in should hold, and whether it already holds it.
+
+    For a drop-in PULSE names and owns outright, unlike the shared /etc/sysctl.conf: the file is
+    exactly one PULSE block and nothing else. Checking only for the block let a pre-marker copy of
+    the same setting survive above it — size.conf carried `SystemMaxUse=500M` twice on this machine
+    until 2026-09-28 — and would keep anything else put there as well. A setting of one's own
+    belongs in a drop-in of one's own.
+    """
+    desired, _ = util.ensure_block_text("", name, content)
+    return desired, util.sudo_read(c, path) == desired and util.readable_by_all(path)
+
+
 @task
 def cap_journal_size(c: Context, max_use: str = "500M"):
     """Cap persistent journal size (default: 500M) and restart journald if changed."""
     util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_systemd()
-    content = f"[Journal]\nSystemMaxUse={max_use}"
-    text = util.sudo_read(c, _JOURNALD_SIZE_CONF)
-    new_text, status = util.ensure_block_text(text, "journal-size", content)
-    current = status == util.BlockStatus.OK and util.readable_by_all(_JOURNALD_SIZE_CONF)
+    desired, current = _owned_dropin(c, _JOURNALD_SIZE_CONF, "journal-size", f"[Journal]\nSystemMaxUse={max_use}")
     if util.DRY_RUN:
         print(f"[journal] SystemMaxUse={max_use}: {util.ok_label(current)}")
         return
     if current:
         print(f"[journal] already capped at {max_use} — nothing to do")
         return
-    c.run(f"{util.SUDO} mkdir -p {_JOURNALD_CONF_DIR}")
-    util.sudo_write(c, _JOURNALD_SIZE_CONF, new_text)
+    util.sudo_write(c, _JOURNALD_SIZE_CONF, desired, mkdir=True)
     c.run(f"{util.SUDO} systemctl restart systemd-journald")
-    print(f"[journal] SystemMaxUse set to {max_use} ({status.value})")
+    print(f"[journal] SystemMaxUse set to {max_use} — {_JOURNALD_SIZE_CONF} written")
 
 
 @task
@@ -205,15 +214,12 @@ def configure_dns(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.
     util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_systemd()
     content = f"[Resolve]\nDNS={primary} {secondary}\nFallbackDNS={fallback}\nDNSSEC=no"
-    text = util.sudo_read(c, _RESOLVED_CONF)
-    new_text, status = util.ensure_block_text(text, "dns", content)
-    current = status == util.BlockStatus.OK and util.readable_by_all(_RESOLVED_CONF)
+    desired, current = _owned_dropin(c, _RESOLVED_CONF, "dns", content)
     if util.DRY_RUN:
         print(f"[dns] {primary}/{secondary} (fallback {fallback}): {util.ok_label(current)}")
         return
     if not current:
-        c.run(f"{util.SUDO} mkdir -p {_RESOLVED_CONF_DIR}")
-        util.sudo_write(c, _RESOLVED_CONF, new_text)
+        util.sudo_write(c, _RESOLVED_CONF, desired, mkdir=True)
     # Always restart, even when the drop-in file already matched: the file matching on disk
     # doesn't mean the *running* systemd-resolved has actually loaded it — e.g. under WSL2, a
     # fresh VM boot can leave resolved running with no DNS servers configured at all even though
@@ -221,4 +227,4 @@ def configure_dns(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.
     # shows no Global/per-link DNS servers in that state). Restarting is cheap and this task's
     # actual contract is "DNS works", not just "the file is correct".
     c.run(f"{util.SUDO} systemctl restart systemd-resolved")
-    print(f"[dns] {primary}, {secondary}, fallback {fallback} ({status.value})")
+    print(f"[dns] {primary}, {secondary}, fallback {fallback} ({'ok' if current else 'written'})")
