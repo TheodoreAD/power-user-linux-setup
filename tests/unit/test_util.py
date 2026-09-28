@@ -201,6 +201,17 @@ def test_sudo_write_with_warn_reports_a_failure_instead_of_raising(monkeypatch):
         util.sudo_write(_Recorder(fail="install"), Path("/etc/x"), "t")
 
 
+def test_sudo_read_reads_a_readable_file_without_sudo(tmp_path):
+    """Every file sudo_write installs is 0644, so this is the common case, and it keeps sudo out of
+    a dry run, which has not authenticated."""
+    path = tmp_path / "99-pulse"
+    path.write_text("content\n")
+    c = _Recorder()
+
+    assert util.sudo_read(c, path) == "content\n"
+    assert c.commands == []
+
+
 def test_write_claude_settings_refuses_past_the_budget_and_leaves_the_file_alone(monkeypatch, tmp_path):
     # Claude Code rejects a settings file over 2 MiB whole, so an oversized write would lose every
     # setting in it, not just the rules that pushed it over.
@@ -371,6 +382,18 @@ def test_ensure_sudo_prefers_a_usable_askpass_over_the_terminal(monkeypatch, fre
 
     util.ensure_sudo()
     assert ran == [["sudo", "-A", "-v"]]
+
+
+def test_ensure_sudo_in_a_dry_run_asks_for_nothing_and_leaves_no_sudo_able_to_prompt(monkeypatch, fresh_sudo):
+    """A dry run authenticates nothing. It used to leave SUDO as `sudo -A`, so every root read in
+    one could raise a password dialog, or at a terminal stop at an invisible in-invoke prompt."""
+    calls = _sudo_answers(monkeypatch, ok_flags=(), askpass="/home/u/.local/bin/askpass-zenity")
+    monkeypatch.setattr(util, "run_interactive", lambda cmd, **kw: pytest.fail(f"asked for a password: {cmd}"))
+    monkeypatch.setattr(util, "DRY_RUN", True)
+
+    assert util.ensure_sudo() is True
+    assert util.SUDO == "sudo -n"
+    assert calls == [], "not even the probes: a dry run is not a reason to touch sudo's state"
 
 
 def test_ensure_sudo_needs_nothing_when_already_root(monkeypatch, fresh_sudo):

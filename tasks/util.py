@@ -780,9 +780,17 @@ def sudo_write(c: Context, path: Path, text: str, *, mkdir: bool = False, warn: 
 
 
 def sudo_read(c: Context, path: Path) -> str:
-    """Read a root-owned `path` via `sudo cat`, or "" if it doesn't exist / can't be read."""
+    """Read a root-owned `path`, or "" if it doesn't exist / can't be read.
+
+    Read directly when this user can, which is every file `sudo_write` installs, and through sudo
+    only for one that is genuinely root-only. That keeps sudo out of a dry run's common case
+    entirely: a dry run authenticates nothing, so its sudo cannot prompt, and a root-only file reads
+    as "" and so reports as needing work, which it does.
+    """
     if not path.exists():
         return ""
+    if os.access(path, os.R_OK):
+        return path.read_text()
     result = c.run(f"{SUDO} cat {shlex.quote(str(path))}", hide=True, warn=True)
     return result.stdout if result.ok else ""
 
@@ -1163,7 +1171,15 @@ def ensure_sudo(reason: str = "the rest of this run") -> bool:
     # every task interpolates, and the whole point of this function is to change what it means for
     # the rest of the run. Renaming it to lowercase would touch 46 call sites for a naming rule.
     global _sudo_ready, SUDO, _sudo_keepalive  # noqa: PLW0603 — process-wide state by design
-    if _sudo_ready or DRY_RUN:
+    if _sudo_ready:
+        return True
+    if DRY_RUN:
+        # A dry run authenticates nothing, and until 2026-09-28 it also left SUDO as `sudo -A` or
+        # plain `sudo`, so by construction every root read in one could raise an askpass dialog
+        # per file or, at a terminal without askpass, stop at the invisible in-invoke prompt this
+        # function exists to rule out. `-n` makes such a read fail instead, and sudo_read reads a
+        # readable file without sudo at all, so only a genuinely root-only file is affected.
+        SUDO = "" if os.geteuid() == 0 else "sudo -n"  # pyright: ignore[reportConstantRedefinition]
         return True
 
     state = sudo_state()

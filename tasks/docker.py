@@ -1,4 +1,5 @@
 import json
+import os
 import re
 import shlex
 from pathlib import Path
@@ -69,7 +70,14 @@ def _ensure_running(c: Context) -> None:
 def _read_daemon_json(c: Context) -> util.JsonObject:
     if not _DAEMON_JSON.exists():
         return {}
-    return cast(util.JsonObject, util.parse_json(c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout))
+    # Not util.sudo_read: its "" for an unreadable file would parse as nothing configured, and the
+    # merge would then write only PULSE's keys over everything else in the file. A failed read
+    # raises here instead, including in a dry run, whose sudo cannot prompt.
+    if os.access(_DAEMON_JSON, os.R_OK):
+        text = _DAEMON_JSON.read_text()
+    else:
+        text = c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout
+    return cast(util.JsonObject, util.parse_json(text))
 
 
 def _configure_group(c: Context, user: str) -> None:
