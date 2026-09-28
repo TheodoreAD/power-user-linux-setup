@@ -23,8 +23,11 @@ permissions:
   contents: read
 
 jobs:
+  # The container's own OS is set by .devcontainer/devcontainer.json's image (ubuntu-24.04), not
+  # here, but the host still supplies the kernel and Docker. Pinned to 24.04 with the other
+  # OS-subject jobs (see ci.yml's runtime-guardrail), so the pair stays the release this repo targets.
   smoke-test:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
         with:

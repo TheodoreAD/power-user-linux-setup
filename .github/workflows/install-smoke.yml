@@ -25,8 +25,11 @@ jobs:
   # released, which is exactly the evidence that is not missing. `git branch` rather than a SHA
   # because `git clone --branch` takes a branch or tag and not an arbitrary commit, and it works
   # from the detached HEAD a pull_request checkout leaves behind.
+  #
+  # Pinned to 24.04, the release this repo targets, for the reason ci.yml's runtime-guardrail gives:
+  # `ubuntu-latest` becomes 26.04 from 2026-10-19, and a fresh machine's OS is this job's subject.
   smoke:
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04
     steps:
       # fetch-depth: 0 so the local clone below has real history to take. `git clone --depth 1`
       # from a *shallow* repo is the failure this avoids; a full checkout of this repo is cheap.
