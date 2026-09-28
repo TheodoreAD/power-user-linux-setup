@@ -452,7 +452,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-socket" },
     { name = "pytest-timeout" },
-    { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks" },
+    { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.6.0" },
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
@@ -668,7 +668,7 @@ wheels = [
 [[package]]
 name = "repo-tasks"
 version = "0.6.0"
-source = { git = "https://github.com/TheodoreAD/repo-tasks#a2d9cf5ebf334e39261bedcc7f83d75eb6f8d3b5" }
+source = { git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.6.0#a2d9cf5ebf334e39261bedcc7f83d75eb6f8d3b5" }
 dependencies = [
     { name = "bump-my-version" },
     { name = "dunamai" },

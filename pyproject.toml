@@ -61,4 +61,7 @@ packages = ["tasks"]
 default-groups = ["dev", "docs"]
 
 [tool.uv.sources]
-repo-tasks = { git = "https://github.com/TheodoreAD/repo-tasks" }
+# Pinned to a release tag, not `main`, per the repo family's pin-don't-track decision (repo-tasks'
+# contributing/consumer-sweep.md). Untagged, a re-lock resolves `main` and can land on unreleased
+# commits. A bump is this edit plus `inv deps.lock --package repo-tasks`.
+repo-tasks = { git = "https://github.com/TheodoreAD/repo-tasks", tag = "v0.6.0" }
