@@ -278,6 +278,14 @@ subcommands = [
 [kind]
 subcommands = ["get", "create", "delete", "load", "build", "export"]
 
+[jira]
+version_flag = "version" # --version is rejected; version is a subcommand
+# Depth 3, not 2: `issue comment` and `issue worklog` are containers whose writes (`comment add`,
+# `worklog add`) sit one level further down. At depth 2 they classified read_only as leaves, and
+# `jira issue comment add …` would have run unattended under their allow rule.
+max_depth = 3 # issue list/view vs create/edit/delete/move, epic add/remove, sprint add/close
+subcommands = ["issue", "epic", "sprint", "board", "project", "release", "me", "serverinfo", "open", "init"]
+
 [tilt]
 subcommands = ["get", "logs", "status", "dump", "doctor", "up", "down", "ci"]
 

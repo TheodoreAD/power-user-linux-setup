@@ -1,0 +1,327 @@
+{
+  "classified_at": "2026-09-28T18:35:44Z",
+  "extracted_at": "2026-09-28T18:35:28Z",
+  "nodes": {
+    "board": {
+      "classification": "read_only",
+      "content_hash": "f1c564aa6f9d9415",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands; no state modification.",
+      "source": "llm"
+    },
+    "board list": {
+      "classification": "read_only",
+      "content_hash": "2143a57e832c3abf",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists boards in a project; read-only query of Jira state.",
+      "source": "llm"
+    },
+    "epic": {
+      "classification": "read_only",
+      "content_hash": "1c4a2d946153e715",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands; no state modification.",
+      "source": "llm"
+    },
+    "epic add": {
+      "classification": "write",
+      "content_hash": "dfe5d33494d8dc10",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Assigns issues to an epic, modifying Jira state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "epic create": {
+      "classification": "write",
+      "content_hash": "1d6b2f13e5c2c707",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new epic in the project; bounded state creation that is reversible.",
+      "source": "llm"
+    },
+    "epic list": {
+      "classification": "read_only",
+      "content_hash": "98b6ac731f0072e0",
+      "flags": {
+        "--no-truncate": {
+          "classification": "needs_review",
+          "rationale": "Only affects display format (show all columns); does not modify state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists top 100 epics with optional filters; read-only query.",
+      "source": "llm"
+    },
+    "epic remove": {
+      "classification": "write",
+      "content_hash": "21e0cf5e0bc7c9ed",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes/unassigns epic from issues, modifying Jira state in a reversible way.",
+      "source": "llm"
+    },
+    "init": {
+      "classification": "write",
+      "content_hash": "26a7e3e5e0777b05",
+      "flags": {
+        "--force": {
+          "classification": "write",
+          "rationale": "Overwrites existing config file if present; still a bounded local config modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates or modifies local jira configuration file; bounded local state change.",
+      "source": "llm"
+    },
+    "issue": {
+      "classification": "read_only",
+      "content_hash": "586355475e66e988",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands; no state modification.",
+      "source": "llm"
+    },
+    "issue assign": {
+      "classification": "write",
+      "content_hash": "a82049c2b902550c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Changes issue assignee; modifies Jira state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "issue clone": {
+      "classification": "write",
+      "content_hash": "a3fa28582210dc18",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Duplicates an issue creating new state in Jira; bounded operation that is reversible.",
+      "source": "llm"
+    },
+    "issue comment": {
+      "classification": "read_only",
+      "content_hash": "6c2c1a3a5fabc5bb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands; no state modification.",
+      "source": "llm"
+    },
+    "issue comment add": {
+      "classification": "write",
+      "content_hash": "f587ce1479cd0963",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a comment to a Jira issue \u2014 modifies issue state in a bounded, expected, and reversible way.",
+      "source": "llm"
+    },
+    "issue create": {
+      "classification": "write",
+      "content_hash": "3f356205d6b210ea",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a new issue in the project; bounded state creation that is reversible.",
+      "source": "llm"
+    },
+    "issue delete": {
+      "classification": "dangerous",
+      "content_hash": "ab4efe8c263a1a38",
+      "flags": {
+        "--cascade": {
+          "classification": "dangerous",
+          "rationale": "Expands deletion to include subtasks; broader destructive blast radius."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes an issue from Jira; destructive, irreversible operation that removes data.",
+      "source": "llm"
+    },
+    "issue edit": {
+      "classification": "write",
+      "content_hash": "b8641f62607e206a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Modifies issue fields; bounded state change that is reversible.",
+      "source": "llm"
+    },
+    "issue link": {
+      "classification": "write",
+      "content_hash": "834b3b52078e3474",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates a link relationship between two issues, modifying their connection state.",
+      "source": "llm"
+    },
+    "issue link remote": {
+      "classification": "write",
+      "content_hash": "ae588de6ebda798c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a web link to a Jira issue \u2014 modifies issue state in a bounded, expected, and reversible way.",
+      "source": "llm"
+    },
+    "issue list": {
+      "classification": "read_only",
+      "content_hash": "860a5d28c3f44c2f",
+      "flags": {
+        "--no-truncate": {
+          "classification": "needs_review",
+          "rationale": "Only affects output formatting of the display, not state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists issues in a project without modifying any state.",
+      "source": "llm"
+    },
+    "issue move": {
+      "classification": "write",
+      "content_hash": "5481d9e12bde547d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Transitions an issue to a new state; can also modify assignee, resolution, and add comments.",
+      "source": "llm"
+    },
+    "issue unlink": {
+      "classification": "write",
+      "content_hash": "ad80974317b1590d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes an existing link relationship between two issues.",
+      "source": "llm"
+    },
+    "issue view": {
+      "classification": "read_only",
+      "content_hash": "1d14ff632cdd3099",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays issue contents without modifying any state.",
+      "source": "llm"
+    },
+    "issue watch": {
+      "classification": "write",
+      "content_hash": "b2e940d3e98b8eae",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a user to an issue's watchers, modifying the issue's state.",
+      "source": "llm"
+    },
+    "issue worklog": {
+      "classification": "read_only",
+      "content_hash": "d21315b70664d6ef",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands when invoked without arguments.",
+      "source": "llm"
+    },
+    "issue worklog add": {
+      "classification": "write",
+      "content_hash": "7384f997069b6054",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Adds a worklog entry to a Jira issue \u2014 modifies time-tracking state in a bounded, expected, and reversible way.",
+      "source": "llm"
+    },
+    "me": {
+      "classification": "read_only",
+      "content_hash": "297d94e79773cfbb",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays configured Jira user information without modification.",
+      "source": "llm"
+    },
+    "open": {
+      "classification": "read_only",
+      "content_hash": "822456773a8034f9",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Opens an issue in a browser; performs no state modification.",
+      "source": "llm"
+    },
+    "project": {
+      "classification": "read_only",
+      "content_hash": "93833a630b9bdab0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands when invoked without arguments.",
+      "source": "llm"
+    },
+    "project list": {
+      "classification": "read_only",
+      "content_hash": "01569e35b24a9938",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists Jira projects the user has access to without modification.",
+      "source": "llm"
+    },
+    "release": {
+      "classification": "read_only",
+      "content_hash": "6a410b67c4781395",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands when invoked without arguments.",
+      "source": "llm"
+    },
+    "release list": {
+      "classification": "read_only",
+      "content_hash": "456fa9d531c4f68a",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists Jira project versions without modification.",
+      "source": "llm"
+    },
+    "serverinfo": {
+      "classification": "read_only",
+      "content_hash": "348e5789b0d8385c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays server information about the Jira instance without modification.",
+      "source": "llm"
+    },
+    "sprint": {
+      "classification": "read_only",
+      "content_hash": "f4b6e9c227805257",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command that displays available subcommands when invoked without arguments.",
+      "source": "llm"
+    },
+    "sprint add": {
+      "classification": "write",
+      "content_hash": "cdf90ddd496c31fd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Assigns issues to a sprint; modifies state in a bounded and reversible way.",
+      "source": "llm"
+    },
+    "sprint close": {
+      "classification": "dangerous",
+      "content_hash": "b51b3e31d7922f20",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Closes a sprint, an irreversible action with broad workflow implications that should require human confirmation.",
+      "source": "llm"
+    },
+    "sprint list": {
+      "classification": "read_only",
+      "content_hash": "162581168b1900c2",
+      "flags": {
+        "--no-truncate": {
+          "classification": "needs_review",
+          "rationale": "Only affects display formatting of results."
+        },
+        "--show-all-issues": {
+          "classification": "needs_review",
+          "rationale": "Only filters which information is displayed, no state modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists and displays sprint information without modifying state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-09-28T18:36:33Z",
+  "truncated": false,
+  "version": "(Version=\"1.7.0\", GitCommit=\"79067e2422df10e59f310bd6fd4979f43a1df0e7\", CommitDate=\"2025-08-30T08:30:25+00:00\", GoVersion=\"go1.24.1\", Compiler=\"gc\", Platform=\"linux/amd64\")"
+}
