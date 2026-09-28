@@ -75,19 +75,39 @@ than inside `[packages.claude-code]`'s block, so the socket list stays in one pa
 Verified live: a nested agent shell handed `/run/user/1000/wezterm/agent.2955010` came up on
 `keyring/ssh` and `git ls-remote origin` succeeded.
 
-### 2. At login, report an old daemon and print how to stop it
+### 2. At login, report an old daemon and offer to stop it
 
-Detect a `claude daemon run` process that started before the current graphical login, and print a
-notice rather than acting. The notice names how many real jobs are running under it (`bg-pty-host`
-children with `--session-id`, as opposed to the `--bg-spare` ones), and gives the command:
+Detect a `claude daemon run` process that started before the current graphical login, and report it
+rather than acting. The report names how many real jobs are running under it (pty hosts with
+`--session-id`, as opposed to the `--bg-spare` ones).
 
-```
-A Claude daemon from your previous login (started <date>) is still running <N> background job(s).
-Its jobs carry that login's environment: an SSH agent link that no longer exists and any variables
-your dotfiles have since dropped. Once those jobs finish, stop it with:
-    claude daemon stop --any
-The next background job starts a fresh one.
-```
+**Landed 2026-09-28** as `[packages.claude-daemon-notice]`: `tasks/claude_daemon.py`, stdlib-only
+like `netdoctor`, deployed as a copy to `~/.local/bin/claude-daemon-notice`, and an autostart entry
+that runs it with `--notify` 15 seconds into each graphical login. The notification offers **Stop it
+(ends N jobs)** and **Leave it**. Only the click runs `claude daemon stop --any`, and it re-checks
+first that the same daemon is still the only stale one. The design is in the module docstring.
+
+Three things changed from the draft above while building it:
+
+- **The notice no longer mentions the SSH agent**, since part 1 repairs that per call. What is left
+  is the environment in general, and the fact that windows opened in the new login attach to the old
+  daemon too. `claude daemon status` showed two `claude agents` clients started after the re-login
+  that were holding the old daemon open.
+- **A job's pty host retitles itself**, so its `argv[0]` is the single element `claude bg-pty-host`.
+  The first version tested for `bg-pty-host` as its own element and reported "no background jobs"
+  against a daemon that was running one. It now matches the `--bg-pty-host` flag. The tests use argv
+  bytes read from the live processes.
+- **The session start comes from logind in microseconds**
+  (`busctl get-property … session/auto …
+  Timestamp`), and the daemon's start from
+  `/proc/<pid>/stat` plus `btime`. Neither involves parsing a date, so the locale cannot affect the
+  comparison.
+
+[UNVERIFIED: **the notification itself has not been seen.** Report mode ran live against the real
+stale daemon (pid 3454123, started 2026-09-26 11:49, one job), both from the checkout and from the
+deployed copy on PATH, and `desktop-file-validate` accepts the autostart entry. `--notify` was not
+run, because clicking Stop would end another session's live job (`76d98521`). The first real test is
+the next login, or `claude-daemon-notice --notify` run on purpose.]
 
 [DECISION: report, never kill. Rejected killing at login because it ends background jobs mid-command
 (a push, a commit, a venv rebuild cut off halfway), and "the daemon is from an older login" cannot
@@ -102,19 +122,25 @@ seconds after login.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: where does the notice appear? A graphical login has no terminal. Candidates:
-the first interactive shell of the login (once, with a marker under `$XDG_RUNTIME_DIR`, which is
-cleared at logout), a desktop notification via `notify-send` from an autostart entry, or both. The
-shell is where the command can be copied from, and the notification is what gets seen if no terminal
-is opened for a while.]
+[DECISION: **a desktop notification with a Stop button, chosen by the user 2026-09-28.** The
+alternatives were the first interactive shell of the login (once, with a marker under
+`$XDG_RUNTIME_DIR`), a text-only notification, or both. The shell lost because the user does not
+type shell commands, so a copyable command in a terminal is a step they would not take. A button
+keeps the human decision the "report, never kill" choice asked for and makes that decision one
+click. `notify-send -A` (libnotify 0.8) blocks until the notification is answered or dismissed. A
+dismissal stops nothing.]
 
-[NEEDS CLARIFICATION: `claude daemon` is Claude Code's own and its subcommands are version-specific
-(checked on 2.1.283). Part 2 should state the version it was written against, and fail quietly (no
-notice) rather than print a stale command if `claude daemon --help` no longer lists `stop`.]
+[DECISION: **written against 2.1.283, and the button is gated on the help text.** Before offering
+Stop, the script runs the daemon's own binary with `daemon --help` and requires both `stop` and
+`--any`. If either is missing, the notification still informs but offers no button, and names the
+version it was written for. The draft said to stay silent in that case. It was changed because the
+stale environment is still worth knowing about when the command has moved. With two stale daemons it
+also informs without a button, since `stop --any` names no pid.]
 
 ## Recommended direction
 
-Part 1 first: it is small, and it fixes the user-visible failure. Part 2 after. Then, in the
-2026-09-26 plan's fix, name the Claude daemon as one of the long-lived processes a re-login does
-**not** replace, so "re-login finishes it" stops being advice that fails silently for agent
-sessions.
+Part 1 first: it is small, and it fixes the user-visible failure. Part 2 after. Both have landed.
+The third step, naming the Claude daemon where the 2026-09-26 plan's fix says a re-login finishes
+the change, was already done when that plan retired: `tasks/zsh.py`'s `_clear_lingering_exports`
+says a re-login cannot touch running processes, "including background agent sessions under an old
+daemon". What is left is the `UNVERIFIED` notification above.
