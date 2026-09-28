@@ -2171,6 +2171,27 @@ bin_pick = "gmailctl"
 bin_in_root = true
 zshrc = "source <(gmailctl completion zsh)"
 
+[packages.jira-cli]
+description = """
+Jira from the terminal — issues, epics, sprints and boards, with --plain and --raw output for
+scripts and agents. Installing it writes no config and stores no token: `jira init` writes a
+per-account config, and the API token comes from JIRA_API_TOKEN, ~/.netrc or the OS keyring under
+service `jira-cli` (api/client.go, in that order), all a per-account step rather than this entry's
+job.
+"""
+method = "archive"
+tags = ["cli", "atlassian"]
+check_cmd = "jira"
+verify_cmd = "jira version" # --version is not a recognized flag; version is a subcommand
+version_cmd = "curl -fsSL https://api.github.com/repos/ankitpokhrel/jira-cli/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
+download_url = "https://github.com/ankitpokhrel/jira-cli/releases/download/v{version}/jira_{version}_linux_x86_64.tar.gz"
+checksum_url = "https://github.com/ankitpokhrel/jira-cli/releases/download/v{version}/checksums.txt"
+# The binary is two levels down, `jira_<version>_linux_x86_64/bin/jira`, so the default strip of
+# one would land it at ~/.local/bin/bin/jira — checked against v1.7.0's tarball 2026-09-28.
+bin_pick = "jira"
+strip_components = 2
+zshrc = "source <(jira completion zsh)"
+
 [packages.plan-store]
 description = """
 The plans store at ~/plans — where the `plan-conveyor` skill files plans for repos that cannot hold
