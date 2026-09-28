@@ -3,6 +3,7 @@ import json
 import os
 import pwd
 import shutil
+import stat
 import subprocess
 import sys
 import tempfile
@@ -764,6 +765,22 @@ def sudo_read(c: Context, path: Path) -> str:
         return ""
     result = c.run(f"{SUDO} cat {path}", hide=True, warn=True)
     return result.stdout if result.ok else ""
+
+
+def readable_by_all(path: Path) -> bool:
+    """True if `path` exists and every user can read it, which is what `sudo_write` installs.
+
+    Check it beside the content wherever a `sudo_write` caller decides there is nothing to do.
+    Content alone made a wrong mode permanent: every file written before `sudo_write` moved from
+    `cp` to `install -m 0644` kept its tempfile's 0600, and a matching-content check never looked
+    again, so `/etc/apt/apt.conf.d/99-pulse` and three others stayed root-only for months — every
+    unprivileged apt query warned it could not read the first. `stat` needs only search permission
+    on the parent, so an unprivileged caller can answer this for a root-only file.
+    """
+    try:
+        return bool(path.stat().st_mode & stat.S_IROTH)
+    except OSError:
+        return False
 
 
 @cache

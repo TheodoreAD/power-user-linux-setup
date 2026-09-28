@@ -130,6 +130,23 @@ def test_remove_block_on_a_missing_file_is_not_an_error(tmp_path):
     assert util.remove_block(tmp_path / "never-created", "mine") is False
 
 
+@pytest.mark.parametrize(
+    ("mode", "expected"), [(0o644, True), (0o600, False), (0o640, False)], ids=["0644", "0600", "0640"]
+)
+def test_readable_by_all_reads_the_other_bit(tmp_path, mode, expected):
+    """0600 is the mode the old `cp`-based sudo_write left behind, and the one that must read as
+    drift; 0640 is here so "readable by some" is not mistaken for "readable by all"."""
+    path = tmp_path / "99-pulse"
+    path.write_text("x")
+    path.chmod(mode)
+
+    assert util.readable_by_all(path) is expected
+
+
+def test_readable_by_all_is_false_for_a_missing_file(tmp_path):
+    assert util.readable_by_all(tmp_path / "never-created") is False
+
+
 def test_write_claude_settings_refuses_past_the_budget_and_leaves_the_file_alone(monkeypatch, tmp_path):
     # Claude Code rejects a settings file over 2 MiB whole, so an oversized write would lose every
     # setting in it, not just the rules that pushed it over.

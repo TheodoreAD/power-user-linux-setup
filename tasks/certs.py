@@ -554,7 +554,7 @@ def _status(c: Context, paths: list[Path]) -> dict[str, str]:
     bundle_status = "MISSING"
     try:
         desired = _desired_bundle_text(c, paths)
-        bundle_status = util.ok_label(_sudo_read(c, _CA_CERT_FILE) == desired)
+        bundle_status = util.ok_label(_sudo_read(c, _CA_CERT_FILE) == desired and util.readable_by_all(_CA_CERT_FILE))
     except RuntimeError as e:
         print(f"[certs] bundle format error: {e}")
     return {"bundle": bundle_status, "zshenv": _zshenv_status(), "java": _java_status(c)}
@@ -784,7 +784,7 @@ def _install_bundle(c: Context, paths: list[Path]) -> None:
     # skipped — see module docstring.
     desired = _desired_bundle_text(c, paths)
 
-    if _sudo_read(c, _CA_CERT_FILE) == desired:
+    if _sudo_read(c, _CA_CERT_FILE) == desired and util.readable_by_all(_CA_CERT_FILE):
         print("[certs] bundle already up to date")
     else:
         _sudo_write(c, _CA_CERT_FILE, desired)

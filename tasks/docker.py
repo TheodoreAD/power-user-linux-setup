@@ -193,7 +193,7 @@ def _configure_registry_mirrors(c: Context, mirrors: list[str]) -> bool:
 
 def _configure_daemon_proxy(c: Context, proxy: str, no_proxy: str | None) -> bool:
     desired = _proxy_dropin(proxy, no_proxy)
-    if util.sudo_read(c, _PROXY_DROPIN) == desired:
+    if util.sudo_read(c, _PROXY_DROPIN) == desired and util.readable_by_all(_PROXY_DROPIN):
         print("[docker-corporate] daemon proxy drop-in already current")
         return False
     c.run(f"{util.SUDO} mkdir -p {_PROXY_DROPIN.parent}")
@@ -257,7 +257,7 @@ def _configure_registry_certs(c: Context, registries: list[str]) -> None:
                 f"[docker] {host!r} is not a host[:port] registry name — refusing to build a path from it"
             )
         path = _CERTS_D / host / "ca.crt"
-        if util.sudo_read(c, path) == bundle:
+        if util.sudo_read(c, path) == bundle and util.readable_by_all(path):
             print(f"[docker-corporate] {host}: CA already current")
             continue
         c.run(f"{util.SUDO} mkdir -p {shlex.quote(str(path.parent))}")

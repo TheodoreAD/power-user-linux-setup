@@ -29,12 +29,11 @@ def configure(c: Context):
     """Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars."""
     util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
     util.require_apt()
+    current = util.sudo_read(c, _APT_CONF) == _APT_CONF_CONTENT and util.readable_by_all(_APT_CONF)
     if util.DRY_RUN:
-        ok = util.sudo_read(c, _APT_CONF) == _APT_CONF_CONTENT
-        print(f"[apt.configure] {util.ok_label(ok)}")
+        print(f"[apt.configure] {util.ok_label(current)}")
         return
-    current = util.sudo_read(c, _APT_CONF)
-    if current == _APT_CONF_CONTENT:
+    if current:
         print("[apt.configure] already configured")
         return
     _APT_CONF.parent.mkdir(parents=True, exist_ok=True)

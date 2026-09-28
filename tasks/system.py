@@ -36,11 +36,11 @@ def install_apparmor_profiles(c: Context):
             raise util.missing_fields(name, "profile", "content")
         path = Path(cfg["profile"])
         content = cfg["content"].strip() + "\n"
-        existing = util.sudo_read(c, path)
+        current = util.sudo_read(c, path) == content and util.readable_by_all(path)
         if util.DRY_RUN:
-            print(f"[apparmor] {name}: {util.ok_label(existing == content)}")
+            print(f"[apparmor] {name}: {util.ok_label(current)}")
             continue
-        if existing == content:
+        if current:
             print(f"[apparmor] {name}: already installed")
             continue
         util.sudo_write(c, path, content)
@@ -140,10 +140,11 @@ def disable_ipv6(c: Context):
     content = "\n".join(f"{k} = 1" for k in _IPV6_KEYS)
     text = util.sudo_read(c, _SYSCTL_CONF)
     new_text, status = util.ensure_block_text(text, "ipv6-disable", content)
+    current = status == util.BlockStatus.OK and util.readable_by_all(_SYSCTL_CONF)
     if util.DRY_RUN:
-        print(f"[sysctl] IPv6 disable: {util.ok_label(status == util.BlockStatus.OK)}")
+        print(f"[sysctl] IPv6 disable: {util.ok_label(current)}")
         return
-    if status == util.BlockStatus.OK:
+    if current:
         print("[sysctl] IPv6 already disabled — nothing to do")
         return
     util.sudo_write(c, _SYSCTL_CONF, new_text)
@@ -159,10 +160,11 @@ def cap_journal_size(c: Context, max_use: str = "500M"):
     content = f"[Journal]\nSystemMaxUse={max_use}"
     text = util.sudo_read(c, _JOURNALD_SIZE_CONF)
     new_text, status = util.ensure_block_text(text, "journal-size", content)
+    current = status == util.BlockStatus.OK and util.readable_by_all(_JOURNALD_SIZE_CONF)
     if util.DRY_RUN:
-        print(f"[journal] SystemMaxUse={max_use}: {util.ok_label(status == util.BlockStatus.OK)}")
+        print(f"[journal] SystemMaxUse={max_use}: {util.ok_label(current)}")
         return
-    if status == util.BlockStatus.OK:
+    if current:
         print(f"[journal] already capped at {max_use} — nothing to do")
         return
     c.run(f"{util.SUDO} mkdir -p {_JOURNALD_CONF_DIR}")
@@ -182,7 +184,9 @@ def set_initramfs_compression(c: Context, algorithm: str = "xz"):
         print("[initramfs] COMPRESS line not found in config — check manually")
         return
     current = m.group(2)
-    already_set = current == algorithm and not m.group(0).strip().startswith("#")
+    already_set = (
+        current == algorithm and not m.group(0).strip().startswith("#") and util.readable_by_all(_INITRAMFS_CONF)
+    )
     if util.DRY_RUN:
         print(f"[initramfs] compression: {'ok' if already_set else f'MISSING  (current: {current})'}")
         return
@@ -203,10 +207,11 @@ def configure_dns(c: Context, primary: str = "1.1.1.1", secondary: str = "1.0.0.
     content = f"[Resolve]\nDNS={primary} {secondary}\nFallbackDNS={fallback}\nDNSSEC=no"
     text = util.sudo_read(c, _RESOLVED_CONF)
     new_text, status = util.ensure_block_text(text, "dns", content)
+    current = status == util.BlockStatus.OK and util.readable_by_all(_RESOLVED_CONF)
     if util.DRY_RUN:
-        print(f"[dns] {primary}/{secondary} (fallback {fallback}): {util.ok_label(status == util.BlockStatus.OK)}")
+        print(f"[dns] {primary}/{secondary} (fallback {fallback}): {util.ok_label(current)}")
         return
-    if status != util.BlockStatus.OK:
+    if not current:
         c.run(f"{util.SUDO} mkdir -p {_RESOLVED_CONF_DIR}")
         util.sudo_write(c, _RESOLVED_CONF, new_text)
     # Always restart, even when the drop-in file already matched: the file matching on disk

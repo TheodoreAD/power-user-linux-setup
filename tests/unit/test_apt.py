@@ -16,6 +16,7 @@ caused the abort in the first place. See tests/README.md.
 import io
 import sys
 from collections.abc import Sequence
+from pathlib import Path
 from typing import override
 
 import pytest
@@ -52,6 +53,45 @@ class _FakeContext(Context):
 @pytest.fixture(autouse=True)
 def _live_mode(monkeypatch):
     monkeypatch.setattr(util, "DRY_RUN", False)
+
+
+# ---------------------------------------------------------------------------
+# configure — "already configured" means readable too, not only the right content
+# ---------------------------------------------------------------------------
+
+
+@pytest.fixture
+def apt_conf(monkeypatch, tmp_path):
+    """99-pulse at a temp path, read directly, with every write recorded rather than made."""
+    path = tmp_path / "99-pulse"
+    path.write_text(apt._APT_CONF_CONTENT)
+    monkeypatch.setattr(apt, "_APT_CONF", path)
+    monkeypatch.setattr(util, "ensure_sudo", lambda: None)
+    monkeypatch.setattr(util, "require_apt", lambda: None)
+    monkeypatch.setattr(util, "sudo_read", lambda _c, p: p.read_text())
+    written: list[Path] = []
+    monkeypatch.setattr(util, "sudo_write", lambda _c, p, _text: written.append(p))
+    return path, written
+
+
+def test_configure_rewrites_a_root_only_file_whose_content_already_matches(apt_conf):
+    """The machine state that motivated the check: 99-pulse written 0600 by the old `cp`-based
+    sudo_write, content correct, and skipped as "already configured" on every run since."""
+    path, written = apt_conf
+    path.chmod(0o600)
+
+    apt.configure(_FakeContext())
+
+    assert written == [path]
+
+
+def test_configure_leaves_a_readable_matching_file_alone(apt_conf):
+    path, written = apt_conf
+    path.chmod(0o644)
+
+    apt.configure(_FakeContext())
+
+    assert written == []
 
 
 # ---------------------------------------------------------------------------
