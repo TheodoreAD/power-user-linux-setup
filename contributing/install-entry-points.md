@@ -146,7 +146,8 @@ could only be fixed together: repair the installer, then let `publish-stable` mo
 `workflow_dispatch`-only trigger rather than a cost of the hand-move.** The container build had been
 failing since 2026-09-05 and nobody dispatched it in between, so the hand-move was made against a
 `stable` whose health was simply unknown. The hand-move published it; the missing trigger is what
-made it invisible. Both halves are worth keeping separate, because only one of them is fixed.]
+made it invisible. Both halves are worth keeping separate, because they were fixed separately: the
+hand-move by this rule, and the trigger on 2026-09-29 by the weekly schedule below.]
 
 [PITFALL: **the local tag can disagree with the remote indefinitely.** A plain `git fetch` never
 updates a tag that moved, so after `publish-stable` corrected `stable`, this machine's local ref
@@ -154,3 +155,48 @@ still pointed at the hand-moved commit — confirmed 2026-09-12, four days later
 `git show stable:<file>` locally would have read the broken tree while looking authoritative. Ask
 the host (`git ls-remote --tags origin stable`) or force it (`git fetch origin --tags --force`)
 before trusting a local tag about what is published.]
+
+## How `stable` moves: weekly, forward-only, with a version tag each time
+
+Settled 2026-09-29. At that point `stable` was 231 commits and three weeks behind `master`. The
+one-line URL served an `install.sh` that still cloned into `~/projects` and had no `--dev` and no
+`self.update`, while the README described all three. `devcontainer.yml` had last been dispatched on
+2026-09-08. The gates were never what failed. Two of the three already ran green on every push
+through `ci.yml`, and only the container smoke test was waiting for someone to dispatch it.
+
+What was compared: the other repos in the family, and comparable tools, which fall into five
+patterns (default-branch HEAD, a moving named ref, immutable tags resolved at install time, channel
+manifests, consumer pins).
+
+[DECISION: **a weekly schedule rather than the `push` trigger.** Either one stops `stable` going
+stale. The schedule also leaves the heavy container build off every push, and gives a regression a
+few days to be noticed before it reaches a fresh machine. oh-my-zsh's update cooldown and omarchy's
+month-behind mirror use the same kind of lag. Dispatch still promotes sooner when that is wanted. A
+`pending` job asks the host where `stable` is, so a week with nothing new builds nothing and cuts no
+duplicate version tag.]
+
+[DECISION: **`stable` stays a tag, and does not become a branch.** omakub, the closest analogue,
+uses a `stable` branch. Git's own `git tag` documentation calls moving a published tag "the insane
+thing". The usual argument for a branch is that `git pull` breaks on a moved tag, and it does not
+apply here. A `--branch stable --depth 1` clone's only refspec is `+refs/tags/stable:…`, and that
+refspec is forced (see the pull pitfall above, re-probed 2026-09-29). Switching would leave every
+existing clone with a refspec naming a tag that no longer moves. Or, if both were kept, there would
+be a branch and a tag both called `stable`, which makes the raw URL ambiguous.]
+
+[DECISION: **an immutable calver tag per promotion, `vYYYY.MM.DD[.N]`.** Moving tags leave no
+history on the host, so before this nothing recorded what a machine installed on a given day. The
+`install.sh` comment's promise of "the same bytes tomorrow" was also false for a moving ref. Calver
+rather than semver, because this repo is an application installed onto a machine, with no API for a
+major version to break. repo-tasks' semver is right for repo-tasks because it is a library resolved
+into other environments. No GitHub Release is cut; the tag list is the record. The version tag and
+the `stable` move go out in one `--atomic` push, and the version tag is pushed without `+`, so an
+existing name is refused rather than overwritten.]
+
+[DECISION: **forward-only.** `publish-stable` refuses when the current `stable` is not an ancestor
+of the commit being promoted. `self.update` pulls `--ff-only`, so a sideways move would strand every
+installed checkout behind a pull that fails.]
+
+Rejected without much weighing: resolving the newest version tag on the client, which is Homebrew's
+shape and would mean more installer and `self.update` code for no gain over a server-side pointer;
+and a channel manifest in the style of rustup or k3s, which is built for several channels when there
+is one.

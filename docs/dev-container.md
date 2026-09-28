@@ -71,16 +71,23 @@ tests). The latter two are `workflow_call` files that `.github/workflows/ci.yml`
 `needs:` cannot reach across workflows. `docs` is deliberately excluded: a documentation-site build
 failure does not change what a consumer installs.
 
-The tag exists as of 2026-09-01, on that workflow's first-ever run. It had never executed before
-then, so `stable` did not resolve at all and the snippet above returned 404 to anyone who copied it.
-The workflow stays `workflow_dispatch`-only for now (see the file for the re-enable note), which
-means **`stable` moves only when someone runs it by hand** — it is a reviewed marker rather than a
-moving head, and it can lag `master` by however long nobody has dispatched it.
+**`stable` moves weekly, on Monday morning (UTC), when `master` has moved and all three gates
+pass.** The workflow runs on a schedule and can also be dispatched by hand to promote sooner. A week
+with nothing new costs one `git ls-remote` and builds nothing. `stable` only ever moves forward:
+`publish-stable` refuses a commit that the current `stable` is not an ancestor of, because an
+installed checkout updates with `git pull --ff-only` and could not follow it.
 
-That lag has a measured cost, so it is worth stating rather than implying: between 2026-09-05 and
-2026-09-08 the container build was broken on `master` and nothing reported it, because the only job
-that would have run was never dispatched. The gates above decide what `stable` may move _onto_; they
-say nothing about how long `master` can stay broken first.
+**Every promotion is also a permanent version tag**, `vYYYY.MM.DD`, with a `.1`, `.2`, … suffix for
+a second promotion on the same day. `stable` says what a fresh install gets today, and the version
+tag says what it got on any given day. To reproduce one exactly, pass it as `--ref`:
+`bash /tmp/pulse-bootstrap.sh --ref v2026.10.05`. `git ls-remote --tags origin 'v*'` lists them.
+Both installers print the full commit they are about to run, so the build log answers "which one did
+I get" as well.
+
+Until 2026-09-29 the workflow ran only when dispatched by hand, and that had a cost worth recording.
+Between 2026-09-05 and 2026-09-08 the container build was broken on `master` and nothing reported
+it. By 2026-09-29 `stable` was 231 commits behind `master`, while this site, which is built from
+`master`, described installer behaviour that the published URL did not have.
 
 **There is no image and no registry.** Delivery is entirely git: one script fetched from
 `raw.githubusercontent.com` at a ref, and a shallow clone of this repo at the same ref. The

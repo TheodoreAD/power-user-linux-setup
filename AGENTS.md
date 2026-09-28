@@ -253,10 +253,10 @@ discovers credential-shaped directories/sockets on the host and prints a devcont
 `@devcontainers/cli up`/`exec`, including a live `ssh-add -l` against a forwarded agent socket).
 
 [`docs/dev-container.md`](docs/dev-container.md) is the published page — read that before extending
-this rather than re-deriving the design. **`.github/workflows/devcontainer.yml` is intentionally
-`workflow_dispatch`-only right now** (the `push` trigger is written in but commented out, with a
-re-enable note) — this is deliberate, not an oversight, while the pipeline is still under active
-iteration; don't "fix" it by uncommenting the trigger without checking with the user first.
+this rather than re-deriving the design. **`.github/workflows/devcontainer.yml` runs weekly and on
+dispatch, deliberately not on push** (the `push` trigger is written in but commented out). The
+container build is the heaviest job, and `ci.yml` already runs the other two gates on every push.
+Don't "fix" it by uncommenting the trigger without checking with the user first.
 
 ## The one-line installer, and what gates the `stable` tag
 
@@ -273,8 +273,10 @@ README without opening either file.
 comment:
 
 - **`stable` is shared.** `install.sh` and `bootstrap-devcontainer.sh` pin the same tag, so whatever
-  moves it moves both consumers at once. Only `devcontainer.yml`'s `publish-stable` should, and it
-  is gated on three jobs.
+  moves it moves both consumers at once. Only `devcontainer.yml`'s `publish-stable` should. It is
+  gated on three jobs, moves `stable` forward only, and cuts an immutable `vYYYY.MM.DD[.N]` tag on
+  every promotion. **Those version tags are never moved or deleted.** Each one records what a
+  machine installed on that day, and nothing else does.
 - **Never move that tag by hand** — done once, and it published a regression to both consumers. And
   a local tag is not evidence about what is published: a plain `git fetch` never updates a tag that
   moved, so ask the host with `git ls-remote --tags origin stable`.

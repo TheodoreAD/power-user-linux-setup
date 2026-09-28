@@ -33,7 +33,8 @@ set -euo pipefail
 #                           PULSE itself: that is where your own repos live, under the per-directory
 #                           git identity `inv git.configure` writes for them.
 #   --ref <git-ref>         git ref to shallow-clone (default: stable, the tag that tracks tested
-#                           commits). Use master for the newest work.
+#                           commits, moved weekly). A version tag such as v2026.10.05 installs
+#                           exactly that promotion; master gets the newest work.
 #   --repo-url <url|path>   clone from somewhere other than the canonical GitHub repo — a fork, a
 #                           corporate mirror, or a local path. The CI smoke test uses this to
 #                           install the commit under test rather than whatever is published.
@@ -64,11 +65,11 @@ DEV_CLONE_DIR="${HOME}/projects/power-user-linux-setup"
 CLONE_DIR_CHOSEN=false
 
 # `stable` rather than `master`, and it is a tag rather than a branch — the same ref
-# bootstrap-devcontainer.sh pins. Pinning is the point: it lets someone read this script today and
-# run the same bytes tomorrow, which is the only thing that makes a pasted one-liner inspectable at
-# all. The cost is that the tag has to be moved deliberately, and until it is, everything here
-# resolves to whatever commit it currently names — so a new file is not reachable through the raw
-# URL above until the tag moves past the commit that added it. `--ref master` gets the newest work.
+# bootstrap-devcontainer.sh pins. It moves only on a tested promotion, weekly at most, so what you
+# read before running this is what runs unless a promotion lands in between. The exact-bytes
+# guarantee is a version tag: every promotion also cuts an immutable `vYYYY.MM.DD`, and fetching
+# the script by that name in the URL above and passing it as --ref pins both halves. A new file is
+# not reachable through the raw URL until `stable` moves past the commit that added it.
 REF="stable"
 EXCLUDE_TAGS=""
 BOOTSTRAP_ONLY=false
