@@ -5,7 +5,7 @@ updated: 2026-09-18
 
 # `~/AGENTS.md` adherence: the sample corpus
 
-Twenty sessions measured with `session-bash-audit`'s `audit.py`, all taken with
+Twenty-eight sessions measured with `session-bash-audit`'s `audit.py`, all taken with
 `--until <harvest boundary>` so the harvest's own sweep is excluded from the headline figure. Six
 were compared against the `2026-08-24-auto-mode.json` opus-5 baseline (n=1676); **sample 7 was run
 without `--compare`**, and so were samples 8, 14 and 15 — they have rates but no baseline deltas.
@@ -71,6 +71,12 @@ from three rows in two files:
 - `2026-09-08-adherence-sample-the-best-row-the-corpus-has-and-it-announced.md` (sample 16), written
   in this repo and deliberately held apart from the corpus so that all three could be merged in one
   pass rather than three edits to the same table
+- `2026-09-04-adherence-sample-a-record-view-and-a-tail-ed-gate.md` (sample 25),
+  `2026-09-13-adherence-sample-ingesta-compaction-split.md` (sample 26),
+  `2026-09-26-adherence-sample-no-scan-across-13-public-commits.md` (sample 27) and
+  `2026-09-27-adherence-sample-auto-mode-announced-then-git-c-into-its-own-repo.md` (sample 28), all
+  merged 2026-09-28. The first had asked to become "sample 8" and sat unmerged for 24 days while
+  eighteen later rows landed around it
 
 Those names are what `plans.py archive --search` needs to read any of them back.
 
@@ -98,6 +104,13 @@ whole point of recording them — and the harness keeps a transcript for 30 days
 | 15 | `agent-skills`           | `af52116e-18ca-4557-9fbe-86cec225fe3e.jsonl` | `2026-09-07T12:07:35.439Z`  |
 | 16 | `power-user-linux-setup` | `9164dacd-2813-4087-a593-14dc24c44782.jsonl` | `2026-09-07T14:55Z`         |
 | 17 | `power-user-linux-setup` | `2f0fa965-60a4-4478-bcba-5097aff65801.jsonl` | `2026-09-07T21:22:50.431Z`  |
+| 25 | `ingesta`                | `c83364a4-8f1d-42f2-bb27-aba9b6feb970.jsonl` | `2026-09-04T11:20:43Z`      |
+| 26 | `ingesta`                | `21c18768-649d-4753-9dca-e23e5b9555d3.jsonl` | `2026-09-06T08:59:05Z`      |
+| 27 | `repo-tasks`             | `86d02b45-c393-4ecd-96a7-75d16974465d.jsonl` | `2026-09-26T10:55Z`         |
+| 28 | `invoke-stubs`           | `65f8437a-a90e-41c6-9b1f-9b43d713ed9b.jsonl` | 2026-09-27                  |
+
+Rows 18–24 record their transcripts in their own sections and are not repeated here. Rows 25–28
+expire from the harness between 2026-10-04 and 2026-10-27, row 25 first.
 
 Row 14's session started on 2026-09-06 and did its working day after a `/clear` on 2026-09-07, which
 is why its start and its boundary sit a day apart; row 16's start is recorded to the minute rather
@@ -166,12 +179,25 @@ The one verdict recorded as changed is sample 11's `chain`, which moves for the 
 | 22  | `power-user-linux-setup` |   185 | install location, absorptions, ~9h |         25% |           11% |               0% | —     |
 | 23  | `freshful-polite-mcp`    |   139 | shopping flow, then three fixes    |          2% |            1% |               0% | —     |
 | 24‡ | `power-user-linux-setup` |   220 | uv pin swap, floor raise, a rule   |         49% |           28% |               0% | —     |
+| 25  | `ingesta`                |    78 | code + plans + commits, ~3h        |         35% |           18% |               0% | —     |
+| 26  | `ingesta`                |   721 | background job, compacted once, 7d |         33% |           24% |               0% | —     |
+| 27  | `repo-tasks`             |   133 | a release, 13 public commits, ~3h  |      **0%** |        **0%** |               0% | —     |
+| 28  | `invoke-stubs`           |   119 | stubs + type-checker probes, auto  |         13% |           10% |           **7%** | 12/17 |
 
 Rows 18–20 were added 2026-09-13; 18 and 19 had sections below but no row here, which is the drift
 this table is for. Row 21 was added 2026-09-18. **Row 22 was that same drift again** — its section
 landed 2026-09-18 with no row here, and the row was written on 2026-09-20 by a session that had come
 to add a different one. Row 23 is the corpus's first from a `*-polite-mcp` repo, and its `chain` and
 `head/tail` are the lowest pair any row has.
+
+Rows 25–28 were added 2026-09-28, and **all four were re-measured that day at their own recorded
+boundary** with the `agent-skills` checkout's `audit.py` at **`1d565d8`**. Each reproduced its filed
+figures to within one call. Row 25 is dated before the heredoc fix but is not a floor: it has a
+recorded boundary and was re-measured, and it wrote no heredocs, so the fix could not have moved it.
+**Row 26 is the largest in the corpus by a margin**, 721 calls against row 19's 441. Its
+whole-session figures average across a compaction and describe neither half (see its section). **Row
+27 is the corpus's first all-zero headline**, and it is also the row that skipped the
+confidentiality scan on every commit (see its section).
 
 `‡` = **filed mid-session, so the figures are a prefix** rather than a finished session's. Row 24 is
 the only one, and it carries the mark because sample 23's own pitfall is that a prefix read as a
@@ -792,6 +818,12 @@ hours on installer debugging would chain more whatever it announced. Separating 
 that announces _and_ does shell-shaped work, which nothing has yet supplied — and sample 14, the
 shell-shaped row from the same week, did not announce.]
 
+**Sample 28 is the closest the corpus has come to that row, and it splits the question instead of
+answering it.** It announced and spent its session on type-checker probes and tests, which is
+shell-shaped work. Its unopposed rules came in low (`chain` 21%, `head/tail` 13%). But the announced
+viewing half leaked ten times while the announced search half held at zero. So an announcement,
+where it helps, helps some of what it names and not the rest.
+
 **The one miss is the interesting one.** `rg-replace-bundle = 1`: a single `rg -rn --stats -l` in
 the first hour, where `-r` ate the `n` and the flags never applied. It was caught by the documented
 detection signature within one call — the output shape was wrong for what had been asked — and the
@@ -1360,6 +1392,159 @@ anything. That is the habit measured with no data lost, and it is the cheapest r
 move — the rule asks for the command to be run plain, and nothing about this session needed the
 filter.
 
+### Sample 25 — `ingesta`, 78 calls, three green claims followed from a masked exit to the sentence
+
+`audit.py --session c83364a4 --until 2026-09-04T15:07:41+03:00`, no `--compare`, instrument
+`1d565d8` (re-measured 2026-09-28; the filed figures were taken on the day and match exactly).
+Transcript `c83364a4-8f1d-42f2-bb27-aba9b6feb970.jsonl`, about three hours on code, plans and
+commits, opened with _"Start from plans/2026-09-04-the-shape-of-the-interface.md — its step 1, the
+usability run, is the only thing left blocking"_. **Measured the day before `PIPE_FAIL` landed**, so
+its masked exits were genuinely masked.
+
+| tag                 | rate | note                                                  |
+| ------------------- | ---: | ----------------------------------------------------- |
+| `chain`             |  40% | 31 calls                                              |
+| `head/tail`         |  35% | 27 calls, 0 actually cut                              |
+| `exit-masked`       |  18% | 14 calls: **9 wrapped a gate**, 5 a listing           |
+| `search\|head`      |  15% | 12 calls                                              |
+| `rg-replace-bundle` |    1 | `rg -ril … \| head`, see below                        |
+| everything else     |   0% | `sed-n`, `cat-view`, `heredoc`, both own-repo rows OK |
+
+**Every masked gate call was one habit on one command.** Seven of the nine were
+`inv quality.precommit 2>&1 | tail -N`, run once per commit-worthy checkpoint. The masking was not
+spread across the session's work.
+
+**The three green claims all held, and this is the one row where that was luck rather than the
+shell.** `harvest.py claims` counted three messages telling the user the gate was green, after 927,
+947 and 958 tests, every one from a `| tail`-ed run with no `pipefail` behind it. The unpiped re-run
+at harvest exited 0 with 958 passed and 1 skipped, so nothing said to the user was false. Set
+against sample 2, where 28% masking sat beside a gate that was genuinely red, the pair is the whole
+argument: the hazard is real and its realised cost is usually zero. That is exactly why the rule is
+easy to dismiss.
+
+The filed plan asked whether the corpus wants a "claims held / claims false" column. The
+`what was masked` decision under "Open questions" already answers it: claims are counted in the
+harvest report, and the corpus quotes the count rather than growing a column. Since 2026-09-05 a row
+on this machine cannot produce a false green through a pipe at all, so a column added now would
+record a hazard the shell has removed.
+
+[PITFALL: **the `rg -r` slip the filed plan named was outside its own window, and the one inside it
+was a form the plan did not recognise.** The plan quoted `rg -rn "half-open" … | head -20`, with
+mangled output that gave it away. The transcript puts that call at 12:10:35Z, three minutes after
+the 12:07:41Z boundary, so it belongs to the harvest's sweep. The call `audit.py` counts inside the
+window is `rg -ril "medication administration record" … | head`, at 11:38:06Z. The `-l` suppresses
+output, so the rewrite never appears on screen. That is the shape
+`plans/2026-09-02-rg-replace-flag-used-twice-in-one-session.md` first recorded as rows 12 and 14 on
+2026-09-12, eight days after this. It went unnoticed then too, which is the finding that plan's
+table makes.]
+
+### Sample 26 — `ingesta`, 721 calls, and a compaction splits it into two different sessions
+
+`audit.py --session <transcript path> --until 2026-09-13T18:42:02+03:00`, no `--compare`, instrument
+`1d565d8`, `setopt` answering `pipefail`. Transcript `21c18768-649d-4753-9dca-e23e5b9555d3.jsonl`, a
+background job from 2026-09-06 to 2026-09-13 in one repo: code, a browser tier, plans and a consumer
+sweep. The row is taken at the job's **second** harvest boundary, because the first (`18:07:33`, 683
+calls) was a prefix.
+
+[PITFALL: **pass the transcript's path, not its id.** At `1d565d8`, `audit.py --session 21c18768-…`
+treats the id as a background job's and redirects to the job record's `linkScanPath`. That now names
+`296b7b18-….jsonl`, a 2026-09-26 resumption with one Bash call, so the run prints
+`no Bash calls found`. The job's own transcript is still there under its own id. With a later
+boundary the redirect would have printed a well-formed, wrong row. Filed for `agent-skills` as
+`2026-09-28-audit-job-redirect-overrides-an-exact-transcript-match.md`.]
+
+The instrument now splits a session at each compaction by itself (`== compacted 1x ==`), and the
+split is the finding:
+
+| window                          | calls | chain | `head/tail` | `exit-masked` | heredoc | `sed-n` |
+| ------------------------------- | ----: | ----: | ----------: | ------------: | ------: | ------: |
+| before the compaction           |   501 |   67% |         48% |           35% |     32% |     15% |
+| after it, to the harvest        |   220 |    1% |          0% |            0% |      0% |      4% |
+| whole session, to that boundary |   721 |   47% |         33% |           24% |     22% |     12% |
+
+The compaction's continuation turn is at `2026-09-12T19:17:19Z`. **Every `head/tail`, `exit-masked`
+and heredoc call is before it**, and 336 of 338 chains are too. `git-C-own-repo` and `cd-own-repo`
+are 0 in both halves. The whole-session `33%` describes neither half.
+
+- `exit-masked` 175 = **105 wrapped a gate**, 70 a listing, all before the compaction. `pipefail`
+  was in force, so the nine green-gate messages stood on real exit codes and no re-run was owed.
+- The 159 heredocs are almost all `python - <<'PY'` scripts doing string replacement on repo files.
+  That is the Edit-tool rule broken 159 times, all before the compaction. After it, every edit went
+  through Edit or Write.
+- The continuation re-injected both instruction files in full: a system reminder carrying
+  `~/.claude/CLAUDE.md` and the repo's `CLAUDE.md`.
+
+Before the compaction, this is a worse row than any other in the corpus: `chain` at 67% against a
+previous record of 66%, and heredoc at 32% where no other row passes 19%. After it, it is as clean
+as sample 21. **A compaction does two things at once**: it re-reads the rules, and it shortens the
+conversation. This row cannot say which one did the work.
+
+### Sample 27 — `repo-tasks`, 133 calls, every counted row clean, and no scan across 13 public commits
+
+`audit.py --session 86d02b45 --until 2026-09-26T14:07:42Z`, no `--compare`, instrument `1d565d8`.
+Transcript `86d02b45-c393-4ecd-96a7-75d16974465d.jsonl`, 10:55Z to 14:07Z. Filed from that session's
+own harvest.
+
+Every headline row is **0%**: `chain`, `head/tail`, `exit-masked`, `sed-n`, `cat-view`, `heredoc`,
+`cd-own-repo`, `git-C-own-repo`, `search|head`, and `cut-message` 0 of 10. The single non-zero row
+is `git-C-mutating` at 1: a bare `git -C ~/plans push`.
+
+**It is the corpus's first all-zero headline, and it is sample 20's pitfall again.** The session
+made **13 commits to `repo-tasks`, which is public**, from `7e3d4b0` to `8dca00b` including a
+release bump, plus **7 pushes** to its `main` and a tag push for `v0.4.0`. It ran **no
+`plans.py scan` before any of them**, in either mode, and no scan at all until its harvest. The one
+store push went through bare git, not `plans.py push`, which would have scanned the outgoing range.
+That push published 8 commits, 6 of them other sessions'. `plan-conveyor` was not loaded yet; it was
+invoked in the same tool batch as the push.
+
+The harvest's retroactive scans came back clean: `--mode history` over `repo-tasks` and over the
+shareable store both found 0 hits against 61 terms. As sample 20 says, a clean history scan
+afterwards looks the same whether or not the gate ran.
+
+**Why it was skipped is more specific than sample 20 could say.** The session's commits all followed
+`~/.agents/AGENTS.md`'s "Writing the commit command" recipe exactly, one shape and one `-m`, and
+that recipe contains no scan. The scan rule sits in a different section, "Committing to a repo that
+is or might become public". So a session drilled on the recipe skips the gate by following it. The
+skipped rule is the one whose command is not part of the shape the session had practised.
+
+### Sample 28 — `invoke-stubs`, 119 calls, announced the auto-mode carve-out and broke the half it named
+
+`audit.py --session 65f8437a --until 2026-09-27T19:47:51Z`, instrument `1d565d8`; the filed run
+scored **12/17** against `2026-09-12.json`. Transcript `65f8437a-a90e-41c6-9b1f-9b43d713ed9b.jsonl`,
+auto mode. **The corpus's first row from `invoke-stubs`.**
+
+| tag              |   rate | note                                            |
+| ---------------- | -----: | ----------------------------------------------- |
+| `chain`          |    21% | 25 calls (the filed run read 26)                |
+| `head/tail`      |    13% | 16 calls, 0 actually cut                        |
+| `exit-masked`    |    10% | 12 calls: 8 wrapped a gate, 4 a listing         |
+| `sed-n`          | **6%** | 7 calls — MISS                                  |
+| `cat-view`       | **3%** | 3 calls — MISS                                  |
+| `git-C-own-repo` | **7%** | 8 calls — MISS                                  |
+| `git-C-mutating` | **3%** | 4 calls — MISS                                  |
+| `cd-own-repo`    |     1% | 1 call, the rule's own recovery case            |
+| `heredoc`        |     1% | 1 call                                          |
+| everything else  |     0% | `grep-r-not-rg`, `find-not-fd`, `rg-replace` OK |
+
+**It stated the auto-mode rule correctly, then broke it on the tool it had just named.** Its second
+message, verbatim: _"Note: auto mode asks for Bash over the file tools; per `~/AGENTS.md` I'll
+search with `rg` but keep Read/Edit/Write."_ It then read files through `sed -n` seven times and
+through `cat`/`head` three more, while also using Read/Edit/Write throughout. All ten were reads a
+Read call would have served: invoke's own source in the uv cache five times, its own plan twice, its
+own README once, its own conftest once. **The search half held**: no `grep -r`, no `find`, no `-r`
+on `rg`. So the two halves of the announced sentence scored in opposite directions in one session.
+
+**`git -C` at its own repo, eight times, four of them mutating**, aimed at `add`, `commit`, `status`
+and `log`. It typed `cd` into its own repo exactly once, to recover after a `cd` to the scratchpad
+had stuck, which is the recovery `~/.agents/AGENTS.md` permits. Compliance with the `cd` half and
+breach of the `git -C` half is the combination that rule's wording predicts. This is the fourth row
+with a non-zero `git-C-own-repo`, after samples 1 (23%), 10 (1%) and 14 (19%). The filed plan
+counted two earlier ones.
+
+`pipefail` was in force, and independently every one of the four green claims rested on an unpiped
+`inv quality.precommit` or `inv test.integration`. The eight masked gate calls were type-checker
+probes whose success the session read from the tool's own output text. No re-run was owed.
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
@@ -1390,6 +1575,14 @@ the named paths whatever else sits in the index, so the `git add` the chain exis
 needed at all. Whether that is what the rule should recommend is this repo's call rather than a
 sample's, and it is a recipe rather than a prohibition, which criterion 4 says is the right form for
 a shaping failure.]
+
+[NEEDS CLARIFICATION: **sample 27 shows that option is necessary and not sufficient.** That session
+already committed by pathspec with one `-m`, following "Writing the commit command" to the letter,
+and so it chained nothing. It also ran no scan before 13 public commits, because the recipe it
+followed has no scan step and the scan rule lives in another section. Whether the recipe itself
+should carry the scan, for example as a line saying "in a repo that is or may become public, run
+`plans.py scan --mode staged` as its own call first", is the user's call, like the other held-open
+clauses.]
 
 [NEEDS CLARIFICATION: **does the corpus want a `gate-skipped` row?** Sample 20's coupling is
 unmeasurable with what exists. `audit.py` has a `GATE_RE`, so the machinery is there, but a tag for
@@ -1486,6 +1679,15 @@ one for every session means picking a split point, and there is no principled on
 phases are a judgement, not a field. Possibly the honest version is that a sample gets a phase split
 only when something else already produced one.]
 
+[DEFERRED: **whether Bash-rule adherence steps at every compaction, and which half of a compaction
+does it.** Sample 26 fell from 67% `chain` and 48% `head/tail` to 1% and 0% at its one compaction,
+and a compaction both re-injects the instruction files and shortens the conversation. If a second
+long session steps the same way, adherence decays with context length and re-reading the rules
+restores it. That would be a different lever from rewording them. `audit.py` now splits at
+compactions by itself, so the first pass is re-running it over every compacted transcript still
+held. Separating the two causes needs a session with re-injection and no compaction, or the
+reverse.]
+
 [DEFERRED: **whether the tool-substitution rules correlate with implementation work generally**, or
 whether sample 23 is one session. n=1 for the composition claim. The corpus has twenty-two prior
 rows and the transcripts are all still there, so it is answerable by re-running the audit per row
@@ -1539,6 +1741,13 @@ past where its current wording can go — sample 15 broke a rule whose text name
 failure, the mechanism _and_ the replacement, which is every lever a sentence has. The held-open
 clauses are the truncation one (the harness keeps the **head**) and now the staging one (the scan is
 its own call); both are the user's to admit, and neither is argued for by a rate here.
+
+**Revised 2026-09-28, after samples 25–28. Still nothing owed to `~/AGENTS.md` from a rate, and a
+third candidate clause held open.** Sample 27 adds the scan step to the commit recipe (see the open
+question above). It is the first held-open clause argued for by an omission rather than a rate, and
+the omission is invisible to `audit.py`, as sample 20 said. Sample 26 opens the first lever in this
+corpus that is not wording at all: adherence may be a function of how far back the rules are in the
+context. That is deferred above as a measurement pass. It is not a recommendation yet.
 
 `2026-09-02-rg-replace-flag-used-twice-in-one-session.md` is a separate finding of the same "simply
 not followed" kind and is deliberately not merged here — it is one flag with its own proposed
