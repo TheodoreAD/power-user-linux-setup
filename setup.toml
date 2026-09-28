@@ -1342,6 +1342,29 @@ claude_permissions_allow = [
   "Read(~/.config/power-user-linux-setup/**)",
 ]
 
+[packages.claude-daemon-notice]
+description = """
+At each graphical login, a desktop notification when a Claude Code daemon from the previous login is
+still running, with a Stop button. That daemon survives logout, and every background job it starts
+afterwards, including jobs from windows opened in the new login, inherits the old login's
+environment.
+"""
+method = "wrapper-script"
+tags = ["ai", "desktop", "gui"]
+# Deployed as a copy of the stdlib-only module, like netdoctor it imports nothing from tasks/. The
+# module docstring carries the design: report and never stop on its own, "older" judged by timestamp
+# against the caller's own logind session, and the Stop button offered only when this Claude Code's
+# `claude daemon --help` still lists `stop --any`. The autostart Exec names the script bare, so it
+# relies on the session PATH carrying ~/.local/bin, which [packages.zsh-path] puts there and
+# gnome-session imports into the systemd user manager. notify-send is libnotify-bin, part of the
+# Ubuntu desktop image; without it the check prints to stdout and nobody sees it. Background:
+# plans/2026-09-28-claude-daemon-outlives-relogin-with-a-dead-ssh-socket.md.
+dest = "~/.local/bin/claude-daemon-notice"
+content_file = "tasks/claude_daemon.py"
+config_files = [
+  { src = "config/claude-daemon-notice.desktop", dst = "~/.config/autostart/claude-daemon-notice.desktop" },
+]
+
 [packages.claude-statusline]
 description = """
 Custom Claude Code statusline — dir/git-status (p10k-style), python env, model tier,

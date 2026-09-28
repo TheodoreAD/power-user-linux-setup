@@ -29,6 +29,7 @@ _FLOOR = (3, 12)
 
 _FOREIGN_SCRIPTS = (
     "tasks/netdoctor.py",
+    "tasks/claude_daemon.py",
     "tests/containers/fakecorp.py",
     "tests/containers/drive.py",
 )
