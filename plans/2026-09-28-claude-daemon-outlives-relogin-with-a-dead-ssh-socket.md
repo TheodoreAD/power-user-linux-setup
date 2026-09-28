@@ -112,16 +112,18 @@ keeps on screen with its buttons until answered, by the user's choice. Before th
 original run had also verified that a dismissal returns no action, and that the daemon, whose one
 job had finished by then, was left running.]
 
-[UNVERIFIED: **the critical banner has not been seen yet.** The next login with a stale daemon, or
-`claude-daemon-notice --notify` run on purpose, is the check. The text below records the state
-before the first live run.]
+**Verified live 2026-09-28.** Report mode ran against the real stale daemon (pid 3454123, started
+2026-09-26 11:49), from the checkout and from the deployed copy on PATH, and `desktop-file-validate`
+accepts the autostart entry. The critical-urgency `--notify` run was confirmed by the user: it
+stayed at the top of the screen with both buttons until answered. A "Leave it" or a dismissal left
+the daemon running.
 
-Before the first live run: **the notification itself had not been seen.** Report mode ran live
-against the real stale daemon (pid 3454123, started 2026-09-26 11:49, one job), both from the
-checkout and from the deployed copy on PATH, and `desktop-file-validate` accepts the autostart
-entry. `--notify` was not run, because clicking Stop would end another session's live job
-(`76d98521`). The first real test is the next login, or `claude-daemon-notice --notify` run on
-purpose.]
+[UNVERIFIED: **the Stop button has never been clicked live.** It runs `claude daemon stop --any`,
+documented by 2.1.283's own help, after re-checking the daemon. Unit tests cover the button only as
+far as "Leave it stops nothing". It was not clicked here because the stale daemon was still holding
+two other sessions' `claude agents` windows. The check is the next login where a stale daemon has no
+jobs: click Stop, then confirm with `claude daemon status` that a fresh daemon starts on the next
+background job.]
 
 [DECISION: report, never kill. Rejected killing at login because it ends background jobs mid-command
 (a push, a commit, a venv rebuild cut off halfway), and "the daemon is from an older login" cannot
