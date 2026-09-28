@@ -434,3 +434,80 @@ def test_a_failed_download_is_not_reported_as_deferred_to_the_repair_pass(monkey
         apt.install_debs(_FakeContext(fail=["releases/download"]))
 
     assert "unconfigured" not in capsys.readouterr().out
+
+
+# ---------------------------------------------------------------------------
+# _resolve_version — "latest" from the web redirect, never the rate-limited API
+# ---------------------------------------------------------------------------
+
+
+class _CurlContext(Context):
+    """Answers every command with one canned curl outcome, and records what was asked."""
+
+    def __init__(self, stdout: str = "", stderr: str = "", exited: int = 0) -> None:
+        super().__init__()
+        self.commands: list[str] = []
+        self._result: tuple[str, str, int] = (stdout, stderr, exited)
+
+    @override
+    def run(self, command: str, **kwargs: object) -> Result:
+        self.commands.append(command)
+        stdout, stderr, exited = self._result
+        result = Result(command=command, stdout=stdout, stderr=stderr, exited=exited)
+        if exited and not kwargs.get("warn"):
+            raise UnexpectedExit(result)
+        return result
+
+
+_UNPINNED: util.PackageConfig = {"repo": "acme/tool", "asset": "tool_{version}.deb"}
+
+
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        pytest.param("https://github.com/acme/tool/releases/tag/v1.20.0", "1.20.0", id="v-prefixed"),
+        pytest.param("https://github.com/wez/wezterm/releases/tag/20240203-110809", "20240203-110809", id="bare"),
+        pytest.param("https://github.com/acme/tool/releases/tag/release%2F2.0", "release/2.0", id="url-encoded"),
+        pytest.param("https://github.com/acme/tool/releases/tag/v1.0\n", "1.0", id="trailing-newline"),
+        pytest.param("https://github.com/acme/tool/releases", None, id="no-releases"),
+        pytest.param("", None, id="empty"),
+    ],
+)
+def test_tag_from_release_url(url: str, expected: str | None):
+    """A repo with no releases redirects to `/releases` with a 200 — the one failure curl reports
+    as success, so the URL has to say it."""
+    assert apt._tag_from_release_url(url) == expected
+
+
+def test_resolve_version_reads_the_redirect_and_never_calls_the_api():
+    """The 2026-09-29 failure: api.github.com's unauthenticated quota, spent by other tenants of a
+    shared runner IP, skipped two packages in one run."""
+    c = _CurlContext(stdout="https://github.com/acme/tool/releases/tag/v3.1.4")
+
+    assert apt._resolve_version(c, "tool", _UNPINNED) == "3.1.4"
+    assert c.commands, "an unpinned package must be resolved"
+    assert not any("api.github.com" in cmd for cmd in c.commands)
+    assert "https://github.com/acme/tool/releases/latest" in c.commands[0]
+
+
+def test_resolve_version_uses_a_pinned_tag_without_any_request():
+    c = _CurlContext()
+
+    assert apt._resolve_version(c, "tool", {**_UNPINNED, "tag": "nightly"}) == "nightly"
+    assert c.commands == []
+
+
+def test_resolve_version_says_why_a_request_failed(capsys):
+    """The old warning hid curl's stderr, so a 403 read the same as a typo'd repo."""
+    err = "curl: (22) The requested URL returned error: 429"
+    c = _CurlContext(stderr=err, exited=22)
+
+    assert apt._resolve_version(c, "tool", _UNPINNED) is None
+    assert err in capsys.readouterr().out
+
+
+def test_resolve_version_reports_a_repo_with_no_releases(capsys):
+    c = _CurlContext(stdout="https://github.com/acme/tool/releases")
+
+    assert apt._resolve_version(c, "tool", _UNPINNED) is None
+    assert "no release tag" in capsys.readouterr().out

@@ -1,6 +1,7 @@
 from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from urllib.parse import unquote
 
 from invoke import Context, Exit, task
 
@@ -286,22 +287,43 @@ class DebOutcome(StrEnum):
     FAILED = "failed"
 
 
+def _tag_from_release_url(url: str) -> str | None:
+    """The version named by a `…/releases/tag/<tag>` URL, less one leading `v`, or None.
+
+    None covers the case that is not an error to curl: a repo with no releases redirects
+    `/releases/latest` to `/releases` with a 200, so the final URL is the only thing that says
+    nothing was resolved. The `v` is dropped because `tag_prefix` puts it back when downloading.
+    """
+    _, found, tag = url.strip().partition("/releases/tag/")
+    if not found or not tag:
+        return None
+    return unquote(tag).removeprefix("v")
+
+
 def _resolve_version(c: Context, name: str, cfg: util.PackageConfig) -> str | None:
-    """Return the version/tag string for a deb-github package, or None on failure."""
+    """Return the version/tag string for a deb-github package, or None on failure.
+
+    Reads the tag off where github.com's `/releases/latest` redirects, not from api.github.com.
+    The API is unauthenticated here, so it allows 60 requests an hour per IP, and a shared CI runner
+    or a corporate NAT can use that up before this runs. The first weekly `stable` promotion failed
+    on exactly that, 2026-09-29, for two packages at once. The web redirect is not subject to that
+    limit and needs no token; it is what GitHub's own runner-images build scripts use.
+    """
     if "tag" in cfg:
         return cfg["tag"]
     if "repo" not in cfg:
         raise util.missing_fields(name, "repo")
     result = c.run(
-        f"curl -fsSL https://api.github.com/repos/{cfg['repo']}/releases/latest"
-        " | grep '\"tag_name\"'"
-        ' | sed -E \'s/.*"v?([^"]+)".*/\\1/\'',
+        f"curl -fsSLI --retry 3 -o /dev/null -w '%{{url_effective}}' https://github.com/{cfg['repo']}/releases/latest",
         hide=True,
         warn=True,
     )
-    version = result.stdout.strip()
+    version = _tag_from_release_url(result.stdout) if result.ok else None
     if not version:
-        print(f"[{name}] WARNING: could not fetch latest release — skipping")
+        # Say why. The previous version hid curl's stderr and printed only "could not fetch", which
+        # left a rate limit, a typo'd repo and a repo with no releases looking identical.
+        reason = result.stderr.strip() if not result.ok else f"no release tag in {result.stdout.strip()!r}"
+        print(f"[{name}] WARNING: could not resolve the latest release ({reason or 'no output'}) — skipping")
         return None
     return version
 
