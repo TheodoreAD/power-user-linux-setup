@@ -35,18 +35,6 @@ ZSHENV = Path.home() / ".zshenv"
 _CERT_RE = re.compile(r"-----BEGIN CERTIFICATE-----.*?-----END CERTIFICATE-----", re.DOTALL)
 
 
-def _sudo_write(c: Context, path: Path, text: str) -> None:
-    with tempfile.NamedTemporaryFile("w", suffix=".crt", delete=False) as f:
-        f.write(text)
-        tmp = f.name
-    c.run(f"{util.SUDO} mkdir -p {path.parent} && {util.SUDO} install -m 0644 {tmp} {path} && rm {tmp}")
-
-
-def _sudo_read(c: Context, path: Path) -> str | None:
-    result = c.run(f"{util.SUDO} cat {path}", hide=True, warn=True)
-    return result.stdout if result.ok else None
-
-
 def _split_pem_certs(text: str) -> list[str]:
     return _CERT_RE.findall(text)
 
@@ -554,7 +542,8 @@ def _status(c: Context, paths: list[Path]) -> dict[str, str]:
     bundle_status = "MISSING"
     try:
         desired = _desired_bundle_text(c, paths)
-        bundle_status = util.ok_label(_sudo_read(c, _CA_CERT_FILE) == desired and util.readable_by_all(_CA_CERT_FILE))
+        current = util.sudo_read(c, _CA_CERT_FILE) == desired and util.readable_by_all(_CA_CERT_FILE)
+        bundle_status = util.ok_label(current)
     except RuntimeError as e:
         print(f"[certs] bundle format error: {e}")
     return {"bundle": bundle_status, "zshenv": _zshenv_status(), "java": _java_status(c)}
@@ -784,10 +773,10 @@ def _install_bundle(c: Context, paths: list[Path]) -> None:
     # skipped — see module docstring.
     desired = _desired_bundle_text(c, paths)
 
-    if _sudo_read(c, _CA_CERT_FILE) == desired and util.readable_by_all(_CA_CERT_FILE):
+    if util.sudo_read(c, _CA_CERT_FILE) == desired and util.readable_by_all(_CA_CERT_FILE):
         print("[certs] bundle already up to date")
     else:
-        _sudo_write(c, _CA_CERT_FILE, desired)
+        util.sudo_write(c, _CA_CERT_FILE, desired, mkdir=True)
         result = c.run(f"{util.SUDO} update-ca-certificates", hide=True)
         # Only match a skip naming our own file — update-ca-certificates also prints a benign,
         # unrelated "skipping ca-certificates.crt, it does not contain exactly one certificate"

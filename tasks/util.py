@@ -2,6 +2,7 @@ import hashlib
 import json
 import os
 import pwd
+import shlex
 import shutil
 import stat
 import subprocess
@@ -741,7 +742,7 @@ def remove_block(path: Path, name: str, *, style: MarkerStyle = MarkerStyle.COMM
     return removed
 
 
-def sudo_write(c: Context, path: Path, text: str) -> None:
+def sudo_write(c: Context, path: Path, text: str, *, mkdir: bool = False, warn: bool = False) -> bool:
     """Write `text` to a root-owned `path` via a tempfile + `sudo install` — direct
     `path.write_text()` can't reach root-owned locations, and `sudo tee` from Python would need the
     text piped through a subprocess shell instead of written directly.
@@ -760,13 +761,20 @@ def sudo_write(c: Context, path: Path, text: str) -> None:
     fork, the parent becomes bash, and `sudo -n` fails with "a password is required" — measured
     2026-09-28 from an agent session: `bash -c 'sudo -n true'` exits 0 and
     `bash -c 'sudo -n true && :'` exits 1 against the same fresh stamp. At a real terminal the
-    cache is keyed on the tty instead, which is why only an unattended run ever saw it.
+    cache is keyed on the tty instead, which is why only an unattended run ever saw it. The same
+    holds for every sudo in this repo, which is why `mkdir` exists: a caller needing the parent
+    directory gets it as a second lone command rather than chaining one in front.
+
+    Returns whether the write happened. With `warn`, a failure is returned rather than raised, for
+    a caller that reports one package and carries on, as apt's repo registration does.
     """
     with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
         f.write(text)
         tmp = Path(f.name)
     try:
-        c.run(f"{SUDO} install -m 0644 {tmp} {path}")
+        if mkdir and not c.run(f"{SUDO} mkdir -p {shlex.quote(str(path.parent))}", warn=warn).ok:
+            return False
+        return c.run(f"{SUDO} install -m 0644 {tmp} {shlex.quote(str(path))}", warn=warn).ok
     finally:
         tmp.unlink(missing_ok=True)
 
@@ -775,7 +783,7 @@ def sudo_read(c: Context, path: Path) -> str:
     """Read a root-owned `path` via `sudo cat`, or "" if it doesn't exist / can't be read."""
     if not path.exists():
         return ""
-    result = c.run(f"{SUDO} cat {path}", hide=True, warn=True)
+    result = c.run(f"{SUDO} cat {shlex.quote(str(path))}", hide=True, warn=True)
     return result.stdout if result.ok else ""
 
 

@@ -1,5 +1,4 @@
 import os
-import tempfile
 from pathlib import Path
 
 from invoke import Context, task
@@ -149,10 +148,9 @@ def _write_static_resolv_conf(c: Context, primary: str = "1.1.1.1", secondary: s
     Loses systemd-resolved's integration (split DNS, mDNS, etc.) but this is the last resort after
     that's already been tried and failed.
     """
-    with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
-        f.write(f"nameserver {primary}\nnameserver {secondary}\n")
-        tmp = f.name
-    c.run(f"{util.SUDO} rm -f {_RESOLV_CONF} && {util.SUDO} install -m 0644 {tmp} {_RESOLV_CONF} && rm {tmp}")
+    # Removed first so the write replaces the symlink to resolved's stub rather than going through it.
+    c.run(f"{util.SUDO} rm -f {_RESOLV_CONF}")
+    util.sudo_write(c, _RESOLV_CONF, f"nameserver {primary}\nnameserver {secondary}\n")
 
 
 def _wslg_available() -> bool:
@@ -372,10 +370,7 @@ def fix(c: Context, dns: bool = False):
         print(f"[wsl.fix] /etc/wsl.conf already has systemd=true and generateResolvConf={dns_target} — nothing to do")
         return
 
-    with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
-        f.write(new_text)
-        tmp = f.name
-    c.run(f"{util.SUDO} mkdir -p {_WSL_CONF.parent} && {util.SUDO} install -m 0644 {tmp} {_WSL_CONF} && rm {tmp}")
+    util.sudo_write(c, _WSL_CONF, new_text, mkdir=True)
 
     fixed = ", ".join(
         name for name, changed in (("systemd", systemd_changed), ("generateResolvConf", dns_changed)) if changed

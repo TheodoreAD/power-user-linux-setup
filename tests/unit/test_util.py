@@ -11,7 +11,7 @@ from pathlib import Path
 from typing import override
 
 import pytest
-from invoke import Context, MockContext, Result
+from invoke import Context, MockContext, Result, UnexpectedExit
 
 from tasks import util
 
@@ -149,25 +149,56 @@ def test_readable_by_all_is_false_for_a_missing_file(tmp_path):
     assert util.readable_by_all(tmp_path / "never-created") is False
 
 
+class _Recorder(Context):
+    """Records commands; any containing a `fail` fragment exits 1, raising unless `warn` was given,
+    as invoke's own runner does."""
+
+    def __init__(self, fail: str | None = None) -> None:
+        super().__init__()
+        self.commands: list[str] = []
+        self._fail: str | None = fail
+
+    @override
+    def run(self, command: str, **kwargs: object) -> Result:
+        self.commands.append(command)
+        result = Result(command=command, exited=1 if self._fail and self._fail in command else 0)
+        if result.exited and not kwargs.get("warn"):
+            raise UnexpectedExit(result)
+        return result
+
+
 def test_sudo_write_runs_one_sudo_alone_and_cleans_up_its_tempfile(monkeypatch):
     """Without a terminal sudo keys its cache on the parent PID, and only a lone command keeps
     that parent as this process — a shell operator makes bash fork and the `sudo -n` fails. See
     sudo_write's docstring for the measurement."""
     monkeypatch.setattr(util, "SUDO", "sudo -n")
-    commands: list[str] = []
+    c = _Recorder()
 
-    class _Recorder(Context):
-        @override
-        def run(self, command: str, **kwargs: object) -> Result:
-            commands.append(command)
-            return Result(command=command)
+    assert util.sudo_write(c, Path("/etc/example.conf"), "text\n") is True
 
-    util.sudo_write(_Recorder(), Path("/etc/example.conf"), "text\n")
-
-    [command] = commands
+    [command] = c.commands
     assert command.startswith("sudo -n install -m 0644 ")
     assert not any(op in command for op in ("&&", "||", ";", "|"))
     assert not Path(command.split()[-2]).exists(), "the tempfile is removed from Python, not by a chained rm"
+
+
+def test_sudo_write_makes_the_parent_directory_as_a_separate_lone_command(monkeypatch):
+    monkeypatch.setattr(util, "SUDO", "sudo -n")
+    c = _Recorder()
+
+    util.sudo_write(c, Path("/etc/docker/daemon.json"), "{}\n", mkdir=True)
+
+    assert c.commands[0] == "sudo -n mkdir -p /etc/docker"
+    assert c.commands[1].startswith("sudo -n install -m 0644 ")
+
+
+def test_sudo_write_with_warn_reports_a_failure_instead_of_raising(monkeypatch):
+    """apt's repo registration reports one repo and carries on, so it needs the answer, not a raise."""
+    monkeypatch.setattr(util, "SUDO", "sudo -n")
+
+    assert util.sudo_write(_Recorder(fail="install"), Path("/etc/x"), "t", warn=True) is False
+    with pytest.raises(UnexpectedExit):
+        util.sudo_write(_Recorder(fail="install"), Path("/etc/x"), "t")
 
 
 def test_write_claude_settings_refuses_past_the_budget_and_leaves_the_file_alone(monkeypatch, tmp_path):

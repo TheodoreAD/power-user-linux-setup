@@ -1,7 +1,6 @@
 import json
 import re
 import shlex
-import tempfile
 from pathlib import Path
 from typing import cast
 
@@ -81,11 +80,7 @@ def _configure_group(c: Context, user: str) -> None:
 
 
 def _write_daemon_json(c: Context, config: util.JsonObject) -> None:
-    updated = json.dumps(config, indent=2) + "\n"
-    with tempfile.NamedTemporaryFile("w", suffix=".json", delete=False) as f:
-        f.write(updated)
-        tmp = f.name
-    c.run(f"{util.SUDO} mkdir -p {_DAEMON_JSON.parent} && {util.SUDO} install -m 0644 {tmp} {_DAEMON_JSON} && rm {tmp}")
+    util.sudo_write(c, _DAEMON_JSON, json.dumps(config, indent=2) + "\n", mkdir=True)
 
 
 def _configure_daemon_json(c: Context) -> None:

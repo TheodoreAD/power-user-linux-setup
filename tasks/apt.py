@@ -1,5 +1,6 @@
 from enum import StrEnum
 from pathlib import Path
+from tempfile import TemporaryDirectory
 
 from invoke import Context, Exit, task
 
@@ -144,6 +145,21 @@ def install_base(c: Context):
 # ---------------------------------------------------------------------------
 
 
+def _install_key(c: Context, url: str, gpg: Path, *, warn: bool = False) -> bool:
+    """Fetch an armored signing key and write it dearmored to `gpg`. Returns whether it worked.
+
+    Fetched to a file as this user, then one lone sudo, never `curl … | sudo gpg`: a pipeline makes
+    bash fork, and a forked sudo misses the credential cache in any run without a terminal — see
+    util.sudo_write. `--batch --yes` because refresh_keys overwrites an existing key, and gpg's
+    "overwrite?" question has nobody to answer it.
+    """
+    with TemporaryDirectory(prefix="pulse-key-") as tmp:
+        armored = Path(tmp) / "armored"
+        if not c.run(f"curl -fsSL {url} -o {armored}", warn=warn).ok:
+            return False
+        return c.run(f"{util.SUDO} gpg --batch --yes --dearmor -o {gpg} {armored}", warn=warn).ok
+
+
 def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str) -> tuple[bool, bool]:
     """Write GPG key and sources entry. Returns (apt update needed, registration succeeded).
 
@@ -158,23 +174,14 @@ def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str
     needs_update = False
 
     if not gpg.exists():
-        result = c.run(
-            f"curl -fsSL {cfg['gpg_url']} | {util.SUDO} gpg --dearmor -o {gpg}",
-            warn=True,
-        )
-        if not result.ok:
+        if not _install_key(c, cfg["gpg_url"], gpg, warn=True):
             print(f"[{name}] FAILED: GPG key fetch — repo not registered")
             return needs_update, False
         needs_update = True
 
     entry = cfg["sources_entry"].format(gpg_path=gpg, codename=codename)
     if not sources.exists() or sources.read_text().strip() != entry.strip():
-        result = c.run(
-            f"printf '%s\\n' {entry!r} | {util.SUDO} tee {sources}",
-            warn=True,
-            hide="stdout",
-        )
-        if not result.ok:
+        if not util.sudo_write(c, sources, entry + "\n", warn=True):
             print(f"[{name}] FAILED: sources file write — repo not registered")
             return needs_update, False
         needs_update = True
@@ -625,7 +632,7 @@ def refresh_keys(c: Context):
         if "gpg_path" not in cfg or "gpg_url" not in cfg:
             raise util.missing_fields(name, "gpg_path", "gpg_url")
         gpg = Path(cfg["gpg_path"])
-        c.run(f"curl -fsSL {cfg['gpg_url']} | {util.SUDO} gpg --dearmor -o {gpg}")
+        _install_key(c, cfg["gpg_url"], gpg)
         print(f"[{name}] key refreshed → {gpg}")
 
 
