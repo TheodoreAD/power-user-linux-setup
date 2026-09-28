@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-29
 ---
 
@@ -106,56 +106,45 @@ thing". That doesn't apply to this repo's installers, since the single-branch re
 above). It does apply to anyone with a full clone: a plain `git fetch` refuses to update a moved
 tag. That is the same stale local `stable` that `install-entry-points.md` recorded on 2026-09-12.
 
-## Open questions
+## Decisions (answered by the user 2026-09-29)
 
-[NEEDS CLARIFICATION: **What should move `stable`, now that only one of three gates is manual?**
-There are three shapes, in order of how much the deliberate dispatch-only stance would change:
+The rationale for each is in `contributing/install-entry-points.md`, in "How `stable` moves".
 
-(a) Keep dispatch-only, and make staleness visible: CI reports "stable is N commits / D days
-behind", or `inv` does.
+[DECISION: **a weekly schedule moves `stable`.** Chosen over staying manual with a staleness
+warning, and over re-enabling the `push` trigger.]
 
-(b) A scheduled promotion, weekly for example, that runs the devcontainer smoke test and promotes on
-green. This is the lag pattern from oh-my-zsh and omarchy: it adds a cooldown for free and keeps the
-heavy container build off every push.
+[DECISION: **an immutable calver tag per promotion, `vYYYY.MM.DD[.N]`, with no GitHub Release.**]
 
-(c) Re-enable the commented `push` trigger. AGENTS.md says to check with the user first, and the
-reason it gives is that the pipeline is still being iterated on.]
+[DECISION: **both installers print the full SHA and commit date** before `bootstrap.sh`.]
 
-[NEEDS CLARIFICATION: **Add an immutable tag per promotion?** For example, calver `v2026.09.29`
-(with a `.N` suffix for a second promotion the same day), cut by `publish-stable` next to the move.
-It would give:
+[DECISION: **nothing is done about the docs lag beyond the cadence.** The docs site keeps building
+from `master`. A week at most is an acceptable gap; 231 commits was not.]
 
-- a history on the host of what was published and when, which the moving tag alone cannot give;
-- a real "same bytes tomorrow": the comment in `install.sh` at `REF=` claims that today, and a
-  moving ref cannot deliver it;
-- a pin for a reproducible install via `--ref v2026.09.29`.
+## What landed, 2026-09-29
 
-The cost is one more line in the job and a tag list that grows. Calver rather than semver, because
-nothing here has an API for a major version to break. Optionally, a GitHub Release per promotion
-carrying `git log --oneline <previous>..<new>` as its notes.]
+- `5a51743`, `devcontainer.yml`:
+  - a Monday 04:17 UTC schedule;
+  - a `pending` job that asks the host where `stable` is and skips the build on a scheduled run when
+    nothing is new;
+  - a `concurrency` group;
+  - `publish-stable` pinned to `ubuntu-24.04`, forward-only, cutting the calver tag and moving
+    `stable` in one `--atomic` push.
 
-[NEEDS CLARIFICATION: **Should the installers print the commit they cloned?** This is docker's
-pattern: `install.sh` would name the resolved SHA, and the calver tag if (2) lands, on the line that
-already says which source it is cloning. It costs nothing and turns "which version did I get" into
-something visible on screen.]
+  The publish script was extracted verbatim and probed against a local bare remote: a first
+  promotion, a same-day `.1`, and a refused backwards move.
+- `ae8854a`, the docs: `docs/dev-container.md`, AGENTS.md, `install.sh`'s `--ref` help and `REF`
+  comment, and the decision record in `contributing/install-entry-points.md`.
+- `844f6cb`, the SHA line in both installers. It is guarded in `bootstrap-devcontainer.sh`, because
+  the Dockerfile bake has no `.git` and no git.
 
-[NEEDS CLARIFICATION: **What should the docs do about the gap between `master` and `stable`?** With
-a regular cadence the gap shrinks to days and can simply be accepted. Otherwise there are two
-options: the docs site builds from `stable`, or the install section says it describes `master`.
-Building from `stable` would also hold back docs for things unrelated to installing, which is
-probably worse.]
+## Still open
 
-## Recommended direction
+[UNVERIFIED: **no promotion has run through the new job on GitHub yet.** The first one is a manual
+`gh workflow run devcontainer.yml` after the push. It should publish the 231 commits as the first
+version tag, and it is also the devcontainer smoke test's first run on `ubuntu-24.04`, which
+`2026-09-28-ci-stops-testing-24-04-when-ubuntu-latest-moves.md` lists as unverified. Checking it
+means confirming three things with `git ls-remote --tags origin`: `stable` names the dispatched
+commit, a `v2026.09.*` tag exists, and its annotated message names the previous `stable`.]
 
-Keep `stable` as a tag. Switching to a branch (the omakub shape) would buy a git-native update path
-this repo already has. It would also break every existing clone, whose one refspec names the tag, or
-leave a branch and a tag both called `stable`, which makes the raw URL ambiguous.
-
-What to fix is the cadence. Two of the three gates already pass on every push, so a **scheduled
-promotion** (b) that runs the container smoke test and moves `stable` on green fixes the staleness.
-It also adds a deliberate lag, and leaves the `push` trigger decision alone. Add the **calver tag
-per promotion** and the **SHA line in the installers** in the same change: together they are about
-five lines, and they make the comment in `install.sh` true. Then run one manual dispatch now to
-publish the 231 commits, but only after the devcontainer smoke test passes on `ubuntu-24.04`. That
-is the one gate `2026-09-28-ci-stops-testing-24-04-when-ubuntu-latest-moves.md` still lists as
-unverified, so the same dispatch closes it.
+[UNVERIFIED: **the scheduled trigger itself.** The first Monday run should be reviewed: whether it
+promoted, or whether `pending` correctly skipped the build.]
