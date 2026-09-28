@@ -2290,7 +2290,7 @@
   
 
 
-<h1 id="package-catalog">Package catalog<a class="headerlink" href="#package-catalog" title="Permanent link">&para;</a></h1>
+<h1 id="package-catalog">Package catalog</h1>
 <p>Everything a full <code>inv setup</code> installs on a workstation, in one table. This is the answer to &ldquo;what
 do I actually get&rdquo; — <a href="configuration.html">How it works</a> is the answer to &ldquo;how&rdquo;, and
 <a href="apt_packages.html">apt_packages.md</a> explains the install <em>methods</em> the <code>Method</code> column names.</p>
@@ -2392,6 +2392,12 @@ grant).</p>
 <td>Claude Code CLI — Anthropic&rsquo;s terminal coding agent, via the native self-updating installer</td>
 <td><code>ai</code></td>
 <td><code>script</code></td>
+</tr>
+<tr>
+<td><code>claude-daemon-notice</code></td>
+<td>At each graphical login, a desktop notification when a Claude Code daemon from the previous login is still running, with a Stop button.</td>
+<td><code>ai</code>, <code>desktop</code>, <code>gui</code></td>
+<td><code>wrapper-script</code></td>
 </tr>
 <tr>
 <td><code>claude-desktop</code></td>
@@ -2949,7 +2955,7 @@ grant).</p>
 </table>
 <!-- /PULSE::package-catalog -->
 
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="apt_packages.html">Install methods</a> — what each value in the <code>Method</code> column does</li>
 <li><a href="configuration.html">How it works</a> — how tags decide which of these a machine gets</li>
