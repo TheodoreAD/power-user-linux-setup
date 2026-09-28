@@ -103,11 +103,25 @@ Three things changed from the draft above while building it:
   `/proc/<pid>/stat` plus `btime`. Neither involves parsing a date, so the locale cannot affect the
   comparison.
 
-[UNVERIFIED: **the notification itself has not been seen.** Report mode ran live against the real
-stale daemon (pid 3454123, started 2026-09-26 11:49, one job), both from the checkout and from the
-deployed copy on PATH, and `desktop-file-validate` accepts the autostart entry. `--notify` was not
-run, because clicking Stop would end another session's live job (`76d98521`). The first real test is
-the next login, or `claude-daemon-notice --notify` run on purpose.]
+[PITFALL: **at normal urgency nobody sees it.** The first live `--notify` run, 2026-09-28, delivered
+the notice, and the user never saw a banner. They found it later in the notification panel, and
+clicking its body dismissed it without showing the buttons. That was the safe outcome, since nothing
+was stopped, but it was a notice nobody read. A normal banner hides after a few seconds, and fifteen
+seconds into a login is when nobody is watching. So the notice is now `-u critical`, which GNOME
+keeps on screen with its buttons until answered, by the user's choice. Before that change the
+original run had also verified that a dismissal returns no action, and that the daemon, whose one
+job had finished by then, was left running.]
+
+[UNVERIFIED: **the critical banner has not been seen yet.** The next login with a stale daemon, or
+`claude-daemon-notice --notify` run on purpose, is the check. The text below records the state
+before the first live run.]
+
+Before the first live run: **the notification itself had not been seen.** Report mode ran live
+against the real stale daemon (pid 3454123, started 2026-09-26 11:49, one job), both from the
+checkout and from the deployed copy on PATH, and `desktop-file-validate` accepts the autostart
+entry. `--notify` was not run, because clicking Stop would end another session's live job
+(`76d98521`). The first real test is the next login, or `claude-daemon-notice --notify` run on
+purpose.]
 
 [DECISION: report, never kill. Rejected killing at login because it ends background jobs mid-command
 (a push, a commit, a venv rebuild cut off halfway), and "the daemon is from an older login" cannot
