@@ -298,8 +298,8 @@ wheels = [
 
 [[package]]
 name = "invoke-stubs"
-version = "0.3.0"
-source = { git = "https://github.com/TheodoreAD/invoke-stubs#0c6a70b8fb2bec6cdc8bbf16db9a4ace5602976b" }
+version = "0.3.1"
+source = { git = "https://github.com/TheodoreAD/invoke-stubs#33d0970c23b1456a633afb7ff9851c5922371915" }
 
 [[package]]
 name = "jinja2"
@@ -667,8 +667,8 @@ wheels = [
 
 [[package]]
 name = "repo-tasks"
-version = "0.5.0"
-source = { git = "https://github.com/TheodoreAD/repo-tasks#023363c4de4f8949bdd379f20fb599cf05f94311" }
+version = "0.6.0"
+source = { git = "https://github.com/TheodoreAD/repo-tasks#a2d9cf5ebf334e39261bedcc7f83d75eb6f8d3b5" }
 dependencies = [
     { name = "bump-my-version" },
     { name = "dunamai" },

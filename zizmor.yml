@@ -1,6 +1,8 @@
 # zizmor's workflow-security audit, run from `inv quality.workflow-check` alongside actionlint.
 #
-# One setting, and it exists to encode a decision this family already made deliberately. Since
+# Two settings, each encoding a decision this family made deliberately.
+#
+# `unpinned-uses`: since
 # zizmor v1.20.0 the default `unpinned-uses` policy is a blanket hash-pin: every `uses:` clause must
 # name a full commit SHA, `actions/*` included. This family pins by hand in exactly one file —
 # `publish.yml`, the one holding `id-token: write` against PyPI Trusted Publishing — because pinning
@@ -11,8 +13,20 @@
 #
 # Revisit this line, not the workflows, if the family ever adopts dependabot — at that point
 # hash-pinning everywhere becomes maintainable and the default policy is the right one.
+#
+# `self-repository` (zizmor 1.30): flags every workspace-relative `uses: ./...` and wants GitHub's
+# self-repository form `uses: $/...` instead. That fix cannot be taken while the gate's other two
+# readers of the same files reject it. actionlint accepts only `./path` or `owner/repo/path@ref` for
+# a reusable-workflow call (rule_workflow_call.go), and act classifies anything not starting `./` as
+# an invalid job (Job.Type in pkg/model/workflow.go), which would break `test.workflows`. Both were
+# checked 2026-09-28. The audit is not configurable, so it is off whole rather than narrowed. Little
+# is lost: every hit in this family is a job-level reusable-workflow call, where no earlier step can
+# plant a workspace action, and the pinning-policy benefit needs org policies personal repos lack.
+# Lift this once both actionlint and act accept `$/`, then rewrite the `uses:` lines.
 rules:
   unpinned-uses:
     config:
       policies:
         "*": ref-pin
+  self-repository:
+    disable: true

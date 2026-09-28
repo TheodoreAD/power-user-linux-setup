@@ -97,9 +97,6 @@
   // `# pyright: reportImportCycles=false` — the rule stays live for every other file.
   "reportImportCycles": "warning",
 
-  // invoke ships no type stubs — every `c: Context` task parameter is Unknown/Any without this.
-  "allowedUntypedLibraries": ["invoke"],
-
   // Tests are a tier of their own — the same shape as mypy's `[mypy-tests.*]
   // disallow_untyped_defs = false` (pyright has no per-environment `typeCheckingMode`, so the
   // relaxation is spelled rule by rule). Every rule that finds a bug in a test stays on (`reportAny`,
