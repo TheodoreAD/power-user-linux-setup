@@ -208,10 +208,17 @@ The harness writing the file itself is fine and is the exception: "Yes, and don'
 rule to the **project's** `.claude/settings.local.json`, which is the harness asking first and
 recording the answer where it belongs.
 
-### Formatting a date or decimal in a shell script
+### Parsing a command's output, or formatting a date or decimal, in a script
 
-Force the C locale for any output a script parses or asserts on — `LC_TIME=C date ...`,
-`LC_NUMERIC=C awk ...`. A locale-sensitive `date` specifier (`%a`, `%b`, ...) or a decimal
-`awk`/`printf` format emits whatever the ambient locale says, and that is not yours to assume: a
-weekday can come back `Mi` rather than `Wed`, a number `1,23` rather than `1.23`. "The terminal
-looks fine" is not proof — verify the actual bytes.
+Force plain, fixed-format output from anything a script parses or asserts on. The ambient
+environment changes the bytes, and that is not yours to assume:
+
+- **Locale** — `LC_TIME=C date ...`, `LC_NUMERIC=C awk ...`. A locale-sensitive `date` specifier
+  (`%a`, `%b`, ...) or a decimal `awk`/`printf` format follows the ambient locale: a weekday can
+  come back `Mi` rather than `Wed`, a number `1,23` rather than `1.23`.
+- **Colour** — `uv --color never`, or `env -u FORCE_COLOR` for a tool with no such flag. Claude
+  Code's background sessions export `FORCE_COLOR=3`, and uv honours it through a pipe, so a parsed
+  path comes back wrapped in escapes and a regex quietly stops matching. `NO_COLOR` alone is not the
+  fix: the common convention ignores it whenever `FORCE_COLOR` is set.
+
+"The terminal looks fine" is not proof — verify the actual bytes.

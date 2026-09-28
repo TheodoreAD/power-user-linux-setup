@@ -362,7 +362,7 @@ than doing nothing.
 - [Unexplained git/file state in a working tree](#unexplained-gitfile-state-in-a-working-tree)
 - [Regenerating a file from a canonical source](#regenerating-a-file-from-a-canonical-source)
 - [Verifying behavior in a repo with test coverage](#verifying-behavior-in-a-repo-with-test-coverage)
-- [Formatting a date or decimal in a shell script](#formatting-a-date-or-decimal-in-a-shell-script)
+- [Parsing a command's output, or formatting a date or decimal, in a script](#parsing-a-commands-output-or-formatting-a-date-or-decimal-in-a-script)
 - [About to commit](#about-to-commit)
 - [Writing the commit command](#writing-the-commit-command)
 - [Committing multi-part work](#committing-multi-part-work)
@@ -1760,7 +1760,7 @@ of the environment. Extends this section rather than opening a new one (criterio
 still "verifying via the test suite", and what is being sharpened is what the suite's sandbox does
 and does not cover.
 
-## Formatting a date or decimal in a shell script
+## Parsing a command's output, or formatting a date or decimal, in a script
 
 Confirmed concretely 2026-08-23, twice in one script (`~/.claude/statusline-command.sh`):
 `date -d ... '+%a'` returned `"Ma"` (Marți, Tuesday) instead of `"Tue"`, and
@@ -1781,6 +1781,28 @@ because they are what makes the hazard recognisable; the incident that produced 
 It also means the rule needs no dependency label, which is what closed the last open question about
 it: it depends on nothing PULSE installs, and it is not a rule about this machine. It is ordinary
 defensive scripting that this machine happened to teach.
+
+**Colour joined it 2026-09-28**, as a second instance of the same hazard, and the heading was
+widened from "Formatting a date or decimal in a shell script" so that it fires on the trigger that
+actually occurs: running a tool and parsing what it prints, which the old name never matched. Three
+repos hit it independently in one day. scaffoldapy's e2e fixture read `uv cache dir`, got the path
+wrapped in `\e[36m…\e[39m`, which made it relative, and rendered every repo with a cold cache inside
+it: 31,442 lint findings and a ten-minute hang (fixed there in `ba23071`). repo-tasks'
+`deps.check-currency` lost exactly the entries that were behind, because a coloured clause broke its
+line regex, and exited 0 (fixed in v0.6.0). invoke-stubs hit the second independently.
+
+The source, read from Claude Code 2.1.284's own binary: a background session is launched with
+`CLAUDE_CODE_SESSION_KIND: "bg"`, `CLAUDE_BG_BACKEND: "daemon"` and `FORCE_COLOR: "3"`. A foreground
+session gets no `FORCE_COLOR` at all, which is why the filed plan's "into every Bash call" did not
+hold in the session that wrote this, and why the rule names background sessions. Measured the same
+day: `env FORCE_COLOR=3 uv cache dir | od -c` shows the escapes, while adding `NO_COLOR=1` or
+`--color never` removes them. uv lets `NO_COLOR` win, but the supports-color logic in the same
+binary ignores `NO_COLOR` whenever `FORCE_COLOR` is defined, which is why the rule offers the flag
+or `env -u` and not `NO_COLOR`.
+
+Not done: unsetting `FORCE_COLOR` for agent shells in `[packages.claude-code]`'s zshenv snippet. It
+would fix every script on this machine at once, and none anywhere else. CI and containers never see
+the snippet, so the instruction is the portable half either way, and it is also the cheaper one.
 
 ## Force-pushing, or asking what a remote actually has
 
