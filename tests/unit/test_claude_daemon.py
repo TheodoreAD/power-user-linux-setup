@@ -6,10 +6,12 @@ notification and stopping the daemon shell out and are not covered here. See tes
 
 import ast
 import os
+import subprocess
 import sys
 import time
 from pathlib import Path
 
+from tasks import claude_daemon
 from tasks.claude_daemon import (
     Proc,
     Stale,
@@ -178,6 +180,30 @@ def test_notice_pluralises():
     _, body = notice(_stale(("a", "b")))
     assert "2 background jobs." in body
     assert "ends those jobs" in body
+
+
+class _FakeRun:
+    """Stands in for subprocess.run: records every argv, answers --help and notify-send."""
+
+    def __init__(self, action: str):
+        self.action: str = action
+        self.calls: list[list[str]] = []
+
+    def __call__(self, argv: list[str], **_: object) -> subprocess.CompletedProcess[str]:
+        self.calls.append(argv)
+        if argv[1:] == ["daemon", "--help"]:
+            return subprocess.CompletedProcess(argv, 0, "  stop  Shut down\n    --any  also transient", "")
+        return subprocess.CompletedProcess(argv, 0, self.action if argv[0] == "notify-send" else "", "")
+
+
+def test_the_offer_stays_on_screen_and_leave_it_stops_nothing(monkeypatch):
+    fake = _FakeRun("keep")
+    monkeypatch.setattr(subprocess, "run", fake)
+    claude_daemon.offer_stop(_stale(("a",)), login=0)
+    [offer] = [argv for argv in fake.calls if argv[0] == "notify-send"]
+    assert offer[offer.index("-u") + 1] == "critical"
+    assert "stop=Stop it (ends 1 job)" in offer
+    assert not any("stop" in argv[1:3] for argv in fake.calls if argv[0] == "/x/claude")
 
 
 def test_claude_daemon_imports_only_the_standard_library():

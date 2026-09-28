@@ -209,6 +209,18 @@ def _notify(*args: str) -> str:
     return result.stdout.strip()
 
 
+def _notice(*args: str) -> str:
+    """The stale-daemon notice itself, at critical urgency so GNOME keeps it on screen until answered.
+
+    At normal urgency the banner hides after a few seconds and waits in the notification list.
+    Confirmed 2026-09-28 on the first live run: the user never saw a banner, found the notice later
+    in the panel, and clicking its body dismissed it without showing the buttons. Fifteen seconds
+    into a login is exactly when nobody is watching the top of the screen. It only fires when a
+    stale daemon exists, so it stays rare. The follow-up results stay at normal urgency.
+    """
+    return _notify("-u", "critical", *args)
+
+
 def _still_the_one(pid: int, login: float) -> bool:
     """The daemon we asked about is still the only stale one — checked again after the click."""
     stale = find_stale(processes(), login)
@@ -222,10 +234,10 @@ def offer_stop(stale: Stale, login: float) -> None:
     help_run = subprocess.run([claude, "daemon", "--help"], capture_output=True, text=True, check=False)
     if not supports_stop(help_run.stdout + help_run.stderr):
         missing = f"This Claude Code no longer offers the stop command this was written for ({WRITTEN_AGAINST})."
-        _notify(summary, f"{body} {missing}")
+        _notice(summary, f"{body} {missing}")
         return
     label = f"Stop it (ends {_plural(len(stale.jobs), 'job')})" if stale.jobs else "Stop it"
-    if _notify("-A", f"stop={label}", "-A", "keep=Leave it", summary, body) != "stop":
+    if _notice("-A", f"stop={label}", "-A", "keep=Leave it", summary, body) != "stop":
         return
     if not _still_the_one(stale.daemon.pid, login):
         _notify("Claude daemon not stopped", "It changed since the notice appeared, so nothing was stopped.")
@@ -254,7 +266,7 @@ def main(argv: list[str] | None = None) -> int:
         return 0
     if len(stale) > 1:
         # `claude daemon stop --any` names no pid, so with two candidates a click could stop either.
-        _notify(*notice(stale[0]))
+        _notice(*notice(stale[0]))
         return 0
     offer_stop(stale[0], login)
     return 0
