@@ -1,0 +1,4615 @@
+{
+  "classified_at": "2026-09-28T20:48:49Z",
+  "extracted_at": "2026-09-28T20:15:31Z",
+  "nodes": {
+    "auth": {
+      "classification": "read_only",
+      "content_hash": "f4c011d76fec1592",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command for auth subcommands; calling it without a subcommand shows help.",
+      "source": "llm"
+    },
+    "auth add": {
+      "classification": "write",
+      "content_hash": "9b5b281dc10857e0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Authorizes and stores a refresh token locally; bounded, expected modification.",
+      "source": "llm"
+    },
+    "auth alias": {
+      "classification": "read_only",
+      "content_hash": "498169584dcadb47",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command for alias subcommands; calling it shows help.",
+      "source": "llm"
+    },
+    "auth alias list": {
+      "classification": "read_only",
+      "content_hash": "a84c79082350752f",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists stored account aliases; read-only inspection only.",
+      "source": "llm"
+    },
+    "auth alias set": {
+      "classification": "write",
+      "content_hash": "adb6b5c8226a252c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Creates or updates an account alias; bounded, reversible modification.",
+      "source": "llm"
+    },
+    "auth alias unset": {
+      "classification": "dangerous",
+      "content_hash": "ede38867f9802309",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes an account alias; deletion operation that may be destructive to configuration.",
+      "source": "llm"
+    },
+    "auth credentials": {
+      "classification": "read_only",
+      "content_hash": "96c024e9c4c29c5b",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Container command for credential management subcommands.",
+      "source": "llm"
+    },
+    "auth credentials list": {
+      "classification": "read_only",
+      "content_hash": "1c6da3f0e71f4971",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists stored OAuth client credentials; read-only inspection only.",
+      "source": "llm"
+    },
+    "auth credentials remove": {
+      "classification": "dangerous",
+      "content_hash": "2beba0fd15448ee2",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Removes stored OAuth credentials; deletion operation with potential for broad impact (supports 'all' argument).",
+      "source": "llm"
+    },
+    "auth credentials set": {
+      "classification": "write",
+      "content_hash": "73a252af7215f2d3",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Stores OAuth client credentials locally; bounded, reversible modification.",
+      "source": "llm"
+    },
+    "auth doctor": {
+      "classification": "read_only",
+      "content_hash": "f687794cc813f653",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Diagnoses auth, keyring, and token issues; inspection and validation only.",
+      "source": "llm"
+    },
+    "auth import": {
+      "classification": "write",
+      "content_hash": "1510162bf730baa8",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Imports and stores refresh token and optional access token locally; bounded, reversible modification.",
+      "source": "llm"
+    },
+    "auth keep": {
+      "classification": "write",
+      "content_hash": "d9d194351f9099c6",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Configures service account for Google Keep; modifies local configuration, bounded and reversible.",
+      "source": "llm"
+    },
+    "auth keyring": {
+      "classification": "write",
+      "content_hash": "1a38e2d680881381",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Configures keyring backend (auto/keychain/file); modifies local configuration, reversible.",
+      "source": "llm"
+    },
+    "auth list": {
+      "classification": "read_only",
+      "content_hash": "837b80f27bb7b1d0",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists stored accounts; read-only inspection only.",
+      "source": "llm"
+    },
+    "auth manage": {
+      "classification": "write",
+      "content_hash": "647c03b0a4966d62",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended actions without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmations for destructive commands during account management."
+        },
+        "--force-consent": {
+          "classification": "write",
+          "rationale": "Forces OAuth consent flow, modifying auth state but not destructively."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Opens interactive browser-based accounts manager for making configuration changes.",
+      "source": "llm"
+    },
+    "auth remove": {
+      "classification": "dangerous",
+      "content_hash": "16c7d00c3beb0517",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be removed without actually removing it."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation prompts before destructive token removal."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly deletes a stored refresh token.",
+      "source": "llm"
+    },
+    "auth service-account": {
+      "classification": "read_only",
+      "content_hash": "2da2b63e1bb504c2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays available subcommands or intended actions."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Configure commands typically modify state; without seeing the --force flag's definition, conservatively classify the management command as write rather than read_only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command; running without subcommand displays available operations.",
+      "source": "llm"
+    },
+    "auth service-account set": {
+      "classification": "write",
+      "content_hash": "28096b084a77da1c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be stored without storing it."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation when storing sensitive service account credentials."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Stores a service account key into keyring for impersonation.",
+      "source": "llm"
+    },
+    "auth service-account status": {
+      "classification": "read_only",
+      "content_hash": "91c7bc342e606da0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows status information without modification."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "The command only shows status; --force on a read operation likely means force-refresh, which remains a read-only action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays status of a stored service account key.",
+      "source": "llm"
+    },
+    "auth service-account unset": {
+      "classification": "dangerous",
+      "content_hash": "66bfb6c2062271df",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be removed without actually removing."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation before destructively removing stored credentials."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly removes a stored service account key.",
+      "source": "llm"
+    },
+    "auth services": {
+      "classification": "read_only",
+      "content_hash": "0f54a8fb61d83bda",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Lists operations without side effects."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command that shows supported services and scopes; --force would not change its read-only nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists supported authentication services and associated scopes.",
+      "source": "llm"
+    },
+    "auth setup": {
+      "classification": "write",
+      "content_hash": "815d561462623465",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows setup steps without making configuration changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmations for potentially destructive setup operations."
+        },
+        "--force-consent": {
+          "classification": "write",
+          "rationale": "Forces OAuth consent screen, modifying auth state without destruction."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Interactive guide for Google Cloud, OAuth client, and account configuration.",
+      "source": "llm"
+    },
+    "auth status": {
+      "classification": "read_only",
+      "content_hash": "53ec49f2530b6448",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Status display is read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Show command displaying auth configuration; --force on a show/read operation is safe."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays auth configuration and keyring backend information.",
+      "source": "llm"
+    },
+    "auth tokens": {
+      "classification": "read_only",
+      "content_hash": "0760a2745c14df21",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows available operations without side effects."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Manage command for tokens without visible subcommand or action; conservatively classify as write since manage operations typically modify state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command; displays available token management operations when run without subcommand.",
+      "source": "llm"
+    },
+    "auth tokens delete": {
+      "classification": "dangerous",
+      "content_hash": "f176c89763c90c83",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be deleted without actually deleting."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation before destructively removing stored token."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Irreversibly deletes a stored refresh token from keyring.",
+      "source": "llm"
+    },
+    "auth tokens export": {
+      "classification": "write",
+      "content_hash": "60ece7b63875aba5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be exported without writing file."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation before overwriting existing export file."
+        },
+        "--overwrite": {
+          "classification": "dangerous",
+          "rationale": "Explicitly force-overwrites output file, bypassing existence check."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Exports a refresh token to a file, creating/modifying a local file.",
+      "source": "llm"
+    },
+    "auth tokens import": {
+      "classification": "write",
+      "content_hash": "d8a87fa4705efbf2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be imported without storing credentials."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation before destructively overwriting stored token."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Imports a refresh token file into keyring, storing sensitive credentials.",
+      "source": "llm"
+    },
+    "auth tokens list": {
+      "classification": "read_only",
+      "content_hash": "d6260a4a4da38afb",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Lists tokens without side effects."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command showing stored tokens; --force on a list operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists stored tokens by key only, displaying configuration without modification.",
+      "source": "llm"
+    },
+    "calendar": {
+      "classification": "read_only",
+      "content_hash": "152c81ede5bb9df1",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows available operations without side effects."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Parent command group without visible subcommand or action defined; conservatively classify as write rather than assume it only shows help."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command; displays available Google Calendar operations when run without subcommand.",
+      "source": "llm"
+    },
+    "calendar acl": {
+      "classification": "read_only",
+      "content_hash": "03d10daec5dff8fc",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "List command for ACL entries; --all flag on a list command means show all results, which is a read-only operation."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "List operation is non-modifying; preview has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command for ACL; --force on a list operation is safe and read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists calendar ACL/permissions; no modifications made.",
+      "source": "llm"
+    },
+    "calendar alias": {
+      "classification": "read_only",
+      "content_hash": "28d0bfe93297cf7d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Help/routing is already non-modifying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Manage command without visible action or subcommand shown; conservatively classify manage operations as write."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Routing command requiring subcommand; without it shows help/management options.",
+      "source": "llm"
+    },
+    "calendar alias list": {
+      "classification": "read_only",
+      "content_hash": "999a5ea966a2957a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "List operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command showing aliases; --force on a list operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists calendar aliases; no modifications made.",
+      "source": "llm"
+    },
+    "calendar alias set": {
+      "classification": "write",
+      "content_hash": "de94016a669d84eb",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended changes without modifying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but alias creation/update is reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates or updates a calendar alias; bounded and reversible.",
+      "source": "llm"
+    },
+    "calendar alias unset": {
+      "classification": "write",
+      "content_hash": "19a0a34277124602",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended removal without modifying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation on reversible alias removal."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes a calendar alias; reversible (alias can be recreated).",
+      "source": "llm"
+    },
+    "calendar calendars": {
+      "classification": "read_only",
+      "content_hash": "3c6f30bb1794ddfc",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "List command; --all flag means show all calendars, which is a read-only operation."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "List operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command; --force on a list operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists calendars; no modifications made.",
+      "source": "llm"
+    },
+    "calendar changed": {
+      "classification": "read_only",
+      "content_hash": "f4d2100daa19a3ce",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "List command showing changed events; --all means show all changed items, which is a read-only operation."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "List operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command; --force on a list operation remains read-only."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists recently changed events; no modifications made.",
+      "source": "llm"
+    },
+    "calendar colors": {
+      "classification": "read_only",
+      "content_hash": "fddf235ece21645f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Display operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Displays calendar colors; --force likely means bypass cache or force refresh, still only shows data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays calendar color definitions; no modifications made.",
+      "source": "llm"
+    },
+    "calendar conflicts": {
+      "classification": "read_only",
+      "content_hash": "abc9f3978087e0ea",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Finds busy-time overlaps; --all includes all calendars in search, broadens what's shown not what's deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Analysis operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Finds overlaps; --force likely forces refresh, still only inspects and reports conflicts."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Analyzes and reports busy-time overlaps; no modifications made.",
+      "source": "llm"
+    },
+    "calendar create": {
+      "classification": "write",
+      "content_hash": "c642b3b9d03e81e0",
+      "flags": {
+        "--all-day": {
+          "classification": "write",
+          "rationale": "Parameter type for creation; still creates reversible event."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview shows intended changes without creating event."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation on reversible event creation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new event; bounded and reversible (event can be deleted).",
+      "source": "llm"
+    },
+    "calendar create-calendar": {
+      "classification": "write",
+      "content_hash": "dbf57e347d1afb12",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview shows intended changes without creating calendar."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation on reversible calendar creation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new secondary calendar; bounded and reversible.",
+      "source": "llm"
+    },
+    "calendar delete": {
+      "classification": "dangerous",
+      "content_hash": "3b6316a59c00a62f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview shows intended deletion without modifying."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation on irreversible event deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes an event; irreversible destruction of data.",
+      "source": "llm"
+    },
+    "calendar delete-calendar": {
+      "classification": "dangerous",
+      "content_hash": "a9dde3e3fc983006",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview shows intended deletion without modifying."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation on irreversible calendar deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes an owned secondary calendar; irreversible destruction.",
+      "source": "llm"
+    },
+    "calendar event": {
+      "classification": "read_only",
+      "content_hash": "5b5bd9f772457a02",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Display operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets/shows an event; --force likely forces cache bypass or refresh, still only retrieves data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Gets/shows event details; no modifications made.",
+      "source": "llm"
+    },
+    "calendar events": {
+      "classification": "read_only",
+      "content_hash": "ad77f86cc16dd366",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists events; --all includes all calendars, broadens what's shown not what's modified."
+        },
+        "--all-pages": {
+          "classification": "read_only",
+          "rationale": "Lists events; --all-pages fetches all result pages for display, pagination flag only."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "List operation is non-modifying."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists events; --force likely forces refresh, still only lists and displays events."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists events from calendar(s); no modifications made.",
+      "source": "llm"
+    },
+    "calendar focus-time": {
+      "classification": "write",
+      "content_hash": "0d8a22cfd83ac08a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended action without modifying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Creates event even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a calendar event block (reversible modification)",
+      "source": "llm"
+    },
+    "calendar freebusy": {
+      "classification": "read_only",
+      "content_hash": "3748848e2e0d1995",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Checks free/busy status; --all includes all calendars, broadens what's queried and shown."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended action without modifying"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets free/busy info; --force likely forces refresh, still only inspects availability."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Queries free/busy information without modification",
+      "source": "llm"
+    },
+    "calendar move": {
+      "classification": "write",
+      "content_hash": "13353a66f27b3408",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended move without doing it"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Moves event even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Moves an event between calendars (reversible modification)",
+      "source": "llm"
+    },
+    "calendar out-of-office": {
+      "classification": "write",
+      "content_hash": "f1929366ee1f3d56",
+      "flags": {
+        "--all-day": {
+          "classification": "write",
+          "rationale": "Still creates an event, just with all-day format"
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended creation without doing it"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Creates event even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates an out-of-office event (reversible modification)",
+      "source": "llm"
+    },
+    "calendar propose-time": {
+      "classification": "read_only",
+      "content_hash": "ea5e4f6da795880e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still just generating a URL"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Generates a URL to propose meeting time; --force likely forces generation, still only outputs/displays a URL."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Generates a URL without modifying calendar state",
+      "source": "llm"
+    },
+    "calendar raw": {
+      "classification": "read_only",
+      "content_hash": "89e16268b889b299",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still just dumping response"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Dumps raw API response as JSON for inspection; --force likely forces refresh, still only retrieves and displays data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Dumps raw API response without modification",
+      "source": "llm"
+    },
+    "calendar respond": {
+      "classification": "write",
+      "content_hash": "6e4697edf2d23fe0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended response without submitting"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Submits response even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Changes your RSVP status on an event (reversible modification)",
+      "source": "llm"
+    },
+    "calendar search": {
+      "classification": "read_only",
+      "content_hash": "5ff9a317b479cd88",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still just searching"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Searches events; --force likely forces full search or refresh, still only finds and displays results."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches and lists matching events without modification",
+      "source": "llm"
+    },
+    "calendar subscribe": {
+      "classification": "write",
+      "content_hash": "3d3aab1e9a370aaf",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended subscription without adding"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Adds calendar even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Adds a calendar to your subscription (reversible modification)",
+      "source": "llm"
+    },
+    "calendar team": {
+      "classification": "read_only",
+      "content_hash": "3d3a45652d65fcf6",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still just listing"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Shows events for group members; --force likely forces refresh, still only displays information."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists team member events without modification",
+      "source": "llm"
+    },
+    "calendar time": {
+      "classification": "read_only",
+      "content_hash": "d487efd632b387cf",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still just retrieving time"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Shows server time; --force likely forces current time fetch, still only retrieves and displays time."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves current server time without modification",
+      "source": "llm"
+    },
+    "calendar unsubscribe": {
+      "classification": "write",
+      "content_hash": "fe6e2b825bb35c1a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended removal without doing it"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Removes calendar even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes a calendar from subscriptions (reversible modification)",
+      "source": "llm"
+    },
+    "calendar update": {
+      "classification": "write",
+      "content_hash": "af106d4882b35103",
+      "flags": {
+        "--all-day": {
+          "classification": "write",
+          "rationale": "Still modifying the event"
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended changes without applying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Updates even with confirmations"
+        },
+        "--remove-zoom": {
+          "classification": "write",
+          "rationale": "Still modifying the event"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies an event (reversible modification)",
+      "source": "llm"
+    },
+    "calendar users": {
+      "classification": "read_only",
+      "content_hash": "24ad04989604d159",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists workspace users; --all includes all users in listing, broadens what's shown not what's deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still just listing"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists workspace users; force likely means force-refresh cache, safe for read operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists workspace users without modification",
+      "source": "llm"
+    },
+    "calendar working-location": {
+      "classification": "write",
+      "content_hash": "d65883f1cb887023",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended location change without setting"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Sets location even with confirmations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sets your working location (reversible modification)",
+      "source": "llm"
+    },
+    "config": {
+      "classification": "read_only",
+      "content_hash": "859dcb1814c6bef6",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents modifications."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Configuration management modifies settings state, but reversibly through API."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command; performs no state modification without a subcommand.",
+      "source": "llm"
+    },
+    "config get": {
+      "classification": "read_only",
+      "content_hash": "3aca9f3bebc298dc",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves and displays a config value without modification.",
+      "source": "llm"
+    },
+    "config keys": {
+      "classification": "read_only",
+      "content_hash": "e5c717fddc35e720",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Lists available configuration keys without modification.",
+      "source": "llm"
+    },
+    "config list": {
+      "classification": "read_only",
+      "content_hash": "0d7d525752503568",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Enumerates all config values without modification.",
+      "source": "llm"
+    },
+    "config no-send": {
+      "classification": "read_only",
+      "content_hash": "4cc3ec0576e0a43f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents modifications."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Manages no-send guards (configuration), modifies state but reversibly."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for no-send guard management; performs no action without subcommand.",
+      "source": "llm"
+    },
+    "config no-send list": {
+      "classification": "read_only",
+      "content_hash": "0059008fb4afae25",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays accounts with no-send guards without modification.",
+      "source": "llm"
+    },
+    "config no-send remove": {
+      "classification": "write",
+      "content_hash": "e41e362280a1b38f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents removal; only displays intended action."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation for deletion of a safety mechanism."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a no-send guard; state change is reversible by re-applying the guard.",
+      "source": "llm"
+    },
+    "config no-send set": {
+      "classification": "write",
+      "content_hash": "480d27633e06213f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents modification; only displays intended action."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but operation is bounded and reversible (enables a safety feature)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Enables a no-send guard; modifies state in a bounded, reversible manner.",
+      "source": "llm"
+    },
+    "config path": {
+      "classification": "read_only",
+      "content_hash": "be1005be975accff",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays the configuration file path without modification.",
+      "source": "llm"
+    },
+    "config set": {
+      "classification": "write",
+      "content_hash": "85f1de71053d5f84",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents modification; only displays intended change."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation for a bounded, reversible configuration change."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies a configuration value; state change is bounded and reversible.",
+      "source": "llm"
+    },
+    "config unset": {
+      "classification": "write",
+      "content_hash": "99ac8987acfa4398",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents removal; only displays intended deletion."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation for bounded, reversible removal of a config value."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a config value; removal is bounded and reversible (value can be reset).",
+      "source": "llm"
+    },
+    "contacts": {
+      "classification": "read_only",
+      "content_hash": "a32e20db585f3289",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents modifications."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Parent command; help text describes command category only, no dangerous operation implied."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for contacts operations; performs no state modification without subcommand.",
+      "source": "llm"
+    },
+    "contacts batch": {
+      "classification": "read_only",
+      "content_hash": "c692cad7a45b5c0c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents modifications."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Help mentions delete capability in batch operations; force likely bypasses confirmation but API operations are reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for batch contact operations; performs no action without subcommand.",
+      "source": "llm"
+    },
+    "contacts batch create": {
+      "classification": "write",
+      "content_hash": "2d88f4551d156ef3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents creation; only displays intended additions."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation for bounded creation of contact records."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates contacts from JSON; adds bounded, reversible state (deletable via removal).",
+      "source": "llm"
+    },
+    "contacts batch delete": {
+      "classification": "dangerous",
+      "content_hash": "38ba4ca510a333ff",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Explicitly prevents deletion; only displays what would be removed."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses the required confirmation for batch deletion of contact resources."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes contact resources in batches; destructive operation requiring confirmation per help text.",
+      "source": "llm"
+    },
+    "contacts batch get": {
+      "classification": "read_only",
+      "content_hash": "aa9065a06dc428a3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prevents any changes; read-only command stays read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Specifically a GET operation retrieving contact resources; read-only even if force exists."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves contact resources in batches without modifying them.",
+      "source": "llm"
+    },
+    "contacts batch update": {
+      "classification": "write",
+      "content_hash": "8a119b3d7b6e1775",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prevents any changes; prints intended actions only."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmations for batch updates affecting multiple contacts without safety checks."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies contacts in batch from a JSON resource map; bounded and reversible.",
+      "source": "llm"
+    },
+    "contacts create": {
+      "classification": "write",
+      "content_hash": "85aacca29be2346e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prevents creation; only prints intended action."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for creation but still a single, reversible write."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new contact; bounded additive modification.",
+      "source": "llm"
+    },
+    "contacts dedupe": {
+      "classification": "write",
+      "content_hash": "53b33b4c22d1abec",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prevents merges; only identifies duplicates."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmations for merging/consolidating contacts, which loses or combines data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Finds and optionally merges duplicate contacts; consolidates data.",
+      "source": "llm"
+    },
+    "contacts delete": {
+      "classification": "dangerous",
+      "content_hash": "e23136a8fabc325d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prevents deletion; only prints intended action."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation for deletion, bypassing safety check on destructive operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Permanently deletes a contact; irreversible destruction.",
+      "source": "llm"
+    },
+    "contacts directory": {
+      "classification": "read_only",
+      "content_hash": "bb7b728731414070",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command is read-only regardless of dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Directory contacts are workspace-provided; force doesn't change read-only nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group for directory contacts; does not modify state by itself.",
+      "source": "llm"
+    },
+    "contacts directory list": {
+      "classification": "read_only",
+      "content_hash": "f32da6bd7f021431",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists directory people; --all broadens shown results, doesn't delete or destroy anything."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only listing is unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List operation is read-only; force likely means force-refresh cache."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists people from Workspace directory without modification.",
+      "source": "llm"
+    },
+    "contacts directory search": {
+      "classification": "read_only",
+      "content_hash": "423a2c7eefa4a22f",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Search operation; --all broadens search scope to show more results, doesn't modify state."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Search is read-only regardless."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Search operation is read-only; force unlikely to change that."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches Workspace directory without modification.",
+      "source": "llm"
+    },
+    "contacts export": {
+      "classification": "read_only",
+      "content_hash": "ca3324e5307b3542",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Export as vCard extracts/reads data; --all exports more contacts but doesn't delete or modify."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Export is already non-destructive."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Export is a read/extract operation; force likely means force re-download."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Exports contacts as vCard format; reads and serializes data without modification.",
+      "source": "llm"
+    },
+    "contacts get": {
+      "classification": "read_only",
+      "content_hash": "84cc7b0c9bef5cac",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Retrieval does not modify state."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Get retrieves a single contact; explicitly read-only operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves a single contact without modification.",
+      "source": "llm"
+    },
+    "contacts list": {
+      "classification": "read_only",
+      "content_hash": "600ef18420ecd1e8",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Listing does not modify state."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List operation is read-only; force likely means force-refresh cache."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists all contacts without modification.",
+      "source": "llm"
+    },
+    "contacts other": {
+      "classification": "read_only",
+      "content_hash": "ed65680c6de8e18a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command is read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Force here bypasses cache/forces refresh of contact data retrieval, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group for other contacts; does not modify state by itself.",
+      "source": "llm"
+    },
+    "contacts other list": {
+      "classification": "read_only",
+      "content_hash": "cceffa4fe35dfc42",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "All expands the scope of what contacts are shown/listed, not what is deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Listing does not modify state."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Force refreshes the listing without modifying any contacts."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists other contacts without modification.",
+      "source": "llm"
+    },
+    "contacts other search": {
+      "classification": "read_only",
+      "content_hash": "e144cab67e40d5a3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Search is read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Force re-executes the search query without modifying data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches other contacts without modification.",
+      "source": "llm"
+    },
+    "contacts raw": {
+      "classification": "read_only",
+      "content_hash": "021f9cfd44e0105a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Raw dump is read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Dumps raw JSON API response for inspection; force likely refreshes the fetch without mutation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Dumps raw API response as JSON; reads and displays data without modification.",
+      "source": "llm"
+    },
+    "contacts search": {
+      "classification": "read_only",
+      "content_hash": "72c45d83dd3c9583",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run on a query has no effect; still just reading."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Search is a read operation; force refreshes results without modifying contacts."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Queries contacts by name/email/phone without modifying anything.",
+      "source": "llm"
+    },
+    "contacts update": {
+      "classification": "write",
+      "content_hash": "b5850c5191ff36db",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be updated without applying changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still just updating one contact, reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies a contact's information; reversible operation.",
+      "source": "llm"
+    },
+    "download": {
+      "classification": "write",
+      "content_hash": "cce9029f9c8e23d4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be downloaded without actually downloading."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Downloads without confirmation; still reversible (local file can be deleted)."
+        },
+        "--overwrite": {
+          "classification": "write",
+          "rationale": "Overwrites existing local file; still reversible (can restore backup or re-download)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Downloads a Drive file to local filesystem, creating/modifying local state.",
+      "source": "llm"
+    },
+    "drive": {
+      "classification": "read_only",
+      "content_hash": "c84b3b537cbf299b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Flag doesn't affect a group command's classification."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Global flag for drive commands which are predominantly audit/query operations; force is refresh-oriented."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group for Drive operations; doesn't modify state on its own.",
+      "source": "llm"
+    },
+    "drive activity": {
+      "classification": "read_only",
+      "content_hash": "958bfdeae700b815",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Dry-run on a query operation remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Querying audit events is a read operation; force refreshes the query."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Described as 'Query Drive Activity audit events'; query implies reading audit logs without mutation.",
+      "source": "llm"
+    },
+    "drive activity query": {
+      "classification": "read_only",
+      "content_hash": "b18a19a7ded5bf74",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "All expands the set of query results returned, not what is modified or deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only query remains read-only with dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Querying the Drive Activity API is a read operation; force bypasses cache."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Queries Drive Activity API v2 to read audit events; no mutation.",
+      "source": "llm"
+    },
+    "drive audit": {
+      "classification": "read_only",
+      "content_hash": "f687e6d0cdfef4b2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Audit-only operation remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Description explicitly states 'without mutation'; force is a refresh mechanism for audit data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Explicitly described as 'Audit Drive sharing without mutation'; auditing is read-only by design.",
+      "source": "llm"
+    },
+    "drive audit sharing": {
+      "classification": "read_only",
+      "content_hash": "3dddfbefafca9da5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Audit/discovery operation remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Finding/listing public or external permissions is a read operation; force refreshes results."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Finds and reports public/external Drive permissions without modifying them.",
+      "source": "llm"
+    },
+    "drive audit user": {
+      "classification": "read_only",
+      "content_hash": "ac60990cea27d128",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Audit query remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Finding permissions granted to a user is auditing/reading; force refreshes the audit."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Discovers and reports Drive permissions granted to a specific user; read-only.",
+      "source": "llm"
+    },
+    "drive bulk": {
+      "classification": "read_only",
+      "content_hash": "219592d985d0cb4d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bulk permission operations could involve modifications; force may bypass confirmations on write operations."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group for bulk Drive operations; doesn't perform actions on its own.",
+      "source": "llm"
+    },
+    "drive bulk remove-public": {
+      "classification": "dangerous",
+      "content_hash": "95432027c1f36feb",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what permissions would be removed without actually removing them."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Removes permissions across many files without confirmation; high blast radius and irreversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes public/anyone permissions across multiple files; bulk, destructive, hard to reverse.",
+      "source": "llm"
+    },
+    "drive bulk update-role": {
+      "classification": "write",
+      "content_hash": "f65adba83f8da7a8",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what roles would change without applying the changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Applies role changes without confirmation across multiple files; reversible but affects broad set."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Changes permission roles across matching files; modifies access but reversible (roles can be changed back).",
+      "source": "llm"
+    },
+    "drive changes": {
+      "classification": "read_only",
+      "content_hash": "bf1d78c51cd73b1c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command unaffected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Tracking/querying Drive changes is a read operation; force refreshes the change tracking."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group for tracking Drive changes; doesn't modify state on its own.",
+      "source": "llm"
+    },
+    "drive changes list": {
+      "classification": "read_only",
+      "content_hash": "39463c5824f07b74",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists changes; --all broadens what's shown, not what's destroyed."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Listing operation remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists changes; --force likely bypasses cache to fetch fresh data."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists Drive changes since a page token; reads and reports data without modification.",
+      "source": "llm"
+    },
+    "drive changes poll": {
+      "classification": "write",
+      "content_hash": "94292721f13cf0a4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows what would be polled without persisting the state token."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Polls and updates state file without confirmation; reversible (state file can be reset)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Polls Drive changes and persists page token state to file; modifies local state file.",
+      "source": "llm"
+    },
+    "drive changes serve": {
+      "classification": "write",
+      "content_hash": "1a3060103382f201",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still sets up a reversible webhook subscription."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Establishes a webhook subscription to receive Drive change notifications; bounded and reversible state modification.",
+      "source": "llm"
+    },
+    "drive changes start-token": {
+      "classification": "read_only",
+      "content_hash": "4e963c69ebfbc0fd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves a page token for Drive changes; read-only data fetch.",
+      "source": "llm"
+    },
+    "drive changes stop": {
+      "classification": "write",
+      "content_hash": "fed923fbaf1687f4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only cancels a reversible subscription."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Stops a webhook channel subscription; modifies state but reversible (can re-establish watch).",
+      "source": "llm"
+    },
+    "drive changes watch": {
+      "classification": "write",
+      "content_hash": "0522cdbb1c7359a2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still creates a reversible webhook subscription."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Establishes a webhook channel to watch Drive changes; bounded state modification.",
+      "source": "llm"
+    },
+    "drive comments": {
+      "classification": "read_only",
+      "content_hash": "35cb74a16a84de19",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Informational flag; does not make changes."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Manages comments (list/get operations); --force likely forces cache refresh, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group that displays help and subcommands; does not modify state when run alone.",
+      "source": "llm"
+    },
+    "drive comments create": {
+      "classification": "write",
+      "content_hash": "69242da68951f2b0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only creates a reversible comment."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new comment; modifies state but reversible (comment can be deleted).",
+      "source": "llm"
+    },
+    "drive comments delete": {
+      "classification": "dangerous",
+      "content_hash": "cd90b69234d7bf5d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation on an irreversible deletion operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a comment; deletion is irreversible without recovery mechanisms.",
+      "source": "llm"
+    },
+    "drive comments get": {
+      "classification": "read_only",
+      "content_hash": "b09e675090494640",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Retrieves a single comment by ID; read-only data fetch.",
+      "source": "llm"
+    },
+    "drive comments list": {
+      "classification": "read_only",
+      "content_hash": "2b0d4fe68bd1a639",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists comments; --all broadens what's shown."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Informational flag on a read-only command."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists comments; --force likely bypasses cache."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists comments on a file; read-only inspection.",
+      "source": "llm"
+    },
+    "drive comments reopen": {
+      "classification": "write",
+      "content_hash": "1ead711f80b4e12e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only performs a reversible state transition."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Reopens a resolved comment; modifies comment state but reversible (can resolve again).",
+      "source": "llm"
+    },
+    "drive comments reply": {
+      "classification": "write",
+      "content_hash": "e85df55f5a8ef663",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only creates a reversible reply."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Adds a reply to a comment; creates new content but reversible (reply can be deleted).",
+      "source": "llm"
+    },
+    "drive comments resolve": {
+      "classification": "write",
+      "content_hash": "dfebc6b134c76a80",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only performs a reversible state transition."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Marks a comment as resolved; modifies comment state but reversible (can reopen).",
+      "source": "llm"
+    },
+    "drive comments update": {
+      "classification": "write",
+      "content_hash": "ff5579e4724b12b9",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only performs a reversible update."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Updates comment text; modifies content but reversible (can update again or restore).",
+      "source": "llm"
+    },
+    "drive copy": {
+      "classification": "write",
+      "content_hash": "2f16984e650b64b5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only creates a reversible file copy."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a copy of a file; modifies state but reversible (copy can be deleted).",
+      "source": "llm"
+    },
+    "drive delete": {
+      "classification": "write",
+      "content_hash": "5231010fc6ddd7f2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode; prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only moves file to trash, which is reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Moves a file to trash; modifies state but reversible (can restore from trash).",
+      "source": "llm"
+    },
+    "drive download": {
+      "classification": "write",
+      "content_hash": "4941c7c139890782",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Only prints intended download without modifying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still downloads file"
+        },
+        "--overwrite": {
+          "classification": "write",
+          "rationale": "Overwrites existing local file when downloading"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Downloads and writes file content to local storage",
+      "source": "llm"
+    },
+    "drive drives": {
+      "classification": "read_only",
+      "content_hash": "59aaaeb696f754b2",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists shared drives; --all broadens what's shown."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only listing"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists shared drives; --force likely forces server refresh."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists shared drives without modification",
+      "source": "llm"
+    },
+    "drive du": {
+      "classification": "read_only",
+      "content_hash": "f8e5a015cb31b84f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only analysis"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Summarizes folder sizes (read/calculation); --force likely forces recalculation rather than use cached values."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Summarizes folder sizes without modification",
+      "source": "llm"
+    },
+    "drive get": {
+      "classification": "read_only",
+      "content_hash": "cd367c7aa07be896",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only retrieval"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets file metadata (read); --force likely bypasses cache."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves file metadata without modification",
+      "source": "llm"
+    },
+    "drive inventory": {
+      "classification": "read_only",
+      "content_hash": "447978798b98bcf8",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only export"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Exports read-only inventory; description explicitly says read-only; --force likely forces refresh."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Exports read-only Drive inventory without modification",
+      "source": "llm"
+    },
+    "drive labels": {
+      "classification": "write",
+      "content_hash": "0fe1a6bee930d364",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended label modifications without applying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for label modifications"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for reading and modifying Drive labels",
+      "source": "llm"
+    },
+    "drive labels file": {
+      "classification": "write",
+      "content_hash": "46fb6d5530bb129e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended label changes without applying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for label modifications"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for applying and removing labels on files",
+      "source": "llm"
+    },
+    "drive labels file apply": {
+      "classification": "write",
+      "content_hash": "a6fc633530432a72",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended label application without applying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for label application"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Applies or updates a label on a Drive file",
+      "source": "llm"
+    },
+    "drive labels file list": {
+      "classification": "read_only",
+      "content_hash": "576135b1f0e263a0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only listing"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists labels on a file (read); --force likely forces refresh."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists labels applied to a Drive file without modification",
+      "source": "llm"
+    },
+    "drive labels file remove": {
+      "classification": "write",
+      "content_hash": "14a650a493df1504",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended label removal without applying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for label removal"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes a label from a Drive file",
+      "source": "llm"
+    },
+    "drive labels get": {
+      "classification": "read_only",
+      "content_hash": "111a3b701e72a0dc",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only retrieval"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets label schema (read); --force likely forces fresh read."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves a Drive label schema without modification",
+      "source": "llm"
+    },
+    "drive labels list": {
+      "classification": "read_only",
+      "content_hash": "0a2d268998e89ac7",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only listing"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists label schemas (read); --force likely forces refresh."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists Drive label schemas without modification",
+      "source": "llm"
+    },
+    "drive ls": {
+      "classification": "read_only",
+      "content_hash": "1124066b6a0643a8",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists files; --all broadens what's shown."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read-only flag on already read-only listing"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Lists files; --force likely bypasses cache to fetch fresh listing."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists files in a folder without modification",
+      "source": "llm"
+    },
+    "drive mkdir": {
+      "classification": "write",
+      "content_hash": "6eddc659e8e8d96f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended folder creation without modifying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for folder creation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new folder in Drive",
+      "source": "llm"
+    },
+    "drive move": {
+      "classification": "write",
+      "content_hash": "bf2d098b736e85af",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended move without applying"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation for file move operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Moves a file to a different Drive folder",
+      "source": "llm"
+    },
+    "drive permissions": {
+      "classification": "read_only",
+      "content_hash": "a05247c917279453",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "--force on a list command only forces a refresh of permissions, not destruction of data"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists file permissions; only inspects access state without modification.",
+      "source": "llm"
+    },
+    "drive raw": {
+      "classification": "read_only",
+      "content_hash": "6441348b0a803105",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "--force on an API dump command may force a fresh fetch, but the operation itself only reads"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Returns raw API metadata for a file; read-only inspection.",
+      "source": "llm"
+    },
+    "drive rename": {
+      "classification": "write",
+      "content_hash": "eef426237fafba91",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays intended rename without executing it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but rename is reversible and explicit."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies file name; reversible state change.",
+      "source": "llm"
+    },
+    "drive revisions": {
+      "classification": "read_only",
+      "content_hash": "42472b90369a7837",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Listing and inspecting revisions is read-only; --force doesn't alter or delete revisions"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists and inspects file version history; read-only inspection.",
+      "source": "llm"
+    },
+    "drive revisions get": {
+      "classification": "read_only",
+      "content_hash": "c7fc686dd3b52876",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Getting revision metadata is retrieval only; --force may bypass cache but doesn't modify data"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Gets revision metadata; read-only inspection.",
+      "source": "llm"
+    },
+    "drive revisions list": {
+      "classification": "read_only",
+      "content_hash": "88181091d205f3ae",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "--all flag expands what is displayed, not what is destroyed\u2014broadens the listing scope"
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Listing revisions is read-only; --force doesn't delete or modify revisions"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists file revisions; read-only inspection.",
+      "source": "llm"
+    },
+    "drive search": {
+      "classification": "read_only",
+      "content_hash": "e0d18c6b8062b34e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Full-text search only inspects files; --force may force index refresh but doesn't modify data"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Full-text search across Drive; read-only query with no modifications.",
+      "source": "llm"
+    },
+    "drive share": {
+      "classification": "write",
+      "content_hash": "18fdbdb52dd134ad",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays intended share without executing it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but sharing is reversible; no data destruction."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Grants file access to others; modifies permissions and is reversible.",
+      "source": "llm"
+    },
+    "drive shortcut": {
+      "classification": "read_only",
+      "content_hash": "79541f3569c15792",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Managing shortcuts involves creating or modifying shortcut state; --force could force operations despite conflicts"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command listing available shortcut operations; read-only.",
+      "source": "llm"
+    },
+    "drive shortcut create": {
+      "classification": "write",
+      "content_hash": "c0bc1109f160de80",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays intended shortcut creation without executing it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but shortcut creation is reversible and bounded."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new shortcut object; adds state to Drive.",
+      "source": "llm"
+    },
+    "drive sync": {
+      "classification": "read_only",
+      "content_hash": "2b7b8494bf5216cb",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Sync reconciles local files with Drive, potentially overwriting them; --force likely forces overwrites despite conflicts"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command listing available sync operations; read-only.",
+      "source": "llm"
+    },
+    "drive sync push": {
+      "classification": "write",
+      "content_hash": "01b500c5910565d7",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays files that would be uploaded without executing upload."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation on overwrites; can destroy existing Drive files without warning."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Uploads local files to Drive folder; modifies remote state.",
+      "source": "llm"
+    },
+    "drive tree": {
+      "classification": "read_only",
+      "content_hash": "34331c5de1063c79",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "On a read-only command, dry-run remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Command explicitly describes a read-only folder tree; --force doesn't change its safe read-only nature"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Prints read-only folder tree; inspects structure without modification.",
+      "source": "llm"
+    },
+    "drive unshare": {
+      "classification": "write",
+      "content_hash": "06df94be748a8175",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays intended permission removal without executing it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation; operation is reversible and permission ID is explicit."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes a permission from a file; modifies access state but is reversible.",
+      "source": "llm"
+    },
+    "drive upload": {
+      "classification": "write",
+      "content_hash": "4d14d405e61dfefc",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displays intended upload without executing it."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation on overwrites; can destroy existing Drive files without warning."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Uploads a file to Drive; modifies remote state.",
+      "source": "llm"
+    },
+    "drive url": {
+      "classification": "read_only",
+      "content_hash": "b8a73f3ef05e8968",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on a read-only operation remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Printing web URLs only displays links; --force doesn't modify or destroy files"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Prints web URLs for files without modifying any state.",
+      "source": "llm"
+    },
+    "gmail": {
+      "classification": "read_only",
+      "content_hash": "bd13ab611b9b8708",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Parent namespace; preview flag has no effect on namespace itself."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Group command where --force applies globally to subcommands; conservatively treat as write pending subcommand context"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command namespace for Gmail subcommands.",
+      "source": "llm"
+    },
+    "gmail archive": {
+      "classification": "write",
+      "content_hash": "71fd900a34b348a0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview archiving without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but still archives messages."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes messages from inbox (reversible state modification).",
+      "source": "llm"
+    },
+    "gmail attachment": {
+      "classification": "read_only",
+      "content_hash": "ea9260a7add714c3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview retrieval without downloading."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Downloading attachment is retrieval only; --force may force a fresh download but doesn't modify or delete"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Downloads and retrieves an existing attachment from a message.",
+      "source": "llm"
+    },
+    "gmail autoreply": {
+      "classification": "write",
+      "content_hash": "ea5c575ba88b2b21",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview replies without sending."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but still sends replies."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sends email replies to matching messages (state modification).",
+      "source": "llm"
+    },
+    "gmail batch": {
+      "classification": "read_only",
+      "content_hash": "e601bcfb96babb5f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Parent namespace; preview flag has no effect on namespace itself."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Help text explicitly mentions permanent delete capability; --force likely bypasses safeguards on destructive batch operations"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command namespace for batch operations.",
+      "source": "llm"
+    },
+    "gmail batch delete": {
+      "classification": "dangerous",
+      "content_hash": "c49b10737fad6613",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview deletions without actually deleting."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation on irreversible permanent deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Permanently and irreversibly deletes messages from Gmail.",
+      "source": "llm"
+    },
+    "gmail batch modify": {
+      "classification": "write",
+      "content_hash": "73ba16f3f090974a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview label changes without applying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but still modifies labels."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes labels from messages (reversible modification)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies labels on messages (reversible state change).",
+      "source": "llm"
+    },
+    "gmail drafts": {
+      "classification": "read_only",
+      "content_hash": "4bb04aac50aeec85",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Parent namespace; preview flag has no effect on namespace itself."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Draft operations modify draft state; --force could force modifications or actions on drafts despite conflicts"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command namespace for draft operations.",
+      "source": "llm"
+    },
+    "gmail drafts create": {
+      "classification": "write",
+      "content_hash": "3ad69e77f5680151",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview draft creation without saving."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but still creates draft."
+        },
+        "--reply-all": {
+          "classification": "write",
+          "rationale": "Still creates draft, just with auto-populated recipients."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a draft message (reversible state modification).",
+      "source": "llm"
+    },
+    "gmail drafts delete": {
+      "classification": "dangerous",
+      "content_hash": "ac8fb5b29a964bff",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview deletion without actually deleting."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation on irreversible permanent deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Permanently and irreversibly deletes a draft (explicitly not recoverable).",
+      "source": "llm"
+    },
+    "gmail drafts forward": {
+      "classification": "write",
+      "content_hash": "2be1ee16085b6155",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview draft creation without saving."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but still creates draft."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Saves a forward as a draft (reversible state modification).",
+      "source": "llm"
+    },
+    "gmail drafts get": {
+      "classification": "read_only",
+      "content_hash": "1607e2402ef278b7",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only retrieval remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Getting draft details is a read operation; --force likely forces cache refresh, not destructive."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves and displays draft details without modification.",
+      "source": "llm"
+    },
+    "gmail drafts list": {
+      "classification": "read_only",
+      "content_hash": "8a06d4af65aa4e1e",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "--all on a list command broadens what's shown, not what's deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on listing remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Listing is a read operation; --force likely forces fresh API fetch."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists all drafts without modifying any state.",
+      "source": "llm"
+    },
+    "gmail drafts reply": {
+      "classification": "write",
+      "content_hash": "8334845d85623c9c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview draft creation without saving."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Bypasses confirmation but still creates draft."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes recipients from draft (reversible modification)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Saves a reply as a draft (reversible state modification).",
+      "source": "llm"
+    },
+    "gmail drafts reply-all": {
+      "classification": "write",
+      "content_hash": "5a21b426d3290648",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews action without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still only creates/modifies a draft (not irreversible)."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Modifies draft recipients, but draft remains reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates/modifies a reply-all draft (reversible state change).",
+      "source": "llm"
+    },
+    "gmail drafts send": {
+      "classification": "dangerous",
+      "content_hash": "c8cc3220908cee15",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews action without sending."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Sends email by bypassing confirmation (irreversible action)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sends an email to recipients (irreversible, external impact).",
+      "source": "llm"
+    },
+    "gmail drafts update": {
+      "classification": "write",
+      "content_hash": "0c315414352b82ed",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews changes without modifying draft."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Modifies draft by skipping confirmation (reversible)."
+        },
+        "--reply-all": {
+          "classification": "write",
+          "rationale": "Adds recipients to draft (reversible modification)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies draft content (reversible state change).",
+      "source": "llm"
+    },
+    "gmail forward": {
+      "classification": "write",
+      "content_hash": "172471e3acba4ee5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews forward draft without creating it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Creates forward draft by skipping confirmation (reversible)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a forwarded message draft (reversible state change).",
+      "source": "llm"
+    },
+    "gmail get": {
+      "classification": "read_only",
+      "content_hash": "8fa428e83bb56ba9",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Retrieves message in preview mode (no state change)."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Getting a message is inspection only; --force forces fresh retrieval."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves and displays a message without modification.",
+      "source": "llm"
+    },
+    "gmail history": {
+      "classification": "read_only",
+      "content_hash": "0c095078a6001e30",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "--all on history broadens what history is displayed, not destructive."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews history retrieval (no state change)."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Viewing history is a read operation; --force forces fresh fetch."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Reads Gmail message change history without modification.",
+      "source": "llm"
+    },
+    "gmail import": {
+      "classification": "write",
+      "content_hash": "afb77f348432e6b2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews import without creating message."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Imports message by skipping confirmation (reversible - can delete imported message)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Imports an email into Gmail (adds message to mailbox).",
+      "source": "llm"
+    },
+    "gmail labels": {
+      "classification": "read_only",
+      "content_hash": "eeeb112d5a5cb60d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews label operations (read-only)."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Label operations command group; --force on the group itself is a metadata flag for API behavior."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists labels or shows label operations help (no state modification).",
+      "source": "llm"
+    },
+    "gmail labels create": {
+      "classification": "write",
+      "content_hash": "57c9c3328e6f0b5d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews label creation without creating it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Creates label by skipping confirmation (reversible)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new label (reversible state change).",
+      "source": "llm"
+    },
+    "gmail labels delete": {
+      "classification": "dangerous",
+      "content_hash": "cd378805ae64d260",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews deletion without deleting."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Deletes label by bypassing confirmation (irreversible destruction)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a label permanently (irreversible, affects all tagged threads).",
+      "source": "llm"
+    },
+    "gmail labels get": {
+      "classification": "read_only",
+      "content_hash": "8f34e4359d58a5be",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews label details (read-only)."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Getting label details is retrieval only; --force forces cache bypass."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves label details and counts without modification.",
+      "source": "llm"
+    },
+    "gmail labels list": {
+      "classification": "read_only",
+      "content_hash": "c10baea0dcd87f85",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews label listing (read-only)."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Listing labels is a read operation; --force forces fresh API call."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists all labels without modification.",
+      "source": "llm"
+    },
+    "gmail labels modify": {
+      "classification": "write",
+      "content_hash": "fe305a1c036b6aa9",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews label modifications without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Modifies labels by skipping confirmation (reversible)."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes labels from threads (reversible modification)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Changes label assignments on threads (reversible state change).",
+      "source": "llm"
+    },
+    "gmail labels rename": {
+      "classification": "write",
+      "content_hash": "a042e4a19b1a9cb1",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews rename without applying it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Renames label by skipping confirmation (reversible)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Renames a label (reversible state change).",
+      "source": "llm"
+    },
+    "gmail labels style": {
+      "classification": "write",
+      "content_hash": "a5d6364d6a8533b5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Previews style changes without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Changes label style by skipping confirmation (reversible)."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Changes label color or visibility settings (reversible state change).",
+      "source": "llm"
+    },
+    "gmail mark-read": {
+      "classification": "write",
+      "content_hash": "bd3deac026eb865e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still marks messages as read; only skips confirmation prompts."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies message state (marking as read); bounded, expected, and reversible.",
+      "source": "llm"
+    },
+    "gmail messages": {
+      "classification": "read_only",
+      "content_hash": "a7045c41a13165ea",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command does not perform destructive actions; flag remains read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Message operations command group; --force at the group level is API control metadata."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Subcommand group showing available message operations; requires a subcommand to perform actions.",
+      "source": "llm"
+    },
+    "gmail messages modify": {
+      "classification": "write",
+      "content_hash": "a9cb7d6d4c59a207",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended label modifications without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still modifies message labels; only skips confirmation."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Specifies which labels to remove, still a write operation to message state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies labels on a message; bounded change to message state.",
+      "source": "llm"
+    },
+    "gmail messages search": {
+      "classification": "read_only",
+      "content_hash": "52ffb1cc24d458d2",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "--all on search broadens what results are shown, not what's deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Search operation is already read-only; flag has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Searching is a read operation; --force forces fresh search execution."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches messages without modifying state; returns matching results.",
+      "source": "llm"
+    },
+    "gmail raw": {
+      "classification": "read_only",
+      "content_hash": "e9502855b5abda15",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Operation is already read-only; flag has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Dumping raw JSON is pure inspection; --force forces fresh API response."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Dumps raw Gmail API response as JSON for reading and scripting; no modification.",
+      "source": "llm"
+    },
+    "gmail reply": {
+      "classification": "write",
+      "content_hash": "8dbe5d217fcbc1c3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows reply content and recipients without sending."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still creates and sends a reply; only skips confirmation."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes specified recipients from reply; still a write operation creating a message."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a reply message; modifies account state by adding new message.",
+      "source": "llm"
+    },
+    "gmail reply-all": {
+      "classification": "write",
+      "content_hash": "77ad1419b65ef291",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows reply content and all recipients without sending."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still creates and sends a reply; only skips confirmation."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes recipients from reply; still a write operation creating a message."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a reply to all message participants; modifies account state.",
+      "source": "llm"
+    },
+    "gmail search": {
+      "classification": "read_only",
+      "content_hash": "a0847c3fb0bceb33",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "--all on thread search broadens results shown, not destructive."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Search is already read-only; flag has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Searching threads is a read operation; --force forces fresh execution."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches threads using Gmail query syntax; returns results without modifying state.",
+      "source": "llm"
+    },
+    "gmail send": {
+      "classification": "write",
+      "content_hash": "58af98b91d1c76b1",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows email content and recipients without sending."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still sends the email; only skips confirmation."
+        },
+        "--reply-all": {
+          "classification": "write",
+          "rationale": "Auto-populates recipients but still sends an email; remains write."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sends an email; creates a new message in the account.",
+      "source": "llm"
+    },
+    "gmail settings": {
+      "classification": "read_only",
+      "content_hash": "9fd123b13f1cbaa3",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command does not perform destructive actions."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Help/navigation command for settings subcommands; --force is not used to override safety or modify state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Subcommand group for settings and admin operations; requires a subcommand.",
+      "source": "llm"
+    },
+    "gmail settings autoforward": {
+      "classification": "read_only",
+      "content_hash": "09165cf35cdd0781",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command does not perform destructive actions."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Help/navigation command for autoforward subcommands; --force doesn't change the read-only nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Subcommand group for auto-forwarding settings; requires a subcommand.",
+      "source": "llm"
+    },
+    "gmail settings autoforward get": {
+      "classification": "read_only",
+      "content_hash": "c67c3c18e78ba702",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Operation is already read-only."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "GET command retrieves current auto-forwarding settings; --force likely forces a fresh API call, not a modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves current auto-forwarding settings; no modifications.",
+      "source": "llm"
+    },
+    "gmail settings autoforward update": {
+      "classification": "write",
+      "content_hash": "06a7d81ce7379926",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended setting changes without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still modifies settings; only skips confirmation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies auto-forwarding settings on the account.",
+      "source": "llm"
+    },
+    "gmail settings delegates": {
+      "classification": "read_only",
+      "content_hash": "0b3bc6f7f686cf3c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Group command does not perform destructive actions."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Help/navigation command for delegate operations; --force is not used for modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Subcommand group for delegate operations; requires a subcommand.",
+      "source": "llm"
+    },
+    "gmail settings delegates add": {
+      "classification": "write",
+      "content_hash": "765eab4eb75bc670",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows which delegate would be added without applying the change."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Still adds the delegate; only skips confirmation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Adds a delegate to the account; modifies account permissions and access.",
+      "source": "llm"
+    },
+    "gmail settings delegates get": {
+      "classification": "read_only",
+      "content_hash": "373f161a662a9b83",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only operation; no state is modified."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "GET command retrieves delegate information; --force suppresses confirmation or forces refresh, not state change."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves information about a specific delegate without modifying any state.",
+      "source": "llm"
+    },
+    "gmail settings delegates list": {
+      "classification": "read_only",
+      "content_hash": "0356bfaefbd40055",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "LIST command enumerates delegates; --force may include all items but doesn't modify any state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists delegates without modifying any state.",
+      "source": "llm"
+    },
+    "gmail settings delegates remove": {
+      "classification": "write",
+      "content_hash": "e588eab7a8f2b1ae",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended removal without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt on a destructive account-access operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes a delegate from the account; modifies access control but is reversible by re-adding.",
+      "source": "llm"
+    },
+    "gmail settings filters": {
+      "classification": "read_only",
+      "content_hash": "fa08c1395f878b71",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on parent command has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Help/navigation command for filter operations; --force doesn't alter the read-only nature."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command group for filter operations; no state modification without a subcommand.",
+      "source": "llm"
+    },
+    "gmail settings filters create": {
+      "classification": "write",
+      "content_hash": "0622c7e4ad61463a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended filter creation without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation on non-destructive create operation; effect remains bounded and reversible."
+        },
+        "--remove-label": {
+          "classification": "write",
+          "rationale": "Parameter specifying filter behavior; still part of reversible filter creation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new email filter configuration; modifies Gmail settings but is reversible.",
+      "source": "llm"
+    },
+    "gmail settings filters delete": {
+      "classification": "write",
+      "content_hash": "b0871e73e4046556",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended deletion without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt on a deletion operation, increasing risk of unintended removal."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a filter configuration; modifies Gmail settings but is reversible by recreating the filter.",
+      "source": "llm"
+    },
+    "gmail settings filters export": {
+      "classification": "read_only",
+      "content_hash": "868976bbc1173988",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only export operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "EXPORT command outputs filters as XML without modification; --force is not destructive."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Exports filter data as XML output; inspects and reads state without modification.",
+      "source": "llm"
+    },
+    "gmail settings filters get": {
+      "classification": "read_only",
+      "content_hash": "4d90a1068b52eb05",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "GET command retrieves a specific filter; --force forces refresh, not modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves information about a specific filter without modifying state.",
+      "source": "llm"
+    },
+    "gmail settings filters list": {
+      "classification": "read_only",
+      "content_hash": "a3fd99f97c9821ce",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "LIST command enumerates email filters; --force doesn't modify state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists all email filters without modifying any state.",
+      "source": "llm"
+    },
+    "gmail settings forwarding": {
+      "classification": "read_only",
+      "content_hash": "8468336627a1db26",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on parent command has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Help/navigation command for forwarding addresses; --force has no destructive effect."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command group for forwarding-address operations; no state modification without a subcommand.",
+      "source": "llm"
+    },
+    "gmail settings forwarding create": {
+      "classification": "write",
+      "content_hash": "9a43c2afca80395c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended forwarding-address creation without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation on non-destructive create operation; effect remains bounded and reversible."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Adds a forwarding address to the account; modifies Gmail settings but is reversible.",
+      "source": "llm"
+    },
+    "gmail settings forwarding delete": {
+      "classification": "write",
+      "content_hash": "55a8285ea70743a0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview mode shows intended deletion without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Bypasses confirmation prompt on a deletion operation, increasing risk of unintended removal."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes a forwarding address from the account; modifies Gmail settings but is reversible by re-adding.",
+      "source": "llm"
+    },
+    "gmail settings forwarding get": {
+      "classification": "read_only",
+      "content_hash": "c2a9e9848939eaec",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "GET command retrieves a forwarding address; --force forces a fresh fetch, not a modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves information about a specific forwarding address without modifying state.",
+      "source": "llm"
+    },
+    "gmail settings forwarding list": {
+      "classification": "read_only",
+      "content_hash": "afa2e38b728c4b34",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on read-only operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "LIST command enumerates forwarding addresses; --force doesn't alter state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists all forwarding addresses without modifying any state.",
+      "source": "llm"
+    },
+    "gmail settings sendas": {
+      "classification": "read_only",
+      "content_hash": "a430fc0e4cb8bd7d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Preview flag on parent command has no effect."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Help/navigation command for send-as settings; --force isn't used to bypass safety on modifications."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command group for send-as settings; no state modification without a subcommand.",
+      "source": "llm"
+    },
+    "gmail settings sendas create": {
+      "classification": "write",
+      "content_hash": "4b2484c68ed69e56",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows intended changes without applying them"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Creates alias without confirmation, but still modifies settings"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new Gmail send-as alias, modifying account settings",
+      "source": "llm"
+    },
+    "gmail settings sendas delete": {
+      "classification": "dangerous",
+      "content_hash": "98e229800c3a0e9d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows deletion without performing it"
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Deletes alias without confirmation, skipping safety check"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Destroys/removes an email alias, an irreversible deletion",
+      "source": "llm"
+    },
+    "gmail settings sendas get": {
+      "classification": "read_only",
+      "content_hash": "936ad6cf588edb16",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Does not change read-only behavior"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "GET command retrieves send-as alias details; --force forces refresh, not state change."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves details of an existing send-as alias",
+      "source": "llm"
+    },
+    "gmail settings sendas list": {
+      "classification": "read_only",
+      "content_hash": "14a7cd933ffb5340",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Does not change read-only behavior"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "List command inherently reads state; --force cannot make listing destructive"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists send-as aliases, only inspects account configuration",
+      "source": "llm"
+    },
+    "gmail settings sendas update": {
+      "classification": "write",
+      "content_hash": "26fdf55674cb0880",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows changes without applying them"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Updates alias without confirmation, but still modifies settings"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies settings of an existing send-as alias",
+      "source": "llm"
+    },
+    "gmail settings sendas verify": {
+      "classification": "write",
+      "content_hash": "b918b942c52aaef4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows action without performing it"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Sends verification email without confirmation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Triggers resending of verification email, modifying state/sending action",
+      "source": "llm"
+    },
+    "gmail settings vacation": {
+      "classification": "read_only",
+      "content_hash": "9a7bf0aa938235f6",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Does not change read-only behavior"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Command group for vacation settings; subcommands shown (get) are read-only"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command for vacation responder; calling alone shows settings or help",
+      "source": "llm"
+    },
+    "gmail settings vacation get": {
+      "classification": "read_only",
+      "content_hash": "9ca4275529ed6a5d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Does not change read-only behavior"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Explicitly 'Get current vacation responder settings' \u2014 pure read operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves current vacation responder settings",
+      "source": "llm"
+    },
+    "gmail settings vacation update": {
+      "classification": "write",
+      "content_hash": "9282ec62a0affc3b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows changes without applying them"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Updates settings without confirmation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies vacation responder settings for the account",
+      "source": "llm"
+    },
+    "gmail settings watch": {
+      "classification": "read_only",
+      "content_hash": "476f0eb644151b5a",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Does not change read-only behavior"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Watch/monitoring management is a read/config operation; --force doesn't alter that"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Container command for watch management; calling alone shows watch state or help",
+      "source": "llm"
+    },
+    "gmail settings watch pull": {
+      "classification": "write",
+      "content_hash": "f1fdc1627782e148",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows messages without processing them"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Processes messages without confirmation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Runs Pub/Sub pull consumer that processes/consumes messages from queue",
+      "source": "llm"
+    },
+    "gmail settings watch renew": {
+      "classification": "write",
+      "content_hash": "b2837f1425a30ca5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows renewal action without performing it"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Renews subscription without confirmation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Renews Gmail watch subscription with Pub/Sub, modifying subscription state",
+      "source": "llm"
+    },
+    "gmail settings watch serve": {
+      "classification": "write",
+      "content_hash": "f5631680c77ead76",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows without processing notifications"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Processes notifications without confirmation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Runs Pub/Sub push handler that processes incoming push notifications",
+      "source": "llm"
+    },
+    "gmail settings watch start": {
+      "classification": "write",
+      "content_hash": "dc2b0898be0c67d9",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Shows startup action without performing it"
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Starts watch without confirmation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Starts a new Gmail watch subscription for Pub/Sub notifications",
+      "source": "llm"
+    },
+    "gmail settings watch status": {
+      "classification": "read_only",
+      "content_hash": "aa14d4dbeb19db75",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Does not change read-only behavior"
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'Show stored watch state' is explicitly a display/read operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays stored watch state/subscription information",
+      "source": "llm"
+    },
+    "gmail settings watch stop": {
+      "classification": "write",
+      "content_hash": "9c2edee306075a0d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation prompts but still reversibl modifies watch state."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Stops Gmail watch and clears stored state; modifies local watch configuration but is reversible.",
+      "source": "llm"
+    },
+    "gmail thread": {
+      "classification": "read_only",
+      "content_hash": "437c1d72173ea1a8",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect; parent help command has no state-changing operations."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Command group for thread operations (get, modify); listed operations include read"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for thread operations that displays help/subcommand info without modifying state.",
+      "source": "llm"
+    },
+    "gmail thread attachments": {
+      "classification": "read_only",
+      "content_hash": "2449e4d0c20c7eda",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No state changes in a read/list operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'List all attachments' is purely a read operation regardless of --force"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists all attachments in a thread; reads and displays data only.",
+      "source": "llm"
+    },
+    "gmail thread get": {
+      "classification": "read_only",
+      "content_hash": "d8a41e232fa95503",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No state changes in a retrieval operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'Get a thread with all messages' is explicitly a read/retrieve operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves thread and messages, optionally downloads attachments; inspects/fetches data only.",
+      "source": "llm"
+    },
+    "gmail thread modify": {
+      "classification": "write",
+      "content_hash": "90842a19c4579618",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended label changes without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation prompts but still reversibl modifies labels."
+        },
+        "--remove": {
+          "classification": "write",
+          "rationale": "Removes specified labels from messages; reversible modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Modifies labels on messages in a thread; reversible state change.",
+      "source": "llm"
+    },
+    "gmail track": {
+      "classification": "read_only",
+      "content_hash": "7c5df67312601aa4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect; parent help command has no state-changing operations."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Email open tracking command group; shown subcommands are queries and status"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for email tracking operations that displays help/subcommand info without modifying state.",
+      "source": "llm"
+    },
+    "gmail track key": {
+      "classification": "read_only",
+      "content_hash": "33891a579f8a163e",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect; parent help command has no state-changing operations."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Key management group; --force on config operations doesn't imply deletion"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Parent command for key management operations that displays help/subcommand info without modifying state.",
+      "source": "llm"
+    },
+    "gmail track key rotate": {
+      "classification": "write",
+      "content_hash": "c81f2767679a9348",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended key rotation without applying it."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still rotates key reversibly."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Rotates email tracking encryption key; modifies tracking configuration but is reversible.",
+      "source": "llm"
+    },
+    "gmail track opens": {
+      "classification": "read_only",
+      "content_hash": "a35738c01e33e89c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No state changes in a query operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'Query email opens' is explicitly a read/query operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Queries email open tracking data; reads/retrieves information only.",
+      "source": "llm"
+    },
+    "gmail track setup": {
+      "classification": "write",
+      "content_hash": "c240385f3c95ffaf",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended setup steps without deploying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still deploys setup reversibly."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sets up tracking infrastructure and deploys Cloudflare Worker; modifies configuration but is reversible.",
+      "source": "llm"
+    },
+    "gmail track status": {
+      "classification": "read_only",
+      "content_hash": "41335f5cd5edc16d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No state changes in a status check."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'Show tracking configuration status' is explicitly a display operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Shows tracking configuration status; reads/inspects configuration only.",
+      "source": "llm"
+    },
+    "gmail trash": {
+      "classification": "write",
+      "content_hash": "0a37345e5a7f6f14",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended moves without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still reversibl moves messages."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Moves messages to trash; modifies message state but is reversible through recovery.",
+      "source": "llm"
+    },
+    "gmail unread": {
+      "classification": "write",
+      "content_hash": "8cb834be03339bc6",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended markings without applying them."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still reversibl marks messages."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Marks messages as unread; modifies message state but is reversible.",
+      "source": "llm"
+    },
+    "gmail url": {
+      "classification": "read_only",
+      "content_hash": "4f3213d95c791464",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No state changes in a URL generation operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'Print Gmail web URLs for threads' is a pure read/output operation"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Prints Gmail web URLs for specified threads; generates/reads URLs without modifying state.",
+      "source": "llm"
+    },
+    "login": {
+      "classification": "write",
+      "content_hash": "025053dae16acb90",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended authorization flow without storing credentials."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but still stores credentials reversibly."
+        },
+        "--force-consent": {
+          "classification": "write",
+          "rationale": "Forces consent screen and stores credentials reversibly."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Authorizes and stores refresh token for Google account; modifies credentials state but is reversible.",
+      "source": "llm"
+    },
+    "logout": {
+      "classification": "write",
+      "content_hash": "e7630d701ee8f972",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmations but still performs the bounded credential removal."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Removes stored credentials but is reversible via re-authentication; bounded and intentional action.",
+      "source": "llm"
+    },
+    "ls": {
+      "classification": "read_only",
+      "content_hash": "7050ea47010f3a95",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "--all on a list command broadens what is shown, not what is removed"
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still only lists files; no modifications."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "'List Drive files' is a read operation; --force doesn't alter its read-only nature"
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists Drive files without modifying any state.",
+      "source": "llm"
+    },
+    "me": {
+      "classification": "read_only",
+      "content_hash": "2f44a92e6436df92",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read operation unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Shows your profile; --force in read context means force output/fetch, not destructive."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays user's own profile without modification.",
+      "source": "llm"
+    },
+    "open": {
+      "classification": "read_only",
+      "content_hash": "fde4aa6d9c646b13",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Still prints URLs without side effects."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Prints best-effort web URL (offline operation); --force broadens output, not destruction."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Prints a URL; offline operation with no state modification.",
+      "source": "llm"
+    },
+    "people": {
+      "classification": "read_only",
+      "content_hash": "de04b8054bcc63fb",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Displaying help is not affected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Parent command for Google People API; no destructive subcommands implied by flagged word."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group that displays help or info when run without subcommand.",
+      "source": "llm"
+    },
+    "people get": {
+      "classification": "read_only",
+      "content_hash": "1cc6078ecc98e6da",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read operation unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets a user profile by ID; --force means force fetch from API, not modify or delete."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves a user profile by ID without modification.",
+      "source": "llm"
+    },
+    "people me": {
+      "classification": "read_only",
+      "content_hash": "a527daffe0f77bf6",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read operation unaffected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Shows your profile; --force forces read operation, not destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays user's own profile without modification.",
+      "source": "llm"
+    },
+    "people raw": {
+      "classification": "read_only",
+      "content_hash": "43edecb53f2dc7ae",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read operation unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Dumps raw People API response as JSON; explicitly described as lossless data output."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Dumps raw API response as JSON; read-only output for inspection.",
+      "source": "llm"
+    },
+    "people relations": {
+      "classification": "read_only",
+      "content_hash": "01c20faaf2ff52f9",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Read operation unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets user relations; --force forces fetch operation, not modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves user relations without modification.",
+      "source": "llm"
+    },
+    "people search": {
+      "classification": "read_only",
+      "content_hash": "b3412902921400ca",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Searches the Workspace directory; --all expands search scope/results shown, not destroyed."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Search operation unaffected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Searches directory; --force forces search execution, not a destructive operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches Workspace directory without modifying state.",
+      "source": "llm"
+    },
+    "schema": {
+      "classification": "read_only",
+      "content_hash": "7963f2f8c58db70c",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Schema output is not affected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Machine-readable command/flag schema (help/introspection); --force broadens help output."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Outputs machine-readable schema; displays information only.",
+      "source": "llm"
+    },
+    "search": {
+      "classification": "read_only",
+      "content_hash": "ca7d88712e5753e4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Search operation unaffected by dry-run flag."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Searches Drive files; --force forces search operation, not file deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Searches Drive files without modifying state.",
+      "source": "llm"
+    },
+    "send": {
+      "classification": "write",
+      "content_hash": "33fed163a03c0ce0",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended actions without actually sending the email."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmations but still performs the bounded email send operation."
+        },
+        "--reply-all": {
+          "classification": "write",
+          "rationale": "Affects recipients of the email but still performs the bounded send operation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Sends an email; modifies external state (creates sent message) in a bounded, intentional manner.",
+      "source": "llm"
+    },
+    "status": {
+      "classification": "read_only",
+      "content_hash": "735cdbca14c477e5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Status display is not affected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Shows auth/config status; --force forces status check/refresh, not state modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Shows authentication and configuration status without modification.",
+      "source": "llm"
+    },
+    "tasks": {
+      "classification": "read_only",
+      "content_hash": "45dae798bce3b1ca",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Help display is not affected by dry-run."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Parent command for Google Tasks; no destructive operations implied by flagged word."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Command group for Google Tasks; displays help or info when run without subcommand.",
+      "source": "llm"
+    },
+    "tasks add": {
+      "classification": "write",
+      "content_hash": "7bd634e0491ffac4",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended actions without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but result is still task creation, which is write-tier."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new task in a task list; modifies remote state but bounded and reversible.",
+      "source": "llm"
+    },
+    "tasks clear": {
+      "classification": "dangerous",
+      "content_hash": "26b79e7e05124927",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended deletions without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation for destructive deletion of tasks."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes all completed tasks from a list; destructive and irreversible.",
+      "source": "llm"
+    },
+    "tasks delete": {
+      "classification": "dangerous",
+      "content_hash": "bf0f75c62bf8d656",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended deletion without making changes."
+        },
+        "--force": {
+          "classification": "dangerous",
+          "rationale": "Skips confirmation for destructive deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Deletes a specific task; destructive operation.",
+      "source": "llm"
+    },
+    "tasks done": {
+      "classification": "write",
+      "content_hash": "9f4d13ceb1de53aa",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended state change without modifying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but result is reversible state change."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Marks a task as completed; modifies state but reversible via tasks undo.",
+      "source": "llm"
+    },
+    "tasks get": {
+      "classification": "read_only",
+      "content_hash": "c76b99d8bf78bfc8",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Gets a task; --force forces fetch from API, not modification or deletion."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Retrieves and displays a single task; only inspects state.",
+      "source": "llm"
+    },
+    "tasks list": {
+      "classification": "read_only",
+      "content_hash": "7f6b369885f84941",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "Lists tasks; --all expands what's shown in listing, not what's deleted."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Command lists tasks; --force in a read context means force refresh/refetch, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists tasks in a task list; only inspects state.",
+      "source": "llm"
+    },
+    "tasks lists": {
+      "classification": "read_only",
+      "content_hash": "f0ff625c69756b88",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Command lists task lists; --force means force refresh the listing, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists available task lists; only inspects state.",
+      "source": "llm"
+    },
+    "tasks lists create": {
+      "classification": "write",
+      "content_hash": "99e96c56058823f5",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended creation without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but result is still task list creation."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Creates a new task list; modifies remote state but bounded and reversible.",
+      "source": "llm"
+    },
+    "tasks lists list": {
+      "classification": "read_only",
+      "content_hash": "01cfa772ba723b2f",
+      "flags": {
+        "--all": {
+          "classification": "read_only",
+          "rationale": "List command; --all expands what is shown in output, not what is deleted or destroyed."
+        },
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Command lists task lists; --force means force refresh the listing, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Lists available task lists; only inspects state.",
+      "source": "llm"
+    },
+    "tasks raw": {
+      "classification": "read_only",
+      "content_hash": "4a27fb87b8c4e76f",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Dumps raw API response as JSON for inspection; --force means force refetch, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Dumps raw JSON API response for a task; only inspects and displays data.",
+      "source": "llm"
+    },
+    "tasks undo": {
+      "classification": "write",
+      "content_hash": "1dbddc6f030b5a4b",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended state change without modifying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but result is reversible state change."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Marks a task as needing action (incomplete); modifies state but reversible via tasks done.",
+      "source": "llm"
+    },
+    "tasks update": {
+      "classification": "write",
+      "content_hash": "1fbe7e59dfe6d11d",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended changes without modifying."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but result is still task modification."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Updates task properties; modifies remote state but bounded and reversible.",
+      "source": "llm"
+    },
+    "time": {
+      "classification": "read_only",
+      "content_hash": "5bfa4aa39489edb2",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Time utilities group command; --force has no destructive semantics in a time utility context."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Time utilities subcommand group; displays help information without modifying state.",
+      "source": "llm"
+    },
+    "time now": {
+      "classification": "read_only",
+      "content_hash": "004ea70d72f26ffd",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "No effect on read operation."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Displays current time; --force means force recalculate/refresh, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Shows current time; only displays information without modifying state.",
+      "source": "llm"
+    },
+    "upload": {
+      "classification": "write",
+      "content_hash": "e646ac1bcabbe7e9",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Prints intended upload without making changes."
+        },
+        "--force": {
+          "classification": "write",
+          "rationale": "Skips confirmation but result is still file upload."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Uploads a file to Google Drive; creates remote resource but bounded and reversible via Drive deletion.",
+      "source": "llm"
+    },
+    "whoami": {
+      "classification": "read_only",
+      "content_hash": "9f66872dee62b128",
+      "flags": {
+        "--dry-run": {
+          "classification": "read_only",
+          "rationale": "Remains read-only; there are no changes to preview or skip on a profile-display command."
+        },
+        "--force": {
+          "classification": "read_only",
+          "rationale": "Shows user profile; --force means force refresh profile data, not a destructive action."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Displays authenticated user's profile information without modifying state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-09-28T20:59:57Z",
+  "truncated": false,
+  "version": "v0.42.0 (792107a3 2026-09-25T22:01:52Z)"
+}

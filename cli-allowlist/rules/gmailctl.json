@@ -1,0 +1,88 @@
+{
+  "classified_at": "2026-09-28T20:16:55Z",
+  "extracted_at": "2026-09-28T20:13:48Z",
+  "nodes": {
+    "apply": {
+      "classification": "write",
+      "content_hash": "54581988f98a4f6f",
+      "flags": {
+        "--remove-labels": {
+          "classification": "dangerous",
+          "rationale": "Enables destructive capability to remove labels from Gmail accounts."
+        },
+        "--yes": {
+          "classification": "dangerous",
+          "rationale": "Bypasses normal confirmation step on a remote-modifying operation without user review."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Applies bounded, expected changes to Gmail settings to match local configuration file.",
+      "source": "llm"
+    },
+    "debug": {
+      "classification": "read_only",
+      "content_hash": "c0999b3de0ac983c",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays annotated configuration with URLs for testing filters; read-only inspection only.",
+      "source": "llm"
+    },
+    "diff": {
+      "classification": "read_only",
+      "content_hash": "a3e8e558094c0b9d",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Displays comparison between local and remote Gmail filter configuration; read-only inspection only.",
+      "source": "llm"
+    },
+    "download": {
+      "classification": "write",
+      "content_hash": "9a1e3ec681e4f5fa",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Writes local configuration file based on remote Gmail filters; bounded, reversible state change.",
+      "source": "llm"
+    },
+    "edit": {
+      "classification": "write",
+      "content_hash": "2c20a2e2f11fd9de",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Opens editor on config file and applies minimal changes to sync Gmail with local state; bounded, expected modification.",
+      "source": "llm"
+    },
+    "export": {
+      "classification": "write",
+      "content_hash": "b2907059b38604fd",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Writes filters to local XML file for import/sharing; bounded, reversible state change to local filesystem.",
+      "source": "llm"
+    },
+    "init": {
+      "classification": "write",
+      "content_hash": "5c66fae2a4d66f81",
+      "flags": {
+        "--reset": {
+          "classification": "dangerous",
+          "rationale": "Destroys and resets existing configuration; irreversible destructive capability."
+        }
+      },
+      "model": "haiku",
+      "rationale": "Initializes configuration and sets up API authorization; expected setup operation.",
+      "source": "llm"
+    },
+    "test": {
+      "classification": "read_only",
+      "content_hash": "24e01c33aa172569",
+      "flags": {},
+      "model": "haiku",
+      "rationale": "Executes tests on configuration file; validation/inspection only without modifying state.",
+      "source": "llm"
+    }
+  },
+  "reviewed": true,
+  "reviewed_at": "2026-09-28T20:59:58Z",
+  "truncated": false,
+  "version": "0.12.0"
+}

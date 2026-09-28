@@ -1,0 +1,62 @@
+{
+  "extracted_at": "2026-09-28T20:13:48Z",
+  "interactive": false,
+  "nodes": {
+    "_top": {
+      "children": [],
+      "content_hash": "f5122871081db591",
+      "help_text": "Gmailctl is a command line utility that allows you to manage\nyour Gmail filters in a declarative way, making them easier\nto maintain and understand.\n\nUsage:\n  gmailctl [command]\n\nAvailable Commands:\n  apply       Apply a configuration file to Gmail settings\n  completion  Generate the autocompletion script for the specified shell\n  debug       Shows an annotated version of the configuration\n  diff        Shows a diff between the local configuration and Gmail settings\n  download    Download filters from Gmail to a local config file\n  edit        Edit the configuration and apply it to Gmail\n  export      Export filters into the Gmail XML format\n  help        Help about any command\n  init        Initialize the Gmail configuration\n  test        Execute config tests\n  version     Print gmailctl version and exit\n\nFlags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)\n  -h, --help                      help for gmailctl\n\nUse \"gmailctl [command] --help\" for more information about a command.",
+      "likely_invalid": false
+    },
+    "apply": {
+      "children": [],
+      "content_hash": "54581988f98a4f6f",
+      "help_text": "The apply command applies minimal changes to your Gmail settings\nto make them match your local configuration file.\n\nBy default apply uses the configuration file inside the config\ndirectory [config.jsonnet].\n\nUsage:\n  gmailctl apply [flags]\n\nFlags:\n      --debug              print extra debugging information\n      --diff-context int   number of lines of filter diff context to show (default 5)\n  -f, --filename string    configuration file\n  -h, --help               help for apply\n  -r, --remove-labels      allow removing labels\n  -y, --yes                don't ask for confirmation, just apply\n      --yolo               skip configuration tests\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "debug": {
+      "children": [],
+      "content_hash": "c0999b3de0ac983c",
+      "help_text": "The debug command shows an annotated version of the configuration\nwith handy URLs to Gmail search that can be used to test that the\nfilter applies to the intended emails.\n\nBy default debug uses the configuration file inside the config\ndirectory config.jsonnet].\n\nUsage:\n  gmailctl debug [flags]\n\nFlags:\n  -f, --filename string   configuration file\n  -h, --help              help for debug\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "diff": {
+      "children": [],
+      "content_hash": "a3e8e558094c0b9d",
+      "help_text": "The diff command shows the difference between the local\nconfiguration and the current Gmail settings of your account.\n\nBy default diff uses the configuration file inside the config\ndirectory [config.jsonnet].\n\nUsage:\n  gmailctl diff [flags]\n\nFlags:\n      --context int       number of lines of filter diff context to show (default 5)\n      --debug             print extra debugging information\n  -f, --filename string   configuration file\n  -h, --help              help for diff\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "download": {
+      "children": [],
+      "content_hash": "9a1e3ec681e4f5fa",
+      "help_text": "The download command gets the currently configured filters from Gmail\nand generates a compatible configuration file.\n\nThe resulting config won't be pretty, but it should be a good starting\npoint if your filters have been managed by other means and you want to\nmove to gmailctl.\n\nWARNING: This functionality is experimental. After downloading, verify\nthat no diff is detected with the remote filters by using the 'diff'\ncommand.\n\nUsage:\n  gmailctl download [flags]\n\nFlags:\n  -h, --help            help for download\n  -o, --output string   output file (default to stdout)\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "edit": {
+      "children": [],
+      "content_hash": "2c20a2e2f11fd9de",
+      "help_text": "The edit command is a shortcut that allows you to edit the\nconfiguration file, shows you the diff with your current Gmail\nconfiguration, and applies minimal changes to it in order to\nmake it match your desired state.\n\nThe editor to be used can be overridden with the $EDITOR\nenvironment variable.\n\nBy default edit uses the configuration file inside the config\ndirectory [config.jsonnet].\n\nUsage:\n  gmailctl edit [flags]\n\nFlags:\n      --debug              print extra debugging information\n      --diff-context int   number of lines of filter diff context to show (default 5)\n  -f, --filename string    configuration file\n  -h, --help               help for edit\n      --yolo               skip configuration tests\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "export": {
+      "children": [],
+      "content_hash": "b2907059b38604fd",
+      "help_text": "Export exports filters into the native Gmail XML format.\nThis allows to import them from within the Gmail settings or to share\nthem with other people.\n\nBy default export uses the configuration file inside the config\ndirectory [config.jsonnet].\n\nUsage:\n  gmailctl export [flags]\n\nFlags:\n  -f, --filename string   configuration file\n  -h, --help              help for export\n  -o, --output string     output file (default to stdout)\n      --yolo              skip configuration tests\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "init": {
+      "children": [],
+      "content_hash": "5c66fae2a4d66f81",
+      "help_text": "The init command initialize the Gmail configuration, asking\nyou for details and guiding you through the process of\nsetting up the API authorizations and initial settings.\n\nUsage:\n  gmailctl init [flags]\n\nFlags:\n  -h, --help              help for init\n      --port int          OAuth server bind port (default is 0 meaning random port)\n      --refresh-expired   Refresh auth token if expired.\n      --reset             Reset the configuration.\n      --update-lib        Update the library file.\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    },
+    "test": {
+      "children": [],
+      "content_hash": "24e01c33aa172569",
+      "help_text": "Execute config tests.\nIf the configuration file contains tests, they will be executed by\nthis command. Not all filters constructs are supported; if any\nis found, the tests will ignore the entire filter and continue.\nThis might result in imprecise testing.\n\nWarning: This command is still experimental.\n\nList of unsupported constructs:\n* Escaped expressions (pkg/config/v1alpha3/FilterNode.IsEscaped);\n* Raw queries (pkg/config/v1alpha3/FilterNode.Query).\n\nBy default test uses the configuration file inside the config\ndirectory [config.jsonnet].\n\nUsage:\n  gmailctl test [flags]\n\nFlags:\n  -f, --filename string   configuration file\n  -h, --help              help for test\n\nGlobal Flags:\n      --color string[=\"always\"]   whether to enable color output ('always', 'auto' or 'never') (default \"auto\")\n      --config string             config directory (default is $HOME/.gmailctl)",
+      "likely_invalid": false
+    }
+  },
+  "truncated": false,
+  "version": "0.12.0"
+}

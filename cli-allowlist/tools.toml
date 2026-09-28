@@ -286,6 +286,59 @@ version_flag = "version" # --version is rejected; version is a subcommand
 max_depth = 3 # issue list/view vs create/edit/delete/move, epic add/remove, sprint add/close
 subcommands = ["issue", "epic", "sprint", "board", "project", "release", "me", "serverinfo", "open", "init"]
 
+# ~40 services; only the ones the Google-stack skills adopted (gmail, calendar, drive, tasks,
+# contacts, people), its own utilities, and the top-level shortcuts, which are aliases for deeper
+# commands (`send` is `gmail send`, `ls` is `drive ls`). Every other service stays unregistered and
+# prompts. Depth 4 because Gmail's filters sit at `gmail settings filters list|create|delete`.
+# Measured from `gog schema --json` at v0.42.0: 271 nodes for this list. Service aliases
+# (`gog mail`, `gog cal`) get no rule and still prompt, which is the safe direction. Read-only
+# commands render as allow, including mail reads: that is a decision (2026-09-28), since those put
+# text written by strangers into an agent's context, and every write, send and delete still asks.
+[gog]
+max_depth = 4
+max_nodes = 300
+subcommands = [
+  "gmail",
+  "calendar",
+  "drive",
+  "tasks",
+  "contacts",
+  "people",
+  "auth",
+  "config",
+  "schema",
+  "open",
+  "time",
+  "send",
+  "ls",
+  "search",
+  "download",
+  "upload",
+  "login",
+  "logout",
+  "status",
+  "me",
+  "whoami",
+]
+# The classifier read these as read_only because they fetch, but each writes a local file, and the
+# file-writing options were never offered to it as risky flags. `gmail attachment` always writes one
+# (`--out` defaults to gog's config directory). The rest write only with the option, and stay
+# allowed without it. A downloaded attachment is also a file from a stranger landing on disk.
+# `--file` on `drive activity query` and `drive audit *` is a file ID, not a path, so it stays.
+ask_overrides = [
+  "gmail attachment",
+  "gmail thread attachments ... --download*",
+  "gmail thread get ... --download*",
+  "gmail drafts get ... --download*",
+  "contacts export ... -o*",
+  "contacts export ... --out*",
+  "gmail settings filters export ... -o*",
+  "gmail settings filters export ... --out*",
+]
+
+[gmailctl]
+version_flag = "version" # version is a subcommand, as with jira
+
 [tilt]
 subcommands = ["get", "logs", "status", "dump", "doctor", "up", "down", "ci"]
 
