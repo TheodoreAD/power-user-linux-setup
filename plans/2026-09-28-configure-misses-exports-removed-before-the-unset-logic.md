@@ -64,10 +64,41 @@ Either way it settles the question below: **a one-off `unset-environment` does n
 older process can re-export, so only a mechanism that runs at every `configure`, and ideally every
 login, keeps it out.
 
-**The search for the re-importer, same day. Not identified, and here is what was ruled out.** The
-premise holds: session `b73129dd` ran `systemctl --user unset-environment UV_PYTHON` at 01:13, and
-its own `show-environment` read the variable present at 01:08 and absent at 01:13. Ruled out for the
-01:48–12:49:17 window:
+**Found, same day: `gnome-session` re-uploads its environment when it exits.** In 46.0,
+`gnome-session/main.c` ends:
+
+```c
+        gsm_main ();
+
+        gsm_util_export_user_environment (NULL);
+```
+
+`gsm_util_export_user_environment` sends the process's whole environment to the manager through
+`UnsetAndSetEnvironment`, so the session manager restores at logout whatever it held at login. The
+timeline fits every observation:
+
+- 00:04. That login's `gnome-session-manager@ubuntu.service` started with `UV_PYTHON`, because the
+  manager still had it.
+- 01:13. The unset removed it from the manager, but not from the running session manager.
+- 12:49:18. After the shell crash, the journal records
+  `Stopped gnome-session-manager@ubuntu.service`. Its exit path re-exported `UV_PYTHON`, and the
+  session bus restarted by `gnome-session-restart-dbus` in the same second carries it.
+- 14:01. The next session manager inherited it from the manager. The current one,
+  `gnome-session-binary --systemd-service` (pid 2058639), carries it now, so it will do the same at
+  the next logout.
+
+**This changes the design, not just the diagnosis.** An unset made during a session is undone at
+that session's logout, so unsetting at every `configure` fails for the same reason the one-off did.
+The unset has to run **before the session manager starts**, so that it never holds the variable and
+has nothing to re-export. That means a user unit in `graphical-session-pre.target` (or ordered
+`Before=gnome-session-manager@.service`) that unsets the declared retired exports. The alternative
+is to unset after the manager exits, at `gnome-session-shutdown.target`, but that misses a crash
+that skips an orderly stop. It also means the variable leaves only at the **second** login after the
+fix is deployed, unless the user unsets it and then logs out from outside the graphical session.
+
+The search that led here, and what it ruled out along the way: The premise holds: session `b73129dd`
+ran `systemctl --user unset-environment UV_PYTHON` at 01:13, and its own `show-environment` read the
+variable present at 01:08 and absent at 01:13. Ruled out for the 01:48–12:49:17 window:
 
 - Agent sessions. No transcript modified in the last two days holds a tool call running
   `import-environment`, `set-environment`, `dbus-update-activation-environment`, `gnome-session`,
@@ -88,28 +119,42 @@ its own `show-environment` read the variable present at 01:08 and absent at 01:1
   that started in the window was GDM's greeter at 12:49:20, which belongs to the `gdm` user's
   manager.
 
-What is left is unconfirmed: a component of the 00:04 session re-exporting an environment it had
-inherited before the unset. The journal cannot settle it, because `SetEnvironment` calls are not
-logged. The way to catch it is to unset again and record the next moment it reappears, together with
-the processes alive at that moment. The source clone is
-`$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-session` with the `46.0` tag fetched.
+The journal could not settle it, because `SetEnvironment` calls are not logged. Reading the whole of
+46.0's `main.c` did, and found the exit-time export above: the first read had stopped at the
+start-time call. The source clone is `$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-session`
+with the `46.0` tag fetched.
+
+[UNVERIFIED: **the mechanism is read from source and fits the timeline, but has not been watched
+happen.** To confirm it: unset `UV_PYTHON` while logged in, check that it stays absent for the rest
+of the session, then log out and back in and check that it is present again. If it reappears before
+the logout, something else is also exporting it.]
 
 It also bears on `tasks/claude_daemon.py`: stopping a stale daemon does not clear this variable,
 because the next daemon starts from a shell of the new login, which inherits it from the manager.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: one-off or mechanism? A one-off:
-`systemctl --user unset-environment UV_PYTHON` once, noted in the plan that retires this. A
-mechanism: `configure` also unsets any name in a small declared list of "exports this repo used to
-own" (a retired-exports table in `setup.toml` or `tasks/zsh.py`), which catches the historical cases
-without the machine-wide scan `5065fea` ruled out. The list is cheap and stays empty most of the
-time.]
+[DECISION: **a mechanism, not a one-off, and the one-off is refuted rather than merely weaker.** The
+01:13 one-off was undone by the session manager's exit-time export at the next logout. A declared
+list of retired exports, starting with `UV_PYTHON`, keeps `5065fea`'s rule: nothing is unset that
+PULSE never exported.]
+
+[NEEDS CLARIFICATION: **where the unset runs.** It must run before `gnome-session-manager@.service`
+starts, or the session manager holds the variable and re-exports it at logout. Candidates:
+
+- a user unit wanted by `graphical-session-pre.target`, deployed like other PULSE files;
+- the same unset also left in `zsh.configure`, which does no harm but on its own does nothing
+  lasting;
+- `gnome-session-shutdown.target`, after the manager exits, which misses a crash that skips an
+  orderly stop.
+
+The first is the only one that holds by construction. Who owns the declared list, `setup.toml` or
+`tasks/zsh.py`, is part of the same decision.]
 
 ## Recommended direction
 
-Declare retired exports and have `configure` unset any the manager still carries, starting with
-`UV_PYTHON`. That keeps `5065fea`'s rule (nothing unset that PULSE never exported) and closes the
-gap for the case that prompted the fix. Whichever way it goes, the message should keep saying that
-running processes, the Claude daemon's jobs included, keep their copy until
-`claude daemon stop --any`.
+Declare the retired exports, and unset them from a user unit that runs before the GNOME session
+manager starts. A variable is then gone from the second login after deploy. `configure` can keep its
+unset for the current session's new processes, but its message must stop implying that a re-login
+finishes the job. Whatever else changes, the message should keep saying that running processes,
+including the Claude daemon's jobs, keep their copy until restarted.
