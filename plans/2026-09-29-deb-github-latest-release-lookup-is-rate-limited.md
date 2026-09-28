@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-09-29
 ---
 
@@ -24,33 +24,44 @@ regression in them.
 REST call, limited to 60 requests an hour per source IP. GitHub-hosted runners share their egress
 IPs, so the quota is partly spent by strangers. So is a corporate NAT.
 
-[UNVERIFIED: **rate limiting is the cause.** It is inferred, not observed. `hide=True` swallows
-curl's stderr, so the 403 body, if that is what came back, is not in the log. The re-run of the
-failed job passed with the same code on the same commit, which fits a transient quota problem but
-does not prove it. Seeing the cause needs the warning to say what failed.]
+Rate limiting as the cause was inferred, never observed. `hide=True` swallowed curl's stderr, and
+the re-run of the failed job passed with the same code on the same commit, which fits a transient
+quota problem without proving it. It is deliberately left unproven: the fix below removes the API
+from the path whatever the cause was, and the warning now prints curl's error, so a recurrence
+explains itself.
 
 Why it matters more now: the promotion job runs weekly and unattended, so an intermittent 403 in any
 of the unpinned `deb-github` packages silently skips that week's promotion. Real installs can hit it
 too: a fresh machine behind a shared IP skips the package and the run fails at the end.
 
-## Open questions
+## Decision
 
-[NEEDS CLARIFICATION: **Which fix, or both?**
+[DECISION: **read the tag off the `/releases/latest` redirect, and do not send a token to the API.**
+User's choice, 2026-09-29, after a grep of the research-library clones. GitHub's own
+`actions/runner-images` build scripts do this, with `--retry`, and so do the mergify, d2 and
+rulesync installers. Mergify's comment states this exact failure: the API "403s on shared CI runner
+IPs; the plain github.com redirect has no such limit." The token alternative fixes CI only, needs
+the workflow token plumbed through `devcontainers/ci` into the container, and does nothing for a
+real install behind a NAT.]
 
-(a) Resolve "latest" without the API. `https://github.com/<repo>/releases/latest` redirects to
-`/releases/tag/<tag>`, and `curl -fsSLI -o /dev/null -w '%{url_effective}'` reads the tag from the
-final URL. That is a web endpoint, not the REST API's 60-an-hour budget, and it needs no token
-anywhere. Check how the research-library clones of other installers (mise, uv, zimfw) resolve
-"latest" before settling on it.
+[PITFALL: **a repo with no releases is a 200, not an error.** `/releases/latest` then redirects to
+`/releases`, so curl succeeds and the final URL has no `/tag/`. The parser requires that segment,
+otherwise the whole URL would flow into the asset name. Mergify's installer guards the same case.]
 
-(b) Send `Authorization: Bearer $GITHUB_TOKEN` (or `GH_TOKEN`) when one is set, and pass the
-workflow token into the devcontainer build. That fixes CI only, and needs the token plumbed through
-`devcontainers/ci` into the container environment.]
+## What landed
 
-Either way, the warning should print curl's error, so a 403 reads as a rate limit rather than as
-"could not fetch".
+`535d821`: `apt._tag_from_release_url` and the rewritten `_resolve_version`, plus tests in
+`tests/unit/test_apt.py`. They cover the tag shapes (`v`-prefixed, bare, URL-encoded), the
+no-releases redirect, a curl failure whose stderr reaches the warning, and a command that never
+names `api.github.com`. Checked live against `sharkdp/hyperfine` (resolves `1.20.0`), a repo with no
+releases, and a missing repo (the warning shows curl's 404).
 
-## Recommended direction
+## Migrated to
 
-(a), plus the better warning. It fixes CI and real installs at once, and puts no token into the
-container build.
+- The rationale and the no-releases pitfall are in `_resolve_version`'s and
+  `_tag_from_release_url`'s docstrings in `tasks/apt.py`, which is where anyone changing the lookup
+  will read them.
+- The incident itself is recorded in `2026-09-29-stable-tag-release-model.md`'s "Still open"
+  section, as the first promotion's failed attempt.
+- Not migrated: the survey of which installers use the API and which use the redirect. It is
+  reproducible with one `rg 'url_effective|releases/latest'` over `$RESEARCH_HOME/repos`.
