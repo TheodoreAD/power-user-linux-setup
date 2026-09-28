@@ -40,9 +40,13 @@ tiebreaker, and it runs 24.04 (`/etc/os-release`, 2026-09-28). `5e4be9d` pinned 
 left `quality`, `docs` and the Pages deploy floating. 26.04 support is the measurement below, not a
 question for now.]
 
-[UNVERIFIED: **the pinned jobs have not run on the pinned image yet.** The next push runs
-`runtime-guardrail`, `netdoctor-python-floor` and `install-smoke` through `ci.yml`. The devcontainer
-job is `workflow_dispatch`-only.]
+The `ci.yml` pins passed on their first run: CI run 36474431063 on `1bdcae3`. `runtime-guardrail`,
+`netdoctor-python-floor` and `install-smoke` are all green, and the 26.04 migration notice now
+annotates only `docs`, which still floats.
+
+[UNVERIFIED: **the devcontainer smoke test has not run on `ubuntu-24.04` yet.** It is
+`workflow_dispatch`-only, so its pin is checked by the next manual
+`gh workflow run devcontainer.yml`.]
 
 Step 4 below is answered: `.devcontainer/devcontainer.json` uses
 `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`, and `docker/Dockerfile` is `FROM ubuntu:24.04`.
