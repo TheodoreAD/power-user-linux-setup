@@ -141,6 +141,21 @@ only the expectations/scoring surface, which neither unscored row uses. So the r
 under either, and the pin holds. **That it holds is luck**: an instrument commit that had touched a
 counter would have left both rows uncorrectable in exactly the way the un-daggered rows above are.
 
+**Two counters changed on 2026-09-26, so a comparison across that date has to say so.** Both changes
+are in `agent-skills`, and the installed copies were refreshed the same day:
+
+- `9579e9c`, in `audit.py`, matches `git-mutating` and `git-C-mutating` with quoted strings blanked.
+  Text inside a `python3 -c "…"` string or an `rg "…"` pattern no longer counts. Those two rows, and
+  `git-mutating-in-chain` with them, can only go **down**. On session `10d0c6cd-…`, `git-C-mutating`
+  went from 4 to 1.
+- `558c814`, in `harvest.py claims`, also counts a success word paired with a test count ("Green,
+  707 tests", "N passed"). The gate-green count can only go **up**: 53 more lines machine-wide, on
+  1,135.
+
+A straddle voids only those rows. Every other row stays comparable, and nothing needs re-running
+unless a comparison turns on one of them. The note was merged from the retired
+`2026-09-26-audit-and-claims-instrument-change-2026-09-26.md`, and the watch carries the same one.
+
 **The `score` column is deliberately not re-scored, and the re-scored rates do not license one.**
 Re-running the comparison today prints 4/12 for sample 6 and 8/12 for sample 11, against the 6/11
 and 9/11 recorded — but the expectation set grew by a row and several `zero` expectations changed

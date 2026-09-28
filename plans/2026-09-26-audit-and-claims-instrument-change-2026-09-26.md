@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-09-26
+status: landed
+updated: 2026-09-28
 source_repo: github.com-personal/agent-skills
 source_session: 8db05b10-386d-41aa-884b-890e81fdada7.jsonl
 source_moment: 2026-09-26T19:12:00Z
@@ -36,3 +36,14 @@ this change for `git-C-mutating`, `git-mutating-in-chain` and the claims count, 
 direction each moved. Per session-harvest's instrument rule, a straddle voids only the rows the
 change touched, so every other row stays comparable. Nothing needs re-running unless a comparison
 actually turns on one of these rows.
+
+## Migrated to
+
+This plan was a note for the two adherence plans to carry, and both carry it now:
+
+- `plans/2026-09-02-agents-md-adherence-sample-corpus.md`, as the paragraph "Two counters changed on
+  2026-09-26", next to that plan's other notes on which instrument measured what;
+- `plans/2026-08-23-global-agents-md-adherence-watch.md`, as a bullet under "Recommended direction".
+
+Nothing was left out. When those plans retire, the note goes wherever their instrument rationale
+goes.

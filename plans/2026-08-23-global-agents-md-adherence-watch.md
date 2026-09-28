@@ -29,6 +29,14 @@ and the caveman register.]
   redeploy. Never revert the cluster structure for a single rule's miss.
 - Close as `landed` once a handful of sessions pass with no rule regressions; a clean watch leaves
   nothing to migrate.
+- A comparison across 2026-09-26 straddles two instrument changes in `agent-skills`, and should say
+  so. `9579e9c` blanks quoted strings before matching `git-mutating` and `git-C-mutating`, so those
+  rows and `git-mutating-in-chain` can only go **down**. One session's `git-C-mutating` went from 4
+  to 1. `558c814` makes `harvest.py claims` also count a success word paired with a test count, so
+  the gate-green count can only go **up**: 53 more lines machine-wide, on 1,135. Only those rows are
+  voided. Everything else stays comparable, and nothing needs re-running unless a conclusion turns
+  on one of them. The same note is in `2026-09-02-agents-md-adherence-sample-corpus.md`, and it was
+  merged from the retired `2026-09-26-audit-and-claims-instrument-change-2026-09-26.md`.
 
 [DEFERRED: watch the reworded "Installing a tool on this machine" rule (`cba4941`, 2026-09-28). It
 now names `package_health.py pypi <name> --upstream <owner/repo>` in place of a PyPI JSON `curl`.
