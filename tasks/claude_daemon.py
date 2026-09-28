@@ -9,16 +9,30 @@ per graphical login by the autostart entry beside it:
 
 Every background Claude session is a child of one `claude daemon run`, and that daemon survives a
 logout: it keeps the old login session alive and hands the environment it copied at start to every
-job it spawns afterwards, including jobs started from the new login. Measured 2026-09-28 in
-`plans/2026-09-28-claude-daemon-outlives-relogin-with-a-dead-ssh-socket.md`: a daemon from 09-26 was
-still serving jobs after a re-login, carrying a dead WezTerm SSH agent link and a `UV_PYTHON` the
-dotfiles had dropped nine days earlier. The SSH half is repaired per call by `[packages.ssh]`'s
-zshenv snippet; this is the other half, which only a fresh daemon fixes.
+job it spawns afterwards, including jobs started from the new login. Measured 2026-09-28: a daemon
+from 09-26 was still serving jobs after a re-login, carrying a dead WezTerm SSH agent link and a
+`UV_PYTHON` the dotfiles had dropped nine days earlier, with `PWD` and `VIRTUAL_ENV` naming whichever
+repo it happened to start in. It recurs at every re-login, because WezTerm names its agent link after
+the GUI process that dies at logout. It also reaches jobs started after the login, because the daemon
+keeps pre-started spare workers forked with the old environment, and `claude agents` windows opened in
+the new login attach to the old daemon too. The SSH half is repaired per call by `[packages.ssh]`'s
+zshenv snippet. This is the other half, which only a fresh daemon fixes. The measurement and the
+design history are in the retired plan
+`2026-09-28-claude-daemon-outlives-relogin-with-a-dead-ssh-socket.md`
+(`plans.py archive --file <that name>` reads it back).
 
 **It reports and never stops anything on its own.** The Stop button is the only thing that runs
 `claude daemon stop --any`, and that ends the daemon's background jobs mid-command, so it is a
 human's click, not a policy. Killing at login was rejected because it cannot tell work left running
-on purpose from leftovers.
+on purpose from leftovers. So was killing only when the daemon has nothing but idle spares: safer,
+but the user chose to keep a human in the loop entirely.
+
+**A desktop notification with buttons, not a notice in the first terminal.** The user does not type
+shell commands, so a copyable command in a shell is a step they would not take. The button keeps the
+human decision and makes it one click. `notify-send -A` blocks until the notification is answered or
+dismissed, and a dismissal stops nothing. The notice is critical urgency for the reason `_notice`
+gives. Verified at a real login on 2026-09-28: the notice appeared, and Stop shut the old daemon down
+through its control socket.
 
 **"Older than this login" is judged against the graphical session's start, by timestamp.** Both
 sides are epoch arithmetic, not parsed dates: the daemon's start from `/proc/<pid>/stat` plus the

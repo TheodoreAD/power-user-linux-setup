@@ -549,6 +549,8 @@ fi
 # whatever it inherited. Guarded on CLAUDECODE for the reason [packages.claude-code]'s block gives —
 # cron, IDE task runners and every other `zsh -c` keep what they were handed. `if` rather than a
 # trailing `&&`, so ~/.zshenv's last status stays zero in a shell the condition does not hold for.
+# It lives here rather than inside [packages.claude-code]'s CLAUDECODE block so the socket list stays
+# in one package; tests/unit/test_ssh.py pins all three copies (this, zprofile, tasks/ssh.py).
 zshenv = """
 if [ -n "${CLAUDECODE:-}" ] && ! ssh-add -l >/dev/null 2>&1; then
   for _pulse_sock in "${XDG_RUNTIME_DIR}/keyring/ssh" "${XDG_RUNTIME_DIR}/gcr/ssh"; do
@@ -1357,8 +1359,8 @@ tags = ["ai", "desktop", "gui"]
 # `claude daemon --help` still lists `stop --any`. The autostart Exec names the script bare, so it
 # relies on the session PATH carrying ~/.local/bin, which [packages.zsh-path] puts there and
 # gnome-session imports into the systemd user manager. notify-send is libnotify-bin, part of the
-# Ubuntu desktop image; without it the check prints to stdout and nobody sees it. Background:
-# plans/2026-09-28-claude-daemon-outlives-relogin-with-a-dead-ssh-socket.md.
+# Ubuntu desktop image; without it the check prints to stdout and nobody sees it. Background is in
+# the module docstring, which names the retired plan it came from.
 dest = "~/.local/bin/claude-daemon-notice"
 content_file = "tasks/claude_daemon.py"
 config_files = [

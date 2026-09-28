@@ -64,7 +64,10 @@ it stays pending and says so, rather than silently prompting on every run.
 ## What is deliberately not here
 
 - **The behaviour itself** — it is in `tasks/ssh.py`, `config/askpass-zenity.sh` and
-  `[packages.ssh]`'s `zprofile`, each carrying its reasoning in comments.
+  `[packages.ssh]`'s `zprofile` and `zshenv`, each carrying its reasoning in comments. The `zshenv`
+  half re-picks the agent in AI agents' non-login shells, which never read `~/.zprofile`. It exists
+  because a Claude daemon outlives a re-login and hands its jobs a dead WezTerm agent link; the
+  daemon side is `tasks/claude_daemon.py`.
 - **"Enumerate agents before asking a human for a secret."** That lesson — the first diagnosis in
   the incident was "the passphrase must be wrong", stated as a conclusion, on evidence that was
   entirely true and led nowhere — is a rule for agents rather than a note for this repo, and it
