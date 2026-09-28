@@ -161,3 +161,25 @@ The third step, naming the Claude daemon where the 2026-09-26 plan's fix says a 
 the change, was already done when that plan retired: `tasks/zsh.py`'s `_clear_lingering_exports`
 says a re-login cannot touch running processes, "including background agent sessions under an old
 daemon". Nothing is left.
+
+## Migrated to
+
+- **Part 1's design and the incident**: `setup.toml`'s comment on `[packages.ssh]`'s `zshenv`, which
+  covers the dead WezTerm link, the probe cost, why keychain is excluded, the CLAUDECODE guard and
+  why it sits in that package. Its tests are in `tests/unit/test_ssh.py`. `docs/ssh.md` has the
+  user-facing paragraph, and `contributing/ssh-agent-selection.md` names the `zshenv` half and the
+  daemon side.
+- **Part 2's design, every DECISION and both PITFALLs**: `tasks/claude_daemon.py`. The module
+  docstring holds the measurement, the recurrence, the spares and `claude agents` reach, report
+  never kill, kill-when-idle rejected, notification over terminal, the timestamp comparison against
+  the caller's own session, and the help-text gate. `_notice` holds critical urgency and its first
+  live run. `job_session` holds the retitled pty host. `[packages.claude-daemon-notice]` in
+  `setup.toml` holds the deployment and PATH reliance.
+- **The stale-environment side of a re-login**: already in `tasks/zsh.py`,
+  `_clear_lingering_exports`.
+
+Deliberately not migrated: the verification log (live runs, pids, log lines), which the docstring
+compresses to one sentence and the commits record; the `basedpyright --verifytypes` detail from
+`VIRTUAL_ENV`, one instance of the stale environment that the docstring states generally; and the
+`claude daemon --help` excerpt, which the help-text gate re-reads at run time instead of trusting a
+copy.
