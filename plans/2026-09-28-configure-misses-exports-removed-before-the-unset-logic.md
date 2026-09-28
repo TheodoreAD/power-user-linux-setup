@@ -64,6 +64,36 @@ Either way it settles the question below: **a one-off `unset-environment` does n
 older process can re-export, so only a mechanism that runs at every `configure`, and ideally every
 login, keeps it out.
 
+**The search for the re-importer, same day. Not identified, and here is what was ruled out.** The
+premise holds: session `b73129dd` ran `systemctl --user unset-environment UV_PYTHON` at 01:13, and
+its own `show-environment` read the variable present at 01:08 and absent at 01:13. Ruled out for the
+01:48–12:49:17 window:
+
+- Agent sessions. No transcript modified in the last two days holds a tool call running
+  `import-environment`, `set-environment`, `dbus-update-activation-environment`, `gnome-session`,
+  `dbus-run-session`, `dbus-launch`, `startx`, `xinit`, `Xvfb`, `busctl --user call` or `gdbus call`
+  in the window. The one environment call anywhere was the unset.
+- Claude Code. The 2.1.283 binary contains none of those strings, and `~/.claude/daemon.log` has no
+  systemd interaction.
+- The manager itself. No re-exec, reload or apt upgrade appears in the system journal, which is
+  readable for that window. The user manager logged nothing between 00:06 and the crash, which fits
+  an idle overnight desktop.
+- Units and scripts. No user unit, `/etc/xdg` entry or autostart imports the environment.
+  `/etc/xdg/Xwayland-session.d` does not either. `/etc/X11/Xsession.d/95dbus_update-activation-env`
+  (`--systemd --all`) runs only in X sessions. `gnome-session-ctl --restart-dbus`, which ran at
+  12:49:18, only restarts the unit (46.0 source, `tools/gnome-session-ctl.c`).
+- GNOME's own export. On this machine only `/usr/libexec/gnome-session-binary` references systemd's
+  `SetEnvironment`. In 46.0 it uploads its whole environment through `UnsetAndSetEnvironment` once,
+  at start (`gnome-session/main.c:639`, `gsm_util_export_user_environment`). The only gnome-session
+  that started in the window was GDM's greeter at 12:49:20, which belongs to the `gdm` user's
+  manager.
+
+What is left is unconfirmed: a component of the 00:04 session re-exporting an environment it had
+inherited before the unset. The journal cannot settle it, because `SetEnvironment` calls are not
+logged. The way to catch it is to unset again and record the next moment it reappears, together with
+the processes alive at that moment. The source clone is
+`$RESEARCH_HOME/repos/gitlab.gnome.org--GNOME--gnome-session` with the `46.0` tag fetched.
+
 It also bears on `tasks/claude_daemon.py`: stopping a stale daemon does not clear this variable,
 because the next daemon starts from a shell of the new login, which inherits it from the manager.
 
