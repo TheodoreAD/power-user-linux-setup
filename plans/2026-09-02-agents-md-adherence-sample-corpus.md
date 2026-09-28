@@ -1547,7 +1547,7 @@ probes whose success the session read from the tool's own output text. No re-run
 
 ### Outside the audit rows: a SHA not read from git, handed to `gh run list --commit`
 
-Three instances in two sessions on 2026-09-28, filed from scaffoldapy and merged here 2026-09-28.
+Four instances in two sessions on 2026-09-28, filed from scaffoldapy and merged here 2026-09-28.
 None of them is an `audit.py` row, and no tag counts this shape. Sample 15 is the same slip under an
 `until` loop.
 
@@ -1573,16 +1573,23 @@ ref you hand git is one you read, never one you derived." `config/agents-md/veri
    The session recognised the shape from `verification.md`, ran `git rev-parse`, and repeated it
    with the full SHA, which found four green runs. It had read the plan it was about to absorb,
    which describes exactly this, about an hour earlier.
+4. **The same session, around 21:44 +03:00, during its harvest and about twenty minutes after
+   writing (3) into this section.** Re-checking CI on `aa0ab52`, it passed a full 40-character SHA
+   whose 33 characters past the push output's seven were invented, `aa0ab526ab7b98fa…`, where the
+   real one continues `aa0ab5260ef58a91…` (the eighth happened to match). `[]`, exit 0; then
+   `git rev-parse` and a correct repeat. So the invented form came back after the short-form lesson
+   of (3), and one hand-written instance of the slip was not enough to stop the next.
 
 **Cost:** one wasted call each time. Any of them would have been a false "no CI run yet" inside a
 wait loop, which is what sample 15 was.
 
-[PITFALL: **the three share one cause and differ in shape**: completed to 40 characters, left at 7,
-and extended by one. What they share is a SHA taken from push output rather than read from git.
-Instance 3 adds the case sample 15's pitfall said the corpus could not separate: a session that had
-**read** the description of this slip that day, in a plan it was handling, and made it anyway. So
-reading about it is not a defence either, and the fix the rule offers, "read it, never derive it",
-is the only form that would have worked.]
+[PITFALL: **the four share one cause and differ in shape**: completed to 40 characters, left at 7,
+extended by one, and completed to 40 again. What they share is a SHA taken from push output rather
+than read from git. Instance 3 adds the case sample 15's pitfall said the corpus could not separate:
+a session that had **read** the description of this slip that day, in a plan it was handling, and
+made it anyway. Instance 4 goes one step further: the same session had just **written** the
+description. So neither reading nor writing about it is a defence, and the fix the rule offers,
+"read it, never derive it", is the only form that would have worked.]
 
 [NEEDS CLARIFICATION: **"every ref you hand git" or "every ref you hand a tool"?** The rule is
 scoped to git and all three slips were in `gh`. Widening the wording is the one change this raises.
