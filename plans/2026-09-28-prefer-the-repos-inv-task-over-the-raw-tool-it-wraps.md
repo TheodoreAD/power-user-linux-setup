@@ -26,6 +26,13 @@ like it needed the raw tool, when five calls of the task was the answer. No rule
 `~/.agents/AGENTS.md` says to prefer a task over the tool it wraps. The nearest one, "Run the bare
 command", is about `uv run` wrappers, not about bypassing tasks.
 
+**A second instance, three weeks earlier, and the user caught that one too.**
+`plans/2026-08-23-global-agents-md-adherence-watch.md` session 16 (`ingesta`, 2026-09-04) reached
+past `inv` to `uv run python tasks/drive_browser.py`, because the task would have regenerated a
+fixture the session had hand-edited. The user asked, in three words: _"why uv python run tasks
+instead of invoke?"_ That session had a real justification, which turned out to rest on a wrong
+premise. This one had none. So the shape recurs both with and without a reason, and in two repos.
+
 ## Open questions
 
 [NEEDS CLARIFICATION: always-loaded rule or skill? The miss is silent (identical output) but cheap
