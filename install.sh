@@ -185,6 +185,10 @@ fi
 
 cd "${CLONE_DIR}"
 
+# The ref alone does not say which bytes these are — `stable` moves weekly, and an adopted checkout
+# is wherever its owner left it. The full SHA does, and the date says how old they are.
+echo "At commit $(git log -1 --format='%H, committed %cs')."
+
 bash ./bootstrap.sh
 # bootstrap.sh's own `export PATH=...` is scoped to that child process — re-export here so `inv`
 # (installed into ~/.local/bin by bootstrap.sh via `uv tool install`) is callable below.

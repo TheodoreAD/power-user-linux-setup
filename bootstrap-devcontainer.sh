@@ -68,6 +68,14 @@ else
   cd "${CLONE_DIR}"
 fi
 
+# Which commit went into this container, in the build log. `stable` moves weekly, so the ref alone
+# cannot answer that after the fact. Guarded because `--local` may have no answer to give:
+# docker/Dockerfile COPYs files without `.git`, onto a base image with no git installed, and a bare
+# `$(git …)` under `set -e` would end the build over a log line.
+if commit="$(git log -1 --format='%H, committed %cs' 2> /dev/null)"; then
+  echo "At commit ${commit}."
+fi
+
 bash ./bootstrap.sh
 # bootstrap.sh's own `export PATH=...` is scoped to that child process — re-export here so `inv`
 # (installed into ~/.local/bin by bootstrap.sh via `uv tool install`) is callable below.
