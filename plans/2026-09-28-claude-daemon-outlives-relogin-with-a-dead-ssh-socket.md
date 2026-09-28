@@ -1,5 +1,5 @@
 ---
-status: in-progress
+status: landed
 updated: 2026-09-28
 source_repo: github.com-personal/invoke-stubs
 source_session: 76d98521-8e7c-4524-bb4f-4caeb36e8cb0.jsonl
@@ -118,12 +118,13 @@ accepts the autostart entry. The critical-urgency `--notify` run was confirmed b
 stayed at the top of the screen with both buttons until answered. The user clicked "Leave it" and
 the daemon kept running, which is the live counterpart of the unit test that pins it.
 
-[UNVERIFIED: **the Stop button has never been clicked live.** It runs `claude daemon stop --any`,
-documented by 2.1.283's own help, after re-checking the daemon. Unit tests cover the button only as
-far as "Leave it stops nothing". It was not clicked here because the stale daemon was still holding
-two other sessions' `claude agents` windows. The check is the next login where a stale daemon has no
-jobs: click Stop, then confirm with `claude daemon status` that a fresh daemon starts on the next
-background job.]
+**Stop verified live the same day.** At the user's next login (session 5799, 14:01:19; a logout and
+login, not a reboot, since uptime runs from 2026-08-28), the notice appeared and the user clicked
+Stop. `~/.claude/daemon.log` records `shutdown requested via control socket` at 14:01:52 with
+`cause=shutdown_op, uptime=180744s, live_workers=3`. That is pid 3454123 from 09-26 with its three
+idle spares. The pid is gone, and `claude daemon status` reports it not running. The next daemon
+starting on demand is Claude Code's own behaviour, and the same log shows it repeatedly after
+earlier `idle_exit` shutdowns.
 
 [DECISION: report, never kill. Rejected killing at login because it ends background jobs mid-command
 (a push, a commit, a venv rebuild cut off halfway), and "the daemon is from an older login" cannot
@@ -159,4 +160,4 @@ Part 1 first: it is small, and it fixes the user-visible failure. Part 2 after. 
 The third step, naming the Claude daemon where the 2026-09-26 plan's fix says a re-login finishes
 the change, was already done when that plan retired: `tasks/zsh.py`'s `_clear_lingering_exports`
 says a re-login cannot touch running processes, "including background agent sessions under an old
-daemon". What is left is the `UNVERIFIED` notification above.
+daemon". Nothing is left.
