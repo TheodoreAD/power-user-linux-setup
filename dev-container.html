@@ -2653,15 +2653,21 @@ installer really clones and bootstraps) and <code>quality</code> (the commit lin
 tests). The latter two are <code>workflow_call</code> files that <code>.github/workflows/ci.yml</code> also calls, since
 <code>needs:</code> cannot reach across workflows. <code>docs</code> is deliberately excluded: a documentation-site build
 failure does not change what a consumer installs.</p>
-<p>The tag exists as of 2026-09-01, on that workflow&rsquo;s first-ever run. It had never executed before
-then, so <code>stable</code> did not resolve at all and the snippet above returned 404 to anyone who copied it.
-The workflow stays <code>workflow_dispatch</code>-only for now (see the file for the re-enable note), which
-means <strong><code>stable</code> moves only when someone runs it by hand</strong> — it is a reviewed marker rather than a
-moving head, and it can lag <code>master</code> by however long nobody has dispatched it.</p>
-<p>That lag has a measured cost, so it is worth stating rather than implying: between 2026-09-05 and
-2026-09-08 the container build was broken on <code>master</code> and nothing reported it, because the only job
-that would have run was never dispatched. The gates above decide what <code>stable</code> may move <em>onto</em>; they
-say nothing about how long <code>master</code> can stay broken first.</p>
+<p><strong><code>stable</code> moves weekly, on Monday morning (UTC), when <code>master</code> has moved and all three gates
+pass.</strong> The workflow runs on a schedule and can also be dispatched by hand to promote sooner. A week
+with nothing new costs one <code>git ls-remote</code> and builds nothing. <code>stable</code> only ever moves forward:
+<code>publish-stable</code> refuses a commit that the current <code>stable</code> is not an ancestor of, because an
+installed checkout updates with <code>git pull --ff-only</code> and could not follow it.</p>
+<p><strong>Every promotion is also a permanent version tag</strong>, <code>vYYYY.MM.DD</code>, with a <code>.1</code>, <code>.2</code>, … suffix for
+a second promotion on the same day. <code>stable</code> says what a fresh install gets today, and the version
+tag says what it got on any given day. To reproduce one exactly, pass it as <code>--ref</code>:
+<code>bash /tmp/pulse-bootstrap.sh --ref v2026.10.05</code>. <code>git ls-remote --tags origin 'v*'</code> lists them.
+Both installers print the full commit they are about to run, so the build log answers &ldquo;which one did
+I get&rdquo; as well.</p>
+<p>Until 2026-09-29 the workflow ran only when dispatched by hand, and that had a cost worth recording.
+Between 2026-09-05 and 2026-09-08 the container build was broken on <code>master</code> and nothing reported
+it. By 2026-09-29 <code>stable</code> was 231 commits behind <code>master</code>, while this site, which is built from
+<code>master</code>, described installer behaviour that the published URL did not have.</p>
 <p><strong>There is no image and no registry.</strong> Delivery is entirely git: one script fetched from
 <code>raw.githubusercontent.com</code> at a ref, and a shallow clone of this repo at the same ref. The
 <code>imageName</code> in the smoke-test job carries <code>push: never</code> and publishes nothing.</p>
