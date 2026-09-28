@@ -425,3 +425,17 @@ result as "no matches" and moved on to a different file. No `-r` involved, no si
 the same outcome as a defective call: a well-formed search, a plausible empty answer, and a wrong
 conclusion available for free. Fifteen occurrences of one flag shape have made this plan about `-r`,
 and the class is wider than the flag.]
+
+### Row 16, found 2026-09-28 — a suppressed-output instance from before rows 12 and 14
+
+`ingesta`, session `c83364a4`, 2026-09-04T11:38:06Z, found while merging that session as sample 25
+of `plans/2026-09-02-agents-md-adherence-sample-corpus.md`:
+
+```shell
+rg -ril "medication administration record" <research docs> <research pages> 2>/dev/null | head
+```
+
+The `-l` means the rewrite never reaches the screen. The session did not notice it, and its filed
+sample named a different `-rn` call as its slip. That call ran three minutes after its own harvest
+boundary. So the suppressed-output form was on record eight days before rows 12 and 14 named it, and
+it was missed the same way.
