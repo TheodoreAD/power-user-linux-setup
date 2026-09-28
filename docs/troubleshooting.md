@@ -88,6 +88,54 @@ Reboot to apply. The only downside is cosmetic: no splash screen, verbose boot o
 
 To undo, restore `GRUB_CMDLINE_LINUX_DEFAULT="quiet splash"` and run `sudo update-grub` again.
 
+## Stuck at 640×480 after a reboot (NVIDIA driver held back)
+
+### Problem
+
+After a reboot the desktop comes up at 640×480 and no resolution change is offered.
+`lspci -k -d ::0300` shows the GPU with **no `Kernel driver in use` line**, and
+`journalctl -b -k -g drm` shows only `simpledrm` — the firmware framebuffer, not the GPU.
+
+### Root cause
+
+A new kernel installed, but not the NVIDIA module built for it. Ubuntu's prebuilt module for a new
+kernel (`linux-modules-nvidia-<ver>-open-<kernel>-generic`) can require a newer driver than the one
+installed, and moving the driver means removing the module for an older kernel. `apt upgrade` never
+removes a package, so it holds the whole NVIDIA stack back, and unattended-upgrades installs the
+kernel anyway. Nothing fails until the next reboot picks the new kernel, which then has no `nvidia`
+module to load.
+
+Hit 2026-09-28 on an RTX 3070 Ti: kernel `6.8.0-142` installed by unattended-upgrades on 09-25, its
+module needed driver 595.91.07 while 595.84 was installed, and an `apt upgrade` on 09-27 left both
+held back. The reboot a day later was the first boot into 142.
+
+### Investigation steps
+
+```shell
+uname -r                                           # the kernel you booted
+modinfo -F version nvidia                          # "not found" → no driver module for this kernel
+apt-cache policy linux-modules-nvidia-595-open-generic nvidia-driver-595-open
+# Installed behind Candidate on both is the held-back stack
+```
+
+### Fix
+
+Upgrade the driver and the module meta-package together, then reboot. Simulate first — it shows the
+old-kernel module the upgrade removes, which is why `apt upgrade` would not do it:
+
+```shell
+apt-get -s install nvidia-driver-595-open linux-modules-nvidia-595-open-generic
+sudo apt-get install nvidia-driver-595-open linux-modules-nvidia-595-open-generic
+modinfo -F version nvidia                          # a version, for the running kernel
+```
+
+Substitute the driver branch `apt-cache policy` names. To work immediately without installing
+anything, pick the previous kernel under GRUB's "Advanced options": its module is still installed.
+
+**To avoid it**, use `apt full-upgrade` rather than `apt upgrade` whenever apt reports packages
+"kept back", as [the apt page](apt_packages.md) already does, and check `apt list --upgradable` for
+an `nvidia-` line before rebooting after unattended-upgrades has installed a kernel.
+
 ## Fix CRLF line endings
 
 If you receive files from Windows machines, they may have `\r\n` line endings that break shell
