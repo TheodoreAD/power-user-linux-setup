@@ -26,8 +26,8 @@ IPs, so the quota is partly spent by strangers. So is a corporate NAT.
 
 [UNVERIFIED: **rate limiting is the cause.** It is inferred, not observed. `hide=True` swallows
 curl's stderr, so the 403 body, if that is what came back, is not in the log. The re-run of the
-failed job is the first evidence either way. Seeing the cause at all first needs the warning to say
-what failed.]
+failed job passed with the same code on the same commit, which fits a transient quota problem but
+does not prove it. Seeing the cause needs the warning to say what failed.]
 
 Why it matters more now: the promotion job runs weekly and unattended, so an intermittent 403 in any
 of the unpinned `deb-github` packages silently skips that week's promotion. Real installs can hit it

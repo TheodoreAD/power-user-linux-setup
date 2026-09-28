@@ -139,12 +139,21 @@ from `master`. A week at most is an acceptable gap; 231 commits was not.]
 
 ## Still open
 
-[UNVERIFIED: **no promotion has run through the new job on GitHub yet.** The first one is a manual
+**The first promotion ran on 2026-09-29, in run 36489105752.** Its first attempt failed in
+`smoke-test`, because `dive` and `hyperfine` could not resolve their latest release (see
+`2026-09-29-deb-github-latest-release-lookup-is-rate-limited.md`). The re-run of the failed job
+passed, and `publish-stable` then published it. `git ls-remote` shows `stable` and `v2026.09.28`
+both at `ab885c8`. The annotated tag's message is `Promoted to stable from 2a2a152…`, from
+`github-actions[bot]`. The name reads 09.28, not 09.29, because the runner stamps the date in UTC.
+That is intended, since UTC is the only date every machine agrees on.
+
+~~[UNVERIFIED: **no promotion has run through the new job on GitHub yet.** The first one is a manual
 `gh workflow run devcontainer.yml` after the push. It should publish the 231 commits as the first
 version tag, and it is also the devcontainer smoke test's first run on `ubuntu-24.04`, which
 `2026-09-28-ci-stops-testing-24-04-when-ubuntu-latest-moves.md` lists as unverified. Checking it
 means confirming three things with `git ls-remote --tags origin`: `stable` names the dispatched
-commit, a `v2026.09.*` tag exists, and its annotated message names the previous `stable`.]
+commit, a `v2026.09.*` tag exists, and its annotated message names the previous `stable`.]~~
+Resolved: see the paragraph above.
 
 [UNVERIFIED: **the scheduled trigger itself.** The first Monday run should be reviewed: whether it
 promoted, or whether `pending` correctly skipped the build.]
