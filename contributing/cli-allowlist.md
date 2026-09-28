@@ -127,6 +127,20 @@ and assuming the shape generalizes:
    only branches on `read_only`/`write`/`dangerous`) and shown in their own section in `review`,
    separate from the normal per-node dump, so they read as "not a command, ignore it" rather than a
    4th risk tier.
+5. **A third listing layout: kong's two-line form, found registering `gog` (2026-09-28).** kong (a
+   Go CLI library) prints the command on its own line — name, aliases in parentheses, then argument
+   placeholders — and the description on the next line, indented deeper, with no two-space gap
+   anywhere for `_SUBCOMMAND_LINE` to find. The explicit `subcommands =` list covered gog's top
+   level, so the first extract looked healthy, but every deeper level would have found no children.
+   `_discover_kong` parses it, and it runs **only when the one-line regex found nothing**, so a tool
+   that already discovered its children keeps exactly that list. A match needs the description on
+   the very next line, and the rest of the command line may not contain a two-space gap. That second
+   condition exists because a first version, widened to accept a required flag in place of an
+   argument (`focus-time --from=STRING`), matched nvm's `nvm --help    Show this message` rows. The
+   unit test that ran the parser over every cached help text on disk caught it, which is why that
+   test exists. The checker was not a review: `gog schema --json` publishes gog's own command tree,
+   and the extracted node set was compared against it until the two were identical (271 for the
+   registered services).
 
 ### Per-flag ratings — same call, no extra invocations
 

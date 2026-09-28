@@ -90,6 +90,70 @@ def test_every_rule_file_on_disk_uses_only_known_classification_and_source_value
                 assert flag["classification"] in known_classifications, f"{path.name}:{key} flag {flag_name}"
 
 
+_KONG_HELP = """\
+Usage: gog gmail (mail,email) <command> [flags]
+
+Flags:
+  -h, --help                    Show context-sensitive help.
+  -a, --account=STRING          Account email, alias, or auto for authenticated
+
+Commands:
+
+Read
+  search (find,query,ls,list) <query> ... [flags]
+    Search threads using Gmail query syntax
+
+  messages (message,msg,msgs) <command>
+    Message operations
+
+  history [flags]
+    Gmail history
+
+Write
+  send [flags]
+    Send an email
+
+  focus-time (focus) --from=STRING --to=STRING [<calendarId>] [flags]
+    Create a Focus Time block
+"""
+
+
+def test_discover_subcommands_reads_kongs_two_line_layout():
+    found = allowlist._discover_subcommands(_KONG_HELP, 40, tool="gog", path=["gmail"])
+    assert found == ["search", "messages", "history", "send", "focus-time"]
+
+
+def test_discover_subcommands_prefers_the_one_line_layout_when_both_match():
+    # A tool whose one-line listing already works keeps exactly that list, even if a line of its
+    # help also happens to look like kong's layout.
+    help_text = (
+        "Commands:\n  apply       Apply a config\n  diff        Show a diff\n\n  stray [flags]\n    Looks like kong\n"
+    )
+    assert allowlist._discover_subcommands(help_text, 40) == ["apply", "diff"]
+
+
+def test_discover_kong_needs_the_description_on_the_next_line():
+    # A two-space line with no deeper-indented line under it is prose or an example, not a command.
+    help_text = "Automation:\n  run [flags]\nnot indented\n  real <arg>\n    Does the real thing\n"
+    assert allowlist._discover_kong(help_text, 40) == ["real"]
+
+
+def test_discover_kong_finds_nothing_in_any_other_registered_tools_cached_help():
+    # The kong parser runs only when the one-line one found nothing, so the risk is a tool that
+    # relied on the synopsis fallback, or on finding no children at all, suddenly growing
+    # fabricated nodes. Every cached help text on disk is the evidence that none does.
+    cache_files = sorted((_REPO_ROOT / "cli-allowlist" / "help-cache").glob("*.json"))
+    assert cache_files
+    hits = {
+        f"{path.stem}:{key}": found
+        for path in cache_files
+        if path.stem != "gog"
+        for key, node in cast(allowlist.CacheEntry, json.loads(path.read_text()))["nodes"].items()
+        if (found := allowlist._discover_kong(node["help_text"], 40))
+    }
+    assert hits == {}
+
+
 def test_classification_formats_as_plain_value_not_enum_repr():
     # (str, Enum) members format as "Classification.DANGEROUS" in an f-string unless __str__ is
     # overridden — review()'s output and _save_rule's callers rely on the plain value.

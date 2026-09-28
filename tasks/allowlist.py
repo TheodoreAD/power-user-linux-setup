@@ -28,6 +28,7 @@ tradeoffs rather than TODOs: `contributing/cli-allowlist.md`.
 
 import dataclasses
 import hashlib
+import itertools
 import json
 import os
 import re
@@ -284,6 +285,20 @@ _SAFE_FLAG_HINTS = {"dry-run", "dry_run", "check", "plan-only", "plan_only", "pr
 # came back empty despite `gh pr --help` clearly listing create/edit/merge/etc.
 _SUBCOMMAND_LINE = re.compile(r"^\s{1,4}([a-z][a-z0-9_-]{1,20})(?:,\s*[a-z][a-z0-9_-]{1,20})?:?\s{2,}\S")
 _SKIP_WORDS = {"help", "completion", "version", "options", "flags", "usage"}
+
+# kong's (Go, alecthomas/kong) two-line layout, which gog prints: the command on its own line at a
+# two-space indent — its aliases in parentheses, then its argument and flag placeholders — and the
+# description on the next line, indented deeper. There is no two-space gap before a description, so
+# _SUBCOMMAND_LINE finds nothing in it, and deeper levels would silently discover no children:
+#     search (find,query,ls,list) <query> ... [flags]
+#       Search threads using Gmail query syntax
+# A required flag may come first instead: `focus-time (focus) --from=STRING --to=STRING [flags]`.
+# The rest never holds a two-space gap, which is what a one-line layout puts before its description
+# — without that, nvm's `  nvm --help    Show this message` rows matched.
+_KONG_COMMAND_LINE = re.compile(
+    r"^  ([a-z][a-z0-9_-]{1,20})(?: \([a-z0-9_,-]+\))?(?: (?:[<\[]|--[a-z][a-z0-9-]*=)(?:(?!  ).)*)?$"
+)
+_KONG_DESCRIPTION_LINE = re.compile(r"^ {4,}\S")
 
 # GNU/POSIX-ish flag definition lines: "  -f, --force          Force the operation" or
 # "      --hard              ..." or "  -n              Dry run". Heuristic, not load-bearing —
@@ -578,7 +593,10 @@ def _discover_subcommands(
     A nested command's own help text often doesn't have one — confirmed empirically on git, whose
     `git remote -h` / `git stash -h` / etc. render as docopt-style usage synopses ("or: git remote
     add ...") instead. When nothing matches and a tool+path is given (i.e. this is a nested-level
-    probe, not the tool's top-level help), fall back to parsing verbs out of those synopsis lines."""
+    probe, not the tool's top-level help), fall back to parsing verbs out of those synopsis lines.
+
+    kong's two-line layout (`_KONG_COMMAND_LINE`) is tried only when the one-line form found nothing,
+    so a tool that already discovered its children keeps exactly the list it had."""
     seen: list[str] = []
     for line in help_text.splitlines():
         m = _SUBCOMMAND_LINE.match(line)
@@ -590,9 +608,29 @@ def _discover_subcommands(
         seen.append(word)
         if len(seen) >= max_n:
             break
+    if not seen:
+        seen = _discover_kong(help_text, max_n)
     if seen or not (tool and path):
         return seen
     return _discover_from_synopsis(help_text, tool, path, max_n)
+
+
+def _discover_kong(help_text: str, max_n: int) -> list[str]:
+    """Command names from kong's two-line layout: a `_KONG_COMMAND_LINE` counts only when the very
+    next line is its indented description, which is what keeps a stray two-space line (a wrapped
+    paragraph, an example) from becoming a node."""
+    seen: list[str] = []
+    for line, following in itertools.pairwise(help_text.splitlines()):
+        m = _KONG_COMMAND_LINE.match(line)
+        if not m or not _KONG_DESCRIPTION_LINE.match(following):
+            continue
+        word = m.group(1)
+        if word in _SKIP_WORDS or word in seen:
+            continue
+        seen.append(word)
+        if len(seen) >= max_n:
+            break
+    return seen
 
 
 _SYNOPSIS_LINE = re.compile(r"^\s*(?:usage:|or:)\s+(.*)$", re.IGNORECASE)
