@@ -969,3 +969,71 @@ in `~/.agents/AGENTS.md` ("Every ref you hand git is one you read, never one you
 context** — a measurement question per the watch's standing decision, not a rewording one. The
 enabling shape is batching dependent calls in one parallel response, where a later call cannot see
 an earlier one's output and the only way to fill its argument is to invent it.]
+
+### Session 22 — `agent-skills`, 2026-09-22 to 09-26: the session that automated hand-rolling, and hand-rolled throughout
+
+**Merged 2026-09-28 from
+`2026-09-26-adherence-sample-21-the-session-that-automated-hand-rolling.md`**, which that session
+filed as "sample 21" against a watch then ending at session 20. Session 21 above was written in this
+repo the following day, so it is numbered 22 here. The name is recorded so `plans.py archive --file`
+can find the merged-away file.
+
+`75b2bcd7-afca-40c8-a408-11bc54871f0a` in the `agent-skills` project directory, `claude-opus-5`,
+auto mode, **261 Bash calls** to the boundary `2026-09-26T11:58:23+03:00`, its own sweep excluded.
+Re-scored 2026-09-28 with the `agent-skills` checkout's `audit.py` at `1d565d8`, and every rate the
+filed plan printed reproduced exactly.
+
+| row              | this session | note                                     |
+| ---------------- | ------------ | ---------------------------------------- |
+| `chain`          | **71%**      | 186 calls, 27 of five or more commands   |
+| `head/tail`      | **60%**      | 157 calls, **1** actually cut            |
+| `exit-masked`    | **44%**      | 114 calls: 70 wrapped a gate, 44 listing |
+| `search\|head`   | 17%          | 44 calls                                 |
+| `heredoc`        | 15%          | 40 calls                                 |
+| `sed-n`          | 8%           | 22 calls                                 |
+| `cd-own-repo`    | 1%           | 3 calls                                  |
+| `git-C-own-repo` | 0            |                                          |
+| `rg-replace`     | 0            |                                          |
+| `git-add-all`    | 0            |                                          |
+| `cut-message`    | 0 of 13      |                                          |
+
+The filed plan scored 11 of 17 expectations against `2026-09-12.json`. The six misses were `chain`,
+`head/tail`, `redirect-then-filter`, `sed-n`, `heredoc` and `cd-own-repo`. Its `exit-masked` split
+read 66 gate calls where the re-score reads 70; the difference is `93e2c41`, which began counting
+the confidentiality scan as a gate on 2026-09-28.
+
+[PITFALL: **the filed comparison straddled the instrument.** The baseline was `2026-09-12.json`,
+whose `instrument` field is `null` because it predates the field. Three commits landed on `audit.py`
+between it and the filed run (`28099cd` replay dedupe, `26f823b`, `adaad81`), and `audit.py` itself
+warned that the baseline counted a resumed transcript's calls once per copy. So its `+37pp` and
+`+40pp` deltas are not quoted here. What survives is the direction and the size: 71% `chain` is
+above anything a dedupe artefact produces.]
+
+**The session's entire subject was removing hand-rolled work, and it hand-rolled at the highest
+`chain` and `head/tail` rates this watch or the sample corpus has recorded.** It spent four days
+building `plans.py commit` subject derivation, `pending`, `migrate`, `rename` and `push`, each
+justified by measurements of sessions hand-rolling git. Meanwhile it chained 71% of its own calls
+and piped 60% through `head`/`tail`. Session 14 recorded the same shape ("three breaches by the
+session editing the rules") at a much smaller size.
+
+A plausible mechanism, to be tested rather than assumed: **the work that breaks these rules hardest
+is measurement work.** The session ran thirteen throwaway analysis scripts over the transcript store
+and the git histories of five repos. The natural shape of that work is a long pipeline whose output
+is cut to a readable window. Almost none of it was editing or deploying. Nearly all of it was
+reading.
+
+**Every rule about mutating git state held**: `cut-message` 0 of 13, the rule with the sharpest
+consequence, plus `git-C-own-repo`, `git-add-all`, `git-undo-relative` and `store-write-by-git` all
+at 0. The misses sit entirely in reading and inspection, which fits the mechanism above. It is also
+the part a rewording pass would have to target.
+
+`pipefail` was in force, so the masked gate calls reported real exit codes and both green-gate
+claims the session made stand. The filed plan tagged this `[UNVERIFIED:]` because `setopt` was only
+checked at harvest time. The gap closes from the other side: `[packages.claude-code]`'s `PIPE_FAIL`
+line in `~/.zshenv` was deployed on 2026-09-05, seventeen days before the session opened, and that
+file is read on every Bash call. So it is recorded here as a fact.
+
+[DECISION: **recorded as a session, not as a proposed rewording.** The watch's standing decision is
+that a rule broken repeatedly is a measurement question before it is a wording question. One session
+does not establish the measurement-work mechanism. What it does establish is that the rate can go
+this high in a session with no unusual constraints and full knowledge of the rules.]
