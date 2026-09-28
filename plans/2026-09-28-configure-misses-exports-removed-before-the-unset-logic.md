@@ -167,6 +167,10 @@ The first is the only one that holds by construction. Who owns the declared list
 
 ## Recommended direction
 
+**Parked 2026-09-28, by the user's choice after the reboot.** Pick it up when a second retired
+export is actually seen lingering in the manager. Until then the direction below stands as the
+design, not as queued work.
+
 Declare the retired exports, and unset them from a user unit that runs before the GNOME session
 manager starts. A variable is then gone from the second login after deploy. `configure` can keep its
 unset for the current session's new processes, but its message must stop implying that a re-login
