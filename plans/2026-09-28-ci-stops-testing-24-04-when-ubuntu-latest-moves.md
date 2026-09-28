@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-09-28
 source_repo: github.com-personal/invoke-stubs
 source_session: 76d98521-8e7c-4524-bb4f-4caeb36e8cb0.jsonl
@@ -34,11 +34,19 @@ is incidental. Here the OS is the product:
 
 ## Open questions
 
-[NEEDS CLARIFICATION: does this repo move to 26.04, or keep targeting 24.04 for now? If 24.04: pin
-the OS-sensitive jobs to `ubuntu-24.04` before 2026-10-19, so CI keeps testing the target rather
-than silently testing something else. If 26.04 support is wanted: add `ubuntu-26.04` as a second
-runner on the apt and install jobs first, and see what breaks while 24.04 is still the default. The
-user's own machine is the tiebreaker: this repo targets the release it runs on.]
+[DECISION: **keep targeting 24.04 for now, and pin.** The plan named the user's own machine as the
+tiebreaker, and it runs 24.04 (`/etc/os-release`, 2026-09-28). `5e4be9d` pinned `runtime-guardrail`,
+`netdoctor-python-floor`, `install-smoke` and the devcontainer smoke test to `ubuntu-24.04`, and
+left `quality`, `docs` and the Pages deploy floating. 26.04 support is the measurement below, not a
+question for now.]
+
+[UNVERIFIED: **the pinned jobs have not run on the pinned image yet.** The next push runs
+`runtime-guardrail`, `netdoctor-python-floor` and `install-smoke` through `ci.yml`. The devcontainer
+job is `workflow_dispatch`-only.]
+
+Step 4 below is answered: `.devcontainer/devcontainer.json` uses
+`mcr.microsoft.com/devcontainers/base:ubuntu-24.04`, and `docker/Dockerfile` is `FROM ubuntu:24.04`.
+Both are pinned, and neither follows "latest". `config/actrc` already maps `ubuntu-24.04` for `act`.
 
 ## Measuring the risk of 26.04 over 24.04
 
@@ -71,10 +79,9 @@ a container before any workflow changes.
 
 ## Recommended direction
 
-Measure first: steps 1 to 4 above are local and cheap, so run them before touching a workflow. Then,
-before 2026-10-19 whatever they show, pin the jobs whose subject is the OS (`runtime-guardrail`,
-`install-smoke`, the devcontainer build) to `ubuntu-24.04`, and leave the pure-Python jobs
-(`quality`, `docs`) on `ubuntu-latest`. The pin keeps CI testing the target during the rollout. The
-measurement decides whether a second `ubuntu-26.04` leg follows, and when the pin can come off. The
-family-wide choice between floating and pinning for the uv-based repos is filed for repo-tasks as
+The pin is done (`5e4be9d`), ahead of 2026-10-19, and it keeps CI testing the target during the
+rollout. What is left is the measurement: steps 1 to 3 locally, then step 5. It decides whether a
+second `ubuntu-26.04` leg follows, and when the pin can come off. Nothing here is urgent any more.
+Revisit when the owner's machine is about to move to 26.04. The family-wide choice between floating
+and pinning for the uv-based repos is filed for repo-tasks as
 `2026-09-28-ubuntu-latest-moves-to-26-04-from-2026-10-19.md`.
