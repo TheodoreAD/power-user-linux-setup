@@ -45,10 +45,10 @@ The `ci.yml` pins passed on their first run: CI run 36474431063 on `1bdcae3`. `r
 annotates only `docs`, which still floats.
 
 **The devcontainer smoke test passed on `ubuntu-24.04`** in run 36489105752 on 2026-09-29, on its
-second attempt. The first attempt failed for a reason unrelated to the pin: see
-`2026-09-29-deb-github-latest-release-lookup-is-rate-limited.md`. That workflow now also runs on a
-weekly schedule (`2026-09-29-stable-tag-release-model.md`), so the pin is re-checked every week
-without anyone dispatching it.
+second attempt. The first attempt failed for a reason unrelated to the pin: a rate-limited GitHub
+API lookup, fixed in `535d821`. That workflow now also runs on a weekly schedule
+(`2026-09-29-stable-tag-release-model.md`), so the pin is re-checked every week without anyone
+dispatching it.
 
 Step 4 below is answered: `.devcontainer/devcontainer.json` uses
 `mcr.microsoft.com/devcontainers/base:ubuntu-24.04`, and `docker/Dockerfile` is `FROM ubuntu:24.04`.

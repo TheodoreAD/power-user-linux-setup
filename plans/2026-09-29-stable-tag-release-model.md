@@ -140,8 +140,9 @@ from `master`. A week at most is an acceptable gap; 231 commits was not.]
 ## Still open
 
 **The first promotion ran on 2026-09-29, in run 36489105752.** Its first attempt failed in
-`smoke-test`, because `dive` and `hyperfine` could not resolve their latest release (see
-`2026-09-29-deb-github-latest-release-lookup-is-rate-limited.md`). The re-run of the failed job
+`smoke-test`, because `dive` and `hyperfine` could not resolve their latest release through the
+rate-limited GitHub API. That was fixed in `535d821`, in the now-retired
+`2026-09-29-deb-github-latest-release-lookup-is-rate-limited.md`. The re-run of the failed job
 passed, and `publish-stable` then published it. `git ls-remote` shows `stable` and `v2026.09.28`
 both at `ab885c8`. The annotated tag's message is `Promoted to stable from 2a2a152…`, from
 `github-actions[bot]`. The name reads 09.28, not 09.29, because the runner stamps the date in UTC.
