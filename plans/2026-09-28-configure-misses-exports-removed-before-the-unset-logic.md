@@ -129,6 +129,20 @@ happen.** To confirm it: unset `UV_PYTHON` while logged in, check that it stays 
 of the session, then log out and back in and check that it is present again. If it reappears before
 the logout, something else is also exporting it.]
 
+**After the reboot, 2026-09-28 (booted 14:44:16): gone, and nothing re-imported it.** A reboot
+starts a fresh user manager, and no login source defines the variable, so this instance is resolved
+without any unit:
+
+- `systemctl --user show-environment | rg 'UV_PYTHON|SSH_AGENT_PID'`: no output.
+- `uv python find --show-version`: `3.11.15` in `agent-skills` (pins 3.11), `3.14.5` here (pins
+  3.14). Each repo's own `.python-version` now wins.
+
+That also retires the verification above as written: it needs the variable present in the manager to
+watch it come back. It can only be re-run by exporting a throwaway variable into a live session's
+environment and following it through a logout. **What the unit is for changes with it**: its
+motivating instance is gone, so it now guards only exports retired in future, and whether that is
+worth a new unit is open again rather than settled.
+
 It also bears on `tasks/claude_daemon.py`: stopping a stale daemon does not clear this variable,
 because the next daemon starts from a shell of the new login, which inherits it from the manager.
 
