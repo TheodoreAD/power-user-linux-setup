@@ -1,6 +1,13 @@
 name: Dev container smoke test
 
 on:
+  # Weekly, so `stable` cannot fall behind unnoticed. Dispatch-only let it trail `master` by 231
+  # commits and three weeks (measured 2026-09-29) while the README, built from `master`, described
+  # an installer the published URL did not serve. A week is also a deliberate lag, the same idea as
+  # oh-my-zsh's update cooldown: a regression pushed on a Tuesday has days to be noticed before it
+  # reaches a fresh machine. `pending` below makes a week with nothing new cost one ls-remote.
+  schedule:
+    - cron: "17 4 * * 1"
   workflow_dispatch:
   # push:
   #   branches: [master]
@@ -11,22 +18,46 @@ on:
   #     - bootstrap-devcontainer.sh
   #     - install.sh
   #     - .devcontainer/**
-  # Intentionally disabled for now (workflow_dispatch-only) while this pipeline is still under
-  # active development — repeated pushes to master would otherwise trigger a build/smoke-test on
-  # every commit. Re-enable by uncommenting the block above once it's been exercised a few times
-  # via `gh workflow run devcontainer.yml` and is trusted to run unattended. Note what that costs
-  # consumers meanwhile: `publish-stable` below is the only thing that moves the `stable` tag, so
-  # dispatch-only means `stable` advances by hand and can lag `master` indefinitely — documented
-  # in docs/dev-container.md, "Why `stable`, not `master`/`HEAD`".
+  # Not on every push: the container build is the heaviest job here, and ci.yml already runs the
+  # other two gates (install-smoke, quality) on every push. Dispatch is still the way to promote
+  # sooner than Monday. contributing/install-entry-points.md has what the schedule beat.
 
 permissions:
   contents: read
 
+# Two promotions racing would each pick the same calver name, and the second push would be refused
+# only after its tests had run. Queued instead, never cancelled — a cancelled promotion is one that
+# silently did not happen.
+concurrency:
+  group: publish-stable
+  cancel-in-progress: false
+
 jobs:
+  # Ask the host, not a local tag: a tag that moved is never updated by a plain fetch, so only
+  # ls-remote says what consumers currently get. A scheduled run skips the build when `stable`
+  # already names this commit; a dispatch runs the tests regardless, since re-checking is the point
+  # of asking by hand, and only the publish step is skipped.
+  pending:
+    runs-on: ubuntu-24.04
+    outputs:
+      promote: ${{ steps.compare.outputs.promote }}
+    steps:
+      - id: compare
+        run: |
+          published="$(git ls-remote "https://github.com/${GITHUB_REPOSITORY}.git" refs/tags/stable | cut -f1)"
+          echo "stable is at ${published:-nothing}; this run is at ${GITHUB_SHA}"
+          if [ "${published}" = "${GITHUB_SHA}" ]; then
+            echo "promote=false" >> "${GITHUB_OUTPUT}"
+          else
+            echo "promote=true" >> "${GITHUB_OUTPUT}"
+          fi
+
   # The container's own OS is set by .devcontainer/devcontainer.json's image (ubuntu-24.04), not
   # here, but the host still supplies the kernel and Docker. Pinned to 24.04 with the other
   # OS-subject jobs (see ci.yml's runtime-guardrail), so the pair stays the release this repo targets.
   smoke-test:
+    needs: pending
+    if: needs.pending.outputs.promote == 'true' || github.event_name == 'workflow_dispatch'
     runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
@@ -78,6 +109,8 @@ jobs:
   # started sharing the ref. Same definition ci.yml calls on every push, called here so the tag move
   # can require it — a second copy of the job would be a copy that drifts.
   install-smoke:
+    needs: pending
+    if: needs.pending.outputs.promote == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/install-smoke.yml
 
   # Both smoke tests prove the thing runs; this proves it is the code the repo actually accepts.
@@ -85,12 +118,14 @@ jobs:
   # in this workflow ever looked. `docs` is deliberately not here: a docs-site build failure does not
   # change what a consumer of this tag installs.
   quality:
+    needs: pending
+    if: needs.pending.outputs.promote == 'true' || github.event_name == 'workflow_dispatch'
     uses: ./.github/workflows/quality.yml
 
   publish-stable:
-    needs: [smoke-test, install-smoke, quality]
-    runs-on: ubuntu-latest
-    if: github.ref == 'refs/heads/master'
+    needs: [pending, smoke-test, install-smoke, quality]
+    runs-on: ubuntu-24.04
+    if: github.ref == 'refs/heads/master' && needs.pending.outputs.promote == 'true'
     permissions:
       contents: write
     steps:
@@ -104,6 +139,31 @@ jobs:
       - uses: actions/checkout@v7 # zizmor: ignore[artipacked]
         with:
           fetch-depth: 0
+      # `stable` moves; every promotion also gets an immutable calver tag, which is what makes a
+      # published state nameable afterwards — the host keeps no history of where a moved tag used to
+      # point. Calver rather than semver because nothing here has an API for a major to break.
       - run: |
+          set -eu
+          # Forward only. `spowse self.update` pulls --ff-only and refuses anything else, so moving
+          # `stable` somewhere its current commit does not lead would strand every installed machine.
+          if git rev-parse -q --verify refs/tags/stable > /dev/null \
+            && ! git merge-base --is-ancestor refs/tags/stable HEAD; then
+            echo "::error::stable ($(git rev-parse refs/tags/stable)) is not an ancestor of ${GITHUB_SHA}; refusing to move it backwards or sideways"
+            exit 1
+          fi
+          previous="$(git rev-parse -q --verify refs/tags/stable || echo none)"
+          day="$(LC_TIME=C date -u +%Y.%m.%d)"
+          version="v${day}"
+          n=1
+          while git rev-parse -q --verify "refs/tags/${version}" > /dev/null; do
+            version="v${day}.${n}"
+            n=$((n + 1))
+          done
+          git -c user.name="github-actions[bot]" \
+            -c user.email="41898282+github-actions[bot]@users.noreply.github.com" \
+            tag -a "${version}" -m "Promoted to stable from ${previous}"
           git tag -f stable
-          git push origin stable --force
+          # One atomic push: the version tag without `+`, so a name that already exists upstream is
+          # refused rather than overwritten, and `stable` forced. Either both land or neither does.
+          git push --atomic origin "refs/tags/${version}" "+refs/tags/stable:refs/tags/stable"
+          echo "Published ${version} and moved stable to ${GITHUB_SHA}"
