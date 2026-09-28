@@ -752,11 +752,23 @@ def sudo_write(c: Context, path: Path, text: str) -> None:
     reads it back to report what changed, died with PermissionError. Every destination this is
     used for (/etc/wsl.conf, apt sources, systemd drop-ins, a CA bundle, daemon.json) is meant to
     be world-readable; none of them carries a secret.
+
+    One sudo, alone on its command line, and the tempfile removed from Python rather than by a
+    chained `&& rm`. With no terminal, sudo keys its credential cache on the parent PID, and
+    `ensure_sudo` stamps it from a child of this process. bash execs a lone command in place, so
+    that sudo's parent is still this process and it finds the cache. Anything compound makes bash
+    fork, the parent becomes bash, and `sudo -n` fails with "a password is required" — measured
+    2026-09-28 from an agent session: `bash -c 'sudo -n true'` exits 0 and
+    `bash -c 'sudo -n true && :'` exits 1 against the same fresh stamp. At a real terminal the
+    cache is keyed on the tty instead, which is why only an unattended run ever saw it.
     """
     with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
         f.write(text)
-        tmp = f.name
-    c.run(f"{SUDO} install -m 0644 {tmp} {path} && rm {tmp}")
+        tmp = Path(f.name)
+    try:
+        c.run(f"{SUDO} install -m 0644 {tmp} {path}")
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def sudo_read(c: Context, path: Path) -> str:

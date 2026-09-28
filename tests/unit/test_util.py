@@ -7,9 +7,11 @@ import os
 import pwd
 import sys
 import types
+from pathlib import Path
+from typing import override
 
 import pytest
-from invoke import MockContext, Result
+from invoke import Context, MockContext, Result
 
 from tasks import util
 
@@ -145,6 +147,27 @@ def test_readable_by_all_reads_the_other_bit(tmp_path, mode, expected):
 
 def test_readable_by_all_is_false_for_a_missing_file(tmp_path):
     assert util.readable_by_all(tmp_path / "never-created") is False
+
+
+def test_sudo_write_runs_one_sudo_alone_and_cleans_up_its_tempfile(monkeypatch):
+    """Without a terminal sudo keys its cache on the parent PID, and only a lone command keeps
+    that parent as this process — a shell operator makes bash fork and the `sudo -n` fails. See
+    sudo_write's docstring for the measurement."""
+    monkeypatch.setattr(util, "SUDO", "sudo -n")
+    commands: list[str] = []
+
+    class _Recorder(Context):
+        @override
+        def run(self, command: str, **kwargs: object) -> Result:
+            commands.append(command)
+            return Result(command=command)
+
+    util.sudo_write(_Recorder(), Path("/etc/example.conf"), "text\n")
+
+    [command] = commands
+    assert command.startswith("sudo -n install -m 0644 ")
+    assert not any(op in command for op in ("&&", "||", ";", "|"))
+    assert not Path(command.split()[-2]).exists(), "the tempfile is removed from Python, not by a chained rm"
 
 
 def test_write_claude_settings_refuses_past_the_budget_and_leaves_the_file_alone(monkeypatch, tmp_path):
