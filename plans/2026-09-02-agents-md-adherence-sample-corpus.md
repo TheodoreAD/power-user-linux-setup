@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-18
+updated: 2026-09-28
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus

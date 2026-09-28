@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-02
+updated: 2026-09-28
 ---
 
 # Do the compressed `~/AGENTS.md` rules actually fire? — the adherence watch
