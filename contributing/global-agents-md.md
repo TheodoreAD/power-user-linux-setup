@@ -1021,6 +1021,35 @@ makes Bash `rg` see `.github` while `Grep` silently does not would be worse than
 alone, so the clause says "these are the Bash spellings" rather than speaking for tools nobody has
 tested. Four calls from an ordinary session would settle it.
 
+### Gitignored directories stay ignored when named, added 2026-09-28
+
+"Name the directory" was stated as the flagless way into a hidden path, and read as if it worked for
+any path. It does not for an ignored one. Found in an invoke-stubs session, 2026-09-27: looking for
+a string in the installed `repo_tasks` package under that repo's `.venv`, both
+`rg -n '<string>' <repo>/.venv/lib/python3.11/site-packages/repo_tasks` and
+`fd -t d repo_tasks <repo>/.venv/lib` returned nothing, exit 1 and no warning, and the session
+nearly concluded the package lacked the code it was about to read. `rg --no-ignore` found it.
+
+Reproduced here 2026-09-28 against this repo's own `.venv`:
+
+| invocation                                                  | result             |
+| ----------------------------------------------------------- | ------------------ |
+| `rg -l 'def task' .venv/…/site-packages/invoke`             | nothing, exit 1    |
+| `rg -l --no-ignore 'def task' .venv/…/site-packages/invoke` | 4 files            |
+| `fd tasks.py .venv/…/site-packages/invoke`                  | nothing            |
+| `fd -I tasks.py .venv/…/site-packages/invoke`               | `invoke/tasks.py`  |
+| `rg -c 'def task' .venv/…/site-packages/invoke/tasks.py`    | 1 — a named _file_ |
+
+So the distinction is directory versus file: a named file is searched regardless, and a named
+directory is walked with ignore rules applied to its children. A `.venv` is doubly covered, since uv
+writes its own `.gitignore` containing `*` into it, so it stays ignored even in a repo whose root
+`.gitignore` forgets it.
+
+[DECISION: **one clause on the existing "Name the directory" bullet, no new heading**, so the rule
+count is unchanged. The fix names `-I`, which the paragraph below the bullet already restricts to a
+targeted lookup of something you know is ignored — this is that case, scoped by the named directory
+rather than by one filename, so the two sentences agree rather than compete.]
+
 ## Translating a `grep` invocation to `rg`
 
 The `rg -r` clause, added 2026-08-26 from a live occurrence. Retiring a plan file meant grepping

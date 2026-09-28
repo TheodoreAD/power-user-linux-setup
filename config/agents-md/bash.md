@@ -97,7 +97,9 @@ well-formed, the path exists, and an empty result reads exactly like "already cl
 through it:
 
 - **Name the directory**, which needs no flag at all. `rg 'uses: ' <repo>` finds nothing where
-  `rg 'uses: ' <repo>/.github` finds every workflow.
+  `rg 'uses: ' <repo>/.github` finds every workflow. That works for a **hidden** directory only: a
+  **gitignored** one — anything under `.venv/`, `node_modules/`, `build/` — stays ignored even when
+  named, and comes back just as silently empty. There, `rg --no-ignore` or `fd -I`.
 - **`fd -H`**, safe as written.
 - **`rg --hidden --glob '!.git'`**, where the exclusion is **not** optional, because git does not
   ignore its own directory.
