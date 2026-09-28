@@ -115,8 +115,8 @@ job had finished by then, was left running.]
 **Verified live 2026-09-28.** Report mode ran against the real stale daemon (pid 3454123, started
 2026-09-26 11:49), from the checkout and from the deployed copy on PATH, and `desktop-file-validate`
 accepts the autostart entry. The critical-urgency `--notify` run was confirmed by the user: it
-stayed at the top of the screen with both buttons until answered. A "Leave it" or a dismissal left
-the daemon running.
+stayed at the top of the screen with both buttons until answered. The user clicked "Leave it" and
+the daemon kept running, which is the live counterpart of the unit test that pins it.
 
 [UNVERIFIED: **the Stop button has never been clicked live.** It runs `claude daemon stop --any`,
 documented by 2.1.283's own help, after re-checking the daemon. Unit tests cover the button only as
