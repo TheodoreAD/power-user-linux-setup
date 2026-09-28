@@ -74,18 +74,15 @@ jobs:
   # installer is pinned to, so the container smoke test alone stopped covering it the day install.sh
   # started sharing the ref. Same definition ci.yml calls on every push, called here so the tag move
   # can require it — a second copy of the job would be a copy that drifts.
-  #
-  # Both calls in this file decline zizmor's self-repository audit; the reason is beside the first
-  # such call in ci.yml.
   install-smoke:
-    uses: ./.github/workflows/install-smoke.yml # zizmor: ignore[self-repository]
+    uses: ./.github/workflows/install-smoke.yml
 
   # Both smoke tests prove the thing runs; this proves it is the code the repo actually accepts.
   # Without it `stable` could carry failing lint, a type error or a red test suite, because nothing
   # in this workflow ever looked. `docs` is deliberately not here: a docs-site build failure does not
   # change what a consumer of this tag installs.
   quality:
-    uses: ./.github/workflows/quality.yml # zizmor: ignore[self-repository]
+    uses: ./.github/workflows/quality.yml
 
   publish-stable:
     needs: [smoke-test, install-smoke, quality]
