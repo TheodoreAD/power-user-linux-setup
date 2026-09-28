@@ -1560,6 +1560,37 @@ counted two earlier ones.
 `inv quality.precommit` or `inv test.integration`. The eight masked gate calls were type-checker
 probes whose success the session read from the tool's own output text. No re-run was owed.
 
+### Sample 29 — `power-user-linux-setup`, 203 calls, clean rows again and the same unscanned pushes as 27
+
+`audit.py --session 492154bb --until 2026-09-28T21:11:40Z`, no `--compare`, instrument `d2cac1c`,
+auto mode, `setopt` answering `pipefail`. Transcript `492154bb-2523-43a2-a2e5-9c4029ea5b08.jsonl`,
+18:49Z to 21:11Z. Filed from that session's own harvest.
+
+Every row is **0%** except `cat-view` at 2 calls (1%): both were `tail -n` on a plan file to find
+its last lines before an `Edit`, where a `Read` with an offset would have served. `exit-masked` 0,
+so the 3 gate-green and 6 CI-green claims all rest on unpiped runs or on
+`gh run watch --exit-status`. This ran in auto mode, whose system note asks for `cat`/`sed -n` over
+`Read`; the note was not followed, and neither was it announced, unlike sample 28.
+
+**The finding is sample 27's, in a different repo.** The session made **14 commits to this repo,
+which is public, and 7 pushes**, and ran no `plans.py scan` before any of them. It did run
+`scan --mode tree` twice, over the unscoped store area and over `cli-allowlist/`, each time as a
+check on content it was unsure of, never as the pre-commit gate. The commits all followed the
+"Writing the commit command" recipe, so sample 27's explanation fits unchanged: the scan sits in a
+different section from the shape being practised.
+
+The harvest's retroactive check is clean for this session and not for the repo. The scanner's own 61
+derived terms, matched against `git log -p a6eaa73..HEAD`, found **0 hits in 7,830 diff lines**. The
+matcher was checked on a known positive before that zero was trusted. `scan --mode history` over the
+whole repo still reports **55 hits** (51 one employer name, 4 another), all in history from before
+this session. `plans/2026-08-28-published-history-purge.md`, in progress, owns them, so they are
+confirmed still open, not new.
+
+One more shape, loud and cheap: the recipe's pathspec commit (`git commit -m … -- <paths>`) fails
+with `pathspec … did not match any file(s) known to git` when a named path is untracked, since a
+pathspec commit takes only tracked paths. It cost one `git add` and a retry. Nothing was committed
+by the failed call.
+
 ### Outside the audit rows: a SHA not read from git, handed to `gh run list --commit`
 
 Six instances in four sessions on 2026-09-28. The first four were filed from scaffoldapy and merged
