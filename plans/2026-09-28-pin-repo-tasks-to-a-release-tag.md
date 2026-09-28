@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-09-28
 source_repo: github.com-personal/invoke-stubs
 source_session: b418c54c-c032-4559-9cf3-6370d926625b.jsonl
@@ -39,3 +39,14 @@ Add `tag = "v0.6.0"` (or whatever the current release is) to the `[tool.uv.sourc
 gate, and say in a comment beside it that a bump is that edit plus
 `inv deps.lock --package repo-tasks`. Check whether anything here reads the source entry's shape —
 e.g. a task or test that parses `[tool.uv.sources]` — before editing it.
+
+## Migrated to
+
+- **The change and its reason:** the comment above `[tool.uv.sources]` in `pyproject.toml`
+  (`70fcc76`). It names the family decision it follows and how to bump.
+- **The rest:** no file under `tasks/`, `tests/` or `.github/` reads the source entry, so nothing
+  else changed. The lock resolves the same commit as before, `a2d9cf5` (the v0.6.0 tag), so this
+  repo never actually landed on untagged `main`. Only the recorded source changed.
+
+Nothing was left out. The family-wide rationale is owned by repo-tasks'
+`contributing/consumer-sweep.md`.
