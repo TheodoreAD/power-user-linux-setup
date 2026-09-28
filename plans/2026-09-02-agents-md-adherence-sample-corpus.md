@@ -1545,6 +1545,50 @@ counted two earlier ones.
 `inv quality.precommit` or `inv test.integration`. The eight masked gate calls were type-checker
 probes whose success the session read from the tool's own output text. No re-run was owed.
 
+### Outside the audit rows: a SHA not read from git, handed to `gh run list --commit`
+
+Three instances in two sessions on 2026-09-28, filed from scaffoldapy and merged here 2026-09-28.
+None of them is an `audit.py` row, and no tag counts this shape. Sample 15 is the same slip under an
+`until` loop.
+
+**Rule:** `config/agents-md/git.md`, "Force-pushing, or asking what a remote actually has": "Every
+ref you hand git is one you read, never one you derived." `config/agents-md/verification.md`,
+"Waiting for something to finish", names `--commit`'s full-SHA-only matching outright.
+
+1. **scaffoldapy session `81492b4f-e6bc-4577-8d01-412b3ff4e7a9`, around 02:58 +03:00.** After a push
+   printed `2512514..95b0724`, it ran `gh run list --branch main --limit 2 --commit <sha>` with
+   `95b07247c3c2a4f6a1a8c0e3a8c5b2d1e0f9a8b7`, a 40-character SHA invented from the 7-character
+   prefix. It printed nothing and exited 0. The session noticed, ran `git rev-parse HEAD`, and
+   repeated the lookup correctly. The filed plan first claimed the session "had applied it correctly
+   minutes before, via `git rev-parse`". It had not: its first `rev-parse` came right after the
+   slip, as the fix.
+2. **The same session, around 21:05 +03:00, minutes after filing the plan about (1).** After a push
+   printed `1fa2c8f..97da68e`, it ran `gh run list --commit 97da68e --limit 2 --json …`, the short
+   form rather than an invented long one. `[]`, exit 0, then `git rev-parse HEAD` and a correct
+   repeat.
+3. **power-user-linux-setup session `846c4b2d-f16f-4518-bb56-116336043ed3`, around 21:15 +03:00, the
+   session that merged this.** After a push printed `7079c80..5fd0120`, it passed `5fd0120f` to
+   `gh run list --commit`. That is not the push output's prefix either: it is those seven characters
+   with an **eighth invented by eye**, and the real SHA continues `5fd01209`. Empty output, exit 0.
+   The session recognised the shape from `verification.md`, ran `git rev-parse`, and repeated it
+   with the full SHA, which found four green runs. It had read the plan it was about to absorb,
+   which describes exactly this, about an hour earlier.
+
+**Cost:** one wasted call each time. Any of them would have been a false "no CI run yet" inside a
+wait loop, which is what sample 15 was.
+
+[PITFALL: **the three share one cause and differ in shape**: completed to 40 characters, left at 7,
+and extended by one. What they share is a SHA taken from push output rather than read from git.
+Instance 3 adds the case sample 15's pitfall said the corpus could not separate: a session that had
+**read** the description of this slip that day, in a plan it was handling, and made it anyway. So
+reading about it is not a defence either, and the fix the rule offers, "read it, never derive it",
+is the only form that would have worked.]
+
+[NEEDS CLARIFICATION: **"every ref you hand git" or "every ref you hand a tool"?** The rule is
+scoped to git and all three slips were in `gh`. Widening the wording is the one change this raises.
+The evidence says wording is not the lever, since `verification.md` names this exact command and
+instance 3 had read it, but a git-only scope does let a `gh` call read as outside the rule.]
+
 ## Open questions
 
 [DECISION: **the "two rules meet at a seam" reading of samples 14 and 15's chain rate does not
