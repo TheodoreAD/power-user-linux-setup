@@ -1562,9 +1562,12 @@ probes whose success the session read from the tool's own output text. No re-run
 
 ### Outside the audit rows: a SHA not read from git, handed to `gh run list --commit`
 
-Four instances in two sessions on 2026-09-28, filed from scaffoldapy and merged here 2026-09-28.
-None of them is an `audit.py` row, and no tag counts this shape. Sample 15 is the same slip under an
-`until` loop.
+Six instances in four sessions on 2026-09-28. The first four were filed from scaffoldapy and merged
+here 2026-09-28. The fifth was filed from invoke-stubs as
+`2026-09-28-fifth-invented-sha-to-gh-run-list.md`, which is the name `plans.py archive --search`
+needs, and merged the same day. The sixth was recorded by the session that merged the fifth. None of
+them is an `audit.py` row, and no tag counts this shape. Sample 15 is the same slip under an `until`
+loop.
 
 **Rule:** `config/agents-md/git.md`, "Force-pushing, or asking what a remote actually has": "Every
 ref you hand git is one you read, never one you derived." `config/agents-md/verification.md`,
@@ -1594,22 +1597,40 @@ ref you hand git is one you read, never one you derived." `config/agents-md/veri
    real one continues `aa0ab5260ef58a91…` (the eighth happened to match). `[]`, exit 0; then
    `git rev-parse` and a correct repeat. So the invented form came back after the short-form lesson
    of (3), and one hand-written instance of the slip was not enough to stop the next.
+5. **invoke-stubs session `b418c54c-c032-4559-9cf3-6370d926625b`, around 22:51 +03:00.** After a
+   push printed `fe1313c..9c5810b`, it ran `gh run list --branch main --commit <sha> --limit 2` with
+   `9c5810bdc04e58cb…`, the push output's seven characters and 33 invented ones. The real SHA
+   continues `9c5810bc543e3c74…`. Empty output, exit 0, then `git rev-parse HEAD` and a correct
+   repeat, which found two green runs. `audit.py` scored the session 0% on every row over 68 calls,
+   so a clean audit sat beside a slip that no row counts. Earlier the same hour, the session had
+   read before writing: it ran `git ls-remote` to resolve the v0.6.0 tag before re-pinning a
+   workflow to its full SHA. **Reading is what it did for a pin, and deriving is what it did for a
+   CI query.** A pin feels like a write, and a `gh` query feels like a read.
+6. **power-user-linux-setup session `492154bb-2523-43a2-a2e5-9c4029ea5b08`, around 22:45 +03:00,
+   about an hour before it merged (5).** After `plans.py commit` printed `committed: 1bdcae30a852`,
+   it passed those twelve characters to `gh run list --branch master --commit`. The form was short
+   and read, not invented, and it was the prefix the tool had just printed. `[]`, exit 0, then
+   `git rev-parse HEAD` and a correct repeat. The global instructions were loaded the whole time,
+   and they include `verification.md`'s sentence about this exact flag.
 
 **Cost:** one wasted call each time. Any of them would have been a false "no CI run yet" inside a
 wait loop, which is what sample 15 was.
 
-[PITFALL: **the four share one cause and differ in shape**: completed to 40 characters, left at 7,
-extended by one, and completed to 40 again. What they share is a SHA taken from push output rather
-than read from git. Instance 3 adds the case sample 15's pitfall said the corpus could not separate:
-a session that had **read** the description of this slip that day, in a plan it was handling, and
-made it anyway. Instance 4 goes one step further: the same session had just **written** the
-description. So neither reading nor writing about it is a defence, and the fix the rule offers,
-"read it, never derive it", is the only form that would have worked.]
+[PITFALL: **the six share one cause and differ in shape**: completed to 40 characters, left at 7,
+extended by one, completed to 40 twice more, and left at a tool's 12-character prefix. What they
+share is a SHA taken from a command's printed output rather than read from git. Instance 3 adds the
+case sample 15's pitfall said the corpus could not separate: a session that had **read** the
+description of this slip that day, in a plan it was handling, and made it anyway. Instance 4 goes
+one step further: the same session had just **written** the description. So neither reading nor
+writing about it is a defence, and the fix the rule offers, "read it, never derive it", is the only
+form that would have worked.]
 
 [NEEDS CLARIFICATION: **"every ref you hand git" or "every ref you hand a tool"?** The rule is
-scoped to git and all three slips were in `gh`. Widening the wording is the one change this raises.
-The evidence says wording is not the lever, since `verification.md` names this exact command and
-instance 3 had read it, but a git-only scope does let a `gh` call read as outside the rule.]
+scoped to git, and all six slips were in `gh`. Instance 5's pin-versus-query split points the same
+way: the reading habit fires for a write to git, and not for a query to another tool. Widening the
+wording is the one change this raises. The evidence says wording is not the lever, since
+`verification.md` names this exact command and instance 3 had read it, but a git-only scope does let
+a `gh` call read as outside the rule.]
 
 ## Open questions
 
