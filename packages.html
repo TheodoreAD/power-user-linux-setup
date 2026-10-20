@@ -2290,7 +2290,7 @@
   
 
 
-<h1 id="package-catalog">Package catalog</h1>
+<h1 id="package-catalog">Package catalog<a class="headerlink" href="#package-catalog" title="Permanent link">&para;</a></h1>
 <p>Everything a full <code>inv setup</code> installs on a workstation, in one table. This is the answer to &ldquo;what
 do I actually get&rdquo; — <a href="configuration.html">How it works</a> is the answer to &ldquo;how&rdquo;, and
 <a href="apt_packages.html">apt_packages.md</a> explains the install <em>methods</em> the <code>Method</code> column names.</p>
@@ -2380,6 +2380,24 @@ grant).</p>
 <td>C/C++ build toolchain and POSIX developer man pages</td>
 <td><code>build</code>, <code>dev</code></td>
 <td><code>apt</code></td>
+</tr>
+<tr>
+<td><code>cameractrls</code></td>
+<td>cameractrls — GUI for V4L2 camera controls, with PTZ sliders, keyboard/gamepad/SpaceMouse pan-tilt- zoom and saved presets.</td>
+<td><code>hardware</code>, <code>camera</code>, <code>gui</code>, <code>workstation</code></td>
+<td><code>git-clone</code></td>
+</tr>
+<tr>
+<td><code>cameractrls-deps</code></td>
+<td>Runtime dependencies of cameractrls — GTK4 bindings for the GUI, SDL2 + turbojpeg for its live preview window</td>
+<td><code>hardware</code>, <code>camera</code>, <code>gui</code>, <code>workstation</code></td>
+<td><code>apt</code></td>
+</tr>
+<tr>
+<td><code>cameractrls-launcher</code></td>
+<td><code>cameractrls</code> command and app-grid launcher for [packages.cameractrls]&rsquo;s GTK4 GUI</td>
+<td><code>hardware</code>, <code>camera</code>, <code>gui</code>, <code>workstation</code></td>
+<td><code>wrapper-script</code></td>
 </tr>
 <tr>
 <td><code>citrix-workspace-deps</code></td>
@@ -2892,6 +2910,12 @@ grant).</p>
 <td><code>zsh</code></td>
 </tr>
 <tr>
+<td><code>v4l-utils</code></td>
+<td>V4L2 webcam tools — v4l2-ctl lists and sets camera controls, including UVC pan/tilt/zoom from a script</td>
+<td><code>hardware</code>, <code>camera</code>, <code>workstation</code></td>
+<td><code>apt</code></td>
+</tr>
+<tr>
 <td><code>vim</code></td>
 <td>Full Vim editor (vim-tiny is the 24.04 default; this installs the complete version)</td>
 <td><code>editor</code>, <code>cli</code></td>
@@ -2961,7 +2985,7 @@ grant).</p>
 </table>
 <!-- /PULSE::package-catalog -->
 
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="apt_packages.html">Install methods</a> — what each value in the <code>Method</code> column does</li>
 <li><a href="configuration.html">How it works</a> — how tags decide which of these a machine gets</li>
