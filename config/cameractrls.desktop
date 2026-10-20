@@ -1,0 +1,10 @@
+[Desktop Entry]
+Type=Application
+Version=1.0
+Name=Cameractrls
+Comment=Camera controls for Linux, including pan/tilt/zoom
+Exec=cameractrls
+Icon=camera-web
+Terminal=false
+Categories=Settings;AudioVideo;Video;GNOME;GTK;
+Keywords=picture;photos;camera;webcam;ptz;insta360;

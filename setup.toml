@@ -465,6 +465,42 @@ method = "apt"
 tags = ["hardware", "monitor", "workstation"]
 verify_cmd = "sensors --version" # package provides the "sensors" binary, not "lm-sensors"
 
+[packages.v4l-utils]
+description = "V4L2 webcam tools — v4l2-ctl lists and sets camera controls, including UVC pan/tilt/zoom from a script"
+method = "apt"
+tags = ["hardware", "camera", "workstation"]
+verify_cmd = "v4l2-ctl --version" # package provides v4l2-ctl, not a "v4l-utils" binary
+
+[packages.cameractrls-deps]
+description = "Runtime dependencies of cameractrls — GTK4 bindings for the GUI, SDL2 + turbojpeg for its live preview window"
+method = "apt"
+tags = ["hardware", "camera", "gui", "workstation"]
+packages = ["python3-gi", "gir1.2-gtk-4.0", "libsdl2-2.0-0", "libturbojpeg"]
+verify = false # shared libraries and bindings only, no binary of their own to invoke
+
+[packages.cameractrls]
+description = """
+cameractrls — GUI for V4L2 camera controls, with PTZ sliders, keyboard/gamepad/SpaceMouse pan-tilt-
+zoom and saved presets. Added for an Insta360 Link 2, which exposes standard UVC pan/tilt/zoom to
+Linux; its AI tracking and gesture controls are proprietary extension-unit controls that no Linux
+tool drives, and Insta360's own controller app ships for Windows and macOS only. Upstream publishes
+no releases and is in no Ubuntu archive (Flathub/snap only), so this clones main — and git-clone
+has no update logic: refresh with `git -C ~/.local/share/cameractrls pull`.
+"""
+method = "git-clone"
+tags = ["hardware", "camera", "gui", "workstation"]
+repo = "https://github.com/soyersoyer/cameractrls.git"
+dest = "~/.local/share/cameractrls"
+depth = 1
+
+[packages.cameractrls-launcher]
+description = "`cameractrls` command and app-grid launcher for [packages.cameractrls]'s GTK4 GUI"
+method = "wrapper-script"
+tags = ["hardware", "camera", "gui", "workstation"]
+dest = "~/.local/bin/cameractrls"
+content_file = "config/cameractrls.sh"
+config_files = [{ src = "config/cameractrls.desktop", dst = "~/.local/share/applications/cameractrls.desktop" }]
+
 [packages.patchelf]
 description = "Modify ELF binaries — required by Nuitka to patch compiled executables"
 method = "apt"
