@@ -63,7 +63,8 @@ from zsh.]
 
 [NEEDS CLARIFICATION: which other installed tools phone home by default and honour `DO_NOT_TRACK`.
 Worth an inventory across `setup.toml` before deciding, since the variable's value scales with how
-many tools read it.]
+many tools read it. Left open deliberately by the user 2026-11-08, once the Tilt variable landed:
+"leave the DO_NOT_TRACK inventory an open question for now". Not scheduled.]
 
 ## Recommended direction
 
