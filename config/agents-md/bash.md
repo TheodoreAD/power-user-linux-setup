@@ -74,6 +74,13 @@ did redirect to — Grep/Read _on the log_ as a second call, never `; rg … log
 same one. And never append `; echo "EXIT=$?"`: it adds a chain for information the tool already
 reports.
 
+**One exception: a mechanical rewrite across many sites** — one substitution through several files,
+or a dozen places in one — where Edit costs a call per site. A script may do that, on one condition:
+**read `git diff` of what it changed before the gate or the commit.** A pattern wider than intended
+applies silently, where Edit's exact, unique match would have refused. One such rewrite stripped the
+opening bracket from tags in seven plans, and only reading the diff caught it. A single edit, or a
+handful, stays with Edit.
+
 ### Searching a tree, by name or by content
 
 **`fd` over `find`, `rg` over `grep -r`.** A non-recursive `grep` stays fine. Translate rather than

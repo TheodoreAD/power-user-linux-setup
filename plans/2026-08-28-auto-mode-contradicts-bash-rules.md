@@ -415,18 +415,27 @@ call and re-ran correctly. That is evidence the signature earns its place while 
 not prevent the mistake, which is a different conclusion from "the wording needs work" and is worth
 settling before anyone rewords that section.]
 
-[NEEDS CLARIFICATION: **is `heredoc edits` at 30% the same failure as the others, or the rule being
-wrong about a case it never considered?** The heredocs in that session were `python3 - <<'PY'`
-blocks doing multi-site string replacement across a file — work `Edit` genuinely cannot do in one
-call, and the same cause the watch's session 10 records for its own 26% (renaming a helper across
-three modules, one line into fifteen task functions). Two sessions, same explanation, and the note's
-own escape hatch ("only when Bash genuinely cannot do the job") arguably covers it. If it is a real
-gap the rule needs a stated exception for mechanical multi-site rewrites and the metric needs to
-stop counting them as misses; if it is not, both sessions are simply reaching for the cheaper call.
-The split is measurable — a heredoc writing one file whole is not the same call as one rewriting a
-pattern across several — and neither the audit script nor either plan separates them yet. A third
-session, 2026-09-29, gives the same explanation and adds a cost on the other side: see "2026-09-29 —
-heredoc edits, a third session" below.]
+[DECISION: **a real gap, closed by a conditional exception, settled by the user 2026-11-08.**
+`config/agents-md/bash.md`'s "Viewing or editing a file" now allows a script for a mechanical
+rewrite across many sites, on condition that `git diff` is read before the gate or the commit. It
+beat a blanket carve-out, which would drop the protection the third session's bracket-stripping
+rewrite shows Edit provides, and "no exception", which three sessions' evidence argues against.
+Still open: the audit's `heredoc` row counts these as misses, and splitting a whole-file write from
+a multi-site rewrite there is `session-bash-audit`'s change to make, in `agent-skills`. The question
+as it stood:]
+
+**Is `heredoc edits` at 30% the same failure as the others, or the rule being wrong about a case it
+never considered?** The heredocs in that session were `python3 - <<'PY'` blocks doing multi-site
+string replacement across a file — work `Edit` genuinely cannot do in one call, and the same cause
+the watch's session 10 records for its own 26% (renaming a helper across three modules, one line
+into fifteen task functions). Two sessions, same explanation, and the note's own escape hatch ("only
+when Bash genuinely cannot do the job") arguably covers it. If it is a real gap the rule needs a
+stated exception for mechanical multi-site rewrites and the metric needs to stop counting them as
+misses; if it is not, both sessions are simply reaching for the cheaper call. The split is
+measurable — a heredoc writing one file whole is not the same call as one rewriting a pattern across
+several — and neither the audit script nor either plan separates them yet. A third session,
+2026-09-29, gives the same explanation and adds a cost on the other side: see "2026-09-29 — heredoc
+edits, a third session" below.
 
 [NEEDS CLARIFICATION: whether the chaining rate is a wording problem or a measurement problem, in
 the sense `session-bash-audit` distinguishes. The rule's own stated reason — one call keeps one exit
