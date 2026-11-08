@@ -2470,7 +2470,7 @@
   
 
 
-<h1 id="kubernetes">Kubernetes<a class="headerlink" href="#kubernetes" title="Permanent link">&para;</a></h1>
+<h1 id="kubernetes">Kubernetes</h1>
 <p>The Kubernetes CLIs this repo installs, and how each one is kept up to date.</p>
 <div class="admonition warning">
 <p class="admonition-title">Warning</p>
@@ -2482,15 +2482,15 @@
 </span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>tools.install<span class="w">  </span><span class="c1"># kind, helm, tilt, ctlptl</span>
 </span></code></pre></div>
 <p>Or all at once: <code>inv setup</code></p>
-<h2 id="kubectl">kubectl<a class="headerlink" href="#kubectl" title="Permanent link">&para;</a></h2>
+<h2 id="kubectl">kubectl</h2>
 <p>Kubernetes CLI — declared as <code>[packages.kubectl]</code> in <code>setup.toml</code>. The apt repo is version-specific
 (<code>v1.33</code>); update the repo URL in <code>setup.toml</code> when upgrading to a new minor version.</p>
-<h2 id="helm">helm<a class="headerlink" href="#helm" title="Permanent link">&para;</a></h2>
+<h2 id="helm">helm</h2>
 <p>Package manager for Kubernetes charts. After install, add repos you need:</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-1-1"><a id="__codelineno-1-1" name="__codelineno-1-1" href="#__codelineno-1-1"></a>helm<span class="w"> </span>repo<span class="w"> </span>add<span class="w"> </span>&lt;name&gt;<span class="w"> </span>&lt;url&gt;
 </span><span id="__span-1-2"><a id="__codelineno-1-2" name="__codelineno-1-2" href="#__codelineno-1-2"></a>helm<span class="w"> </span>repo<span class="w"> </span>update
 </span></code></pre></div>
-<h2 id="kind">kind<a class="headerlink" href="#kind" title="Permanent link">&para;</a></h2>
+<h2 id="kind">kind</h2>
 <p>Kubernetes in Docker — for when you kinda want the banana but without the gorilla and the whole
 jungle.</p>
 <p>Single-node cluster on your machine without the pain of kubeadm, kubelet &amp; friends. Installed as a
@@ -2498,13 +2498,13 @@ direct binary download to <code>~/.local/bin/kind</code>.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-2-1"><a id="__codelineno-2-1" name="__codelineno-2-1" href="#__codelineno-2-1"></a>kind<span class="w"> </span>create<span class="w"> </span>cluster
 </span><span id="__span-2-2"><a id="__codelineno-2-2" name="__codelineno-2-2" href="#__codelineno-2-2"></a>kind<span class="w"> </span>delete<span class="w"> </span>cluster
 </span></code></pre></div>
-<h2 id="k9s">k9s<a class="headerlink" href="#k9s" title="Permanent link">&para;</a></h2>
+<h2 id="k9s">k9s</h2>
 <p>Terminal UI for Kubernetes — browse clusters, pods, logs, exec into containers, port-forward, all
 from the keyboard. Installed as a <code>.deb</code> from the latest GitHub release via <code>inv apt.install-debs</code>.</p>
-<h2 id="freelens">Freelens<a class="headerlink" href="#freelens" title="Permanent link">&para;</a></h2>
+<h2 id="freelens">Freelens</h2>
 <p>Open-source Kubernetes IDE (community fork of Lens). Installed as a <code>.deb</code> from the latest GitHub
 release via <code>inv apt.install-debs</code>.</p>
-<h2 id="tilt">Tilt<a class="headerlink" href="#tilt" title="Permanent link">&para;</a></h2>
+<h2 id="tilt">Tilt</h2>
 <p>Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual
 <code>kubectl apply</code>.</p>
 <p><strong>Usage reporting is switched off.</strong> Tilt reports usage to <code>events.windmill.build</code> by default, so
@@ -2520,7 +2520,7 @@ names of loaded extensions, builds add their durations, and a running <code>tilt
 and the cluster type. No source code, file contents or resource names are sent, except whatever tags
 a Tiltfile hands <code>experimental_analytics_report</code>. The hashes are unsalted MD5, so anyone who can
 guess an <code>origin</code> URL can confirm it was the repo in use.</p>
-<h2 id="file-watch-limits">File-watch limits<a class="headerlink" href="#file-watch-limits" title="Permanent link">&para;</a></h2>
+<h2 id="file-watch-limits">File-watch limits</h2>
 <p>kind and Tilt both lean on inotify: every kind node runs a kubelet sharing the host&rsquo;s per-user
 limits, and Tilt watches the whole source tree. Below kind&rsquo;s recommended limits the failure is &ldquo;too
 many open files&rdquo; from kubelet or a pod, which reads as a cluster bug rather than a host setting.
@@ -2550,14 +2550,14 @@ where the kind or tilt package is enabled:</p>
 <p>The 65536 is not the kernel&rsquo;s own figure: Ubuntu&rsquo;s <code>tracker</code> package pins it in
 <code>/usr/lib/sysctl.d/30-tracker.conf</code>. The task writes <code>/etc/sysctl.d/60-pulse-inotify.conf</code>, which
 sorts after that file and so wins, and it never lowers a value already above these.</p>
-<h2 id="ctlptl">ctlptl<a class="headerlink" href="#ctlptl" title="Permanent link">&para;</a></h2>
+<h2 id="ctlptl">ctlptl</h2>
 <p>Declares a kind cluster together with a local image registry, so Tilt pushes images rather than
 copying each one in with <code>kind load</code>. It reads the same analytics choice file as Tilt, and sends
 nothing unless that file says <code>opt-in</code>, so the opt-out above covers it too.</p>
 <div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ctlptl<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>kind<span class="w"> </span>--registry<span class="o">=</span>ctlptl-registry
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ctlptl<span class="w"> </span>delete<span class="w"> </span>cluster<span class="w"> </span>kind-kind
 </span></code></pre></div>
-<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
+<h2 id="see-also">See also</h2>
 <ul>
 <li><a href="docker.html">Docker</a> — the runtime underneath</li>
 <li><a href="packages.html">Package catalog</a> — how each of these CLIs is installed</li>
