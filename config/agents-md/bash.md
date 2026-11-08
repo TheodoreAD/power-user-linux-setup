@@ -118,11 +118,24 @@ worst is a bare `-r`, and it is why the habit survives: rg searches for _the pat
 the whole working directory, prints hits from files you never named, and writes your pattern over
 each match — which reads exactly like the recursive search you wanted.
 
+**Three more letters mean something else in rg**, and the one-edit rule is wrong for them. Each
+exits 0 and searches something other than what you asked:
+
+| `grep`                       | the same letter in `rg`   | write instead                    |
+| ---------------------------- | ------------------------- | -------------------------------- |
+| `-L` files **without** match | `--follow`: matched lines | `--files-without-match`          |
+| `-h` no filename prefix      | `--help`: no search       | `-I` (`--no-filename`)           |
+| `-I` skip binary files       | `--no-filename`           | drop it; rg skips binary already |
+
+`-E` also changes meaning (`--encoding`), but it fails loudly, so it needs no entry here.
+
 **The detection signature, since every occurrence on record was caught by luck:** your own flag
 letters appearing where the matched text should be (`inv ai.n` for `inv ai.check-…`), line numbers
 missing after you asked for `-n`, a `-l` that printed lines, or hits from a path you did not name.
-Any of those means `-r` ate the bundle. Re-run without it rather than reading the output. Deliberate
-replacement is unaffected: spell it `--replace`, which no `grep` bundle can turn into.
+Any of those means `-r` ate the bundle; a `-L` search printing lines, or help text where results
+belong, means one of the three letters above did. Re-run with the corrected flags rather than
+reading the output. Deliberate replacement is unaffected: spell it `--replace`, which no `grep`
+bundle can turn into.
 
 ### Writing to a repo other than the session's
 

@@ -473,3 +473,10 @@ binaries already)". The detection signature extends in the existing paragraph's 
 printing lines, or a `-h` search printing help. `agent-skills` filed a separate plan to have
 `session-bash-audit` measure how often these occur, so the rule change can be weighed against a
 rate.
+
+[DECISION: **the three exceptions landed 2026-11-08, without waiting for that rate.** A table under
+the one-edit rule in `config/agents-md/bash.md`, plus a clause in the detection signature. Each
+letter fails silently, and the `-L` case was the rule followed exactly and still wrong, so a rule
+that is wrong when obeyed is fixed on one instance rather than measured first. Checked against the
+installed rg's own `--help` the same day; `-E` (`--encoding`) was found too and left out of the
+table because it fails loudly with `unknown encoding`.]
