@@ -69,8 +69,8 @@ def setup(c: Context):
     phases.run_phase(
         c,
         "system",
-        [system.set_locale, system.write_curlrc, system.configure_dns],
-        note="locale, curl config, DNS",
+        [system.set_locale, system.write_curlrc, system.configure_dns, system.raise_inotify_limits],
+        note="locale, curl config, DNS, inotify limits for kind/Tilt",
     )
 
     phases.run_phase(c, "packages", PACKAGES_PHASE, note=PACKAGES_NOTE)

@@ -13,6 +13,17 @@ _JOURNALD_CONF_DIR = Path("/etc/systemd/journald.conf.d")
 _JOURNALD_SIZE_CONF = _JOURNALD_CONF_DIR / "size.conf"
 _RESOLVED_CONF_DIR = Path("/etc/systemd/resolved.conf.d")
 _RESOLVED_CONF = _RESOLVED_CONF_DIR / "pulse-dns.conf"
+# sysctl.d files apply in lexical order and the last writer wins. 60 sits after Ubuntu's own
+# /usr/lib/sysctl.d/30-tracker.conf, which pins max_user_watches at 65536 on a GNOME desktop and is
+# what this has to beat, and before 99-sysctl.conf, so a value set in /etc/sysctl.conf still wins.
+_INOTIFY_CONF = Path("/etc/sysctl.d/60-pulse-inotify.conf")
+_PROC_SYS = Path("/proc/sys")
+# kind's known-issues page recommends these; below them kubelet or a pod fails with "too many open
+# files", which reads as a cluster bug rather than a host setting. Every kind node's kubelet and
+# Tilt's file watcher share the host's per-user limits.
+INOTIFY_LIMITS = {"fs.inotify.max_user_watches": 524288, "fs.inotify.max_user_instances": 512}
+# The packages that need them. The task does nothing on a machine with neither enabled.
+_INOTIFY_PACKAGES = ("kind", "tilt")
 CURLRC = Path.home() / ".config" / "curlrc"
 
 _IPV6_KEYS = [
@@ -163,6 +174,57 @@ def _owned_dropin(c: Context, path: Path, name: str, content: str) -> tuple[str,
     """
     desired, _ = util.ensure_block_text("", name, content)
     return desired, util.sudo_read(c, path) == desired and util.readable_by_all(path)
+
+
+def inotify_targets(live: dict[str, int]) -> dict[str, int]:
+    """What the drop-in should say for each key: the INOTIFY_LIMITS value, or the live one if higher.
+
+    A raise must never lower. The kernel sizes `max_user_watches` from RAM when no file sets it, and
+    on a large machine that can exceed 524288, so a fixed value in the drop-in would cut it at the
+    next boot. Taking the higher value keeps the file stable once applied: after a reboot the live
+    value is the file's. Pure, so it is testable without /proc.
+    """
+    return {k: max(v, live.get(k, 0)) for k, v in INOTIFY_LIMITS.items()}
+
+
+def inotify_shortfall(live: dict[str, int]) -> dict[str, int]:
+    """The INOTIFY_LIMITS keys whose live value is below target, with the target value — the only
+    ones applied to the running kernel with `sysctl -w`."""
+    return {k: v for k, v in INOTIFY_LIMITS.items() if live.get(k, 0) < v}
+
+
+def _live_sysctl(key: str) -> int:
+    return int((_PROC_SYS / key.replace(".", "/")).read_text().strip())
+
+
+@task
+def raise_inotify_limits(c: Context):
+    """Raise the inotify watch/instance limits for kind and Tilt, if either is enabled. Idempotent.
+
+    Writes /etc/sysctl.d/60-pulse-inotify.conf, a drop-in this repo owns whole, so the limits
+    survive a reboot, and applies only the keys currently below target. Does nothing on a machine
+    where neither the kind nor the tilt package is enabled.
+    """
+    wanted_by = [name for name in _INOTIFY_PACKAGES if name in util.enabled_packages()]
+    if not wanted_by:
+        print(f"[inotify] neither {' nor '.join(_INOTIFY_PACKAGES)} is enabled — nothing to do")
+        return
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
+    live = {k: _live_sysctl(k) for k in INOTIFY_LIMITS}
+    content = "\n".join(f"{k} = {v}" for k, v in inotify_targets(live).items())
+    desired, current = _owned_dropin(c, _INOTIFY_CONF, "inotify-limits", content)
+    short = inotify_shortfall(live)
+    if util.DRY_RUN:
+        print(f"[inotify] {_INOTIFY_CONF}: {util.ok_label(current)}; live limits: {util.ok_label(not short)}")
+        return
+    if current and not short:
+        print("[inotify] limits already raised — nothing to do")
+        return
+    if not current:
+        util.sudo_write(c, _INOTIFY_CONF, desired, mkdir=True)
+    for key, value in short.items():
+        c.run(f"{util.SUDO} sysctl -w {key}={value}")
+    print(f"[inotify] raised for {', '.join(wanted_by)}: {', '.join(content.splitlines())}")
 
 
 @task

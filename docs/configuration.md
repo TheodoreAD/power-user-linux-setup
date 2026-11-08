@@ -87,6 +87,7 @@ complete, generated answer.
 | `~/.zprofile`                                                | `inv zsh.configure`                                         | login-shell config — from `zprofile` fields in `setup.toml`                                                                                                                                                                                       |
 | `~/.config/curlrc`                                           | `inv system.write-curlrc`                                   | curl defaults (silent, follow redirects)                                                                                                                                                                                                          |
 | `/etc/sysctl.conf`                                           | `inv system.disable-ipv6`                                   | IPv6 disable keys                                                                                                                                                                                                                                 |
+| `/etc/sysctl.d/60-pulse-inotify.conf`                        | `inv system.raise-inotify-limits`                           | inotify watch/instance limits for kind and Tilt — written only where either package is enabled; numbered 60 so any value set elsewhere outranks it                                                                                                |
 | `/etc/systemd/journald.conf.d/size.conf`                     | `inv system.cap-journal-size`                               | `SystemMaxUse` drop-in                                                                                                                                                                                                                            |
 | `/etc/apt/apt.conf.d/99-pulse`                               | `inv apt.configure`                                         | Disable dpkg progress bars                                                                                                                                                                                                                        |
 | `~/.local/bin/askpass-zenity`                                | `inv tools.install`                                         | Zenity GUI askpass helper — enables `sudo -A` without a TTY                                                                                                                                                                                       |
@@ -391,6 +392,7 @@ reboot needed.
 inv system.set-locale
 inv system.write-curlrc
 inv system.configure-dns
+inv system.raise-inotify-limits  # only where kind or tilt is enabled — applies immediately
 inv system.disable-ipv6          # optional — sysctl -p applies immediately
 inv system.cap-journal-size          # optional — restarts journald
 inv system.set-initramfs-compression # optional — deferred to next reboot

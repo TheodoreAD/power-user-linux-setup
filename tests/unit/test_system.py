@@ -60,6 +60,35 @@ def _dropin(tmp_path: Path, text: str) -> Path:
     return path
 
 
+def test_inotify_targets_raise_but_never_lower():
+    # The kernel sizes max_user_watches from RAM when nothing sets it; on a large machine that can
+    # exceed the target, and a fixed value in the drop-in would cut it at the next boot.
+    live = {"fs.inotify.max_user_watches": 1048576, "fs.inotify.max_user_instances": 128}
+
+    assert system.inotify_targets(live) == {
+        "fs.inotify.max_user_watches": 1048576,
+        "fs.inotify.max_user_instances": 512,
+    }
+
+
+def test_inotify_shortfall_names_only_the_keys_below_target():
+    live = {"fs.inotify.max_user_watches": 65536, "fs.inotify.max_user_instances": 512}
+
+    assert system.inotify_shortfall(live) == {"fs.inotify.max_user_watches": 524288}
+
+
+def test_raise_inotify_limits_does_nothing_without_kind_or_tilt(monkeypatch, capsys):
+    def no_sudo(*_args, **_kwargs):
+        raise AssertionError("a machine without kind or tilt must not be asked for a password")
+
+    monkeypatch.setattr(util, "enabled_packages", lambda: {"helm": {}})
+    monkeypatch.setattr(util, "ensure_sudo", no_sudo)
+
+    system.raise_inotify_limits(Context())
+
+    assert "nothing to do" in capsys.readouterr().out
+
+
 def test_owned_dropin_is_current_when_it_holds_exactly_the_block(tmp_path):
     desired, _ = util.ensure_block_text("", "journal-size", _JOURNAL)
     path = _dropin(tmp_path, desired)

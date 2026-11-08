@@ -70,6 +70,23 @@ running `tilt up` adds resource counts and the cluster type. No source code, fil
 resource names are sent, except whatever tags a Tiltfile hands `experimental_analytics_report`. The
 hashes are unsalted MD5, so anyone who can guess an `origin` URL can confirm it was the repo in use.
 
+## File-watch limits
+
+kind and Tilt both lean on inotify: every kind node runs a kubelet sharing the host's per-user
+limits, and Tilt watches the whole source tree. Below kind's recommended limits the failure is "too
+many open files" from kubelet or a pod, which reads as a cluster bug rather than a host setting.
+`inv system.raise-inotify-limits`, part of `inv setup`'s system phase, raises them on any machine
+where the kind or tilt package is enabled:
+
+| key                             | on an Ubuntu 24.04 desktop | raised to |
+| ------------------------------- | -------------------------- | --------- |
+| `fs.inotify.max_user_watches`   | 65536                      | 524288    |
+| `fs.inotify.max_user_instances` | 128                        | 512       |
+
+The 65536 is not the kernel's own figure: Ubuntu's `tracker` package pins it in
+`/usr/lib/sysctl.d/30-tracker.conf`. The task writes `/etc/sysctl.d/60-pulse-inotify.conf`, which
+sorts after that file and so wins, and it never lowers a value already above these.
+
 ## ctlptl
 
 Declares a kind cluster together with a local image registry, so Tilt pushes images rather than

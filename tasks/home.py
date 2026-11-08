@@ -172,6 +172,7 @@ _APP_OWNED = frozenset(
 # footer so nothing reads this registry as the whole of what PULSE touches.
 SYSTEM_TARGETS = (
     "/etc/sysctl.conf",
+    "/etc/sysctl.d/60-pulse-inotify.conf",
     "/etc/initramfs-tools/initramfs.conf",
     "/etc/systemd/journald.conf.d/",
     "/etc/systemd/resolved.conf.d/",
