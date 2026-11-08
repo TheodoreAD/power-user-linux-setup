@@ -14,6 +14,7 @@ caused the abort in the first place. See tests/README.md.
 """
 
 import io
+import re
 import sys
 from collections.abc import Sequence
 from pathlib import Path
@@ -81,6 +82,75 @@ def test_configure_rewrites_a_root_only_file_whose_content_already_matches(apt_c
     path.chmod(0o600)
 
     apt.configure(_FakeContext())
+
+    assert written == [path]
+
+
+def test_installed_nvidia_drivers_ignores_removed_packages():
+    # A machine keeps an `rc` line per retired driver branch; only `ii` is installed.
+    status = "un  nvidia-driver-595\nii  nvidia-driver-595-open\nrc  nvidia-driver-460\n"
+
+    assert apt.installed_nvidia_drivers(status) == ["nvidia-driver-595-open"]
+
+
+def test_kernel_lockstep_blacklist_matches_the_metas_and_nothing_else():
+    # unattended-upgrades applies each entry with re.match, which anchors only the start.
+    entries: list[str] = [m.group(1) for m in re.finditer(r'"([^"]+)";', apt._KERNEL_LOCKSTEP_CONTENT)]
+
+    def blacklisted(pkg: str) -> bool:
+        return any(re.match(e, pkg) for e in entries)
+
+    for pkg in ("linux-generic", "linux-image-generic", "linux-headers-generic-hwe-24.04"):
+        assert blacklisted(pkg), pkg
+    for pkg in ("linux-image-6.8.0-147-generic", "linux-modules-nvidia-595-open-generic", "linux-firmware"):
+        assert not blacklisted(pkg), pkg
+
+
+def test_boot_kernel_reads_the_vmlinuz_link(tmp_path):
+    link = tmp_path / "vmlinuz"
+    link.symlink_to("vmlinuz-6.8.0-147-generic")
+
+    assert apt.boot_kernel(link) == "6.8.0-147-generic"
+    assert apt.boot_kernel(tmp_path / "missing") is None
+
+
+@pytest.fixture
+def lockstep(monkeypatch, tmp_path):
+    path = tmp_path / "99-pulse-kernel-lockstep"
+    monkeypatch.setattr(apt, "_KERNEL_LOCKSTEP_CONF", path)
+    monkeypatch.setattr(util, "ensure_sudo", lambda: None)
+    monkeypatch.setattr(util, "require_apt", lambda: None)
+    monkeypatch.setattr(util, "sudo_read", lambda _c, p: p.read_text() if p.exists() else "")
+    written: list[Path] = []
+    monkeypatch.setattr(util, "sudo_write", lambda _c, p, _text: written.append(p))
+    return path, written
+
+
+def test_kernel_lockstep_writes_nothing_without_an_nvidia_driver(lockstep, monkeypatch):
+    _, written = lockstep
+    monkeypatch.setattr(apt, "nvidia_drivers_here", list)
+
+    apt.configure_kernel_lockstep(Context())
+
+    assert written == []
+
+
+def test_kernel_lockstep_removes_its_drop_in_once_the_driver_is_gone(lockstep, monkeypatch):
+    path, _ = lockstep
+    path.write_text(apt._KERNEL_LOCKSTEP_CONTENT)
+    monkeypatch.setattr(apt, "nvidia_drivers_here", list)
+    c = _FakeContext()
+
+    apt.configure_kernel_lockstep(c)
+
+    assert any(f"rm -f {path}" in cmd for cmd in c.commands)
+
+
+def test_kernel_lockstep_writes_the_drop_in_where_a_driver_is_installed(lockstep, monkeypatch):
+    path, written = lockstep
+    monkeypatch.setattr(apt, "nvidia_drivers_here", lambda: ["nvidia-driver-595-open"])
+
+    apt.configure_kernel_lockstep(Context())
 
     assert written == [path]
 

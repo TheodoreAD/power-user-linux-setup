@@ -1,3 +1,5 @@
+import shutil
+import subprocess
 from enum import StrEnum
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -41,6 +43,108 @@ def configure(c: Context):
     _APT_CONF.parent.mkdir(parents=True, exist_ok=True)
     util.sudo_write(c, _APT_CONF, _APT_CONF_CONTENT)
     print(f"[apt.configure] written → {_APT_CONF}")
+
+
+# ---------------------------------------------------------------------------
+# NVIDIA kernel lockstep
+#
+# unattended-upgrades installs a new kernel through the meta packages, but refuses any upgrade that
+# removes a package — and moving the NVIDIA driver to the version a new kernel's prebuilt module
+# needs removes the old kernel's module. So the kernel goes in and the module for it does not, and
+# the next boot has no `nvidia` module: GNOME falls back to simpledrm at 640x480. Hit 2026-09-28 and
+# again 2026-10-10. There is no u-u option permitting removals (checked in its source 2026-11-08),
+# so the metas are blacklisted instead and a kernel arrives only with a manual `apt full-upgrade`,
+# which does move the module. The cost, accepted by the user 2026-10-20: kernel security updates no
+# longer install unattended. Symptom, diagnosis and the manual fix: docs/troubleshooting.md.
+# ---------------------------------------------------------------------------
+
+_KERNEL_LOCKSTEP_CONF = Path("/etc/apt/apt.conf.d/99-pulse-kernel-lockstep")
+# u-u matches each entry with re.match, so the start is anchored and the `$` anchors the end.
+_KERNEL_METAS = ("linux-generic", "linux-image-generic", "linux-headers-generic")
+_KERNEL_LOCKSTEP_CONTENT = (
+    "// Written by `inv apt.configure-kernel-lockstep` (power-user-linux-setup). The kernel meta\n"
+    "// packages move only with a manual `apt full-upgrade`, so the NVIDIA module moves with them.\n"
+    "Unattended-Upgrade::Package-Blacklist {\n"
+    + "".join(f'    "{meta}(-hwe-[0-9.]+)?$";\n' for meta in _KERNEL_METAS)
+    + "};\n"
+)
+_BOOT_VMLINUZ = Path("/boot/vmlinuz")
+
+
+def installed_nvidia_drivers(dpkg_status: str) -> list[str]:
+    """Installed package names from `dpkg-query -W -f '${db:Status-Abbrev} ${Package}\\n'` output.
+
+    Pure, so it is testable without dpkg. `rc` lines — removed, config left behind — are not
+    installed, and a machine accumulates one per retired driver branch.
+    """
+    return [line.split()[1] for line in dpkg_status.splitlines() if line.startswith("ii ") and len(line.split()) > 1]
+
+
+def nvidia_drivers_here() -> list[str]:
+    """The `nvidia-driver-*` packages installed on this machine; empty where there is no dpkg."""
+    if not shutil.which("dpkg-query"):
+        return []
+    result = subprocess.run(
+        ["dpkg-query", "-W", "-f=${db:Status-Abbrev} ${Package}\n", "nvidia-driver-*"],
+        capture_output=True,
+        text=True,
+        check=False,  # exits 1 when no package matches the pattern, which is an answer
+    )
+    return installed_nvidia_drivers(result.stdout)
+
+
+def boot_kernel(vmlinuz: Path = _BOOT_VMLINUZ) -> str | None:
+    """The kernel version the next boot uses by default: what /boot/vmlinuz links to on Ubuntu,
+    which the kernel packages point at the newest installed kernel. None if it is not such a link."""
+    try:
+        name = vmlinuz.readlink().name
+    except OSError:
+        return None
+    return name.removeprefix("vmlinuz-") if name.startswith("vmlinuz-") else None
+
+
+def nvidia_module_version(kernel: str) -> str | None:
+    """The `nvidia` module version installed for `kernel`, or None if that kernel has none."""
+    result = subprocess.run(
+        ["modinfo", "-k", kernel, "-F", "version", "nvidia"], capture_output=True, text=True, check=False
+    )
+    return (result.stdout.strip() or None) if result.returncode == 0 else None
+
+
+@task
+def configure_kernel_lockstep(c: Context):
+    """Stop unattended-upgrades installing a kernel the NVIDIA module can't follow. Idempotent.
+
+    Writes /etc/apt/apt.conf.d/99-pulse-kernel-lockstep, blacklisting the kernel meta packages in
+    unattended-upgrades, only on a machine with an `nvidia-driver-*` package installed — and removes
+    it again from one that no longer has one. Kernels then arrive with `sudo apt full-upgrade`.
+    """
+    util.require_apt()
+    drivers = nvidia_drivers_here()
+    present = _KERNEL_LOCKSTEP_CONF.exists()
+    if not drivers:
+        if util.DRY_RUN:
+            print(f"[kernel-lockstep] no NVIDIA driver: {'MISSING  (stale drop-in to remove)' if present else 'ok'}")
+        elif present:
+            util.ensure_sudo()
+            c.run(f"{util.SUDO} rm -f {_KERNEL_LOCKSTEP_CONF}")
+            print(f"[kernel-lockstep] no NVIDIA driver installed — removed {_KERNEL_LOCKSTEP_CONF}")
+        else:
+            print("[kernel-lockstep] no NVIDIA driver installed — nothing to do")
+        return
+    util.ensure_sudo()  # standalone-safe: no sudo call inside c.run may prompt
+    current = util.sudo_read(c, _KERNEL_LOCKSTEP_CONF) == _KERNEL_LOCKSTEP_CONTENT and util.readable_by_all(
+        _KERNEL_LOCKSTEP_CONF
+    )
+    if util.DRY_RUN:
+        print(f"[kernel-lockstep] {', '.join(drivers)}: {util.ok_label(current)}")
+        return
+    if current:
+        print("[kernel-lockstep] already configured")
+        return
+    util.sudo_write(c, _KERNEL_LOCKSTEP_CONF, _KERNEL_LOCKSTEP_CONTENT)
+    print(f"[kernel-lockstep] written → {_KERNEL_LOCKSTEP_CONF} (for {', '.join(drivers)})")
+    print("[kernel-lockstep] kernels now arrive only with `sudo apt full-upgrade` — run it regularly")
 
 
 # ---------------------------------------------------------------------------

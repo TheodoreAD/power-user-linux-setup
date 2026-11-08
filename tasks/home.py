@@ -177,6 +177,7 @@ SYSTEM_TARGETS = (
     "/etc/systemd/journald.conf.d/",
     "/etc/systemd/resolved.conf.d/",
     "/etc/apt/apt.conf.d/99-pulse",
+    "/etc/apt/apt.conf.d/99-pulse-kernel-lockstep",
     "/etc/apparmor.d/",
     "/etc/docker/daemon.json",
     "/etc/wsl.conf",

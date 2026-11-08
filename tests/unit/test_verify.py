@@ -9,6 +9,13 @@ import pytest
 from tasks import deploy, util, verify
 
 
+@pytest.fixture(autouse=True)
+def _no_nvidia_driver(monkeypatch):
+    """_all_checks adds a check when this machine has an NVIDIA driver; the tests describe a
+    machine without one unless they say otherwise, so the host's hardware never decides a result."""
+    monkeypatch.setattr(verify.apt, "nvidia_drivers_here", list)
+
+
 def test_resolve_wrapper_script_with_content_file_returns_deploy_kind():
     cfg: util.PackageConfig = {"dest": "~/.agents/AGENTS.md", "content_file": "config/statusline-command.sh"}
     kind, target = verify._resolve("agents-md", cfg, util.PackageMethod.WRAPPER_SCRIPT)
@@ -249,6 +256,28 @@ def test_mirror_check_fails_for_a_path_no_package_declares(tmp_path, monkeypatch
 
     assert not passed
     assert "not declared as a mirror" in message
+
+
+def test_nvidia_check_is_absent_without_a_driver(monkeypatch):
+    monkeypatch.setattr(verify.apt, "nvidia_drivers_here", list)
+
+    assert verify._nvidia_checks() == []
+
+
+def test_nvidia_check_fails_when_the_next_boot_kernel_has_no_module(monkeypatch):
+    monkeypatch.setattr(verify.apt, "nvidia_module_version", lambda _kernel: None)
+
+    passed, message = verify._nvidia_check("6.8.0-148-generic")
+
+    assert not passed
+    assert "6.8.0-148-generic" in message
+    assert "640x480" in message
+
+
+def test_nvidia_check_passes_and_names_the_module_version(monkeypatch):
+    monkeypatch.setattr(verify.apt, "nvidia_module_version", lambda _kernel: "595.99.02")
+
+    assert verify._nvidia_check("6.8.0-147-generic") == (True, "kernel 6.8.0-147-generic has nvidia 595.99.02")
 
 
 def test_mirror_checks_skip_an_agent_that_isnt_installed(tmp_path, monkeypatch):

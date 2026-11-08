@@ -90,6 +90,7 @@ complete, generated answer.
 | `/etc/sysctl.d/60-pulse-inotify.conf`                        | `inv system.raise-inotify-limits`                           | inotify watch/instance limits for kind and Tilt — written only where either package is enabled; numbered 60 so any value set elsewhere outranks it                                                                                                |
 | `/etc/systemd/journald.conf.d/size.conf`                     | `inv system.cap-journal-size`                               | `SystemMaxUse` drop-in                                                                                                                                                                                                                            |
 | `/etc/apt/apt.conf.d/99-pulse`                               | `inv apt.configure`                                         | Disable dpkg progress bars                                                                                                                                                                                                                        |
+| `/etc/apt/apt.conf.d/99-pulse-kernel-lockstep`               | `inv apt.configure-kernel-lockstep`                         | Blacklist the kernel metas in unattended-upgrades — only where an NVIDIA driver is installed, see [troubleshooting.md](troubleshooting.md)                                                                                                        |
 | `~/.local/bin/askpass-zenity`                                | `inv tools.install`                                         | Zenity GUI askpass helper — enables `sudo -A` without a TTY                                                                                                                                                                                       |
 | `~/.agents/AGENTS.md` (`~/.claude/CLAUDE.md` symlinks to it) | `inv tools.install`                                         | Global agent instructions (use `sudo -A` for all sudo calls, Bash/allowlist discipline)                                                                                                                                                           |
 | `~/.config/systemd/user/pulse-proxy.service`                 | `inv proxy.fix`/`install`                                   | Whole file from `config/pulse-proxy.service` — runs the Px proxy daemon, see [corporate-proxy.md](corporate-proxy.md). Deployed through `deploy.py` but not declared in `setup.toml`: only a machine that configures a corporate proxy writes it. |
@@ -405,6 +406,7 @@ If applied, it also defers to next reboot.
 
 ```shell
 inv apt.configure      # write /etc/apt/apt.conf.d/99-pulse (disables dpkg progress bars)
+inv apt.configure-kernel-lockstep  # NVIDIA machines only: kernels wait for a manual full-upgrade
 inv apt.install-repos          # register external repo GPG keys + sources, then install their packages
 inv apt.install-base           # install from Ubuntu default repos
 inv docker.configure   # merge log limits/DNS into daemon.json, add user to docker group

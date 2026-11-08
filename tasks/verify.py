@@ -2,7 +2,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import deploy, util
+from . import apt, deploy, util
 
 # Hard ceiling on any single check, via coreutils `timeout` — not a fallback/retry, just a bound
 # on the one attempt. Necessary in practice, not just in theory: auditing this task against a real
@@ -152,7 +152,31 @@ def _all_checks() -> list[tuple[str, str, str]]:
         if m.mechanism not in (deploy.Mechanism.WRAPPER_SCRIPT, deploy.Mechanism.ASSEMBLED)
     ]
     checks += _mirror_checks()
+    checks += _nvidia_checks()
     return checks
+
+
+def _nvidia_checks() -> list[tuple[str, str, str]]:
+    """One check on a machine with an NVIDIA driver installed: the kernel the next boot uses has
+    an `nvidia` module. Not a package's own check — the driver comes from Ubuntu, not setup.toml —
+    but the failure it catches is silent until a reboot comes up at 640x480, and every path to it
+    (a manual `apt upgrade`, a kernel installed before the lockstep drop-in existed) ends here.
+    The target is the kernel version, or empty when /boot/vmlinuz names none."""
+    if not apt.nvidia_drivers_here():
+        return []
+    return [("nvidia-kernel-module", "nvidia", apt.boot_kernel() or "")]
+
+
+def _nvidia_check(kernel: str) -> tuple[bool, str]:
+    if not kernel:
+        return False, "/boot/vmlinuz is not a link to a kernel, so the next boot's kernel is unknown"
+    version = apt.nvidia_module_version(kernel)
+    if version is None:
+        return False, (
+            f"kernel {kernel}, the one the next boot uses, has no nvidia module — that boot comes up "
+            "at 640x480. Fix before rebooting: the 'Stuck at 640' entry in docs/troubleshooting.md"
+        )
+    return True, f"kernel {kernel} has nvidia {version}"
 
 
 def _mirror_checks() -> list[tuple[str, str, str]]:
@@ -251,6 +275,8 @@ def all(c: Context):  # noqa: A001, C901
                 print(f"[verify] {name}: {util.ok_label(_mirror_check(target)[0])}")
             elif kind == "cmd":
                 print(f"[verify] {name}: {util.ok_label(util.command_exists(target.split()[0]))}")
+            elif kind == "nvidia":
+                print(f"[verify] {name}: {util.ok_label(_nvidia_check(target)[0])}")
             else:
                 print(f"[verify] {name}: MISSING ({target})")
         return
@@ -275,5 +301,10 @@ def all(c: Context):  # noqa: A001, C901
         elif kind == "cmd":
             c.run(f"timeout {_TIMEOUT_SECS}s {target}", hide=True)
             print(f"[verify] {name}: ok")
+        elif kind == "nvidia":
+            passed, message = _nvidia_check(target)
+            if not passed:
+                raise RuntimeError(f"[verify] {name}: {message}")
+            print(f"[verify] {name}: {message}")
         else:
             raise RuntimeError(f"[verify] {name}: {target}")

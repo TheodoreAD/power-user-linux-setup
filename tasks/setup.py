@@ -6,6 +6,7 @@ from . import ai, apt, docker, fonts, next_steps, node, phases, python, system, 
 # `inv setup` uses (via phases.probe) instead of a second, driftable copy.
 PACKAGES_PHASE = [
     apt.configure,
+    apt.configure_kernel_lockstep,
     apt.install_repos,
     apt.install_base,
     docker.configure,

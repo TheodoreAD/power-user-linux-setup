@@ -133,8 +133,20 @@ Substitute the driver branch `apt-cache policy` names. To work immediately witho
 anything, pick the previous kernel under GRUB's "Advanced options": its module is still installed.
 
 **To avoid it**, use `apt full-upgrade` rather than `apt upgrade` whenever apt reports packages
-"kept back", as [the apt page](apt_packages.md) already does, and check `apt list --upgradable` for
-an `nvidia-` line before rebooting after unattended-upgrades has installed a kernel.
+"kept back", as [the apt page](apt_packages.md) already does.
+
+On a machine with an `nvidia-driver-*` package installed, `inv setup` also runs
+`inv apt.configure-kernel-lockstep`. It writes `/etc/apt/apt.conf.d/99-pulse-kernel-lockstep`, which
+blacklists the kernel meta packages (`linux-generic`, `linux-image-generic`, `linux-headers-generic`
+and their `-hwe-` variants) in unattended-upgrades. Unattended-upgrades then never installs a kernel
+on its own, so it cannot install one without the module. Kernels, security fixes included, arrive
+with the next `sudo apt full-upgrade`, which moves the driver and the module with them.
+Unattended-upgrades has no option permitting an upgrade that removes a package, which is why the
+kernel is held rather than the module let through.
+
+`inv verify.all` checks the other direction on the same machines: that the kernel `/boot/vmlinuz`
+points at, the one the next boot uses, has an `nvidia` module. Run it before rebooting after any
+kernel install.
 
 ## Fix CRLF line endings
 
