@@ -424,7 +424,9 @@ own escape hatch ("only when Bash genuinely cannot do the job") arguably covers 
 gap the rule needs a stated exception for mechanical multi-site rewrites and the metric needs to
 stop counting them as misses; if it is not, both sessions are simply reaching for the cheaper call.
 The split is measurable — a heredoc writing one file whole is not the same call as one rewriting a
-pattern across several — and neither the audit script nor either plan separates them yet.]
+pattern across several — and neither the audit script nor either plan separates them yet. A third
+session, 2026-09-29, gives the same explanation and adds a cost on the other side: see "2026-09-29 —
+heredoc edits, a third session" below.]
 
 [NEEDS CLARIFICATION: whether the chaining rate is a wording problem or a measurement problem, in
 the sense `session-bash-audit` distinguishes. The rule's own stated reason — one call keeps one exit
@@ -534,3 +536,34 @@ external cause. Most of it is the sanctioned cross-repo form (`cd <research clon
 vendor clones outside this repo), which `bash.md` explicitly permits; whether that exemption is
 doing more work than intended is the audit the line above this section asks for, and this session is
 a usable sample for it.
+
+## 2026-09-29 — heredoc edits, a third session
+
+Merged in from `plans/2026-09-29-heredoc-edits-evidence-from-an-ingesta-triage.md` (now deleted;
+`plans.py archive --file` reads it back), filed from `ingesta` (session
+`e15f97a5-8323-4308-8b25-c2648bc833a4.jsonl`, 2026-09-29T01:06:39+03:00) and absorbed here
+2026-11-08. It answers the heredoc question under "Open questions".
+
+- Session: an `ingesta` plan triage and a feature build, auto mode's Bash note in context.
+  `audit.py --until 2026-09-29T01:06:39+03:00`: **303 calls, `heredoc` 61 (20%)**, and every other
+  row at 0–1% (`chain` 1%, `head/tail` 0%, `exit-masked` 0%, `sed-n` 0%, `cat-view` 0%).
+- **Almost all 61 were `python3 - <<'EOF'` blocks doing multi-site replacement** — moving several
+  passages between plans in one call, appending `## Migrated to` sections to four plans at once,
+  threading one new keyword argument through a model, three tables and three store methods. That is
+  the second session's explanation again: work `Edit` needs several calls for. Sessions now: three,
+  one explanation.
+- **But it carried a cost this plan did not record before.** One multi-file regex rewrite (turning
+  markdown links into plain text) let its capture group span back to an earlier `[`, and deleted the
+  opening bracket of `[DECISION:`/`[NEEDS CLARIFICATION:` blocks in seven plans. It was caught only
+  by reading the output and reverted with `git checkout`. `Edit`'s exact-match-and-unique contract
+  makes that class of error impossible, because an ambiguous or wider-than-intended match fails
+  instead of applying. So the gap is real in one direction (several calls) and the rule's protection
+  is real in the other (no silent over-match).
+- Second cost, measurement-side: `harvest.py sweep` reports
+  `67 call(s) … ran an inline script …
+  writes inside those are invisible here`, so its
+  files-written-outside-a-repo check is a floor for exactly these sessions.
+
+What it suggests for the open question: neither reading alone. The multi-site rewrites are a real
+gap **and** the rule is protecting something. A stated exception would want a condition — every
+heredoc edit followed by a diff read before the gate, say — rather than a blanket carve-out.
