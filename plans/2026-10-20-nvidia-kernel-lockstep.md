@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-10-20
+status: landed
+updated: 2026-11-08
 source_repo: github.com-personal/agent-skills
 source_session: 24d8b75b-4a2c-49eb-aaa0-da619810b928.jsonl
 source_moment: 2026-10-20
@@ -75,3 +75,36 @@ User chose (2026-10-20) the unattended-upgrades blacklist route over switching t
   a manual `apt full-upgrade`.
 - Pair it with a verify check: for the kernel `/boot/vmlinuz` points at, `modinfo -k <kver> nvidia`
   must succeed. Cheap, and catches every other path to the same break.
+
+## Resolved 2026-11-08
+
+- **Blacklisting the metas stops unattended kernel security updates.** Confirmed acceptable by the
+  user 2026-11-08, after the alternative of a scheduled `apt full-upgrade` was offered again.
+- **No unattended-upgrades option permits an upgrade that removes a package.** Checked in a clone of
+  `mvo5/unattended-upgrades` at `main@5dbd859`: the `Allow-` options cover downgrades and the
+  apt-mark fallback, the removal options cover autoremove only, and the blacklist is applied with
+  `re.match`, so each entry needs its own `$`.
+- **The pre-reboot check is in `inv verify.all`**, run only where an `nvidia-driver-*` package is
+  installed, chosen over a login-time check.
+
+## Verification
+
+The incident cannot be replayed on demand, since it needs a kernel bump and a driver bump together.
+What was checked on this machine on 2026-11-08: `inv apt.configure-kernel-lockstep` wrote the
+drop-in, `apt-config dump Unattended-Upgrade::Package-Blacklist` lists the three entries, the dry
+run reports it `ok`, and the boot-kernel check reports
+`kernel 6.8.0-147-generic has nvidia
+595.99.02`. Unit tests pin that the entries match the metas and
+their `-hwe-` variants and not a versioned kernel image, module or firmware package.
+
+## Migrated to
+
+- **The mechanism**: `inv apt.configure-kernel-lockstep` and its section comment in `tasks/apt.py`,
+  and the check in `tasks/verify.py`'s `_nvidia_checks`, commit `2140a8b`.
+- **Usage docs**: `docs/troubleshooting.md`, "Stuck at 640×480 after a reboot", which now covers the
+  second incident's mechanism, the drop-in and the check, beside the existing manual fix.
+- **Managed files**: `docs/configuration.md`.
+
+Deliberately not migrated: the 2026-10-20 log excerpts and the exact manual install command. The
+troubleshooting page already has the general form of the fix, and the logs were evidence for a
+diagnosis that is now in the code comment.

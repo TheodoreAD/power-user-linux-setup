@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-11-08
 ---
 
@@ -44,3 +44,24 @@ a fallback command that is wrong when it is followed.
 - Consider whether the agent-skills repo's `test_remote_install_commands_are_global` should also
   require `--agent` on remote install lines — probably not for a published skill a stranger runs,
   where "every agent you have" is the right default; this is a this-machine concern.
+
+## Verification
+
+The original repro was `npx skills add TheodoreAD/agent-skills --global --skill release-herald -y`
+installing for every detected agent. After commit `e6cbc14`,
+`inv ai.install-skills --skill=release-herald --yes` on this machine installed it for GitHub Copilot
+and Claude Code only, the entry's two `agents`.
+
+## Migrated to
+
+- **The behaviour**: `_select_entry` and `_install_declared_skills` in `tasks/ai.py`, commit
+  `e6cbc14`. `_select_entry`'s docstring carries why passing an undeclared name through beats a
+  hand-typed `skills add`, and a comment in the other says why two whole-repo entries refuse.
+- **The documented refresh**: `[packages.agent-skills]`'s description in `setup.toml` and
+  `ai.install-skills`' docstring.
+- **The skill-side half**: filed for agent-skills as
+  `2026-11-08-skill-authoring-one-skill-reinstall-has-no-agent.md`, since `skill-authoring`'s step 6
+  still gives the bare command.
+
+Deliberately not migrated: the third bullet, requiring `--agent` in agent-skills' own install lines.
+Those are for strangers, where every agent they have is the right default.

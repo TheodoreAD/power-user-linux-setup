@@ -1,5 +1,5 @@
 ---
-status: idea
+status: landed
 updated: 2026-11-08
 source_repo: github.com-personal/agent-skills
 source_session: cfdd5789-b3d9-4818-a387-308047144830.jsonl
@@ -42,16 +42,41 @@ this 6-core, 31 GiB machine.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: a drop-in file (`/etc/sysctl.d/<nn>-inotify.conf`, owned whole by this repo)
-or a managed block in `/etc/sysctl.conf` following the `system.disable-ipv6` precedent. The drop-in
-is the more conventional shape for a setting this repo owns outright; the precedent argues for
-consistency.]
+[DECISION: **a drop-in, `/etc/sysctl.d/60-pulse-inotify.conf`.** `tasks/system.py`'s `_owned_dropin`
+docstring already settled it — "a setting of one's own belongs in a drop-in of one's own" — after
+`/etc/systemd/journald.conf.d/size.conf` carried a setting twice. 60 because Ubuntu's
+`/usr/lib/sysctl.d/30-tracker.conf` is what pins 65536 on a GNOME desktop, so the drop-in must sort
+after it, and before `99-sysctl.conf` so a value in `/etc/sysctl.conf` still wins. Confirmed with
+`sysctl --system --dry-run`: 30-tracker sets 65536, then 60-pulse sets 524288.]
 
-[NEEDS CLARIFICATION: whether this is its own `inv system.*` task or attaches to the kind/tilt
-packages so it applies whenever they are installed.]
+[DECISION: **its own task, `inv system.raise-inotify-limits`, in setup's system phase, a no-op
+unless kind or tilt is enabled.** Chosen by the user 2026-11-08 over running on every machine and
+over a standalone task setup never calls.]
+
+[DECISION: **raise, never lower.** The kernel sizes `max_user_watches` from RAM when no file sets
+it, which can exceed 524288, and a fixed value in the drop-in would cut it at the next boot. So each
+key in the drop-in is the higher of the target and the live value, and only keys below target are
+applied live with `sysctl -w`. Reasoned while writing the task, not hit.]
 
 ## Recommended direction
 
 Set both keys to kind's recommended values, apply immediately with `sysctl --system` (or `-p` on the
 file), and make the task idempotent and verifiable — the hekate repo's planned doctor task will
 check the live values and point here for the fix.
+
+## Verification
+
+The original measurement was 65536/128 on this machine, read in the agent-skills session named
+above. After `inv system.raise-inotify-limits` on 2026-11-08 the live values are 524288 and 512, the
+task's dry run reports both the drop-in and the live limits `ok`, and `sysctl --system --dry-run`
+applies `60-pulse-inotify.conf` after `30-tracker.conf`, so the value survives a reboot.
+
+## Migrated to
+
+- **The task**: `inv system.raise-inotify-limits` in `tasks/system.py`, commit `01696d6`. The
+  drop-in's number, the raise-never-lower rule and the kind/tilt gate are commented there.
+- **Usage docs**: `docs/kubernetes.md`, "File-watch limits", including where the 65536 comes from;
+  `docs/configuration.md`'s managed-files table and system-phase list.
+
+Deliberately not migrated: the hekate doctor's check of these values. It belongs to hekate and is in
+its own plan.
