@@ -83,20 +83,33 @@ def _entry_skill_names(entry: util.SkillEntry) -> list[str] | None:
     return entry.get("names")
 
 
-def _select_entry(entry: util.SkillEntry, selected: set[str] | None) -> util.SkillEntry | None:
+_NO_NAMES: frozenset[str] = frozenset()
+
+
+def _select_entry(
+    entry: util.SkillEntry, selected: set[str] | None, known: frozenset[str] = _NO_NAMES
+) -> util.SkillEntry | None:
     """Filter one `skills` entry against `--skill`: the entry to install, or None to skip it.
 
     A remote entry is narrowed to just the requested names rather than installed wholesale, so
-    `--skill=a` against an entry declaring `names = ["a", "b"]` installs only `a`. An entry whose
-    names aren't knowable (see _entry_skill_names) is skipped whenever a selection is active — it
-    can't be confirmed to match, and installing it on the chance that it might would defeat the
-    point of naming one skill.
+    `--skill=a` against an entry declaring `names = ["a", "b"]` installs only `a`.
+
+    An entry whose names aren't knowable offline (see _entry_skill_names) is handed the requested
+    names no other entry declares — `known` — and nothing else, carrying its own `agents`. That is
+    what lets a one-skill refresh of `[packages.agent-skills]`, which deliberately declares no
+    `names`, go through the declared mechanism rather than a hand-typed `skills add`. A hand-typed
+    one has no `--agent` and installs for every agent the CLI detects, writing copies setup.toml
+    never declared (seen 2026-11-08: "+12 more" agents for one skill). Not knowing the names stops
+    this task from *validating* them, not from passing them on: the CLI validates, and exits 1 with
+    "No matching skills" when none match. A requested name that matches nothing while another in
+    the same call does is skipped by the CLI without an error.
     """
     if selected is None:
         return entry
     names = _entry_skill_names(entry)
     if names is None:
-        return None
+        passthrough = sorted(selected - known)
+        return {**entry, "names": passthrough} if passthrough else None
     matched = [n for n in names if n in selected]
     if not matched:
         return None
@@ -234,21 +247,29 @@ def _install_declared_skills(c: Context, base: Path, *, yes: bool, selected: set
     reading the code. Already-installed skills are left alone; this stops them being re-installed,
     and removing a skill directory is not something to do behind the user's back.
     """
-    known: set[str] = set()
+    entries = [(name, entry) for name, cfg in util.enabled_packages().items() for entry in cfg.get("skills", [])]
+    known = frozenset(n for _, entry in entries for n in _entry_skill_names(entry) or [])
+    open_ended = [name for name, entry in entries if _entry_skill_names(entry) is None]
+    # Two open-ended entries would each be handed the same undeclared names, and the CLI exits 1
+    # for the one that lacks them — so the refresh would fail halfway rather than pick a source.
+    if selected is not None and len(open_ended) > 1 and selected - known:
+        raise ValueError(
+            f"--skill {', '.join(sorted(selected - known))} is declared by no entry, and more than one "
+            f"entry installs a whole repo ({', '.join(open_ended)}), so which one provides it is "
+            "unknown. Declare `names` on one of them."
+        )
     matched = False
 
-    for name, cfg in util.enabled_packages().items():
-        for entry in cfg.get("skills", []):
-            known.update(_entry_skill_names(entry) or [])
-            chosen = _select_entry(entry, selected)
-            if chosen is None:
-                continue
-            matched = True
-            source = chosen.get("source")
-            if source in ("local", "npx"):
-                _install_skill(c, chosen, label=name, yes=yes)
-            else:
-                ui.warn(f"[{name}] skills entry has unknown source {source!r} — skipping")
+    for name, entry in entries:
+        chosen = _select_entry(entry, selected, known)
+        if chosen is None:
+            continue
+        matched = True
+        source = chosen.get("source")
+        if source in ("local", "npx"):
+            _install_skill(c, chosen, label=name, yes=yes)
+        else:
+            ui.warn(f"[{name}] skills entry has unknown source {source!r} — skipping")
 
     if selected is not None and not matched:
         raise ValueError(
@@ -607,14 +628,15 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
 
     Pass --skill=<name> (comma-separated for several) to act on just those skills instead of every
     declared one. A --skill that matches nothing raises, rather than quietly doing no work and
-    looking like a successful refresh. Permissions/statusLine/Copilot are skipped for a --skill run,
-    same as for --dir: they're global settings with nothing to do with which skill was named.
+    looking like a successful refresh (here, or as the CLI's own exit 1). Permissions/statusLine/
+    Copilot are skipped for a --skill run, same as for --dir: they're global settings with nothing
+    to do with which skill was named.
 
-    Note that --skill can only narrow an entry whose skill names are knowable without the network —
-    a `local` entry, or a remote one that declares `names`. `[packages.agent-skills]` deliberately
-    declares no `names` (so an upstream addition needs no setup.toml edit), so it is all-or-nothing
-    here and --skill skips it; refresh one of its skills with
-    `skills add TheodoreAD/agent-skills --global --skill <name>` instead.
+    A name no entry declares is handed to the one entry that installs a whole repo —
+    `[packages.agent-skills]`, which deliberately declares no `names` — with that entry's own
+    `agents`, and the `skills` CLI validates it: `inv ai.install-skills --skill=<name>` is the
+    one-skill refresh for those skills too. See _select_entry for why that beats a hand-typed
+    `skills add`.
 
     Defaults to the home directory (the personal, cross-project skills location). Pass --dir to
     set this up for a specific project instead — permissions/statusLine/Copilot are skipped for a

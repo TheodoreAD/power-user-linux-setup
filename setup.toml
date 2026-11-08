@@ -2261,9 +2261,10 @@ skill added upstream arrives without editing this file. Anyone can install the s
 `npx skills add TheodoreAD/agent-skills`, on any agent the `skills` CLI supports. Design and the
 move's measured findings: plans/2026-08-26-agent-artifact-authoring-decoupling.md.
 
-Trade-off of dropping `names`: `inv ai.install-skills --skill=<name>` can no longer narrow this
-entry (ai.py can't know a remote repo's skill list without fetching it), so a one-skill refresh is
-`skills add TheodoreAD/agent-skills --global --skill <name>` directly.
+A one-skill refresh is still `inv ai.install-skills --skill=<name>`: ai.py can't know this repo's
+skill list without fetching it, so it hands the name to the `skills` CLI with this entry's `agents`,
+and the CLI validates it. Not a bare `skills add … --skill <name>`, which has no `--agent` and
+installs for every agent the CLI detects.
 
 `agents` names both agents actually installed here. The CLI treats github-copilot as universal at
 global scope and writes one real copy to ~/.agents/skills, which Claude Code reaches through the

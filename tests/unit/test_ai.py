@@ -319,9 +319,19 @@ def test_select_entry_narrows_remote_names_to_the_requested_ones():
     assert entry["names"] == ["a", "b"]
 
 
-def test_select_entry_skips_remote_entry_whose_names_are_unknowable():
-    # Installing it on the chance it might contain the named skill would defeat --skill's point.
-    assert ai._select_entry({"source": "npx", "repo": "o/r"}, {"a"}) is None
+def test_select_entry_hands_undeclared_names_to_a_whole_repo_entry_with_its_agents():
+    # The CLI validates the name; what this task contributes is the entry's own `agents`, which a
+    # hand-typed `skills add --skill <name>` lacks.
+    entry: util.SkillEntry = {"source": "npx", "repo": "o/r", "agents": ["claude-code"]}
+
+    chosen = ai._select_entry(entry, {"x", "declared"}, frozenset({"declared"}))
+
+    assert chosen == {"source": "npx", "repo": "o/r", "agents": ["claude-code"], "names": ["x"]}
+    assert "names" not in entry
+
+
+def test_select_entry_skips_a_whole_repo_entry_when_every_name_is_declared_elsewhere():
+    assert ai._select_entry({"source": "npx", "repo": "o/r"}, {"a"}, frozenset({"a"})) is None
 
 
 # ---------------------------------------------------------------------------
@@ -417,6 +427,37 @@ def test_install_declared_skills_unmatched_selection_raises_and_lists_declared(m
 
     assert "plan-docs" in str(excinfo.value)
     assert calls == []
+
+
+def test_install_declared_skills_selection_reaches_a_whole_repo_entry(monkeypatch):
+    calls = []
+    _stub_two_skill_packages(monkeypatch, calls)
+    packages = util.load_config()["packages"]
+    packages["pkg-d"] = {"enabled": True, "skills": [{"source": "npx", "repo": "o/whole"}]}
+    monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
+
+    ai._install_declared_skills(MockContext(), Path("/base"), yes=True, selected={"plan-docs", "upstream-only"})
+
+    assert calls == [("local", "skills/plan-docs"), ("npx", ["upstream-only"])]
+
+
+def test_install_declared_skills_refuses_an_undeclared_name_with_two_whole_repo_entries(monkeypatch):
+    # Each would be handed the name and the CLI exits 1 for the one lacking it — a refresh that
+    # fails halfway rather than one that picks a source.
+    monkeypatch.setattr(ai, "_install_skill", _fail_if_asked("should not install"))
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {
+            "packages": {
+                "pkg-a": {"enabled": True, "skills": [{"source": "npx", "repo": "o/one"}]},
+                "pkg-b": {"enabled": True, "skills": [{"source": "npx", "repo": "o/two"}]},
+            }
+        },
+    )
+
+    with pytest.raises(ValueError, match="more than one entry installs a whole repo"):
+        ai._install_declared_skills(MockContext(), Path("/base"), yes=True, selected={"x"})
 
 
 def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
