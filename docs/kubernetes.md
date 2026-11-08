@@ -62,13 +62,15 @@ Live-update dev loop for Kubernetes — watches files and hot-reloads workloads 
 `[packages.tilt]` seeds `~/.tilt-dev/analytics/user/choice.txt` with `opt-out`; `tilt analytics`
 prints `analytics status : opt-out`. A Tiltfile calling `analytics_settings(True)` outranks that
 file, which matters on a repo you do not control, and only an environment variable
-(`TILT_DISABLE_ANALYTICS`, `DO_NOT_TRACK` or `CI`) outranks the Tiltfile. This repo sets none of
-them. While it is on, each event carries hashes of `uname -a`, the machine id and the git `origin`
-URL, plus Tilt's version, the OS and the subcommand. A loaded Tiltfile adds how often each Tiltfile
-builtin and argument was used and the names of loaded extensions, builds add their durations, and a
-running `tilt up` adds resource counts and the cluster type. No source code, file contents or
-resource names are sent, except whatever tags a Tiltfile hands `experimental_analytics_report`. The
-hashes are unsalted MD5, so anyone who can guess an `origin` URL can confirm it was the repo in use.
+(`TILT_DISABLE_ANALYTICS`, `DO_NOT_TRACK` or `CI`) outranks the Tiltfile. So `[packages.tilt]` also
+exports `TILT_DISABLE_ANALYTICS=1` in `~/.zshenv`, which closes that gap for anything started from
+zsh; the file still covers a launch from outside a shell. While it is on, each event carries hashes
+of `uname -a`, the machine id and the git `origin` URL, plus Tilt's version, the OS and the
+subcommand. A loaded Tiltfile adds how often each Tiltfile builtin and argument was used and the
+names of loaded extensions, builds add their durations, and a running `tilt up` adds resource counts
+and the cluster type. No source code, file contents or resource names are sent, except whatever tags
+a Tiltfile hands `experimental_analytics_report`. The hashes are unsalted MD5, so anyone who can
+guess an `origin` URL can confirm it was the repo in use.
 
 ## File-watch limits
 

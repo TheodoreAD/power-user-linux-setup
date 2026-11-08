@@ -49,14 +49,17 @@ anonymized usage statistics" describes behaviour the pinned code does not have.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: export `DO_NOT_TRACK=1` machine-wide (a `zshenv` snippet on some package),
-export only `TILT_DISABLE_ANALYTICS=1` (narrow, one tool, beats a Tiltfile), or neither? The broad
-one also changes what other tools do — every CLI honouring the consoledonottrack convention goes
-quiet, which is the point, but some tie unrelated behaviour to it — and it reaches only processes
-started from zsh, so a GUI or systemd launch still needs the file.]
+[DECISION: **`TILT_DISABLE_ANALYTICS=1` landed 2026-11-08, asked for by the user**: "add
+TILT_DISABLE_ANALYTICS to our setup". A `zshenv` field on `[packages.tilt]`, so it applies wherever
+tilt is enabled, on every machine rather than only a corporate-tagged one — the Tiltfile override is
+just as possible in a personal checkout of someone else's repo. It closes the Tiltfile override for
+anything started from zsh; the choice file stays for every other launch. What remains open is the
+broad variable.]
 
-[NEEDS CLARIFICATION: whether this belongs on every machine or only on a corporate-tagged one, where
-the Tiltfile is most likely to be somebody else's. The tag would gate it automatically.]
+[NEEDS CLARIFICATION: export `DO_NOT_TRACK=1` machine-wide as well, or not? It changes what other
+tools do — every CLI honouring the consoledonottrack convention goes quiet, which is the point, but
+some tie unrelated behaviour to it — and like the Tilt variable it reaches only processes started
+from zsh.]
 
 [NEEDS CLARIFICATION: which other installed tools phone home by default and honour `DO_NOT_TRACK`.
 Worth an inventory across `setup.toml` before deciding, since the variable's value scales with how
@@ -64,6 +67,5 @@ many tools read it.]
 
 ## Recommended direction
 
-Inventory first, then decide with the list in hand. Lean towards `TILT_DISABLE_ANALYTICS=1` as the
-minimum, since it is the only thing that closes the Tiltfile override and has no side effects
-outside Tilt, and treat `DO_NOT_TRACK` as the broader question the inventory answers.
+With the Tilt-specific minimum in place, inventory the other installed tools first and decide on
+`DO_NOT_TRACK` with that list in hand.
