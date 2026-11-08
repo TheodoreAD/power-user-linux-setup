@@ -9,9 +9,9 @@ The Kubernetes CLIs this repo installs, and how each one is kept up to date.
 All tools are declared in `setup.toml` and installed via invoke:
 
 ```shell
-inv apt.install-repos   # kubectl, helm, tilt
+inv apt.install-repos   # kubectl
 inv apt.install-debs  # k9s, freelens
-inv tools.install  # kind
+inv tools.install  # kind, helm, tilt, ctlptl
 ```
 
 Or all at once: `inv setup`
@@ -57,6 +57,17 @@ release via `inv apt.install-debs`.
 
 Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual
 `kubectl apply`.
+
+## ctlptl
+
+Declares a kind cluster together with a local image registry, so Tilt pushes images rather than
+copying each one in with `kind load`. It sends no usage reports unless its analytics choice is
+`opt-in`.
+
+```shell
+ctlptl create cluster kind --registry=ctlptl-registry
+ctlptl delete cluster kind-kind
+```
 
 ## See also
 

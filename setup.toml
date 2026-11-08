@@ -1745,6 +1745,19 @@ bin_pick = "tilt"
 bin_in_root = true
 zshrc = "source <(tilt completion zsh)"
 
+[packages.ctlptl]
+description = "Declarative kind clusters with a local image registry — Tilt's companion for kind"
+method = "archive"
+tags = ["k8s", "dev"]
+check_cmd = "ctlptl"
+verify_cmd = "ctlptl version" # no --version flag: the root command sets no Version
+version_cmd = "curl -fsSL https://api.github.com/repos/tilt-dev/ctlptl/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
+download_url = "https://github.com/tilt-dev/ctlptl/releases/download/v{version}/ctlptl.{version}.linux.x86_64.tar.gz"
+checksum_url = "https://github.com/tilt-dev/ctlptl/releases/download/v{version}/checksums.txt"
+bin_pick = "ctlptl" # the binary sits at the archive root beside LICENSE and README.md (v0.9.6)
+bin_in_root = true
+zshrc = "source <(ctlptl completion zsh)"
+
 [packages.k9s]
 description = "Terminal UI for Kubernetes — browse clusters, pods, logs, exec, port-forward"
 method = "deb-github"
