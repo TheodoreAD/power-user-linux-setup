@@ -1744,6 +1744,14 @@ checksum_url = "https://github.com/tilt-dev/tilt/releases/download/v{version}/ch
 bin_pick = "tilt"
 bin_in_root = true
 zshrc = "source <(tilt completion zsh)"
+# Tilt reports usage to events.windmill.build unless told not to: it builds its client with
+# WithEnabled(true) and stops only on an `opt-out` choice or an env var (internal/cli/analytics.go,
+# internal/analytics/env.go, read from a clone 2026-11-08). Pinned off deliberately, per the rule
+# that a feature phoning home by default is a decision. The choice file is wmclient's, so this one
+# file also covers ctlptl, which shares it. Two limits, both in plans/2026-11-08-do-not-track.md: a
+# Tiltfile's analytics_settings(True) outranks this file (only an env var outranks a Tiltfile),
+# and wmclient reads ~/.windmill instead whenever that directory exists.
+config_files = [{ src = "config/tilt-analytics-choice.txt", dst = "~/.tilt-dev/analytics/user/choice.txt" }]
 
 [packages.ctlptl]
 description = "Declarative kind clusters with a local image registry — Tilt's companion for kind"

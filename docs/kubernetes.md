@@ -58,11 +58,23 @@ release via `inv apt.install-debs`.
 Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual
 `kubectl apply`.
 
+**Usage reporting is switched off.** Tilt reports usage to `events.windmill.build` by default, so
+`[packages.tilt]` seeds `~/.tilt-dev/analytics/user/choice.txt` with `opt-out`; `tilt analytics`
+prints `analytics status : opt-out`. A Tiltfile calling `analytics_settings(True)` outranks that
+file, which matters on a repo you do not control, and only an environment variable
+(`TILT_DISABLE_ANALYTICS`, `DO_NOT_TRACK` or `CI`) outranks the Tiltfile. This repo sets none of
+them. While it is on, each event carries hashes of `uname -a`, the machine id and the git `origin`
+URL, plus Tilt's version, the OS and the subcommand. A loaded Tiltfile adds how often each Tiltfile
+builtin and argument was used and the names of loaded extensions, builds add their durations, and a
+running `tilt up` adds resource counts and the cluster type. No source code, file contents or
+resource names are sent, except whatever tags a Tiltfile hands `experimental_analytics_report`. The
+hashes are unsalted MD5, so anyone who can guess an `origin` URL can confirm it was the repo in use.
+
 ## ctlptl
 
 Declares a kind cluster together with a local image registry, so Tilt pushes images rather than
-copying each one in with `kind load`. It sends no usage reports unless its analytics choice is
-`opt-in`.
+copying each one in with `kind load`. It reads the same analytics choice file as Tilt, and sends
+nothing unless that file says `opt-in`, so the opt-out above covers it too.
 
 ```shell
 ctlptl create cluster kind --registry=ctlptl-registry
