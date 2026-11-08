@@ -2835,8 +2835,18 @@ old-kernel module the upgrade removes, which is why <code>apt upgrade</code> wou
 <p>Substitute the driver branch <code>apt-cache policy</code> names. To work immediately without installing
 anything, pick the previous kernel under GRUB&rsquo;s &ldquo;Advanced options&rdquo;: its module is still installed.</p>
 <p><strong>To avoid it</strong>, use <code>apt full-upgrade</code> rather than <code>apt upgrade</code> whenever apt reports packages
-&ldquo;kept back&rdquo;, as <a href="apt_packages.html">the apt page</a> already does, and check <code>apt list --upgradable</code> for
-an <code>nvidia-</code> line before rebooting after unattended-upgrades has installed a kernel.</p>
+&ldquo;kept back&rdquo;, as <a href="apt_packages.html">the apt page</a> already does.</p>
+<p>On a machine with an <code>nvidia-driver-*</code> package installed, <code>inv setup</code> also runs
+<code>inv apt.configure-kernel-lockstep</code>. It writes <code>/etc/apt/apt.conf.d/99-pulse-kernel-lockstep</code>, which
+blacklists the kernel meta packages (<code>linux-generic</code>, <code>linux-image-generic</code>, <code>linux-headers-generic</code>
+and their <code>-hwe-</code> variants) in unattended-upgrades. Unattended-upgrades then never installs a kernel
+on its own, so it cannot install one without the module. Kernels, security fixes included, arrive
+with the next <code>sudo apt full-upgrade</code>, which moves the driver and the module with them.
+Unattended-upgrades has no option permitting an upgrade that removes a package, which is why the
+kernel is held rather than the module let through.</p>
+<p><code>inv verify.all</code> checks the other direction on the same machines: that the kernel <code>/boot/vmlinuz</code>
+points at, the one the next boot uses, has an <code>nvidia</code> module. Run it before rebooting after any
+kernel install.</p>
 <h2 id="fix-crlf-line-endings">Fix CRLF line endings<a class="headerlink" href="#fix-crlf-line-endings" title="Permanent link">&para;</a></h2>
 <p>If you receive files from Windows machines, they may have <code>\r\n</code> line endings that break shell
 scripts and tools. <code>dos2unix</code> is installed by default in this setup.</p>

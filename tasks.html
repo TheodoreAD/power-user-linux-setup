@@ -2458,6 +2458,10 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 <td>Write /etc/apt/apt.conf.d/99-pulse: disable dpkg progress bars.</td>
 </tr>
 <tr>
+<td><code>inv apt.configure-kernel-lockstep</code></td>
+<td>Stop unattended-upgrades installing a kernel the NVIDIA module can&rsquo;t follow.</td>
+</tr>
+<tr>
 <td><code>inv apt.install-base</code></td>
 <td>Install base apt packages from config.</td>
 </tr>
@@ -2880,6 +2884,10 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 <tr>
 <td><code>inv system.install-apparmor-profiles</code></td>
 <td>Install AppArmor profiles declared in setup.toml with method = &lsquo;apparmor-profile&rsquo;.</td>
+</tr>
+<tr>
+<td><code>inv system.raise-inotify-limits</code></td>
+<td>Raise the inotify watch/instance limits for kind and Tilt, if either is enabled.</td>
 </tr>
 <tr>
 <td><code>inv system.set-initramfs-compression</code></td>

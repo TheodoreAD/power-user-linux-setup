@@ -1438,6 +1438,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#file-watch-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        File-watch limits
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ctlptl" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ctlptl
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2329,6 +2351,28 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#file-watch-limits" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        File-watch limits
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
+  <a href="#ctlptl" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        ctlptl
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#see-also" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2433,9 +2477,9 @@
 <p>Kubernetes may cause: headaches, fits of rage, binge eating, back pain and container orchestration.</p>
 </div>
 <p>All tools are declared in <code>setup.toml</code> and installed via invoke:</p>
-<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>apt.install-repos<span class="w">   </span><span class="c1"># kubectl, helm, tilt</span>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-0-1"><a id="__codelineno-0-1" name="__codelineno-0-1" href="#__codelineno-0-1"></a>inv<span class="w"> </span>apt.install-repos<span class="w">   </span><span class="c1"># kubectl</span>
 </span><span id="__span-0-2"><a id="__codelineno-0-2" name="__codelineno-0-2" href="#__codelineno-0-2"></a>inv<span class="w"> </span>apt.install-debs<span class="w">  </span><span class="c1"># k9s, freelens</span>
-</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>tools.install<span class="w">  </span><span class="c1"># kind</span>
+</span><span id="__span-0-3"><a id="__codelineno-0-3" name="__codelineno-0-3" href="#__codelineno-0-3"></a>inv<span class="w"> </span>tools.install<span class="w">  </span><span class="c1"># kind, helm, tilt, ctlptl</span>
 </span></code></pre></div>
 <p>Or all at once: <code>inv setup</code></p>
 <h2 id="kubectl">kubectl<a class="headerlink" href="#kubectl" title="Permanent link">&para;</a></h2>
@@ -2463,6 +2507,54 @@ release via <code>inv apt.install-debs</code>.</p>
 <h2 id="tilt">Tilt<a class="headerlink" href="#tilt" title="Permanent link">&para;</a></h2>
 <p>Live-update dev loop for Kubernetes — watches files and hot-reloads workloads without manual
 <code>kubectl apply</code>.</p>
+<p><strong>Usage reporting is switched off.</strong> Tilt reports usage to <code>events.windmill.build</code> by default, so
+<code>[packages.tilt]</code> seeds <code>~/.tilt-dev/analytics/user/choice.txt</code> with <code>opt-out</code>; <code>tilt analytics</code>
+prints <code>analytics status : opt-out</code>. A Tiltfile calling <code>analytics_settings(True)</code> outranks that
+file, which matters on a repo you do not control, and only an environment variable
+(<code>TILT_DISABLE_ANALYTICS</code>, <code>DO_NOT_TRACK</code> or <code>CI</code>) outranks the Tiltfile. This repo sets none of
+them. While it is on, each event carries hashes of <code>uname -a</code>, the machine id and the git <code>origin</code>
+URL, plus Tilt&rsquo;s version, the OS and the subcommand. A loaded Tiltfile adds how often each Tiltfile
+builtin and argument was used and the names of loaded extensions, builds add their durations, and a
+running <code>tilt up</code> adds resource counts and the cluster type. No source code, file contents or
+resource names are sent, except whatever tags a Tiltfile hands <code>experimental_analytics_report</code>. The
+hashes are unsalted MD5, so anyone who can guess an <code>origin</code> URL can confirm it was the repo in use.</p>
+<h2 id="file-watch-limits">File-watch limits<a class="headerlink" href="#file-watch-limits" title="Permanent link">&para;</a></h2>
+<p>kind and Tilt both lean on inotify: every kind node runs a kubelet sharing the host&rsquo;s per-user
+limits, and Tilt watches the whole source tree. Below kind&rsquo;s recommended limits the failure is &ldquo;too
+many open files&rdquo; from kubelet or a pod, which reads as a cluster bug rather than a host setting.
+<code>inv system.raise-inotify-limits</code>, part of <code>inv setup</code>&rsquo;s system phase, raises them on any machine
+where the kind or tilt package is enabled:</p>
+<table>
+<thead>
+<tr>
+<th>key</th>
+<th>on an Ubuntu 24.04 desktop</th>
+<th>raised to</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td><code>fs.inotify.max_user_watches</code></td>
+<td>65536</td>
+<td>524288</td>
+</tr>
+<tr>
+<td><code>fs.inotify.max_user_instances</code></td>
+<td>128</td>
+<td>512</td>
+</tr>
+</tbody>
+</table>
+<p>The 65536 is not the kernel&rsquo;s own figure: Ubuntu&rsquo;s <code>tracker</code> package pins it in
+<code>/usr/lib/sysctl.d/30-tracker.conf</code>. The task writes <code>/etc/sysctl.d/60-pulse-inotify.conf</code>, which
+sorts after that file and so wins, and it never lowers a value already above these.</p>
+<h2 id="ctlptl">ctlptl<a class="headerlink" href="#ctlptl" title="Permanent link">&para;</a></h2>
+<p>Declares a kind cluster together with a local image registry, so Tilt pushes images rather than
+copying each one in with <code>kind load</code>. It reads the same analytics choice file as Tilt, and sends
+nothing unless that file says <code>opt-in</code>, so the opt-out above covers it too.</p>
+<div class="language-shell highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>ctlptl<span class="w"> </span>create<span class="w"> </span>cluster<span class="w"> </span>kind<span class="w"> </span>--registry<span class="o">=</span>ctlptl-registry
+</span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>ctlptl<span class="w"> </span>delete<span class="w"> </span>cluster<span class="w"> </span>kind-kind
+</span></code></pre></div>
 <h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="docker.html">Docker</a> — the runtime underneath</li>
