@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-08-30
+updated: 2026-11-25
 depends_on: [agent-skills]
 ---
 

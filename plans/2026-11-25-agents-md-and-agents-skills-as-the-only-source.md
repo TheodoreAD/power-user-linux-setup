@@ -187,9 +187,10 @@ only for an agent that is installed and does not read the canonical one:
 | `~/.copilot/copilot-instructions.md` | Copilot     | copy, when `~/.copilot` exists |
 | `~/.gemini/GEMINI.md`                | Gemini CLI  | copy, when `~/.gemini` exists  |
 
-**In a repo**, `AGENTS.md` and `.agents/skills/` are the only files with content. No `CLAUDE.md`.
-One shim stays, because Claude Code is the one agent that cannot see the skills: `.claude/skills` as
-a committed **relative** directory symlink to `../.agents/skills`, only in repos that have skills.
+**In a repo**, `AGENTS.md` is the only instructions file and no `CLAUDE.md` exists. The repo's own
+skills are authored in `skills/<name>/`; `.agents/skills/`, `.claude/skills/` and `skills-lock.json`
+are gitignored install targets, filled per clone by repo-tasks' `agents.install-skills` (corrected
+the same day — see the superseded decision below).
 
 [DECISION: **keep `~/.claude/CLAUDE.md` a copy, not a one-line `@~/.agents/AGENTS.md` import.** The
 import is now documented, loads without an approval dialog from a user-scope file, and would remove
@@ -208,14 +209,20 @@ updates itself on every machine PULSE sets up, so a version before 2.1.277 is no
 for. Rejected: setting `claude-md-and-agents-md` globally to keep the symlinks harmless — it is a
 Claude-only setting that exists to tolerate a file the target does not have.]
 
-[DECISION: **repo skills keep a committed relative `.claude/skills -> ../.agents/skills` directory
-link, not per-skill links.** Repo-authored skills (the polite-mcp ones, a tool's own interface
-skill) are not in any lock file, so `skills install -a claude-code` cannot produce their links; a
-committed per-skill link would need a new link every time a skill is added. One relative link is
-zero maintenance and is what the CLI's own installer already expects to find
-(`resolveParentSymlinks`). The home directory stays per-skill because `synced/` and `.trash/` live
-there; a repo `.claude/skills` holds neither. Cost: on Windows without `core.symlinks`, git checks
-the link out as a one-line text file, the same limitation every committed symlink here has.]
+[DECISION, **superseded the same day** by
+`plans/2026-09-07-agents-md-and-skills-on-native-windows.md`, "A repo's own skills, for Claude Code,
+without a committed symlink": skills are authored in `skills/`, every install target is gitignored,
+and `agents.install-skills` links them per clone — because a committed symlink breaks on Windows and
+committing into `.agents/skills` turns every project trial into a tracked change. The original
+decision, kept for its reasoning: **repo skills keep a committed relative
+`.claude/skills -> ../.agents/skills` directory link, not per-skill links.** Repo-authored skills
+(the polite-mcp ones, a tool's own interface skill) are not in any lock file, so
+`skills install -a claude-code` cannot produce their links; a committed per-skill link would need a
+new link every time a skill is added. One relative link is zero maintenance and is what the CLI's
+own installer already expects to find (`resolveParentSymlinks`). The home directory stays per-skill
+because `synced/` and `.trash/` live there; a repo `.claude/skills` holds neither. Cost: on Windows
+without `core.symlinks`, git checks the link out as a one-line text file, the same limitation every
+committed symlink here has.]
 
 [DECISION: **the `skills` CLI is called with `--agent universal --agent claude-code` and nothing
 else** (`_DEFAULT_AGENTS` in `tasks/ai.py`). Corrected the same day: the first draft said
@@ -292,13 +299,14 @@ proposed were done directly instead, each repo pulled first.
   `freshful-polite-mcp` keep their relative `.claude/skills` links.
 - `hekate` — through PR 19, since everything there lands by squash-merged pull request.
 
-## Open questions
+**Later the same day, the repo-skills layout changed** (the decision above is marked superseded):
+`repo-tasks` `945d051` added `agents.install-skills` to `dev-env.setup`; `scaffoldapy` `7058c65`
+generates `skills/` and the three ignore lines; `freshful-polite-mcp` `fb51553` moved its two skills
+to `skills/`; `ingesta` `873a456` moved its README stub. No repo commits a `.claude/skills` link any
+more. repo-tasks then shipped as v0.7.0, v0.7.1 and v0.7.2 and every consumer was swept to v0.7.2;
+the design and its evidence are in `plans/2026-09-07-agents-md-and-skills-on-native-windows.md`.
 
-**A committed `.claude/skills` symlink does not survive a Windows checkout without Developer Mode**
-— git writes it as a text file, so Claude Code there sees no repo skills. Found the same day from
-the agent-skills Windows commit, which hit exactly this with `CLAUDE.md`. It is an OS-axis question,
-so it is filed as a NEEDS CLARIFICATION in
-`plans/2026-09-07-agents-md-and-skills-on-native-windows.md` rather than here.
+## Open questions
 
 [NEEDS CLARIFICATION: **should PULSE configure Gemini CLI to read `AGENTS.md`** in repos
 (`context.fileName: ["AGENTS.md", "GEMINI.md"]` in `~/.gemini/settings.json`) once Gemini is
@@ -322,6 +330,6 @@ reach npm without adding minutes to every run.]
 
 ## Recommended direction
 
-What is left is the open questions above, none of which blocks anything. The Windows
-`.claude/skills` question is the one with a real user behind it, and the first time a repo with
-skills is opened on the Windows machine is when to answer it.
+What is left is the open questions above, none of which blocks anything. The one check with a real
+user behind it is on the Windows machine: whether Claude Code follows the junction the `skills` CLI
+makes for each skill, first in `freshful-polite-mcp`.

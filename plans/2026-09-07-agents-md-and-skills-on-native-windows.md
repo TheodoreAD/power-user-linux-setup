@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-07
+updated: 2026-11-25
 ---
 
 # `AGENTS.md` and skills on native Windows
