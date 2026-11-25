@@ -53,7 +53,7 @@ The askpass script itself shows the caller's actual prompt (`$1` — sudo passes
 `[sudo] password for user:`, ssh passes `Enter passphrase for key '...':`) instead of a hardcoded
 string, so the dialog text is accurate regardless of which one triggered it.
 
-## direnv auto-activation in the Bash tool — `inv agents.wire-claude-hook`
+## direnv auto-activation in the Bash tool — `[packages.claude-direnv-hook]`
 
 A second consequence of the Bash tool's execution model (see "The core problem: no TTY" above),
 separate from the askpass issue: direnv (`[packages.direnv]`, e.g. a project's `.envrc` activating
@@ -72,43 +72,67 @@ terminal, even after `direnv allow`. Two things stack:
    `direnv export` silently no-op even when invoked correctly — `unset`ting those first forces a
    correct recompute.
 
-The fix uses `CLAUDE_ENV_FILE` (a Claude Code environment variable naming a file it sources before
-each Bash command — its documented purpose is exactly this: persisting environment changes across
-tool calls) paired with a `PreToolUse` hook on the Bash tool that keeps that file fresh from
-`direnv export zsh` before every single call, so `cd`/`.envrc` changes are picked up too, not just
-whatever was true at session start.
+What does reach a Bash call is `CLAUDE_ENV_FILE`. Claude Code hands each `SessionStart` and
+`CwdChanged` hook a file path in that variable, keeps one file per event
+(`~/.claude/session-env/<session>/sessionstart-hook-0.sh`, `cwdchanged-hook-0.sh`), and sources all
+of them before every Bash command, **after** the snapshot. So a hook that writes the environment
+there wins over the snapshot's `PATH`, where an export in `~/.zshenv` loses to it.
 
-`inv agents.wire-claude-hook [--dir PATH]` (from the
-[`repo-tasks`](https://github.com/TheodoreAD/repo-tasks) dev dependency — see `pyproject.toml`)
-writes this into `<dir>/.claude/settings.json`:
+`[packages.claude-direnv-hook]` deploys `config/claude-direnv-hook.sh` to `~/.claude/direnv-hook.sh`
+and declares it for both events with the `claude_hooks` field, which `inv ai.install-skills` merges
+into user-level `~/.claude/settings.json`:
 
 ```json
 {
-  "env": { "CLAUDE_ENV_FILE": "~/.cache/claude-code/<sanitized-abs-path>-direnv-env" },
   "hooks": {
-    "PreToolUse": [{
-      "matcher": "Bash",
-      "hooks": [{
-        "type": "command",
-        "command": "unset DIRENV_DIR DIRENV_WATCHES DIRENV_DIFF DIRENV_FILE; direnv export zsh > <that file> 2>/dev/null || true"
-      }]
-    }]
+    "SessionStart": [
+      { "hooks": [{ "type": "command", "command": "zsh ~/.claude/direnv-hook.sh" }] }
+    ],
+    "CwdChanged": [{ "hooks": [{ "type": "command", "command": "zsh ~/.claude/direnv-hook.sh" }] }]
   }
 }
 ```
 
-The env-file path is derived the same way Claude Code's own auto-memory directory is
-(`~/.claude/projects/<sanitized-cwd>/memory/`) — the repo's absolute path with `/` → `-` — so two
-repos sharing a basename never collide. No-ops if `<dir>/.envrc` doesn't exist (nothing to
-activate), and merges into an existing `settings.json` (appending to a `Bash` `PreToolUse` group if
-one already exists, adding one if not) rather than overwriting, so hand-written hooks survive a
-re-run. `dev-env.setup` calls it for this repo's own `.venv` automatically; run it directly against
-any other project — `inv agents.wire-claude-hook --dir ~/projects/foo` — to set the same thing up
-there.
+Each run writes the **whole** environment, not `direnv export`'s diff: it unsets the venv and direnv
+variables, writes a `PATH` with any `*/.venv/bin` entry inherited from the launch shell removed,
+then appends `direnv export zsh` for the current directory. A diff would not be enough, because
+every event's file is sourced: from a directory with no `.envrc` the diff is empty and the
+session-start repo's venv would stay in force. Resetting first makes the most recent file decide.
 
-Caveat: `env` values in `settings.json` are only read at Claude Code process launch, unlike hooks,
-which are read fresh per call — so this needs a session restart (or VS Code window reload) to take
-effect after first being configured, even though the hook itself starts firing immediately.
+**Measured 2026-11-25** in a throwaway WSL distro
+(`inv wsl-distro.install --name pulse-test
+--no-set-default`), Claude Code 2.1.332, direnv 2.32.1.
+Headless sessions started in repo `a`, then the Bash tool probed `a`, `cd`'d to repo `b`, probed,
+`cd`'d to a directory with no `.envrc`, probed. "Clean" launches from a shell where direnv never ran
+(an IDE or GUI start); "stale" launches from a shell still carrying `b`'s environment.
+
+| **mechanism**                           | **clean: a / b / plain**           | **stale: a / b / plain**               |
+| --------------------------------------- | ---------------------------------- | -------------------------------------- |
+| **none**                                | nothing / nothing / —              | b / b / b (the frozen venv everywhere) |
+| **`~/.zshenv` direnv line (removed)**   | VIRTUAL_ENV right, python **none** | VIRTUAL_ENV a, python **b**            |
+| **repo-tasks' per-repo hook (retired)** | a / b / none ✓                     | a / b / **b's VIRTUAL_ENV and python** |
+| **`[packages.claude-direnv-hook]`**     | a / b / none ✓                     | a / b / none ✓                         |
+
+The `~/.zshenv` line is the worst of them because it looks right: `VIRTUAL_ENV` names the current
+repo while `python` resolves somewhere else. It was in `[packages.claude-code]`'s snippet from
+2026-09-18 until this replaced it, and the measurement that justified it was taken with the per-repo
+hook still active. The per-repo hook, `inv agents.wire-claude-hook` from repo-tasks, wrote
+`.claude/settings.json` into each repo with an absolute `CLAUDE_ENV_FILE` path, which published the
+home directory in committed files and missed the stale case above.
+
+What it covers and what it doesn't:
+
+- **Every repo with an allowed `.envrc`**, with no per-repo step. A fresh clone still needs
+  `direnv allow` (part of `inv dev-env.setup`); until then the directory gets no venv, silently.
+- **A `cd` that Claude Code tracks**, i.e. one that sticks between calls. A `cd` out of the project
+  is reset unless that directory was added (`--add-dir`, `additionalDirectories`).
+- **Not `cd <other repo> && <command>` in one call**: the environment is the one written before the
+  call, for the directory it started in. Use the tool's own directory option, or the other repo's
+  `.venv/bin` by absolute path, as `~/.agents/AGENTS.md` says.
+- **Not Windows.** The PowerShell tool reads only plain assignments from `CLAUDE_ENV_FILE` and drops
+  any value containing `/` or `\`, so it cannot carry `PATH`; `uv run` is the Windows answer.
+
+Hooks are read when a session starts, so an existing session needs a restart to pick them up.
 
 ## Installing the CLI
 

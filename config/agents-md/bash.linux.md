@@ -87,20 +87,20 @@ in its own session. For the unavoidable quick one:
 - **Neither environment shortcut works.** `INVOKE_TASKS_SEARCH_ROOT` is read after the collection
   has loaded, so it fails exactly as if unset. `tasks.search_root` in `~/.invoke.yaml` replaces cwd
   for **every** repo on the machine.
-- **Never a bare `pytest`/`inv` against another repo.** The per-call direnv hook resolves the
-  directory the shell **started** in, not the one a chained `cd` moved to — `~/.zshenv` is sourced
-  before your command runs. So PATH stays the primary project's `.venv/bin`, and the command
-  silently runs the wrong repo's interpreter, dependencies or tasks while looking like it passed.
+- **Never a bare `pytest`/`inv` against another repo.** The venv is set for the directory a call
+  **starts** in, not the one a chained `cd` moves to. So PATH stays the primary project's
+  `.venv/bin`, and the command silently runs the wrong repo's interpreter, dependencies or tasks
+  while looking like it passed.
 
-### Invoking a venv tool in the session's own project [needs direnv]
+### Invoking a venv tool in the session's own project [needs claude-direnv-hook]
 
 **Run the bare command** — `pytest`, `ruff`, `inv`. Never `uv run <tool>`, which matches none of the
 `Bash(<tool>:*)` permission rules and so prompts every time, and never `.venv/bin/<tool>` spelled
-out. `[packages.claude-code]`'s `~/.zshenv` snippet re-runs `direnv export zsh` on **every** Bash
-call, so the venv of the directory you are standing in is already active and a wrapper only adds
-friction. That per-call hook is the mechanism, not direnv's own: direnv's hook lives in `~/.zshrc`,
-which is read once per session from a snapshot, and without the snippet the environment would stay
-frozen at whatever was active when the session started.
+out. `[packages.claude-direnv-hook]`'s `SessionStart`/`CwdChanged` hook writes the current
+directory's direnv environment into the file Claude Code sources before every Bash call, so the venv
+of the directory you are standing in, following a `cd` that sticks, is already active. direnv's own
+hook lives in `~/.zshrc`, which is read once per session from a snapshot, so without this the
+environment would stay frozen at whatever was active when the session started.
 
 **A missing venv tool means the repo has not been set up — run `inv dev-env.setup` there.** It does
 `uv sync` and `direnv allow` together, and an un-allowed `.envrc` is the ordinary state of a fresh

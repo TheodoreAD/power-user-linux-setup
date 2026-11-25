@@ -104,9 +104,14 @@ style, and config footguns that would ship to every consumer verbatim.
 
 Git and agent-harness behavior comes from global config, so every repo works the same. Don't add
 local git config (`core.autocrlf`, `url.*.insteadOf`, ...) or `.claude/settings*.json` entries that
-would make sense in any repo, and never add hooks. `.claude/settings.local.json` is only for what is
-specific to that repo on this machine, such as `additionalDirectories`. Propose the global change
-instead: in `power-user-linux-setup` on Linux, in `win-configs` on Windows.
+would make sense in any repo, and never add a hook to a repo. `.claude/settings.local.json` is only
+for what is specific to that repo on this machine, such as `additionalDirectories`. Propose the
+global change instead: in `power-user-linux-setup` on Linux, in `win-configs` on Windows.
+
+A hook is acceptable only as global harness plumbing declared in one of those two repos, never in a
+project, and never to enforce or correct agent behavior (see the next rule). The one there today is
+`[packages.claude-direnv-hook]`, which activates the current directory's venv for the Bash tool
+because nothing else can reach that shell.
 
 ### Proposing an enforcement mechanism for agent behavior
 

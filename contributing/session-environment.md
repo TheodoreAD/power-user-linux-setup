@@ -77,11 +77,27 @@ carries their values — while an **edit** to either file reaches nothing until 
 started. Read a present value as "captured once", never as "read every call"; only `zshenv` is the
 second thing.]
 
-## The first thing built to exploit the per-call property: direnv
+## Where the per-call property stops: `PATH`, and the direnv line that did not work
 
-`[packages.claude-code]`'s snippet runs `eval "$(direnv export zsh 2> /dev/null)"` on every Bash
-call. It is here rather than in `~/.zshrc`, where direnv's own hook lives, for exactly the reason
-the table above gives: `~/.zshrc` is read once per session from the snapshot, so direnv's hook never
+[PITFALL: **a variable the shell snapshot also assigns does not survive from `~/.zshenv`, and `PATH`
+is one.** The snapshot is sourced after `~/.zshenv` and ends by assigning `PATH`, so an export there
+is overwritten before the command runs, while a variable the snapshot leaves alone (`VIRTUAL_ENV`,
+`PIPE_FAIL`) survives. Measured 2026-11-25 in a throwaway WSL distro: with the direnv line below and
+nothing else, `VIRTUAL_ENV` named the current repo while `python` resolved to no venv, or to the
+launch shell's. What does override the snapshot is a file Claude Code sources after it,
+`CLAUDE_ENV_FILE`; `[packages.claude-direnv-hook]` writes that, and docs/claude-code.md has the
+eight-case table.]
+
+**Everything from here to the next heading describes the direnv line as it was designed, and that
+design was wrong.** `[packages.claude-code]`'s snippet ran
+`eval "$(direnv export zsh 2> /dev/null)"` on every Bash call from 2026-09-18 to 2026-11-25. Its
+measurement was taken in a session where repo-tasks' per-repo `CLAUDE_ENV_FILE` hook was still
+active and doing the work, so the line's own effect was never isolated. Kept for the findings that
+still hold (why `~/.zshrc` never re-runs, frozen-is-worse-than-absent, the blocked-`.envrc`
+silence), which the hook relies on too.
+
+It was here rather than in `~/.zshrc`, where direnv's own hook lives, for exactly the reason the
+table above gives: `~/.zshrc` is read once per session from the snapshot, so direnv's hook never
 re-runs and the environment an agent gets is frozen at capture time.
 
 **Frozen is worse than absent, which is the finding that motivated it.** What is frozen is the
@@ -92,7 +108,8 @@ repo, standing in `olx-polite-mcp`, still resolved `ruff` to
 the failure as "direnv never fires", which is the same mechanism observed where the frozen
 environment happened to be empty.
 
-What the export does, all measured on direnv 2.32.1 at roughly 21 ms a call:
+What `direnv export` itself does, all measured on direnv 2.32.1 at roughly 21 ms a call; these hold,
+and are what the hook now relies on:
 
 | cwd                                  | result                                                               |
 | ------------------------------------ | -------------------------------------------------------------------- |
@@ -104,9 +121,9 @@ The unload row is half the value and is easy to miss: without it, moving to a di
 `.envrc` would keep the last repo's venv rather than dropping it.
 
 **The gap, stated so nobody reads more into the fix than is there**: `cd <other repo> && <command>`
-in a single call is unaffected, because `~/.zshenv` is sourced at shell startup, before the
-command's own `cd`. `~/.agents/AGENTS.md`'s cross-repo section sanctions that shape and its advice
-is unchanged; only its stated reason moved.
+in a single call is unaffected, because the environment is written before the call, for the
+directory it starts in. `~/.agents/AGENTS.md`'s cross-repo section sanctions that shape and its
+advice is unchanged.
 
 [PITFALL: **`DIRENV_LOG_FORMAT=` does not silence the blocked-`.envrc` error, and believing it does
 costs a deploy.** The empty log format suppresses direnv's ordinary loading/export lines and nothing
@@ -117,10 +134,11 @@ and still loads an allowed repo. The redirect is the mechanism; the log format w
 job.]
 
 [PITFALL: **silencing it at all is deliberate and has a cost worth knowing before someone "fixes"
-it.** An un-allowed `.envrc` is the ordinary state of a fresh clone, and an agent there now gets
-`command not found` with no explanation. Unsilenced, the alternative is a red direnv error on
-**every** Bash call in that repo, which is the noise that gets a mechanism switched off.
-`inv dev-env.setup` runs `direnv allow` and is what `~/.agents/AGENTS.md` names as the remedy.]
+it.** The hook keeps the same redirect. An un-allowed `.envrc` is the ordinary state of a fresh
+clone, and an agent there now gets `command not found` with no explanation. Unsilenced, the
+alternative is a red direnv error on **every** Bash call in that repo, which is the noise that gets
+a mechanism switched off. `inv dev-env.setup` runs `direnv allow` and is what `~/.agents/AGENTS.md`
+names as the remedy.]
 
 ## Why `~/.config/environment.d/` is not used
 

@@ -2425,6 +2425,14 @@ Unmeasured so far: the plan's pilot week is the first count of whether sessions 
 
 ## Invoking a venv tool in the session's own project
 
+**Relabelled `[needs claude-direnv-hook]` on 2026-11-25, when its mechanism was found not to work.**
+The rule said `[packages.claude-code]`'s `~/.zshenv` line re-ran `direnv export` on every call. In a
+throwaway WSL distro, eight headless sessions (clean and stale launches, each mechanism on and off)
+showed that line setting `VIRTUAL_ENV` while `PATH`, overwritten by the shell snapshot sourced after
+`~/.zshenv`, kept the launch shell's python. What had been doing the work was repo-tasks' per-repo
+`CLAUDE_ENV_FILE` hook. Both were replaced by `[packages.claude-direnv-hook]`, a user-level
+`SessionStart`/`CwdChanged` hook that was right in every case; the table is in docs/claude-code.md.
+
 Moved twice on 2026-08-30, and it is now labelled `[needs direnv]` in `bash.md` — first out of
 `portable.md` into the then-existing `this-setup.md`, then back into "Bash & tool use" when the
 fragments were re-cut by subject. The reason for the first move stands and became the label: the
