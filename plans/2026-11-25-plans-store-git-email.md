@@ -65,26 +65,23 @@ Nothing requires it: GH007 checks only the commits a push adds.]
 
 ## Remaining steps
 
-1. **This machine has no `~/.config/power-user-linux-setup/identity.toml`.** Its nine global
-   `includeIf` entries were set up outside PULSE, so `inv git.configure` skips with "no
-   git_profiles" today. Write one whose `[[git_profiles]]` reproduce the nine existing per-directory
-   `.gitconfig` files exactly, with `extra_directories = ["~/plans", "~/plans-sensitive"]` on the
-   `github.com-personal` profile, then run `inv git.configure`. `[[ssh_hosts]]` must not be left
-   empty: `inv ssh.configure` writes `~/.ssh/config`'s managed block from it, and agents cannot read
-   `~/.ssh/` here (a `Read(~/.ssh/**)` deny rule), so the user fills that section in.
-2. `git -C ~/plans config --local --unset user.email` and the same for `~/plans-sensitive`;
-   `inv git.configure` prints both commands while the overrides exist.
-3. Once hekate is idle: `git -C ~/plans log origin/master..HEAD`, confirm no commit there is still
+Done 2026-11-25: this machine had no `~/.config/power-user-linux-setup/identity.toml`; its nine
+global `includeIf` entries predated it. One was written whose `[[git_profiles]]` copy the nine
+per-directory `.gitconfig` files unchanged, with `extra_directories` for both stores on the
+`github.com-personal` profile. `inv git.configure` then warned about both stores' local
+`user.email`, both were unset, and `git config --show-origin` in each store now resolves to the
+personal profile's `.gitconfig` and the noreply address.
+
+1. **`[[ssh_hosts]]` in that `identity.toml` is empty, left commented for the user.** Agents cannot
+   read `~/.ssh/` here (a `Read(~/.ssh/**)` deny rule). Until it is filled in, `inv ssh.configure`
+   must not run: it would rewrite `~/.ssh/config`'s managed block from an empty list.
+2. Once hekate is idle: `git -C ~/plans log origin/master..HEAD`, confirm no commit there is still
    being amended by a live session, rebase with
    `--exec 'git commit --amend --no-edit --reset-author'` onto `origin/master`, then
    `plans.py push`.
 
 ## Recommended direction
 
-- Manage the plans stores' git identity from `setup.toml` like every other dotfile, so it cannot
-  drift again: either an `includeIf "gitdir:~/plans/"` and `"gitdir:~/plans-sensitive/"` block in
-  the managed gitconfig, or a global noreply identity.
-- Remove the hand-set local overrides once the managed identity covers both stores.
 - Reset the author on the unpushed store commits, then push through `plans.py push`.
 - Consider proposing to agent-skills that plan-conveyor's `doctor` report a store whose identity is
   a private address while the store has a GitHub remote.
