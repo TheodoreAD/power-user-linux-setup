@@ -141,6 +141,14 @@ class AgentsMdFragment(TypedDict, total=False):
     platforms: list[str]
 
 
+class MirrorEntry(TypedDict):
+    """One `also_deploy_to` destination that applies on fewer platforms than its package: Copilot's
+    instructions path is written on Linux only until Copilot on Windows is decided."""
+
+    path: str
+    platforms: list[str]
+
+
 class PackageConfig(TypedDict, total=False):
     """A `[packages.<name>]` section. Field-by-field reference: setup.toml's header comment."""
 
@@ -211,9 +219,9 @@ class PackageConfig(TypedDict, total=False):
     # Additional destinations the deployed file is *copied* to — not symlinked; see deploy.py's
     # "Mirrored destinations" header for why the mechanism changed on 2026-09-07. A bare string is
     # a vendor path, written only when its parent directory already exists (that agent is
-    # installed). A `{ path = ..., always = true }` table is a path no vendor owns — the cross-tool
-    # `~/.agents/AGENTS.md` shape — which is written unconditionally, parent created.
-    also_deploy_to: str | list[str]
+    # installed), on every platform the package declares. A `{ path, platforms }` table narrows one
+    # destination to fewer platforms than its package.
+    also_deploy_to: str | list[str | MirrorEntry]
     # gnome-extension
     uuid: str
     ego_id: int

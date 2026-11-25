@@ -37,7 +37,7 @@ def _isolated(tmp_path, monkeypatch):
     (tmp_path / "config.sh").write_text("echo hi\n", encoding="utf-8", newline="\n")
 
 
-def _cfg(tmp_path, *, also_deploy_to: str | list[str] | None = None) -> util.PackageConfig:
+def _cfg(tmp_path, *, also_deploy_to: str | list[str | util.MirrorEntry] | None = None) -> util.PackageConfig:
     cfg: util.PackageConfig = {"dest": str(tmp_path / "deployed.sh"), "content_file": "config.sh"}
     if also_deploy_to is not None:
         cfg["also_deploy_to"] = also_deploy_to
@@ -208,14 +208,31 @@ def test_mirror_dests_accepts_a_bare_string(tmp_path):
     assert deploy.mirror_dests(_cfg(tmp_path, also_deploy_to=str(tmp_path / "a"))) == [tmp_path / "a"]
 
 
-def test_mirror_dests_rejects_a_non_string_entry(tmp_path):
-    """Kept from the retired table form's validation: reaching `Path()` with a mapping reports on
-    `os.PathLike` and never names the field that is wrong. The cast is the point — this is TOML a
-    type checker never sees, which is why the runtime check has to exist at all."""
+def test_mirror_dests_rejects_a_table_without_platforms(tmp_path):
+    """A table exists only to narrow platforms, so `{ path }` alone (the retired `always` form's
+    shape) is refused by name rather than reaching `Path()` and reporting on `os.PathLike`. The cast
+    is the point — this is TOML a type checker never sees, which is why the runtime check exists."""
     bad = cast("object", {"dest": str(tmp_path / "d.sh"), "also_deploy_to": [{"path": "x"}]})
     cfg = cast("util.PackageConfig", bad)
-    with pytest.raises(TypeError, match="also_deploy_to takes a path string"):
+    with pytest.raises(TypeError, match=r"also_deploy_to takes a path string or a \{ path, platforms \} table"):
         deploy.mirror_dests(cfg)
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected"),
+    [(util.Platform.LINUX, ["claude", "copilot"]), (util.Platform.WINDOWS, ["claude"])],
+    ids=["linux", "windows"],
+)
+def test_a_mirror_table_applies_only_on_its_platforms(tmp_path, monkeypatch, platform, expected):
+    # Copilot's instructions path is Linux-only until Copilot on Windows is decided.
+    monkeypatch.setattr(util, "current_platform", lambda: platform)
+    cfg = _cfg(tmp_path)
+    cfg["also_deploy_to"] = [
+        str(tmp_path / "claude"),
+        {"path": str(tmp_path / "copilot"), "platforms": ["linux"]},
+    ]
+
+    assert deploy.mirror_dests(cfg) == [tmp_path / name for name in expected]
 
 
 def test_a_dest_change_rewrites_the_old_real_file_as_a_mirror(tmp_path, capsys):

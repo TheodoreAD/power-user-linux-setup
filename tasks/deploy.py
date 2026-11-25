@@ -753,20 +753,30 @@ def mirror_dests(cfg: util.PackageConfig) -> list[Path]:
     passed anyway, which setup.toml's own comment conceded in the word "vacuously". The field
     reference in setup.toml never documented the table form, so this is the code returning to the
     schema rather than the schema losing anything.
+
+    A table came back on 2026-11-25 for a different job: `{ path, platforms }` narrows one
+    destination to fewer platforms than its package, because the user decided Copilot's path is not
+    written on Windows yet. A destination outside this machine's platforms is left out here, so
+    deploy, verify and home.list-claims all stop seeing it at once. A table needs both keys: one
+    without `platforms` would be a bare string spelled the long way.
     """
     declared = cfg.get("also_deploy_to")
     if not declared:
         return []
     entries = [declared] if isinstance(declared, str) else declared
+    paths: list[Path] = []
     for entry in entries:
-        # Kept from the table form's validation rather than dropped with it: a TOML author who
-        # writes anything but a string here would otherwise reach `Path()` with a mapping and get a
-        # message about `os.PathLike`, which says nothing about the field they got wrong.
-        # The annotation says `list[str]`; TOML at runtime says whatever the author typed, and this
-        # field carried a table form until 2026-09-09 that some setup.toml out there may still have.
-        if not isinstance(entry, str):  # pyright: ignore[reportUnnecessaryIsInstance]
-            raise TypeError(f"also_deploy_to takes a path string or a list of them, got {entry!r}")
-    return [Path(entry).expanduser() for entry in entries]
+        if isinstance(entry, str):
+            paths.append(Path(entry).expanduser())
+            continue
+        # TOML at runtime says whatever the author typed, whatever the annotation claims, and this
+        # field carried an `always` table form until 2026-09-09 that a setup.toml may still have.
+        # Without this a mapping would reach `Path()` and fail with a message about os.PathLike.
+        if not isinstance(entry, dict) or "path" not in entry or "platforms" not in entry:  # pyright: ignore[reportUnnecessaryIsInstance]
+            raise TypeError(f"also_deploy_to takes a path string or a {{ path, platforms }} table, got {entry!r}")
+        if util.applies_here(f"also_deploy_to {entry['path']}", entry["platforms"]):
+            paths.append(Path(entry["path"]).expanduser())
+    return paths
 
 
 def mirror_ok(mirror: Path, dest: Path) -> bool:

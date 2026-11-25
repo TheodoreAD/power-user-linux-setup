@@ -1115,7 +1115,7 @@ def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
 # ---------------------------------------------------------------------------
 
 
-def _deployed_package(tmp_path, monkeypatch, *, dest, mirrors: list[str]) -> None:
+def _deployed_package(tmp_path, monkeypatch, *, dest, mirrors: list[str | util.MirrorEntry]) -> None:
     """Deploy one wrapper-script package with mirrors, so the manifest records every path."""
     (tmp_path / "config").mkdir(exist_ok=True)
     (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")

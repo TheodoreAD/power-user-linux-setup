@@ -157,7 +157,9 @@
 #                 or a list of them) gets a byte-for-byte *copy* of dest whenever it doesn't
 #                 already hold one, same as [packages.agents-md]'s ~/.claude/CLAUDE.md. A
 #                 destination whose parent directory doesn't exist is reported and skipped, never
-#                 created: that directory's absence is how an uninstalled agent is detected.
+#                 created: that directory's absence is how an uninstalled agent is detected. An
+#                 entry may instead be a `{ path = "...", platforms = [...] }` table, which writes
+#                 that one destination only on the platforms listed (both keys required).
 #                 Copies, not symlinks, since 2026-09-07 — the field is named for the intent
 #                 because the mechanism is the part that changed; tasks/deploy.py's "Mirrored
 #                 destinations" header has the three reasons, and inv verify.all checks each
@@ -1442,10 +1444,13 @@ dest = "~/.agents/AGENTS.md"
 # and the home root is not a path any vendor owns. The table form went with it — it was the only
 # user, it never changed an outcome (that path's parent is the home directory, so the test it opted
 # out of would have passed anyway), and the field reference above never documented it.
+# Copilot's path is Linux-only for now: whether Copilot is written to on Windows is still an open
+# question in plans/2026-09-07-agents-md-and-skills-on-native-windows.md, and the user decided to
+# skip it there until that is answered (2026-11-25).
 also_deploy_to = [
   "~/.claude/CLAUDE.md",
   "~/.codex/AGENTS.md",
-  "~/.copilot/copilot-instructions.md",
+  { path = "~/.copilot/copilot-instructions.md", platforms = ["linux"] },
   "~/.gemini/GEMINI.md",
 ]
 # Assembled from fragments rather than copied from one file — see config/agents-md/README.md for
