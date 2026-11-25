@@ -2290,7 +2290,7 @@
   
 
 
-<h1 id="package-catalog">Package catalog</h1>
+<h1 id="package-catalog">Package catalog<a class="headerlink" href="#package-catalog" title="Permanent link">&para;</a></h1>
 <p>Everything a full <code>inv setup</code> installs on a workstation, in one table. This is the answer to &ldquo;what
 do I actually get&rdquo; — <a href="configuration.html">How it works</a> is the answer to &ldquo;how&rdquo;, and
 <a href="apt_packages.html">apt_packages.md</a> explains the install <em>methods</em> the <code>Method</code> column names.</p>
@@ -2422,6 +2422,12 @@ grant).</p>
 <td>Claude desktop app (community repackage — aaddrick/claude-desktop-debian)</td>
 <td><code>ai</code>, <code>desktop</code>, <code>gui</code>, <code>windows-native</code></td>
 <td><code>apt-repo</code></td>
+</tr>
+<tr>
+<td><code>claude-direnv-hook</code></td>
+<td>Activates the current directory&rsquo;s direnv environment (a repo&rsquo;s .venv) for every Claude Code Bash call, following the session&rsquo;s cd: a SessionStart and a CwdChanged hook write the whole environment into the file Claude Code sources after its shell snapshot.</td>
+<td><code>ai</code>, <code>dev</code>, <code>environment</code></td>
+<td><code>wrapper-script</code></td>
 </tr>
 <tr>
 <td><code>claude-statusline</code></td>
@@ -2991,7 +2997,7 @@ grant).</p>
 </table>
 <!-- /PULSE::package-catalog -->
 
-<h2 id="see-also">See also</h2>
+<h2 id="see-also">See also<a class="headerlink" href="#see-also" title="Permanent link">&para;</a></h2>
 <ul>
 <li><a href="apt_packages.html">Install methods</a> — what each value in the <code>Method</code> column does</li>
 <li><a href="configuration.html">How it works</a> — how tags decide which of these a machine gets</li>
