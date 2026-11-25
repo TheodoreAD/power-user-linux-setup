@@ -506,7 +506,8 @@ in the machine directory, the next thing standing between this machine and "repl
 move would still need by hand, as of that day: the SSH private key, which by this plan's admission
 rule never enters a repo, so a new machine mints and registers its own (`inv ssh.create-keys`, then
 `gh ssh-key add`); and a `[[ssh_hosts]]` entry for the user's Windows machine on the home network,
-whose own key `TD-WS-WIN-I5G14` is already registered on GitHub.
+not yet written. Reaching it needs that machine's SSH server to hold this machine's public key; the
+key the Windows machine registered on GitHub for its own pushes plays no part in that.
 
 ## Recommended direction
 
