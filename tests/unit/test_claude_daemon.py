@@ -24,9 +24,15 @@ from tasks.claude_daemon import (
     read_proc,
     supports_stop,
 )
+from tests.platforms import posix_only
+
+# processes() filters by the real uid and reads the real clock tick, neither of which Windows has.
+_real_uid = posix_only("processes() compares against os.getuid() and os.sysconf")
 
 _REPO_ROOT = Path(__file__).parent.parent.parent
-_HZ = os.sysconf("SC_CLK_TCK")
+# The fake /proc only has to agree with itself, except where `processes()` reads the real clock
+# tick; Windows has no sysconf, and those tests are marked POSIX-only.
+_HZ = os.sysconf("SC_CLK_TCK") if sys.platform != "win32" else 100
 _BTIME = 1_790_000_000
 
 
@@ -101,6 +107,7 @@ def test_read_proc_of_a_vanished_process_is_none(tmp_path):
     assert read_proc(tmp_path / "999", _BTIME, _HZ) is None
 
 
+@_real_uid
 def test_processes_keeps_only_this_users(tmp_path):
     proc = _fake_proc(tmp_path)
     _write_proc(proc, 42, 1, start_ticks=_HZ, argv=_DAEMON_ARGV)
@@ -126,6 +133,7 @@ def test_job_session_reads_a_retitled_pty_host(tmp_path):
     assert job_session(spare) is None
 
 
+@_real_uid
 def test_find_stale_counts_jobs_and_not_spares(tmp_path):
     proc = _fake_proc(tmp_path)
     _write_proc(proc, 42, 1, start_ticks=100 * _HZ, argv=_DAEMON_ARGV)
@@ -137,6 +145,7 @@ def test_find_stale_counts_jobs_and_not_spares(tmp_path):
     assert stale.jobs == ("76d98521-8e7c-4524-bb4f-4caeb36e8cb0",)
 
 
+@_real_uid
 def test_a_daemon_started_after_the_login_is_not_stale(tmp_path):
     # The fresh daemon a new login starts within seconds must never be flagged.
     proc = _fake_proc(tmp_path)

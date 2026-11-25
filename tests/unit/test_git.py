@@ -26,8 +26,14 @@ def test_resolve_project_dir_tilde_path_expanded_and_used_as_is():
     assert resolve_project_dir("~/code/clientA") == Path.home() / "code" / "clientA"
 
 
+# An absolute path on this platform: "/mnt/data/projects" on Linux, "C:\mnt\data\projects" on Windows,
+# where a path without a drive is not absolute.
+_ROOT = Path(Path.home().anchor)
+
+
 def test_resolve_project_dir_absolute_path_used_as_is():
-    assert resolve_project_dir("/mnt/data/projects") == Path("/mnt/data/projects")
+    absolute = _ROOT / "mnt" / "data" / "projects"
+    assert resolve_project_dir(str(absolute)) == absolute
 
 
 def test_resolve_project_dir_empty_string_resolves_to_projects_root():
@@ -47,6 +53,7 @@ def test_include_scopes_lists_the_profile_directory_first_then_each_extra():
         "directory": "github.com-personal",
         "name": "J",
         "email": "j@example.com",
-        "extra_directories": ["~/plans", "/srv/notes"],
+        "extra_directories": ["~/plans", str(_ROOT / "srv" / "notes")],
     }
-    assert include_scopes(profile) == [PROJECTS_ROOT / "github.com-personal", Path.home() / "plans", Path("/srv/notes")]
+    expected = [PROJECTS_ROOT / "github.com-personal", Path.home() / "plans", _ROOT / "srv" / "notes"]
+    assert include_scopes(profile) == expected

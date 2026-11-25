@@ -179,7 +179,8 @@ def test_parse_gateway_reads_px_ini():
 def test_both_daemon_start_paths_read_the_env_file_that_pins_the_backend():
     # Three files have to agree on one path, and a drift here is silent: px falls back to the
     # default backend, finds no credential, and answers 407 as though the password were wrong.
-    relative = str(proxy.ENV_FILE).removeprefix(str(Path.home()))
+    # Compared as POSIX text: both files are read on Linux, so their paths use "/" on every platform.
+    relative = "/" + proxy.ENV_FILE.relative_to(Path.home()).as_posix()
     assert f"EnvironmentFile=-%h{relative}" in (_REPO / "config" / "pulse-proxy.service").read_text(encoding="utf-8")
     assert relative in (_REPO / "config" / "pulse-proxy-start.sh").read_text(encoding="utf-8")
 

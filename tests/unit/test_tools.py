@@ -24,6 +24,7 @@ import pytest
 from invoke import Context, MockContext, Result
 
 from tasks import deploy, tools, util
+from tests.platforms import needs_symlinks, posix_only
 
 
 @pytest.fixture(autouse=True)
@@ -43,6 +44,7 @@ def _cfg(tmp_path, *, also_deploy_to: str | list[str] | None = None) -> util.Pac
     return cfg
 
 
+@posix_only("checks the executable bit, which Windows does not keep")
 def test_install_wrapper_script_writes_matching_content(tmp_path):
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
@@ -287,6 +289,7 @@ def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path,
     assert "Leaving it alone" in capsys.readouterr().out
 
 
+@needs_symlinks()
 def test_a_hand_made_symlink_to_an_unmanaged_file_is_left_alone(tmp_path, capsys):
     """Only a link into something this repo deployed is replaceable — the manifest is the proof."""
     someone_elses = tmp_path / "notes.md"

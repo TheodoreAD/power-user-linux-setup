@@ -11,6 +11,7 @@ import pytest
 from invoke import Exit, MockContext
 
 from tasks import deploy, util
+from tests.platforms import needs_symlinks
 
 
 @pytest.fixture(autouse=True)
@@ -366,6 +367,7 @@ def test_an_npx_skill_is_not_claimed(tmp_path, monkeypatch):
     assert deploy.managed_paths(tmp_path) == {}
 
 
+@needs_symlinks()
 def test_lookup_matches_a_symlink_to_a_managed_destination(tmp_path, monkeypatch):
     dest = tmp_path / "AGENTS.md"
     dest.write_text("x\n", encoding="utf-8", newline="\n")
@@ -964,6 +966,7 @@ def test_deploy_all_writes_a_packages_mirrors(tmp_path, monkeypatch, capsys):
     assert vendor.read_text(encoding="utf-8") == "rules\n"
 
 
+@needs_symlinks()
 def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypatch):
     """Every machine deployed before 2026-09-07 carries symlinks at these paths. If they were not
     replaced they would keep working on Linux and quietly keep the old wiring forever — which is

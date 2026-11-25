@@ -127,7 +127,8 @@ def test_discover_candidates_certs_bundle_offered_when_configured_and_file_exist
     bundle = tmp_path / "corp-ca.pem"
     bundle.write_text("-----BEGIN CERTIFICATE-----\n", encoding="utf-8", newline="\n")
     identity_toml = tmp_path / "identity.toml"
-    identity_toml.write_text(f'[certs]\nbundle = "{bundle}"\n', encoding="utf-8", newline="\n")
+    # TOML literal strings ('…'): a Windows path in a basic string ("…") reads `\U` as an escape.
+    identity_toml.write_text(f"[certs]\nbundle = '{bundle}'\n", encoding="utf-8", newline="\n")
 
     candidates = _discover_candidates(tmp_path, identity_toml, None)
     cert = next(c for c in candidates if c.id == "corporate-cert-bundle")
@@ -138,7 +139,7 @@ def test_discover_candidates_certs_bundle_offered_when_configured_and_file_exist
 
 def test_discover_candidates_certs_bundle_not_offered_when_configured_file_missing(tmp_path):
     identity_toml = tmp_path / "identity.toml"
-    identity_toml.write_text(f'[certs]\nbundle = "{tmp_path / "nonexistent.pem"}"\n', encoding="utf-8", newline="\n")
+    identity_toml.write_text(f"[certs]\nbundle = '{tmp_path / 'nonexistent.pem'}'\n", encoding="utf-8", newline="\n")
     candidates = _discover_candidates(tmp_path, identity_toml, None)
     assert not any(c.id.startswith("corporate-cert-bundle") for c in candidates)
 
@@ -149,7 +150,7 @@ def test_discover_candidates_certs_bundle_list_yields_multiple_candidates(tmp_pa
     bundle1.write_text("cert1", encoding="utf-8", newline="\n")
     bundle2.write_text("cert2", encoding="utf-8", newline="\n")
     identity_toml = tmp_path / "identity.toml"
-    identity_toml.write_text(f'[certs]\nbundle = ["{bundle1}", "{bundle2}"]\n', encoding="utf-8", newline="\n")
+    identity_toml.write_text(f"[certs]\nbundle = ['{bundle1}', '{bundle2}']\n", encoding="utf-8", newline="\n")
 
     ids = _ids(tmp_path, identity_toml=identity_toml)
     assert "corporate-cert-bundle" in ids

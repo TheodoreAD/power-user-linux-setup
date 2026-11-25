@@ -16,6 +16,12 @@ from pathlib import Path
 
 import pytest
 
+from tests.platforms import posix_only
+
+# install.sh is the Linux installer. On Windows `bash` on PATH is usually WSL's launcher, which
+# runs the script in another machine's filesystem, or fails outright.
+pytestmark = posix_only("install.sh is a bash installer for Linux machines")
+
 _INSTALL_SH = Path(__file__).parents[2] / "install.sh"
 
 _STUB_BOOTSTRAP = "#!/usr/bin/env bash\necho '[stub bootstrap.sh ran]'\n"

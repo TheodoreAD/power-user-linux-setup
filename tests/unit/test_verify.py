@@ -7,6 +7,7 @@ content comparison is the entire point of the check. See tests/README.md.
 import pytest
 
 from tasks import deploy, util, verify
+from tests.platforms import needs_symlinks
 
 
 @pytest.fixture(autouse=True)
@@ -233,6 +234,7 @@ def test_mirror_check_fails_for_content_that_has_drifted(tmp_path, monkeypatch):
     assert "drifted" in message
 
 
+@needs_symlinks()
 def test_mirror_check_fails_for_a_leftover_symlink(tmp_path, monkeypatch):
     """A machine deployed before 2026-09-07 still has links at these paths. They resolve to the
     right bytes, so a content comparison alone would pass one — and the whole point of the change

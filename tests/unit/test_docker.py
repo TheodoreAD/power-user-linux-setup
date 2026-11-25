@@ -17,6 +17,7 @@ from invoke import Exit, MockContext, Result
 
 from tasks import docker, util
 from tasks.docker import _is_subset, _merge
+from tests.platforms import posix_only
 
 
 def test_is_subset_true_when_all_default_keys_match():
@@ -118,6 +119,7 @@ def test_write_creds_store_keeps_every_other_key(docker_config):
     assert written["HttpHeaders"] == {"a": "b"}
 
 
+@posix_only("checks POSIX mode 0600, which Windows does not keep")
 def test_write_creds_store_creates_the_file_unreadable_by_anyone_else(docker_config):
     assert docker._write_creds_store() is True
     assert docker_config.stat().st_mode & 0o777 == 0o600
@@ -308,6 +310,7 @@ def test_registry_names_that_may_become_a_path():
     assert not docker._REGISTRY_RE.match("")
 
 
+@posix_only("the Secret Service answers over a D-Bus session bus, which Windows does not have")
 def test_store_failure_names_the_state_the_bus_reports_rather_than_guessing(docker_config, monkeypatch):
     # The message used to say the keyring is "usually" locked or not running. On a machine where a
     # Secret Service is answering, "not running" is wrong and unlocking is the whole fix; the same

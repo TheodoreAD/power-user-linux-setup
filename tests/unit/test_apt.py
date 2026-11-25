@@ -24,6 +24,7 @@ import pytest
 from invoke import Context, Exit, Result, UnexpectedExit
 
 from tasks import apt, deploy, util
+from tests.platforms import needs_symlinks, posix_only
 
 
 class _FakeContext(Context):
@@ -75,6 +76,7 @@ def apt_conf(monkeypatch, tmp_path):
     return path, written
 
 
+@posix_only("a root-only file is a POSIX mode (0600), which Windows does not keep")
 def test_configure_rewrites_a_root_only_file_whose_content_already_matches(apt_conf):
     """The machine state that motivated the check: 99-pulse written 0600 by the old `cp`-based
     sudo_write, content correct, and skipped as "already configured" on every run since."""
@@ -106,6 +108,7 @@ def test_kernel_lockstep_blacklist_matches_the_metas_and_nothing_else():
         assert not blacklisted(pkg), pkg
 
 
+@needs_symlinks()
 def test_boot_kernel_reads_the_vmlinuz_link(tmp_path):
     link = tmp_path / "vmlinuz"
     link.symlink_to("vmlinuz-6.8.0-147-generic")

@@ -54,7 +54,7 @@ def test_desktop_sockets_match_the_setup_toml_snippets(field):
     # Three copies of one list: this helper for `inv ssh.check`, the login shell's picker and the
     # agent shell's. Nothing but this test notices when one of them gains a socket the others lack.
     snippet = util.load_config()["packages"]["ssh"][field]
-    positions = [snippet.find(f'"{sock}"') for sock in desktop_sockets("${XDG_RUNTIME_DIR}")]
+    positions = [snippet.find(f'"{sock.as_posix()}"') for sock in desktop_sockets("${XDG_RUNTIME_DIR}")]
     assert -1 not in positions, f"[packages.ssh] {field} is missing a desktop socket"
     assert positions == sorted(positions), f"[packages.ssh] {field} tries the sockets in another order"
 
