@@ -32,6 +32,14 @@ def test_render_with_hosts_adds_one_ssh_hosts_entry_per_host():
     ]
 
 
+def test_render_commit_email_goes_to_git_profile_and_key_email_to_ssh_hosts():
+    noreply = "123+jane@users.noreply.github.com"
+    text = _render("Jane Smith", "jane@example.com", "~/projects/", hosts=["GitHub"], commit_email=noreply)
+    parsed = tomllib.loads(text)
+    assert parsed["git_profiles"][0]["email"] == noreply
+    assert parsed["ssh_hosts"][0]["email"] == "jane@example.com"
+
+
 def test_render_escapes_special_characters_in_name():
     text = _render('Jane "JJ" Smith', "jane@example.com", "~/projects/", hosts=[])
     parsed = tomllib.loads(text)
