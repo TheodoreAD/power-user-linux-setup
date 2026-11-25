@@ -88,13 +88,28 @@ def current_node() -> str:
     return subprocess.run(["uname", "-n"], capture_output=True, text=True, check=False).stdout.strip()
 
 
+# Preference order. A key this repo mints is always the first; the others are adopted, never made.
+KEY_TYPES = ("ed25519", "ecdsa", "rsa")
+
+
 def key_path(email: str, node: str) -> Path:
-    return _SSH_DIR / f"{email}__{node}_ed25519"
+    """`<email>__<node>_<type>` for an existing key of any type in KEY_TYPES, else the ed25519 path
+    `create_keys` will mint.
+
+    Adopting matters on a machine whose keys predate this repo but follow its naming: an
+    ed25519-only lookup sent `create_keys` off to mint a second key, which then needs registering
+    on every host, while the working key it already had went unused.
+    """
+    for kind in KEY_TYPES:
+        candidate = _SSH_DIR / f"{email}__{node}_{kind}"
+        if candidate.exists():
+            return candidate
+    return _SSH_DIR / f"{email}__{node}_{KEY_TYPES[0]}"
 
 
 @task
 def create_keys(c: Context):
-    """Create ed25519 SSH keys for each unique email in identity.toml (skips existing)."""
+    """Create ed25519 SSH keys for each unique email in identity.toml (skips existing, of any type)."""
     identity = util.load_identity()
     hosts = identity.get("ssh_hosts", [])
     emails = sorted({h["email"] for h in hosts})
@@ -255,8 +270,8 @@ def add(c: Context):
         # ssh.create-keys minted these. A machine adopting PULSE onto an existing home directory
         # usually has neither this repo's naming nor its key type.
         node = current_node()
-        keys = sorted(p for pat in (f"*{node}_ed25519", f"*{node}_rsa") for p in _SSH_DIR.glob(pat))
-        source = f"{_SSH_DIR}/*{node}_{{ed25519,rsa}}"
+        keys = sorted(p for kind in KEY_TYPES for p in _SSH_DIR.glob(f"*{node}_{kind}"))
+        source = f"{_SSH_DIR}/*{node}_{{{','.join(KEY_TYPES)}}}"
 
     if not keys:
         print(

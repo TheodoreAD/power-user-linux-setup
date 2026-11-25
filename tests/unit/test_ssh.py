@@ -14,7 +14,7 @@ from pathlib import Path
 
 import pytest
 
-from tasks import util
+from tasks import ssh, util
 from tasks.ssh import (
     AGENT_EMPTY,
     AGENT_HAS_KEYS,
@@ -220,3 +220,31 @@ def test_parse_fingerprints_matches_ssh_keygen_output():
     # file against what the agent already holds.
     out = "4096 SHA256:BRJ2dA+DbUy1eoXhSCqydpk9Hsbcpwdv+FdQ/GTe+Tk user@example.com (RSA)\n"
     assert parse_fingerprints(out) == {"SHA256:BRJ2dA+DbUy1eoXhSCqydpk9Hsbcpwdv+FdQ/GTe+Tk"}
+
+
+@pytest.fixture
+def ssh_dir(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
+    monkeypatch.setattr(ssh, "_SSH_DIR", tmp_path)
+    return tmp_path
+
+
+def test_key_path_with_no_key_is_the_ed25519_one_create_keys_mints(ssh_dir: Path):
+    assert ssh.key_path("me@example.com", "NODE") == ssh_dir / "me@example.com__NODE_ed25519"
+
+
+def test_key_path_adopts_an_existing_rsa_key_named_the_same_way(ssh_dir: Path):
+    # A machine whose keys predate this repo: minting an ed25519 beside it would need registering
+    # on every host while the working key went unused.
+    (ssh_dir / "me@example.com__NODE_rsa").touch()
+    assert ssh.key_path("me@example.com", "NODE") == ssh_dir / "me@example.com__NODE_rsa"
+
+
+def test_key_path_prefers_ed25519_when_both_exist(ssh_dir: Path):
+    (ssh_dir / "me@example.com__NODE_rsa").touch()
+    (ssh_dir / "me@example.com__NODE_ed25519").touch()
+    assert ssh.key_path("me@example.com", "NODE") == ssh_dir / "me@example.com__NODE_ed25519"
+
+
+def test_key_path_ignores_another_nodes_key(ssh_dir: Path):
+    (ssh_dir / "me@example.com__OTHER_rsa").touch()
+    assert ssh.key_path("me@example.com", "NODE") == ssh_dir / "me@example.com__NODE_ed25519"

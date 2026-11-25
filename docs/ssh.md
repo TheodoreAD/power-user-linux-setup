@@ -64,6 +64,11 @@ with years of accumulated manual SSH config.
 ~/.ssh/<email>__<hostname>_ed25519.pub
 ```
 
+An existing key with the same name and another type (`_ecdsa`, `_rsa`) is adopted instead: no new
+key is created, and the config's `IdentityFile` points at the one you already have. That is how a
+machine whose keys predate PULSE, but follow its naming, moves onto `identity.toml` without
+registering anything new.
+
 **Config** — `~/.ssh/config` gets a PULSE-managed block with one `Host` entry per `ssh_hosts` entry,
 plus a `Host *` default section:
 
