@@ -1,7 +1,7 @@
+import getpass
 import hashlib
 import json
 import os
-import pwd
 import shlex
 import shutil
 import stat
@@ -19,6 +19,12 @@ from typing import NotRequired, Required, TypedDict, cast, overload
 
 from invoke import Context
 
+
+def is_root() -> bool:
+    """Whether this process runs as root. Always False on Windows, which has no euid and no sudo."""
+    return sys.platform != "win32" and os.geteuid() == 0
+
+
 DRY_RUN: bool = os.environ.get("PULSE_DRY_RUN", "").lower() in ("1", "true", "yes")
 
 # The env-var form of `--yes` for the composite entry points (`inv setup`, `inv wsl.install`) that
@@ -34,7 +40,7 @@ ASSUME_YES: bool = os.environ.get("PULSE_ASSUME_YES", "").lower() in ("1", "true
 #
 # Empty when already root: `sudo` then isn't needed and, in a container built FROM a stock base
 # image, often isn't even installed.
-SUDO: str = "" if os.geteuid() == 0 else ("sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo")
+SUDO: str = "" if is_root() else ("sudo -A" if os.environ.get("SUDO_ASKPASS") else "sudo")
 
 _PULSE_WIDTH = 78
 
@@ -455,9 +461,10 @@ def current_user() -> str:
     else the actual name of the current UID. The env-var-only version of this (duplicated
     across tasks/zsh.py, tasks/docker.py, tasks/next_steps.py before being factored out here)
     raises KeyError from pwd.getpwnam("") in environments with neither var set — a plain
-    `docker build` doesn't set $USER at all, only $HOME.
+    `docker build` doesn't set $USER at all, only $HOME. The last step is `getpass.getuser()`, which
+    is the passwd lookup on POSIX and `%USERNAME%` on Windows.
     """
-    return os.environ.get("SUDO_USER") or os.environ.get("USER") or pwd.getpwuid(os.getuid()).pw_name
+    return os.environ.get("SUDO_USER") or os.environ.get("USER") or getpass.getuser()
 
 
 def login_shell() -> str:
@@ -466,8 +473,14 @@ def login_shell() -> str:
 
     Not `$SHELL`, which is inherited from whatever started the current process and so answers a
     different question: a task run from a bash subshell inside a zsh terminal sees `$SHELL=/bin/zsh`
-    while `bash -c` is what is actually reading rc files.
+    while `bash -c` is what is actually reading rc files. Empty on Windows, which has no passwd.
     """
+    if sys.platform == "win32":
+        return ""
+    # POSIX-only, so imported here rather than at the top: this module is imported by every task
+    # module, and a top-level `import pwd` stopped `inv` from loading at all on native Windows.
+    import pwd  # noqa: PLC0415
+
     try:
         return pwd.getpwnam(current_user()).pw_shell
     except KeyError:
@@ -1121,7 +1134,7 @@ def _usable_askpass() -> str | None:
 
 
 def sudo_state() -> SudoState:
-    if os.geteuid() == 0:
+    if is_root():
         return SudoState(root=True, passwordless=True, cached=True, askpass=None, tty=sys.stdin.isatty())
     if not command_exists("sudo"):
         return SudoState(root=False, passwordless=False, cached=False, askpass=None, tty=sys.stdin.isatty())
@@ -1182,7 +1195,7 @@ def ensure_sudo(reason: str = "the rest of this run") -> bool:
         # per file or, at a terminal without askpass, stop at the invisible in-invoke prompt this
         # function exists to rule out. `-n` makes such a read fail instead, and sudo_read reads a
         # readable file without sudo at all, so only a genuinely root-only file is affected.
-        SUDO = "" if os.geteuid() == 0 else "sudo -n"  # pyright: ignore[reportConstantRedefinition]
+        SUDO = "" if is_root() else "sudo -n"  # pyright: ignore[reportConstantRedefinition]
         return True
 
     state = sudo_state()

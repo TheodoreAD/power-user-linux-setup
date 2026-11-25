@@ -3,8 +3,6 @@ packages_by_method's enabled/tag-filtering logic (given an in-memory config, no 
 sudo state machine with every probe stubbed out. See tests/README.md.
 """
 
-import os
-import pwd
 import sys
 import types
 from pathlib import Path
@@ -14,6 +12,11 @@ import pytest
 from invoke import Context, MockContext, Result, UnexpectedExit
 
 from tasks import util
+from tests.platforms import posix_only
+
+# `pwd` is patched by dotted name rather than imported: importing it fails on native Windows, which
+# would take every test in this module down with it, not just the passwd ones.
+_needs_passwd = posix_only("login_shell() reads the passwd database")
 
 
 def test_ok_label():
@@ -121,10 +124,10 @@ def test_remove_block_text_leaves_no_widening_gap_when_applied_repeatedly():
 
 def test_remove_block_writes_only_when_the_block_was_there(tmp_path):
     path = tmp_path / ".zshenv"
-    path.write_text(util.ensure_block_text("", "mine", "exported=1")[0])
+    path.write_text(util.ensure_block_text("", "mine", "exported=1")[0], encoding="utf-8", newline="\n")
 
     assert util.remove_block(path, "mine") is True
-    assert "exported=1" not in path.read_text()
+    assert "exported=1" not in path.read_text(encoding="utf-8")
     assert util.remove_block(path, "mine") is False
 
 
@@ -135,11 +138,12 @@ def test_remove_block_on_a_missing_file_is_not_an_error(tmp_path):
 @pytest.mark.parametrize(
     ("mode", "expected"), [(0o644, True), (0o600, False), (0o640, False)], ids=["0644", "0600", "0640"]
 )
+@posix_only("Windows synthesises st_mode from file attributes, so chmod 0600 reads back as 0666")
 def test_readable_by_all_reads_the_other_bit(tmp_path, mode, expected):
     """0600 is the mode the old `cp`-based sudo_write left behind, and the one that must read as
     drift; 0640 is here so "readable by some" is not mistaken for "readable by all"."""
     path = tmp_path / "99-pulse"
-    path.write_text("x")
+    path.write_text("x", encoding="utf-8", newline="\n")
     path.chmod(mode)
 
     assert util.readable_by_all(path) is expected
@@ -182,6 +186,7 @@ def test_sudo_write_runs_one_sudo_alone_and_cleans_up_its_tempfile(monkeypatch):
     assert not Path(command.split()[-2]).exists(), "the tempfile is removed from Python, not by a chained rm"
 
 
+@posix_only("sudo_write targets root-owned POSIX paths such as /etc")
 def test_sudo_write_makes_the_parent_directory_as_a_separate_lone_command(monkeypatch):
     monkeypatch.setattr(util, "SUDO", "sudo -n")
     c = _Recorder()
@@ -205,7 +210,7 @@ def test_sudo_read_reads_a_readable_file_without_sudo(tmp_path):
     """Every file sudo_write installs is 0644, so this is the common case, and it keeps sudo out of
     a dry run, which has not authenticated."""
     path = tmp_path / "99-pulse"
-    path.write_text("content\n")
+    path.write_text("content\n", encoding="utf-8", newline="\n")
     c = _Recorder()
 
     assert util.sudo_read(c, path) == "content\n"
@@ -216,7 +221,7 @@ def test_write_claude_settings_refuses_past_the_budget_and_leaves_the_file_alone
     # Claude Code rejects a settings file over 2 MiB whole, so an oversized write would lose every
     # setting in it, not just the rules that pushed it over.
     settings_file = tmp_path / "settings.json"
-    settings_file.write_text('{"theme": "dark"}\n', encoding="utf-8")
+    settings_file.write_text('{"theme": "dark"}\n', encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "CLAUDE_SETTINGS", settings_file)
     monkeypatch.setattr(util, "CLAUDE_SETTINGS_BUDGET", 64)
     with pytest.raises(RuntimeError, match="over the 64-byte budget"):
@@ -304,7 +309,9 @@ def test_load_overrides_reads_enabled_flips_and_skips_unknown_packages(monkeypat
     overrides.write_text(
         "[packages.chrome-x11]\nenabled = true\n"
         "[packages.ripgrep]\ndescription = 'no enabled key, so no opinion'\n"
-        "[packages.typo-not-in-setup-toml]\nenabled = true\n"
+        "[packages.typo-not-in-setup-toml]\nenabled = true\n",
+        encoding="utf-8",
+        newline="\n",
     )
     monkeypatch.setattr(util, "OVERRIDES_PATH", overrides)
     monkeypatch.setattr(util, "load_config", _config_with_disabled_workaround)
@@ -349,7 +356,7 @@ def _sudo_answers(monkeypatch, *, root=False, ok_flags=(), askpass=None, tty=Tru
         return tuple(args) in ok_flags
 
     monkeypatch.setattr(util, "_sudo_ok", fake_ok)
-    monkeypatch.setattr(os, "geteuid", lambda: 0 if root else 1000)
+    monkeypatch.setattr(util, "is_root", lambda: root)
     monkeypatch.setattr(util, "command_exists", lambda name: name == "sudo")
     monkeypatch.setattr(util, "_usable_askpass", lambda: askpass)
     monkeypatch.setattr(sys.stdin, "isatty", lambda: tty)
@@ -443,9 +450,10 @@ def _raise_key_error(_name: str):
 
 def _passwd_shell(monkeypatch, shell: str) -> None:
     monkeypatch.setattr(util, "current_user", lambda: "someone")
-    monkeypatch.setattr(pwd, "getpwnam", lambda _name: types.SimpleNamespace(pw_shell=shell))
+    monkeypatch.setattr("pwd.getpwnam", lambda _name: types.SimpleNamespace(pw_shell=shell))
 
 
+@_needs_passwd
 def test_login_shell_reads_the_registered_shell_not_the_inherited_one(monkeypatch):
     # $SHELL answers "what started the process that started me", which is a different question and
     # is wrong in exactly the case this check exists for.
@@ -455,16 +463,18 @@ def test_login_shell_reads_the_registered_shell_not_the_inherited_one(monkeypatc
     assert util.login_shell_is_zsh() is False
 
 
+@_needs_passwd
 def test_login_shell_is_zsh_matches_by_name_not_by_path(monkeypatch):
     # A machine can have an apt zsh at /usr/bin/zsh and another earlier on PATH; both count.
     _passwd_shell(monkeypatch, "/usr/local/bin/zsh")
     assert util.login_shell_is_zsh() is True
 
 
+@_needs_passwd
 def test_login_shell_survives_a_user_with_no_passwd_entry(monkeypatch):
     # A plain `docker build` sets $HOME and no $USER; getpwnam("") raises rather than returning.
     monkeypatch.setattr(util, "current_user", lambda: "ghost")
-    monkeypatch.setattr(pwd, "getpwnam", _raise_key_error)
+    monkeypatch.setattr("pwd.getpwnam", _raise_key_error)
     assert util.login_shell() == ""
     assert util.login_shell_is_zsh() is False
 
@@ -506,11 +516,13 @@ def test_session_bus_prefers_the_environment(monkeypatch: pytest.MonkeyPatch):
     assert util.session_bus_address() == "unix:path=/tmp/somewhere-else"
 
 
+@_needs_passwd
 def test_login_shell_warning_is_silent_on_a_zsh_machine(monkeypatch):
     _passwd_shell(monkeypatch, "/usr/bin/zsh")
     assert util.login_shell_warning("SSL_CERT_FILE") is None
 
 
+@_needs_passwd
 def test_login_shell_warning_names_both_the_shell_and_what_is_lost(monkeypatch):
     # The whole failure is silent, so the message has to carry the diagnosis: neither the shell in
     # use nor the exports that never arrived shows up anywhere else.
@@ -525,9 +537,11 @@ def test_login_shell_warning_names_both_the_shell_and_what_is_lost(monkeypatch):
 
 def test_login_shell_warning_still_warns_when_the_shell_is_unknown(monkeypatch):
     # A container with no passwd entry is not evidence that zsh is in place — the exports are just
-    # as invisible, so the safe answer is the warning, not silence.
+    # as invisible, so the safe answer is the warning, not silence. Runs on Windows too, where
+    # login_shell() has no passwd to read and the shell is unknown by definition.
     monkeypatch.setattr(util, "current_user", lambda: "ghost")
-    monkeypatch.setattr(pwd, "getpwnam", _raise_key_error)
+    if sys.platform != "win32":
+        monkeypatch.setattr("pwd.getpwnam", _raise_key_error)
     note = util.login_shell_warning("http_proxy")
 
     assert note is not None
