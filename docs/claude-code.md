@@ -135,11 +135,10 @@ is no admin-less way to link a _file_ at all — so a plain copy is the one wiri
 platform and every checkout treats identically. The cost is drift, which `inv verify.all` checks by
 comparing content rather than by looking for a link, and `inv deploy.all` repairs.
 
-**The real file moved there on 2026-09-04**; it used to be `~/AGENTS.md`, which is now a copy of it.
-The reason is that `~/.agents/AGENTS.md` is a path several agents read on their own — Goose, Warp,
-Cline and Kimi Code, each verified against its own source or documentation — while nothing verified
-reads a bare `~/.agents/AGENTS.md`; that path worked only because every symlink pointed at it. See
-`docs/ai.md` and `contributing/ai-tooling.md`. Either path still works for reading or editing.
+**The real file moved there on 2026-09-04**, from `~/AGENTS.md`, which no agent ever read and which
+was retired on 2026-09-09. `~/.agents/AGENTS.md` is a path several agents read on their own — Goose,
+Warp, Cline and Kimi Code, each verified against its own source or documentation. Claude Code is not
+one of them: it reads nothing under `~/.agents/`, which is why it gets a copy. See `docs/ai.md`.
 
 **The file is assembled, not copied.** `[packages.agents-md]` sets `assembled_from = "agents_md"`,
 and every package declaring an `agents_md` fragment contributes whole `##` sections to the result,
@@ -158,23 +157,16 @@ markers in it are provenance, not an ownership boundary: nothing outside a block
 Both `deploy.all` and the install-time writer in `inv tools.install` go through the same deploy
 writer, so an edit made to the deployed file directly is shown as a diff and asked about (default:
 keep it) rather than silently overwritten — but it still only lives on this machine until it's
-ported into a fragment. `~/.claude/CLAUDE.md` itself is never touched once it's a correct symlink;
-if something other than that symlink already lives there, `inv tools.install` warns and leaves it
-alone rather than overwriting it.
+ported into a fragment. The copies in each agent's own path are rewritten by the same command.
 
 Several conventions live there too, deliberately global rather than repeated per-repo — see
 `config/agents-md/agent-knowledge.md` for the exact wording:
 
-- **`CLAUDE.md` is only ever a symlink.** Any repo that wants agent instructions should have a real
-  `AGENTS.md` (the cross-tool standard 30+ agent CLIs read) and, if `CLAUDE.md` exists at all, it's
-  a plain symlink to `AGENTS.md` — not a file containing Claude Code's `@AGENTS.md` import
-  directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content to
-  every harness that reads a literal `CLAUDE.md`, no special-case parsing needed. Trade-off: nothing
-  can be appended below a symlink's target, so a genuinely Claude-specific addendum belongs in
-  `AGENTS.md` itself instead. Both this repo's own root (`AGENTS.md` real,
-  `CLAUDE.md ->
-  AGENTS.md`) and `~` itself (`~/.agents/AGENTS.md` real,
-  `~/.claude/CLAUDE.md -> ~/.agents/AGENTS.md`) follow it.
+- **A repo has `AGENTS.md` and no `CLAUDE.md`.** Claude Code reads a repo's `AGENTS.md` itself since
+  2.1.277, but only while no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` exists in the
+  working directory or above it — so a `CLAUDE.md`, even a symlink to `AGENTS.md`, is what switches
+  that off. The home directory is the exception: Claude Code reads nothing under `~/.agents/`, so
+  `~/.claude/CLAUDE.md` is a copy of `~/.agents/AGENTS.md`.
 - **Cross-session memory policy.** Durable, repo-specific knowledge belongs in that repo's
   `AGENTS.md`, not Claude Code's auto-memory system (`~/.claude/projects/.../memory/`) — memory is
   invisible to every other contributor, every other agent tool, and every code review; `AGENTS.md`
@@ -202,19 +194,22 @@ the allowlist pipeline, not something PULSE enforces or will change on your beha
 
 ## `.agents/skills/` — `inv ai.install-skills`
 
-`.agents/skills/` is the emerging cross-tool convention for Agent Skills, but Claude Code itself
-currently only discovers skills from `~/.claude/skills/` and `<project>/.claude/skills/` — not
-`.agents/skills/` directly. To get both the cross-tool convention _and_ a working Claude Code setup,
-PULSE symlinks `.claude/skills` to `.agents/skills`:
+`.agents/skills/` is the cross-tool location for Agent Skills, read natively by every agent PULSE's
+survey checked except Claude Code, which discovers skills only from `~/.claude/skills/` and
+`<project>/.claude/skills/`. So the skills are installed once and Claude Code is linked to them:
 
-- `inv ai.install-skills [--dir PATH]` — ensures `.agents/skills/` exists and `.claude/skills` is
-  symlinked to it, then installs every skill declared via a `skills` field anywhere in `setup.toml`
-  (see below). Defaults to `~` (the personal, cross-project skills location); part of the standard
-  `inv setup`/`inv wsl.install` chain.
+- `inv ai.install-skills [--dir PATH]` — ensures `.agents/skills/` exists, then installs every skill
+  declared via a `skills` field anywhere in `setup.toml` (see below) through the `skills` CLI with
+  `--agent universal --agent claude-code`: one real copy per skill in `~/.agents/skills/` and one
+  relative link per skill in `~/.claude/skills/`, nothing in any other agent's directory. Defaults
+  to `~`; part of the standard `inv setup`/`inv wsl.install` chain.
+- `inv ai.update-skills` — `skills update --global`, which refreshes every installed skill from the
+  source its lock entry records. `inv upgrade` runs it after upgrading the CLI itself.
 
-Checks for existing files/symlinks first and skips rather than overwrites — safe to re-run, and safe
-to point at a project that already has hand-written skills content. A new Python project's own
-`AGENTS.md`/`CLAUDE.md`/`.agents/skills`/`.claude/skills` scaffold isn't this task's job —
+`~/.claude/skills/` stays a real directory with one link per skill, never a link to the whole of
+`~/.agents/skills/`: Claude Code keeps skills synced from a claude.ai account in its `synced/`
+folder, and those must not land where every other agent reads. A new Python project's own
+`AGENTS.md`/`.agents/skills` scaffold isn't this task's job —
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) stamps that at generation time instead.
 
 ## Declaring skills to install — the `skills` field

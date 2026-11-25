@@ -12,6 +12,29 @@ talks to.
 
 ## Where each agent looks for skills, and why the registry cannot be trusted for it
 
+**Re-measured 2026-11-25, and the current answer is the table in
+`plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`**: fourteen agents checked
+against their own source or vendor docs, thirteen of them reading `~/.agents/skills` and a repo's
+`.agents/skills` natively, Claude Code the only exception. Three things changed what this section
+used to recommend:
+
+- **The CLI's install mode now depends on how many directories the targets span.** In 1.9.0,
+  `defaultInstallMode` copies straight into the one directory when every selected agent shares it,
+  and symlinks from a canonical `~/.agents/skills` copy only when there are two or more. So
+  `--agent claude-code` alone leaves `~/.agents/skills` empty. PULSE installs with
+  `--agent
+  universal --agent claude-code` (`_DEFAULT_AGENTS` in `tasks/ai.py`), which writes the
+  canonical copy and one link per skill for Claude Code, verified on a throwaway HOME.
+- **The registry still lags the vendors**, in the direction this section found in September: it
+  records Crush, Goose and Roo Code with vendor directories although all three read
+  `~/.agents/skills`, so a `skills add` that names them, or that targets every detected agent,
+  writes links nobody needs. Name agents explicitly, and only ones that do not read the canonical
+  directory — which today is Claude Code alone.
+- **The `agents` list on `[packages.agent-skills]` is gone**; the default above applies.
+
+What follows is the September measurement, kept for its sources and for the `globalSkillsDir`
+finding, which still holds.
+
 Measured 2026-09-04 against the installed `skills` CLI (v1.5.10,
 [vercel-labs/skills](https://github.com/vercel-labs/skills)), reading its bundle rather than its
 README. Read this before adding an agent to `[packages.agent-skills]`'s `agents` list or claiming on
@@ -132,10 +155,13 @@ sourced. That is fine in a login shell and invisible to a `RUN` layer or a non-i
 the same trap `[packages.node]`'s own `verify_cmd` documents, and the reason `node.nvm_command()`
 exists.
 
-It reads `~/.gemini/GEMINI.md`, which is one of the four paths `[packages.agents-md]` symlinks to
-`~/.agents/AGENTS.md` — so installing it is enough to have it pick up this machine's instructions.
-It also reads `~/.agents/skills` directly, alongside its own `~/.gemini/skills`, so it picks up the
-skills too with nothing added to `[packages.agent-skills]` — see the skills-directory section above.
+It reads `~/.gemini/GEMINI.md`, which is one of the paths `[packages.agents-md]` copies
+`~/.agents/AGENTS.md` to once `~/.gemini/` exists — so installing it and re-running
+`inv deploy.all --name agents-md` is enough to have it pick up this machine's instructions. In a
+repo it reads `GEMINI.md` by default, and reads `AGENTS.md` only once `context.fileName` in its
+`settings.json` lists it. It also reads `~/.agents/skills` directly, alongside its own
+`~/.gemini/skills`, so it picks up the skills too with nothing added to `[packages.agent-skills]` —
+see the skills-directory section above.
 
 ## IDE extensions
 
