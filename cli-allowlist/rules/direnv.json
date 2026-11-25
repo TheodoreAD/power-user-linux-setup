@@ -4,7 +4,7 @@
   "nodes": {
     "allow": {
       "classification": "write",
-      "content_hash": "c3f107276651899a",
+      "content_hash": "d31afee46562a84a",
       "flags": {},
       "model": "haiku",
       "rationale": "Grants direnv permission to load .envrc/.env files, modifying the internal allow-list.",
@@ -12,7 +12,7 @@
     },
     "deny": {
       "classification": "write",
-      "content_hash": "c3f107276651899a",
+      "content_hash": "d31afee46562a84a",
       "flags": {},
       "model": "haiku",
       "rationale": "Alias for block; revokes permission to load env files.",
@@ -44,7 +44,7 @@
     },
     "status": {
       "classification": "read_only",
-      "content_hash": "2df1618c11683806",
+      "content_hash": "ded8686d0f786e60",
       "flags": {},
       "model": "haiku",
       "rationale": "Prints debug information about direnv state; no state modification.",

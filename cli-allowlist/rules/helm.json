@@ -4,7 +4,7 @@
   "nodes": {
     "create": {
       "classification": "write",
-      "content_hash": "db737d10c408e961",
+      "content_hash": "9c46fd430f478a2f",
       "flags": {},
       "model": "haiku",
       "rationale": "Creates a new chart directory and files locally on the filesystem in a bounded, reversible manner.",
@@ -12,7 +12,7 @@
     },
     "diff": {
       "classification": "invalid",
-      "content_hash": "6d19913ba96e0511",
+      "content_hash": "2a77cc19185f21a7",
       "flags": {},
       "model": "haiku",
       "rationale": "Provided help text is generic Helm output, not documentation for the diff subcommand; extraction heuristic misfired and captured truncated help output instead of diff-specific documentation.",
@@ -20,7 +20,7 @@
     },
     "env": {
       "classification": "read_only",
-      "content_hash": "4f01d1aa8a050c2e",
+      "content_hash": "95394f6efed124d5",
       "flags": {},
       "model": "haiku",
       "rationale": "Prints environment information used by Helm without modifying any state.",
@@ -28,7 +28,7 @@
     },
     "get": {
       "classification": "read_only",
-      "content_hash": "71c512df47d5008c",
+      "content_hash": "8acd4329387a570e",
       "flags": {},
       "model": "haiku",
       "rationale": "Retrieves and displays extended information about a release (values, manifest, notes, hooks) without modification.",
@@ -36,7 +36,7 @@
     },
     "get all": {
       "classification": "read_only",
-      "content_hash": "bdbec886b5db75e6",
+      "content_hash": "b5838798ca2f44df",
       "flags": {},
       "model": "haiku",
       "rationale": "Prints information about a release; 'all' means display all information (notes, hooks, values, manifest), not destroy anything.",
@@ -44,7 +44,7 @@
     },
     "get hooks": {
       "classification": "read_only",
-      "content_hash": "fc730e061f222e54",
+      "content_hash": "bae1ea4a65aa25cc",
       "flags": {},
       "model": "haiku",
       "rationale": "Downloads and displays hook information for a release without modifying anything.",
@@ -52,7 +52,7 @@
     },
     "get manifest": {
       "classification": "read_only",
-      "content_hash": "2190cb25f4e0c199",
+      "content_hash": "b6b4f2a19982ba4d",
       "flags": {},
       "model": "haiku",
       "rationale": "Fetches and displays the generated manifest for a release without making changes.",
@@ -60,7 +60,7 @@
     },
     "get notes": {
       "classification": "read_only",
-      "content_hash": "122ad37b4c53bd50",
+      "content_hash": "4ce96aa4d95fe32a",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays notes from a release's chart without modifying state.",
@@ -68,7 +68,7 @@
     },
     "get values": {
       "classification": "read_only",
-      "content_hash": "114274a67e1b78c7",
+      "content_hash": "d486b41ca6b5e750",
       "flags": {
         "--all": {
           "classification": "read_only",
@@ -81,7 +81,7 @@
     },
     "history": {
       "classification": "read_only",
-      "content_hash": "b7c2791e5b4b57b7",
+      "content_hash": "00b847deaac790a8",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays historical revision information for a release without modifying state.",
@@ -89,7 +89,7 @@
     },
     "install": {
       "classification": "write",
-      "content_hash": "c9250bd8fef8a2f6",
+      "content_hash": "44eb96dea52a6bf8",
       "flags": {
         "--dry-run": {
           "classification": "read_only",
@@ -102,7 +102,7 @@
     },
     "lint": {
       "classification": "read_only",
-      "content_hash": "834a276b9c4c1303",
+      "content_hash": "279e1da6002a0c00",
       "flags": {},
       "model": "haiku",
       "rationale": "Validates chart format and structure by running tests without modifying anything.",
@@ -110,7 +110,7 @@
     },
     "list": {
       "classification": "read_only",
-      "content_hash": "cb7b601897daa7b4",
+      "content_hash": "4acc3b1b4b11ffac",
       "flags": {
         "--all": {
           "classification": "read_only",
@@ -127,14 +127,14 @@
     },
     "list maudlin-arachnid": {
       "classification": "invalid",
-      "content_hash": "cb7b601897daa7b4",
+      "content_hash": "4acc3b1b4b11ffac",
       "flags": {},
       "rationale": "Auto-discovered but duplicates its parent's help text verbatim \u2014 likely a false-positive match (e.g. example/sample output mistaken for a subcommand listing), not a real distinct command.",
       "source": "heuristic"
     },
     "package": {
       "classification": "write",
-      "content_hash": "e82d7af33ac74588",
+      "content_hash": "d60ab7520d2ae52d",
       "flags": {},
       "model": "haiku",
       "rationale": "Packages a chart into a versioned archive file, creating new files locally in a bounded, reversible manner.",
@@ -142,7 +142,7 @@
     },
     "plugin": {
       "classification": "write",
-      "content_hash": "8ee5555b99d25cc3",
+      "content_hash": "90238ff53a12eb32",
       "flags": {},
       "model": "haiku",
       "rationale": "Manages client-side Helm plugins; subcommands install, uninstall, and update all modify local plugin state.",
@@ -150,7 +150,7 @@
     },
     "plugin install": {
       "classification": "write",
-      "content_hash": "ff228551d46c8827",
+      "content_hash": "a8dad5751c7c2e18",
       "flags": {},
       "model": "haiku",
       "rationale": "Installs a plugin to the local system, modifying helm's installed plugins in a bounded and reversible way.",
@@ -158,7 +158,7 @@
     },
     "plugin list": {
       "classification": "read_only",
-      "content_hash": "d5e636121188c94c",
+      "content_hash": "a1efc9bc86b7c2ff",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays list of installed plugins without modifying anything.",
@@ -166,7 +166,7 @@
     },
     "plugin uninstall": {
       "classification": "write",
-      "content_hash": "41a838c99580169b",
+      "content_hash": "81ffc13b4ec0bbfc",
       "flags": {},
       "model": "haiku",
       "rationale": "Removes a plugin from the local system, a deletion that is reversible by reinstalling.",
@@ -174,7 +174,7 @@
     },
     "plugin update": {
       "classification": "write",
-      "content_hash": "971b593266e612dc",
+      "content_hash": "f639b2db325db864",
       "flags": {},
       "model": "haiku",
       "rationale": "Updates an installed plugin, modifying it in a reversible manner.",
@@ -182,7 +182,7 @@
     },
     "repo": {
       "classification": "write",
-      "content_hash": "e14c8be4d3f7dc14",
+      "content_hash": "170dee8ebf4a49ee",
       "flags": {},
       "model": "haiku",
       "rationale": "Manages chart repositories; subcommands add, remove, index, and update all modify local repository configuration and cache.",
@@ -190,7 +190,7 @@
     },
     "repo add": {
       "classification": "write",
-      "content_hash": "a8a0c4179b8780a6",
+      "content_hash": "388ded4e1bd2a91f",
       "flags": {},
       "model": "haiku",
       "rationale": "Adds a chart repository to helm configuration, modifying local state in a reversible way.",
@@ -198,7 +198,7 @@
     },
     "repo index": {
       "classification": "write",
-      "content_hash": "8765a941ad6f389b",
+      "content_hash": "20ce3b96f3bf4f05",
       "flags": {},
       "model": "haiku",
       "rationale": "Generates or updates an index file for charts, modifying a file in a reversible manner.",
@@ -206,7 +206,7 @@
     },
     "repo list": {
       "classification": "read_only",
-      "content_hash": "45189390aaae0183",
+      "content_hash": "3a10bfb54a214b79",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays list of configured chart repositories without modifying state.",
@@ -214,7 +214,7 @@
     },
     "repo remove": {
       "classification": "write",
-      "content_hash": "588b6dbb2e1349be",
+      "content_hash": "a2ef3126c95e508d",
       "flags": {},
       "model": "haiku",
       "rationale": "Removes a chart repository configuration, a deletion that is reversible by re-adding.",
@@ -222,7 +222,7 @@
     },
     "repo update": {
       "classification": "write",
-      "content_hash": "cc6b0a6f5f2d5cdd",
+      "content_hash": "4d5e5af31aaada43",
       "flags": {},
       "model": "haiku",
       "rationale": "Updates cached information about charts from repositories, modifying local cache in a reversible way.",
@@ -230,7 +230,7 @@
     },
     "rollback": {
       "classification": "write",
-      "content_hash": "cbfd01f1eb6de364",
+      "content_hash": "0c339fb741d2b9ef",
       "flags": {
         "--dry-run": {
           "classification": "read_only",
@@ -247,7 +247,7 @@
     },
     "search": {
       "classification": "read_only",
-      "content_hash": "b44720d36a963897",
+      "content_hash": "5f982d8dbb471e9e",
       "flags": {},
       "model": "haiku",
       "rationale": "Searches for charts in Helm Hub or chart repositories without modifying any state.",
@@ -255,7 +255,7 @@
     },
     "search hub": {
       "classification": "read_only",
-      "content_hash": "90cf968288395ed9",
+      "content_hash": "7f79cdf2674592ad",
       "flags": {},
       "model": "haiku",
       "rationale": "Searches a remote Helm repository index for charts without modifying any state.",
@@ -263,7 +263,7 @@
     },
     "search repo": {
       "classification": "read_only",
-      "content_hash": "221a3e107225c63f",
+      "content_hash": "93e58e95674fda02",
       "flags": {},
       "model": "haiku",
       "rationale": "Searches configured local repository metadata for matching charts without modifying any state.",
@@ -271,7 +271,7 @@
     },
     "show": {
       "classification": "read_only",
-      "content_hash": "37d3ce122a1b63f2",
+      "content_hash": "4a700d1f01491726",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays information about a chart (definition, values, README) without modifying anything.",
@@ -279,7 +279,7 @@
     },
     "show all": {
       "classification": "read_only",
-      "content_hash": "8b43aef596d67dbf",
+      "content_hash": "8747ce52baa10b8b",
       "flags": {},
       "model": "haiku",
       "rationale": "Inspects and displays all chart content (values, metadata, README); 'all' means show all sections, not modify or delete.",
@@ -287,7 +287,7 @@
     },
     "show chart": {
       "classification": "read_only",
-      "content_hash": "7b40e991de4f4930",
+      "content_hash": "2198eb3faaf32506",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays chart metadata from Charts.yaml file without modifying any state.",
@@ -295,7 +295,7 @@
     },
     "show readme": {
       "classification": "read_only",
-      "content_hash": "d85f9532bf280750",
+      "content_hash": "da993b7f9061ab5c",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays chart README file without modifying any state.",
@@ -303,7 +303,7 @@
     },
     "show values": {
       "classification": "read_only",
-      "content_hash": "9b0d4bbdc269fe39",
+      "content_hash": "fb9d5800af449e38",
       "flags": {},
       "model": "haiku",
       "rationale": "Displays chart default values from values.yaml file without modifying any state.",
@@ -311,7 +311,7 @@
     },
     "status": {
       "classification": "read_only",
-      "content_hash": "6398277a30dbda76",
+      "content_hash": "f83d948bc8b8f563",
       "flags": {},
       "model": "haiku",
       "rationale": "Shows the status and details of a named release without modifying any state.",
@@ -319,7 +319,7 @@
     },
     "template": {
       "classification": "read_only",
-      "content_hash": "97e2b47e3618a206",
+      "content_hash": "76a5ec5fb76591f7",
       "flags": {
         "--dry-run": {
           "classification": "read_only",
@@ -332,7 +332,7 @@
     },
     "uninstall": {
       "classification": "dangerous",
-      "content_hash": "559616b628ee9c99",
+      "content_hash": "bc6ab0dcd17f8e01",
       "flags": {},
       "model": "haiku",
       "rationale": "Irreversibly removes all cluster resources associated with a release and deletes the release history.",
@@ -340,7 +340,7 @@
     },
     "upgrade": {
       "classification": "write",
-      "content_hash": "69ea7d9de3a84175",
+      "content_hash": "4ade59565f4be19a",
       "flags": {},
       "model": "haiku",
       "rationale": "Updates an existing release to a new chart version, modifying cluster resources in a bounded and reversible manner.",

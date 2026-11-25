@@ -118,6 +118,35 @@ Write
 """
 
 
+def test_captured_output_names_the_home_directory_as_tilde(monkeypatch, tmp_path):
+    home = tmp_path / "me"
+    monkeypatch.setattr(Path, "home", lambda: home)
+    text = f'--config string   config file (default "{home / ".config" / "helm"}")\nfile: {home.as_posix()}/.npmrc'
+
+    assert allowlist.without_home(text) == (
+        f'--config string   config file (default "{Path("~") / ".config" / "helm"}")\nfile: ~/.npmrc'
+    )
+
+
+def test_a_longer_name_sharing_the_homes_prefix_is_left_alone(monkeypatch):
+    monkeypatch.setattr(Path, "home", lambda: Path("/home/u"))
+
+    assert allowlist.without_home("/home/user/x and /home/u/x") == "/home/user/x and ~/x"
+
+
+def test_no_committed_capture_names_this_machines_home_directory():
+    # The captures are committed, so a username in them is published. Checked against whichever
+    # machine runs the suite; the capture step (allowlist._run_capture) is what keeps it true.
+    home = Path.home()
+    leaks = [
+        p.name
+        for d in (allowlist._HELP_CACHE_DIR, allowlist._RULES_DIR)
+        for p in sorted(d.glob("*.json"))
+        if str(home) in (text := p.read_text(encoding="utf-8")) or home.as_posix() in text
+    ]
+    assert not leaks, f"cli-allowlist files naming {home}: {leaks}"
+
+
 def test_discover_subcommands_reads_kongs_two_line_layout():
     found = allowlist._discover_subcommands(_KONG_HELP, 40, tool="gog", path=["gmail"])
     assert found == ["search", "messages", "history", "send", "focus-time"]

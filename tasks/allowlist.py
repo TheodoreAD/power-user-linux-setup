@@ -543,9 +543,26 @@ def _save_cache(tool: str, data: CacheEntry) -> None:
     )
 
 
+def without_home(text: str) -> str:
+    """`text` with this machine's home directory written as `~`.
+
+    Help and version output is committed under cli-allowlist/, and plenty of it names a default path
+    under the home directory (`--config` defaults to `/home/<user>/.config/...`), which put the
+    username into a public repo dozens of times. The home directory is derived (`Path.home()`, in
+    both its native and forward-slash spelling on Windows), never written down. Matched only where
+    it is a whole path component, so a home of `/home/u` leaves `/home/user` alone.
+    """
+    home = Path.home()
+    for form in {str(home), home.as_posix()}:
+        text = re.sub(re.escape(form) + r"(?=[/\\\"'\s:]|$)", "~", text)
+    return text
+
+
 def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
     """Run a command, return combined stdout+stderr, "" on timeout/missing binary. Never raises
-    on nonzero exit — --help conventionally exits nonzero on plenty of tools."""
+    on nonzero exit — --help conventionally exits nonzero on plenty of tools. The home directory is
+    replaced by `~` here, before anything is hashed or cached, so a capture is identical on every
+    machine and for every user."""
     env = {**os.environ, **_DETERMINISTIC_ENV}
     try:
         result = subprocess.run(
@@ -553,7 +570,7 @@ def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
         )
     except subprocess.TimeoutExpired, FileNotFoundError:
         return ""
-    return (result.stdout + result.stderr).strip()
+    return without_home((result.stdout + result.stderr).strip())
 
 
 def _invocation(tool: str, args: list[str], cfg: ToolConfig) -> list[str]:

@@ -1702,7 +1702,7 @@
     },
     "trust": {
       "classification": "invalid",
-      "content_hash": "e92990a5f6d59ed3",
+      "content_hash": "dde917cd9ecd094c",
       "flags": {},
       "model": "haiku",
       "rationale": "The provided text is a copy of the main Docker help output, not actual trust subcommand documentation; appears to be an extraction heuristic misfire.",
