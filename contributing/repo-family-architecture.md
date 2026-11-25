@@ -78,16 +78,17 @@ assumed because the package happens to be resolvable.
 
 **`scaffoldapy`** — anything generated _once_ and then hand-maintained per repo, diverging
 immediately and legitimately: project structure, the `pyproject.toml` skeleton, `AGENTS.md` and
-`.agents/skills` (with a relative `.claude/skills` symlink kept by Copier's `_preserve_symlinks`,
-not a runtime task — see §F), `mkdocs.yml` when `with_docs` is set. Copier-driven, `_tasks` is three
-bare `inv`/ `repo-tasks` calls, never `uv run`/a raw `uv` subcommand:
-`repo-tasks configs.ensure-deps` (populates the generated `dependency-groups.dev` — deliberately
-empty in the template itself — from `repo-tasks`' own canonical `dependency-groups.quality`),
-`inv deps.lock`, then `inv configure`. Neither `repo-tasks` nor `invoke` is ever a project
-dependency of a generated repo at all (see "Quality tools vs. public-API deps" below) — both
-`_tasks` and the generated CI workflow assume the global `uv tool install`ed daily-driver is already
-on PATH, the same assumption `power-user-linux-setup`'s own `bootstrap.sh` makes real. Nothing else
-about `repo-tasks`' internals is named in this template, on purpose.
+`skills/` (the source of the project's own skills; installing them into `.agents/skills` and
+`.claude/skills` is repo-tasks' `agents.install-skills` at runtime, see §F), `mkdocs.yml` when
+`with_docs` is set. Copier-driven, `_tasks` is three bare `inv`/ `repo-tasks` calls, never
+`uv run`/a raw `uv` subcommand: `repo-tasks configs.ensure-deps` (populates the generated
+`dependency-groups.dev` — deliberately empty in the template itself — from `repo-tasks`' own
+canonical `dependency-groups.quality`), `inv deps.lock`, then `inv configure`. Neither `repo-tasks`
+nor `invoke` is ever a project dependency of a generated repo at all (see "Quality tools vs.
+public-API deps" below) — both `_tasks` and the generated CI workflow assume the global
+`uv tool install`ed daily-driver is already on PATH, the same assumption `power-user-linux-setup`'s
+own `bootstrap.sh` makes real. Nothing else about `repo-tasks`' internals is named in this template,
+on purpose.
 
 ### Quality tools vs. public-API deps: which dependency list a thing belongs in
 
@@ -146,7 +147,7 @@ everywhere?**
 Two things that look like they could go either way, resolved by this test directly (both hit for
 real, not hypothetically):
 
-- `AGENTS.md`/`.agents/skills` — tempting to think of as "config," but it's written once and then
+- `AGENTS.md`/`skills/` — tempting to think of as "config," but it's written once and then
   hand-edited per repo forever; nothing about it should be silently overwritten by a later sync the
   way `ruff.toml` should be. `scaffoldapy`, not `repo-tasks` (§F).
 - `pyrightconfig.json`'s `include` list — looked at first like it needed to differ per repo (`src`/

@@ -6,10 +6,15 @@
 symlink, not an `@AGENTS.md` import. Claude Code reads `AGENTS.md` itself since 2.1.277, but only
 while no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` sits in the working directory or
 above it, so adding one is what switches that off. A Claude-specific addendum goes in `AGENTS.md`
-under a labelled heading. Skills live in `.agents/skills/`, which every agent surveyed reads
-natively except Claude Code. A repo with skills therefore carries one shim: `.claude/skills` as a
-**relative** symlink to `../.agents/skills`, never an absolute one, which breaks on every other
-machine.
+under a labelled heading.
+
+**A repo's own skills are authored in `skills/<name>/`, and every install target is gitignored** —
+`.agents/skills/`, `.claude/skills/` and `skills-lock.json`. Agents read the installed copies, not
+`skills/`, so after cloning or editing a skill run `inv agents.install-skills` (part of
+`inv dev-env.setup`), or `npx skills add ./skills --agent universal claude-code --skill '*' --yes`
+where repo-tasks is absent. Never commit a symlink — a Windows checkout without Developer Mode turns
+it into a text file — and never commit into an install target, which is where a developer trying
+another skill with `skills add` writes.
 
 **The home directory works differently, and assuming it matches costs an edit.** The real file is
 `~/.agents/AGENTS.md`, the path four agents read natively. Every other place these rules appear is a

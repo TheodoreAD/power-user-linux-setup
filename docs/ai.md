@@ -57,15 +57,16 @@ because Claude Code keeps skills synced from a claude.ai account there.
 
 ### In a repo
 
-The same two paths, and only one shim:
-
 - **`AGENTS.md` at the root, and no `CLAUDE.md`.** Claude Code reads `AGENTS.md` itself since
   2.1.277, but only while no `CLAUDE.md` exists in the directory or above it. Codex, Copilot,
   opencode, Cursor, Zed and the rest read it natively; Gemini CLI does once `context.fileName` lists
   it.
-- **`.agents/skills/`** for the repo's own skills, which every agent surveyed reads natively except
-  Claude Code. A repo with skills adds `.claude/skills` as a relative symlink to
-  `../.agents/skills`.
+- **Skills authored in `skills/<name>/`, installed per clone.** repo-tasks' `inv dev-env.setup` runs
+  `agents.install-skills`, which has the `skills` CLI copy each one into `.agents/skills/` — the
+  directory every agent surveyed reads except Claude Code — and link it from `.claude/skills/` for
+  Claude Code, as a junction on Windows. `.agents/skills/`, `.claude/skills/` and `skills-lock.json`
+  are gitignored: no symlink is committed, and trying another skill in the project with
+  `npx skills add` changes nothing git tracks.
 
 The survey behind both tables — fourteen agents, each checked against its source or its vendor's
 docs — is `plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`, with the per-vendor

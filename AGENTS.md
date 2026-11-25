@@ -34,9 +34,9 @@ always wrong: it is overwritten by the next install and never leaves this machin
 published, and is deliberately unused — it goes through the same `skills` CLI as everything else,
 handed an absolute directory path instead of a repo, rather than PULSE copying the tree itself.
 
-Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`.agents/skills` setup) isn't
-this repo's job anymore — see [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which
-stamps that at generation time instead (`contributing/repo-family-architecture.md`). The
+Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`skills/` setup) isn't this
+repo's job anymore — see [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps
+that at generation time instead (`contributing/repo-family-architecture.md`). The
 cross-session-memory policy (don't use Claude Code's auto-memory for durable repo knowledge — use
 `AGENTS.md` instead) is documented once, globally, in `[packages.agents-md]` in `setup.toml` rather
 than repeated per-repo — see `docs/claude-code.md`.
