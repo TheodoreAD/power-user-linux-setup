@@ -72,9 +72,15 @@ per-directory `.gitconfig` files unchanged, with `extra_directories` for both st
 `user.email`, both were unset, and `git config --show-origin` in each store now resolves to the
 personal profile's `.gitconfig` and the noreply address.
 
-1. **`[[ssh_hosts]]` in that `identity.toml` is empty, left commented for the user.** Agents cannot
-   read `~/.ssh/` here (a `Read(~/.ssh/**)` deny rule). Until it is filled in, `inv ssh.configure`
-   must not run: it would rewrite `~/.ssh/config`'s managed block from an empty list.
+1. **`[[ssh_hosts]]` in that `identity.toml` stays empty, and cannot be filled by copying.** A
+   one-off script the user permitted read `~/.ssh/config` (agents' own reads there are denied by
+   `Read(~/.ssh/**)`) and printed only what it derived: the file has no PULSE block, and none of its
+   11 hosts uses a key named `<email>__<node>_ed25519`, the only path an `[[ssh_hosts]]` entry can
+   resolve to (`tasks/ssh.py`, `key_path`). So listing them is a migration: `inv ssh.create-keys`
+   would make new keys, which then need registering on every host. Whether to migrate, or leave SSH
+   hand-managed here, is the user's call, and it is not this plan's subject. Until then
+   `inv ssh.configure` must not run here: with an empty list it appends a block holding only PULSE's
+   `Host *` defaults.
 2. Once hekate is idle: `git -C ~/plans log origin/master..HEAD`, confirm no commit there is still
    being amended by a live session, rebase with
    `--exec 'git commit --amend --no-edit --reset-author'` onto `origin/master`, then
