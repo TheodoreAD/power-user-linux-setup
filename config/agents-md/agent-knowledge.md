@@ -2,13 +2,14 @@
 
 ### Setting up a repo's agent instructions and skills
 
-`AGENTS.md` at the repo root is the real file, the cross-tool convention read by 30+ agents.
-`CLAUDE.md`, if present at all, is a plain **symlink** to it, never a file containing the
-`@AGENTS.md` import directive — that is Claude-Code-specific syntax other harnesses would read as
-literal text. Nothing can be appended below a symlink's target, so a genuinely Claude-specific
-addendum goes in `AGENTS.md` itself or a separate `.claude/`-scoped file. Skills live in
-`.agents/skills/`, the cross-tool convention, with each agent's own skills directory symlinked to it
-for the agents that don't read it natively.
+`AGENTS.md` at the repo root is the only instructions file. **No `CLAUDE.md` at all** — not a
+symlink, not an `@AGENTS.md` import. Claude Code reads `AGENTS.md` itself since 2.1.277, but only
+while no `CLAUDE.md`, `.claude/CLAUDE.md` or `CLAUDE.local.md` sits in the working directory or
+above it, so adding one is what switches that off. A Claude-specific addendum goes in `AGENTS.md`
+under a labelled heading. Skills live in `.agents/skills/`, which every agent surveyed reads
+natively except Claude Code. A repo with skills therefore carries one shim: `.claude/skills` as a
+**relative** symlink to `../.agents/skills`, never an absolute one, which breaks on every other
+machine.
 
 **The home directory works differently, and assuming it matches costs an edit.** The real file is
 `~/.agents/AGENTS.md`, the path four agents read natively. Every other place these rules appear is a
@@ -16,7 +17,9 @@ for the agents that don't read it natively.
 2026-09-09, three distinct inodes here, link count 1 each). So editing whichever one a session
 happens to open is not editing the original, and the next deploy overwrites it silently rather than
 refusing. There is deliberately nothing at `~/AGENTS.md`, retired 2026-09-09 because no agent ever
-read it.
+read it. Home skills are installed by the `skills` CLI as one real copy in `~/.agents/skills/` plus
+a per-skill link in `~/.claude/skills/`; that directory stays real, because Claude Code keeps its
+account-synced skills in it.
 
 ### Where durable knowledge goes
 

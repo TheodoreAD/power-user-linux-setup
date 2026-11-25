@@ -524,6 +524,26 @@ repo it belongs to and under version control. The trailing sentence about "exiti
 reworded to match, since there is no longer a mode to exit; the approval signal it describes
 ("Implement and document …") is unchanged and still correct.
 
+## Setting up a repo's agent instructions and skills
+
+Reversed 2026-11-25. Until then the rule said a repo's `CLAUDE.md`, if present, is a plain symlink
+to `AGENTS.md` and never an `@AGENTS.md` import — right while Claude Code read only `CLAUDE.md`,
+since a symlink showed every harness the same bytes with no Claude-only syntax.
+
+Claude Code 2.1.277 started reading `AGENTS.md` itself, with one condition that turned the symlink
+from a shim into the wrong default: it reads `AGENTS.md` only while no `CLAUDE.md`,
+`.claude/CLAUDE.md` or `CLAUDE.local.md` exists in the working directory or above it (its memory
+docs, section "AGENTS.md", mirrored in the research library on 2026-11-25). The content was
+identical either way, so nothing broke; but the target is one source of truth, and a second name for
+the same bytes is also what several other agents read as a fallback. So the rule now says no
+`CLAUDE.md` at all, and every personal repo's symlink was deleted the same day.
+
+The skills half did not change in substance. Claude Code still reads nothing under `.agents/`, so a
+repo with skills keeps one `.claude/skills` link, now required to be relative after two repos were
+found carrying absolute ones into their history. The survey behind both halves, fourteen agents
+checked against source or vendor docs, is
+`plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`.
+
 ## Where durable knowledge goes
 
 Retitled 2026-08-30 from "Saving to cross-session memory". The rule it documents had itself been

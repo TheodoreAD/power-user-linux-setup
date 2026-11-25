@@ -1,27 +1,28 @@
 # Agent instructions for power-user-linux-setup
 
-Cross-tool instructions for AI coding agents working in this repo (Claude Code, and anything else
-that reads `AGENTS.md`). This repo's own `CLAUDE.md` is a plain symlink to `AGENTS.md` — not a file
-containing Claude Code's `@AGENTS.md` import directive — so Claude Code and any other harness that
-also happens to read a literal `CLAUDE.md` see byte-identical content, no special-case import syntax
-required (see `~/.agents/AGENTS.md`'s "Project conventions" for the full rationale).
+Cross-tool instructions for AI coding agents working in this repo. There is no `CLAUDE.md`: Claude
+Code reads this file itself, as Codex, Copilot, Gemini CLI (with `context.fileName`) and the rest
+do, and a `CLAUDE.md` anywhere on the path would switch that off (see `~/.agents/AGENTS.md`,
+"Setting up a repo's agent instructions and skills").
 
 ## Global conventions live in `~/.agents/AGENTS.md`
 
 Anyone working in this repo already has `~/.agents/AGENTS.md` installed — this repo is literally
 what deploys it (`[packages.agents-md]` in `setup.toml`, and **copied** into `~/.claude/CLAUDE.md`
-and every other installed agent's own instruction path — unlike this file, which really is a symlink
-from its own `CLAUDE.md`; the home directory is the case where the two differ). It covers sudo/ssh
-askpass, the `AGENTS.md`-over-`CLAUDE.md` convention itself, cross-session memory policy, and
-Bash/allowlist discipline (don't `cd` out of a project, prefer several simple commands over one
-chained one). Nothing universal is repeated below — only what's specific to this repo.
+and every other installed agent's own instruction path, since in the home directory Claude Code
+reads nothing under `~/.agents/`). It covers sudo/ssh askpass, the `AGENTS.md` convention itself,
+cross-session memory policy, and Bash/allowlist discipline (don't `cd` out of a project, prefer
+several simple commands over one chained one). Nothing universal is repeated below — only what's
+specific to this repo.
 
 ## AI agent tooling (`tasks/ai.py`)
 
-`inv ai.install-skills` ensures `.agents/skills/` exists with `.claude/skills` symlinked to it
-(Claude Code doesn't read `.agents/skills/` natively, only the symlink target) and installs every
-skill declared via a `skills` field anywhere in `setup.toml` — home-directory-scoped (`~`), never
-overwrites hand-written content.
+`inv ai.install-skills` ensures `~/.agents/skills/` exists and installs every skill declared via a
+`skills` field anywhere in `setup.toml` through the `skills` CLI, as
+`--agent universal --agent
+claude-code`: one real copy in `~/.agents/skills/` and one link per skill
+in `~/.claude/skills/`. `inv ai.update-skills` refreshes what is installed, and `inv upgrade` runs
+it after upgrading the CLI itself — upgrading is never part of `inv setup`.
 
 **Skills are not authored here.** There is no `skills/` directory; every skill lives in
 [`agent-skills`](https://github.com/TheodoreAD/agent-skills) and is installed from there by
@@ -33,13 +34,12 @@ always wrong: it is overwritten by the next install and never leaves this machin
 published, and is deliberately unused — it goes through the same `skills` CLI as everything else,
 handed an absolute directory path instead of a repo, rather than PULSE copying the tree itself.
 
-Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills`
-setup) isn't this repo's job anymore — see
-[`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which stamps that at generation time
-instead (`contributing/repo-family-architecture.md`). The cross-session-memory policy (don't use
-Claude Code's auto-memory for durable repo knowledge — use `AGENTS.md` instead) is documented once,
-globally, in `[packages.agents-md]` in `setup.toml` rather than repeated per-repo — see
-`docs/claude-code.md`.
+Project-scoped scaffolding (a new Python project's own `AGENTS.md`/`.agents/skills` setup) isn't
+this repo's job anymore — see [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy), which
+stamps that at generation time instead (`contributing/repo-family-architecture.md`). The
+cross-session-memory policy (don't use Claude Code's auto-memory for durable repo knowledge — use
+`AGENTS.md` instead) is documented once, globally, in `[packages.agents-md]` in `setup.toml` rather
+than repeated per-repo — see `docs/claude-code.md`.
 
 ## Deployed dotfiles are generated — never edit `~/<file>` directly
 

@@ -87,11 +87,11 @@ survives the premise:
 - **Case-insensitivity was never a risk.** No two tracked paths in this repo differ only by case.
 - **A lost exec bit would not stop an install.** `install.sh` runs `bash ./bootstrap.sh`, naming the
   interpreter, so none of the tracked `100755` files is invoked by path.
-- **`CLAUDE.md` is the repo's only tracked symlink** (mode `120000` → `AGENTS.md`), and deliberately
-  so — `AGENTS.md` requires a real symlink rather than a file carrying Claude Code's `@` import
-  syntax. **So this repo cannot be checked out anywhere symlinks do not work**, and that fails at
-  `git clone` rather than degrading. That is a property of the repo, not of any filesystem, and it
-  outlives the WSL question entirely.
+- **`CLAUDE.md` was the repo's only tracked symlink** (mode `120000` → `AGENTS.md`), so at the time
+  this repo could not be checked out anywhere symlinks do not work. It was deleted 2026-11-25, once
+  Claude Code read `AGENTS.md` itself
+  (`plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`), and the repo now tracks no
+  symlink at all.
 
 [DECISION: **deleted rather than carried as an open item.** An `[UNVERIFIED:]` tag describing a
 scenario that has been ruled out is a backlog entry nobody can ever close, and it would have been
