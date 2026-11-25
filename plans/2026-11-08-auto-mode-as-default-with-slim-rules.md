@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-11-08
+status: in-progress
+updated: 2026-11-25
 ---
 
 # Auto mode as the declared default, with a slim rule set and unprompted push and PR work
@@ -131,12 +131,18 @@ finding says a mid-pattern `*` is read literally when the rule ends in `:*`. Pro
 expressed, the classifier's default block is what remains for it — "if possible" in the user's
 words.]
 
-[NEEDS CLARIFICATION: **does "GitHub operations on PRs" include `gh pr merge`?** The classifier
-blocks "merging unapproved PRs" by default, and on a sole-contributor personal repo no PR is ever
-approved by anyone else, so removing the ask rule alone may turn a prompt into a classifier denial.
-If merge is meant, the fix is an `autoMode.allow` entry or an `autoMode.environment` line declaring
-the personal repos trusted — check `code.claude.com/docs/en/auto-mode-config` for the schema, and
-whether a new `claude_auto_mode` field on `[packages.claude-code]` is needed to declare it.]
+[DECISION: **`gh pr merge` on the user's own repos stops prompting too — user decision, 2026-11-25**
+("Yes, trust my repos"). The classifier blocks "merging unapproved PRs" by default, and on a
+sole-contributor repo no PR is ever approved by anyone else, so removing the ask rule alone would
+turn a prompt into a classifier denial. The fix is declaring the user's own repositories trusted in
+`autoMode.environment` (or an `autoMode.allow` entry for merging their PRs), carried by a new
+`claude_auto_mode` field on `[packages.claude-code]`, since no existing field writes the `autoMode`
+key. It beat keeping merge as the one PR operation that still asks.]
+
+[NEEDS CLARIFICATION: **what exactly goes in the `autoMode` block?** Read
+`code.claude.com/docs/en/auto-mode-config` for the schema and run `claude auto-mode defaults` for
+the rule names before writing it. The trust must be scoped to the user's own GitHub account, not to
+GitHub, or it also trusts merging into any repo the gh token can reach.]
 
 [NEEDS CLARIFICATION: **how does `cli-allowlist` express "leave this unmatched on purpose"?** Today
 a verb renders as allow or ask; there is no third verdict meaning "defer to the classifier".
