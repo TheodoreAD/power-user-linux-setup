@@ -80,54 +80,48 @@ variable to move or skip it). So **a committed lock makes every trial a modified
 diff each developer carries and must never commit, and two developers' trials would collide in it.
 That rules the committed lock out.
 
-**Recommended design**, verified end to end 2026-11-25 in a throwaway repo on CLI 1.9.0:
+**The design, implemented 2026-11-25** — the user's own suggestion: _"don't we author all the skills
+in a skills/ directory? would't we gitignore all the installed skills?"_ — the layout `agent-skills`
+already uses, applied to every repo:
 
-1. **`.gitignore` names the repo's own skills and ignores everything else around them:**
+1. **A repo's skills are authored in `skills/<name>/`**, the committed source. Agents do not read
+   it.
+2. **Every install target is gitignored:** `.agents/skills/`, `.claude/skills/`, `skills-lock.json`.
+   No symlink is committed, and nothing a developer installs is tracked.
+3. **Per clone, repo-tasks' `agents.install-skills`, run by `dev-env.setup`**, calls
+   `skills add ./skills --agent universal claude-code --skill '*' --yes`: one copy per skill in
+   `.agents/skills/` for every agent but Claude Code, one link per skill in `.claude/skills/` for
+   Claude Code — a junction on Windows. Without the CLI or npx it says so and skips. Where
+   repo-tasks is absent, that one command is the step.
+4. **A trial is a project-scope `skills add`** and ends with `skills remove --skill <name>`; both
+   touch only ignored paths. Measured in a throwaway repo: `git status` stayed clean, Claude Code
+   saw the repo's skill and the trial, and `remove` took only the trial.
+5. **Promoting a trial** is copying it into `skills/` and committing it — a vendored copy, which is
+   a decision about owning that content.
 
-   ```gitignore
-   .agents/skills/*
-   !.agents/skills/<each repo skill>/
-   .claude/skills/
-   skills-lock.json
-   ```
+[PITFALL: **the installed copies do not follow the source.** An edit to `skills/<name>/` reaches no
+agent until the install runs again, and `skills update` skips local sources (`update.ts`,
+`getProjectSkillsForUpdate`). The CLI's live-link mode exists only in `experimental_sync`, for npm
+packages. Re-run `inv agents.install-skills` after an edit — the same edit → install loop
+`agent-skills` has always had.]
 
-   `.agents/skills/` holds the committed skills plus any developer's trials; `.claude/skills/` and
-   the lock are per-clone state. No committed symlink anywhere.
-2. **Per clone, repo-tasks' `dev-env.setup` runs
-   `skills add ./.agents/skills --agent universal claude-code --skill '*' --yes`**, which links
-   every skill present for Claude Code — symlinks on Linux and macOS, junctions on Windows — and
-   leaves the sources untouched. Without the CLI it prints one line saying Claude Code will not see
-   the repo's skills. Every other agent reads `.agents/skills` directly and needs nothing.
-3. **A trial is `skills add <source> --skill <name> --agent universal claude-code`** at the repo
-   root, and **ending it is `skills remove --skill <name>`**. Measured: after a trial install,
-   `git status` showed nothing but ignored paths (the trial skill, `.claude/`, the lock), Claude
-   Code had links to both the repo skill and the trial, and `skills remove` took out the trial's
-   directory, link and lock entry while leaving the repo skill and its link alone.
-4. **Promoting a trial** to a repo skill is adding its `!.agents/skills/<name>/` line and committing
-   the directory — a vendored copy, which is a decision about owning that content, not a side
-   effect.
-5. **scaffoldapy** stops generating the `.claude/skills` link and generates the `.gitignore` block,
-   with the `!` line for the skill interface's own skill.
+Landed: `repo-tasks` 945d051 (`agents.install-skills`, in `dev-env.setup`, eight tests),
+`scaffoldapy` 7058c65 (template), `freshful-polite-mcp` fb51553 (its two skills moved), `ingesta`
+873a456 (README stub moved), `agent-skills` b954314 (the publishing note). Consumers reach
+`agents.install-skills` at repo-tasks' next release; until then the README in each `skills/` gives
+the npx command.
 
-[PITFALL: **a new repo skill is ignored until its `!` line is added**, and nothing in git says so —
-`git status` shows an ignored path only with `--ignored`. The author of a new skill can commit
-everything else and never notice. So `dev-env.setup` should list every skill under `.agents/skills/`
-that git ignores ("trial or forgotten: add `!.agents/skills/<name>/` to commit it"), which is the
-one moment a trial and a forgotten skill both deserve a line.]
-
-Rejected: a committed `skills-lock.json` with `skills install` as the per-clone restore — the CLI's
-documented project workflow, and the first draft of this design, but it turns every project trial
-into a tracked-file diff (see the constraint above). Rejected: per-developer ignores in
-`.git/info/exclude` for each trial, which works and needs no committed whitelist but is a manual
-step per trial and per clone. Rejected: repo-tasks creating the per-skill links itself
-(`os.symlink`, or `mklink /J` on Windows) — no Node dependency, but it reimplements what the CLI
-already does. Rejected: `core.symlinks` with Developer Mode, which needs admin once and is
-unavailable on a work machine, the constraint this plan started from.
-
-The user chose to leave this designed rather than implement it now.
+Rejected: committing the repo's skills into `.agents/skills/` with a per-skill `!` whitelist in
+`.gitignore` — the previous draft of this section; it commits into an install target, and a new
+skill stays silently ignored until its line is added. Rejected: a committed `skills-lock.json` with
+`skills install` as the per-clone restore, which turns every project trial into a tracked-file diff
+(see the constraint above). Rejected: repo-tasks creating the links itself (`os.symlink`, or
+`mklink /J` on Windows), which reimplements what the CLI already does. Rejected: `core.symlinks`
+with Developer Mode, which needs admin once and is unavailable on a work machine.
 
 [UNVERIFIED: whether Claude Code follows a junction for a skill entry — the same open item as the
-home-directory case below, and the first thing to check on the Windows machine once this lands.]
+home-directory case below, and the first thing to check on the Windows machine: in
+`freshful-polite-mcp`, run the npx install, then ask Claude Code to list its skills.]
 
 ## What breaks, measured rather than assumed
 
