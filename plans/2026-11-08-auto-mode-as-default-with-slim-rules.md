@@ -121,15 +121,14 @@ notice.]
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **can an ask rule catch a force push behind a global option or a refspec?**
-Ask rules are prefix matches, so `Bash(git push --force*)` misses `git push origin main --force` and
-`git -C <repo> push -f` — the same gap `plans/2026-08-22-compound-command-permission-audit.md` found
-for push itself. The docs say `*` works mid-pattern and spans arguments (`Bash(git * --force*)`),
-and that an ask rule "matching command content" falls back to a prompt in auto, but a 2026-09-26
-finding says a mid-pattern `*` is read literally when the rule ends in `:*`. Probe every shape with
-`inv allowlist.check-claude` before trusting the list in design step 4. If a shape cannot be
-expressed, the classifier's default block is what remains for it — "if possible" in the user's
-words.]
+[DECISION: **ask rules catch a force push wherever the flag sits, except behind `-C`.** Resolved
+2026-11-25. The renderer spells `push ... --force*` as `Bash(git push --force*)` and
+`Bash(git push * --force*)`, so the flag is caught first, last or in the middle, and the `*` glob
+covers `--force-with-lease` and `--force-if-includes`. Probed live with `inv allowlist.check-claude`
+under auto: `git push --force origin …`, `git push origin +HEAD:…` and `git commit --amend` all
+asked, while plain push and commit ran. Two shapes have no rule and stay with the classifier's Git
+Destructive default: `git -C <repo> push -f` (Claude renders no `-C` form) and the `:<branch>`
+delete refspec (a trailing `:*` is Claude's prefix wildcard, which `render_claude` now refuses).]
 
 [DECISION: **`gh pr merge` on the user's own repos stops prompting too — user decision, 2026-11-25**
 ("Yes, trust my repos"). The classifier blocks "merging unapproved PRs" by default, and on a
@@ -139,17 +138,26 @@ turn a prompt into a classifier denial. The fix is declaring the user's own repo
 `claude_auto_mode` field on `[packages.claude-code]`, since no existing field writes the `autoMode`
 key. It beat keeping merge as the one PR operation that still asks.]
 
-[NEEDS CLARIFICATION: **what exactly goes in the `autoMode` block?** Read
-`code.claude.com/docs/en/auto-mode-config` for the schema and run `claude auto-mode defaults` for
-the rule names before writing it. The trust must be scoped to the user's own GitHub account, not to
-GitHub, or it also trusts merging into any repo the gh token can reach.]
+[DECISION: **the `autoMode` block is two entries, both scoped to the account TheodoreAD.** Resolved
+2026-11-25, in `setup.toml`'s `claude_auto_mode`. One is an `environment` Source-control entry
+naming the account's repositories in every URL form. It also says what that does not imply: not
+visibility, not fork trust, no relaxed Git Destructive, no cross-repo writes. The other is an
+`allow` exception, Own-Repo Merge, for a PR the transcript shows the agent opened this session in
+the session's own repository from a same-repo branch. Drafts, failing checks and user boundaries
+still block it. Worded across three passes of `claude auto-mode critique`.]
 
-[NEEDS CLARIFICATION: **how does `cli-allowlist` express "leave this unmatched on purpose"?** Today
-a verb renders as allow or ask; there is no third verdict meaning "defer to the classifier".
-Removing `push` from the `[git]` tree would also lose its classification. Candidates: a
-`defer_overrides` list beside `allow_overrides`/`ask_overrides`, or a per-mode render switch keyed
-on `claude_default_mode`. The second would keep the acceptEdits rendering correct if the mode is
-ever switched back.]
+[PITFALL: **the classifier refused an edit that loosened its own rules.** A draft line telling it a
+merge that republishes docs to GitHub Pages is "routine, not a production deploy" was denied as
+[Undermining Oversight] while the tightening edit beside it passed. The user chose to leave the line
+out, so a docs-publishing merge may be judged a deploy and stopped, which is the cautious failure.
+Any future loosening of `claude_auto_mode` needs the user's explicit instruction in the session that
+makes it.]
+
+[DECISION: **`defer_overrides`, a third render verdict meaning "no rule".** Resolved 2026-11-25 in
+`tasks/allowlist.py`, documented in `contributing/cli-allowlist.md`. It beat a per-mode render
+switch: a deferred verb is unmatched in every mode, which means the classifier under auto and a
+prompt under anything else, so switching modes back stays safe with no second rendering to keep
+right. The classification on disk is untouched.]
 
 [NEEDS CLARIFICATION: **which ask rules survive the shrink?** Proposed line in design step 4; the
 full list needs one pass over `cli-allowlist/` verdicts, and Anthropic's `claude auto-mode defaults`
@@ -167,6 +175,15 @@ egress boundary and the honest fix for exfiltration. That plan ordered "revisit
 `claude_default_mode`" last, after the sandbox; this plan deliberately goes first, because the
 user's threat model makes the sandbox an improvement rather than a prerequisite. Update that plan's
 step 4 to point here when this lands.]
+
+## Landed 2026-11-25
+
+Design steps 1–5, 7 and 8 are in: the mode is `auto` (`setup.toml`, applied by
+`inv ai.install-skills --yes`, whose `-y` now confirms setting replacements), deny rules unchanged,
+commit/push/pr deferred, force-push and rewrite asks added, the release/repo/secret asks kept, the
+commit-message rule and trailers in `config/agents-md/git.md`, and `bash.md`/`collaboration.md`
+rewritten for auto and for unprompted own-repo commit and push. Step 6, the ask-rule shrink, is
+still open below, as are the auto-mode note and the sandbox.
 
 ## Recommended direction
 
