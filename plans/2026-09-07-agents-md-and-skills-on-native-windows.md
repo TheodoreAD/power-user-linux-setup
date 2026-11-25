@@ -41,8 +41,8 @@ question — which harnesses read what — and its answers are used here rather 
 - **The skills-link question below is answered.** PULSE stopped making a `~/.claude/skills`
   directory link on 2026-09-07, and the `skills` CLI writes one entry per skill itself — a junction
   on Windows. Since 1.9.0 it does so only when the targets span two directories, so PULSE installs
-  with `--agent universal --agent claude-code`. The remaining UNVERIFIED, whether Claude Code
-  follows a junction, still stands.
+  with `--agent universal --agent claude-code`. Claude Code follows the junction, verified on the
+  Windows machine the same day.
 - **A repo's own skills get the same treatment**, designed in the next section.
 
 ### A repo's own skills, for Claude Code, without a committed symlink
@@ -119,9 +119,11 @@ skill stays silently ignored until its line is added. Rejected: a committed `ski
 `mklink /J` on Windows), which reimplements what the CLI already does. Rejected: `core.symlinks`
 with Developer Mode, which needs admin once and is unavailable on a work machine.
 
-[UNVERIFIED: whether Claude Code follows a junction for a skill entry — the same open item as the
-home-directory case below, and the first thing to check on the Windows machine: in
-`freshful-polite-mcp`, run the npx install, then ask Claude Code to list its skills.]
+**Verified 2026-11-25 on the Windows machine (Claude Code 2.1.332, no Developer Mode):** Claude
+Code follows a junction for a skill entry. In `nexus`,
+`npx skills add ./skills -a universal claude-code -y` left a real copy in `.agents/skills/` and a
+junction in `.claude/skills/`, and a headless `claude -p` listed the project skill alongside the
+seven global ones, which were reinstalled the same way and are junctions too.
 
 ## What breaks, measured rather than assumed
 
@@ -320,13 +322,10 @@ bearing**, because the CLI's parent-symlink resolution then treats `~/.claude/sk
 therefore safe only together with a CLI that does create the per-skill entry — which is what the
 pitfall above says has to be measured rather than assumed.]
 
-[UNVERIFIED: **whether Claude Code follows a junction for a skill entry.** Its docs say a
-`<skill-name>` entry "can be a symlink to a directory elsewhere on disk", and its binary classifies
-a Windows junction as `isSymbolicLink: true` in its own directory-listing wrapper while every
-user/project skill loader accepts `isDirectory() || isSymbolicLink()` — so it almost certainly
-works. That is source inference about a closed binary, not documentation and not a Windows test. It
-is also the single fact the skills half rests on, so it is the first thing to check on a real
-Windows machine.]
+**Claude Code follows a junction for a skill entry — verified 2026-11-25**, see "A repo's own
+skills" above. The inference recorded here (the binary classifies a junction as
+`isSymbolicLink: true`, and every skill loader accepts `isDirectory() || isSymbolicLink()`) was
+right.
 
 ### Nothing out there syncs both, and the drift model we just adopted is the mature one
 
@@ -453,12 +452,20 @@ consumer is worse than adding it when a second package needs it.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **where does the Windows machine get the fragments — a clone of this repo, or
-a rendered artifact?** A clone means the whole repo lands on a work machine and the port has to be
-real. A rendered artifact (assemble on Linux, commit `dist/AGENTS.windows.md`, fetch it there) needs
-almost no port at all, and this repo already has a convention for it — "Regenerating a file from a
-canonical source" says commit the regenerated output and run regeneration as a deliberate standalone
-command. The user asked for a port, so this is a question about how much of one, not whether.]
+[DECISION: **the Windows machine gets the fragments from a clone of this repo, and the Windows rules
+fold in as fragments.** Decided by the user 2026-11-25, over a rendered `dist/AGENTS.windows.md` and
+over keeping a separate Windows file. `win-configs/claude/CLAUDE.md` (PowerShell 7, the tool table,
+Bash tool denied, no-memory, Documents and Artifacts) becomes a Windows-only fragment here.
+`win-configs` stops deploying the instructions file once PULSE does, and keeps scoop, the terminal
+and the pwsh profile. On Windows the entry point is `spowse deploy.all` + `spowse ai.install-skills`,
+not `inv setup`.
+
+Interim state, 2026-11-25: `win-configs` 0292aba copies its file to `~/.agents/AGENTS.md` and
+`~/.claude/CLAUDE.md` (identical), and installs the global skills with
+`-g -a universal claude-code`. So the destinations already have the shape PULSE will write.
+Reconciling content is part of the fold-in. Several of the Windows file's rules (naming, Markdown
+tables, commits, no personal details) are cross-platform and may duplicate or contradict fragments
+here. Diff them rule by rule instead of appending the file whole.]
 
 [NEEDS CLARIFICATION: **does Copilot get written to on Windows?** It is one of the four named
 agents, and PULSE deliberately writes nothing for Copilot today because no confirmed path-scoped
@@ -490,6 +497,8 @@ against. That is settled, which moves the work to the order below.
    that says the port works; content differences are the next problem, not this one.
 4. **Then the axis**, then the Windows-only rules it enables.
 
-The one thing to check on a real Windows machine before trusting any of it is whether Claude Code
-follows a junction for a skill entry, since the whole skills half rests on it and the evidence is
-inference from a closed binary.
+The junction question this section used to end on is answered (yes, 2026-11-25). Step 1 is
+partly done: the tracked `CLAUDE.md` symlink is gone. `.gitattributes` and the encoding fix are
+still open, and so are all four blockers in step 2. Checked against master 76d1a84:
+`tasks/util.py:4`, `tasks/util.py:37`, about 20 bare `read_text()` calls across `tasks/`, and
+`tasks/verify.py:227`.
