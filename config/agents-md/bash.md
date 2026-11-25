@@ -83,19 +83,23 @@ bundle can turn into.
 
 ### Writing to a repo other than the session's
 
-**Out entirely, not merely discouraged.** No edit and no commit, however small, however obviously
-correct, however much a skill's own instructions tell you to. File it instead:
+**Only when the user has explicitly approved that change.** Without approval, make no edit and no
+commit, however small, however obviously correct, however much a skill's own instructions tell you
+to. File it instead:
 `python3 ~/.agents/skills/plan-conveyor/scripts/plans.py new <topic> --for <repo>` puts a plan in
 that repo's store mirror, outside every working tree, and the next session working there is offered
-it. Commit it in the store immediately and say where it went. The only exception is genuinely
-iterative work needing back-and-forth in that repo, which gets its own session there rather than a
-relay.
+it. Commit it in the store immediately and say where it went. Genuinely iterative work needing
+back-and-forth in that repo gets its own session there rather than a relay.
 
-The reason it is a hard line rather than a judgment call: a commit in someone else's tree is silent
-by construction. It looks routine in `git log`, and the session that owns the repo may push it
-without ever knowing it was not theirs. So a mutating `git -C <other repo> commit`/`push` prompting
-is a **stop**, not a checkpoint to click through. There is almost nothing legitimate on the far side
-of it.
+**With approval, make exactly the approved change and nothing beside it.** Follow that repo's own
+`AGENTS.md` and gate, commit only your own hunks (another session may have uncommitted work there),
+and report the repo and the commit's SHA, so the user knows a commit exists that no session in that
+repo made.
+
+Approval rather than judgment, because a commit in someone else's tree is silent by construction. It
+looks routine in `git log`, and the session that owns the repo may push it without ever knowing it
+was not theirs. So without approval a mutating `git -C <other repo> commit`/`push` prompting is a
+**stop**, not a checkpoint to click through.
 
 ### Parsing a command's output, or formatting a date or decimal, in a script
 

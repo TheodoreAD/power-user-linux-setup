@@ -1208,6 +1208,14 @@ repo has no signal distinguishing it from its own work, and the natural next act
 Size is not what makes a cross-repo write dangerous, and "it was only two lines" is exactly the
 framing under which one gets made.
 
+**Softened 2026-11-25, on the user's instruction, to "only with explicit approval".** Merging the
+Windows machine's global rules into these fragments surfaced the conflict: Windows had no such rule,
+and that same day a session there had edited three other repos at the user's request, each change
+approved before it was made. Asked which should hold on both platforms, the user chose "allow when
+user approves". The silent-commit argument above still decides the default, so approval has to be
+explicit and for that change, and the commit is reported by repo and SHA so the owning repo's next
+session is not the first to find it.
+
 The `git -C` clause was re-cut 2026-08-24: read-only `-C` verbs are rendered as allow rules by
 `cli-allowlist`, and the mutating ones are meant to prompt — the earlier "expect a one-off prompt"
 framing read as friction to minimize, and under auto mode the prompt never came at all (see the
