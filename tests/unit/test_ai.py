@@ -487,8 +487,10 @@ def _stub_skills_task_helpers(monkeypatch, calls):
     )
     monkeypatch.setattr(ai, "_apply_static_claude_permissions", lambda: calls.append(("perms",)))
     monkeypatch.setattr(ai, "_apply_additional_directories", lambda: calls.append(("dirs",)))
-    monkeypatch.setattr(ai, "_apply_declared_default_mode", lambda: calls.append(("mode",)))
-    monkeypatch.setattr(ai, "_apply_declared_statusline", lambda: calls.append(("statusline",)))
+    monkeypatch.setattr(ai, "_apply_declared_default_mode", lambda *, yes: calls.append(("mode", yes)))
+    monkeypatch.setattr(ai, "_apply_declared_auto_mode", lambda *, yes: calls.append(("auto", yes)))
+    monkeypatch.setattr(ai, "_apply_declared_skill_listing_budget", lambda *, yes: calls.append(("budget", yes)))
+    monkeypatch.setattr(ai, "_apply_declared_statusline", lambda *, yes: calls.append(("statusline", yes)))
     monkeypatch.setattr(ai, "_note_copilot_permissions", lambda: calls.append(("copilot",)))
 
 
@@ -503,8 +505,10 @@ def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch
     ai.install_skills.body(MockContext(), yes=True)
     assert ("perms",) in calls
     assert ("dirs",) in calls
-    assert ("mode",) in calls
-    assert ("statusline",) in calls
+    assert ("mode", True) in calls
+    assert ("auto", True) in calls
+    assert ("budget", True) in calls
+    assert ("statusline", True) in calls
     assert ("copilot",) in calls
     assert ("install", Path.home(), True, None) in calls
 
@@ -753,6 +757,81 @@ def test_apply_declared_default_mode_noop_when_nothing_declared(monkeypatch):
     monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
 
     ai._apply_declared_default_mode()
+
+
+def test_apply_declared_default_mode_yes_replaces_without_asking(monkeypatch):
+    # `-y` answers the replace question the way apt's `-y` answers every prompt; without it a
+    # non-interactive run declines, so an agent's Bash call could never move the mode at all.
+    _stub_declared_mode(monkeypatch, value="auto")
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"defaultMode": "acceptEdits"}})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("yes given, must never prompt"))
+
+    ai._apply_declared_default_mode(yes=True)
+
+    assert written == [{"permissions": {"defaultMode": "auto"}}]
+
+
+# ---------------------------------------------------------------------------
+# _apply_declared_auto_mode — the whole autoMode block as one value
+# ---------------------------------------------------------------------------
+
+_AUTO_MODE = {"environment": ["$defaults", "Source control: github.com/example"], "allow": ["$defaults", "x"]}
+
+
+def _stub_declared_auto_mode(monkeypatch, value=_AUTO_MODE):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {"packages": {"claude-code": {"enabled": True, "claude_auto_mode": value}}},
+    )
+
+
+def test_apply_declared_auto_mode_sets_when_absent(monkeypatch, capsys):
+    _stub_declared_auto_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {}})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    monkeypatch.setattr(ui, "ask", _fail_if_asked("no existing block, must never prompt"))
+
+    ai._apply_declared_auto_mode()
+
+    assert written == [{"permissions": {}, "autoMode": _AUTO_MODE}]
+    assert "autoMode set" in capsys.readouterr().out
+
+
+def test_apply_declared_auto_mode_noop_when_equal(monkeypatch, capsys):
+    _stub_declared_auto_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"autoMode": dict(_AUTO_MODE)})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("already equal, must never write"))
+
+    ai._apply_declared_auto_mode()
+
+    assert "already up to date" in capsys.readouterr().out
+
+
+def test_apply_declared_auto_mode_declines_a_different_block_by_default(monkeypatch, capsys):
+    # A block edited from /permissions' Auto mode tab is the user's; replacing it needs a yes.
+    _stub_declared_auto_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"autoMode": {"environment": ["mine"]}})
+    monkeypatch.setattr(util, "write_claude_settings", _fail_if_asked("declined, must never write"))
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: False)
+
+    ai._apply_declared_auto_mode()
+
+    assert "left existing block in place" in capsys.readouterr().out
+
+
+def test_apply_declared_auto_mode_yes_replaces_a_different_block(monkeypatch):
+    _stub_declared_auto_mode(monkeypatch)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"autoMode": {"environment": ["mine"]}})
+    written = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+
+    ai._apply_declared_auto_mode(yes=True)
+
+    assert written == [{"autoMode": _AUTO_MODE}]
 
 
 # ---------------------------------------------------------------------------

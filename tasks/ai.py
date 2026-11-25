@@ -417,18 +417,24 @@ def _apply_additional_directories() -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: additionalDirectories updated ({len(declared)} dir(s))")
 
 
-def _apply_declared_default_mode() -> None:
+def _confirm_replace(question: str, *, yes: bool) -> bool:
+    """The replace-a-different-value question every declared-setting sync asks. `-y`/`--yes` on
+    `inv ai.install-skills` answers it, as apt's `-y` answers every prompt; without it a
+    non-interactive run declines, which is `ui.ask`'s default here."""
+    return yes or ui.ask(question, default=False)
+
+
+def _apply_declared_default_mode(*, yes: bool = False) -> None:
     """Sync `[packages.claude-code]`'s `claude_default_mode` into ~/.claude/settings.json's
     `permissions.defaultMode`. Same three-outcome shape as `_apply_declared_statusline` — one
     scalar with one desired value, so no manifest: absent -> set; matches -> no-op; set to
-    something else -> ask before overwriting (declines by default).
+    something else -> ask before overwriting (declines by default, `yes` confirms).
 
-    The mode is declared here rather than flipped per session because the rest of this machine's
-    Claude Code setup — the `cli-allowlist` pipeline's prefix rules, `mode_covered`, the scratch
-    `claude_additional_directories` — is designed around `acceptEdits`' rules-decide model, not
-    `auto`'s classifier-decides one; a session started in the wrong mode silently gets a different
-    permission system. Rationale and the audit behind the choice: the `session-bash-audit` skill's
-    references/research.md.
+    The mode is declared here rather than flipped per session because a session started in a mode
+    other than the one the rest of this setup assumes silently gets a different permission system:
+    the `cli-allowlist` rules, `defer_overrides` and `claude_auto_mode` are shaped for the declared
+    one. Why it is `auto` since 2026-11-25:
+    `plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`.
     """
     declared = util.load_config()["packages"].get("claude-code", {}).get("claude_default_mode")
     if not declared:
@@ -445,9 +451,9 @@ def _apply_declared_default_mode() -> None:
         print("[ai.install-skills] permissions.defaultMode: already up to date")
         return
 
-    if current is not None and not ui.ask(
+    if current is not None and not _confirm_replace(
         f"~/.claude/settings.json already sets permissions.defaultMode={current!r} — replace it with {declared!r}?",
-        default=False,
+        yes=yes,
     ):
         print("[ai.install-skills] permissions.defaultMode: left existing value in place")
         return
@@ -457,7 +463,45 @@ def _apply_declared_default_mode() -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: permissions.defaultMode set to {declared!r}")
 
 
-def _apply_declared_skill_listing_budget() -> None:
+def _apply_declared_auto_mode(*, yes: bool = False) -> None:
+    """Sync `[packages.claude-code]`'s `claude_auto_mode` table into ~/.claude/settings.json's
+    top-level `autoMode` block, which tells auto mode's classifier what is trusted and which of
+    its default blocks to lift. Same three outcomes as the scalars around it, applied to the whole
+    block as one value: absent -> set; equal -> no-op; different -> ask (`yes` confirms).
+
+    Whole-block rather than merged per entry because the classifier reads the lists as prose
+    rules in order, `"$defaults"` splicing the built-in ones in where it sits, so a merge would
+    have to decide an order nobody declared. Only the user scope carries it: Claude Code ignores
+    `autoMode` in a project's own settings files, so a checked-in repo cannot loosen it.
+    """
+    declared = util.load_config()["packages"].get("claude-code", {}).get("claude_auto_mode")
+    if not declared:
+        return
+
+    settings = util.load_claude_settings()
+    current = settings.get("autoMode")
+
+    if util.DRY_RUN:
+        print(f"[ai.install-skills] autoMode: {util.ok_label(current == declared)}")
+        return
+
+    if current == declared:
+        print("[ai.install-skills] autoMode: already up to date")
+        return
+
+    if current is not None and not _confirm_replace(
+        "~/.claude/settings.json already has a different autoMode block — replace it with the declared one?",
+        yes=yes,
+    ):
+        print("[ai.install-skills] autoMode: left existing block in place")
+        return
+
+    settings["autoMode"] = declared
+    util.write_claude_settings(settings)
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: autoMode set")
+
+
+def _apply_declared_skill_listing_budget(*, yes: bool = False) -> None:
     """Sync `[packages.claude-code]`'s `claude_skill_listing_budget_fraction` into
     ~/.claude/settings.json's top-level `skillListingBudgetFraction`. Same three-outcome scalar
     shape as the two functions either side of this one — absent -> set; matches -> no-op; set to
@@ -495,9 +539,9 @@ def _apply_declared_skill_listing_budget() -> None:
         print("[ai.install-skills] skillListingBudgetFraction: already up to date")
         return
 
-    if current is not None and not ui.ask(
+    if current is not None and not _confirm_replace(
         f"~/.claude/settings.json already sets skillListingBudgetFraction={current!r} — replace it with {declared!r}?",
-        default=False,
+        yes=yes,
     ):
         print("[ai.install-skills] skillListingBudgetFraction: left existing value in place")
         return
@@ -507,7 +551,7 @@ def _apply_declared_skill_listing_budget() -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: skillListingBudgetFraction set to {declared!r}")
 
 
-def _apply_declared_statusline() -> None:
+def _apply_declared_statusline(*, yes: bool = False) -> None:
     """Point ~/.claude/settings.json's top-level `statusLine` key at the managed script, declared
     via `[packages.claude-statusline]`'s `claude_statusline` field.
 
@@ -532,9 +576,9 @@ def _apply_declared_statusline() -> None:
         print("[ai.install-skills] statusLine: already up to date")
         return
 
-    if current is not None and not ui.ask(
+    if current is not None and not _confirm_replace(
         f"~/.claude/settings.json already has a custom statusLine ({current!r}) — replace it with the managed one?",
-        default=False,
+        yes=yes,
     ):
         print("[ai.install-skills] statusLine: left existing custom value in place")
         return
@@ -613,14 +657,16 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     no longer links the whole directory.
     On the default (global) run, also merges every declared `claude_permissions_allow` rule and
     `claude_additional_directories` entry into ~/.claude/settings.json, syncs the declared
-    `claude_default_mode`, `claude_skill_listing_budget_fraction` and `claude_statusline` values
-    into `permissions.defaultMode` / `skillListingBudgetFraction` / `statusLine`, and checks for
-    GitHub Copilot (see docs/claude-code.md).
+    `claude_default_mode`, `claude_auto_mode`, `claude_skill_listing_budget_fraction` and
+    `claude_statusline` values into `permissions.defaultMode` / `autoMode` /
+    `skillListingBudgetFraction` / `statusLine`, and checks for GitHub Copilot (see
+    docs/claude-code.md).
 
     Before actually installing or updating a skill, shows its own description and asks — same
     `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
     add --yes`), rather than a bespoke `--confirm`-to-opt-in flag: pass -y/--yes to skip the
-    prompts and install everything, e.g. for a fully unattended `inv setup`. Skills that are
+    prompts and install everything, e.g. for a fully unattended `inv setup`. It answers the
+    replace-a-different-setting questions above too, as apt's `-y` answers every prompt. Skills that are
     already up to date are never prompted for, so a re-run of an unchanged setup stays quiet
     either way. Like every other prompt in this repo (see ui.ask), a non-interactive run (piped,
     CI, PULSE_DRY_RUN) skips the prompt and proceeds — this never hangs a scripted run even
@@ -649,9 +695,10 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     if dir is None and selected is None:
         _apply_static_claude_permissions()
         _apply_additional_directories()
-        _apply_declared_default_mode()
-        _apply_declared_skill_listing_budget()
-        _apply_declared_statusline()
+        _apply_declared_default_mode(yes=yes)
+        _apply_declared_auto_mode(yes=yes)
+        _apply_declared_skill_listing_budget(yes=yes)
+        _apply_declared_statusline(yes=yes)
         _note_copilot_permissions()
 
 
