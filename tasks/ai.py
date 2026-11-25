@@ -400,10 +400,13 @@ def _apply_additional_directories() -> None:
     `~/.claude/jobs/<id>/tmp`) are outside every repo, so without this every scratch write prompts.
     Directories listed here grant file access only — no CLAUDE.md/skills/hooks load from them
     (documented harness behavior for the settings-file form, unlike `--add-dir`).
+
+    Written with forward slashes (`as_posix()`), which Claude Code's settings use on every platform:
+    `str()` on Windows turned `/tmp/claude-1000` into `\\tmp\\claude-1000`.
     """
     declared = sorted(
         {
-            str(Path(d).expanduser())
+            Path(d).expanduser().as_posix()
             for cfg in util.enabled_packages().values()
             for d in cfg.get("claude_additional_directories", [])
         }

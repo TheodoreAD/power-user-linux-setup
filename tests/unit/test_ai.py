@@ -709,7 +709,7 @@ def test_apply_additional_directories_writes_expanded_paths_and_manifest(monkeyp
 
     ai._apply_additional_directories()
 
-    expected = sorted(["/tmp/claude-1000", str(Path.home() / ".claude" / "jobs")])
+    expected = sorted(["/tmp/claude-1000", (Path.home() / ".claude" / "jobs").as_posix()])
     assert written == [{"permissions": {"allow": ["Bash(ls:*)"], "additionalDirectories": expected}}]
     assert json.loads((tmp_path / "dirs-manifest.json").read_text(encoding="utf-8")) == expected
     assert "additionalDirectories updated" in capsys.readouterr().out

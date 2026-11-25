@@ -533,10 +533,13 @@ def session_bus_address() -> str | None:
     into under WSL: WSLg supplies a display and nothing else. Without a session bus every process
     that wants one autolaunches its own, so nothing is shared between a terminal and an IDE-started
     server — and a secret store unlocked in one is invisible to the other. `dbus-user-session` plus
-    a systemd user session is what puts a single bus at /run/user/<uid>/bus.
+    a systemd user session is what puts a single bus at /run/user/<uid>/bus. None on native Windows,
+    which has no D-Bus and no uid.
     """
     if address := os.environ.get("DBUS_SESSION_BUS_ADDRESS"):
         return address
+    if sys.platform == "win32":
+        return None
     path = Path(f"/run/user/{os.getuid()}/bus")
     return f"unix:path={path}" if path.exists() else None
 

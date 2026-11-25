@@ -190,8 +190,10 @@ def _under_home(path: Path) -> bool:
 
 
 def _rel(path: Path) -> str:
-    """`~`-relative display form, so the listing lines up and never leaks the username."""
-    return f"~/{path.relative_to(_HOME)}" if _under_home(path) and path != _HOME else str(path)
+    """`~`-relative display form, so the listing lines up and never leaks the username. Always with
+    forward slashes, which is how every path in setup.toml is written: on Windows `str()` gave
+    `~/Pictures\\Screenshots`, a label matching nothing it is compared against."""
+    return f"~/{path.relative_to(_HOME).as_posix()}" if _under_home(path) and path != _HOME else path.as_posix()
 
 
 # ---------------------------------------------------------------------------
