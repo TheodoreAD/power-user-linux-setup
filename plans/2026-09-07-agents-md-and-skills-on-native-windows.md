@@ -70,43 +70,61 @@ throwaway repo holding one skill at `.agents/skills/demo-skill/`:
   survived only because source and destination are one directory. Under `CI` it reported the skill
   as installed and changed nothing.
 
-**Recommended design.** The CLI's own project workflow, unmodified:
+**The constraint that decides the design: skills are tried in a project, never globally.** Asked
+2026-11-25, the user: _"i don't want to trial skills globally, since globally i expect to have
+stability for important things, so i would try them out in a project first"_, and every developer
+must be able to try different skills in the same repo without issue. The CLI gives no control over
+where a project-scope `skills add` writes: always the skill into `.agents/skills/<name>/` and an
+entry into `skills-lock.json` at the repo root (`local-lock.ts`, `LOCAL_LOCK_FILE`, no option or
+variable to move or skip it). So **a committed lock makes every trial a modified tracked file**, a
+diff each developer carries and must never commit, and two developers' trials would collide in it.
+That rules the committed lock out.
 
-1. **Commit `.agents/skills/` and `skills-lock.json`; gitignore `.claude/skills/`.** No committed
-   symlink anywhere. The lock is the CLI's documented project manifest, so any developer with `npx`
-   can restore the links with `npx skills install`, knowing nothing about this repo family.
-2. **Per clone, `skills install --agent universal claude-code`** creates Claude Code's per-skill
-   links — symlinks on Linux and macOS, junctions on Windows. repo-tasks' `dev-env.setup`, already
-   the one per-clone step every repo documents, runs it when the CLI is available and prints one
-   line saying Claude Code will not see the repo's skills when it is not. Nothing else changes for
-   any other agent, all of which read `.agents/skills` directly.
-3. **Adding a skill** is `skills add ./.agents/skills --skill <name> --agent universal claude-code`,
-   which writes its lock entry and its link. **Editing one** leaves the lock's hash stale until the
-   next `skills install`, which rewrites it: the lock diff is committed with the skill change, the
-   same as any lockfile.
-4. **scaffoldapy** stops generating the `.claude/skills` link, generates the `.gitignore` entry, and
-   generates `skills-lock.json` only for the skill interface, where there is a skill to lock.
+**Recommended design**, verified end to end 2026-11-25 in a throwaway repo on CLI 1.9.0:
 
-Rejected: repo-tasks creating the per-skill links itself (`os.symlink`, or `mklink /J` on Windows).
-It works with no Node dependency, but it reimplements exactly what the CLI already does, which is
-the "verify rather than reimplement" case. Rejected: `core.symlinks` with Developer Mode, which
-needs admin once and is unavailable on a work machine, the constraint this plan started from.
+1. **`.gitignore` names the repo's own skills and ignores everything else around them:**
 
-[NEEDS CLARIFICATION: **the lock's hash is redundant for an in-repo skill** — git already versions
-its content — and makes every skill edit a two-file change. The alternative is to gitignore
-`skills-lock.json` too and have `dev-env.setup` run `skills add ./.agents/skills --skill '*'`
-instead of `install`, so `.agents/skills/` alone is the manifest. That loses `npx skills install` as
-the zero-knowledge restore, and a repo that later also pins an external project skill would want the
-lock committed after all. Recommend the committed lock; decide before implementing.
+   ```gitignore
+   .agents/skills/*
+   !.agents/skills/<each repo skill>/
+   .claude/skills/
+   skills-lock.json
+   ```
 
-Asked 2026-11-25 whether a committed lock gets in the way of each developer trying other skills —
-_"trying out skills is important"_. It does not, given one rule: **trials go global**
-(`skills add <source> -g --agent universal claude-code`), into `~/.agents/skills`, touching no repo
-and seen by every agent in every project. A project-scope trial dirties the tree whether or not the
-lock is committed, because the CLI writes the skill itself into the committed `.agents/skills/`; a
-committed lock only adds `skills-lock.json` to what shows as modified. And nothing leaks between
-developers: `skills install` restores only the committed lock's entries. The user chose to leave
-this designed rather than implement it now.]
+   `.agents/skills/` holds the committed skills plus any developer's trials; `.claude/skills/` and
+   the lock are per-clone state. No committed symlink anywhere.
+2. **Per clone, repo-tasks' `dev-env.setup` runs
+   `skills add ./.agents/skills --agent universal claude-code --skill '*' --yes`**, which links
+   every skill present for Claude Code — symlinks on Linux and macOS, junctions on Windows — and
+   leaves the sources untouched. Without the CLI it prints one line saying Claude Code will not see
+   the repo's skills. Every other agent reads `.agents/skills` directly and needs nothing.
+3. **A trial is `skills add <source> --skill <name> --agent universal claude-code`** at the repo
+   root, and **ending it is `skills remove --skill <name>`**. Measured: after a trial install,
+   `git status` showed nothing but ignored paths (the trial skill, `.claude/`, the lock), Claude
+   Code had links to both the repo skill and the trial, and `skills remove` took out the trial's
+   directory, link and lock entry while leaving the repo skill and its link alone.
+4. **Promoting a trial** to a repo skill is adding its `!.agents/skills/<name>/` line and committing
+   the directory — a vendored copy, which is a decision about owning that content, not a side
+   effect.
+5. **scaffoldapy** stops generating the `.claude/skills` link and generates the `.gitignore` block,
+   with the `!` line for the skill interface's own skill.
+
+[PITFALL: **a new repo skill is ignored until its `!` line is added**, and nothing in git says so —
+`git status` shows an ignored path only with `--ignored`. The author of a new skill can commit
+everything else and never notice. So `dev-env.setup` should list every skill under `.agents/skills/`
+that git ignores ("trial or forgotten: add `!.agents/skills/<name>/` to commit it"), which is the
+one moment a trial and a forgotten skill both deserve a line.]
+
+Rejected: a committed `skills-lock.json` with `skills install` as the per-clone restore — the CLI's
+documented project workflow, and the first draft of this design, but it turns every project trial
+into a tracked-file diff (see the constraint above). Rejected: per-developer ignores in
+`.git/info/exclude` for each trial, which works and needs no committed whitelist but is a manual
+step per trial and per clone. Rejected: repo-tasks creating the per-skill links itself
+(`os.symlink`, or `mklink /J` on Windows) — no Node dependency, but it reimplements what the CLI
+already does. Rejected: `core.symlinks` with Developer Mode, which needs admin once and is
+unavailable on a work machine, the constraint this plan started from.
+
+The user chose to leave this designed rather than implement it now.
 
 [UNVERIFIED: whether Claude Code follows a junction for a skill entry — the same open item as the
 home-directory case below, and the first thing to check on the Windows machine once this lands.]
