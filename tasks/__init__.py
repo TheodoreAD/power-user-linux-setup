@@ -155,11 +155,11 @@ if testing is not None:
 if dev_env is not None:
     _add_borrowed(dev_env, name="dev-env")
 if agents is not None:
-    # `inv agents.wire-claude-hook` used to reach this repo as `inv dev-env.claude-hook`, which
-    # existed only because repo_tasks' dev_env.py imports it for a pre= chain and
-    # Collection.from_module republished it. That leak is fixed upstream, so the namespace it
-    # really lives in has to be wired explicitly or the command disappears from this repo — and
-    # docs/claude-code.md documents it.
+    # Wired explicitly: repo_tasks' dev_env.py imports agents' tasks for its pre= chain, and since
+    # that leak was fixed upstream nothing else publishes the `agents` namespace here
+    # (`inv agents.install-skills`). Its other task, wire-claude-hook, is retired upstream as of
+    # 2026-11-25 in favour of [packages.claude-direnv-hook]; it leaves this repo at the next
+    # repo-tasks bump.
     _add_borrowed(agents)
 if docs is not None:
     _add_borrowed(docs)

@@ -46,10 +46,11 @@ inv dev-env.setup
 This runs `uv sync` (creates `.venv/` from `pyproject.toml`'s `dev` dependency group —
 `pytest`/`invoke` — and editable-installs `tasks` as a real package so `import tasks` just works, no
 `sys.path` tricks needed) and `direnv allow`, so the repo's `.envrc` auto-exports
-`VIRTUAL_ENV`/`PATH` whenever direnv's shell hook fires (`[packages.direnv]` in `setup.toml`), plus
-wires Claude Code's Bash tool to pick up the same environment (`agents.wire-claude-hook` — see
-docs/claude-code.md). Then just `cd` into the repo and run tests the plain way, same as any other
-Python project — no `uv run` prefix, no manual activation:
+`VIRTUAL_ENV`/`PATH` whenever direnv's shell hook fires (`[packages.direnv]` in `setup.toml`).
+Claude Code's Bash tool picks up the same environment through `[packages.claude-direnv-hook]`, a
+user-level hook installed by `inv ai.install-skills` (see docs/claude-code.md). Then just `cd` into
+the repo and run tests the plain way, same as any other Python project — no `uv run` prefix, no
+manual activation:
 
 ```shell
 pytest            # or: inv test.unit — what quality.check/precommit run
