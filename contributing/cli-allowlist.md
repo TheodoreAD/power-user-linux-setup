@@ -637,6 +637,35 @@ exact near-miss the `sed` section below records — while from an agent's non-TT
 `util.confirm` can only return its default, so there was no way to approve one tool and not the
 others.
 
+### `defer_overrides` — leaving a verb to the harness on purpose (2026-11-25)
+
+When the machine's declared mode moved to `auto`, the user decided that `git commit`, `git push` and
+`gh pr` work goes unprompted, while force pushes and history rewrites keep a deterministic prompt
+(`plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`). Neither existing verdict fits:
+
+- **Allow is wrong.** An allow rule resolves before the classifier, so `Bash(git push *)` would also
+  pass `git push --force` without anything judging it — Backslash Security measured exactly that
+  with a broad `Bash(git:*)`.
+- **Ask is the thing being removed.**
+
+`defer_overrides` is the third answer: no rule at all for the node's write/dangerous verdict, the
+node's children included, read-only children keeping their allow. Unmatched, the call goes to the
+harness's own default — auto mode's classifier, which allows an ordinary push and blocks a force
+push of shared work, or a prompt in any other mode, so switching modes back is still safe. The
+shapes that must always prompt are `ask_overrides` beside it: `push ... --force*` (one glob covers
+`--force-with-lease` and `--force-if-includes`), `-f`, `+*` refspecs, `--mirror`, `--delete`/`-d`,
+`--prune`, `commit ... --amend`, `filter-branch`, `filter-repo`, `update-ref ... -d`,
+`reflog expire`, `gc ... --prune*`.
+
+[PITFALL: **a trailing `:*` in a pattern is Claude's legacy prefix wildcard, not a literal.** The
+first draft listed `push ... :*` for the `:<branch>` delete-by-refspec form, which rendered
+`Bash(git push :*)` and `Bash(git push * :*)` — an ask on every push, the opposite of the decision.
+Caught by reading the render, not by a test. `render_claude` now refuses any pattern ending in `:*`,
+and that refspec form is left to the classifier's Git Destructive default.]
+
+Residual, accepted: Claude renders no `-C` form for any rule, so `git -C <repo> push --force` is
+unmatched and reaches the classifier, not the ask.
+
 ### End-to-end confirmed live
 
 This isn't just tested in isolation — after `apply`, the actual rules were exercised in a live
