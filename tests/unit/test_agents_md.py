@@ -58,7 +58,6 @@ _EVIDENCE_FREE = frozenset(
         "Machine behavior belongs in global config, not in a repo",
         "The shell on the Windows machine",
         "Writing a script on the Windows machine",
-        "Running a Python project's tools on the Windows machine",
     }
 )
 

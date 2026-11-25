@@ -2221,6 +2221,27 @@ first thing to run, not the retry.
   truncated one is visible before anyone notices. Not observed, so it is reasoning rather than
   evidence; the rule already names both bodies.
 
+## Running a Python project's tools on the Windows machine
+
+Measured 2026-11-25 and 26 on the Windows machine with headless Claude Code 2.1.332 sessions, after
+the user asked for the Linux venv experience on Windows. What Claude Code's PowerShell tool offers,
+read from its docs and its shipped binary: no profile (`-NoProfile` is hard-coded), no shell prefix
+(`CLAUDE_CODE_SHELL_PREFIX` wraps the Bash tool only), and a `CLAUDE_ENV_FILE` that drops any value
+holding `/` or `\`, so it cannot carry `PATH`.
+
+- **A PreToolUse hook rewriting the command (`updatedInput`, matcher `PowerShell`) is applied**:
+  `python` resolved to the project's venv. But permission rules are checked against the rewritten
+  command, and the `PATH` assignment made `uv run invoke --version`, allowed by the user's
+  `PowerShell(uv run invoke *)` rule, come back denied, even with allow rules added for the two
+  assignments. Only a hook that approves everything itself would avoid that. Rejected.
+- **`.ps1` shims first on the user PATH** never change the command text. In a session started with
+  another repo's venv in its environment, `python` ran the project's own `.venv`; with no `.venv`,
+  it fell back to the next interpreter that is not a venv's. From a fresh registry `PATH`, PULSE and
+  repo-tasks each got their own `pytest` (9.2.0 and 9.1.1) and `inv`.
+
+The command list (`python`, `pytest`, `inv`, `invoke`; not `pip`) is the user's: uv manages the
+environment, and everything else is meant to run through inv tasks.
+
 ## Writing the commit command in PowerShell
 
 The Windows counterpart of the rule above, added 2026-11-25 when the Windows machine's global rules

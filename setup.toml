@@ -1531,6 +1531,28 @@ content_file = "config/claude-direnv-hook.sh"
 # into settings.json. One command per event; ai.install-skills merges them into `hooks`.
 claude_hooks = { SessionStart = "zsh ~/.claude/direnv-hook.sh", CwdChanged = "zsh ~/.claude/direnv-hook.sh" }
 
+[packages.venv-shims]
+description = """
+Native Windows counterpart of claude-direnv-hook: `python`, `pytest`, `inv` and `invoke` resolve to
+the .venv of the nearest directory at or above the current one, in Claude Code's PowerShell tool
+and in any PowerShell, through .ps1 shims first on the user PATH. Claude Code's PowerShell tool
+loads no profile and its hook mechanisms cannot set PATH without breaking permission rules, so a
+shim is what works (docs/claude-code.md). Everything else goes through `uv run` or an inv task.
+"""
+method = "wrapper-script"
+platforms = ["windows"]
+tags = ["ai", "dev", "python"]
+# One file, deployed under each command name: the shim takes its command from its own file name.
+dest = "~/.local/share/venv-shims/python.ps1"
+content_file = "config/venv-shim.ps1"
+also_deploy_to = [
+  "~/.local/share/venv-shims/pytest.ps1",
+  "~/.local/share/venv-shims/inv.ps1",
+  "~/.local/share/venv-shims/invoke.ps1",
+]
+# Put first on the user PATH by `inv windows.configure-path`.
+windows_path = ["~/.local/share/venv-shims"]
+
 [packages.zsh]
 description = "The zsh shell itself — Oh My Zsh and every zsh-method config entry need it installed first"
 method = "apt"

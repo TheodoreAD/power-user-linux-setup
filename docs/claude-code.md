@@ -130,7 +130,36 @@ What it covers and what it doesn't:
   call, for the directory it started in. Use the tool's own directory option, or the other repo's
   `.venv/bin` by absolute path, as `~/.agents/AGENTS.md` says.
 - **Not Windows.** The PowerShell tool reads only plain assignments from `CLAUDE_ENV_FILE` and drops
-  any value containing `/` or `\`, so it cannot carry `PATH`; `uv run` is the Windows answer.
+  any value containing `/` or `\`, so it cannot carry `PATH`. Windows uses `[packages.venv-shims]`
+  instead, below.
+
+## Project venvs on native Windows — `[packages.venv-shims]`
+
+The PowerShell tool starts every call with `-NoProfile`, ignores `CLAUDE_CODE_SHELL_PREFIX`, and
+cannot receive `PATH` through `CLAUDE_ENV_FILE`. A `PreToolUse` hook can rewrite the command, and
+the rewrite is applied, but permission rules are then matched against the rewritten text, and a
+`PATH` assignment made an allowed `uv run invoke` call come back denied. So Windows uses shims:
+`python.ps1`, `pytest.ps1`, `inv.ps1` and `invoke.ps1`, copies of `config/venv-shim.ps1`, in
+`~/.local/share/venv-shims`, first on the user PATH.
+
+Each shim walks up from the current directory to the first `.venv\Scripts\<command>.exe`, sets
+`VIRTUAL_ENV`, puts that `Scripts` first on `PATH` for the rest of the call, and runs it. With no
+`.venv` it runs the next copy on `PATH`, skipping any venv's `Scripts` inherited from the launch
+environment. The command text never changes, so permission rules see exactly what was typed, and the
+same shims serve any PowerShell, not just Claude Code's.
+
+```powershell
+uv run invoke deploy.all --name venv-shims     # writes the four shims
+uv run invoke windows.configure-path           # puts their folder first on the user PATH
+uv run invoke windows.check-path               # read-only
+```
+
+Restart terminals and Claude Code afterwards: a running program keeps the PATH it started with.
+Measured 2026-11-26 from a fresh registry PATH: PULSE and repo-tasks each got their own `pytest`
+(9.2.0 and 9.1.1) and `inv`; a directory with no `.venv` got uv's interpreter and the user-wide
+`inv`, and `pytest` said it was not found. Limits: only PowerShell resolves `.ps1` from PATH, so
+`cmd.exe` and programs that spawn `python` directly bypass the shims, and a venv activated in the
+launching shell comes earlier on PATH than the shims and wins.
 
 Hooks are read when a session starts, so an existing session needs a restart to pick them up.
 

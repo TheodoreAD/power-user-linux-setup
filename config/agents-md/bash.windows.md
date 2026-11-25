@@ -35,7 +35,11 @@ reviewable:
   for quick one-liners.
 - **Always ask the user whether a script should be saved for reuse.**
 
-### Running a Python project's tools on the Windows machine
+### Running a Python project's tools on the Windows machine [needs venv-shims]
 
-Through `uv run` — `uv run invoke ...`, `uv run pytest` — and never by activating a venv. There is
-no direnv on this machine to put a project's `.venv` on `PATH`.
+**Run `python`, `pytest`, `inv` and `invoke` bare.** Each is a shim first on the user `PATH` that
+runs the copy in the `.venv` of the nearest directory at or above the current one, so the project's
+own interpreter and tools answer, and the command text, which your permission rules match, stays as
+typed. Any other tool goes through `uv run <tool>` or the project's inv task. Never activate a venv
+by hand, and expect `pip` to be absent: uv manages the environment. A tool that says "not found in a
+.venv" means the project has no `.venv` yet; run `uv sync` there.
