@@ -122,6 +122,20 @@ class StatusLine(TypedDict):
     command: str
 
 
+class HookCommand(TypedDict):
+    """One entry of a hook group's `hooks` list in Claude Code's settings.json."""
+
+    type: str
+    command: str
+
+
+class HookGroup(TypedDict, total=False):
+    """One group under a hook event in settings.json: an optional tool matcher and its commands."""
+
+    matcher: str
+    hooks: list[HookCommand]
+
+
 class AgentsMdFragment(TypedDict, total=False):
     """One item of a package's `agents_md` list — a whole-`##`-section Markdown fragment of the
     assembled `~/.agents/AGENTS.md`, plus where it sits in the document.
@@ -172,6 +186,9 @@ class PackageConfig(TypedDict, total=False):
     claude_auto_mode: dict[str, list[str]]
     claude_skill_listing_budget_fraction: float
     claude_statusline: StatusLine
+    # Hook event name (SessionStart, CwdChanged, ...) -> the command to run on it, merged into
+    # ~/.claude/settings.json's `hooks` by ai.install-skills. See _apply_declared_hooks.
+    claude_hooks: dict[str, str]
     omz_plugin: str | list[str]
     cleanup_paths: list[str]
     check_cmd: str
@@ -362,6 +379,7 @@ class ClaudeSettings(TypedDict, total=False):
     statusLine: StatusLine
     skillListingBudgetFraction: float
     autoMode: dict[str, list[str]]
+    hooks: dict[str, list[HookGroup]]
 
 
 def load_toml(path: Path) -> object:

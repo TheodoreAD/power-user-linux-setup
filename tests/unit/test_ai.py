@@ -573,6 +573,7 @@ def _stub_skills_task_helpers(monkeypatch, calls):
     monkeypatch.setattr(ai, "_apply_declared_auto_mode", lambda *, yes: calls.append(("auto", yes)))
     monkeypatch.setattr(ai, "_apply_declared_skill_listing_budget", lambda *, yes: calls.append(("budget", yes)))
     monkeypatch.setattr(ai, "_apply_declared_statusline", lambda *, yes: calls.append(("statusline", yes)))
+    monkeypatch.setattr(ai, "_apply_declared_hooks", lambda: calls.append(("hooks",)))
     monkeypatch.setattr(ai, "_note_copilot_permissions", lambda: calls.append(("copilot",)))
 
 
@@ -620,6 +621,92 @@ def test_skills_task_with_skill_filters_and_skips_global_settings(monkeypatch):
     assert ("statusline",) not in calls
     assert ("copilot",) not in calls
     assert ("install", Path.home(), True, {"plan-docs"}) in calls
+
+
+# ---------------------------------------------------------------------------
+# _hook_merge / _apply_declared_hooks — manifest-tracked, like the permission tiers
+# ---------------------------------------------------------------------------
+
+_HOOK = "zsh ~/.claude/direnv-hook.sh"
+
+
+def _group(command: str, matcher: str | None = None) -> util.HookGroup:
+    group: util.HookGroup = {"hooks": [{"type": "command", "command": command}]}
+    if matcher:
+        group["matcher"] = matcher
+    return group
+
+
+def test_hook_merge_adds_a_group_per_declared_event():
+    merged = ai._hook_merge({}, {"SessionStart": [_HOOK], "CwdChanged": [_HOOK]}, {})
+
+    assert merged == {"CwdChanged": [_group(_HOOK)], "SessionStart": [_group(_HOOK)]}
+
+
+def test_hook_merge_leaves_every_hook_it_did_not_write():
+    # A hand-written hook under the same event, and one under another event, both survive.
+    existing = {"SessionStart": [_group("echo mine")], "PreToolUse": [_group("audit.sh", matcher="Bash")]}
+
+    merged = ai._hook_merge(existing, {"SessionStart": [_HOOK]}, {})
+
+    assert merged == {
+        "PreToolUse": [_group("audit.sh", matcher="Bash")],
+        "SessionStart": [_group("echo mine"), _group(_HOOK)],
+    }
+
+
+def test_hook_merge_takes_back_only_what_it_wrote_and_no_longer_declares():
+    both: util.HookGroup = {"hooks": [{"type": "command", "command": _HOOK}, {"type": "command", "command": "x"}]}
+    existing = {"SessionStart": [both]}
+
+    merged = ai._hook_merge(existing, {}, {"SessionStart": [_HOOK]})
+
+    assert merged == {"SessionStart": [_group("x")]}
+
+
+def test_hook_merge_drops_an_event_left_empty():
+    merged = ai._hook_merge({"CwdChanged": [_group(_HOOK)]}, {}, {"CwdChanged": [_HOOK]})
+
+    assert merged == {}
+
+
+def test_hook_merge_reports_no_change_as_none():
+    existing = {"SessionStart": [_group(_HOOK)]}
+
+    assert ai._hook_merge(existing, {"SessionStart": [_HOOK]}, {"SessionStart": [_HOOK]}) is None
+
+
+def test_apply_declared_hooks_writes_settings_and_manifest(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {
+            "packages": {
+                "claude-direnv-hook": {
+                    "platforms": EVERYWHERE,
+                    "claude_hooks": {"SessionStart": _HOOK, "CwdChanged": _HOOK},
+                }
+            }
+        },
+    )
+    monkeypatch.setattr(util, "load_overrides", dict)
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "DRY_RUN", False)
+    monkeypatch.setattr(util, "load_claude_settings", lambda: {"permissions": {"allow": []}})
+    written: list[util.ClaudeSettings] = []
+    monkeypatch.setattr(util, "write_claude_settings", written.append)
+    manifest = tmp_path / "hooks-manifest.json"
+    monkeypatch.setattr(ai, "_HOOKS_MANIFEST", manifest)
+
+    ai._apply_declared_hooks()
+
+    assert written == [
+        {
+            "permissions": {"allow": []},
+            "hooks": {"CwdChanged": [_group(_HOOK)], "SessionStart": [_group(_HOOK)]},
+        }
+    ]
+    assert json.loads(manifest.read_text(encoding="utf-8")) == {"CwdChanged": [_HOOK], "SessionStart": [_HOOK]}
 
 
 # ---------------------------------------------------------------------------

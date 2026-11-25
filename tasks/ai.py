@@ -34,6 +34,8 @@ _STATIC_PERM_TIERS = (
 # Same shape again for `claude_additional_directories` (permissions.additionalDirectories): its own
 # manifest, so a directory the user added by hand is never removed by this mechanism.
 _STATIC_DIRS_MANIFEST = util.PULSE_STATE_DIR / "claude-additional-directories-applied.json"
+# The `claude_hooks` commands this mechanism wrote, by event, so only those are ever removed.
+_HOOKS_MANIFEST = util.PULSE_STATE_DIR / "claude-hooks-applied.json"
 
 
 def _parse_frontmatter_description(text: str) -> str | None:
@@ -611,6 +613,77 @@ def _apply_declared_statusline(*, yes: bool = False) -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: statusLine updated")
 
 
+def _hook_merge(
+    existing: dict[str, list[util.HookGroup]], declared: dict[str, list[str]], previous: dict[str, list[str]]
+) -> dict[str, list[util.HookGroup]] | None:
+    """The merged `hooks` block, or None when it would not change.
+
+    Hooks are a list several parties write to — the user by hand, `/hooks`, plugins — so the same
+    rule as the permission tiers holds: only a command this mechanism wrote last time (`previous`) is
+    eligible for removal, and each declared command is added once, in a group of its own with no
+    matcher, when no group under that event already runs it. Pure, so it is unit-testable.
+    """
+    merged: dict[str, list[util.HookGroup]] = {}
+    for event in sorted(set(existing) | set(declared)):
+        wanted = declared.get(event, [])
+        stale = set(previous.get(event, [])) - set(wanted)
+        groups: list[util.HookGroup] = []
+        for group in existing.get(event, []):
+            kept = [h for h in group.get("hooks", []) if h.get("command") not in stale]
+            if kept:
+                groups.append({**group, "hooks": kept})
+        present = {h.get("command") for g in groups for h in g.get("hooks", [])}
+        for cmd in wanted:
+            if cmd not in present:
+                new_group: util.HookGroup = {"hooks": [{"type": "command", "command": cmd}]}
+                groups.append(new_group)
+        if groups:
+            merged[event] = groups
+    return None if merged == existing else merged
+
+
+def _apply_declared_hooks() -> None:
+    """Merge every enabled package's `claude_hooks` (event -> command) into ~/.claude/settings.json's
+    `hooks`, tracked by `_HOOKS_MANIFEST` so a hook that stops being declared is taken back out.
+
+    Global harness plumbing, which is the one place a hook is allowed (see "Machine behavior belongs
+    in global config" in config/agents-md/agent-knowledge.md): no hook is ever written into a repo.
+    The first user is `[packages.claude-direnv-hook]`, the per-directory venv activation that the
+    `~/.zshenv` direnv line could not provide; docs/claude-code.md has the measurements.
+    """
+    declared: dict[str, list[str]] = {}
+    for cfg in util.enabled_packages().values():
+        for event, command in cfg.get("claude_hooks", {}).items():
+            declared.setdefault(event, []).append(command)
+
+    settings = util.load_claude_settings()
+    existing = settings.get("hooks", {})
+    previous: dict[str, list[str]] = (
+        cast(dict[str, list[str]], json.loads(_HOOKS_MANIFEST.read_text(encoding="utf-8")))
+        if _HOOKS_MANIFEST.exists()
+        else {}
+    )
+
+    if util.DRY_RUN:
+        present = {h.get("command") for groups in existing.values() for g in groups for h in g.get("hooks", [])}
+        missing = [c for cmds in declared.values() for c in cmds if c not in present]
+        print(f"[ai.install-skills] hooks: {'ok' if not missing else f'MISSING {len(missing)}'}")
+        return
+
+    merged = _hook_merge(existing, declared, previous)
+    if merged is None:
+        print(f"[ai.install-skills] hooks: already up to date ({sum(map(len, declared.values()))} declared)")
+        return
+    if merged:
+        settings["hooks"] = merged
+    else:
+        settings.pop("hooks", None)
+    util.write_claude_settings(settings)
+    _HOOKS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    _HOOKS_MANIFEST.write_text(json.dumps(declared, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
+    print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: hooks updated ({', '.join(sorted(declared)) or 'none'})")
+
+
 def _copilot_present() -> bool:
     ext_dir = Path.home() / ".vscode" / "extensions"
     return ext_dir.is_dir() and any(ext_dir.glob("github.copilot-*"))
@@ -687,8 +760,8 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     `claude_additional_directories` entry into ~/.claude/settings.json, syncs the declared
     `claude_default_mode`, `claude_auto_mode`, `claude_skill_listing_budget_fraction` and
     `claude_statusline` values into `permissions.defaultMode` / `autoMode` /
-    `skillListingBudgetFraction` / `statusLine`, and checks for GitHub Copilot (see
-    docs/claude-code.md).
+    `skillListingBudgetFraction` / `statusLine`, merges every declared `claude_hooks` command into
+    `hooks`, and checks for GitHub Copilot (see docs/claude-code.md).
 
     Before actually installing or updating a skill, shows its own description and asks — same
     `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
@@ -727,6 +800,7 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
         _apply_declared_auto_mode(yes=yes)
         _apply_declared_skill_listing_budget(yes=yes)
         _apply_declared_statusline(yes=yes)
+        _apply_declared_hooks()
         _note_copilot_permissions()
 
 
