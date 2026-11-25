@@ -180,10 +180,11 @@ egress boundary and the honest fix for exfiltration. That plan ordered "revisit
 user's threat model makes the sandbox an improvement rather than a prerequisite. That plan's step 4
 now points here (2026-11-25).]
 
-[UNVERIFIED: **the Own-Repo Merge exception has never run.** `claude auto-mode config` shows it in
-effect and the critique passes found no conflict, but no agent has merged a PR it opened under it.
-The first real merge either runs, or is blocked with a reason worth reading before rewording the
-entry.]
+[DECISION, verified 2026-11-25: **the Own-Repo Merge exception works as written.** Until then it had
+never run — no agent had merged a PR it opened under it. That day a session opened
+`TheodoreAD/hekate` PR 19 (deleting the repo's `CLAUDE.md` symlink), waited for its two checks to
+pass, and ran `gh pr merge 19 --squash --delete-branch` under auto mode: no prompt, no classifier
+denial, merged as `8f0e69f`. The entry needs no rewording.]
 
 ## Landed 2026-11-25
 
