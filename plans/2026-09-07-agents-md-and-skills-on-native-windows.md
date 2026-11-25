@@ -43,13 +43,64 @@ question — which harnesses read what — and its answers are used here rather 
   on Windows. Since 1.9.0 it does so only when the targets span two directories, so PULSE installs
   with `--agent universal --agent claude-code`. The remaining UNVERIFIED, whether Claude Code
   follows a junction, still stands.
+- **A repo's own skills get the same treatment**, designed in the next section.
 
-[NEEDS CLARIFICATION: **a repo's committed `.claude/skills -> ../.agents/skills` link has the same
-Windows problem `CLAUDE.md` had.** Git for Windows checks it out as a text file holding the target
-path, so Claude Code there sees no repo skills, silently. Affects `freshful-polite-mcp`, `ingesta`
-and every repo scaffoldapy generates. Options: a per-clone step (repo-tasks' `dev-env.setup`
-creating per-skill junctions into a gitignored `.claude/skills`), or `core.symlinks` with Developer
-Mode on that machine. Decide when a repo with skills is first worked on from Windows.]
+### A repo's own skills, for Claude Code, without a committed symlink
+
+**The problem.** A repo's committed `.claude/skills -> ../.agents/skills` link has the same Windows
+problem `CLAUDE.md` had: Git for Windows checks it out as a text file holding the target path, so
+Claude Code there sees no repo skills, silently. It affects `freshful-polite-mcp`, `ingesta` and
+every repo scaffoldapy generates.
+
+**The `skills` CLI already does the right thing for this, measured 2026-11-25** on CLI 1.9.0 in a
+throwaway repo holding one skill at `.agents/skills/demo-skill/`:
+
+- `skills add ./.agents/skills --agent universal claude-code --skill '*' --yes`, run at the repo
+  root, left the source untouched and wrote
+  `.claude/skills/demo-skill -> ../../.agents/skills/demo-skill`, one relative link per skill. It
+  also wrote a `skills-lock.json` recording `"source": "./.agents/skills", "sourceType": "local"`
+  and a content hash. `installer.ts` has an explicit `sourceIsCanonical` branch for this case — it
+  skips the copy and only makes the agent link — and on Windows that link is a **junction**
+  (`platform() === 'win32' ? 'junction'`), which needs no privilege.
+- With `.claude/skills` deleted, as on a fresh clone,
+  `skills experimental_install --agent universal claude-code` (alias `skills install`) restored the
+  link from the lock alone.
+- After editing the skill, the same command warned that the skill "does not match skills-lock.json;
+  restoring the locked version", then rewrote the lock's hash to the edited content. The edit
+  survived only because source and destination are one directory. Under `CI` it reported the skill
+  as installed and changed nothing.
+
+**Recommended design.** The CLI's own project workflow, unmodified:
+
+1. **Commit `.agents/skills/` and `skills-lock.json`; gitignore `.claude/skills/`.** No committed
+   symlink anywhere. The lock is the CLI's documented project manifest, so any developer with `npx`
+   can restore the links with `npx skills install`, knowing nothing about this repo family.
+2. **Per clone, `skills install --agent universal claude-code`** creates Claude Code's per-skill
+   links — symlinks on Linux and macOS, junctions on Windows. repo-tasks' `dev-env.setup`, already
+   the one per-clone step every repo documents, runs it when the CLI is available and prints one
+   line saying Claude Code will not see the repo's skills when it is not. Nothing else changes for
+   any other agent, all of which read `.agents/skills` directly.
+3. **Adding a skill** is `skills add ./.agents/skills --skill <name> --agent universal claude-code`,
+   which writes its lock entry and its link. **Editing one** leaves the lock's hash stale until the
+   next `skills install`, which rewrites it: the lock diff is committed with the skill change, the
+   same as any lockfile.
+4. **scaffoldapy** stops generating the `.claude/skills` link, generates the `.gitignore` entry, and
+   generates `skills-lock.json` only for the skill interface, where there is a skill to lock.
+
+Rejected: repo-tasks creating the per-skill links itself (`os.symlink`, or `mklink /J` on Windows).
+It works with no Node dependency, but it reimplements exactly what the CLI already does, which is
+the "verify rather than reimplement" case. Rejected: `core.symlinks` with Developer Mode, which
+needs admin once and is unavailable on a work machine, the constraint this plan started from.
+
+[NEEDS CLARIFICATION: **the lock's hash is redundant for an in-repo skill** — git already versions
+its content — and makes every skill edit a two-file change. The alternative is to gitignore
+`skills-lock.json` too and have `dev-env.setup` run `skills add ./.agents/skills --skill '*'`
+instead of `install`, so `.agents/skills/` alone is the manifest. That loses `npx skills install` as
+the zero-knowledge restore, and a repo that later also pins an external project skill would want the
+lock committed after all. Recommend the committed lock; decide before implementing.]
+
+[UNVERIFIED: whether Claude Code follows a junction for a skill entry — the same open item as the
+home-directory case below, and the first thing to check on the Windows machine once this lands.]
 
 ## What breaks, measured rather than assumed
 
