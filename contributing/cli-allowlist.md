@@ -666,6 +666,28 @@ and that refspec form is left to the classifier's Git Destructive default.]
 Residual, accepted: Claude renders no `-C` form for any rule, so `git -C <repo> push --force` is
 unmatched and reaches the classifier, not the ask.
 
+**The shrink, the same day: 704 ask rules to 440.** With the mode at `auto`, an ask on a local,
+recoverable command is a prompt nobody needs. The user chose the line: keep an ask for anything that
+reaches people or systems outside this machine, and leave the local rest to the classifier. A
+`defer_overrides` entry of `...` defers a whole tool. The classification tier was rejected as the
+line, because the `write` tier holds `gog gmail send`, `gog drive share`, `gh gist create` and
+`gog auth tokens export`, none of which a rebuild undoes. What still asks:
+
+- sending or sharing: all of `gog`, `gmailctl`, `jira`, `glab`
+- publishing: `npm`/`cargo`/`twine` publish, docker pushes, `mkdocs gh-deploy`, `gh release`,
+  `gh gist` writes, `gh workflow run`
+- credentials and keys: `gh auth`/`secret`/`ssh-key`/`gpg-key`/`repo deploy-key`, registry logins
+- cloud, cluster and remote state: `aws`, `gcloud`, `kubectl` (but not its local `config`),
+  `helm install`/`upgrade`/`rollback`/`uninstall`, `terraform` apply, destroy, import and state,
+  `gh codespace`, `gh repo delete`/`edit`
+- remote machines and disks: `ssh`, `rsync`, `curl`, `su`, `dd`, `shred`, `mount`/`umount`
+- git operations that lose uncommitted work or rewrite history
+- tools backing an existing rule: `gext` (no live GNOME mutation from a session), `tmux` and
+  `wezterm` (driving a terminal)
+
+GitHub housekeeping (issues, labels, projects, runs, variables, reversible repo operations) is
+deferred, because the user's threat model counts a mess in GitHub as recoverable.
+
 ### End-to-end confirmed live
 
 This isn't just tested in isolation — after `apply`, the actual rules were exercised in a live
