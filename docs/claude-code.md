@@ -301,22 +301,27 @@ confirmed, documented Copilot setting for path-scoped _file-read_ auto-approval 
 isn't scopable to one directory. Shipping a guessed key into a real settings.json seemed worse than
 an honest "nothing applied, here's why." Revisit if a scoped-read key is ever confirmed.
 
-## Declaring the permission mode and scratch directories — `claude_default_mode`, `claude_additional_directories`
+## Declaring the permission mode and scratch directories — `claude_default_mode`, `claude_auto_mode`, `claude_additional_directories`
 
-Two more `settings.json` keys `inv ai.install-skills` syncs, both declared on
+Three more `settings.json` keys `inv ai.install-skills` syncs, all declared on
 `[packages.claude-code]` (the mode is a single scalar read directly, like `claude_statusline`; the
 directories are an any-section list merged through their own manifest,
 `~/.local/state/power-user-linux-setup/claude-additional-directories-applied.json`, like
 `claude_permissions_allow`):
 
-- `claude_default_mode = "acceptEdits"` → `permissions.defaultMode`. Absent → set; matches → no-op;
-  a different explicit value → ask before replacing (declines by default). This machine's permission
-  setup is built for `acceptEdits`, where the allow/ask rules decide and anything unmatched that
-  isn't read-only prompts; `auto` mode replaces that with a classifier and, on top, instructs the
-  agent to prefer `cat`/`sed`/heredocs over the Read/Edit tools — the opposite of
-  `~/.agents/AGENTS.md`. The audit that settled this (3,956 Bash calls over four days, per-model
-  chaining and truncation rates, the `git -C` ask-rule bypass) and the mode comparison are in the
-  `session-bash-audit` skill's `references/research.md`; re-run the skill to re-measure.
+- `claude_default_mode = "auto"` → `permissions.defaultMode`. Absent → set; matches → no-op; a
+  different explicit value → ask before replacing (declines by default, `-y` confirms). The allow,
+  ask and deny rules resolve first, and anything unmatched that isn't read-only goes to auto mode's
+  classifier instead of a prompt. It was `acceptEdits` from 2026-08-24, after an audit of what auto
+  mode's own note does to tool use (the `session-bash-audit` skill's `references/research.md`); it
+  moved back on 2026-11-25 because the machine ran auto for 96% of its Bash calls anyway, and the
+  threat model it is judged against is a mess a rebuild or revert recovers. The decision and the
+  research behind it are in `plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`.
+- `claude_auto_mode` → the top-level `autoMode` block, written whole, same three outcomes. It names
+  the user's own GitHub account as trusted source control and lifts the classifier's "Merge Without
+  Review" block for that account only, so merging a PR on a sole-contributor repo is not a denial.
+  Claude Code reads `autoMode` from user settings only, never from a project's. Check the effective
+  config with `claude auto-mode config`.
 - `claude_additional_directories = ["/tmp/claude-1000", "~/.claude/jobs"]` →
   `permissions.additionalDirectories`, `~` expanded. The harness's own scratch locations — the
   per-session scratchpad and background-job tmp — are outside every repo, so under `acceptEdits`
