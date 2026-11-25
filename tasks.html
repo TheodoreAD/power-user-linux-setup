@@ -2386,6 +2386,10 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 </thead>
 <tbody>
 <tr>
+<td><code>inv agents.install-skills</code></td>
+<td>Install this repo&rsquo;s own skills, authored in skills/<name>/, for every agent: one copy per skill in .agents/skills/ and a link per skill in .claude/skills/ for Claude Code, through the <code>skills</code> CLI.</td>
+</tr>
+<tr>
 <td><code>inv agents.wire-claude-hook</code></td>
 <td>Wire Claude Code&rsquo;s Bash tool to auto-activate this project&rsquo;s direnv environment on every call, by writing <dir>/.claude/settings.json with env.CLAUDE_ENV_FILE and a PreToolUse/Bash hook that…</td>
 </tr>
@@ -2599,7 +2603,7 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 </tr>
 <tr>
 <td><code>inv dev-env.setup</code></td>
-<td>Run once after cloning: create/refresh .venv, let direnv auto-activate it, and wire Claude Code&rsquo;s Bash tool to auto-activate it too.</td>
+<td>Run once after cloning: create/refresh .venv, let direnv auto-activate it, wire Claude Code&rsquo;s Bash tool to auto-activate it too, and install the repo&rsquo;s own skills from skills/ for every agent.</td>
 </tr>
 <tr>
 <td><code>inv devcontainer.check</code></td>
