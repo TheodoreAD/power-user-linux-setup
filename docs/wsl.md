@@ -6,6 +6,28 @@ zsh/uv/nvm toolchain are plain userspace and don't care that they're running und
 that need attention are the ones that assume a full systemd-managed machine with a GNOME session:
 DNS, Docker, and anything `gui`/`desktop`/`gnome`-tagged.
 
+## Creating the distro, from the Windows host
+
+`inv wsl-distro.*` runs in PowerShell on Windows, from a checkout there, and needs WSL itself
+(`wsl --install --no-distribution` once, as admin, then a reboot):
+
+```powershell
+uv run invoke wsl-distro.install                     # Ubuntu-24.04, user dev, default distro
+uv run invoke wsl-distro.check                       # verify only, changes nothing
+uv run invoke wsl-distro.install --name pulse-test --no-set-default --vhd-size 40GB
+uv run invoke wsl-distro.remove --name pulse-test    # deletes the distro and everything in it
+```
+
+`install` adds a user `dev` with passwordless sudo and makes it the default login, skips the
+distro's interactive first run, and caps the virtual disk (500GB by default). It is safe to run
+again: each step checks first and skips what's done. `--name` with `--no-set-default` installs a
+throwaway copy beside the distro that holds real work, and `remove` takes it away again; it refuses
+the default distro without `--force`. The reasons for each step are in
+[`tasks/wsl_distro.py`](../tasks/wsl_distro.py)'s docstring. These tasks moved here from
+win-configs' `scripts/setup-wsl.py`.
+
+## Inside the distro
+
 Run the diagnostic first, before installing anything:
 
 ```shell

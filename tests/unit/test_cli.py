@@ -73,6 +73,10 @@ def test_machine_administration_tasks_are_present():
         "verify.all",
         "home.list-claims",
         "net.check",
+        # Machine administration from the Windows host, so it ships with the shim.
+        "wsl-distro.install",
+        "wsl-distro.check",
+        "wsl-distro.remove",
         # The point of the shim: a consumer's checkout is somewhere they have no reason to know,
         # so the command that updates it has to be reachable without standing in it.
         "self.update",

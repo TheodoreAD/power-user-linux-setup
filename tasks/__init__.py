@@ -39,6 +39,7 @@ from . import (
     upgrade,
     verify,
     wsl,
+    wsl_distro,
     zsh,
 )
 
@@ -127,6 +128,7 @@ namespace = Collection(
     Collection.from_module(node),
     Collection.from_module(verify),
     Collection.from_module(wsl),
+    Collection.from_module(wsl_distro, name="wsl-distro"),
     Collection.from_module(zsh),
 )
 # Which top-level collections came from repo_tasks rather than from this repo, recorded as they
