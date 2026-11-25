@@ -159,10 +159,14 @@ switch: a deferred verb is unmatched in every mode, which means the classifier u
 prompt under anything else, so switching modes back stays safe with no second rendering to keep
 right. The classification on disk is untouched.]
 
-[NEEDS CLARIFICATION: **which ask rules survive the shrink?** Proposed line in design step 4; the
-full list needs one pass over `cli-allowlist/` verdicts, and Anthropic's `claude auto-mode defaults`
-output shows which of them the classifier already blocks, which makes an ask rule for those
-redundant rather than protective.]
+[DECISION: **the shrink keeps asks for whatever leaves the machine — user decision, 2026-11-25.**
+704 ask rules became 440. Local commands are deferred to the classifier, whole tools through a new
+`defer_overrides = ["..."]`. Asks stay for sending, sharing, publishing, credentials, cloud and
+remote state, remote machines and disks, work-losing git operations, and the tools that back an
+existing rule. The full list and reasoning are in `contributing/cli-allowlist.md`,
+"defer_overrides". It beat the mechanical tier line (defer every `write`, keep every `dangerous`),
+which would have dropped the ask on sending email, sharing Drive files, publishing gists and
+exporting tokens, all of which sit in the `write` tier.]
 
 [NEEDS CLARIFICATION: **what happens to `plans/2026-08-28-auto-mode-contradicts-bash-rules.md`?**
 Making auto the default makes its note — use `cat`/`sed`/`grep`, Grep withdrawn — permanent in every
@@ -182,8 +186,8 @@ Design steps 1–5, 7 and 8 are in: the mode is `auto` (`setup.toml`, applied by
 `inv ai.install-skills --yes`, whose `-y` now confirms setting replacements), deny rules unchanged,
 commit/push/pr deferred, force-push and rewrite asks added, the release/repo/secret asks kept, the
 commit-message rule and trailers in `config/agents-md/git.md`, and `bash.md`/`collaboration.md`
-rewritten for auto and for unprompted own-repo commit and push. Step 6, the ask-rule shrink, is
-still open below, as are the auto-mode note and the sandbox.
+rewritten for auto and for unprompted own-repo commit and push. Step 6, the ask-rule shrink, landed
+the same day (704 to 440, decision below). Still open: the auto-mode note and the sandbox.
 
 ## Recommended direction
 
