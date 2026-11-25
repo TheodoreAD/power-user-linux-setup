@@ -59,11 +59,10 @@ for, what it beat, what it cost. Trailers are the **index** into that prose, not
 
 | trailer                           | when                                                 | the query it answers                                                               |
 | --------------------------------- | ---------------------------------------------------- | ---------------------------------------------------------------------------------- |
-| `Plan: plans/<file>.md`           | the commit carries out, lands or retires a plan      | every commit of one plan, even after the plan is deleted                           |
+| `Plan: plans/<file>.md`           | the commit carries out a plan tracked in this repo   | every commit of one plan, even after the plan is deleted                           |
 | `Rejected: <approach> (<reason>)` | an alternative was weighed and dropped, one per line | "was X already tried here?" before an agent re-proposes it                         |
 | `Verified: <command or probe>`    | something was run that proves the change             | what a green claim rested on, without re-running it                                |
 | `Not-verified: <what> (<why>)`    | a part could not be or was not proven                | the open risk a later session inherits, the commit-level twin of `[UNVERIFIED: …]` |
-| `Session: <transcript id>`        | an agent made the commit                             | the conversation behind it, for `session-harvest` and audits                       |
 | `Co-Authored-By: …`               | unchanged                                            | attribution                                                                        |
 
 [DECISION: **`Plan:` is the one that fixes something already broken.** `plan-conveyor` deletes a
@@ -71,6 +70,13 @@ plan on retirement, and a nickname in a commit body leaves nothing to search for
 file, so `git log --grep='^Plan: plans/<file>'` lists a plan's whole implementation and
 `plans.py archive --file <file>` brings the plan back. The 15-commit sample had four nickname
 references ("the leanness plan", "the shipping plan", "stage 1", "the pilot's criterion").]
+
+[DECISION: **every trailer value names something in the repo or nothing local at all — user rule,
+2026-11-25.** _"only files in the repo should be referenced, nothing on the same machine, unless
+it's about an investigation etc"_. So `Plan:` is written only for a plan tracked in the repo's own
+`plans/`. A repo routed to the plans store gets no `Plan:` trailer, because naming a store plan in
+its history publishes what the routing keeps out. The same line now stands in
+`config/agents-md/git.md` for commit bodies.]
 
 [DECISION: **`Rejected:` duplicates part of the body on purpose.** The body explains why the
 alternative lost; the trailer is the signpost a query finds. That is the one duplication worth its
@@ -101,6 +107,10 @@ needs, and its absence on a commit claiming a fix is visible in review.]
   relevant, and it cannot go stale against its own code.
 - **Git notes, Agent Trace, `git-ai`.** Line-level provenance answers "which conversation wrote this
   line", which nothing here asks. Revisit if it ever is.
+- **`Session:` (the agent transcript behind a commit).** It points at a file on this machine, which
+  the rule above excludes, and the transcript is deleted after 30 days by default, so the trailer
+  would outlive what it names. Copilot's `Agent-Logs-Url:` works because its logs are hosted; ours
+  are not.
 - **A prompt hook injecting recent rejections** (structured-git-commits' `UserPromptSubmit`). It
   fires behind the agent's back, and the read side below is a rule the agent runs instead.
 
@@ -122,11 +132,10 @@ Read with `git log`, which is safe in a working tree another session holds, unli
 written when the condition in the table holds, so a formatting fix carries none. Making any one
 required turns it into ceremony, which the existing "a floor, not a ceremony" guard warns against.]
 
-[NEEDS CLARIFICATION: **`Session:` value.** The transcript id (`$CLAUDE_CODE_SESSION_ID`) is
-harness-specific and its transcript is deleted after 30 days by default, so the trailer outlives
-what it points at. `agent-skills` already writes `Claude-Session: <url>` on some commits. Options: a
-harness-neutral `Session:` with the id, accepting the retention gap; or drop it and rely on `Plan:`,
-which survives.]
+[NEEDS CLARIFICATION: **`agent-skills` already writes `Claude-Session: <url>`** on some commits — a
+claude.ai URL, so hosted rather than local, but private to the account and still a vendor-specific
+link in a public history. Whether that stays is a question for that repo, filed there if the user
+wants it changed.]
 
 [NEEDS CLARIFICATION: **how does `plans.py commit` carry trailers?** It derives subjects and takes
 `--body`. A `Plan:` trailer on plan commits is the most mechanical case and the script could add it
@@ -149,8 +158,7 @@ re-deciding something. Only then file the `plan-conveyor` and `scaffoldapy` chan
 
 ## Sources
 
-- https://github.com/srdjan/structured-git-commits (cloned:
-  `$RESEARCH_HOME/repos/github.com--srdjan--structured-git-commits`)
+- https://github.com/srdjan/structured-git-commits
 - https://arxiv.org/abs/2603.15566
 - https://docs.kernel.org/process/coding-assistants.html
 - https://github.com/git-ai-project/git-ai
