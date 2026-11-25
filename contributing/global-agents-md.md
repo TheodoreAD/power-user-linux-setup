@@ -2313,6 +2313,34 @@ The one question this repo did not settle is whether `scaffoldapy` should stamp 
 the shared-working-tree argument does not, so a verbatim copy would ship reasoning that is false in
 a generated repo.
 
+### What changed comes first, added 2026-11-25
+
+The user's request at admission was "commits must say what and why". The rule as written named only
+the why — what the change is for, what it beat, what it cost — so the _what_ was lost in the
+wording, not in the behaviour. It surfaced when the user made commit and push unprompted
+(`plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`), which means nobody reads a message
+before it lands, and restated the bar: walk the history "without having to check out files to
+understand what happened".
+
+Measured before rewording. Body presence is effectively solved: over the 90 days to 2026-11-25, **31
+of 2,782 commits** across ten personal repos had no body once trailers were stripped, almost all
+plan retirements and automated version bumps. A random sample of **15 code commits** across four
+repos then read for content: every one carried the reasoning, and the gaps were two of a different
+kind.
+
+- **The noun was missing.** A body described a new option ("a deployment names the origin") without
+  the setting's name, so the reader still needs the diff to know what to search for. Bodies that
+  named the identifier (`BandShape`, `ensure_mirror`, `allowedUntypedLibraries`) passed the bar on
+  their own.
+- **Context cited by nickname.** "The leanness plan", "the shipping plan", "stage 1", "the pilot's
+  criterion": each points at a plan, and plans are deleted on retirement. `plans.py archive --file`
+  recovers one only from its filename.
+
+Criterion 4 classifies this as **wrong-shaped output**: the message is written, and it is shaped
+around the reasoning instead of the change. So the fix is a recipe stating the body's order, what
+changed first, rather than a prohibition. It extends this section rather than taking a heading,
+because the trigger is unchanged: writing a commit body.
+
 ## Invoking a venv tool in the session's own project
 
 Moved twice on 2026-08-30, and it is now labelled `[needs direnv]` in `bash.md` — first out of

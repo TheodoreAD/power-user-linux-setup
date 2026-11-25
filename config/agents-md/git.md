@@ -100,8 +100,8 @@ The command has one shape:
 ```shell
 git commit -m "subject line
 
-Body: what the change is for, what it beat, what it cost. Real blank lines,
-inside this one argument.
+Body: what changed, by name; then what it is for, what it beat, what it cost.
+Real blank lines, inside this one argument.
 
 Co-Authored-By: ..." -- path/one path/two
 ```
@@ -135,15 +135,19 @@ commits separately from the code implementing it. A bug fix found mid-implementa
 commit introducing the correct behavior, never broken-then-fixed. Granularity is settled — ask only
 _whether_ to commit, never how to split.
 
-**And every commit has a body**, saying what the change is for, what it beat and what it cost. A doc
-or plan commit is not exempt, and is the case where "the file already says it" is backwards:
-`git log` does not show the file, and `plan-conveyor` retires a plan by **deleting** it, so the file
-is temporary while its message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone
-satisfies `%b`. It is a floor rather than a ceremony: a formatting fix's why is one clause, and
-padding reads as reasoning, which is worse than a bare subject. **One exception**, named so it is
-not discovered as an inconsistency: a plan filed into the plans store commits as
-`<repo>: <what it is>` with no body, because a filed plan _is_ its own description.
-`gh pr create --body` and `gh issue comment` get the full rule, not the exception.
+**And every commit has a body**, in this order. First what changed, named the way a reader would
+search for it: the setting, flag, function, field or file, and what it now does. Then what the
+change is for, what it beat and what it cost. The bar is that `git log` alone explains the change
+and the diff only confirms it. Cite a plan or document by its filename, never a nickname like "the
+leanness plan": a retired plan is deleted, and only its filename finds it again. A doc or plan
+commit is not exempt, and is the case where "the file already says it" is backwards: `git log` does
+not show the file, and `plan-conveyor` retires a plan by **deleting** it, so the file is temporary
+while its message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone satisfies
+`%b`. It is a floor rather than a ceremony: a formatting fix's why is one clause, and padding reads
+as reasoning, which is worse than a bare subject. **One exception**, named so it is not discovered
+as an inconsistency: a plan filed into the plans store commits as `<repo>: <what it is>` with no
+body, because a filed plan _is_ its own description. `gh pr create --body` and `gh issue comment`
+get the full rule, not the exception.
 
 **Stage each commit's paths immediately before that commit**, never ahead of time. `git commit`
 ships the whole index, so anything staged earlier rides along under the next message — a `git rm`
