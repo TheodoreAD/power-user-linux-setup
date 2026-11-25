@@ -1554,7 +1554,8 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
     repo_opts = tuple(cfg.get("repo_dir_options", []))
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
     extended = [body.split() for body in allow_overrides]
-    deferred = [body.split() for body in cfg.get("defer_overrides", [])]
+    # `...` alone, the grammar's "any arguments", defers every node of the tool.
+    deferred = [[] if body == permission_rules.ANY_ARGS else body.split() for body in cfg.get("defer_overrides", [])]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
     # top-level service-group command, classified on what *that* does with no args (usually
     # "shows help/lists things"), never on what its real subcommands do. That's the wrong

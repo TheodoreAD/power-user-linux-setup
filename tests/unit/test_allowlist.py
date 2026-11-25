@@ -529,6 +529,26 @@ def test_compute_claude_rules_defer_override_keeps_ask_overrides_for_its_flags(s
     )
 
 
+def test_compute_claude_rules_defer_override_any_args_defers_the_whole_tool(stub_registry):
+    stub_registry({"docker": {"defer_overrides": ["..."], "ask_overrides": ["image push"]}})
+    rules = {
+        "docker": _rule_entry(
+            {
+                "rm": _rule_node("dangerous"),
+                "build": _rule_node("write"),
+                "ps": _rule_node("read_only"),
+            }
+        )
+    }
+    assert allowlist._compute_claude_rules(rules) == (["Bash(docker ps *)"], ["Bash(docker image push *)"])
+
+
+def test_compute_claude_rules_defer_override_any_args_covers_a_no_subcommand_tool(stub_registry):
+    stub_registry({"kill": {"no_subcommands": True, "defer_overrides": ["..."]}})
+    rules = {"kill": _rule_entry({allowlist._NO_SUBCOMMANDS_KEY: _rule_node("dangerous")})}
+    assert allowlist._compute_claude_rules(rules) == ([], [])
+
+
 def test_compute_claude_rules_defer_override_does_not_match_a_longer_verb(stub_registry):
     # Word-wise prefix, not string prefix: deferring `pr` must not swallow a `prune` node.
     stub_registry({"tool": {"defer_overrides": ["pr"]}})
