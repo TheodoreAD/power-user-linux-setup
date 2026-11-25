@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-11-25
 ---
 
@@ -128,9 +128,12 @@ Read with `git log`, which is safe in a working tree another session holds, unli
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **which trailers, and required or optional?** Proposed: all optional and
-written when the condition in the table holds, so a formatting fix carries none. Making any one
-required turns it into ceremony, which the existing "a floor, not a ceremony" guard warns against.]
+[DECISION: **all four trailers, all optional, plus the read rule — user decision, 2026-11-25.**
+`Plan:`, `Rejected:`, `Verified:` and `Not-verified:`, each written only when its condition holds,
+so a formatting fix carries none. Landed the same day in `config/agents-md/git.md`: the trailers
+under "Committing multi-part work" and the read side as "About to change code, or re-decide
+something, whose reason you don't know". Evidence in `contributing/global-agents-md.md`. It beat
+making any of them required, which the "a floor, not a ceremony" guard warns against.]
 
 [NEEDS CLARIFICATION: **`agent-skills` already writes `Claude-Session: <url>`** on some commits — a
 claude.ai URL, so hosted rather than local, but private to the account and still a vendor-specific
