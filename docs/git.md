@@ -47,6 +47,22 @@ machine for a long time, but hasn't yet been validated end-to-end on a genuinely
 worth confirming the created `.gitconfig` files and the global `includeIf` entries look right the
 next time this repo is bootstrapped on a new machine.
 
+## Commit email vs SSH key email
+
+A `[[git_profiles]]` email is stamped on every commit; an `[[ssh_hosts]]` email only labels the key
+`inv ssh.create-keys` makes for it. They are independent fields and need not match.
+
+For GitHub, put the noreply address in the profile — `<id>+<login>@users.noreply.github.com`, shown
+at github.com/settings/emails. With "Block command line pushes that expose my email" switched on
+there, GitHub refuses any push whose commits carry the real address, with
+`GH007: Your push would publish a private email address`. Keep the real address on the
+`[[ssh_hosts]]` entries: changing it there would make `inv ssh.create-keys` generate a new key.
+`inv identity.init` asks for the commit address separately whenever GitHub is one of its hosts.
+
+A commit made under the old address and not yet pushed is re-authored after the switch with
+`git commit --amend --no-edit --reset-author`; one already pushed stays as it is, since the block
+checks only what a push adds.
+
 ## Multi-account platforms
 
 For multiple accounts on the same platform (e.g. two GitHub accounts), use a distinct alias in

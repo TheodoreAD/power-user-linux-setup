@@ -20,11 +20,15 @@
 # absolute path (optionally starting with ~, expanded), used as-is for a location outside
 # ~/projects/ entirely, e.g. directory = "~/projects/" (repos directly in ~/projects/, no
 # subdirectory) or directory = "~/code/clientA".
+#
+# A git_profiles email is what commits carry; an ssh_hosts email only labels a key. They need not
+# match. For GitHub, use the noreply address from github.com/settings/emails — with "Block command
+# line pushes that expose my email" on, GitHub refuses any push carrying the real one.
 
 [[git_profiles]]
 directory = "github.com-personal"
 name      = "Jane Smith"
-email     = "jane.smith@gmail.com"
+email     = "12345678+janesmith@users.noreply.github.com"
 
 [[git_profiles]]
 directory = "github.com-work"
