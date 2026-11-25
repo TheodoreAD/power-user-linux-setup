@@ -261,11 +261,12 @@ of the `skills` task.
 The `npx` source was first validated end-to-end against a real package
 ([caveman](https://github.com/JuliusBrussee/caveman), an ultra-compressed communication-style skill)
 long before this repo's own skills used it. Caveman itself ended up living in `~/.agents/AGENTS.md`
-instead (see "Caveman-style terse output" in `config/agents-md/collaboration.md`), not as an
-installed skill: a skill loads conditionally on a trigger, and this behaviour had to be
-unconditional and reach every agent tool, so the always-on `AGENTS.md` version replaced it outright.
-That test — unconditional and cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a
-skill — is now written up in the `skill-authoring` skill.
+instead, not as an installed skill: a skill loads conditionally on a trigger, and this behaviour had
+to be unconditional and reach every agent tool, so the always-on `AGENTS.md` version replaced it
+outright. It was dropped on 2026-11-25 in favour of a lighter rule, "Writing a reply" in
+`config/agents-md/collaboration.md`: no fluff, but not compressed telegraphese either. That test —
+unconditional and cross-tool means `AGENTS.md`, sharp trigger and cheap to miss means a skill — is
+now written up in the `skill-authoring` skill.
 
 ## Declaring static permission rules — the `claude_permissions_allow` field
 

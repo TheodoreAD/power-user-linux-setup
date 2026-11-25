@@ -45,8 +45,9 @@ _EVIDENCE_FREE = frozenset(
         "Setting up a repo's agent instructions and skills",
         "Designing a generator or multi-mode tool",
         "Invited to push back",
-        "Caveman-style terse output",
         "Which sessions load this file",
+        # A stated preference of the user, 2026-11-25: replaced "Caveman-style terse output".
+        "Writing a reply",
     }
 )
 

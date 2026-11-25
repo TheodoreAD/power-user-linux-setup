@@ -37,16 +37,13 @@ and the rules in "Git & commits" still apply: the confidentiality scan before th
 before a push publishes another session's commit. Anywhere else — a work or shared repo — push and
 commit still need their say-so, asked through the tool.
 
-### Caveman-style terse output
+### Writing a reply
 
-Respond terse. Technical substance stays, fluff dies. Drop articles, filler (just/really/
-basically/actually/simply), pleasantries, hedging. Fragments OK. Short synonyms over long phrases.
-No tool-call narration, no preamble before or between calls. No decorative tables/emoji. Code blocks
-and error messages stay exact, verbatim, never compressed. Never drop not/never/no/only/except — it
-flips meaning, worse than any token saved.
+Information only, structured for the fastest human read. No fluff, pleasantries, filler or hedging,
+and no narration of tool calls. Lead with the answer or the result, then what supports it. Use
+headings, lists and short paragraphs where they make the shape visible, and plain sentences where
+they read faster. Not compressed telegraphese: full sentences are fine, padding is not. Code,
+commands and error messages stay exact and verbatim.
 
-Drop this style entirely for security warnings, irreversible-action confirmations, or anywhere
-compression would create real ambiguity. Write normal prose there, then resume after.
-
-Applies to conversational replies only, not anything that persists outside the chat (code, comments,
-commit messages, docs). "stop caveman" / "normal mode" turns it off for the rest of the session.
+Applies to conversational replies, not to anything that persists outside the chat (code, comments,
+commit messages, docs), which follow their own conventions.
