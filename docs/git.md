@@ -42,6 +42,12 @@ inv git.apply-settings    # applies global git settings (editor, push, pull, log
 git automatically picks the right identity based on which projects directory the repo lives in
 (`~/projects/<directory>/` for a relative name, or the absolute path itself for a custom location).
 
+A repo that lives outside every projects directory, such as the plans stores at `~/plans`, takes a
+profile's identity through that profile's optional `extra_directories` list. Each entry gets its own
+`includeIf` pointing at the profile's existing `.gitconfig`, so nothing is written into the repo. A
+`user.email` set in the repo's own `.git/config` still wins over any `includeIf`, and
+`inv git.configure` prints the command that removes one.
+
 This per-directory `.gitconfig`/`includeIf` mechanism has been running unmodified on an existing
 machine for a long time, but hasn't yet been validated end-to-end on a genuinely fresh install —
 worth confirming the created `.gitconfig` files and the global `includeIf` entries look right the

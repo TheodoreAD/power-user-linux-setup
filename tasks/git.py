@@ -21,6 +21,28 @@ def resolve_project_dir(directory: str) -> Path:
     return PROJECTS_ROOT / directory
 
 
+def include_scopes(profile: util.GitProfile) -> list[Path]:
+    """Every directory whose repos take this profile's identity: its own `directory`, then each
+    `extra_directories` entry, resolved the same way.
+
+    An extra directory gets an `includeIf` pointing at the profile's own `.gitconfig`, so it needs no
+    file of its own. That is what it is for: a repo that lives outside the projects tree (the plans
+    stores at ~/plans) takes an identity without a `.gitconfig` appearing in its working tree.
+    """
+    return [resolve_project_dir(d) for d in [profile["directory"], *profile.get("extra_directories", [])]]
+
+
+def _local_email(repo: Path) -> str | None:
+    """A repo-local user.email, which wins over any includeIf and so silently defeats one."""
+    result = subprocess.run(
+        ["git", "-C", str(repo), "config", "--local", "--get", "user.email"],
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+    return result.stdout.strip() or None
+
+
 SETTINGS = {
     "core.autocrlf": "input",
     "core.fileMode": "true",
@@ -66,22 +88,27 @@ def configure(c: Context):
 
     if util.DRY_RUN:
         for p in profiles:
-            project_dir = resolve_project_dir(p["directory"])
-            exists = util.ok_label(project_dir.exists())
-            print(f"[git] {project_dir} ({exists}) → {p['name']} <{p['email']}>")
+            for scope in include_scopes(p):
+                exists = util.ok_label(scope.exists())
+                print(f"[git] {scope} ({exists}) → {p['name']} <{p['email']}>")
         return
 
     c.run("git config --global --unset user.name", warn=True, hide=True)
     c.run("git config --global --unset user.email", warn=True, hide=True)
 
     for p in profiles:
-        project_dir = resolve_project_dir(p["directory"])
+        project_dir, *extras = include_scopes(p)
         project_dir.mkdir(parents=True, exist_ok=True)
         gitconfig = project_dir / ".gitconfig"
-        c.run(
-            f'git config --global includeIf.gitdir:"{project_dir}/".path "{gitconfig}"',
-            hide=True,
-        )
         c.run(f'git config --file "{gitconfig}" user.name "{p["name"]}"', hide=True)
         c.run(f'git config --file "{gitconfig}" user.email "{p["email"]}"', hide=True)
-        print(f"[git] {project_dir} → {p['name']} <{p['email']}>")
+        # Extras are someone's existing repos, never created here.
+        for scope in [project_dir, *extras]:
+            c.run(f'git config --global includeIf.gitdir:"{scope}/".path "{gitconfig}"', hide=True)
+            print(f"[git] {scope} → {p['name']} <{p['email']}>")
+            local = _local_email(scope) if (scope / ".git").exists() else None
+            if local and local != p["email"]:
+                print(
+                    f"[git] WARNING: {scope} sets user.email = {local} in its own .git/config, which wins "
+                    f"over this includeIf. Remove it: git -C {scope} config --local --unset user.email"
+                )

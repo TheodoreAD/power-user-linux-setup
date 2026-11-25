@@ -1,10 +1,11 @@
-"""Unit tests for tasks/git.py's resolve_project_dir — the only part of that module that doesn't
-shell out to git or touch the filesystem. See tests/README.md.
+"""Unit tests for tasks/git.py's path resolution — the part of that module that doesn't shell out to
+git or touch the filesystem. See tests/README.md.
 """
 
 from pathlib import Path
 
-from tasks.git import PROJECTS_ROOT, resolve_project_dir
+from tasks.git import PROJECTS_ROOT, include_scopes, resolve_project_dir
+from tasks.util import GitProfile
 
 
 def test_resolve_project_dir_relative_name_joins_under_projects_root():
@@ -33,3 +34,19 @@ def test_resolve_project_dir_empty_string_resolves_to_projects_root():
     # Legacy form (directory = "") from before the wizard wrote "~/projects/" explicitly — kept
     # working since Path(...) / "" is a no-op join.
     assert resolve_project_dir("") == PROJECTS_ROOT
+
+
+def test_include_scopes_without_extras_is_the_profile_directory_alone():
+    profile: GitProfile = {"directory": "github.com-personal", "name": "J", "email": "j@example.com"}
+    assert include_scopes(profile) == [PROJECTS_ROOT / "github.com-personal"]
+
+
+def test_include_scopes_lists_the_profile_directory_first_then_each_extra():
+    # configure() unpacks the first as the directory that owns the .gitconfig, so the order is load-bearing.
+    profile: GitProfile = {
+        "directory": "github.com-personal",
+        "name": "J",
+        "email": "j@example.com",
+        "extra_directories": ["~/plans", "/srv/notes"],
+    }
+    assert include_scopes(profile) == [PROJECTS_ROOT / "github.com-personal", Path.home() / "plans", Path("/srv/notes")]

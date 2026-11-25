@@ -29,6 +29,10 @@
 directory = "github.com-personal"
 name      = "Jane Smith"
 email     = "12345678+janesmith@users.noreply.github.com"
+# Optional. Repos outside `directory` that should commit as this profile too, such as the
+# plan-conveyor stores. Each gets an includeIf pointing at this profile's .gitconfig, so nothing is
+# written into them. A repo-local user.email still wins; `inv git.configure` warns about one.
+extra_directories = ["~/plans", "~/plans-sensitive"]
 
 [[git_profiles]]
 directory = "github.com-work"

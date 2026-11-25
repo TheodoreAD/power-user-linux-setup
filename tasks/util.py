@@ -264,6 +264,7 @@ class GitProfile(TypedDict):
     directory: str
     name: str
     email: str
+    extra_directories: NotRequired[list[str]]
 
 
 class SshHost(TypedDict):
