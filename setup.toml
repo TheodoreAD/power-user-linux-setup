@@ -1454,12 +1454,18 @@ also_deploy_to = [
 assembled_from = "agents_md"
 agents_md = [
   { src = "config/agents-md/preamble.md", order = 5, platforms = ["linux", "windows"] },
-  { src = "config/agents-md/agent-knowledge.md", order = 10, platforms = ["linux"] },
-  { src = "config/agents-md/git.md", order = 20, platforms = ["linux"] },
-  { src = "config/agents-md/bash.md", order = 30, platforms = ["linux"] },
-  { src = "config/agents-md/research.md", order = 40, platforms = ["linux"] },
-  { src = "config/agents-md/verification.md", order = 50, platforms = ["linux"] },
-  { src = "config/agents-md/collaboration.md", order = 60, platforms = ["linux"] },
+  { src = "config/agents-md/agent-knowledge.md", order = 10, platforms = ["linux", "windows"] },
+  # A `<parent>.<platform>.md` supplement holds the rules of its parent's cluster that are true on
+  # one platform only, and sits at the next order so they land under the parent's heading.
+  { src = "config/agents-md/git.md", order = 20, platforms = ["linux", "windows"] },
+  { src = "config/agents-md/git.linux.md", order = 21, platforms = ["linux"] },
+  { src = "config/agents-md/bash.md", order = 30, platforms = ["linux", "windows"] },
+  { src = "config/agents-md/bash.linux.md", order = 31, platforms = ["linux"] },
+  { src = "config/agents-md/research.md", order = 40, platforms = ["linux", "windows"] },
+  { src = "config/agents-md/research.linux.md", order = 41, platforms = ["linux"] },
+  { src = "config/agents-md/verification.md", order = 50, platforms = ["linux", "windows"] },
+  { src = "config/agents-md/verification.linux.md", order = 51, platforms = ["linux"] },
+  { src = "config/agents-md/collaboration.md", order = 60, platforms = ["linux", "windows"] },
 ]
 
 [packages.repo-tasks]
