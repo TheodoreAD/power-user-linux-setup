@@ -152,8 +152,45 @@ allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]
 # Destructive default: Claude renders no `-C` form, so `git -C <repo> push --force` is unmatched;
 # and the `:<branch>` delete-by-refspec has no safe spelling, because Claude reads a trailing `:*`
 # as its legacy prefix wildcard, so `push ... :*` renders as an ask on every push.
-defer_overrides = ["commit", "push"]
+#
+# The shrink the same day deferred every other verb that can neither lose uncommitted work nor
+# rewrite history. Still asking: checkout, clean, rebase, stash clear/drop, worktree remove, plus
+# the flag shapes below that turn a deferred verb destructive. One gap, accepted: `git restore
+# <path>` without --staged discards changes but cannot ask, because an ask on `restore` would beat
+# the `restore --staged` allow; under auto it reaches the classifier's Irreversible Local
+# Destruction rule, and in any other mode it prompts as unmatched.
+defer_overrides = [
+  "commit",
+  "push",
+  "bisect",
+  "branch",
+  "config",
+  "merge",
+  "pull",
+  "mv",
+  "notes",
+  "remote",
+  "stash apply",
+  "stash branch",
+  "stash create",
+  "stash pop",
+  "stash save",
+  "stash store",
+  "submodule",
+  "switch",
+  "tag",
+  "worktree add",
+  "worktree lock",
+  "worktree move",
+  "worktree prune",
+  "worktree repair",
+  "worktree unlock",
+]
 ask_overrides = [
+  "branch ... -D",
+  "switch ... --discard-changes",
+  "switch ... -f",
+  "switch ... --force",
   "push ... --force*",
   "push ... -f",
   "push ... +*",
@@ -222,8 +259,31 @@ max_depth = 2 # pr create/merge, secret set/remove, release delete, etc. are the
 max_nodes = 200 # real tree measured ~170+ nodes at depth 2; 150 truncated it
 # 2026-11-25, user decision: PR operations go unprompted and are left to auto mode's classifier,
 # with the user's own repositories declared trusted for merges in setup.toml's claude_auto_mode.
-# release, repo, secret and the rest keep their asks.
-defer_overrides = ["pr"]
+# The shrink the same day deferred the rest of GitHub housekeeping too: the user's threat model
+# counts a mess in GitHub as recoverable. Still asking: auth, ssh-key, gpg-key, secret and
+# `repo deploy-key` (credentials), codespace (billed cloud machines), gist create/edit/rename/delete
+# (a public paste), release (publishes to users), `repo delete`, `repo edit` (visibility lives
+# there) and `workflow run` (a dispatched workflow can publish, as devcontainer.yml moves `stable`).
+defer_overrides = [
+  "pr",
+  "issue",
+  "label",
+  "project",
+  "run",
+  "variable",
+  "extension",
+  "gist clone",
+  "workflow disable",
+  "workflow enable",
+  "repo archive",
+  "repo autolink",
+  "repo clone",
+  "repo create",
+  "repo fork",
+  "repo rename",
+  "repo sync",
+  "repo unarchive",
+]
 subcommands = [
   "auth",
   "pr",
@@ -252,6 +312,7 @@ max_depth = 2 # mr create/merge, ci run/trace
 subcommands = ["mr", "issue", "ci", "repo", "release", "pipeline", "label", "variable", "auth"]
 
 [kubectl]
+defer_overrides = ["config"] # the local kubeconfig only; everything touching a cluster still asks
 version_flag = "version --client"
 max_depth = 2 # config use-context/delete-context, rollout undo/restart, create <kind> are the real leaves
 max_nodes = 90
@@ -283,6 +344,7 @@ subcommands = [
 ]
 
 [helm]
+defer_overrides = ["create", "package", "plugin", "repo"] # local; install/upgrade/rollback/uninstall still ask
 version_flag = "version --short"
 max_depth = 2 # repo add/remove, plugin install/uninstall
 subcommands = [
@@ -307,6 +369,7 @@ subcommands = [
 ]
 
 [kind]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 subcommands = ["get", "create", "delete", "load", "build", "export"]
 
 [jira]
@@ -371,12 +434,28 @@ ask_overrides = [
 version_flag = "version" # version is a subcommand, as with jira
 
 [tilt]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 subcommands = ["get", "logs", "status", "dump", "doctor", "up", "down", "ci"]
 
 [k9s]
 skip_interactive = true
 
 [docker]
+# Local containers, images and volumes are left to the classifier (2026-11-25 shrink); what leaves
+# the machine still asks: a push to a registry, or a login storing registry credentials.
+defer_overrides = ["..."]
+ask_overrides = [
+  "push",
+  "login",
+  "image push",
+  "compose push",
+  "compose publish",
+  "manifest push",
+  "plugin push",
+  "build ... --push",
+  "buildx build ... --push",
+  "buildx bake ... --push",
+]
 max_depth = 2 # this is where docker's real danger lives: network/volume/image/context rm vs ls
 max_nodes = 200 # real tree measured ~160-170 nodes at depth 2; 150 truncated it
 subcommands = [
@@ -414,6 +493,9 @@ subcommands = [
 ]
 
 [terraform]
+# Local formatting, init and workspace switching are left to the classifier; apply, destroy, import
+# and every state mutation still ask.
+defer_overrides = ["fmt", "init", "providers", "workspace new", "workspace select"]
 max_depth = 2 # state rm/mv, workspace delete are meaningfully different from state show/list
 subcommands = [
   "validate",
@@ -485,6 +567,7 @@ subcommands = [
 ]
 
 [go]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 version_flag = "version"
 help_flag = "help" # not --help: `go <sub> --help` is a stub ("Run 'go help list' for details")
 help_style = "prefix"
@@ -492,6 +575,9 @@ max_depth = 2 # mod tidy/vendor vs mod download are meaningfully different
 subcommands = ["list", "mod", "version", "env", "build", "run", "install", "get", "clean", "generate"]
 
 [npm]
+# Local installs and scripts are left to the classifier; publishing and registry credentials ask.
+defer_overrides = ["..."]
+ask_overrides = ["publish", "unpublish", "login", "adduser", "token"]
 max_depth = 2 # config get/list (read) vs config set/delete (write) are meaningfully different
 subcommands = [
   "list",
@@ -511,6 +597,9 @@ subcommands = [
 ]
 
 [cargo]
+# Local builds and tests are left to the classifier; publishing and registry credentials ask.
+defer_overrides = ["..."]
+ask_overrides = ["publish", "yank", "login", "owner"]
 subcommands = [
   "tree",
   "search",
@@ -530,6 +619,7 @@ subcommands = [
 ]
 
 [uv]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 subcommands = ["pip", "tree", "add", "sync", "run", "tool", "venv", "python", "init", "build"]
 
 [pytest]
@@ -634,12 +724,15 @@ subcommands = [
 ]
 
 [direnv]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 subcommands = ["status", "dump", "allow", "edit", "deny", "reload"]
 
 [dprint]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 subcommands = ["check", "fmt", "config", "file-paths"]
 
 [zensical]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 help_flag = "--help"
 subcommands = ["build", "serve"]
 
@@ -647,12 +740,15 @@ subcommands = ["build", "serve"]
 subcommands = ["check", "upload", "register"]
 
 [nuitka]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [hyperfine]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [dive]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [vim]
@@ -681,6 +777,7 @@ no_subcommands = true
 no_subcommands = true
 
 [find]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [sed]
@@ -690,12 +787,15 @@ no_subcommands = true
 no_subcommands = true
 
 [xargs]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [bash]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [zsh]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [eza]
@@ -711,6 +811,7 @@ no_subcommands = true
 no_subcommands = true
 
 [unzip]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 version_flag = "-v"
 no_subcommands = true
 
@@ -725,6 +826,7 @@ no_subcommands = true
 no_subcommands = true
 
 [node]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [wezterm]
@@ -734,15 +836,19 @@ no_subcommands = true
 no_subcommands = true
 
 [mkdocs]
+defer_overrides = ["..."]
+ask_overrides = ["gh-deploy"] # publishes the site
 subcommands = ["build", "serve", "gh-deploy", "new"]
 
 [gext]
 subcommands = ["list", "search", "show", "install", "uninstall", "enable", "disable", "update"]
 
 [rustup]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 subcommands = ["show", "toolchain", "target", "component", "update", "default", "override", "check"]
 
 [nvm]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 # Not a binary — nvm only exists as a shell function after sourcing nvm.sh, so `which nvm` and a
 # direct exec both fail. nvm_dir matches tasks/node.py's default (node.py reads it from
 # setup.toml's [packages.node].nvm_dir if that's ever changed from the default — update here too).
@@ -778,36 +884,45 @@ no_subcommands = true
 
 # acceptEdits auto-approves these in-scope and prompts out-of-scope — see `mode_covered` above.
 [cp]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 mode_covered = true
 
 [mv]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 mode_covered = true
 
 [rm]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 mode_covered = true
 
 [mkdir]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 mode_covered = true
 
 [rmdir]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 mode_covered = true
 
 [touch]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 mode_covered = true
 
 [chmod]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [chown]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [ln]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [dd]
@@ -817,18 +932,23 @@ no_subcommands = true
 no_subcommands = true
 
 [truncate]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [tee]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [mktemp]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [install]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [date]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [id]
@@ -838,12 +958,15 @@ no_subcommands = true
 no_subcommands = true
 
 [env]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [kill]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [pkill]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [su]
@@ -856,15 +979,19 @@ no_subcommands = true
 no_subcommands = true
 
 [gzip]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [bzip2]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [xz]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 no_subcommands = true
 
 [tar]
+defer_overrides = ["..."] # local only: auto mode's classifier judges it
 # Not actually subcommand-based — -c/-x/-t are flags, not subcommands `tar -tvf --help` can query
 # individually (tar --help already dumps the full flag reference in one screen). Flat like unzip.
 no_subcommands = true
