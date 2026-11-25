@@ -301,7 +301,7 @@ wheels = [
 [[package]]
 name = "invoke-stubs"
 version = "0.3.1"
-source = { git = "https://github.com/TheodoreAD/invoke-stubs#5c0836daf76f2e5b41debafdf73f42ca8572e6cc" }
+source = { git = "https://github.com/TheodoreAD/invoke-stubs#a4b480bd8bfc03a88f9753c76e64ebc27cd659a9" }
 
 [[package]]
 name = "jinja2"
@@ -454,7 +454,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-socket" },
     { name = "pytest-timeout" },
-    { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.7.0" },
+    { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.7.2" },
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
@@ -669,8 +669,8 @@ wheels = [
 
 [[package]]
 name = "repo-tasks"
-version = "0.7.0"
-source = { git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.7.0#8a2f549485a8810a3e34bbf682cf58423b72bc63" }
+version = "0.7.2"
+source = { git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.7.2#67b75c99c94b13ba2858cdc3dddfc328e0b6ca47" }
 dependencies = [
     { name = "bump-my-version" },
     { name = "dunamai" },
