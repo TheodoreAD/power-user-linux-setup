@@ -111,13 +111,17 @@ def render_claude(rules: Iterable[Rule]) -> tuple[list[str], list[str]]:
 
     Raises on an allow pattern with an inner wildcard: it would print a warning on every session
     start, and a permanent warning is one nobody reads — which is how the next real one gets
-    missed."""
+    missed. Raises on any pattern ending in `:*` too, which Claude reads as its legacy prefix
+    wildcard rather than as a literal colon: `push ... :*` meant "a `:<branch>` refspec" and
+    rendered `Bash(git push :*)`, an ask on every push (caught 2026-11-25 reading the render)."""
     allow: dict[str, None] = {}
     ask: dict[str, None] = {}
     for rule in rules:
         if rule.decision is Decision.ASK and rule.mode_covered:
             continue
         for pattern in claude_patterns(rule):
+            if pattern.endswith(":*)"):
+                raise RuleSyntaxError(f"{pattern}: Claude reads a trailing `:*` as a prefix wildcard")
             if rule.decision is Decision.ALLOW and claude_inner_wildcard(pattern):
                 raise RuleSyntaxError(f"{pattern}: Claude Code warns about a wildcard before the last word")
             (allow if rule.decision is Decision.ALLOW else ask)[pattern] = None

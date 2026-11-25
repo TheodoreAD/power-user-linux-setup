@@ -101,6 +101,13 @@ def test_render_claude_refuses_an_allow_it_would_warn_about():
         render_claude([_rule("... status ...")])
 
 
+@pytest.mark.parametrize("decision", [Decision.ALLOW, Decision.ASK])
+def test_render_claude_refuses_a_trailing_colon_glob(decision: Decision):
+    # `:*` is Claude's legacy prefix wildcard, so `Bash(git push :*)` matches every push.
+    with pytest.raises(RuleSyntaxError, match="prefix wildcard"):
+        render_claude([_rule("push ... :*", decision)])
+
+
 def test_render_claude_accepts_the_same_shape_as_an_ask():
     # Ask rules only ever add a prompt, so Claude Code does not warn about them.
     assert render_claude([_rule("reset ... --hard ...", Decision.ASK)])[1][1] == "Bash(git reset * --hard)"
