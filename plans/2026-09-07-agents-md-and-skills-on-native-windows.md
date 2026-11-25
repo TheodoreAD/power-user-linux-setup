@@ -518,7 +518,21 @@ against. That is settled, which moves the work to the order below.
   It's the same pure function over the same UTF-8 bytes as on Linux; no Linux machine was at hand to
   compare digests directly.
 
-**Next is step 4, the axis**, and it is visible already: on Windows `deploy.status` also lists
-`askpass-zenity` and `cameractrls-launcher`, so the platform filter has to cover packages as well as
-fragments. Do not run `inv deploy.all` for `agents-md` on Windows before the Windows fragment
-exists: it would replace the Windows rules now in `~/.agents/AGENTS.md` with the Linux-only file.
+**Step 4 is done too, 2026-11-25.** Both §1 questions were answered by the user: the axis is an
+explicit, required `platforms` field on every package and every fragment, not tags and not a
+derivation from `[needs …]` labels (`b2956cb`). Fragments that mixed platforms were split into
+`<parent>.<platform>.md` supplements that land under the parent's heading (`41c2190`). The Windows
+machine's global rules were merged rule by rule (`60ea993`), after the user decided the four real
+conflicts: auto-push own repos on both platforms; writes to another repo allowed only with explicit
+approval (`4c68269`); caveman replaced by a plain no-fluff reply rule (`c5a970f`); supplements
+rather than per-OS clusters. Rendered: Linux 1,043 lines, Windows 838.
+
+**What is left:**
+
+- Deploy on the Windows machine: `inv deploy.all --name agents-md --yes`. It replaces the
+  `win-configs`-deployed file in `~/.agents/AGENTS.md` and `~/.claude/CLAUDE.md`, so it waits for
+  the user's go-ahead.
+- `win-configs` then stops deploying `claude/CLAUDE.md`. Its install snippet should point here
+  instead (`spowse deploy.all --name agents-md`), and the file should be deleted once nothing reads
+  it.
+- The Copilot and Windsurf questions above are still open; nothing here writes for either.
