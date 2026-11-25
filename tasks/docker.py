@@ -74,7 +74,7 @@ def _read_daemon_json(c: Context) -> util.JsonObject:
     # merge would then write only PULSE's keys over everything else in the file. A failed read
     # raises here instead, including in a dry run, whose sudo cannot prompt.
     if os.access(_DAEMON_JSON, os.R_OK):
-        text = _DAEMON_JSON.read_text()
+        text = _DAEMON_JSON.read_text(encoding="utf-8")
     else:
         text = c.run(f"{util.SUDO} cat {_DAEMON_JSON}", hide=True).stdout
     return cast(util.JsonObject, util.parse_json(text))
@@ -237,7 +237,7 @@ def _configure_container_proxy(proxy_url: str, no_proxy: str | None) -> None:
     # 0600 before the write, for the same reason _write_creds_store does it: this file can hold
     # credentials, and a new one created under the default umask is world-readable in between.
     DOCKER_CONFIG.touch(mode=0o600, exist_ok=True)
-    DOCKER_CONFIG.write_text(json.dumps(updated, indent=2) + "\n")
+    DOCKER_CONFIG.write_text(json.dumps(updated, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"[docker-corporate] container proxy written to {DOCKER_CONFIG}")
 
 
@@ -338,7 +338,7 @@ def configure_corporate(c: Context):
 def _read_docker_config() -> util.JsonObject:
     if not DOCKER_CONFIG.exists():
         return {}
-    return cast(util.JsonObject, util.parse_json(DOCKER_CONFIG.read_text()))
+    return cast(util.JsonObject, util.parse_json(DOCKER_CONFIG.read_text(encoding="utf-8")))
 
 
 def _plaintext_secret_hosts(config: util.JsonObject) -> list[str]:
@@ -394,7 +394,7 @@ def _purge_plaintext_auths() -> tuple[int, int]:
     for host in emptied:
         del auths[host]
     if hosts or emptied:
-        DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
+        DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8", newline="\n")
     return len(hosts), len(emptied)
 
 
@@ -430,7 +430,7 @@ def _write_creds_store() -> bool:
     # 0600 before the write, not after: this file holds credentials, and a new one created under
     # the default umask would be world-readable for the moment between the two calls.
     DOCKER_CONFIG.touch(mode=0o600, exist_ok=True)
-    DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n")
+    DOCKER_CONFIG.write_text(json.dumps(config, indent=2) + "\n", encoding="utf-8", newline="\n")
     return True
 
 

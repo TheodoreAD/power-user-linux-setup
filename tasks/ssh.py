@@ -196,7 +196,7 @@ def _declared_keys() -> list[Path]:
     """Private keys this machine actually uses, from ~/.ssh/config, newest source of truth first."""
     if not SSH_CONFIG.exists():
         return []
-    return parse_identity_files(SSH_CONFIG.read_text())
+    return parse_identity_files(SSH_CONFIG.read_text(encoding="utf-8"))
 
 
 def _pub_fingerprint(key: Path) -> str | None:

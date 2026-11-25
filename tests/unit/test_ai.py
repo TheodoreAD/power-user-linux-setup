@@ -96,7 +96,7 @@ def test_parse_frontmatter_description_stops_at_closing_marker():
 
 def test_skill_frontmatter_description_reads_real_file(tmp_path):
     skill_md = tmp_path / "SKILL.md"
-    skill_md.write_text('---\ndescription: "hello"\n---\n')
+    skill_md.write_text('---\ndescription: "hello"\n---\n', encoding="utf-8", newline="\n")
     assert ai._skill_frontmatter_description(skill_md) == "hello"
 
 
@@ -128,7 +128,9 @@ def test_remote_skill_prompt_no_description():
 def _make_src_skill(repo_root: Path, rel_path: str, *, description: str = "desc") -> Path:
     src = repo_root / rel_path
     src.mkdir(parents=True)
-    (src / "SKILL.md").write_text(f'---\nname: {src.name}\ndescription: "{description}"\n---\nbody\n')
+    (src / "SKILL.md").write_text(
+        f'---\nname: {src.name}\ndescription: "{description}"\n---\nbody\n', encoding="utf-8", newline="\n"
+    )
     return src
 
 
@@ -709,13 +711,13 @@ def test_apply_additional_directories_writes_expanded_paths_and_manifest(monkeyp
 
     expected = sorted(["/tmp/claude-1000", str(Path.home() / ".claude" / "jobs")])
     assert written == [{"permissions": {"allow": ["Bash(ls:*)"], "additionalDirectories": expected}}]
-    assert json.loads((tmp_path / "dirs-manifest.json").read_text()) == expected
+    assert json.loads((tmp_path / "dirs-manifest.json").read_text(encoding="utf-8")) == expected
     assert "additionalDirectories updated" in capsys.readouterr().out
 
 
 def test_apply_additional_directories_keeps_hand_added_dir_and_removes_only_ours(monkeypatch, tmp_path):
     _stub_declared_dirs(monkeypatch, tmp_path, ["/tmp/claude-1000"])
-    (tmp_path / "dirs-manifest.json").write_text(json.dumps(["/old/ours"]))
+    (tmp_path / "dirs-manifest.json").write_text(json.dumps(["/old/ours"]), encoding="utf-8", newline="\n")
     monkeypatch.setattr(
         util,
         "load_claude_settings",
@@ -989,7 +991,7 @@ def _stub_permission_packages(monkeypatch, **fields: list[str]) -> None:
 
 def test_static_perm_merge_leaves_a_rule_this_mechanism_never_wrote(tmp_path):
     manifest = tmp_path / "applied.json"
-    manifest.write_text(json.dumps(["Bash(ours:*)"]))
+    manifest.write_text(json.dumps(["Bash(ours:*)"]), encoding="utf-8", newline="\n")
 
     merged = ai._static_perm_merge(["Bash(ours:*)", "Read(./hand-added)"], ["Bash(new:*)"], manifest)
 
@@ -999,7 +1001,7 @@ def test_static_perm_merge_leaves_a_rule_this_mechanism_never_wrote(tmp_path):
 
 def test_static_perm_merge_returns_none_when_nothing_changes(tmp_path):
     manifest = tmp_path / "applied.json"
-    manifest.write_text(json.dumps(["Bash(ours:*)"]))
+    manifest.write_text(json.dumps(["Bash(ours:*)"]), encoding="utf-8", newline="\n")
 
     assert ai._static_perm_merge(["Bash(ours:*)"], ["Bash(ours:*)"], manifest) is None
 
@@ -1099,9 +1101,11 @@ def test_labelled_rules_reads_headings_and_skips_the_readme(tmp_path, monkeypatc
     frag = tmp_path / "agents-md"
     frag.mkdir()
     (frag / "bash.md").write_text(
-        "## Bash & tool use\n\n### Plain rule\n\nBody.\n\n### Labelled rule  [needs direnv]\n\nBody.\n"
+        "## Bash & tool use\n\n### Plain rule\n\nBody.\n\n### Labelled rule  [needs direnv]\n\nBody.\n",
+        encoding="utf-8",
+        newline="\n",
     )
-    (frag / "README.md").write_text("### Not a rule  [needs direnv]\n")
+    (frag / "README.md").write_text("### Not a rule  [needs direnv]\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(ai, "_AGENTS_MD_FRAGMENTS", frag)
 
     assert ai._labelled_rules() == [("bash.md", "Labelled rule", "needs direnv")]

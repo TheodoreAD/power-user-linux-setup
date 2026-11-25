@@ -117,7 +117,7 @@ def pin_default(c: Context):
         print("[python] settings.uv_python_default is unset — no global pin to apply")
         return
     if util.DRY_RUN:
-        current = UV_GLOBAL_PIN.read_text().strip() if UV_GLOBAL_PIN.exists() else None
+        current = UV_GLOBAL_PIN.read_text(encoding="utf-8").strip() if UV_GLOBAL_PIN.exists() else None
         ok = current == version
         print(f"[python] global pin {version}: {util.ok_label(ok)}" + ("" if ok else f"  (currently {current})"))
         return
@@ -161,12 +161,12 @@ def set_default(c: Context, version: str):
         print(f"[python] would set uv_python_extra: {extras_literal}")
         return
 
-    text = _SETUP_TOML.read_text()
+    text = _SETUP_TOML.read_text(encoding="utf-8")
     if not _DEFAULT_RE.search(text):
         raise RuntimeError("uv_python_default not found in setup.toml")
     text = _DEFAULT_RE.sub(rf'\1"{version}"', text, count=1)
     text = _EXTRA_RE.sub(rf"\g<1>{extras_literal}", text, count=1)
-    _SETUP_TOML.write_text(text)
+    _SETUP_TOML.write_text(text, encoding="utf-8", newline="\n")
     print(f'[python] setup.toml: uv_python_default = "{version}", uv_python_extra = {extras_literal}')
 
     c.run(f"uv python install {version}")

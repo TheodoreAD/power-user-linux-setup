@@ -82,7 +82,7 @@ def render_docs(c: Context):
     """
     content = _generated_content()
     if util.DRY_RUN:
-        text = _DOC_PATH.read_text() if _DOC_PATH.exists() else ""
+        text = _DOC_PATH.read_text(encoding="utf-8") if _DOC_PATH.exists() else ""
         _, status = util.ensure_block_text(text, "devcontainer-tags", content, style=util.MarkerStyle.HTML)
         print(f"[devcontainer] render-docs: {util.ok_label(status == util.BlockStatus.OK)}")
         return

@@ -74,12 +74,12 @@ def _write_proc(root: Path, pid: int, ppid: int, start_ticks: int, argv: bytes, 
     pid_dir.mkdir()
     # 20 fields after the comm: state, ppid, then filler up to starttime at index 19.
     after = ["S", str(ppid), *["0"] * 17, str(start_ticks)]
-    (pid_dir / "stat").write_text(f"{pid} ({comm}) {' '.join(after)} 0 0\n")
+    (pid_dir / "stat").write_text(f"{pid} ({comm}) {' '.join(after)} 0 0\n", encoding="utf-8", newline="\n")
     (pid_dir / "cmdline").write_bytes(argv)
 
 
 def _fake_proc(tmp_path: Path) -> Path:
-    (tmp_path / "stat").write_text(f"cpu  1 2 3\nbtime {_BTIME}\nprocesses 9\n")
+    (tmp_path / "stat").write_text(f"cpu  1 2 3\nbtime {_BTIME}\nprocesses 9\n", encoding="utf-8", newline="\n")
     return tmp_path
 
 
@@ -208,7 +208,7 @@ def test_the_offer_stays_on_screen_and_leave_it_stops_nothing(monkeypatch):
 
 def test_claude_daemon_imports_only_the_standard_library():
     """It runs from an autostart entry on the desktop's own `python3`, with no venv behind it."""
-    tree = ast.parse((_REPO_ROOT / "tasks" / "claude_daemon.py").read_text())
+    tree = ast.parse((_REPO_ROOT / "tasks" / "claude_daemon.py").read_text(encoding="utf-8"))
     imported: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

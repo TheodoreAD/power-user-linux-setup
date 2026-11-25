@@ -255,7 +255,7 @@ def test_an_unclassifiable_claim_reports_presence_only(tmp_path):
     )
 
     assert home.state_of(claim, {}) == "absent"
-    path.write_text("[General]\n")
+    path.write_text("[General]\n", encoding="utf-8", newline="\n")
     assert home.state_of(claim, {}) == "present"
 
 
@@ -264,9 +264,9 @@ def test_a_deploy_backed_claim_reports_its_real_state(tmp_path, monkeypatch):
     same object the writer acts on rather than from a path lookup that could go stale."""
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     (tmp_path / "config").mkdir()
-    (tmp_path / "config" / "app.conf").write_text("source\n")
+    (tmp_path / "config" / "app.conf").write_text("source\n", encoding="utf-8", newline="\n")
     path = tmp_path / "app.conf"
-    path.write_text("edited here\n")
+    path.write_text("edited here\n", encoding="utf-8", newline="\n")
     managed = deploy.Managed(
         path=path, package="app", source="config/app.conf", mechanism=deploy.Mechanism.MANAGED_FILE
     )
@@ -374,7 +374,7 @@ def test_the_plaintext_credential_store_is_claimed_once_the_fallback_was_chosen(
     # not an inventory.
     _stub_config(monkeypatch, {})
     env_file = tmp_path / "proxy.env"
-    env_file.write_text("PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring\n")
+    env_file.write_text("PYTHON_KEYRING_BACKEND=keyrings.alt.file.PlaintextKeyring\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(home.proxy, "ENV_FILE", env_file)
 
     claim = _keyring_store_claims(fake_home)[0]
@@ -413,7 +413,7 @@ def test_each_git_profile_directory_is_claimed(fake_home, monkeypatch):
     _stub_config(monkeypatch, {})
     monkeypatch.setattr(home.screenshot, "SCREENSHOTS_DIR", fake_home / "Pictures" / "Screenshots")
     identity = fake_home / "identity.toml"
-    identity.write_text("")
+    identity.write_text("", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "IDENTITY_PATH", identity)
     monkeypatch.setattr(
         util,

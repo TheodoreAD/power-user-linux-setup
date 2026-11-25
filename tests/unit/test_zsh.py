@@ -49,7 +49,7 @@ def _ctx(session_env: str = "", *, exited: int = 0, unset: str | None = None) ->
 
 def _zshenv(tmp_path) -> str:
     path = tmp_path / ".zshenv"
-    return path.read_text() if path.exists() else ""
+    return path.read_text(encoding="utf-8") if path.exists() else ""
 
 
 def test_configure_writes_a_gui_block_when_no_tag_is_excluded(tmp_path, monkeypatch):
@@ -86,7 +86,7 @@ def test_configure_removes_a_block_whose_package_stopped_applying(tmp_path, monk
 
 
 def test_configure_leaves_hand_written_content_alone_when_it_removes_a_block(tmp_path, monkeypatch):
-    (tmp_path / ".zshenv").write_text("# mine, not PULSE's\nexport MINE=1\n")
+    (tmp_path / ".zshenv").write_text("# mine, not PULSE's\nexport MINE=1\n", encoding="utf-8", newline="\n")
     _config(monkeypatch, {"askpass": _GUI})
     zsh.configure(_ctx())
 
@@ -134,7 +134,7 @@ def test_configure_removes_a_block_whose_field_was_dropped_from_setup_toml(tmp_p
     zsh.configure(_ctx())
 
     assert "UV_PYTHON" not in _zshenv(tmp_path)
-    assert "eval completions" in (tmp_path / ".zshrc").read_text(), "the surviving field stays"
+    assert "eval completions" in (tmp_path / ".zshrc").read_text(encoding="utf-8"), "the surviving field stays"
 
 
 _UV_ENV: util.PackageConfig = {"zshenv": "export UV_PYTHON=3.14", "zshrc": "eval completions"}
@@ -173,7 +173,7 @@ def test_configure_is_silent_when_the_session_no_longer_carries_the_export(tmp_p
 def test_an_export_still_set_by_another_line_is_not_reported_as_removed(tmp_path, monkeypatch, capsys):
     """Removal is judged on the whole dotfile, not the block: a human's own `export UV_PYTHON` means
     the variable is still exported, whatever PULSE's block did."""
-    (tmp_path / ".zshenv").write_text("export UV_PYTHON=3.13\n")
+    (tmp_path / ".zshenv").write_text("export UV_PYTHON=3.13\n", encoding="utf-8", newline="\n")
     _config(monkeypatch, {"uv-env": _UV_ENV})
     zsh.configure(_ctx())
 

@@ -158,7 +158,9 @@ def test_set_default_repins_and_no_longer_rewrites_a_shell_export(monkeypatch: p
     setup_toml = tmp_path / "setup.toml"
     setup_toml.write_text(
         '[settings]\nuv_python_default = "3.14"\nuv_python_extra = ["3.11"]\n\n'
-        "[packages.something]\nzshenv = 'export UV_PYTHON=\"3.14\"'\n"
+        "[packages.something]\nzshenv = 'export UV_PYTHON=\"3.14\"'\n",
+        encoding="utf-8",
+        newline="\n",
     )
     monkeypatch.setattr(python_tasks, "_SETUP_TOML", setup_toml)
     settings = {"uv_python_default": "3.14", "uv_python_extra": ["3.11"], "uv_python_set_default": False}
@@ -168,7 +170,7 @@ def test_set_default_repins_and_no_longer_rewrites_a_shell_export(monkeypatch: p
     python_tasks.set_default(context, "3.15")
 
     assert "uv python pin --global 3.15" in context.commands
-    text = setup_toml.read_text()
+    text = setup_toml.read_text(encoding="utf-8")
     assert 'uv_python_default = "3.15"' in text
     assert 'export UV_PYTHON="3.14"' in text, "an unrelated UV_PYTHON is not this task's to rewrite"
 

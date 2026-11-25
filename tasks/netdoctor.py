@@ -431,7 +431,7 @@ def split_host_port(value: str, default_port: int = 80) -> tuple[str, int] | Non
 
 def _read(path: str | Path) -> str:
     try:
-        return Path(path).expanduser().read_text(errors="replace")
+        return Path(path).expanduser().read_text(errors="replace", encoding="utf-8")
     except OSError:
         return ""
 

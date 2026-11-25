@@ -71,7 +71,7 @@ def test_committed_catalog_matches_setup_toml():
     one — the alternative is a docs page that quietly describes a setup.toml from three commits
     ago. Fix a failure by running `inv catalog.render-packages` and committing the result."""
     _, status = util.ensure_block_text(
-        _PACKAGES_DOC.read_text(),
+        _PACKAGES_DOC.read_text(encoding="utf-8"),
         _PACKAGES_BLOCK,
         _packages_table(),
         style=util.MarkerStyle.HTML,
@@ -120,7 +120,7 @@ def test_committed_task_index_matches_the_namespace():
     """Fix a failure by running `inv catalog.render-tasks` and committing the result. This one can
     go stale without any commit in this repo: a `repo-tasks` bump changes the task surface here."""
     _, status = util.ensure_block_text(
-        _TASKS_DOC.read_text(),
+        _TASKS_DOC.read_text(encoding="utf-8"),
         _TASKS_BLOCK,
         _tasks_table(),
         style=util.MarkerStyle.HTML,

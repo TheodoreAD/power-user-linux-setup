@@ -56,7 +56,7 @@ def _parse_frontmatter_description(text: str) -> str | None:
 def _skill_frontmatter_description(skill_md: Path) -> str | None:
     if not skill_md.is_file():
         return None
-    return _parse_frontmatter_description(skill_md.read_text())
+    return _parse_frontmatter_description(skill_md.read_text(encoding="utf-8"))
 
 
 def _selected_skill_names(skill: str | None) -> set[str] | None:
@@ -312,7 +312,9 @@ def _static_perm_merge(existing: list[str], declared: list[str], manifest: Path)
     a rule added by hand — or by tasks/allowlist.py, which keeps its own separate manifest — is
     never dropped. Pure apart from reading the manifest, so the merge itself is unit-testable.
     """
-    previous: set[str] = set(cast(list[str], json.loads(manifest.read_text()))) if manifest.exists() else set()
+    previous: set[str] = (
+        set(cast(list[str], json.loads(manifest.read_text(encoding="utf-8")))) if manifest.exists() else set()
+    )
     kept = [r for r in existing if r not in previous]
     merged = kept + [r for r in declared if r not in kept]
     return None if set(merged) == set(existing) else merged
@@ -381,7 +383,7 @@ def _apply_static_claude_permissions() -> None:
 
     for key, _, manifest in _STATIC_PERM_TIERS:
         manifest.parent.mkdir(parents=True, exist_ok=True)
-        manifest.write_text(json.dumps(declared[key], indent=2) + "\n")
+        manifest.write_text(json.dumps(declared[key], indent=2) + "\n", encoding="utf-8", newline="\n")
     summary = ", ".join(f"{key} {len(declared[key])}" for key, _, _ in _STATIC_PERM_TIERS if key in changed)
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: static permissions updated ({summary})")
 
@@ -416,7 +418,9 @@ def _apply_additional_directories() -> None:
         return
 
     previous: set[str] = (
-        set(cast(list[str], json.loads(_STATIC_DIRS_MANIFEST.read_text()))) if _STATIC_DIRS_MANIFEST.exists() else set()
+        set(cast(list[str], json.loads(_STATIC_DIRS_MANIFEST.read_text(encoding="utf-8"))))
+        if _STATIC_DIRS_MANIFEST.exists()
+        else set()
     )
     kept = [d for d in existing if d not in previous]
     merged = kept + [d for d in declared if d not in kept]
@@ -429,7 +433,7 @@ def _apply_additional_directories() -> None:
     util.write_claude_settings(settings)
 
     _STATIC_DIRS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    _STATIC_DIRS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n")
+    _STATIC_DIRS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: additionalDirectories updated ({len(declared)} dir(s))")
 
 
@@ -764,7 +768,7 @@ def _labelled_rules() -> list[tuple[str, str, str]]:
         (path.name, m["rule"], m["label"])
         for path in sorted(_AGENTS_MD_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
-        for m in _RULE_LABEL.finditer(path.read_text())
+        for m in _RULE_LABEL.finditer(path.read_text(encoding="utf-8"))
     ]
 
 

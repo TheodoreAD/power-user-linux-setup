@@ -512,7 +512,9 @@ def _load_rule(tool: str) -> RuleEntry | None:
 
 def _save_rule(tool: str, entry: RuleEntry) -> None:
     _RULES_DIR.mkdir(parents=True, exist_ok=True)
-    (_RULES_DIR / f"{tool}.json").write_text(json.dumps(entry, indent=2, sort_keys=True) + "\n")
+    (_RULES_DIR / f"{tool}.json").write_text(
+        json.dumps(entry, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 def _load_all_rules() -> dict[str, RuleEntry]:
@@ -536,7 +538,9 @@ def _help_text(cache_nodes: dict[str, CacheNode], path: str) -> str:
 
 def _save_cache(tool: str, data: CacheEntry) -> None:
     _HELP_CACHE_DIR.mkdir(parents=True, exist_ok=True)
-    (_HELP_CACHE_DIR / f"{tool}.json").write_text(json.dumps(data, indent=2, sort_keys=True) + "\n")
+    (_HELP_CACHE_DIR / f"{tool}.json").write_text(
+        json.dumps(data, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n"
+    )
 
 
 def _run_capture(cmd: list[str], timeout: int = _HELP_TIMEOUT) -> str:
@@ -1696,7 +1700,7 @@ def render(c: Context, target: str = "claude", out: str | None = None):
         return
 
     if out:
-        Path(out).write_text(text + "\n")
+        Path(out).write_text(text + "\n", encoding="utf-8", newline="\n")
         print(f"[allowlist] wrote {out}")
     else:
         print(text)
@@ -1763,7 +1767,9 @@ def apply(c: Context):
     allow, ask = _compute_claude_rules(rules)
     new_set = set(allow) | set(ask)
     previous: set[str] = (
-        set(cast(list[str], json.loads(_APPLIED_MANIFEST.read_text()))) if _APPLIED_MANIFEST.exists() else set()
+        set(cast(list[str], json.loads(_APPLIED_MANIFEST.read_text(encoding="utf-8"))))
+        if _APPLIED_MANIFEST.exists()
+        else set()
     )
 
     settings = util.load_claude_settings()
@@ -1800,7 +1806,7 @@ def apply(c: Context):
     util.write_claude_settings(settings)
 
     _APPLIED_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
-    _APPLIED_MANIFEST.write_text(json.dumps(sorted(new_set), indent=2) + "\n")
+    _APPLIED_MANIFEST.write_text(json.dumps(sorted(new_set), indent=2) + "\n", encoding="utf-8", newline="\n")
     print(f"[allowlist] wrote {util.CLAUDE_SETTINGS} (backup at {util.CLAUDE_SETTINGS}.bak)")
 
 
@@ -2006,7 +2012,7 @@ def check_claude(c: Context, model: str = "haiku"):
         _init_probe_repo(other)
         allow, ask = _compute_claude_rules(_load_all_rules())
         settings = root / "settings.json"
-        settings.write_text(json.dumps({"permissions": {"allow": allow, "ask": ask}}), encoding="utf-8")
+        settings.write_text(json.dumps({"permissions": {"allow": allow, "ask": ask}}), encoding="utf-8", newline="\n")
         print(f"[allowlist] probing Claude Code with {len(allow)} allow / {len(ask)} ask rule(s)")
 
         jobs = [(p, p.command.format(other=other), root / f"debug-{i}.log") for i, p in enumerate(_CLAUDE_PROBES)]
@@ -2022,7 +2028,12 @@ def check_claude(c: Context, model: str = "haiku"):
             failures += not ok
             print(f"  {'ok  ' if ok else 'FAIL'} {actual:13} {command}  ({probe.why})")
         warnings = sorted(
-            {m.group(0) for _, _, log in jobs if log.exists() for m in _RULE_WARNING.finditer(log.read_text())}
+            {
+                m.group(0)
+                for _, _, log in jobs
+                if log.exists()
+                for m in _RULE_WARNING.finditer(log.read_text(encoding="utf-8"))
+            }
         )
         for warning in warnings:
             print(f"  WARN {warning}")
@@ -2063,7 +2074,7 @@ def _strace_execve_log(cmd: list[str], env: dict[str, str]) -> str | None:
             )
         except subprocess.TimeoutExpired:
             return None
-        return Path(log.name).read_text()
+        return Path(log.name).read_text(encoding="utf-8")
 
 
 def _man_dependency(log_text: str) -> str | None:

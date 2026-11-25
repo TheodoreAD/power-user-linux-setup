@@ -45,13 +45,13 @@ def test_load_vscode_settings_missing_file_returns_empty(tmp_path):
 
 def test_load_vscode_settings_empty_file_returns_empty(tmp_path):
     path = tmp_path / "settings.json"
-    path.write_text("")
+    path.write_text("", encoding="utf-8", newline="\n")
     assert _load_vscode_settings(path) == {}
 
 
 def test_load_vscode_settings_parses_jsonc_with_trailing_comment(tmp_path):
     path = tmp_path / "settings.json"
-    path.write_text('{\n  "editor.fontFamily": "JetBrains Mono" // set by pulse\n}')
+    path.write_text('{\n  "editor.fontFamily": "JetBrains Mono" // set by pulse\n}', encoding="utf-8", newline="\n")
     assert _load_vscode_settings(path) == {"editor.fontFamily": "JetBrains Mono"}
 
 
@@ -166,7 +166,7 @@ def test_the_committed_configs_match_what_settings_fonts_declares():
     """The whole point of the mechanism: `[settings.fonts]` is the one place the font is named, so
     every repo-side file that names it must already agree. A change to that block without a
     `inv fonts.render-configs` run fails here."""
-    stale = [path.name for path, text in fonts.rendered().items() if path.read_text() != text]
+    stale = [path.name for path, text in fonts.rendered().items() if path.read_text(encoding="utf-8") != text]
 
     assert not stale, f"run `inv fonts.render-configs` — these no longer match: {stale}"
 

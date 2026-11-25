@@ -62,12 +62,12 @@ def _rule_headings() -> list[str]:
         _LABEL.sub("", m.group(1))
         for path in sorted(_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
-        for m in re.finditer(r"^### (.+)$", path.read_text(), re.MULTILINE)
+        for m in re.finditer(r"^### (.+)$", path.read_text(encoding="utf-8"), re.MULTILINE)
     ]
 
 
 def _evidence_headings() -> list[str]:
-    return re.findall(r"^## (.+)$", _EVIDENCE.read_text(), re.MULTILINE)
+    return re.findall(r"^## (.+)$", _EVIDENCE.read_text(encoding="utf-8"), re.MULTILINE)
 
 
 def test_every_rule_has_an_evidence_section_or_is_declared_evidence_free():
@@ -100,7 +100,7 @@ def _labels() -> list[tuple[str, str]]:
         (m.group(1), m.group(2))
         for path in sorted(_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
-        for m in re.finditer(r"^### (.+?)\s*\[([^\]]+)\]$", path.read_text(), re.MULTILINE)
+        for m in re.finditer(r"^### (.+?)\s*\[([^\]]+)\]$", path.read_text(encoding="utf-8"), re.MULTILINE)
     ]
 
 
@@ -125,7 +125,9 @@ def _declared_and_enabled() -> set[str]:
     excludes the `dev` tag makes `[needs direnv]` legitimately false and must not fail a gate for
     it.
     """
-    sections = re.split(r"^\[packages\.", (_REPO_ROOT / "setup.toml").read_text(), flags=re.MULTILINE)[1:]
+    sections = re.split(r"^\[packages\.", (_REPO_ROOT / "setup.toml").read_text(encoding="utf-8"), flags=re.MULTILINE)[
+        1:
+    ]
     out: set[str] = set()
     for section in sections:
         name, _, body = section.partition("]")
@@ -182,7 +184,7 @@ def test_no_rule_carries_a_dated_confirmation_inline():
         f"{path.name}: {' '.join(m.group(0).split())}"
         for path in sorted(_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
-        for m in dated.finditer(path.read_text())
+        for m in dated.finditer(path.read_text(encoding="utf-8"))
     ]
     assert not offenders, (
         f"dated confirmation inline in a fragment: {offenders}. Move the date and the fuller account "
@@ -210,6 +212,6 @@ def test_no_rule_dates_itself_relative_to_another_rule():
         f"{path.name}: {m.group(0)}"
         for path in sorted(_FRAGMENTS.glob("*.md"))
         if path.name != "README.md"
-        for m in relative.finditer(path.read_text())
+        for m in relative.finditer(path.read_text(encoding="utf-8"))
     ]
     assert not offenders, f"relative date in a fragment with no absolute date to anchor it: {offenders}"

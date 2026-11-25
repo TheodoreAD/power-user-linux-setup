@@ -104,11 +104,15 @@ def _round_trip_context(
 def test_write_creds_store_keeps_every_other_key(docker_config):
     """The whole risk of this write: the same file holds docker's own `auths` and settings, so a
     replace rather than a merge silently destroys a credential."""
-    docker_config.write_text(json.dumps({"auths": {"registry.example": {"auth": "x"}}, "HttpHeaders": {"a": "b"}}))
+    docker_config.write_text(
+        json.dumps({"auths": {"registry.example": {"auth": "x"}}, "HttpHeaders": {"a": "b"}}),
+        encoding="utf-8",
+        newline="\n",
+    )
 
     assert docker._write_creds_store() is True
 
-    written = cast(util.JsonObject, json.loads(docker_config.read_text()))
+    written = cast(util.JsonObject, json.loads(docker_config.read_text(encoding="utf-8")))
     assert written["credsStore"] == docker.CREDS_STORE
     assert written["auths"] == {"registry.example": {"auth": "x"}}
     assert written["HttpHeaders"] == {"a": "b"}
@@ -120,7 +124,7 @@ def test_write_creds_store_creates_the_file_unreadable_by_anyone_else(docker_con
 
 
 def test_write_creds_store_reports_no_change_when_already_set(docker_config):
-    docker_config.write_text(json.dumps({"credsStore": docker.CREDS_STORE}))
+    docker_config.write_text(json.dumps({"credsStore": docker.CREDS_STORE}), encoding="utf-8", newline="\n")
     assert docker._write_creds_store() is False
 
 
@@ -147,12 +151,14 @@ def test_purge_keeps_an_email_entry_and_drops_an_empty_one(docker_config):
                 "auths": {"a.example": {"auth": "eA==", "email": "x@y"}, "b.example": {}},
                 "HttpHeaders": {"a": "b"},
             }
-        )
+        ),
+        encoding="utf-8",
+        newline="\n",
     )
 
     assert docker._purge_plaintext_auths() == (1, 1)
 
-    written = cast(util.JsonObject, json.loads(docker_config.read_text()))
+    written = cast(util.JsonObject, json.loads(docker_config.read_text(encoding="utf-8")))
     auths = cast(util.JsonObject, written["auths"])
     assert auths["a.example"] == {"email": "x@y"}
     assert "b.example" not in auths
@@ -164,15 +170,15 @@ def test_purge_removes_an_entry_it_emptied_itself(docker_config):
     """`docker logout` deletes the entry — `nativeStore.Erase` erases from the helper and then
     delegates to `fileStore.Erase`, which is a `delete()` on the map. An entry stripped of its secret
     and left in place is a state docker never produces."""
-    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}), encoding="utf-8", newline="\n")
 
     assert docker._purge_plaintext_auths() == (1, 1)
 
-    assert cast(util.JsonObject, json.loads(docker_config.read_text()))["auths"] == {}
+    assert cast(util.JsonObject, json.loads(docker_config.read_text(encoding="utf-8")))["auths"] == {}
 
 
 def test_purge_is_a_no_op_when_there_is_nothing_to_remove(docker_config):
-    docker_config.write_text(json.dumps({"auths": {"a.example": {"email": "x@y"}}}))
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"email": "x@y"}}}), encoding="utf-8", newline="\n")
     assert docker._purge_plaintext_auths() == (0, 0)
 
 
@@ -180,32 +186,38 @@ def test_configure_credential_store_leaves_plaintext_alone_by_default(docker_con
     """Removing a credential takes away access the user may not be able to get back, so the default
     reports and stops. `~/.agents/AGENTS.md` reserves the opt-in flag shape for exactly this case."""
     monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
-    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}), encoding="utf-8", newline="\n")
 
     docker.configure_credential_store(_round_trip_context())
 
-    assert docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text()))) == 1
+    assert (
+        docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text(encoding="utf-8")))) == 1
+    )
 
 
 def test_configure_credential_store_purges_only_when_asked(docker_config, monkeypatch):
     monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
-    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}), encoding="utf-8", newline="\n")
 
     docker.configure_credential_store(_round_trip_context(), purge_plaintext=True)
 
-    assert docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text()))) == 0
+    assert (
+        docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text(encoding="utf-8")))) == 0
+    )
 
 
 def test_purge_cannot_run_when_the_store_did_not_answer(docker_config, monkeypatch):
     """The ordering that matters: a machine whose keyring is locked must not lose the one copy of a
     credential to a flag that was meant to tidy up after a working migration."""
     monkeypatch.setattr(util, "command_exists", lambda _cmd: True)
-    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}))
+    docker_config.write_text(json.dumps({"auths": {"a.example": {"auth": "eA=="}}}), encoding="utf-8", newline="\n")
 
     with pytest.raises(Exit):
         docker.configure_credential_store(_round_trip_context(store_ok=False), purge_plaintext=True)
 
-    assert docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text()))) == 1
+    assert (
+        docker._plaintext_auth_count(cast(util.JsonObject, json.loads(docker_config.read_text(encoding="utf-8")))) == 1
+    )
 
 
 def test_round_trip_passes_when_the_store_returns_what_was_stored():
@@ -252,7 +264,7 @@ def test_configure_credential_store_sets_the_key_when_the_store_answers(docker_c
 
     docker.configure_credential_store(_round_trip_context())
 
-    assert json.loads(docker_config.read_text())["credsStore"] == docker.CREDS_STORE
+    assert json.loads(docker_config.read_text(encoding="utf-8"))["credsStore"] == docker.CREDS_STORE
 
 
 def test_proxy_dropin_sets_both_schemes():

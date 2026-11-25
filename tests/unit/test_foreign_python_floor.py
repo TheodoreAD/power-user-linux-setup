@@ -40,7 +40,7 @@ def test_script_parses_at_the_distro_floor(relative: str):
     """Fix a failure by restoring the syntax the formatter replaced and marking that line
     `# fmt: skip` — never by editing `_FLOOR`, and never by adding the file to a ruff exclude:
     `ruff.toml` is pulled byte-identical from repo-tasks and serves every consumer."""
-    source = (_REPO_ROOT / relative).read_text()
+    source = (_REPO_ROOT / relative).read_text(encoding="utf-8")
     ast.parse(source, feature_version=_FLOOR)
 
 
@@ -63,7 +63,7 @@ def test_the_zero_install_guardrail_job_pins_its_interpreter():
     SyntaxError on a PEP 758 `except` clause, from a file nothing else in the gate reads below the
     floor. Pin it there and `tasks/` never has to parse below its own declaration.
     """
-    workflow = (_REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text()
+    workflow = (_REPO_ROOT / ".github" / "workflows" / "ci.yml").read_text(encoding="utf-8")
     install = [line for line in workflow.splitlines() if "uv tool install" in line and "invoke" in line]
     assert install, "runtime-guardrail no longer installs invoke — check this test still describes the job"
     assert all("--python" in line for line in install), install

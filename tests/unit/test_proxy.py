@@ -180,8 +180,8 @@ def test_both_daemon_start_paths_read_the_env_file_that_pins_the_backend():
     # Three files have to agree on one path, and a drift here is silent: px falls back to the
     # default backend, finds no credential, and answers 407 as though the password were wrong.
     relative = str(proxy.ENV_FILE).removeprefix(str(Path.home()))
-    assert f"EnvironmentFile=-%h{relative}" in (_REPO / "config" / "pulse-proxy.service").read_text()
-    assert relative in (_REPO / "config" / "pulse-proxy-start.sh").read_text()
+    assert f"EnvironmentFile=-%h{relative}" in (_REPO / "config" / "pulse-proxy.service").read_text(encoding="utf-8")
+    assert relative in (_REPO / "config" / "pulse-proxy-start.sh").read_text(encoding="utf-8")
 
 
 def test_the_deployed_env_file_names_the_backend_this_module_probes_with():
@@ -189,7 +189,7 @@ def test_the_deployed_env_file_names_the_backend_this_module_probes_with():
     # and writes the credential with _FALLBACK_BACKEND while the daemon reads whatever the deployed
     # file says. A drift is silent in the same way the path drift is — px finds no credential and
     # answers 407 as though the password were wrong.
-    deployed = (_REPO / proxy.ENV_MANAGED.source).read_text()
+    deployed = (_REPO / proxy.ENV_MANAGED.source).read_text(encoding="utf-8")
     assert f"PYTHON_KEYRING_BACKEND={proxy._FALLBACK_BACKEND}\n" in deployed
 
 
@@ -198,6 +198,6 @@ def test_the_env_file_sets_one_variable_and_nothing_else():
     # rather than scanning for a forbidden word: this is a repo-side source now, so anything that
     # reached it would be committed, and the daemon's environment is not a place to grow settings
     # nobody reviewed.
-    deployed = (_REPO / proxy.ENV_MANAGED.source).read_text()
+    deployed = (_REPO / proxy.ENV_MANAGED.source).read_text(encoding="utf-8")
     directives = [line for line in deployed.splitlines() if line.strip() and not line.startswith("#")]
     assert directives == [f"PYTHON_KEYRING_BACKEND={proxy._FALLBACK_BACKEND}"]

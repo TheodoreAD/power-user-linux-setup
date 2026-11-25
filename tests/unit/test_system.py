@@ -55,7 +55,7 @@ _JOURNAL = "[Journal]\nSystemMaxUse=500M"
 
 def _dropin(tmp_path: Path, text: str) -> Path:
     path = tmp_path / "size.conf"
-    path.write_text(text)
+    path.write_text(text, encoding="utf-8", newline="\n")
     path.chmod(0o644)
     return path
 

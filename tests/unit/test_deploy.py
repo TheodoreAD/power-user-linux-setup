@@ -28,7 +28,7 @@ def src(tmp_path):
     """A repo-side source file, as `config/app.conf`."""
     path = tmp_path / "config" / "app.conf"
     path.parent.mkdir(parents=True)
-    path.write_text("new content\n")
+    path.write_text("new content\n", encoding="utf-8", newline="\n")
     return path
 
 
@@ -60,7 +60,7 @@ def test_clean_when_the_destination_matches_what_we_recorded(tmp_path, src):
 def test_stale_when_the_source_moved_on_but_the_destination_is_untouched(tmp_path, src):
     m = _managed(tmp_path)
     deploy.deploy(m)
-    src.write_text("source moved on\n")
+    src.write_text("source moved on\n", encoding="utf-8", newline="\n")
 
     assert deploy.classify(m) == deploy.State.STALE
 
@@ -68,7 +68,7 @@ def test_stale_when_the_source_moved_on_but_the_destination_is_untouched(tmp_pat
 def test_dirty_when_the_destination_was_edited_after_we_wrote_it(tmp_path, src):
     m = _managed(tmp_path)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
 
     assert deploy.classify(m) == deploy.State.DIRTY
 
@@ -76,7 +76,7 @@ def test_dirty_when_the_destination_was_edited_after_we_wrote_it(tmp_path, src):
 def test_unknown_when_a_differing_destination_has_no_manifest_entry(tmp_path, src):
     m = _managed(tmp_path)
     m.path.parent.mkdir(parents=True)
-    m.path.write_text("someone else wrote this\n")
+    m.path.write_text("someone else wrote this\n", encoding="utf-8", newline="\n")
 
     assert deploy.classify(m) == deploy.State.UNKNOWN
 
@@ -86,7 +86,7 @@ def test_a_matching_destination_with_no_manifest_entry_is_clean_not_unknown(tmp_
     # on the first run, or the whole mechanism lands as a prompt storm.
     m = _managed(tmp_path)
     m.path.parent.mkdir(parents=True)
-    m.path.write_text("new content\n")
+    m.path.write_text("new content\n", encoding="utf-8", newline="\n")
 
     assert deploy.classify(m) == deploy.State.CLEAN
 
@@ -94,8 +94,8 @@ def test_a_matching_destination_with_no_manifest_entry_is_clean_not_unknown(tmp_
 def test_a_manifest_from_a_future_version_is_ignored_rather_than_trusted(tmp_path, src):
     m = _managed(tmp_path)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
-    deploy._MANIFEST.write_text(json.dumps({"version": 99, "entries": {}}) + "\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
+    deploy._MANIFEST.write_text(json.dumps({"version": 99, "entries": {}}) + "\n", encoding="utf-8", newline="\n")
 
     # Unknown, not dirty — but crucially still not clean, so the edit is never overwritten unasked.
     assert deploy.classify(m) == deploy.State.UNKNOWN
@@ -104,11 +104,11 @@ def test_a_manifest_from_a_future_version_is_ignored_rather_than_trusted(tmp_pat
 def test_wrapper_script_content_is_stripped_and_newline_terminated(tmp_path, src):
     # tools.py has always deployed `content_file.strip() + "\n"`; a destination holding exactly
     # that must not read as drifted just because the source has trailing blank lines.
-    src.write_text("\n\nnew content\n\n\n")
+    src.write_text("\n\nnew content\n\n\n", encoding="utf-8", newline="\n")
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
 
-    assert m.path.read_text() == "new content\n"
+    assert m.path.read_text(encoding="utf-8") == "new content\n"
     assert deploy.classify(m) == deploy.State.CLEAN
 
 
@@ -122,18 +122,18 @@ def test_creating_a_missing_destination_never_prompts(tmp_path, src, monkeypatch
     m = _managed(tmp_path)
 
     assert deploy.deploy(m) == deploy.Action.CREATED
-    assert m.path.read_text() == "new content\n"
+    assert m.path.read_text(encoding="utf-8") == "new content\n"
 
 
 def test_a_stale_destination_is_overwritten_without_prompting(tmp_path, src, monkeypatch):
     # Nothing can be lost: the destination still holds exactly what PULSE last wrote there.
     m = _managed(tmp_path)
     deploy.deploy(m)
-    src.write_text("source moved on\n")
+    src.write_text("source moved on\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("a redeploy must not prompt"))
 
     assert deploy.deploy(m) == deploy.Action.UPDATED
-    assert m.path.read_text() == "source moved on\n"
+    assert m.path.read_text(encoding="utf-8") == "source moved on\n"
 
 
 def test_a_clean_destination_is_a_no_op(tmp_path, src, monkeypatch):
@@ -147,11 +147,11 @@ def test_a_clean_destination_is_a_no_op(tmp_path, src, monkeypatch):
 def test_a_dirty_managed_destination_is_kept_when_declined(tmp_path, src, monkeypatch, capsys):
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: False)
 
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
-    assert m.path.read_text() == "hand-edited\n"
+    assert m.path.read_text(encoding="utf-8") == "hand-edited\n"
     out = capsys.readouterr().out
     assert "-hand-edited" in out
     assert "+new content" in out
@@ -160,21 +160,21 @@ def test_a_dirty_managed_destination_is_kept_when_declined(tmp_path, src, monkey
 def test_a_dirty_managed_destination_is_overwritten_when_confirmed(tmp_path, src, monkeypatch):
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: True)
 
     assert deploy.deploy(m) == deploy.Action.UPDATED
-    assert m.path.read_text() == "new content\n"
+    assert m.path.read_text(encoding="utf-8") == "new content\n"
 
 
 def test_assume_yes_overwrites_a_dirty_destination_without_prompting(tmp_path, src, monkeypatch):
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("--yes must not prompt"))
 
     assert deploy.deploy(m, assume_yes=True) == deploy.Action.UPDATED
-    assert m.path.read_text() == "new content\n"
+    assert m.path.read_text(encoding="utf-8") == "new content\n"
 
 
 def test_pulse_assume_yes_overwrites_a_dirty_destination_without_prompting(tmp_path, src, monkeypatch):
@@ -182,12 +182,12 @@ def test_pulse_assume_yes_overwrites_a_dirty_destination_without_prompting(tmp_p
     # flag to pass through — what bootstrap-devcontainer.sh sets.
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "ASSUME_YES", True)
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("PULSE_ASSUME_YES must not prompt"))
 
     assert deploy.deploy(m) == deploy.Action.UPDATED
-    assert m.path.read_text() == "new content\n"
+    assert m.path.read_text(encoding="utf-8") == "new content\n"
 
 
 def test_a_non_tty_run_without_yes_leaves_a_dirty_destination_alone(tmp_path, src, monkeypatch, capsys):
@@ -196,11 +196,11 @@ def test_a_non_tty_run_without_yes_leaves_a_dirty_destination_alone(tmp_path, sr
     # say so on stdout rather than looking like a successful deploy.
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr("sys.stdin", type("NoTTY", (), {"isatty": staticmethod(lambda: False)})())
 
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
-    assert m.path.read_text() == "hand-edited\n"
+    assert m.path.read_text(encoding="utf-8") == "hand-edited\n"
     assert "left alone" in capsys.readouterr().out
 
 
@@ -209,24 +209,24 @@ def test_a_seeded_destination_that_differs_is_left_alone_without_prompting(tmp_p
     # reported for information, never a prompt and never a warning.
     m = _managed(tmp_path, deploy.Mechanism.CONFIG_FILE)
     deploy.deploy(m)
-    m.path.write_text("customized by the user\n")
+    m.path.write_text("customized by the user\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("a seeded path must not prompt"))
 
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
-    assert m.path.read_text() == "customized by the user\n"
+    assert m.path.read_text(encoding="utf-8") == "customized by the user\n"
     assert "yours to own" in capsys.readouterr().out
 
 
 def test_dry_run_reports_without_writing_or_prompting(tmp_path, src, monkeypatch, capsys):
     m = _managed(tmp_path, deploy.Mechanism.WRAPPER_SCRIPT)
     deploy.deploy(m)
-    m.path.write_text("hand-edited\n")
+    m.path.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "DRY_RUN", True)
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("a dry run must not prompt"))
 
     deploy.deploy(m)
 
-    assert m.path.read_text() == "hand-edited\n"
+    assert m.path.read_text(encoding="utf-8") == "hand-edited\n"
     assert "would overwrite" in capsys.readouterr().out
 
 
@@ -256,7 +256,7 @@ def test_the_source_resolves_against_the_repo_root_not_the_cwd(tmp_path, src, mo
 
     deploy.deploy(_managed(tmp_path))
 
-    assert (tmp_path / "home" / "app.conf").read_text() == "new content\n"
+    assert (tmp_path / "home" / "app.conf").read_text(encoding="utf-8") == "new content\n"
 
 
 # ---------------------------------------------------------------------------
@@ -368,7 +368,7 @@ def test_an_npx_skill_is_not_claimed(tmp_path, monkeypatch):
 
 def test_lookup_matches_a_symlink_to_a_managed_destination(tmp_path, monkeypatch):
     dest = tmp_path / "AGENTS.md"
-    dest.write_text("x\n")
+    dest.write_text("x\n", encoding="utf-8", newline="\n")
     link = tmp_path / "CLAUDE.md"
     link.symlink_to(dest)
     _stub_config(
@@ -468,7 +468,7 @@ def test_status_reports_a_clean_path_without_a_diff(wrapper_pkg, capsys):
 
 def test_status_shows_the_diff_and_warns_for_a_dirty_managed_path(wrapper_pkg, capsys):
     deploy.deploy(_entry(wrapper_pkg))
-    wrapper_pkg.write_text("hand-edited\n")
+    wrapper_pkg.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     capsys.readouterr()
 
     _status(MockContext())
@@ -482,7 +482,7 @@ def test_status_shows_the_diff_and_warns_for_a_dirty_managed_path(wrapper_pkg, c
 def test_status_doesnt_warn_about_a_seeded_path_that_differs(tmp_path, src, monkeypatch, capsys):
     dst = tmp_path / "home" / "app.conf"
     dst.parent.mkdir(parents=True)
-    dst.write_text("customized by the user\n")
+    dst.write_text("customized by the user\n", encoding="utf-8", newline="\n")
     _stub_config(
         monkeypatch,
         {"app": {"method": "archive", "config_files": [{"src": "config/app.conf", "dst": str(dst)}]}},
@@ -521,7 +521,7 @@ def test_status_name_for_a_package_that_deploys_nothing_raises(tmp_path, monkeyp
 def test_status_path_reports_an_unmanaged_file_as_not_deployed(tmp_path, monkeypatch, capsys):
     _stub_config(monkeypatch, {})
     stray = tmp_path / "hand-written.conf"
-    stray.write_text("mine\n")
+    stray.write_text("mine\n", encoding="utf-8", newline="\n")
 
     _status(MockContext(), path=str(stray))
 
@@ -536,7 +536,7 @@ def test_status_path_distinguishes_a_block_owned_file_from_an_unmanaged_one(tmp_
     # in exactly the message meant to teach.
     _stub_config(monkeypatch, {})
     zshrc = tmp_path / ".zshrc"
-    zshrc.write_text(f"export FOO=1\n{util._marker('nvm', open_=True)}\nnvm stuff\n")
+    zshrc.write_text(f"export FOO=1\n{util._marker('nvm', open_=True)}\nnvm stuff\n", encoding="utf-8", newline="\n")
 
     _status(MockContext(), path=str(zshrc))
 
@@ -568,32 +568,32 @@ def test_all_creates_a_missing_destination_and_records_it(wrapper_pkg, src, monk
 
     _all(MockContext())
 
-    assert wrapper_pkg.read_text() == src.read_text().strip() + "\n"
+    assert wrapper_pkg.read_text(encoding="utf-8") == src.read_text(encoding="utf-8").strip() + "\n"
     assert deploy.classify(_entry(wrapper_pkg)) == deploy.State.CLEAN
     assert "1 path(s): 1 created" in capsys.readouterr().out
 
 
 def test_all_shows_the_diff_and_keeps_a_dirty_destination_when_declined(wrapper_pkg, monkeypatch, capsys):
     _all(MockContext())
-    wrapper_pkg.write_text("hand-edited\n")
+    wrapper_pkg.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: False)
 
     _all(MockContext())
 
     out = capsys.readouterr().out
-    assert wrapper_pkg.read_text() == "hand-edited\n"
+    assert wrapper_pkg.read_text(encoding="utf-8") == "hand-edited\n"
     assert "-hand-edited" in out
     assert "1 left alone" in out
 
 
 def test_all_yes_overwrites_a_dirty_destination_without_prompting(wrapper_pkg, src, monkeypatch):
     _all(MockContext())
-    wrapper_pkg.write_text("hand-edited\n")
+    wrapper_pkg.write_text("hand-edited\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("--yes must not prompt"))
 
     _all(MockContext(), yes=True)
 
-    assert wrapper_pkg.read_text() == src.read_text().strip() + "\n"
+    assert wrapper_pkg.read_text(encoding="utf-8") == src.read_text(encoding="utf-8").strip() + "\n"
 
 
 def test_all_name_scopes_to_one_package(tmp_path, src, monkeypatch):
@@ -629,8 +629,8 @@ def agents_md_fragments(tmp_path):
     """Two repo-side fragments, as `config/agents-md/*.md`."""
     d = tmp_path / "config" / "agents-md"
     d.mkdir(parents=True)
-    (d / "this-setup.md").write_text("# Title\n\n## This setup\n\nMachine facts.\n")
-    (d / "portable.md").write_text("## Conventions\n\nPortable rules.\n")
+    (d / "this-setup.md").write_text("# Title\n\n## This setup\n\nMachine facts.\n", encoding="utf-8", newline="\n")
+    (d / "portable.md").write_text("## Conventions\n\nPortable rules.\n", encoding="utf-8", newline="\n")
     return d
 
 
@@ -729,7 +729,7 @@ def test_an_assembled_destination_deploys_and_then_classifies_clean(tmp_path, ag
     assert m is not None
 
     assert deploy.deploy(m) == deploy.Action.CREATED
-    assert dest.read_text().endswith("<!-- /PULSE::agents-md/portable -->\n")
+    assert dest.read_text(encoding="utf-8").endswith("<!-- /PULSE::agents-md/portable -->\n")
     assert deploy.classify(m) == deploy.State.CLEAN
 
 
@@ -752,11 +752,11 @@ def test_editing_a_fragment_makes_the_deployed_file_stale(tmp_path, agents_md_fr
     assert m is not None
     deploy.deploy(m)
 
-    (agents_md_fragments / "portable.md").write_text("## Conventions\n\nRewritten.\n")
+    (agents_md_fragments / "portable.md").write_text("## Conventions\n\nRewritten.\n", encoding="utf-8", newline="\n")
 
     assert deploy.classify(m) == deploy.State.STALE
     assert deploy.deploy(m) == deploy.Action.UPDATED
-    assert "Rewritten." in dest.read_text()
+    assert "Rewritten." in dest.read_text(encoding="utf-8")
 
 
 def test_a_hand_edited_assembled_file_is_not_overwritten_unasked(tmp_path, agents_md_fragments, monkeypatch):
@@ -778,11 +778,11 @@ def test_a_hand_edited_assembled_file_is_not_overwritten_unasked(tmp_path, agent
     assert m is not None
     deploy.deploy(m)
 
-    dest.write_text(dest.read_text() + "\nHand-written note.\n")
+    dest.write_text(dest.read_text(encoding="utf-8") + "\nHand-written note.\n", encoding="utf-8", newline="\n")
 
     assert deploy.classify(m) == deploy.State.DIRTY
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
-    assert "Hand-written note." in dest.read_text()
+    assert "Hand-written note." in dest.read_text(encoding="utf-8")
 
 
 def test_assembled_from_naming_a_field_no_package_fills_raises(tmp_path, monkeypatch):
@@ -832,18 +832,18 @@ def test_apply_seeds_a_missing_config_files_destination(tmp_path, src, no_prompt
     deploy.apply_config_files("app", _mapped_cfg(tmp_path))
 
     dst = tmp_path / "home" / "app.conf"
-    assert dst.read_text() == "new content\n"
+    assert dst.read_text(encoding="utf-8") == "new content\n"
     assert deploy.load_manifest()[str(dst)]["mechanism"] == "config-file"
 
 
 def test_apply_reports_and_keeps_a_customized_config_files_destination(tmp_path, src, no_prompt, capsys):
     deploy.apply_config_files("app", _mapped_cfg(tmp_path))
     dst = tmp_path / "home" / "app.conf"
-    dst.write_text("customized by the user\n")
+    dst.write_text("customized by the user\n", encoding="utf-8", newline="\n")
 
     deploy.apply_config_files("app", _mapped_cfg(tmp_path))
 
-    assert dst.read_text() == "customized by the user\n"
+    assert dst.read_text(encoding="utf-8") == "customized by the user\n"
     assert "yours to own" in capsys.readouterr().out
 
 
@@ -852,21 +852,21 @@ def test_apply_keeps_a_pre_existing_config_files_destination_it_never_wrote(tmp_
     # differs. Seeded policy — it's the user's, leave it and say so.
     dst = tmp_path / "home" / "app.conf"
     dst.parent.mkdir()
-    dst.write_text("was here first\n")
+    dst.write_text("was here first\n", encoding="utf-8", newline="\n")
 
     deploy.apply_config_files("app", _mapped_cfg(tmp_path))
 
-    assert dst.read_text() == "was here first\n"
+    assert dst.read_text(encoding="utf-8") == "was here first\n"
     assert "yours to own" in capsys.readouterr().out
 
 
 def test_apply_refreshes_an_untouched_destination_when_the_source_changes(tmp_path, src, no_prompt):
     deploy.apply_config_files("app", _mapped_cfg(tmp_path))
-    src.write_text("new content v2\n")
+    src.write_text("new content v2\n", encoding="utf-8", newline="\n")
 
     deploy.apply_config_files("app", _mapped_cfg(tmp_path))
 
-    assert (tmp_path / "home" / "app.conf").read_text() == "new content v2\n"
+    assert (tmp_path / "home" / "app.conf").read_text(encoding="utf-8") == "new content v2\n"
 
 
 def test_apply_with_no_mappings_is_a_no_op(tmp_path, src, no_prompt):
@@ -882,7 +882,7 @@ def test_a_managed_file_destination_is_managed_not_seeded(tmp_path):
 def test_a_managed_file_is_copied_verbatim_and_left_non_executable(tmp_path, src):
     """The whole reason this mechanism exists: `wrapper-script` was the only MANAGED whole-file
     shape and it chmods 0755, which is wrong for a systemd unit."""
-    src.write_text("[Unit]\nDescription=x\n\n")
+    src.write_text("[Unit]\nDescription=x\n\n", encoding="utf-8", newline="\n")
 
     deploy.deploy(_unit(tmp_path))
 
@@ -895,7 +895,7 @@ def test_an_edited_managed_file_is_reported_not_accepted(tmp_path, src, monkeypa
     monkeypatch.setattr(util, "confirm", lambda *a, **k: False)
     deploy.deploy(_unit(tmp_path))
     dst = tmp_path / "home" / "app.conf"
-    dst.write_text("hand-edited\n")
+    dst.write_text("hand-edited\n", encoding="utf-8", newline="\n")
 
     deploy.deploy(_unit(tmp_path))
 
@@ -903,7 +903,7 @@ def test_an_edited_managed_file_is_reported_not_accepted(tmp_path, src, monkeypa
     out = capsys.readouterr().out
     assert "edited since PULSE deployed it" in out
     assert "yours to own" not in out
-    assert dst.read_text() == "hand-edited\n"
+    assert dst.read_text(encoding="utf-8") == "hand-edited\n"
 
 
 def test_yes_overwrites_a_customized_seeded_destination(tmp_path, src):
@@ -914,20 +914,20 @@ def test_yes_overwrites_a_customized_seeded_destination(tmp_path, src):
     m = _managed(tmp_path)
     deploy.deploy(m)
     dest = tmp_path / "home" / "app.conf"
-    dest.write_text("customized by the user\n")
+    dest.write_text("customized by the user\n", encoding="utf-8", newline="\n")
 
     assert deploy.deploy(m, assume_yes=True) == deploy.Action.UPDATED
-    assert dest.read_text() == "new content\n"
+    assert dest.read_text(encoding="utf-8") == "new content\n"
 
 
 def test_a_customized_seeded_destination_is_still_left_alone_without_yes(tmp_path, src):
     m = _managed(tmp_path)
     deploy.deploy(m)
     dest = tmp_path / "home" / "app.conf"
-    dest.write_text("customized by the user\n")
+    dest.write_text("customized by the user\n", encoding="utf-8", newline="\n")
 
     assert deploy.deploy(m) == deploy.Action.LEFT_ALONE
-    assert dest.read_text() == "customized by the user\n"
+    assert dest.read_text(encoding="utf-8") == "customized by the user\n"
 
 
 # ---------------------------------------------------------------------------
@@ -943,7 +943,7 @@ def test_deploy_all_writes_a_packages_mirrors(tmp_path, monkeypatch, capsys):
     vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
     vendor.parent.mkdir(parents=True)
     (tmp_path / "config").mkdir(exist_ok=True)
-    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     _stub_config(
         monkeypatch,
@@ -959,9 +959,9 @@ def test_deploy_all_writes_a_packages_mirrors(tmp_path, monkeypatch, capsys):
 
     deploy.all_(MockContext(), name="agents-md", yes=True)
 
-    assert dest.read_text() == "rules\n"
+    assert dest.read_text(encoding="utf-8") == "rules\n"
     assert not vendor.is_symlink()
-    assert vendor.read_text() == "rules\n"
+    assert vendor.read_text(encoding="utf-8") == "rules\n"
 
 
 def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypatch):
@@ -972,10 +972,10 @@ def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypa
     vendor = tmp_path / "home" / ".claude" / "CLAUDE.md"
     vendor.parent.mkdir(parents=True)
     dest.parent.mkdir(parents=True)
-    dest.write_text("rules\n")
+    dest.write_text("rules\n", encoding="utf-8", newline="\n")
     vendor.symlink_to(dest)
     (tmp_path / "config").mkdir(exist_ok=True)
-    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     _stub_config(
         monkeypatch,
@@ -992,7 +992,7 @@ def test_deploy_all_replaces_a_link_left_by_the_old_mechanism(tmp_path, monkeypa
     deploy.all_(MockContext(), name="agents-md", yes=True)
 
     assert not vendor.is_symlink()
-    assert vendor.read_text() == "rules\n"
+    assert vendor.read_text(encoding="utf-8") == "rules\n"
 
 
 def test_deploy_all_creates_a_mirror_that_does_not_exist_yet(tmp_path, monkeypatch):
@@ -1001,7 +1001,7 @@ def test_deploy_all_creates_a_mirror_that_does_not_exist_yet(tmp_path, monkeypat
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     compat = tmp_path / "home" / "AGENTS.md"
     (tmp_path / "config").mkdir(exist_ok=True)
-    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     _stub_config(
         monkeypatch,
@@ -1018,7 +1018,7 @@ def test_deploy_all_creates_a_mirror_that_does_not_exist_yet(tmp_path, monkeypat
     deploy.all_(MockContext(), name="agents-md", yes=True)
 
     assert not compat.is_symlink()
-    assert compat.read_text() == "rules\n"
+    assert compat.read_text(encoding="utf-8") == "rules\n"
 
 
 def test_deploy_all_writes_no_mirror_under_dry_run(tmp_path, monkeypatch, capsys):
@@ -1032,7 +1032,7 @@ def test_deploy_all_writes_no_mirror_under_dry_run(tmp_path, monkeypatch, capsys
     # the only case where a dry run has a write to predict. Nothing creates it during the run.
     vendor.parent.mkdir(parents=True)
     (tmp_path / "config").mkdir(exist_ok=True)
-    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(util, "DRY_RUN", True)
     _stub_config(
@@ -1059,7 +1059,7 @@ def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     vendor = tmp_path / "home" / ".codex" / "AGENTS.md"
     (tmp_path / "config").mkdir(exist_ok=True)
-    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     monkeypatch.setattr(util, "DRY_RUN", True)
     _stub_config(
@@ -1088,7 +1088,7 @@ def test_dry_run_names_the_agent_it_would_skip(tmp_path, monkeypatch, capsys):
 def _deployed_package(tmp_path, monkeypatch, *, dest, mirrors: list[str]) -> None:
     """Deploy one wrapper-script package with mirrors, so the manifest records every path."""
     (tmp_path / "config").mkdir(exist_ok=True)
-    (tmp_path / "config" / "agents.md").write_text("rules\n")
+    (tmp_path / "config" / "agents.md").write_text("rules\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(deploy, "_REPO_ROOT", tmp_path)
     _stub_config(
         monkeypatch,
@@ -1152,12 +1152,12 @@ def test_prune_refuses_to_delete_a_file_edited_since_pulse_wrote_it(tmp_path, mo
     dest = tmp_path / "home" / ".agents" / "AGENTS.md"
     compat = tmp_path / "home" / "AGENTS.md"
     _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[str(compat)])
-    compat.write_text("something a human wrote here\n")
+    compat.write_text("something a human wrote here\n", encoding="utf-8", newline="\n")
 
     _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[])
     deploy.prune(MockContext(), yes=True)
 
-    assert compat.read_text() == "something a human wrote here\n"
+    assert compat.read_text(encoding="utf-8") == "something a human wrote here\n"
     assert "not ours to delete" in capsys.readouterr().out
 
 
@@ -1183,7 +1183,7 @@ def test_prune_never_touches_a_directory_the_manifest_still_records(tmp_path, mo
     _deployed_package(tmp_path, monkeypatch, dest=dest, mirrors=[])
     skill_dir = tmp_path / "home" / ".agents" / "skills" / "research-library"
     skill_dir.mkdir(parents=True)
-    (skill_dir / "SKILL.md").write_text("a skill someone else installs\n")
+    (skill_dir / "SKILL.md").write_text("a skill someone else installs\n", encoding="utf-8", newline="\n")
     entries = deploy.load_manifest()
     entries[str(skill_dir)] = entries[str(dest)].copy()
     deploy._write_manifest(entries)

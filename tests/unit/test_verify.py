@@ -161,7 +161,7 @@ def test_classify_deploy_resolves_a_registry_path_end_to_end(tmp_path, monkeypat
     monkeypatch.setattr(deploy, "_MANIFEST", tmp_path / "state" / "deployed.json")
     monkeypatch.setattr(util, "DRY_RUN", False)
     (tmp_path / "config").mkdir()
-    (tmp_path / "config" / "x.sh").write_text("echo hi\n")
+    (tmp_path / "config" / "x.sh").write_text("echo hi\n", encoding="utf-8", newline="\n")
     dest = tmp_path / "x"
     _stub_config(
         monkeypatch,
@@ -172,7 +172,7 @@ def test_classify_deploy_resolves_a_registry_path_end_to_end(tmp_path, monkeypat
     assert state == deploy.State.ABSENT
     deploy.deploy(m)
     assert verify._classify_deploy(str(dest))[1] == deploy.State.CLEAN
-    dest.write_text("edited\n")
+    dest.write_text("edited\n", encoding="utf-8", newline="\n")
     assert verify._classify_deploy(str(dest))[1] == deploy.State.DIRTY
 
 
@@ -195,9 +195,9 @@ def _stub_mirror_package(monkeypatch, dest, mirror):
 
 def test_mirror_check_passes_for_a_copy_holding_the_deployed_bytes(tmp_path, monkeypatch):
     dest = tmp_path / "AGENTS.md"
-    dest.write_text("rules\n")
+    dest.write_text("rules\n", encoding="utf-8", newline="\n")
     mirror = tmp_path / "CLAUDE.md"
-    mirror.write_text("rules\n")
+    mirror.write_text("rules\n", encoding="utf-8", newline="\n")
     _stub_mirror_package(monkeypatch, dest, mirror)
 
     passed, _ = verify._mirror_check(str(mirror))
@@ -207,7 +207,7 @@ def test_mirror_check_passes_for_a_copy_holding_the_deployed_bytes(tmp_path, mon
 
 def test_mirror_check_fails_for_a_missing_file(tmp_path, monkeypatch):
     dest = tmp_path / "AGENTS.md"
-    dest.write_text("rules\n")
+    dest.write_text("rules\n", encoding="utf-8", newline="\n")
     mirror = tmp_path / "CLAUDE.md"
     _stub_mirror_package(monkeypatch, dest, mirror)
 
@@ -222,9 +222,9 @@ def test_mirror_check_fails_for_content_that_has_drifted(tmp_path, monkeypatch):
     mirror left behind by an older deploy is a real file at the right path, and an agent reading
     last week's rules looks exactly like an agent reading this week's."""
     dest = tmp_path / "AGENTS.md"
-    dest.write_text("this week's rules\n")
+    dest.write_text("this week's rules\n", encoding="utf-8", newline="\n")
     mirror = tmp_path / "CLAUDE.md"
-    mirror.write_text("last week's rules\n")
+    mirror.write_text("last week's rules\n", encoding="utf-8", newline="\n")
     _stub_mirror_package(monkeypatch, dest, mirror)
 
     passed, message = verify._mirror_check(str(mirror))
@@ -238,7 +238,7 @@ def test_mirror_check_fails_for_a_leftover_symlink(tmp_path, monkeypatch):
     right bytes, so a content comparison alone would pass one — and the whole point of the change
     is that a link is not what should be there."""
     dest = tmp_path / "AGENTS.md"
-    dest.write_text("rules\n")
+    dest.write_text("rules\n", encoding="utf-8", newline="\n")
     mirror = tmp_path / "CLAUDE.md"
     mirror.symlink_to(dest)
     _stub_mirror_package(monkeypatch, dest, mirror)

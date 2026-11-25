@@ -13,7 +13,7 @@ _OSRELEASE = Path("/proc/sys/kernel/osrelease")
 
 def _is_wsl2() -> bool:
     try:
-        release = _OSRELEASE.read_text().lower()
+        release = _OSRELEASE.read_text(encoding="utf-8").lower()
     except FileNotFoundError:
         return False
     return "wsl2" in release or "microsoft-standard" in release
@@ -28,7 +28,7 @@ def _wsl_conf_value(section: str, key: str) -> str | None:
     if not _WSL_CONF.exists():
         return None
     current = None
-    for raw_line in _WSL_CONF.read_text().splitlines():
+    for raw_line in _WSL_CONF.read_text(encoding="utf-8").splitlines():
         line = raw_line.strip()
         if not line or line.startswith("#") or line.startswith(";"):
             continue
@@ -159,7 +159,7 @@ def _wslg_available() -> bool:
 
 def _os_release_id() -> str:
     try:
-        text = Path("/etc/os-release").read_text()
+        text = Path("/etc/os-release").read_text(encoding="utf-8")
     except FileNotFoundError:
         return ""
     for line in text.splitlines():
@@ -357,7 +357,7 @@ def fix(c: Context, dns: bool = False):
         return
 
     dns_target = "false" if dns else "true"
-    text = _WSL_CONF.read_text() if _WSL_CONF.exists() else ""
+    text = _WSL_CONF.read_text(encoding="utf-8") if _WSL_CONF.exists() else ""
     new_text, systemd_changed = _ensure_wsl_conf_kv(text, "boot", "systemd", "true")
     new_text, dns_changed = _ensure_wsl_conf_kv(new_text, "network", "generateResolvConf", dns_target)
 

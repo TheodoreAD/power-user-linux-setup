@@ -64,7 +64,7 @@ def write_curlrc(c: Context):
     """Write ~/.config/curlrc: silent, show errors, follow redirects. Idempotent."""
     content = "--silent\n--show-error\n--location"
     if util.DRY_RUN:
-        text = CURLRC.read_text() if CURLRC.exists() else ""
+        text = CURLRC.read_text(encoding="utf-8") if CURLRC.exists() else ""
         _, status = util.ensure_block_text(text, "curlrc", content)
         print(f"[curlrc] {util.ok_label(status == util.BlockStatus.OK)}")
         return
@@ -194,7 +194,7 @@ def inotify_shortfall(live: dict[str, int]) -> dict[str, int]:
 
 
 def _live_sysctl(key: str) -> int:
-    return int((_PROC_SYS / key.replace(".", "/")).read_text().strip())
+    return int((_PROC_SYS / key.replace(".", "/")).read_text(encoding="utf-8").strip())
 
 
 @task

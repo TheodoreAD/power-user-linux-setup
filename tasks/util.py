@@ -360,7 +360,7 @@ def load_toml(path: Path) -> object:
 
 def load_json(path: Path) -> object:
     """Same shape as load_toml for json.loads' `Any`."""
-    return cast(object, json.loads(path.read_text()))
+    return cast(object, json.loads(path.read_text(encoding="utf-8")))
 
 
 def parse_json(text: str) -> object:
@@ -441,7 +441,7 @@ def is_wsl() -> bool:
     if os.environ.get("WSL_DISTRO_NAME") or os.environ.get("WSL_INTEROP"):
         return True
     try:
-        return "microsoft" in _PROC_VERSION.read_text().lower()
+        return "microsoft" in _PROC_VERSION.read_text(encoding="utf-8").lower()
     except FileNotFoundError:
         return False
 
@@ -721,11 +721,11 @@ def ensure_block_text(
 
 def ensure_block(path: Path, name: str, content: str, *, style: MarkerStyle = MarkerStyle.COMMENT) -> BlockStatus:
     """Idempotently write a named PULSE block to a file. Returns BlockStatus.{ADDED,UPDATED,OK}."""
-    text = path.read_text() if path.exists() else ""
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
     new_text, status = ensure_block_text(text, name, content, style=style)
     if status != BlockStatus.OK:
         path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_text(new_text)
+        path.write_text(new_text, encoding="utf-8", newline="\n")
     return status
 
 
@@ -752,9 +752,9 @@ def remove_block(path: Path, name: str, *, style: MarkerStyle = MarkerStyle.COMM
     """Remove a named PULSE block from a file if it is there. Returns True if the file changed."""
     if not path.exists():
         return False
-    new_text, removed = remove_block_text(path.read_text(), name, style=style)
+    new_text, removed = remove_block_text(path.read_text(encoding="utf-8"), name, style=style)
     if removed:
-        path.write_text(new_text)
+        path.write_text(new_text, encoding="utf-8", newline="\n")
     return removed
 
 
@@ -784,7 +784,7 @@ def sudo_write(c: Context, path: Path, text: str, *, mkdir: bool = False, warn: 
     Returns whether the write happened. With `warn`, a failure is returned rather than raised, for
     a caller that reports one package and carries on, as apt's repo registration does.
     """
-    with tempfile.NamedTemporaryFile("w", suffix=".conf", delete=False) as f:
+    with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".conf", delete=False) as f:
         f.write(text)
         tmp = Path(f.name)
     try:
@@ -806,7 +806,7 @@ def sudo_read(c: Context, path: Path) -> str:
     if not path.exists():
         return ""
     if os.access(path, os.R_OK):
-        return path.read_text()
+        return path.read_text(encoding="utf-8")
     result = c.run(f"{SUDO} cat {shlex.quote(str(path))}", hide=True, warn=True)
     return result.stdout if result.ok else ""
 
@@ -939,9 +939,11 @@ def write_claude_settings(settings: ClaudeSettings) -> None:
             f"{CLAUDE_SETTINGS_BUDGET:,}-byte budget (Claude Code rejects the whole file past 2 MiB)"
         )
     if CLAUDE_SETTINGS.exists():
-        CLAUDE_SETTINGS.with_suffix(".json.bak").write_text(CLAUDE_SETTINGS.read_text())
+        CLAUDE_SETTINGS.with_suffix(".json.bak").write_text(
+            CLAUDE_SETTINGS.read_text(encoding="utf-8"), encoding="utf-8", newline="\n"
+        )
     CLAUDE_SETTINGS.parent.mkdir(parents=True, exist_ok=True)
-    CLAUDE_SETTINGS.write_text(text)
+    CLAUDE_SETTINGS.write_text(text, encoding="utf-8", newline="\n")
 
 
 def _excluded_tags() -> set[str]:
@@ -1277,7 +1279,7 @@ def require_apt() -> None:
 
 def file_contains(path: str | Path, text: str) -> bool:
     try:
-        return text in Path(path).expanduser().read_text()
+        return text in Path(path).expanduser().read_text(encoding="utf-8")
     except FileNotFoundError:
         return False
 

@@ -56,5 +56,7 @@ def test_committed_shortcuts_table_matches_the_task():
         ("Shortcut", "Ubuntu default", "After `inv screenshot.enable`"),
         [(f"`{shortcut}`", default, after) for shortcut, default, after in _shortcut_rows()],
     )
-    _, status = util.ensure_block_text(_DOC_PATH.read_text(), _DOC_BLOCK, content, style=util.MarkerStyle.HTML)
+    _, status = util.ensure_block_text(
+        _DOC_PATH.read_text(encoding="utf-8"), _DOC_BLOCK, content, style=util.MarkerStyle.HTML
+    )
     assert status == util.BlockStatus.OK, "docs/shortcuts.md is stale — run `inv screenshot.render-docs`"

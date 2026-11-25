@@ -33,7 +33,7 @@ def _ssh_config_applied(identity: util.Identity) -> bool:
         blocks.append(f"Host {h['alias']}\n  HostName {h['hostname']}\n  IdentityFile {key}\n  User {h['user']}")
     blocks.append(ssh.HOST_STAR)
     content = "\n\n".join(blocks)
-    text = ssh.SSH_CONFIG.read_text()
+    text = ssh.SSH_CONFIG.read_text(encoding="utf-8")
     _, status = util.ensure_block_text(text, "ssh", content)
     return status == util.BlockStatus.OK
 

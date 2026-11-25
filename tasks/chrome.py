@@ -502,7 +502,7 @@ def fix_launchers(c: Context, yes: bool = False, profile: str | None = None, ozo
         return
 
     for launcher, new_text, _ in planned:
-        launcher.path.write_text(new_text, encoding="utf-8")
+        launcher.path.write_text(new_text, encoding="utf-8", newline="\n")
     print(f"[chrome] rewrote {len(planned)} launcher(s)")
 
     if util.command_exists("update-desktop-database"):

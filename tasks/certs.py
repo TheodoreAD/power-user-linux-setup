@@ -68,7 +68,7 @@ def _try_convert(c: Context, path: Path) -> str | None:
     raw = None
 
     if c.run(f"openssl x509 -in {q} -noout -inform PEM", hide=True, warn=True).ok:
-        raw = path.read_text()
+        raw = path.read_text(encoding="utf-8")
     else:
         result = c.run(f"openssl x509 -in {q} -inform DER -outform PEM", hide=True, warn=True)
         if result.ok and "-----BEGIN CERTIFICATE-----" in result.stdout:
@@ -287,7 +287,9 @@ def _export_windows_roots() -> Path | None:
         )
 
     system_bundle = Path(_SYSTEM_BUNDLE)
-    extras = _windows_extra_roots(export, system_bundle.read_text(errors="replace") if system_bundle.exists() else "")
+    extras = _windows_extra_roots(
+        export, system_bundle.read_text(encoding="utf-8", errors="replace") if system_bundle.exists() else ""
+    )
     total = len(_split_pem_certs(export))
     if not extras:
         print(f"[certs] windows: {total} root(s) in the Windows store, all already trusted here — nothing to add")
@@ -301,7 +303,7 @@ def _export_windows_roots() -> Path | None:
         return _WINDOWS_ROOTS_PEM if _WINDOWS_ROOTS_PEM.exists() else None
 
     _WINDOWS_ROOTS_PEM.parent.mkdir(parents=True, exist_ok=True)
-    _WINDOWS_ROOTS_PEM.write_text("\n".join(extras) + "\n")
+    _WINDOWS_ROOTS_PEM.write_text("\n".join(extras) + "\n", encoding="utf-8", newline="\n")
     print(f"[certs] windows: {len(extras)} of {total} root(s) not already trusted -> {_WINDOWS_ROOTS_PEM}")
     return _WINDOWS_ROOTS_PEM
 
@@ -318,7 +320,7 @@ _ENV_FILES = ("/etc/environment", "~/.zshenv", "~/.zshrc", "~/.bashrc", "~/.prof
 
 def _read_text(path: Path) -> str | None:
     try:
-        return path.read_text(errors="replace")
+        return path.read_text(encoding="utf-8", errors="replace")
     except OSError:
         return None
 
@@ -406,7 +408,9 @@ def _windows_store_findings() -> list[tuple[str, bool]]:
     if not export:
         return []
     system_bundle = Path(_SYSTEM_BUNDLE)
-    extras = _windows_extra_roots(export, system_bundle.read_text(errors="replace") if system_bundle.exists() else "")
+    extras = _windows_extra_roots(
+        export, system_bundle.read_text(encoding="utf-8", errors="replace") if system_bundle.exists() else ""
+    )
     labels = _windows_labels(export)
     policy = _policy_thumbprints()
     found: list[tuple[str, bool]] = []
@@ -497,7 +501,7 @@ def _configure_java(c: Context, desired: str) -> None:
         alias = f"pulse-corporate-{i}"
         if _keytool_alias_exists(c, cacerts, alias):
             continue
-        with tempfile.NamedTemporaryFile("w", suffix=".pem", delete=False) as f:
+        with tempfile.NamedTemporaryFile("w", encoding="utf-8", suffix=".pem", delete=False) as f:
             f.write(cert)
             tmp = f.name
         c.run(
@@ -533,7 +537,7 @@ def _env_block_content() -> str:
 
 
 def _zshenv_status() -> str:
-    text = ZSHENV.read_text() if ZSHENV.exists() else ""
+    text = ZSHENV.read_text(encoding="utf-8") if ZSHENV.exists() else ""
     _, status = util.ensure_block_text(text, "certs", _env_block_content())
     return util.ok_label(status == util.BlockStatus.OK)
 

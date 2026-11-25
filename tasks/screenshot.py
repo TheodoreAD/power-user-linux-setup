@@ -85,7 +85,7 @@ def _bindings() -> list[dict[str, str]]:
 
 def _set_ini_key(path: Path, key: str, value: str) -> bool:
     """Idempotently set `key=value` under [General] in a Qt-style ini file. Returns True if changed."""
-    text = path.read_text() if path.exists() else ""
+    text = path.read_text(encoding="utf-8") if path.exists() else ""
     new_line = f"{key}={value}"
     line_re = re.compile(rf"^{re.escape(key)}=.*$", re.MULTILINE)
     match = line_re.search(text)
@@ -98,14 +98,14 @@ def _set_ini_key(path: Path, key: str, value: str) -> bool:
     else:
         new_text = text.rstrip("\n") + ("\n\n" if text.strip() else "") + f"[General]\n{new_line}\n"
     path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(new_text)
+    path.write_text(new_text, encoding="utf-8", newline="\n")
     return True
 
 
 def _read_ini_key(path: Path, key: str) -> str | None:
     if not path.exists():
         return None
-    match = re.search(rf"^{re.escape(key)}=(.*)$", path.read_text(), re.MULTILINE)
+    match = re.search(rf"^{re.escape(key)}=(.*)$", path.read_text(encoding="utf-8"), re.MULTILINE)
     return match.group(1) if match else None
 
 
@@ -184,7 +184,7 @@ def enable(c: Context):  # noqa: C901
         print(f"[screenshot] flameshot savePath -> {SCREENSHOTS_DIR}")
 
     if _is_wayland() and _DESKTOP_FILE.exists():
-        content = _DESKTOP_FILE.read_text()
+        content = _DESKTOP_FILE.read_text(encoding="utf-8")
         if "QT_QPA_PLATFORM=wayland" not in content:
             c.run(
                 f"{util.SUDO} sed -i 's|Exec=flameshot|Exec=env QT_QPA_PLATFORM=wayland flameshot|g' {_DESKTOP_FILE}",
@@ -335,7 +335,7 @@ def render_docs(c: Context):
         [(f"`{shortcut}`", default, after) for shortcut, default, after in _shortcut_rows()],
     )
     if util.DRY_RUN:
-        text = _DOC_PATH.read_text() if _DOC_PATH.exists() else ""
+        text = _DOC_PATH.read_text(encoding="utf-8") if _DOC_PATH.exists() else ""
         _, status_ = util.ensure_block_text(text, _DOC_BLOCK, content, style=util.MarkerStyle.HTML)
         print(f"[screenshot] render-docs: {util.ok_label(status_ == util.BlockStatus.OK)}")
         return

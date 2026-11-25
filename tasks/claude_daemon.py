@@ -80,7 +80,7 @@ class Proc:
 
 def boot_time(proc: Path = PROC) -> float:
     """Wall-clock boot time from `/proc/stat`'s `btime` line."""
-    for line in (proc / "stat").read_text().splitlines():
+    for line in (proc / "stat").read_text(encoding="utf-8").splitlines():
         if line.startswith("btime "):
             return float(line.split()[1])
     raise ValueError("no btime line in /proc/stat")
@@ -94,7 +94,7 @@ def read_proc(pid_dir: Path, btime: float, hz: int) -> Proc | None:
     the start time, in clock ticks since boot, index 19.
     """
     try:
-        stat = (pid_dir / "stat").read_text()
+        stat = (pid_dir / "stat").read_text(encoding="utf-8")
         raw_argv = (pid_dir / "cmdline").read_bytes()
     except OSError:
         return None

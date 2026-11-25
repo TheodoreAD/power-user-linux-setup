@@ -109,7 +109,9 @@ def init(c: Context):
         assert commit_email is not None
 
     util.IDENTITY_PATH.parent.mkdir(mode=0o700, parents=True, exist_ok=True)
-    util.IDENTITY_PATH.write_text(_render(name, email, directory, hosts, commit_email=commit_email))
+    util.IDENTITY_PATH.write_text(
+        _render(name, email, directory, hosts, commit_email=commit_email), encoding="utf-8", newline="\n"
+    )
     util.IDENTITY_PATH.chmod(0o600)
     print(f"[identity] wrote {util.IDENTITY_PATH}")
     print("[identity] next: inv git.configure git.apply-settings ssh.create-keys ssh.configure ssh.add")

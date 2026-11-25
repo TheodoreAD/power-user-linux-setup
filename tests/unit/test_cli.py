@@ -150,7 +150,7 @@ def test_only_what_is_actually_missing_is_reported(tmp_path, monkeypatch):
     """A half-present checkout is the case the guard can actually see, so it should not claim the
     manifest is gone when only the config sources are."""
     monkeypatch.setattr(sys, "argv", ["spowse"])
-    (tmp_path / "setup.toml").write_text("")
+    (tmp_path / "setup.toml").write_text("", encoding="utf-8", newline="\n")
     with pytest.raises(SystemExit) as excinfo:
         cli._require_checkout(tmp_path)
     missing_line = next(line for line in str(excinfo.value).splitlines() if "missing:" in line)

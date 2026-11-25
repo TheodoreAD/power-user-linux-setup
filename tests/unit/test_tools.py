@@ -33,7 +33,7 @@ def _isolated(tmp_path, monkeypatch):
     monkeypatch.setattr(deploy, "_MANIFEST", tmp_path / "state" / "deployed.json")
     monkeypatch.setattr(util, "DRY_RUN", False)
     monkeypatch.setattr(util, "ASSUME_YES", False)
-    (tmp_path / "config.sh").write_text("echo hi\n")
+    (tmp_path / "config.sh").write_text("echo hi\n", encoding="utf-8", newline="\n")
 
 
 def _cfg(tmp_path, *, also_deploy_to: str | list[str] | None = None) -> util.PackageConfig:
@@ -47,7 +47,7 @@ def test_install_wrapper_script_writes_matching_content(tmp_path):
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
     dest = tmp_path / "deployed.sh"
-    assert dest.read_text() == "echo hi\n"
+    assert dest.read_text(encoding="utf-8") == "echo hi\n"
     assert dest.stat().st_mode & 0o111, "a wrapper script must be executable"
 
 
@@ -85,12 +85,12 @@ def test_install_wrapper_script_never_silently_overwrites_a_hand_edit(tmp_path, 
     # edit survives, and the run says so instead of looking like a successful install.
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
     dest = tmp_path / "deployed.sh"
-    dest.write_text("echo edited by hand\n")
+    dest.write_text("echo edited by hand\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr("sys.stdin", type("NoTTY", (), {"isatty": staticmethod(lambda: False)})())
 
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
-    assert dest.read_text() == "echo edited by hand\n"
+    assert dest.read_text(encoding="utf-8") == "echo edited by hand\n"
     out = capsys.readouterr().out
     assert "-echo edited by hand" in out
     assert "+echo hi" in out
@@ -101,25 +101,25 @@ def test_install_wrapper_script_overwrites_a_hand_edit_under_pulse_assume_yes(tm
     # The unattended path (bootstrap-devcontainer.sh sets PULSE_ASSUME_YES=1): overwrite, and say so.
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
     dest = tmp_path / "deployed.sh"
-    dest.write_text("echo edited by hand\n")
+    dest.write_text("echo edited by hand\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "ASSUME_YES", True)
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("PULSE_ASSUME_YES must not prompt"))
 
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
-    assert dest.read_text() == "echo hi\n"
+    assert dest.read_text(encoding="utf-8") == "echo hi\n"
     assert "overwrote" in capsys.readouterr().out
 
 
 def test_install_wrapper_script_redeploys_a_changed_source_without_prompting(tmp_path, monkeypatch):
     # The destination still holds exactly what PULSE last wrote, so nothing can be lost.
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
-    (tmp_path / "config.sh").write_text("echo v2\n")
+    (tmp_path / "config.sh").write_text("echo v2\n", encoding="utf-8", newline="\n")
     monkeypatch.setattr(util, "confirm", lambda *a, **k: pytest.fail("a stale redeploy must not prompt"))
 
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path))
 
-    assert (tmp_path / "deployed.sh").read_text() == "echo v2\n"
+    assert (tmp_path / "deployed.sh").read_text(encoding="utf-8") == "echo v2\n"
 
 
 def test_install_wrapper_script_dry_run_reports_ok_or_missing_without_writing(tmp_path, monkeypatch, capsys):
@@ -140,16 +140,16 @@ def test_install_wrapper_script_writes_the_mirror(tmp_path):
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=str(mirror)))
 
     assert not mirror.is_symlink()
-    assert mirror.read_text() == (tmp_path / "deployed.sh").read_text()
+    assert mirror.read_text(encoding="utf-8") == (tmp_path / "deployed.sh").read_text(encoding="utf-8")
 
 
 def test_install_wrapper_script_leaves_someone_elses_file_at_a_mirror_path_alone(tmp_path, capsys):
     mirror = tmp_path / "CLAUDE.md"
-    mirror.write_text("a real file nobody here wrote\n")
+    mirror.write_text("a real file nobody here wrote\n", encoding="utf-8", newline="\n")
 
     tools._install_wrapper_script(MockContext(), "test-tool", _cfg(tmp_path, also_deploy_to=str(mirror)))
 
-    assert mirror.read_text() == "a real file nobody here wrote\n"
+    assert mirror.read_text(encoding="utf-8") == "a real file nobody here wrote\n"
     assert "Leaving it alone" in capsys.readouterr().out
 
 
@@ -163,8 +163,8 @@ def test_install_wrapper_script_writes_every_mirror_in_a_list(tmp_path):
     cfg = _cfg(tmp_path, also_deploy_to=[str(claude), str(copilot)])
     tools._install_wrapper_script(MockContext(), "test-tool", cfg)
 
-    deployed = (tmp_path / "deployed.sh").read_text()
-    assert claude.read_text() == copilot.read_text() == deployed
+    deployed = (tmp_path / "deployed.sh").read_text(encoding="utf-8")
+    assert claude.read_text(encoding="utf-8") == copilot.read_text(encoding="utf-8") == deployed
     assert not claude.is_symlink()
     assert not copilot.is_symlink()
 
@@ -189,7 +189,7 @@ def test_install_wrapper_script_writes_for_installed_agents_and_skips_the_rest(t
     cfg = _cfg(tmp_path, also_deploy_to=[str(absent), str(present)])
     tools._install_wrapper_script(MockContext(), "test-tool", cfg)
 
-    assert present.read_text() == (tmp_path / "deployed.sh").read_text()
+    assert present.read_text(encoding="utf-8") == (tmp_path / "deployed.sh").read_text(encoding="utf-8")
     assert not absent.parent.exists()
 
 
@@ -231,7 +231,7 @@ def test_a_dest_change_rewrites_the_old_real_file_as_a_mirror(tmp_path, capsys):
 
     # The source moves on in the same step, so the old file is genuinely stale rather than
     # coincidentally identical — otherwise `mirror_ok` short-circuits and this proves nothing.
-    (tmp_path / "config.sh").write_text("echo v2\n")
+    (tmp_path / "config.sh").write_text("echo v2\n", encoding="utf-8", newline="\n")
     moved: util.PackageConfig = {
         "dest": str(new),
         "content_file": "config.sh",
@@ -239,9 +239,9 @@ def test_a_dest_change_rewrites_the_old_real_file_as_a_mirror(tmp_path, capsys):
     }
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
-    assert new.read_text() == "echo v2\n"
+    assert new.read_text(encoding="utf-8") == "echo v2\n"
     assert not old.is_symlink()
-    assert old.read_text() == "echo v2\n"
+    assert old.read_text(encoding="utf-8") == "echo v2\n"
     assert "replaced a stale copy" in capsys.readouterr().out
 
 
@@ -258,14 +258,14 @@ def test_a_dest_change_rewrites_a_mirror_that_held_the_old_dests_content(tmp_pat
     tools._install_wrapper_script(
         MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh", "also_deploy_to": [str(vendor)]}
     )
-    assert vendor.read_text() == old.read_text()
+    assert vendor.read_text(encoding="utf-8") == old.read_text(encoding="utf-8")
 
-    (tmp_path / "config.sh").write_text("echo moved\n")
+    (tmp_path / "config.sh").write_text("echo moved\n", encoding="utf-8", newline="\n")
     moved: util.PackageConfig = {"dest": str(new), "content_file": "config.sh", "also_deploy_to": [str(vendor)]}
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
-    assert new.read_text() == "echo moved\n"
-    assert vendor.read_text() == "echo moved\n"
+    assert new.read_text(encoding="utf-8") == "echo moved\n"
+    assert vendor.read_text(encoding="utf-8") == "echo moved\n"
 
 
 def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path, capsys):
@@ -273,7 +273,7 @@ def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path,
     old = tmp_path / "AGENTS.md"
     new = tmp_path / "dot-agents" / "AGENTS.md"
     tools._install_wrapper_script(MockContext(), "agents-md", {"dest": str(old), "content_file": "config.sh"})
-    old.write_text("edited by hand after the deploy\n")
+    old.write_text("edited by hand after the deploy\n", encoding="utf-8", newline="\n")
 
     moved: util.PackageConfig = {
         "dest": str(new),
@@ -282,7 +282,7 @@ def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path,
     }
     tools._install_wrapper_script(MockContext(), "agents-md", moved)
 
-    assert old.read_text() == "edited by hand after the deploy\n"
+    assert old.read_text(encoding="utf-8") == "edited by hand after the deploy\n"
     assert not old.is_symlink()
     assert "Leaving it alone" in capsys.readouterr().out
 
@@ -290,7 +290,7 @@ def test_a_dest_change_still_refuses_to_replace_a_hand_edited_old_file(tmp_path,
 def test_a_hand_made_symlink_to_an_unmanaged_file_is_left_alone(tmp_path, capsys):
     """Only a link into something this repo deployed is replaceable — the manifest is the proof."""
     someone_elses = tmp_path / "notes.md"
-    someone_elses.write_text("my own file\n")
+    someone_elses.write_text("my own file\n", encoding="utf-8", newline="\n")
     link = tmp_path / "CLAUDE.md"
     link.symlink_to(someone_elses)
 
@@ -338,7 +338,7 @@ def _tarball(tmp_path: Path, name: str, flag: str) -> Path:
     """A real archive with one file one level down, so strip_components has something to strip."""
     src = tmp_path / "src" / "Telegram"
     src.mkdir(parents=True)
-    (src / "binary").write_text("payload\n")
+    (src / "binary").write_text("payload\n", encoding="utf-8", newline="\n")
     archive = tmp_path / name
     subprocess.run(["tar", f"-c{flag}f", str(archive), "-C", str(tmp_path / "src"), "Telegram"], check=True)
     return archive
@@ -363,7 +363,7 @@ def test_install_archive_extracts_every_compression_format(tmp_path, suffix, fla
 
     tools._install_archive(_ShellContext(), "t", _archive_cfg(install_dir, _tarball(tmp_path, f"a.{suffix}", flag)))
 
-    assert (install_dir / "binary").read_text() == "payload\n"
+    assert (install_dir / "binary").read_text(encoding="utf-8") == "payload\n"
 
 
 def test_install_archive_leaves_no_download_behind(tmp_path):
@@ -377,7 +377,7 @@ def test_install_archive_leaves_no_download_behind(tmp_path):
 
 def _checksummed(tmp_path: Path, archive: Path, listing: str) -> util.PackageConfig:
     sums = tmp_path / "checksums.txt"
-    sums.write_text(listing)
+    sums.write_text(listing, encoding="utf-8", newline="\n")
     return {**_archive_cfg(tmp_path / "installed", archive), "checksum_url": sums.as_uri()}
 
 
@@ -391,7 +391,7 @@ def test_install_archive_installs_when_the_published_checksum_matches(tmp_path):
 
     tools._install_archive(_ShellContext(), "t", _checksummed(tmp_path, archive, listing))
 
-    assert (tmp_path / "installed" / "binary").read_text() == "payload\n"
+    assert (tmp_path / "installed" / "binary").read_text(encoding="utf-8") == "payload\n"
 
 
 def test_install_archive_refuses_a_download_whose_checksum_differs(tmp_path):

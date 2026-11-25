@@ -25,8 +25,8 @@ def _write_checkout(root: Path) -> Path:
     """The three things install.sh looks for when deciding whether a directory is a checkout."""
     root.mkdir(parents=True, exist_ok=True)
     (root / ".git").mkdir(exist_ok=True)
-    (root / "setup.toml").write_text("")
-    (root / "bootstrap.sh").write_text(_STUB_BOOTSTRAP)
+    (root / "setup.toml").write_text("", encoding="utf-8", newline="\n")
+    (root / "bootstrap.sh").write_text(_STUB_BOOTSTRAP, encoding="utf-8", newline="\n")
     return root
 
 
@@ -72,13 +72,13 @@ def test_a_directory_that_is_not_a_checkout_is_refused_untouched(home: Path, tmp
     to name, and a typo pointing at real work would otherwise delete it."""
     occupied = tmp_path / "occupied"
     occupied.mkdir()
-    (occupied / "important.txt").write_text("do not delete me")
+    (occupied / "important.txt").write_text("do not delete me", encoding="utf-8", newline="\n")
 
     result = _run("--dir", str(occupied), home=home)
 
     assert result.returncode == 1
     assert "not a power-user-linux-setup checkout" in result.stderr
-    assert (occupied / "important.txt").read_text() == "do not delete me"
+    assert (occupied / "important.txt").read_text(encoding="utf-8") == "do not delete me"
 
 
 def test_an_existing_checkout_is_adopted_exactly_as_it_stands(home: Path, tmp_path: Path):
@@ -86,14 +86,14 @@ def test_an_existing_checkout_is_adopted_exactly_as_it_stands(home: Path, tmp_pa
     uncommitted work is a clobber wearing a git command."""
     checkout = _write_checkout(tmp_path / "existing")
     sentinel = checkout / "uncommitted.txt"
-    sentinel.write_text("work in progress")
+    sentinel.write_text("work in progress", encoding="utf-8", newline="\n")
 
     result = _run("--dir", str(checkout), "--bootstrap-only", home=home)
 
     assert result.returncode == 0
     assert "Left exactly as it is" in result.stdout
     assert "[stub bootstrap.sh ran]" in result.stdout
-    assert sentinel.read_text() == "work in progress"
+    assert sentinel.read_text(encoding="utf-8") == "work in progress"
 
 
 def test_the_checkout_is_permanent_and_the_script_says_so(home: Path, tmp_path: Path):
@@ -230,14 +230,14 @@ def test_a_non_checkout_at_the_old_default_is_ignored_rather_than_adopted(home: 
     an unpacked archive. Only the three markers make it a checkout worth adopting."""
     stray = home / "projects" / "power-user-linux-setup"
     stray.mkdir(parents=True)
-    (stray / "notes.txt").write_text("not a checkout")
+    (stray / "notes.txt").write_text("not a checkout", encoding="utf-8", newline="\n")
     origin = _make_origin(tmp_path / "origin")
 
     result = _run("--repo-url", str(origin), "--ref", "trunk", "--bootstrap-only", home=home)
 
     assert result.returncode == 0, result.stderr
     assert (home / ".local/share/power-user-linux-setup/setup.toml").is_file()
-    assert (stray / "notes.txt").read_text() == "not a checkout"
+    assert (stray / "notes.txt").read_text(encoding="utf-8") == "not a checkout"
 
 
 def test_the_outro_names_the_command_that_replaces_knowing_the_path(home: Path, tmp_path: Path):

@@ -34,7 +34,7 @@ def configure_omz(c: Context):  # noqa: C901
         print("[oh-my-zsh] ~/.zshrc not found — skipping")
         return
 
-    text = zshrc.read_text()
+    text = zshrc.read_text(encoding="utf-8")
     theme = cfg.get("theme", "powerlevel10k/powerlevel10k")
 
     if util.DRY_RUN:
@@ -78,7 +78,7 @@ def configure_omz(c: Context):  # noqa: C901
             print("[oh-my-zsh] plugins updated")
 
     if changed:
-        zshrc.write_text(text)
+        zshrc.write_text(text, encoding="utf-8", newline="\n")
     else:
         print("[oh-my-zsh] already configured — nothing to do")
 
@@ -123,7 +123,7 @@ _EXPORT = re.compile(r"^\s*export\s+([A-Za-z_][A-Za-z0-9_]*)=", re.MULTILINE)
 def _exported(path: Path) -> set[str]:
     """Every variable name a dotfile exports, whoever wrote the line — so an export that moved from
     one block to another, or that a human also sets, never reads as removed."""
-    return set(_EXPORT.findall(path.read_text())) if path.exists() else set()
+    return set(_EXPORT.findall(path.read_text(encoding="utf-8"))) if path.exists() else set()
 
 
 def _clear_lingering_exports(c: Context, gone: set[str]) -> None:
@@ -165,7 +165,7 @@ def _clear_lingering_exports(c: Context, gone: set[str]) -> None:
 
 def _apply_snippet(path: Path, name: str, target: str, content: str) -> None:
     if util.DRY_RUN:
-        text = path.read_text() if path.exists() else ""
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
         _, status = util.ensure_block_text(text, name, content)
         print(f"[{name}] .{target}: {util.ok_label(status == util.BlockStatus.OK)}")
         return
@@ -179,7 +179,7 @@ def _drop_snippet(path: Path, name: str, target: str) -> None:
     """Report or remove a block nothing declares any more — either the package stopped applying to
     this machine, or it stopped declaring this dotfile."""
     if util.DRY_RUN:
-        text = path.read_text() if path.exists() else ""
+        text = path.read_text(encoding="utf-8") if path.exists() else ""
         # "MISSING" is what phases.probe() greps for to decide a phase still has work to do, and a
         # stale block is work — the word reads oddly for a removal, but the token is the protocol.
         if util.remove_block_text(text, name)[1]:

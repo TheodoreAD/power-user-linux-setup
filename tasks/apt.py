@@ -285,7 +285,7 @@ def _register_repo(c: Context, name: str, cfg: util.PackageConfig, codename: str
         needs_update = True
 
     entry = cfg["sources_entry"].format(gpg_path=gpg, codename=codename)
-    if not sources.exists() or sources.read_text().strip() != entry.strip():
+    if not sources.exists() or sources.read_text(encoding="utf-8").strip() != entry.strip():
         if not util.sudo_write(c, sources, entry + "\n", warn=True):
             print(f"[{name}] FAILED: sources file write — repo not registered")
             return needs_update, False

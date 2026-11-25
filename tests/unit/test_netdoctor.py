@@ -168,7 +168,7 @@ def test_a_full_run_probes_hosts_declared_in_the_real_setup_toml():
 
 def test_full_scope_picks_up_extra_hosts_from_setup_toml(tmp_path):
     setup_toml = tmp_path / "setup.toml"
-    setup_toml.write_text('url = "https://downloads.example.org/thing.deb"\n')
+    setup_toml.write_text('url = "https://downloads.example.org/thing.deb"\n', encoding="utf-8", newline="\n")
     hosts = {endpoint.host for endpoint in endpoints_for("full", setup_toml)}
     assert "downloads.example.org" in hosts
 
@@ -312,7 +312,7 @@ def test_netdoctor_imports_only_the_standard_library():
     """The zero-install entrypoint is only zero-install while this holds. A third-party import
     here would make `python3 tasks/netdoctor.py` fail on the machine that needs it most: a fresh
     WSL distro with nothing on it yet."""
-    tree = ast.parse((_REPO_ROOT / "tasks" / "netdoctor.py").read_text())
+    tree = ast.parse((_REPO_ROOT / "tasks" / "netdoctor.py").read_text(encoding="utf-8"))
     imported: set[str] = set()
     for node in ast.walk(tree):
         if isinstance(node, ast.Import):

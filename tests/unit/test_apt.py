@@ -65,11 +65,11 @@ def _live_mode(monkeypatch):
 def apt_conf(monkeypatch, tmp_path):
     """99-pulse at a temp path, read directly, with every write recorded rather than made."""
     path = tmp_path / "99-pulse"
-    path.write_text(apt._APT_CONF_CONTENT)
+    path.write_text(apt._APT_CONF_CONTENT, encoding="utf-8", newline="\n")
     monkeypatch.setattr(apt, "_APT_CONF", path)
     monkeypatch.setattr(util, "ensure_sudo", lambda: None)
     monkeypatch.setattr(util, "require_apt", lambda: None)
-    monkeypatch.setattr(util, "sudo_read", lambda _c, p: p.read_text())
+    monkeypatch.setattr(util, "sudo_read", lambda _c, p: p.read_text(encoding="utf-8"))
     written: list[Path] = []
     monkeypatch.setattr(util, "sudo_write", lambda _c, p, _text: written.append(p))
     return path, written
@@ -120,7 +120,7 @@ def lockstep(monkeypatch, tmp_path):
     monkeypatch.setattr(apt, "_KERNEL_LOCKSTEP_CONF", path)
     monkeypatch.setattr(util, "ensure_sudo", lambda: None)
     monkeypatch.setattr(util, "require_apt", lambda: None)
-    monkeypatch.setattr(util, "sudo_read", lambda _c, p: p.read_text() if p.exists() else "")
+    monkeypatch.setattr(util, "sudo_read", lambda _c, p: p.read_text(encoding="utf-8") if p.exists() else "")
     written: list[Path] = []
     monkeypatch.setattr(util, "sudo_write", lambda _c, p, _text: written.append(p))
     return path, written
@@ -137,7 +137,7 @@ def test_kernel_lockstep_writes_nothing_without_an_nvidia_driver(lockstep, monke
 
 def test_kernel_lockstep_removes_its_drop_in_once_the_driver_is_gone(lockstep, monkeypatch):
     path, _ = lockstep
-    path.write_text(apt._KERNEL_LOCKSTEP_CONTENT)
+    path.write_text(apt._KERNEL_LOCKSTEP_CONTENT, encoding="utf-8", newline="\n")
     monkeypatch.setattr(apt, "nvidia_drivers_here", list)
     c = _FakeContext()
 

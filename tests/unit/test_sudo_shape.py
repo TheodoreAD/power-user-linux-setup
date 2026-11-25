@@ -48,7 +48,7 @@ _MODULES = sorted(_TASKS.glob("*.py"))
 
 @pytest.mark.parametrize("module", _MODULES, ids=[path.name for path in _MODULES])
 def test_no_sudo_command_is_compound(module: Path):
-    lines = list(_compound_sudo_lines(module.read_text()))
+    lines = list(_compound_sudo_lines(module.read_text(encoding="utf-8")))
     assert lines == [], (
         f"{module.name}: sudo inside a compound command at line(s) {lines} — split it into lone "
         "c.run calls, or use util.sudo_write (mkdir=True for the parent directory)"

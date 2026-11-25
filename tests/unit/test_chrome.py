@@ -91,7 +91,9 @@ def test_read_profiles_extracts_names_and_last_used(tmp_path):
                     },
                 }
             }
-        )
+        ),
+        encoding="utf-8",
+        newline="\n",
     )
     assert read_profiles(state) == Profiles(labels={"Default": "Work", "Profile 2": "Main"}, primary="Profile 2")
 
@@ -103,7 +105,7 @@ def test_read_profiles_returns_empty_when_chrome_is_not_installed(tmp_path):
 @pytest.mark.parametrize("payload", ["[]", '{"profile": "wrong-shape"}', '{"profile": {"info_cache": 3}}'])
 def test_read_profiles_tolerates_unexpected_shapes(tmp_path, payload):
     state = tmp_path / "Local State"
-    state.write_text(payload)
+    state.write_text(payload, encoding="utf-8", newline="\n")
     assert read_profiles(state).labels == {}
 
 
@@ -236,7 +238,7 @@ Exec=/snap/bin/spotify %U
 def _autostart(tmp_path: Path, name: str, text: str) -> Path:
     tmp_path.mkdir(parents=True, exist_ok=True)
     path = tmp_path / name
-    path.write_text(text, encoding="utf-8")
+    path.write_text(text, encoding="utf-8", newline="\n")
     return path
 
 

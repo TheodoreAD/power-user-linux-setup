@@ -37,7 +37,7 @@ VSCODE_SETTINGS_PATHS = [
 
 def _load_vscode_settings(path: Path) -> util.JsonObject:
     """Parse VS Code settings.json, which is JSONC (comments + trailing commas allowed)."""
-    text = path.read_text() if path.exists() and path.stat().st_size > 0 else ""
+    text = path.read_text(encoding="utf-8") if path.exists() and path.stat().st_size > 0 else ""
     if not text:
         return {}
     return _load_jsonc(text)
@@ -257,9 +257,11 @@ def configure(c: Context):  # noqa: C901
     if settings_path and settings:
         existing: util.JsonObject = {}
         if settings_path.exists() and settings_path.stat().st_size > 0:
-            existing = _load_jsonc(settings_path.read_text())
+            existing = _load_jsonc(settings_path.read_text(encoding="utf-8"))
         if not all(existing.get(k) == v for k, v in settings.items()):
-            settings_path.write_text(json.dumps({**existing, **settings}, indent=2) + "\n")
+            settings_path.write_text(
+                json.dumps({**existing, **settings}, indent=2) + "\n", encoding="utf-8", newline="\n"
+            )
             print(f"[fonts] VS Code → {settings_path}")
         else:
             print("[fonts] VS Code already configured")
@@ -332,7 +334,9 @@ def render_text(source: str, rules: tuple[tuple[str, str], ...]) -> str:
 
 def rendered() -> dict[Path, str]:
     """What every repo-side config that names a font should contain, keyed by absolute path."""
-    return {_REPO_ROOT / rel: render_text((_REPO_ROOT / rel).read_text(), rules) for rel, rules in _RENDERS}
+    return {
+        _REPO_ROOT / rel: render_text((_REPO_ROOT / rel).read_text(encoding="utf-8"), rules) for rel, rules in _RENDERS
+    }
 
 
 @task(name="render-configs")
@@ -351,7 +355,7 @@ def render_configs(c: Context):
     A test asserts the committed files already match this output, so a font change that skips this
     step fails CI rather than leaving one application on the old font.
     """
-    changed = [path for path, text in rendered().items() if path.read_text() != text]
+    changed = [path for path, text in rendered().items() if path.read_text(encoding="utf-8") != text]
     if not changed:
         print(f"[fonts] {len(_RENDERS)} config(s) already match [settings.fonts]")
         return
@@ -360,7 +364,7 @@ def render_configs(c: Context):
         if util.DRY_RUN:
             print(f"[fonts] would rewrite {rel}")
             continue
-        path.write_text(rendered()[path])
+        path.write_text(rendered()[path], encoding="utf-8", newline="\n")
         print(f"[fonts] rewrote {rel}")
     if not util.DRY_RUN:
         print(f"[fonts] {len(changed)} file(s) rewritten — commit them, then `inv deploy.all`")
@@ -400,7 +404,7 @@ def _file_font_rows(c: Context) -> list[tuple[str, str]]:
         if not path.exists():
             rows.append((rel, f"MISSING — {path} not there"))
             continue
-        text = path.read_text()
+        text = path.read_text(encoding="utf-8")
         try:
             rows.append((rel, "ok" if render_text(text, rules) == text else f"DIFFERS — {path}"))
         except RuntimeError:

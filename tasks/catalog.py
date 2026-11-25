@@ -140,7 +140,7 @@ def _tasks_table() -> str:
 
 def _render(doc: Path, block: str, content: str, label: str) -> None:
     if util.DRY_RUN:
-        text = doc.read_text() if doc.exists() else ""
+        text = doc.read_text(encoding="utf-8") if doc.exists() else ""
         _, status = util.ensure_block_text(text, block, content, style=util.MarkerStyle.HTML)
         print(f"[catalog] {label}: {util.ok_label(status == util.BlockStatus.OK)}")
         return

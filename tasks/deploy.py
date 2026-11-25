@@ -164,7 +164,7 @@ def assemble(parts: tuple[str, ...]) -> str:
     """
     text = ""
     for part in parts:
-        content = (_REPO_ROOT / part).read_text().strip()
+        content = (_REPO_ROOT / part).read_text(encoding="utf-8").strip()
         text, _ = util.ensure_block_text(text, block_name(part), content, style=util.MarkerStyle.HTML)
     # ensure_block_text separates blocks with a blank line, which leaves two leading newlines on
     # the very first one appended to an empty string.
@@ -179,7 +179,7 @@ def expected_bytes(m: Managed) -> bytes:
     if m.mechanism == Mechanism.ASSEMBLED:
         return (assemble(m.parts).strip() + "\n").encode()
     if m.mechanism == Mechanism.WRAPPER_SCRIPT:
-        return (m.src.read_text().strip() + "\n").encode()
+        return (m.src.read_text(encoding="utf-8").strip() + "\n").encode()
     return m.src.read_bytes()
 
 
@@ -324,7 +324,7 @@ def load_manifest() -> Manifest:
     """The per-destination record of what PULSE last wrote, or {} if there is none yet."""
     if not _MANIFEST.exists():
         return {}
-    data = cast(_ManifestFile, cast(object, json.loads(_MANIFEST.read_text())))
+    data = cast(_ManifestFile, cast(object, json.loads(_MANIFEST.read_text(encoding="utf-8"))))
     if data.get("version") != _MANIFEST_VERSION:
         # A future version's format isn't readable here, and guessing would risk treating a
         # destination as ours on bad evidence. An empty manifest degrades to UNKNOWN/CLEAN by
@@ -336,7 +336,7 @@ def load_manifest() -> Manifest:
 def _write_manifest(entries: Manifest) -> None:
     _MANIFEST.parent.mkdir(parents=True, exist_ok=True)
     payload: _ManifestFile = {"version": _MANIFEST_VERSION, "entries": entries}
-    _MANIFEST.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n")
+    _MANIFEST.write_text(json.dumps(payload, indent=2, sort_keys=True) + "\n", encoding="utf-8", newline="\n")
 
 
 def record(m: Managed, digest: str) -> None:
@@ -902,7 +902,7 @@ def _has_pulse_block(target: Path) -> bool:
     rewrites that region. Both marker styles embed the same "PULSE::" tag, so one scan covers both.
     """
     try:
-        return "PULSE::" in target.read_text()
+        return "PULSE::" in target.read_text(encoding="utf-8")
     except OSError, UnicodeDecodeError:
         return False
 

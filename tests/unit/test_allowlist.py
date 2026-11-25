@@ -82,7 +82,7 @@ def test_every_rule_file_on_disk_uses_only_known_classification_and_source_value
     known_classifications = {m.value for m in allowlist.Classification}
     known_sources = {m.value for m in allowlist.Source}
     for path in rule_files:
-        entry = cast(allowlist.RuleEntry, json.loads(path.read_text()))
+        entry = cast(allowlist.RuleEntry, json.loads(path.read_text(encoding="utf-8")))
         for key, node in entry["nodes"].items():
             assert node["classification"] in known_classifications, f"{path.name}:{key}"
             assert node["source"] in known_sources, f"{path.name}:{key}"
@@ -148,7 +148,7 @@ def test_discover_kong_finds_nothing_in_any_other_registered_tools_cached_help()
         f"{path.stem}:{key}": found
         for path in cache_files
         if path.stem != "gog"
-        for key, node in cast(allowlist.CacheEntry, json.loads(path.read_text()))["nodes"].items()
+        for key, node in cast(allowlist.CacheEntry, json.loads(path.read_text(encoding="utf-8")))["nodes"].items()
         if (found := allowlist._discover_kong(node["help_text"], 40))
     }
     assert hits == {}

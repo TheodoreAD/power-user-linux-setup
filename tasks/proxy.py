@@ -182,7 +182,9 @@ def _discover_candidate(c: Context) -> tuple[str, int, str] | None:  # noqa: C90
     env = _parse_env_proxy(os.environ)
     if env:
         return (*env, "environment")
-    etc_env = _parse_etc_environment(Path("/etc/environment").read_text() if Path("/etc/environment").exists() else "")
+    etc_env = _parse_etc_environment(
+        Path("/etc/environment").read_text(encoding="utf-8") if Path("/etc/environment").exists() else ""
+    )
     if etc_env:
         return (*etc_env, "/etc/environment")
     gnome = _gsettings_proxy(c)
@@ -322,7 +324,7 @@ def accepts_remote_clients() -> bool:
     Public because docker.py needs it: a container-side proxy pointing at the bridge gateway is
     configuration that looks right and cannot work while Px is listening on 127.0.0.1 only.
     """
-    return _PX_INI.exists() and _parse_gateway(_PX_INI.read_text())
+    return _PX_INI.exists() and _parse_gateway(_PX_INI.read_text(encoding="utf-8"))
 
 
 def _configure_px(
@@ -337,9 +339,9 @@ def _configure_px(
     if util.DRY_RUN:
         print(f"[proxy] px.ini ({host}:{port}): {util.ok_label(_PX_INI.exists())}")
         return False
-    before = _PX_INI.read_text() if _PX_INI.exists() else None
+    before = _PX_INI.read_text(encoding="utf-8") if _PX_INI.exists() else None
     c.run(_px_save_command(host, port, noproxy, username, use_kerberos, exposure), hide=True)
-    after = _PX_INI.read_text() if _PX_INI.exists() else None
+    after = _PX_INI.read_text(encoding="utf-8") if _PX_INI.exists() else None
     return before != after
 
 
@@ -550,7 +552,7 @@ def _capture_password(prompt: str) -> str | None:
         return getpass.getpass(prompt + " ")
     password_file = os.environ.get("PULSE_PROXY_PASSWORD_FILE")
     if password_file and Path(password_file).exists():
-        return Path(password_file).read_text().strip()
+        return Path(password_file).read_text(encoding="utf-8").strip()
     return None
 
 
@@ -709,7 +711,9 @@ def check(c: Context, proxy: str = "auto"):
         print("[proxy] px: installed ✓")
         # px.ini always has a "username =" line, even blank — only a non-empty value means a
         # credential was actually captured (confirmed against a real px --save run).
-        saved = _PX_INI.exists() and bool(re.search(r"^username\s*=\s*\S", _PX_INI.read_text(), re.MULTILINE))
+        saved = _PX_INI.exists() and bool(
+            re.search(r"^username\s*=\s*\S", _PX_INI.read_text(encoding="utf-8"), re.MULTILINE)
+        )
         print(f"[proxy] px.ini: {'username saved (credential likely cached)' if saved else 'no saved username yet'}")
         if accepts_remote_clients():
             print("[proxy] listen: remote clients allowed (gateway) — check [proxy] allow narrows who")

@@ -26,7 +26,7 @@ def test_bootstrap_devcontainer_runs_setup_with_pulse_assume_yes():
     # nothing said yes, so an unattended `inv setup` that doesn't set PULSE_ASSUME_YES would build
     # an image that looks fine and is silently missing a dotfile. docker/Dockerfile and the
     # devcontainer.json postCreateCommand both reach `inv setup` only through this script.
-    script = (_REPO_ROOT / "bootstrap-devcontainer.sh").read_text()
+    script = (_REPO_ROOT / "bootstrap-devcontainer.sh").read_text(encoding="utf-8")
 
     # Invocations, not prose: a comment line mentioning `inv setup` is not a call, and the
     # comments around it explain exactly this sequencing, so they name it often.
@@ -47,7 +47,7 @@ def test_discover_candidates_empty_home_yields_nothing(tmp_path):
 
 def test_discover_candidates_ssh_agent_offered_when_socket_exists(tmp_path):
     sock = tmp_path / "agent.sock"
-    sock.write_text("")
+    sock.write_text("", encoding="utf-8", newline="\n")
     assert "ssh-agent" in _ids(tmp_path, ssh_auth_sock=str(sock))
 
 
@@ -78,7 +78,7 @@ def test_discover_candidates_ssh_dir_defaults_true_when_no_agent_socket(tmp_path
 def test_discover_candidates_ssh_dir_defaults_false_when_agent_socket_present(tmp_path):
     (tmp_path / ".ssh").mkdir()
     sock = tmp_path / "agent.sock"
-    sock.write_text("")
+    sock.write_text("", encoding="utf-8", newline="\n")
     candidates = _discover_candidates(tmp_path, None, str(sock))
     ssh_dir = next(c for c in candidates if c.id == "ssh-dir")
     assert ssh_dir.default is False
@@ -86,7 +86,7 @@ def test_discover_candidates_ssh_dir_defaults_false_when_agent_socket_present(tm
 
 def test_discover_candidates_ssh_agent_gets_wsl_caveat_only_when_is_wsl(tmp_path):
     sock = tmp_path / "agent.sock"
-    sock.write_text("")
+    sock.write_text("", encoding="utf-8", newline="\n")
     without_wsl = _discover_candidates(tmp_path, None, str(sock), is_wsl=False)
     with_wsl = _discover_candidates(tmp_path, None, str(sock), is_wsl=True)
     assert next(c for c in without_wsl if c.id == "ssh-agent").caveat is None
@@ -99,7 +99,7 @@ def test_discover_candidates_pulse_identity_offered_when_present(tmp_path):
 
 
 def test_discover_candidates_gitconfig_readonly_and_default_true(tmp_path):
-    (tmp_path / ".gitconfig").write_text("")
+    (tmp_path / ".gitconfig").write_text("", encoding="utf-8", newline="\n")
     candidates = _discover_candidates(tmp_path, None, None)
     gitconfig = next(c for c in candidates if c.id == "gitconfig")
     assert gitconfig.readonly is True
@@ -125,9 +125,9 @@ def test_discover_candidates_no_certs_bundle_when_identity_toml_missing(tmp_path
 
 def test_discover_candidates_certs_bundle_offered_when_configured_and_file_exists(tmp_path):
     bundle = tmp_path / "corp-ca.pem"
-    bundle.write_text("-----BEGIN CERTIFICATE-----\n")
+    bundle.write_text("-----BEGIN CERTIFICATE-----\n", encoding="utf-8", newline="\n")
     identity_toml = tmp_path / "identity.toml"
-    identity_toml.write_text(f'[certs]\nbundle = "{bundle}"\n')
+    identity_toml.write_text(f'[certs]\nbundle = "{bundle}"\n', encoding="utf-8", newline="\n")
 
     candidates = _discover_candidates(tmp_path, identity_toml, None)
     cert = next(c for c in candidates if c.id == "corporate-cert-bundle")
@@ -138,7 +138,7 @@ def test_discover_candidates_certs_bundle_offered_when_configured_and_file_exist
 
 def test_discover_candidates_certs_bundle_not_offered_when_configured_file_missing(tmp_path):
     identity_toml = tmp_path / "identity.toml"
-    identity_toml.write_text(f'[certs]\nbundle = "{tmp_path / "nonexistent.pem"}"\n')
+    identity_toml.write_text(f'[certs]\nbundle = "{tmp_path / "nonexistent.pem"}"\n', encoding="utf-8", newline="\n")
     candidates = _discover_candidates(tmp_path, identity_toml, None)
     assert not any(c.id.startswith("corporate-cert-bundle") for c in candidates)
 
@@ -146,10 +146,10 @@ def test_discover_candidates_certs_bundle_not_offered_when_configured_file_missi
 def test_discover_candidates_certs_bundle_list_yields_multiple_candidates(tmp_path):
     bundle1 = tmp_path / "corp-ca-1.pem"
     bundle2 = tmp_path / "corp-ca-2.pem"
-    bundle1.write_text("cert1")
-    bundle2.write_text("cert2")
+    bundle1.write_text("cert1", encoding="utf-8", newline="\n")
+    bundle2.write_text("cert2", encoding="utf-8", newline="\n")
     identity_toml = tmp_path / "identity.toml"
-    identity_toml.write_text(f'[certs]\nbundle = ["{bundle1}", "{bundle2}"]\n')
+    identity_toml.write_text(f'[certs]\nbundle = ["{bundle1}", "{bundle2}"]\n', encoding="utf-8", newline="\n")
 
     ids = _ids(tmp_path, identity_toml=identity_toml)
     assert "corporate-cert-bundle" in ids
@@ -255,7 +255,7 @@ def test_dev_container_docs_have_no_unrendered_drift():
     command, run by whoever made the change rather than by a robot afterwards.
     """
     _, status = util.ensure_block_text(
-        _DOC_PATH.read_text(),
+        _DOC_PATH.read_text(encoding="utf-8"),
         "devcontainer-tags",
         _generated_content(),
         style=util.MarkerStyle.HTML,
