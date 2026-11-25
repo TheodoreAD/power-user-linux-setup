@@ -2341,6 +2341,16 @@ around the reasoning instead of the change. So the fix is a recipe stating the b
 changed first, rather than a prohibition. It extends this section rather than taking a heading,
 because the trigger is unchanged: writing a commit body.
 
+[DECISION: **cite only files tracked in the repo — user correction, the same day.** The first
+wording said to cite a plan "by its filename". The user pointed out that this is wrong for a repo
+whose plans live in the plans store: _"if the plans are meant to stay in the central location, a
+reference should not go there, since the whole point is to not make the plans transparent. my take
+is only files in the repo should be referenced, nothing on the same machine, unless it's about an
+investigation etc"_. A store-held plan's path in a commit publishes the existence of a plan the
+routing keeps out of that repo, and every other machine-local path (a research clone, a scratchpad,
+a transcript) resolves for nobody who reads the repo. The rule now draws the line at "tracked in
+this repo", with an investigation's local evidence as the stated exception, named as local.]
+
 ## Invoking a venv tool in the session's own project
 
 Moved twice on 2026-08-30, and it is now labelled `[needs direnv]` in `bash.md` — first out of

@@ -138,8 +138,12 @@ _whether_ to commit, never how to split.
 **And every commit has a body**, in this order. First what changed, named the way a reader would
 search for it: the setting, flag, function, field or file, and what it now does. Then what the
 change is for, what it beat and what it cost. The bar is that `git log` alone explains the change
-and the diff only confirms it. Cite a plan or document by its filename, never a nickname like "the
-leanness plan": a retired plan is deleted, and only its filename finds it again. A doc or plan
+and the diff only confirms it. **Cite only files tracked in this repo, by their path in it** — a
+plan under its `plans/`, a doc, a module — never a nickname like "the leanness plan", since a
+retired plan is deleted and only its path finds it again. Never a path elsewhere on the machine: the
+plans store, a research clone, a scratchpad, a transcript. A store-held plan is kept out of the repo
+on purpose, and a commit naming it publishes what the routing hides. When the commit records an
+investigation whose evidence is local, say what the evidence is and that it is local. A doc or plan
 commit is not exempt, and is the case where "the file already says it" is backwards: `git log` does
 not show the file, and `plan-conveyor` retires a plan by **deleting** it, so the file is temporary
 while its message is permanent. **A trailer is not a body** — `Co-Authored-By:` alone satisfies
