@@ -67,8 +67,7 @@ is enabled. `man loginctl`: _"If enabled for a specific user, a user manager is 
 at boot and kept around after logouts."_
 
 State is a zero-byte file at `/var/lib/systemd/linger/<username>`. Verified 2026-08-25 on this
-machine (systemd 255): the directory is empty and `loginctl show-user tdumitrescu` reports
-`Linger=no`.
+machine (systemd 255): the directory is empty and `loginctl show-user "$USER"` reports `Linger=no`.
 
 [PITFALL: lingering is per-user, not per-unit — enabling it for one mux server means every
 `systemctl --user` unit added afterwards also starts at boot and outlives logout.]
@@ -85,7 +84,7 @@ by accident. Don't build on that: nothing restarts it after a reboot or a crash,
 machine state, and GNOME session teardown or `loginctl terminate-user` ends it anyway.]
 
 Enabling it would be a `setup.toml` entry plus a task, not a one-off
-`sudo -A loginctl enable-linger tdumitrescu`.
+`sudo -A loginctl enable-linger "$USER"`.
 
 ## `wezterm.plugin.require` mechanics (needed by option B)
 

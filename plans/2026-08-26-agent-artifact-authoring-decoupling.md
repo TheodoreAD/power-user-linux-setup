@@ -571,15 +571,14 @@ all.]
 prunes it — there are now nine, one per skill that moved.** Confirmed 2026-08-27 on `plan-docs` and
 repeated through 2026-08-28 for the rest: once the `source = "local"` entry is gone the path leaves
 `deploy.managed_paths()`, so `inv deploy.status` stops reporting it entirely — while
-`~/.local/state/power-user-linux-setup/deployed.json` still records each
-`/home/tdumitrescu/.agents/skills/<name>` as deployed from `skills/<name>`, sources that no longer
-exist. `deploy.forget()` is written and unit-tested for exactly this and **has no production
-caller**. Removing each installed directory before re-installing was likewise a bare `rm -rf` with
-no task behind it. The migration this was meant to be decided before is finished, so it is now
-straightforward debt rather than a precaution: pick the mechanism (a prune step in `deploy`, or a
-task calling `forget`) and clear all nine at once. Every one of them is unambiguous — a manifest
-entry whose `source` names a path no longer in the repo — so the prune has no judgement call in it,
-only a decision about where it lives.]
+`~/.local/state/power-user-linux-setup/deployed.json` still records each `~/.agents/skills/<name>`
+as deployed from `skills/<name>`, sources that no longer exist. `deploy.forget()` is written and
+unit-tested for exactly this and **has no production caller**. Removing each installed directory
+before re-installing was likewise a bare `rm -rf` with no task behind it. The migration this was
+meant to be decided before is finished, so it is now straightforward debt rather than a precaution:
+pick the mechanism (a prune step in `deploy`, or a task calling `forget`) and clear all nine at
+once. Every one of them is unambiguous — a manifest entry whose `source` names a path no longer in
+the repo — so the prune has no judgement call in it, only a decision about where it lives.]
 
 [DEFERRED: **The `skills ls --json` per-agent check from D7 is not built**, and the pilot showed it
 needs a stronger predicate than first designed. The symlink check that landed covers the instruction

@@ -34,7 +34,7 @@ named the rule, and re-ran without `-r`. Exactly the intended outcome.
 **Second occurrence**, three hours later, during that session's own harvest:
 
 ```shell
-rg -rn --no-heading -i "ripgrep|rg -r|--replace" /home/tdumitrescu/plans 2>/dev/null | head -10
+rg -rn --no-heading -i "ripgrep|rg -r|--replace" ~/plans 2>/dev/null | head -10
 ```
 
 It returned nothing. That is consistent with "no matches" and also with a mangled search, and the

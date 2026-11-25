@@ -59,7 +59,7 @@ attached to the wrong conclusion in two places.]
 ## Evidence
 
 Transcript:
-`~/.claude/projects/-home-tdumitrescu-projects-github-com-personal-freshful-polite-mcp/2888f600-fe6e-4cd8-aa7f-fcd46bc4c81d.jsonl`
+`~/.claude/projects/-home-<user>-projects-github-com-personal-freshful-polite-mcp/2888f600-fe6e-4cd8-aa7f-fcd46bc4c81d.jsonl`
 
 The instance that surfaced it, 2026-09-18, distinctive phrase `direnv isn't active in this shell`:
 
@@ -68,9 +68,9 @@ inv check
 -> bash: line 1: ruff: command not found     (exit 127)
 
 which inv ruff python3
--> /home/tdumitrescu/.local/bin/inv
+-> ~/.local/bin/inv
    ruff not found
-   /home/tdumitrescu/.local/bin/python3
+   ~/.local/bin/python3
 ```
 
 Note what `inv` resolving to `~/.local/bin/inv` means: the task runner ran, found `tasks.py`, and

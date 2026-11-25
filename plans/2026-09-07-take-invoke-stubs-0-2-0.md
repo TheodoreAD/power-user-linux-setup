@@ -22,8 +22,8 @@ other.
 ## Evidence
 
 Session transcript `52905ee0-50ff-4376-bd19-5ab4d9ca0a24.jsonl` under
-`~/.claude/projects/-home-tdumitrescu-projects-github-com-personal-repo-tasks/`, 2026-09-07, from
-"we just finished upgrading the invoke stubs".
+`~/.claude/projects/-home-<user>-projects-github-com-personal-repo-tasks/`, 2026-09-07, from "we
+just finished upgrading the invoke stubs".
 
 The one cost that session paid: `collection.pyi` declares `collections: Lexicon` and `util.pyi`
 declares `Lexicon(dict[str, Any])`, so `Collection.collections["x"]` is now honestly `Any`. Under

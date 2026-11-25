@@ -117,7 +117,7 @@ git-mutating-in-chain 9%(+1pp,MISS)  chain 57%(-9pp,OK)
 ```
 
 Transcript:
-`~/.claude/projects/-home-tdumitrescu-projects-github-com-personal-ingesta/f489b075-6f46-4814-a71b-57f5879ef27e.jsonl`,
+`~/.claude/projects/-home-<user>-projects-github-com-personal-ingesta/f489b075-6f46-4814-a71b-57f5879ef27e.jsonl`,
 session start `2026-08-31T18:41:11.778Z`, ~7 hours.
 
 Two things sharpen it. The regression is **specific rather than general** — `cd-own-repo`,
