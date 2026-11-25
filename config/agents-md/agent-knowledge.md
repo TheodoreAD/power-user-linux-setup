@@ -64,9 +64,10 @@ it.
 
 ### Installing agent instructions and skills on this machine [needs setup.toml]
 
-`inv ai.install-skills` sets up `~`'s `.agents/skills/` and its `.claude/skills` symlink, and
-installs every skill declared in `setup.toml`, never overwriting existing content. A new Python
-project's own `AGENTS.md`/`CLAUDE.md`/`.agents/skills` scaffold comes from
+`inv ai.install-skills` installs every skill declared in `setup.toml` through the `skills` CLI: one
+real copy per skill in `~/.agents/skills/` and one link per skill in `~/.claude/skills/` (a junction
+on Windows), never overwriting existing content. A new Python project's own
+`AGENTS.md`/`CLAUDE.md`/`.agents/skills` scaffold comes from
 [`scaffoldapy`](https://github.com/TheodoreAD/scaffoldapy) at generation time, not from a task run
 afterwards. The convention these implement is in "Agent instructions & knowledge" below.
 
