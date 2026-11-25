@@ -85,6 +85,20 @@ about remote state, ask the host — `gh api repos/<owner>/<repo>/branches` or `
 `git fetch --prune`. A branch was once folded into a history rewrite to protect against an exposure
 that had not existed for weeks.
 
+### About to change code, or re-decide something, whose reason you don't know
+
+Read its history first. `git log` is safe in a working tree another session holds; a checkout is
+not.
+
+```shell
+git log -n 5 --format='%h %s%n%b' -- <path>
+git log --format='%h %s%n%(trailers:key=Rejected,valueonly)' --grep='^Rejected:' -- <path>
+```
+
+A `Rejected:` line naming what you were about to propose means it was tried. Read that commit's body
+before proposing it again, and if you still think it is right, say what has changed since. A
+`Not-verified:` line on the code you are touching is a risk you now inherit.
+
 ### About to commit
 
 Run the repo's quality gate first: `inv quality.precommit` where the repo-tasks tasks exist, else
@@ -103,6 +117,8 @@ git commit -m "subject line
 Body: what changed, by name; then what it is for, what it beat, what it cost.
 Real blank lines, inside this one argument.
 
+Rejected: an approach weighed and dropped (the reason)
+Verified: inv quality.precommit
 Co-Authored-By: ..." -- path/one path/two
 ```
 
@@ -152,6 +168,18 @@ as reasoning, which is worse than a bare subject. **One exception**, named so it
 as an inconsistency: a plan filed into the plans store commits as `<repo>: <what it is>` with no
 body, because a filed plan _is_ its own description. `gh pr create --body` and `gh issue comment`
 get the full rule, not the exception.
+
+**Then the trailers, which make the history searchable by the next agent.** Each is written only
+when its condition holds, one per line, in the final block together with `Co-Authored-By:` and no
+blank line inside it — git reads only that last unbroken block as trailers:
+
+- `Plan: plans/<file>.md` — the commit carries out a plan tracked in this repo. Never a store-held
+  plan.
+- `Rejected: <approach> (<reason>)` — an alternative was weighed and dropped. One line each.
+- `Verified: <command or probe>` — what was run that proves the change.
+- `Not-verified: <what> (<why>)` — a part that was not proven. The risk the next session inherits.
+
+The body still explains; a trailer is the line a query finds.
 
 **Stage each commit's paths immediately before that commit**, never ahead of time. `git commit`
 ships the whole index, so anything staged earlier rides along under the next message — a `git rm`

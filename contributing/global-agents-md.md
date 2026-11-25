@@ -2351,6 +2351,37 @@ routing keeps out of that repo, and every other machine-local path (a research c
 a transcript) resolves for nobody who reads the repo. The rule now draws the line at "tracked in
 this repo", with an investigation's local evidence as the stated exception, named as local.]
 
+### Trailers, added 2026-11-25
+
+Four optional trailers — `Plan:`, `Rejected:`, `Verified:`, `Not-verified:` — chosen by the user
+from the proposal in `plans/2026-11-25-commit-trailers-as-agent-memory.md`, which holds the research
+and what was not adopted. The bodies on this machine already carry the reasoning; what agents lacked
+was a way to find it without reading every body. Each trailer answers one query an agent actually
+runs, and the paired read rule, "About to change code, or re-decide something, whose reason you
+don't know", is what makes them pay off.
+
+Criterion 4 classifies the missing information as an **omission**, which takes a structural slot in
+what is already being produced: the trailer block is that slot. They extend this section rather than
+taking a heading because the trigger is still writing the commit message. The read rule takes its
+own heading because its trigger is different and fires while editing code, not while committing.
+
+`git interpret-trailers --parse` was checked on a draft message to read all four beside
+`Co-Authored-By:`, and the `%(trailers:key=…,valueonly)` query was checked on this repo's history.
+The one-block constraint is git's, not ours: a blank line inside the block, or a trailer above the
+body's last paragraph, and git reads none of them.
+
+## About to change code, or re-decide something, whose reason you don't know
+
+Admitted 2026-11-25 with the trailers above, chosen by the user. Trailers are written for this
+moment, and without a trigger to read them they are a record nobody consults: the same gap the
+structured-git-commits skills close with a prompt hook, which "Proposing an enforcement mechanism"
+refuses here. So the read side is a rule the agent runs.
+
+The failure it answers is re-deriving a settled decision, which
+`plans/2026-08-28-auto-mode-contradicts-bash-rules.md` records across several sessions. The commands
+are `git log` only, because a checkout moves a working tree a parallel session may be holding.
+Unmeasured so far: the plan's pilot week is the first count of whether sessions run the query.
+
 ## Invoking a venv tool in the session's own project
 
 Moved twice on 2026-08-30, and it is now labelled `[needs direnv]` in `bash.md` — first out of
