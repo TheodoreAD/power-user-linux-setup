@@ -29,8 +29,13 @@ design work builds on the wrong name.
 The user works only through prompts and never types shell commands themselves, so never close with
 "run `git push`" or "you can run X". It hands them a step they can't take. When the work is done and
 what happens next is their call — push now, pick the next plan, stop — put the concrete options in
-an `AskUserQuestion` and act on the answer. Push/commit still need their say-so, and asking via the
-tool is how they give it.
+an `AskUserQuestion` and act on the answer.
+
+**On the user's own repos, commit and push are not that question.** When a piece of work passes the
+gate, commit it and push it, then say what went out. A force push or a history rewrite still asks,
+and the rules in "Git & commits" still apply: the confidentiality scan before the commit, and asking
+before a push publishes another session's commit. Anywhere else — a work or shared repo — push and
+commit still need their say-so, asked through the tool.
 
 ### Caveman-style terse output
 
