@@ -68,6 +68,7 @@ def test_machine_administration_tasks_are_present():
         "deploy.all",
         "deploy.status",
         "ai.install-skills",
+        "ai.update-skills",
         "verify.all",
         "home.list-claims",
         "net.check",

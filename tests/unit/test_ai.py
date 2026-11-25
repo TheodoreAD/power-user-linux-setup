@@ -183,7 +183,9 @@ def test_install_skill_reaches_the_cli_through_nvm_when_it_is_not_on_path(monkey
 
     ai._install_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
 
-    assert c.commands == ["bash -c 'nvm && skills add owner/repo --global --yes --agent claude-code --skill '*''"]
+    assert c.commands == [
+        "bash -c 'nvm && skills add owner/repo --global --yes --agent universal --agent claude-code --skill '*''"
+    ]
 
 
 def test_install_skill_skips_when_the_cli_exists_nowhere(monkeypatch, capsys):
@@ -216,7 +218,7 @@ def test_install_skill_asks_before_running_skills_add(monkeypatch):
     ai._install_skill(c, entry, label="test", yes=False)
 
     assert "Does foo things." in asked["question"]
-    assert c.commands == ["skills add owner/repo --global --yes --agent claude-code --skill foo"]
+    assert c.commands == ["skills add owner/repo --global --yes --agent universal --agent claude-code --skill foo"]
 
 
 def test_install_skill_pins_the_cli_telemetry_off(monkeypatch):
@@ -253,7 +255,7 @@ def test_install_skill_yes_skips_prompt_and_runs(monkeypatch):
 
     ai._install_skill(c, entry, label="test", yes=True)
 
-    assert c.commands == ["skills add owner/repo --global --yes --agent claude-code --skill '*'"]
+    assert c.commands == ["skills add owner/repo --global --yes --agent universal --agent claude-code --skill '*'"]
 
 
 def test_install_skill_dry_run_never_prompts_or_runs(monkeypatch):
@@ -265,6 +267,63 @@ def test_install_skill_dry_run_never_prompts_or_runs(monkeypatch):
     ai._install_skill(c, entry, label="test", yes=False)
 
     assert c.commands == []
+
+
+def test_install_skill_names_universal_beside_claude_code_by_default(monkeypatch):
+    """Not decoration: with claude-code alone, CLI 1.9.0 copies into ~/.claude/skills and writes
+    nothing to ~/.agents/skills, which every other agent reads. Two target directories are what
+    make it keep the canonical copy and link Claude Code to it."""
+    c = _FakeContext()
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._install_skill(c, {"repo": "owner/repo"}, label="test", yes=True)
+
+    assert "--agent universal --agent claude-code" in c.commands[0]
+
+
+def test_install_skill_an_entrys_own_agents_replace_the_default(monkeypatch):
+    c = _FakeContext()
+    monkeypatch.setattr(ui, "ask", lambda *a, **k: True)
+
+    ai._install_skill(c, {"repo": "owner/repo", "agents": ["codex"]}, label="test", yes=True)
+
+    assert "--agent codex --skill" in c.commands[0]
+    assert "universal" not in c.commands[0]
+
+
+# ---------------------------------------------------------------------------
+# update_skills — the counterpart that `inv upgrade` runs
+# ---------------------------------------------------------------------------
+
+
+def test_update_skills_runs_a_global_update_with_telemetry_off():
+    c = _FakeContext()
+
+    ai.update_skills(c)
+
+    assert c.commands == ["skills update --global --yes"]
+    assert c.envs == [{"DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1"}]
+
+
+def test_update_skills_dry_run_runs_nothing(capsys):
+    c = _FakeContext()
+    util.DRY_RUN = True
+
+    ai.update_skills(c)
+
+    assert c.commands == []
+    assert "would run: skills update --global --yes" in capsys.readouterr().out
+
+
+def test_update_skills_skips_when_the_cli_exists_nowhere(monkeypatch, capsys):
+    c = _FakeContext()
+    monkeypatch.setattr(ai.util, "command_exists", lambda name: False)
+    monkeypatch.setattr(ai.node, "nvm_command", lambda command: None)
+
+    ai.update_skills(c)
+
+    assert c.commands == []
+    assert "skipped" in capsys.readouterr().out
 
 
 # ---------------------------------------------------------------------------

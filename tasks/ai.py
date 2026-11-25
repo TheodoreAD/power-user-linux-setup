@@ -144,6 +144,17 @@ def _remote_skill_prompt(label: str, entry_description: str | None) -> str:
 # feature being paid for with the same disclosure, which is a different trade from usage reporting.
 _SKILLS_ENV = {"DO_NOT_TRACK": "1", "DISABLE_TELEMETRY": "1"}
 
+# The agents a `skills` entry installs for when it names none. Both are needed, and the first is not
+# decoration: since CLI 1.9.0, `defaultInstallMode` symlinks from a canonical copy only when the
+# targets span more than one skills directory, and copies straight into the one directory otherwise.
+# Measured 2026-11-25 on a throwaway HOME: `--agent claude-code` alone wrote a plain copy into
+# ~/.claude/skills and nothing into ~/.agents/skills, which every other agent reads. With
+# `universal` beside it the CLI writes the real copy to ~/.agents/skills and one relative link per
+# skill into ~/.claude/skills, and touches no other agent's directory — the agents that read
+# ~/.agents/skills natively need nothing more. See
+# plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md.
+_DEFAULT_AGENTS = ("universal", "claude-code")
+
 
 def _skills_command(command: str) -> str | None:
     """`command` as something actually runnable here, or None if the `skills` CLI is nowhere.
@@ -183,7 +194,12 @@ def _install_skill(c: Context, entry: util.SkillEntry, *, label: str, yes: bool)
     Always global (this is unattended provisioning, not a project-local, interactive `skills
     add`) — `--yes` on the `skills` CLI invocation below skips *its own* per-file overwrite
     prompts, separate from the `yes` param here, which gates whether we ask before running it at
-    all. `names` omitted installs every skill in the source; `agents` defaults to just claude-code.
+    all. `names` omitted installs every skill in the source; `agents` defaults to
+    `_DEFAULT_AGENTS`, whose comment says why it is two names and not one.
+
+    This installs, and re-running it picks up a skill added upstream since; refreshing what is
+    already installed is `update_skills`, which follows each skill's recorded source rather than
+    re-adding it.
 
     **`source = "local"` used to be PULSE copying the directory itself**, with a `.pulse-source`
     marker, an up-to-date check and a deploy-registry entry. That was removed 2026-09-07: the CLI
@@ -198,7 +214,7 @@ def _install_skill(c: Context, entry: util.SkillEntry, *, label: str, yes: bool)
     """
     source = _skill_source(entry, label=label)
     names = entry.get("names")
-    agents = entry.get("agents", ["claude-code"])
+    agents = entry.get("agents", list(_DEFAULT_AGENTS))
     desc = _remote_skill_label(names, source)
 
     if util.DRY_RUN:
@@ -638,6 +654,11 @@ def _ensure_agents_skills(base: Path, *, label: str) -> None:
       needs no privilege, and falls back to copying.
 
     So the directory is created and the linking is left to the tool that owns it.
+
+    `~/.claude/skills` must also stay a real directory for a reason of Claude Code's own: it keeps
+    skills synced from a claude.ai account in `~/.claude/skills/synced/` and moves removed ones to
+    `~/.claude/skills/.trash/`. Linked to `~/.agents/skills`, both would land in the directory every
+    other agent reads.
     """
     agents_skills = base / ".agents" / "skills"
     if util.DRY_RUN:
@@ -700,6 +721,32 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
         _apply_declared_skill_listing_budget(yes=yes)
         _apply_declared_statusline(yes=yes)
         _note_copilot_permissions()
+
+
+@task(name="update-skills")
+def update_skills(c: Context):
+    """Update every globally installed skill to its source's latest, through `skills update`.
+
+    The counterpart to `install_skills`, the same way `node.update-globals` is to `node.install`:
+    installing reproduces what `setup.toml` declares, updating takes whatever upstream published
+    today, and the second is a choice rather than a side effect of the first. `inv upgrade` runs it.
+
+    The CLI reads `~/.agents/.skill-lock.json`, compares each skill against its source's current
+    tree and reinstalls only what moved, keeping each skill's agent links. So this needs no list of
+    its own: whatever `install_skills` installed, from any entry, is what gets updated. `--yes` only
+    skips the CLI's project-or-global scope question, which `--global` already answers.
+    """
+    if util.DRY_RUN:
+        print("[ai.update-skills] would run: skills update --global --yes")
+        return
+    command = _skills_command("skills update --global --yes")
+    if command is None:
+        ui.warn(
+            "[ai.update-skills] skipped — the `skills` CLI isn't available. It's a global npm "
+            "package (see [packages.node]); run `inv node.install` first."
+        )
+        return
+    c.run(command, env=_SKILLS_ENV)
 
 
 # `[Claude Code]` / `[needs <thing>]` on a `### ` heading in config/agents-md/*.md. Only the

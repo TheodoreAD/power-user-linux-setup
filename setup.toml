@@ -248,15 +248,18 @@
 #                     Installs via the `skills` CLI (global npm package, see [packages.node]),
 #                     e.g. `skills add <owner>/<repo> --global --skill <names...> --agent
 #                     <agents...> --yes`. `names` omitted installs every skill in the repo;
-#                     `agents` defaults to ["claude-code"]. `description` is optional and shown
+#                     `agents` defaults to ["universal", "claude-code"] — the canonical copy in
+#                     ~/.agents/skills plus Claude Code's per-skill links, see _DEFAULT_AGENTS in
+#                     tasks/ai.py for why both. `description` is optional and shown
 #                     alongside the repo/skill names when `inv ai.install-skills` asks before installing —
 #                     a remote skill has no local SKILL.md to read a description from the way a
 #                     `local` entry does, so there's nothing to show without it.
 #
 #                 `inv ai.install-skills` shows each skill's description (from its SKILL.md frontmatter
 #                 for a `local` entry, or this `description` field for an `npx` one) and asks
-#                 before installing/updating it — pass -y/--yes (same convention as the `skills`
-#                 CLI's own --yes) to skip the prompts. See ai.install-skills' docstring.
+#                 before installing it — pass -y/--yes (same convention as the `skills` CLI's own
+#                 --yes) to skip the prompts. See ai.install-skills' docstring. Updating what is
+#                 installed is `inv ai.update-skills`, which reads the CLI's lock file instead.
 
 [settings]
 # Default Python for all uv tool installs — uv downloads it if not already managed.
@@ -2319,21 +2322,19 @@ skill list without fetching it, so it hands the name to the `skills` CLI with th
 and the CLI validates it. Not a bare `skills add … --skill <name>`, which has no `--agent` and
 installs for every agent the CLI detects.
 
-`agents` names both agents actually installed here. The CLI treats github-copilot as universal at
-global scope and writes one real copy to ~/.agents/skills, which Claude Code reaches through the
-~/.claude/skills symlink that `inv ai.install-skills` maintains — measured 2026-08-27, the CLI
-announces that symlink and does not create it, so `_ensure_agents_skills` is load-bearing, not
-redundant.
+No `agents` here: the default in tasks/ai.py, `universal` plus `claude-code`, is the minimal
+install. It writes the one real copy to ~/.agents/skills, which every agent surveyed except Claude
+Code reads natively, and one relative link per skill into ~/.claude/skills for Claude Code, and
+touches no other agent's directory. Both names are needed: with claude-code alone the CLI (1.9.0)
+copies straight into ~/.claude/skills and leaves ~/.agents/skills empty. Naming more agents only
+adds redundant links — the CLI's registry still records vendor directories for agents that read
+~/.agents/skills themselves. Survey and sources:
+plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md and contributing/ai-tooling.md.
 
-The github-copilot element is a no-op, kept for accuracy rather than effect: verified 2026-09-04
-against GitHub's own docs source, Copilot accepts ~/.agents/skills as a personal-skills location
-itself, so it finds these whether or not it is named. Codex and Gemini CLI likewise, which is why
-neither is listed. Do not read the CLI's per-agent `globalSkillsDir` as "where that agent looks" —
-it named a deprecated or secondary path in all three cases checked; the reasoning and the sources
-are in contributing/ai-tooling.md.
+Updating what is installed is `inv ai.update-skills` (`skills update -g`), run by `inv upgrade`.
 """
 method = "skill"
 tags = ["dev"]
 skills = [
-  { source = "npx", repo = "TheodoreAD/agent-skills", agents = ["claude-code", "github-copilot"], description = "Every cross-project convention skill this machine uses: storage-tech defaults per use case, invoke task naming, MCP server shipping, authoring and redeploying a skill, plans/ lifecycle, the *-polite-mcp conventions, Python design defaults, the shared research library, the session Bash audit, and what to persist from a session and where." },
+  { source = "npx", repo = "TheodoreAD/agent-skills", description = "Every cross-project convention skill this machine uses: storage-tech defaults per use case, invoke task naming, MCP server shipping, authoring and redeploying a skill, plans/ lifecycle, the *-polite-mcp conventions, Python design defaults, the shared research library, the session Bash audit, and what to persist from a session and where." },
 ]
