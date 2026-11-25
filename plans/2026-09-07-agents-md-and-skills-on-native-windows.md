@@ -97,7 +97,16 @@ its content — and makes every skill edit a two-file change. The alternative is
 `skills-lock.json` too and have `dev-env.setup` run `skills add ./.agents/skills --skill '*'`
 instead of `install`, so `.agents/skills/` alone is the manifest. That loses `npx skills install` as
 the zero-knowledge restore, and a repo that later also pins an external project skill would want the
-lock committed after all. Recommend the committed lock; decide before implementing.]
+lock committed after all. Recommend the committed lock; decide before implementing.
+
+Asked 2026-11-25 whether a committed lock gets in the way of each developer trying other skills —
+_"trying out skills is important"_. It does not, given one rule: **trials go global**
+(`skills add <source> -g --agent universal claude-code`), into `~/.agents/skills`, touching no repo
+and seen by every agent in every project. A project-scope trial dirties the tree whether or not the
+lock is committed, because the CLI writes the skill itself into the committed `.agents/skills/`; a
+committed lock only adds `skills-lock.json` to what shows as modified. And nothing leaks between
+developers: `skills install` restores only the committed lock's entries. The user chose to leave
+this designed rather than implement it now.]
 
 [UNVERIFIED: whether Claude Code follows a junction for a skill entry — the same open item as the
 home-directory case below, and the first thing to check on the Windows machine once this lands.]
