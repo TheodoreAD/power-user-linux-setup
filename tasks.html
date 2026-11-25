@@ -2962,6 +2962,18 @@ and <code>PULSE_DRY_RUN=1</code> turns any task into a report of what it would d
 <td>Prove every package this run installed actually works, not just that it&rsquo;s present.</td>
 </tr>
 <tr>
+<td><code>inv wsl-distro.check</code></td>
+<td>Verify a distro without changing anything: login user, passwordless sudo, first-run, disk cap.</td>
+</tr>
+<tr>
+<td><code>inv wsl-distro.install</code></td>
+<td>Install a WSL distro with a passwordless-sudo user as its default login, or repair one.</td>
+</tr>
+<tr>
+<td><code>inv wsl-distro.remove</code></td>
+<td>Unregister a distro, deleting everything inside it.</td>
+</tr>
+<tr>
 <td><code>inv wsl.check</code></td>
 <td>Diagnose WSL-specific risks before running PULSE tasks: systemd, DNS, Docker, WSLg.</td>
 </tr>
