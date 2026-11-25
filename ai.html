@@ -1807,10 +1807,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#it-goes-wider-than-the-four-in-a-repo" class="md-nav__link">
+  <a href="#in-a-repo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        It goes wider than the four, in a repo
+        In a repo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keeping-skills-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keeping skills current
       </span>
     </span>
   </a>
@@ -2259,10 +2270,21 @@
       <ul class="md-nav__list">
         
           <li class="md-nav__item">
-  <a href="#it-goes-wider-than-the-four-in-a-repo" class="md-nav__link">
+  <a href="#in-a-repo" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
-        It goes wider than the four, in a repo
+        In a repo
+      </span>
+    </span>
+  </a>
+  
+</li>
+        
+          <li class="md-nav__item">
+  <a href="#keeping-skills-current" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Keeping skills current
       </span>
     </span>
   </a>
@@ -2401,10 +2423,10 @@ Copilot, Cursor, Windsurf and Tabby.</p>
 <li><strong><code>.agents/skills/</code></strong> — the cross-tool location for Agent Skills. PULSE installs every skill it
   declares into <code>~/.agents/skills/</code>, once.</li>
 </ul>
-<p>Both halves live under <code>~/.agents/</code>, which is nobody&rsquo;s vendor directory — Goose, Warp, Cline and
-Kimi Code each read <code>~/.agents/AGENTS.md</code> on their own, and <code>~/.agents/AGENTS.md</code> is kept as a link
-to it so anything pointing at the older location still works.</p>
-<p>Each agent then reads that same content from wherever it happens to look:</p>
+<p>Both halves live under <code>~/.agents/</code>, which is nobody&rsquo;s vendor directory. Every other path below is a
+shim for an agent that does not read the cross-tool one, and a shim is written only for an agent
+that is installed — the absence of <code>~/.codex/</code> is how PULSE knows Codex is not, so nothing is
+created for it.</p>
 <table>
 <thead>
 <tr>
@@ -2416,22 +2438,22 @@ to it so anything pointing at the older location still works.</p>
 <tbody>
 <tr>
 <td>Claude Code</td>
-<td><code>~/.claude/CLAUDE.md</code> → <code>~/.agents/AGENTS.md</code></td>
-<td><code>~/.claude/skills</code> → <code>~/.agents/skills</code></td>
+<td><code>~/.claude/CLAUDE.md</code>, a copy</td>
+<td><code>~/.claude/skills/&lt;name&gt;</code>, a link per skill</td>
 </tr>
 <tr>
 <td>Codex</td>
-<td><code>~/.codex/AGENTS.md</code> → <code>~/.agents/AGENTS.md</code></td>
+<td><code>~/.codex/AGENTS.md</code>, a copy</td>
 <td><code>~/.agents/skills</code>, natively</td>
 </tr>
 <tr>
 <td>GitHub Copilot</td>
-<td><code>~/.copilot/copilot-instructions.md</code> → <code>~/.agents/AGENTS.md</code></td>
+<td><code>~/.copilot/copilot-instructions.md</code>, a copy</td>
 <td><code>~/.agents/skills</code>, natively</td>
 </tr>
 <tr>
 <td>Gemini CLI</td>
-<td><code>~/.gemini/GEMINI.md</code> → <code>~/.agents/AGENTS.md</code></td>
+<td><code>~/.gemini/GEMINI.md</code>, a copy</td>
 <td><code>~/.agents/skills</code>, natively</td>
 </tr>
 <tr>
@@ -2439,32 +2461,43 @@ to it so anything pointing at the older location still works.</p>
 <td><code>~/.agents/AGENTS.md</code>, natively</td>
 <td><code>~/.agents/skills</code>, natively</td>
 </tr>
+<tr>
+<td>opencode, Zed, Crush, Amp</td>
+<td>a vendor path PULSE does not write yet, see the plan</td>
+<td><code>~/.agents/skills</code>, natively</td>
+</tr>
 </tbody>
 </table>
-<p>Every arrow is a symlink, so there is exactly one file to edit and no copies to keep in sync. The
-bottom row needs no arrow at all in either column: those four agents already read both cross-tool
-paths. Of the top four, only Claude Code needs a link for the skills — Codex and Gemini CLI read
-<code>~/.agents/skills</code> alongside a vendor directory of their own, and Copilot accepts it as one of two
-places. So <strong>every agent PULSE hands the instructions to also picks up the skills</strong>, and the one
-that does not read the cross-tool location for either is the one PULSE installs.</p>
-<p><strong>A vendor link is only created when that agent&rsquo;s own directory already exists</strong> — the absence of
-<code>~/.codex/</code> is how PULSE knows Codex is not installed here, so nothing is created for it. Install an
-agent later and <code>inv deploy.all --name agents-md</code> links it in; <code>inv verify.all</code> then checks each
-link resolves to the file this repo deploys, rather than to some stale hand-made copy.</p>
-<p><code>~/.agents/AGENTS.md</code> is the exception, declared as <code>always</code> in <code>setup.toml</code>: it is not a vendor
-path, its parent is your home directory, and it is created unconditionally so that anything still
-pointing at the old location keeps working.</p>
-<h3 id="it-goes-wider-than-the-four-in-a-repo">It goes wider than the four, in a repo</h3>
-<p><code>.agents/skills</code> is not a PULSE invention. The <a href="https://github.com/vercel-labs/skills"><code>skills</code></a>
-CLI, which is what installs these, carries a registry of 71 agents, and <strong>19 of them read
-<code>.agents/skills</code> in a repository</strong> with no configuration — amp, Cline, Codex, Cursor, Gemini CLI,
-GitHub Copilot, opencode, Warp, Zed and ten more. Claude Code is not one of them, which is why the
-<code>~/.claude/skills</code> symlink exists.</p>
-<p>That is a claim about a <strong>project</strong> directory you commit alongside the code, not about <code>~</code>. The
-agents in the table above are the ones confirmed to read the home-directory copies PULSE writes; for
-the rest, check the vendor&rsquo;s own docs before assuming, because the registry&rsquo;s own record of where
-each agent looks in <code>~</code> is stale in every case we have checked — details in
-<code>contributing/ai-tooling.md</code>.</p>
+<p><strong>The instruction shims are copies, not symlinks.</strong> Claude Code skips a symlinked
+<code>~/.claude/CLAUDE.md</code> in some sessions, opencode reads that same file as its fallback, and Windows
+cannot make a file link without privileges — a copy behaves the same everywhere. <code>inv verify.all</code>
+checks each copy&rsquo;s content against the real file, and <code>inv deploy.all --name agents-md</code> rewrites
+them; install an agent later and the same command adds its copy.</p>
+<p><strong>The skills are one real copy plus Claude Code&rsquo;s links.</strong> The
+<a href="https://github.com/vercel-labs/skills"><code>skills</code></a> CLI installs with
+<code>--agent universal --agent claude-code</code>, which writes each skill once to <code>~/.agents/skills/</code> and
+links <code>~/.claude/skills/&lt;name&gt;</code> to it, and touches no other agent&rsquo;s directory. Every agent in the
+table except Claude Code reads <code>~/.agents/skills</code> itself. <code>~/.claude/skills</code> stays a real directory
+because Claude Code keeps skills synced from a claude.ai account there.</p>
+<h3 id="in-a-repo">In a repo</h3>
+<p>The same two paths, and only one shim:</p>
+<ul>
+<li><strong><code>AGENTS.md</code> at the root, and no <code>CLAUDE.md</code>.</strong> Claude Code reads <code>AGENTS.md</code> itself since
+  2.1.277, but only while no <code>CLAUDE.md</code> exists in the directory or above it. Codex, Copilot,
+  opencode, Cursor, Zed and the rest read it natively; Gemini CLI does once <code>context.fileName</code> lists
+  it.</li>
+<li><strong><code>.agents/skills/</code></strong> for the repo&rsquo;s own skills, which every agent surveyed reads natively except
+  Claude Code. A repo with skills adds <code>.claude/skills</code> as a relative symlink to
+  <code>../.agents/skills</code>.</li>
+</ul>
+<p>The survey behind both tables — fourteen agents, each checked against its source or its vendor&rsquo;s
+docs — is <code>plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md</code>, with the per-vendor
+install notes in <code>contributing/ai-tooling.md</code>.</p>
+<h3 id="keeping-skills-current">Keeping skills current</h3>
+<p><code>inv ai.install-skills</code> installs; <code>inv ai.update-skills</code> updates what is installed, from each
+skill&rsquo;s recorded source. <code>inv upgrade</code> runs the CLI&rsquo;s own upgrade and then the skills update, and
+<code>inv self.update</code> offers it. None of it is part of <code>inv setup</code>, which reproduces the machine rather
+than taking whatever upstream released today.</p>
 <div class="admonition note">
 <p class="admonition-title">Note</p>
 <p>Reading the file is not the same as PULSE installing or configuring the agent. Only Claude Code
@@ -2473,8 +2506,8 @@ and the skills if they are present, which is the cheap and useful part.</p>
 </div>
 <h2 id="see-also">See also</h2>
 <ul>
-<li><a href="claude-code.html">Claude Code</a> — the statusline, the <code>AGENTS.md</code>-over-<code>CLAUDE.md</code> convention,
-  skills scaffolding for a project, and the permission settings</li>
+<li><a href="claude-code.html">Claude Code</a> — the statusline, the instructions file, skills, and the permission
+  settings</li>
 <li><a href="cli-allowlist.html">CLI allowlist</a> — generating agent permission rules from the real <code>--help</code>
   output of every CLI installed here, so read-only commands stop prompting</li>
 <li><a href="packages.html">Package catalog</a> — everything else this repo installs</li>

@@ -2717,11 +2717,10 @@ picks it up automatically without needing to rediscover it.</p>
 is no admin-less way to link a <em>file</em> at all — so a plain copy is the one wiring every agent, every
 platform and every checkout treats identically. The cost is drift, which <code>inv verify.all</code> checks by
 comparing content rather than by looking for a link, and <code>inv deploy.all</code> repairs.</p>
-<p><strong>The real file moved there on 2026-09-04</strong>; it used to be <code>~/AGENTS.md</code>, which is now a copy of it.
-The reason is that <code>~/.agents/AGENTS.md</code> is a path several agents read on their own — Goose, Warp,
-Cline and Kimi Code, each verified against its own source or documentation — while nothing verified
-reads a bare <code>~/.agents/AGENTS.md</code>; that path worked only because every symlink pointed at it. See
-<code>docs/ai.md</code> and <code>contributing/ai-tooling.md</code>. Either path still works for reading or editing.</p>
+<p><strong>The real file moved there on 2026-09-04</strong>, from <code>~/AGENTS.md</code>, which no agent ever read and which
+was retired on 2026-09-09. <code>~/.agents/AGENTS.md</code> is a path several agents read on their own — Goose,
+Warp, Cline and Kimi Code, each verified against its own source or documentation. Claude Code is not
+one of them: it reads nothing under <code>~/.agents/</code>, which is why it gets a copy. See <code>docs/ai.md</code>.</p>
 <p><strong>The file is assembled, not copied.</strong> <code>[packages.agents-md]</code> sets <code>assembled_from = "agents_md"</code>,
 and every package declaring an <code>agents_md</code> fragment contributes whole <code>##</code> sections to the result,
 ordered by a sparse <code>order</code> — the same any-section pattern as <code>zshrc</code>/<code>zshenv</code>, for a file where
@@ -2738,22 +2737,15 @@ markers in it are provenance, not an ownership boundary: nothing outside a block
 Both <code>deploy.all</code> and the install-time writer in <code>inv tools.install</code> go through the same deploy
 writer, so an edit made to the deployed file directly is shown as a diff and asked about (default:
 keep it) rather than silently overwritten — but it still only lives on this machine until it&rsquo;s
-ported into a fragment. <code>~/.claude/CLAUDE.md</code> itself is never touched once it&rsquo;s a correct symlink;
-if something other than that symlink already lives there, <code>inv tools.install</code> warns and leaves it
-alone rather than overwriting it.</p>
+ported into a fragment. The copies in each agent&rsquo;s own path are rewritten by the same command.</p>
 <p>Several conventions live there too, deliberately global rather than repeated per-repo — see
 <code>config/agents-md/agent-knowledge.md</code> for the exact wording:</p>
 <ul>
-<li><strong><code>CLAUDE.md</code> is only ever a symlink.</strong> Any repo that wants agent instructions should have a real
-  <code>AGENTS.md</code> (the cross-tool standard 30+ agent CLIs read) and, if <code>CLAUDE.md</code> exists at all, it&rsquo;s
-  a plain symlink to <code>AGENTS.md</code> — not a file containing Claude Code&rsquo;s <code>@AGENTS.md</code> import
-  directive. The import syntax is Claude-Code-specific; a symlink presents byte-identical content to
-  every harness that reads a literal <code>CLAUDE.md</code>, no special-case parsing needed. Trade-off: nothing
-  can be appended below a symlink&rsquo;s target, so a genuinely Claude-specific addendum belongs in
-  <code>AGENTS.md</code> itself instead. Both this repo&rsquo;s own root (<code>AGENTS.md</code> real,
-  <code>CLAUDE.md -&gt;
-  AGENTS.md</code>) and <code>~</code> itself (<code>~/.agents/AGENTS.md</code> real,
-  <code>~/.claude/CLAUDE.md -&gt; ~/.agents/AGENTS.md</code>) follow it.</li>
+<li><strong>A repo has <code>AGENTS.md</code> and no <code>CLAUDE.md</code>.</strong> Claude Code reads a repo&rsquo;s <code>AGENTS.md</code> itself since
+  2.1.277, but only while no <code>CLAUDE.md</code>, <code>.claude/CLAUDE.md</code> or <code>CLAUDE.local.md</code> exists in the
+  working directory or above it — so a <code>CLAUDE.md</code>, even a symlink to <code>AGENTS.md</code>, is what switches
+  that off. The home directory is the exception: Claude Code reads nothing under <code>~/.agents/</code>, so
+  <code>~/.claude/CLAUDE.md</code> is a copy of <code>~/.agents/AGENTS.md</code>.</li>
 <li><strong>Cross-session memory policy.</strong> Durable, repo-specific knowledge belongs in that repo&rsquo;s
   <code>AGENTS.md</code>, not Claude Code&rsquo;s auto-memory system (<code>~/.claude/projects/.../memory/</code>) — memory is
   invisible to every other contributor, every other agent tool, and every code review; <code>AGENTS.md</code>
@@ -2778,19 +2770,22 @@ specifically — governs how long session transcripts/tasks/shell-snapshots/back
 to <code>365</code> here (default is <code>30</code>) as a deliberate preference, reviewed and confirmed while building
 the allowlist pipeline, not something PULSE enforces or will change on your behalf.</p>
 <h2 id="agentsskills-inv-aiinstall-skills"><code>.agents/skills/</code> — <code>inv ai.install-skills</code></h2>
-<p><code>.agents/skills/</code> is the emerging cross-tool convention for Agent Skills, but Claude Code itself
-currently only discovers skills from <code>~/.claude/skills/</code> and <code>&lt;project&gt;/.claude/skills/</code> — not
-<code>.agents/skills/</code> directly. To get both the cross-tool convention <em>and</em> a working Claude Code setup,
-PULSE symlinks <code>.claude/skills</code> to <code>.agents/skills</code>:</p>
+<p><code>.agents/skills/</code> is the cross-tool location for Agent Skills, read natively by every agent PULSE&rsquo;s
+survey checked except Claude Code, which discovers skills only from <code>~/.claude/skills/</code> and
+<code>&lt;project&gt;/.claude/skills/</code>. So the skills are installed once and Claude Code is linked to them:</p>
 <ul>
-<li><code>inv ai.install-skills [--dir PATH]</code> — ensures <code>.agents/skills/</code> exists and <code>.claude/skills</code> is
-  symlinked to it, then installs every skill declared via a <code>skills</code> field anywhere in <code>setup.toml</code>
-  (see below). Defaults to <code>~</code> (the personal, cross-project skills location); part of the standard
-  <code>inv setup</code>/<code>inv wsl.install</code> chain.</li>
+<li><code>inv ai.install-skills [--dir PATH]</code> — ensures <code>.agents/skills/</code> exists, then installs every skill
+  declared via a <code>skills</code> field anywhere in <code>setup.toml</code> (see below) through the <code>skills</code> CLI with
+  <code>--agent universal --agent claude-code</code>: one real copy per skill in <code>~/.agents/skills/</code> and one
+  relative link per skill in <code>~/.claude/skills/</code>, nothing in any other agent&rsquo;s directory. Defaults
+  to <code>~</code>; part of the standard <code>inv setup</code>/<code>inv wsl.install</code> chain.</li>
+<li><code>inv ai.update-skills</code> — <code>skills update --global</code>, which refreshes every installed skill from the
+  source its lock entry records. <code>inv upgrade</code> runs it after upgrading the CLI itself.</li>
 </ul>
-<p>Checks for existing files/symlinks first and skips rather than overwrites — safe to re-run, and safe
-to point at a project that already has hand-written skills content. A new Python project&rsquo;s own
-<code>AGENTS.md</code>/<code>CLAUDE.md</code>/<code>.agents/skills</code>/<code>.claude/skills</code> scaffold isn&rsquo;t this task&rsquo;s job —
+<p><code>~/.claude/skills/</code> stays a real directory with one link per skill, never a link to the whole of
+<code>~/.agents/skills/</code>: Claude Code keeps skills synced from a claude.ai account in its <code>synced/</code>
+folder, and those must not land where every other agent reads. A new Python project&rsquo;s own
+<code>AGENTS.md</code>/<code>.agents/skills</code> scaffold isn&rsquo;t this task&rsquo;s job —
 <a href="https://github.com/TheodoreAD/scaffoldapy"><code>scaffoldapy</code></a> stamps that at generation time instead.</p>
 <h2 id="declaring-skills-to-install-the-skills-field">Declaring skills to install — the <code>skills</code> field</h2>
 <p>Any <code>setup.toml</code> package entry can carry a <code>skills</code> list, checked by <code>inv ai.install-skills</code>
