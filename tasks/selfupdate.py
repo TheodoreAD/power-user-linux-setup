@@ -28,7 +28,7 @@ from invoke import Context, task
 # `Collection.from_module` cannot tell an imported Task from a defined one — so it would publish a
 # second `self.setup` alongside the real top-level `inv setup`. That trap has produced four
 # undeclared tasks in this repo family already.
-from . import setup, ui, util
+from . import setup, ui, upgrade, util
 
 _REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -91,8 +91,34 @@ def _apply_or_explain(c: Context, setup_after: str) -> None:
         print("[self.update] stopped. Run 'inv setup' when you want to apply it.")
 
 
+def _offer_upgrade(c: Context, upgrade_after: str) -> None:
+    """Offer `inv upgrade` once the checkout question is settled, whether or not anything was pulled.
+
+    Separate from `_apply_or_explain` because it answers a different question: setup applies what
+    the checkout declares, and an upgrade moves the agent tooling to what upstream released, which
+    changes even when the checkout did not. So it is offered after "already up to date" too.
+    """
+    if upgrade_after == "no":
+        return
+    if upgrade_after == "yes" or util.ASSUME_YES:
+        upgrade.upgrade(c)
+        return
+    if not util.interactive():
+        print("[self.update] to also move the agent tooling to upstream's latest, run 'inv upgrade'.")
+        return
+    ui.block(
+        "'inv upgrade' moves the `skills` CLI and every installed skill to what upstream publishes",
+        "today. It needs no sudo, and nothing in it is part of 'inv setup'.",
+        label="upgrade",
+    )
+    if ui.ask("Run it now?", default=True):
+        upgrade.upgrade(c)
+    else:
+        print("[self.update] skipped the upgrade. Run 'inv upgrade' when you want it.")
+
+
 @task
-def update(c: Context, setup_after: str = "ask"):
+def update(c: Context, setup_after: str = "ask", upgrade_after: str = "ask"):
     """Pull the power-user-linux-setup checkout this command reads, and report what moved.
 
     `spowse` resolves that checkout on every run rather than carrying a copy, so this is how a
@@ -109,9 +135,12 @@ def update(c: Context, setup_after: str = "ask"):
         setup_after: "ask" (default) — offer to run `inv setup` once the pull brought something
           new, declining by default anywhere that cannot prompt (piped, scripted, CI, dry run).
           "yes" runs it without asking; "no" pulls and stops.
+        upgrade_after: the same three answers for `inv upgrade`, offered last, after a pull or an
+          "already up to date" alike — see _offer_upgrade.
     """
-    if setup_after not in ("ask", "yes", "no"):
-        raise SystemExit(f"[self.update] --setup-after must be ask, yes or no (got {setup_after!r})")
+    for flag, value in (("setup-after", setup_after), ("upgrade-after", upgrade_after)):
+        if value not in ("ask", "yes", "no"):
+            raise SystemExit(f"[self.update] --{flag} must be ask, yes or no (got {value!r})")
 
     if not (_REPO_ROOT / ".git").is_dir():
         raise SystemExit(
@@ -150,6 +179,7 @@ def update(c: Context, setup_after: str = "ask"):
     after = _git(c, "rev-parse HEAD")
     if after == before:
         print(f"[self.update] already up to date ({before[:12]})")
+        _offer_upgrade(c, upgrade_after)
         return
 
     changed = [line for line in _git(c, f"diff --name-only {before} {after}").splitlines() if line]
@@ -164,3 +194,4 @@ def update(c: Context, setup_after: str = "ask"):
         )
 
     _apply_or_explain(c, setup_after)
+    _offer_upgrade(c, upgrade_after)

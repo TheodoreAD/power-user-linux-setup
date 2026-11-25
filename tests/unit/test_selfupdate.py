@@ -66,10 +66,13 @@ def _live_and_unattended(monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(util, "ASSUME_YES", False)
     # Nothing here may reach the real `inv setup`; each test that cares asserts on this list.
     monkeypatch.setattr(selfupdate.setup, "setup", lambda _c: _ran_setup.append(True))
+    monkeypatch.setattr(selfupdate.upgrade, "upgrade", lambda _c: _ran_upgrade.append(True))
     _ran_setup.clear()
+    _ran_upgrade.clear()
 
 
 _ran_setup: list[bool] = []
+_ran_upgrade: list[bool] = []
 
 
 def _consumer_clone(before: str = "a" * 40, after: str = "b" * 40, changed: str = "") -> _FakeContext:
@@ -206,3 +209,54 @@ def test_an_unknown_setup_after_is_refused_rather_than_treated_as_no(checkout: P
     with pytest.raises(SystemExit):
         selfupdate.update(context, setup_after="maybe")
     assert context.commands == []
+
+
+def test_an_unknown_upgrade_after_is_refused_before_anything_runs(checkout: Path):
+    context = _FakeContext()
+    with pytest.raises(SystemExit) as excinfo:
+        selfupdate.update(context, upgrade_after="maybe")
+    assert "--upgrade-after" in str(excinfo.value)
+    assert context.commands == []
+
+
+def test_the_upgrade_is_offered_even_when_nothing_was_pulled(checkout: Path, monkeypatch: pytest.MonkeyPatch):
+    """The agent tooling moves upstream whether or not the checkout did, so "already up to date"
+    is no reason to skip the offer."""
+    monkeypatch.setattr(util, "interactive", lambda: True)
+    monkeypatch.setattr(ui, "ask", lambda *_args, **_kwargs: True)
+    selfupdate.update(_consumer_clone(before="a" * 40, after="a" * 40))
+    assert _ran_upgrade == [True]
+    assert _ran_setup == []
+
+
+def test_the_upgrade_follows_setup_after_a_pull(checkout: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(util, "interactive", lambda: True)
+    monkeypatch.setattr(ui, "ask", lambda *_args, **_kwargs: True)
+    selfupdate.update(_consumer_clone())
+    assert (_ran_setup, _ran_upgrade) == ([True], [True])
+
+
+def test_a_declined_upgrade_runs_nothing(checkout: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(util, "interactive", lambda: True)
+    monkeypatch.setattr(ui, "ask", lambda *_args, **_kwargs: False)
+    selfupdate.update(_consumer_clone(before="a" * 40, after="a" * 40))
+    assert _ran_upgrade == []
+
+
+def test_upgrade_after_yes_runs_without_asking(checkout: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(ui, "ask", lambda *_args, **_kwargs: pytest.fail("should not have asked"))
+    selfupdate.update(_consumer_clone(), setup_after="no", upgrade_after="yes")
+    assert _ran_upgrade == [True]
+
+
+def test_upgrade_after_no_never_upgrades(checkout: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setattr(util, "interactive", lambda: True)
+    monkeypatch.setattr(ui, "ask", lambda *_args, **_kwargs: True)
+    selfupdate.update(_consumer_clone(), upgrade_after="no")
+    assert _ran_upgrade == []
+
+
+def test_nobody_to_ask_means_no_upgrade_but_the_command_is_named(checkout: Path, capsys):
+    selfupdate.update(_consumer_clone())
+    assert _ran_upgrade == []
+    assert "inv upgrade" in capsys.readouterr().out

@@ -36,6 +36,7 @@ from . import (
     ssh,
     system,
     tools,
+    upgrade,
     verify,
     wsl,
     zsh,
@@ -94,6 +95,7 @@ def _configure_report_mode(ns: Collection, simulate_missing: bool = False) -> bo
 
 namespace = Collection(
     setup.setup,
+    upgrade.upgrade,
     Collection.from_module(ai),
     Collection.from_module(allowlist),
     Collection.from_module(apt),
