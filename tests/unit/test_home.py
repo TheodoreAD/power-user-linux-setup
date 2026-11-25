@@ -14,9 +14,11 @@ import pytest
 from invoke import MockContext
 
 from tasks import deploy, home, util
+from tests.platforms import with_platforms
 
 
 def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
+    packages = with_platforms(packages)
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
     monkeypatch.setattr(util, "enabled_packages", lambda: packages)
     monkeypatch.setattr(

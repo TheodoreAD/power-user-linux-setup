@@ -7,7 +7,7 @@ content comparison is the entire point of the check. See tests/README.md.
 import pytest
 
 from tasks import deploy, util, verify
-from tests.platforms import needs_symlinks
+from tests.platforms import needs_symlinks, with_platforms
 
 
 @pytest.fixture(autouse=True)
@@ -98,6 +98,7 @@ def test_deploy_check_failure_message_points_at_deploy_status(tmp_path):
 
 
 def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
+    packages = with_platforms(packages)
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
     monkeypatch.setattr(util, "enabled_packages", lambda: packages)
     monkeypatch.setattr(

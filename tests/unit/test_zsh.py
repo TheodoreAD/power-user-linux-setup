@@ -18,6 +18,7 @@ import pytest
 from invoke import MockContext, Result
 
 from tasks import util, zsh
+from tests.platforms import with_platforms
 
 _GUI: util.PackageConfig = {"tags": ["gui"], "zshenv": "export ASKPASS=/usr/bin/zenity-thing"}
 _HEADLESS: util.PackageConfig = {"zshenv": "export EDITOR=vim"}
@@ -33,6 +34,7 @@ def _home(tmp_path, monkeypatch):
 
 
 def _config(monkeypatch, packages: dict[str, util.PackageConfig], *, exclude: Collection[str] = ()) -> None:
+    packages = with_platforms(packages)
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
     monkeypatch.setattr(util, "_excluded_tags", lambda: set(exclude))
 

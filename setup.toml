@@ -197,6 +197,16 @@
 #   (default ~/.local/share/nvm).
 #
 # any section (any method):
+#   platforms     REQUIRED. The operating systems this section applies to: "linux" (which covers
+#                 WSL and dev containers), "windows" (native Windows), or both. A section that does
+#                 not list this machine's platform is invisible to every task that goes through
+#                 util.enabled_packages()/packages_by_method(), before `enabled`, overrides.toml and
+#                 PULSE_EXCLUDE_TAGS are even consulted: no override can install an apt package on
+#                 Windows. Required, not defaulted (user decision 2026-11-25): a missing value fails
+#                 with the section's name instead of silently choosing where a package runs. Only
+#                 agents-md and agent-skills list "windows" today; see
+#                 plans/2026-09-07-agents-md-and-skills-on-native-windows.md for the Windows slice.
+#
 #   verify_cmd    shell command `inv verify.all` runs to prove this package actually works, not
 #                 just that it's installed (default: `<check_cmd or section-name> --version`).
 #                 Override when the default guess is wrong — a multi-binary bundle with no single
@@ -211,7 +221,9 @@
 #                 gnome-extension defaults to a `gnome-extensions list` membership check — none of
 #                 those four need verify_cmd/verify=false unless the default doesn't apply.
 #
-#   agents_md     list of `{ src, order }` fragments composed into the assembled ~/AGENTS.md (the
+#   agents_md     list of `{ src, order, platforms }` fragments composed into the assembled
+#                 ~/AGENTS.md; `platforms` is required here too, per fragment, and a fragment whose
+#                 platforms leave out this machine is not assembled at all (the
 #                 destination is declared once, by whichever section sets `assembled_from` — see
 #                 wrapper-script above). Any section may contribute one, the same way zshrc/zshenv
 #                 work. `src` is a repo-relative Markdown file holding whole `##` sections, never a
@@ -418,24 +430,28 @@ legacy = ["Ubuntu Mono*Nerd Font Complete.ttf"]
 [packages.software-properties-common]
 description = "Provides add-apt-repository — prerequisite for all apt-repo setup tasks in this config"
 method = "apt"
+platforms = ["linux"]
 tags = ["apt", "setup"]
 verify_cmd = "add-apt-repository --help" # no --version support (exit 2, "unrecognized arguments")
 
 [packages.unzip]
 description = "Prerequisite for dprint's install.sh (unzips its release archive) and deb-github assets that ship as a .zip wrapping a .deb (e.g. flameshot)"
 method = "apt"
+platforms = ["linux"]
 tags = ["apt", "setup"]
 verify_cmd = "unzip -v" # no --version support
 
 [packages.fontconfig]
 description = "Provides fc-cache — fonts.install rebuilds the font cache with it after installing any new font files"
 method = "apt"
+platforms = ["linux"]
 tags = ["apt", "setup"]
 verify_cmd = "fc-list --version" # package provides fc-* tools, not a "fontconfig" binary
 
 [packages.zenity]
 description = "Runtime dependency of the askpass-zenity wrapper script (GUI password/passphrase dialog for sudo -A / SSH_ASKPASS)"
 method = "apt"
+platforms = ["linux"]
 # `gui` as well as shell/system: this is a GTK dialog, and installing its whole dependency tree
 # into a headless WSL distro or a dev container buys a window that can never be shown. The helper
 # itself stays installed there and falls back to reading /dev/tty with echo off — see
@@ -445,6 +461,7 @@ tags = ["gui", "shell", "system"]
 [packages.dbus-user-session]
 description = "Per-user D-Bus session bus (systemd user unit) — one bus at /run/user/<uid>/bus shared by every session in the distro, so a secret store unlocked once is visible to an IDE-started server too"
 method = "apt"
+platforms = ["linux"]
 # Not gui/desktop-tagged, and that is the point: a session bus is not a display. A WSL2 distro with
 # WSLg has a display and still autolaunches a private bus per process without this, which is how a
 # keyring unlocked in a terminal ends up invisible to everything else. Present already on any
@@ -456,6 +473,7 @@ verify_cmd = "dbus-run-session --version"
 [packages.gnome-keyring]
 description = "Secret Service provider — the store inv proxy.install writes the proxy credential into, and docker's credential helper reads registry passwords from"
 method = "apt"
+platforms = ["linux"]
 tags = ["system", "shell"]
 check_cmd = "gnome-keyring-daemon"
 # --version exits cleanly; the daemon only starts when asked to with --start/--daemonize, so this
@@ -465,18 +483,21 @@ verify_cmd = "gnome-keyring-daemon --version"
 [packages.lm-sensors]
 description = "Read hardware temperature, voltage, and fan speeds via lm-sensors and sensors command"
 method = "apt"
+platforms = ["linux"]
 tags = ["hardware", "monitor", "workstation"]
 verify_cmd = "sensors --version" # package provides the "sensors" binary, not "lm-sensors"
 
 [packages.v4l-utils]
 description = "V4L2 webcam tools — v4l2-ctl lists and sets camera controls, including UVC pan/tilt/zoom from a script"
 method = "apt"
+platforms = ["linux"]
 tags = ["hardware", "camera", "workstation"]
 verify_cmd = "v4l2-ctl --version" # package provides v4l2-ctl, not a "v4l-utils" binary
 
 [packages.cameractrls-deps]
 description = "Runtime dependencies of cameractrls — GTK4 bindings for the GUI, SDL2 + turbojpeg for its live preview window"
 method = "apt"
+platforms = ["linux"]
 tags = ["hardware", "camera", "gui", "workstation"]
 packages = ["python3-gi", "gir1.2-gtk-4.0", "libsdl2-2.0-0", "libturbojpeg"]
 verify = false # shared libraries and bindings only, no binary of their own to invoke
@@ -491,6 +512,7 @@ no releases and is in no Ubuntu archive (Flathub/snap only), so this clones main
 has no update logic: refresh with `git -C ~/.local/share/cameractrls pull`.
 """
 method = "git-clone"
+platforms = ["linux"]
 tags = ["hardware", "camera", "gui", "workstation"]
 repo = "https://github.com/soyersoyer/cameractrls.git"
 dest = "~/.local/share/cameractrls"
@@ -499,6 +521,7 @@ depth = 1
 [packages.cameractrls-launcher]
 description = "`cameractrls` command and app-grid launcher for [packages.cameractrls]'s GTK4 GUI"
 method = "wrapper-script"
+platforms = ["linux"]
 tags = ["hardware", "camera", "gui", "workstation"]
 dest = "~/.local/bin/cameractrls"
 content_file = "config/cameractrls.sh"
@@ -507,11 +530,13 @@ config_files = [{ src = "config/cameractrls.desktop", dst = "~/.local/share/appl
 [packages.patchelf]
 description = "Modify ELF binaries — required by Nuitka to patch compiled executables"
 method = "apt"
+platforms = ["linux"]
 tags = ["build", "dev"]
 
 [packages.build-tools]
 description = "C/C++ build toolchain and POSIX developer man pages"
 method = "apt"
+platforms = ["linux"]
 tags = ["build", "dev"]
 packages = [
   "make",
@@ -528,21 +553,25 @@ verify_cmd = "make --version" # multi-package bundle, no single "build-tools" co
 [packages.git]
 description = "Distributed version control system"
 method = "apt"
+platforms = ["linux"]
 tags = ["dev", "vcs"]
 
 [packages.vim]
 description = "Full Vim editor (vim-tiny is the 24.04 default; this installs the complete version)"
 method = "apt"
+platforms = ["linux"]
 tags = ["editor", "cli"]
 
 [packages.curl]
 description = "Command-line tool for transferring data with URLs — HTTP, FTP, and more. wget is also available without installing (ubuntu-standard default) for simple downloads."
 method = "apt"
+platforms = ["linux"]
 tags = ["network", "cli"]
 
 [packages.ssh]
 description = "SSH client, GPG, and keychain agent manager — keys and secure connections"
 method = "apt"
+platforms = ["linux"]
 tags = ["security", "dev"]
 packages = ["openssh-client", "gnupg", "keychain"]
 verify_cmd = "ssh -V" # ssh only supports the short getopt-style flag, not --version
@@ -608,6 +637,7 @@ Enable if you need remote access (e.g. from a laptop, or for remote dev via VS C
 The client is always installed via [packages.ssh]; this only adds the server side.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["security", "network"]
 
@@ -625,6 +655,7 @@ Network diagnostics and monitoring suite.
 Useful for network troubleshooting and monitoring; overkill for general dev.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["network", "monitor"]
 packages = ["nmap", "traceroute", "iftop", "hping3", "vnstat", "iptraf-ng", "dool", "iproute2-doc"]
@@ -637,6 +668,7 @@ C development libraries for low-level network programming.
 Enable only if writing C/C++ tools that interact directly with network packets.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["network", "dev", "build"]
 packages = ["libpcap-dev", "libnet1-dev"]
@@ -649,6 +681,7 @@ Ubuntu 24.04 recommends iproute2 instead. Enable only if scripts or muscle memor
 require the old command names.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["network", "legacy"]
 
@@ -660,6 +693,7 @@ Packages for mounting remote filesystems over the network.
 Enable if you access network file shares; both are dead weight otherwise.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["network", "files"]
 packages = ["cifs-utils", "rpcbind"]
@@ -667,6 +701,7 @@ packages = ["cifs-utils", "rpcbind"]
 [packages.clipboard]
 description = "Wayland clipboard CLI — wl-copy and wl-paste for scripts and terminal tools"
 method = "apt"
+platforms = ["linux"]
 tags = ["cli", "desktop", "gui"]
 packages = ["wl-clipboard"]
 verify_cmd = "wl-copy --version" # package name differs from both the section name and the two binaries it provides
@@ -684,6 +719,7 @@ alias xv="wl-paste"
 [packages.xdg-desktop-portal-gnome]
 description = "GNOME backend for the xdg-desktop-portal Screenshot/ScreenCast D-Bus interfaces"
 method = "apt"
+platforms = ["linux"]
 enabled = true
 tags = ["desktop", "gnome"]
 verify = false # background D-Bus service, not a CLI — no invocable command to prove it works
@@ -699,6 +735,7 @@ verify = false # background D-Bus service, not a CLI — no invocable command to
 [packages.flameshot]
 description = "Screenshot tool with built-in annotation editor — arrows, text, blur, crop. Better than the GNOME built-in when you need to mark up screenshots for docs or bug reports."
 method = "deb-github"
+platforms = ["linux"]
 repo = "flameshot-org/flameshot"
 tag = "v14.0.0"
 tag_prefix = ""
@@ -716,6 +753,7 @@ tags = ["desktop", "gui", "gnome"]
 [packages.shellcheck]
 description = "Static analysis and linting for shell scripts"
 method = "uv-tool"
+platforms = ["linux"]
 package = "shellcheck-py"
 check_cmd = "shellcheck"
 tags = ["dev", "linting"]
@@ -723,6 +761,7 @@ tags = ["dev", "linting"]
 [packages.shfmt]
 description = "Formatter for shell scripts — the shellcheck-py sibling package, wrapping the real shfmt binary"
 method = "uv-tool"
+platforms = ["linux"]
 package = "shfmt-py"
 check_cmd = "shfmt"
 tags = ["dev", "linting"]
@@ -730,6 +769,7 @@ tags = ["dev", "linting"]
 [packages.actionlint]
 description = "Static checker for GitHub Actions workflow files — same shellcheck-py pattern, wrapping the real actionlint binary"
 method = "uv-tool"
+platforms = ["linux"]
 package = "actionlint-py"
 check_cmd = "actionlint"
 tags = ["dev", "linting"]
@@ -737,6 +777,7 @@ tags = ["dev", "linting"]
 [packages.act]
 description = "Runs GitHub Actions workflows locally in Docker containers (nektos/act) — act-bin wraps the real binary"
 method = "uv-tool"
+platforms = ["linux"]
 package = "act-bin"
 check_cmd = "act"
 tags = ["dev", "workstation"]
@@ -747,6 +788,7 @@ config_files = [{ src = "config/actrc", dst = "~/.config/act/actrc" }]
 [packages.copier]
 description = "Project scaffolding tool with in-place template updates — drives the scaffoldapy repo template"
 method = "uv-tool"
+platforms = ["linux"]
 package = "copier"
 check_cmd = "copier"
 tags = ["dev"]
@@ -754,6 +796,7 @@ tags = ["dev"]
 [packages.spowse]
 description = "PULSE's own machine-administration CLI — Sensible POWer-user SEtup. The tasks that set up and maintain this machine, callable from any directory instead of only from inside the checkout."
 method = "uv-tool"
+platforms = ["linux"]
 # This repo, installed from its own checkout rather than from an index — see the `editable` field in
 # the header for why a non-editable install fails silently rather than loudly. tasks/cli.py builds
 # the namespace: PULSE's own collections minus every task marked @util.dev_only, and none of the
@@ -772,6 +815,7 @@ tags = ["cli", "dev"]
 [packages.dos2unix]
 description = "Convert CRLF line endings to LF — useful when receiving files from Windows"
 method = "apt"
+platforms = ["linux"]
 tags = ["cli", "files"]
 
 [packages.rsync]
@@ -781,12 +825,14 @@ Listed here for awareness: useful for local backups, deploy scripts, and syncing
 directories between machines. No install needed on a standard Ubuntu 24.04 desktop.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["files", "network", "cli"]
 
 [packages.font-manager]
 description = "GUI for browsing, previewing, and toggling installed font families — useful alongside Nerd Fonts"
 method = "apt"
+platforms = ["linux"]
 tags = ["fonts", "desktop", "gui", "windows-native"]
 
 [packages.gnome-system-monitor-ext]
@@ -797,6 +843,7 @@ GObject introspection libraries required by the GNOME system-monitor shell exten
 Disable if not running the system-monitor GNOME extension.
 """
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "monitor", "gui"]
 packages = ["gir1.2-gtop-2.0", "gir1.2-nm-1.0"]
@@ -804,18 +851,21 @@ packages = ["gir1.2-gtop-2.0", "gir1.2-nm-1.0"]
 [packages.gnome-clocks]
 description = "GNOME Clocks — world clock, stopwatch, timer, and alarms; desktop convenience, not dev-related"
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 
 [packages.gnome-browser-connector]
 description = "Native messaging host that bridges the GNOME Shell Integration browser extension to gnome-shell. Required for installing extensions via browser; not needed if using gext CLI."
 method = "apt"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 
 [packages.gnome-extensions-cli]
 description = "gext — CLI tool for installing, enabling, and updating GNOME Shell extensions from extensions.gnome.org. Powers inv gnome.install-extensions."
 method = "uv-tool"
+platforms = ["linux"]
 package = "gnome-extensions-cli"
 check_cmd = "gext"
 tags = ["gnome", "desktop", "gui"]
@@ -830,6 +880,7 @@ tags = ["gnome", "desktop", "gui"]
 [packages.gnome-ext-dash-to-panel]
 description = "Dash to Panel — merges the top bar and dock into a single taskbar; Windows-style workflow with app icons, clock, and system tray in one strip"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "dash-to-panel@jderose9.github.com"
@@ -851,6 +902,7 @@ uuid = "dash-to-panel@jderose9.github.com"
 [packages.gnome-ext-extension-list]
 description = "Extension List — manage and toggle installed GNOME extensions from a top-bar dropdown without opening Settings"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "extension-list@tu.berry"
@@ -858,6 +910,7 @@ uuid = "extension-list@tu.berry"
 [packages.gnome-ext-clipboard-indicator]
 description = "Clipboard Indicator — clipboard history accessible from the top bar; keeps the last N entries for fast re-paste"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "clipboard-indicator@tudmotu.com"
@@ -865,6 +918,7 @@ uuid = "clipboard-indicator@tudmotu.com"
 [packages.gnome-ext-gtile]
 description = "gTile — keyboard-driven window tiling grid; press a hotkey, pick a grid slot, window snaps to it"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "gTile@vibou"
@@ -872,6 +926,7 @@ uuid = "gTile@vibou"
 [packages.gnome-ext-lockkeys]
 description = "Lock Keys — shows CapsLock and NumLock state in the top bar so you always know what mode you're in"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "lockkeys@vaina.lt"
@@ -880,6 +935,7 @@ uuid = "lockkeys@vaina.lt"
 [packages.gnome-ext-switcher]
 description = "Switcher — single hotkey opens a combined app launcher + window switcher; type to fuzzy-filter running windows or apps. Retired: original maintainer inactive, replaced by AATWS"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "switcher@landau.fi"
@@ -887,6 +943,7 @@ uuid = "switcher@landau.fi"
 [packages.gnome-ext-aatws]
 description = "Advanced Alt-Tab Window Switcher — replaces Alt+Tab/Super+Tab with a searchable, filterable switcher; type to find running windows by title; actively maintained for GNOME 46–50"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "advanced-alt-tab@G-dH.github.com"
@@ -895,6 +952,7 @@ ego_id = 4412
 [packages.gnome-ext-freon]
 description = "Freon — superseded by Vitals (which covers temps, fans, voltage, storage and more); keep disabled"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui", "workstation"]
 uuid = "freon@UshakovVasilii_Github.yahoo.com"
@@ -903,6 +961,7 @@ ego_id = 841
 [packages.gnome-ext-tophat]
 description = "Top Hat — CPU, memory, disk I/O, and network sparklines in the top bar; modern TypeScript codebase, no extra deps"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "tophat@fflewddur.github.io"
@@ -919,6 +978,7 @@ uuid = "tophat@fflewddur.github.io"
 [packages.gnome-ext-vitals]
 description = "Vitals — hardware sensors: temps, fans, voltage, disk temps; show-processor/memory/network disabled (Top Hat handles usage metrics)"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui", "workstation"]
 uuid = "Vitals@CoreCoding.com"
@@ -943,6 +1003,7 @@ uuid = "Vitals@CoreCoding.com"
 [packages.gnome-ext-system-monitor-next]
 description = "System Monitor Next — inline CPU/mem/disk/net graphs in the panel; requires gir1.2-gtop-2.0 + gir1.2-nm-1.0; Top Hat is a more modern alternative"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "system-monitor-next@paradoxxx.zero.gmail.com"
@@ -950,6 +1011,7 @@ uuid = "system-monitor-next@paradoxxx.zero.gmail.com"
 [packages.gnome-ext-smart-auto-move]
 description = "Smart Auto Move — learns and restores window positions and workspace assignments across sessions; Wayland-compatible; useful for repeatable multi-window dev layouts"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "smart-auto-move@khimaros.com"
@@ -957,6 +1019,7 @@ uuid = "smart-auto-move@khimaros.com"
 [packages.gnome-ext-light-dict]
 description = "Light Dict — popup action menu on mouse text selection (dictionary, translate, web search, custom commands); low adoption (7K downloads), niche use case"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "light-dict@tuberry.github.io"
@@ -968,6 +1031,7 @@ uuid = "light-dict@tuberry.github.io"
 [packages.gnome-ext-appindicator]
 description = "AppIndicator and KStatusNotifierItem Support — shows system tray icons for apps that use the AppIndicator protocol (Slack, Discord, 1Password, Dropbox etc.) which GNOME 46 hides by default"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "appindicatorsupport@rgcjonas.gmail.com"
@@ -975,6 +1039,7 @@ uuid = "appindicatorsupport@rgcjonas.gmail.com"
 [packages.gnome-ext-caffeine]
 description = "Caffeine — panel toggle to prevent screen lock and auto-suspend; auto-activates in fullscreen; zero config; 3M+ downloads"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "caffeine@patapon.info"
@@ -982,6 +1047,7 @@ uuid = "caffeine@patapon.info"
 [packages.gnome-ext-just-perfection]
 description = "Just Perfection — single GUI to tweak all GNOME Shell UI details: hide/move Activities button, clock position, hot corners, animation speed, notification banners, panel sizing"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "just-perfection-desktop@just-perfection"
@@ -989,6 +1055,7 @@ uuid = "just-perfection-desktop@just-perfection"
 [packages.gnome-ext-blur-my-shell]
 description = "Blur My Shell — frosted blur on top panel, overview, dash, and lockscreen; purely cosmetic; 4.8M downloads, near-zero performance impact"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "blur-my-shell@aunetx"
@@ -996,6 +1063,7 @@ uuid = "blur-my-shell@aunetx"
 [packages.gnome-ext-tiling-shell]
 description = "Tiling Shell — snap zones + custom grid layouts; Super+Arrow moves windows between tiles; Wayland-native; inv gnome.install-extensions auto-disables tiling-assistant@ubuntu.com (conflict)"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "tilingshell@ferrarodomenico.com"
@@ -1011,6 +1079,7 @@ uuid = "tilingshell@ferrarodomenico.com"
 [packages.gnome-ext-space-bar]
 description = "Space Bar — replaces Activities/workspace indicator with an i3-style named workspace bar; click to switch, auto-name by running app; pairs well with dash-to-panel"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = true
 tags = ["gnome", "desktop", "gui"]
 uuid = "space-bar@luchrioh"
@@ -1025,6 +1094,7 @@ uuid = "space-bar@luchrioh"
 [packages.gnome-ext-gsconnect]
 description = "GSConnect — KDE Connect for GNOME: clipboard sync, file transfer, notification mirroring, SMS from desktop, media control; requires Android + KDE Connect app on phone"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "gsconnect@andyholmes.github.io"
@@ -1032,6 +1102,7 @@ uuid = "gsconnect@andyholmes.github.io"
 [packages.gnome-ext-night-theme-switcher]
 description = "Night Theme Switcher — auto-switches dark/light colour scheme at sunset/sunrise; can run custom commands on switch to sync terminal/editor themes"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "nightthemeswitcher@romainvigier.fr"
@@ -1039,6 +1110,7 @@ uuid = "nightthemeswitcher@romainvigier.fr"
 [packages.gnome-ext-quick-settings-tweaker]
 description = "Quick Settings Tweaker — adds media controls, notification list, and per-app volume mixer to the Quick Settings popup; verify GNOME 46 version compatibility before enabling"
 method = "gnome-extension"
+platforms = ["linux"]
 enabled = false
 tags = ["gnome", "desktop", "gui"]
 uuid = "quick-settings-tweaks@qwreey"
@@ -1046,6 +1118,7 @@ uuid = "quick-settings-tweaks@qwreey"
 [packages.nyancat]
 description = "NyanCat for the terminal — an absolute must"
 method = "apt"
+platforms = ["linux"]
 tags = ["terminal", "fun"]
 # --version doesn't exit — ignores unrecognized flags and just runs the animation forever, which
 # hung the machine running the inv verify.all audit pass before this override was added. --help
@@ -1055,23 +1128,27 @@ verify_cmd = "nyancat --help"
 [packages.terminator]
 description = "Feature-rich terminal emulator with split panes and profiles"
 method = "apt"
+platforms = ["linux"]
 tags = ["terminal", "gui", "windows-native"]
 config_files = [{ src = "config/terminator.conf", dst = "~/.config/terminator/config" }]
 
 [packages.tmux]
 description = "Terminal multiplexer — persistent sessions, split panes, detach/reattach"
 method = "apt"
+platforms = ["linux"]
 tags = ["terminal", "multiplexer", "workstation"]
 verify_cmd = "tmux -V" # no --version support
 
 [packages.tree]
 description = "Recursive directory listing formatted as a tree"
 method = "apt"
+platforms = ["linux"]
 tags = ["files", "cli"]
 
 [packages.fd]
 description = "Fast, user-friendly alternative to find — respects .gitignore"
 method = "apt"
+platforms = ["linux"]
 tags = ["files", "search", "modern"]
 packages = ["fd-find"]
 symlinks = [{ src = "fdfind", dst = "fd" }]
@@ -1079,12 +1156,14 @@ symlinks = [{ src = "fdfind", dst = "fd" }]
 [packages.ripgrep]
 description = "Extremely fast recursive grep — respects .gitignore, supports regex"
 method = "apt"
+platforms = ["linux"]
 tags = ["search", "modern"]
 verify_cmd = "rg --version" # package name differs from the "rg" binary it provides
 
 [packages.fzf]
 description = "Interactive fuzzy finder — Ctrl+R history, Ctrl+T file picker, Alt+C directory jump, ** tab completion. Uses fd for file listing and bat for previews."
 method = "apt"
+platforms = ["linux"]
 tags = ["search", "interactive"]
 zshenv = """
 # Use fd as the default source: respects .gitignore, includes hidden files, skips .git
@@ -1108,6 +1187,7 @@ zshrc = """
 [packages.atuin]
 description = "Shell history replacement — SQLite backend, rich search UI (exit code, directory, duration per command). No sync, no daemon. Disabled pending evaluation; fzf handles Ctrl+R for now."
 method = "archive"
+platforms = ["linux"]
 enabled = false
 tags = ["shell", "search", "interactive"]
 check_cmd = "atuin"
@@ -1127,6 +1207,7 @@ eval "$(atuin init zsh --disable-up-arrow)"
 [packages.fkill]
 description = "Interactive fuzzy process killer — fkill to pick from a list, fkill :PORT to kill by port. Requires fzf."
 method = "zsh"
+platforms = ["linux"]
 tags = ["cli", "interactive"]
 zshrc = """
 fkill() {
@@ -1141,6 +1222,7 @@ fkill() {
 [packages.askpass-zenity]
 description = "Zenity GUI askpass helper — enables sudo and ssh-agent key unlocks without a terminal by showing a GUI password/passphrase dialog"
 method = "wrapper-script"
+platforms = ["linux"]
 tags = ["shell", "system"]
 dest = "~/.local/bin/askpass-zenity"
 content_file = "config/askpass-zenity.sh"
@@ -1153,6 +1235,7 @@ export SSH_ASKPASS_REQUIRE="prefer"
 [packages.claude-code]
 description = "Claude Code CLI — Anthropic's terminal coding agent, via the native self-updating installer"
 method = "script"
+platforms = ["linux"]
 tags = ["ai"]
 script_url = "https://claude.ai/install.sh"
 # Installer uses bash-only syntax — the "script" method's default shell ("sh", i.e. dash on
@@ -1333,6 +1416,7 @@ fi'''
 [packages.agents-md]
 description = "Global ~/.agents/AGENTS.md — sudo, git/ssh, allowlist-discipline, and project-convention instructions for every agent CLI on this machine; copied into each installed agent's own instruction path"
 method = "wrapper-script"
+platforms = ["linux", "windows"]
 tags = ["shell", "ai"]
 # The real file sits at the cross-tool path because that is the one four verified agents read on
 # their own: Goose, Warp, Cline and Kimi Code (sources and the reasoning are in
@@ -1369,13 +1453,13 @@ also_deploy_to = [
 # Any package may add an `agents_md` fragment; this entry only declares where the result lands.
 assembled_from = "agents_md"
 agents_md = [
-  { src = "config/agents-md/preamble.md", order = 5 },
-  { src = "config/agents-md/agent-knowledge.md", order = 10 },
-  { src = "config/agents-md/git.md", order = 20 },
-  { src = "config/agents-md/bash.md", order = 30 },
-  { src = "config/agents-md/research.md", order = 40 },
-  { src = "config/agents-md/verification.md", order = 50 },
-  { src = "config/agents-md/collaboration.md", order = 60 },
+  { src = "config/agents-md/preamble.md", order = 5, platforms = ["linux", "windows"] },
+  { src = "config/agents-md/agent-knowledge.md", order = 10, platforms = ["linux"] },
+  { src = "config/agents-md/git.md", order = 20, platforms = ["linux"] },
+  { src = "config/agents-md/bash.md", order = 30, platforms = ["linux"] },
+  { src = "config/agents-md/research.md", order = 40, platforms = ["linux"] },
+  { src = "config/agents-md/verification.md", order = 50, platforms = ["linux"] },
+  { src = "config/agents-md/collaboration.md", order = 60, platforms = ["linux"] },
 ]
 
 [packages.repo-tasks]
@@ -1389,6 +1473,7 @@ lives in `cli-allowlist/tools.toml`'s `[inv]` entry and is rendered per harness 
 `inv allowlist.apply`, so there is one source for them.
 """
 tags = ["ai"]
+platforms = ["linux"]
 claude_permissions_allow = [
   # Read/Grep/Glob outside the session's working directory prompt under acceptEdits; ~/projects
   # holds only git repos (nothing downloaded — that lives in ~/research, which has the same grant),
@@ -1419,6 +1504,7 @@ afterwards, including jobs from windows opened in the new login, inherits the ol
 environment.
 """
 method = "wrapper-script"
+platforms = ["linux"]
 tags = ["ai", "desktop", "gui"]
 # Deployed as a copy of the stdlib-only module, like netdoctor it imports nothing from tasks/. The
 # module docstring carries the design: report and never stop on its own, "older" judged by timestamp
@@ -1442,6 +1528,7 @@ muted "weight" palette. See the script's own header comment for the full color/i
 rationale — this repo only deploys it, never edits its logic.
 """
 method = "wrapper-script"
+platforms = ["linux"]
 tags = ["ai"]
 dest = "~/.claude/statusline-command.sh"
 content_file = "config/statusline-command.sh"
@@ -1450,11 +1537,13 @@ claude_statusline = { type = "command", command = "bash ~/.claude/statusline-com
 [packages.zsh]
 description = "The zsh shell itself — Oh My Zsh and every zsh-method config entry need it installed first"
 method = "apt"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 
 [packages.zsh-path]
 description = "User PATH entries — ~/.local/bin prepended so user tools shadow system tools, and PATH kept free of duplicates"
 method = "zsh"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 # `typeset -U path PATH` marks the array unique: it drops duplicates from the value it inherits and
 # from every later assignment for the shell's life. So this one line covers the export below it, the
@@ -1480,6 +1569,7 @@ export PATH="${HOME}/.local/bin:${PATH}"'''
 [packages.zsh-history]
 description = "Zsh history tuning — large history, deduplication, timestamps, cross-session sharing"
 method = "zsh"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 zshrc = """
 HISTSIZE=1000000
@@ -1498,6 +1588,7 @@ setopt HIST_FCNTL_LOCK        # fcntl-based file locking — avoids corruption f
 [packages.oh-my-zsh]
 description = "Oh My Zsh — zsh configuration framework with plugins and themes"
 method = "script"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 script_url = "https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh"
 shell = "sh -s -- --unattended"
@@ -1516,6 +1607,7 @@ plugins = [
 [packages.powerlevel10k]
 description = "Powerlevel10k — fast, flexible zsh theme with instant prompt"
 method = "git-clone"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 repo = "https://github.com/romkatv/powerlevel10k.git"
 dest = "~/.oh-my-zsh/custom/themes/powerlevel10k"
@@ -1527,6 +1619,7 @@ config_files = [{ src = "config/p10k.zsh", dst = "~/.p10k.zsh" }]
 [packages.zsh-autosuggestions]
 description = "Fish-style history-based command suggestions as you type"
 method = "git-clone"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 repo = "https://github.com/zsh-users/zsh-autosuggestions.git"
 dest = "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
@@ -1534,6 +1627,7 @@ dest = "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
 [packages.zsh-syntax-highlighting]
 description = "Syntax highlighting for commands in the zsh prompt — must be last in plugins list"
 method = "git-clone"
+platforms = ["linux"]
 tags = ["shell", "zsh"]
 repo = "https://github.com/zsh-users/zsh-syntax-highlighting.git"
 dest = "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
@@ -1541,22 +1635,26 @@ dest = "~/.oh-my-zsh/custom/plugins/zsh-syntax-highlighting"
 [packages.eza]
 description = "Modern replacement for ls with colour, icons, and git status"
 method = "apt"
+platforms = ["linux"]
 tags = ["files", "modern"]
 
 [packages.bat]
 description = "Cat clone with syntax highlighting and git diff integration"
 method = "apt"
+platforms = ["linux"]
 tags = ["cli", "modern"]
 symlinks = [{ src = "batcat", dst = "bat" }]
 
 [packages.jq]
 description = "Command-line JSON processor — query, filter, and transform JSON"
 method = "apt"
+platforms = ["linux"]
 tags = ["cli", "data"]
 
 [packages.jq-aliases]
 description = "jq aliases and helpers — sort keys by default; ppjson, isjson, urlencode, urldecode"
 method = "zsh"
+platforms = ["linux"]
 tags = ["cli", "data"]
 zshrc = """
 alias jq='jq -S'
@@ -1569,6 +1667,7 @@ function urldecode() { python3 -c 'import sys,urllib.parse; print(urllib.parse.u
 [packages.direnv]
 description = "Per-directory environment variable loading via .envrc files"
 method = "apt"
+platforms = ["linux"]
 tags = ["dev", "environment"]
 zshrc = """
 export DIRENV_LOG_FORMAT=""
@@ -1578,16 +1677,19 @@ eval "$(direnv hook zsh)"
 [packages.htop]
 description = "Interactive process viewer — sortable columns, tree view, signal sending"
 method = "apt"
+platforms = ["linux"]
 tags = ["monitor", "cli"]
 
 [packages.btop]
 description = "Modern resource monitor with mouse support, themes, and detailed per-process stats"
 method = "apt"
+platforms = ["linux"]
 tags = ["monitor", "cli", "modern"]
 
 [packages.ncdu]
 description = "Ncurses disk usage analyser — interactively browse and identify space hogs"
 method = "apt"
+platforms = ["linux"]
 tags = ["disk", "cli"]
 
 [packages.gcloud]
@@ -1602,6 +1704,7 @@ Post-install (interactive, run manually):
 Note: gcloud auth configure-docker does not work with Docker installed via Snap.
 """
 method = "script"
+platforms = ["linux"]
 enabled = false
 tags = ["cloud", "gcp"]
 script_url = "https://sdk.cloud.google.com"
@@ -1618,6 +1721,7 @@ fi
 [packages.claude-desktop]
 description = "Claude desktop app (community repackage — aaddrick/claude-desktop-debian)"
 method = "apt-repo"
+platforms = ["linux"]
 tags = ["ai", "desktop", "gui", "windows-native"]
 verify_cmd = "claude-desktop-unofficial --version" # apt package "claude-desktop" is now a transitional rename to this real binary
 gpg_url = "https://pkg.claude-desktop-debian.dev/KEY.gpg"
@@ -1649,6 +1753,7 @@ Off by default: a Telegram client is this machine's business, not every consumer
 ~/.config/power-user-linux-setup/overrides.toml.
 """
 method = "archive"
+platforms = ["linux"]
 enabled = false
 tags = ["messaging", "desktop", "gui"]
 download_url = "https://telegram.org/dl/desktop/linux"
@@ -1669,6 +1774,7 @@ verify_cmd = "sh -c '! ldd ~/.local/share/telegram-desktop/Telegram | grep -q \"
 [packages.google-chrome]
 description = "Google Chrome stable — install via deb; Chrome then self-manages its apt sources (google-chrome.sources)"
 method = "deb-url"
+platforms = ["linux"]
 tags = ["browser", "desktop", "gui"]
 check_cmd = "google-chrome-stable"
 url = "https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb"
@@ -1686,6 +1792,7 @@ Machine-specific workaround, not a universal default — enable only if you hit 
 black-video symptom (audio fine, video black except a flash on play/pause).
 """
 method = "wrapper-script"
+platforms = ["linux"]
 enabled = false
 tags = ["browser", "desktop", "gui"]
 dest = "~/.local/share/applications/google-chrome.desktop"
@@ -1707,6 +1814,7 @@ Enable together with [packages.google-chrome-x11] — see contributing/chrome-oz
 options this was chosen over.
 """
 method = "wrapper-script"
+platforms = ["linux"]
 enabled = false
 tags = ["browser", "desktop", "gui"]
 dest = "~/.config/autostart/00-google-chrome-x11.desktop"
@@ -1715,6 +1823,7 @@ content_file = "config/google-chrome-x11-autostart.desktop"
 [packages.gh]
 description = "GitHub CLI — create PRs, manage issues, clone repos, and authenticate from the terminal"
 method = "apt-repo"
+platforms = ["linux"]
 tags = ["dev", "vcs"]
 gpg_url = "https://cli.github.com/packages/githubcli-archive-keyring.gpg"
 gpg_path = "/usr/share/keyrings/githubcli-archive-keyring.gpg"
@@ -1724,6 +1833,7 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://cli.github.com/pa
 [packages.glab]
 description = "GitLab CLI — create MRs, manage issues, clone repos, and authenticate from the terminal"
 method = "deb-url"
+platforms = ["linux"]
 tags = ["dev", "vcs"]
 enabled = false
 check_cmd = "glab"
@@ -1736,6 +1846,7 @@ Kubernetes CLI — interact with clusters, apply manifests, inspect resources.
 The apt repo URL is version-specific (v1.33); update when upgrading to a new minor version.
 """
 method = "apt-repo"
+platforms = ["linux"]
 tags = ["k8s", "cloud"]
 omz_plugin = "kubectl"
 verify_cmd = "kubectl version --client" # --version is not a recognized flag
@@ -1747,6 +1858,7 @@ sources_entry = "deb [signed-by={gpg_path}] https://pkgs.k8s.io/core:/stable:/v1
 [packages.helm]
 description = "Kubernetes package manager — install and manage charts (application bundles) on a cluster"
 method = "archive"
+platforms = ["linux"]
 tags = ["k8s", "cloud"]
 omz_plugin = "helm"
 check_cmd = "helm"
@@ -1759,6 +1871,7 @@ bin_pick = "helm"
 [packages.kind]
 description = "Kubernetes in Docker — spin up local clusters for dev and CI without a cloud provider"
 method = "binary"
+platforms = ["linux"]
 tags = ["k8s", "dev"]
 url = "https://kind.sigs.k8s.io/dl/latest/kind-linux-amd64"
 check_cmd = "kind"
@@ -1767,6 +1880,7 @@ zshrc = "source <(kind completion zsh)"
 [packages.tilt]
 description = "Live-update dev environment for Kubernetes — rebuilds and hot-reloads on file changes"
 method = "archive"
+platforms = ["linux"]
 tags = ["k8s", "dev"]
 check_cmd = "tilt"
 version_cmd = "curl -fsSL https://api.github.com/repos/tilt-dev/tilt/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
@@ -1791,6 +1905,7 @@ config_files = [{ src = "config/tilt-analytics-choice.txt", dst = "~/.tilt-dev/a
 [packages.ctlptl]
 description = "Declarative kind clusters with a local image registry — Tilt's companion for kind"
 method = "archive"
+platforms = ["linux"]
 tags = ["k8s", "dev"]
 check_cmd = "ctlptl"
 verify_cmd = "ctlptl version" # no --version flag: the root command sets no Version
@@ -1804,6 +1919,7 @@ zshrc = "source <(ctlptl completion zsh)"
 [packages.k9s]
 description = "Terminal UI for Kubernetes — browse clusters, pods, logs, exec, port-forward"
 method = "deb-github"
+platforms = ["linux"]
 tags = ["k8s", "dev"]
 repo = "derailed/k9s"
 asset = "k9s_linux_amd64.deb"
@@ -1814,6 +1930,7 @@ verify_cmd = "k9s version" # --version is not a recognized flag; version is a su
 [packages.freelens]
 description = "Open-source Kubernetes IDE (community fork of Lens) — cluster explorer, log viewer, resource editor"
 method = "deb-github"
+platforms = ["linux"]
 tags = ["k8s", "dev", "gui", "windows-native"]
 repo = "freelensapp/freelens"
 asset = "Freelens-{version}-linux-amd64.deb"
@@ -1831,6 +1948,7 @@ verify_cmd = "test -x /usr/bin/freelens"
 [packages.docker]
 description = "Docker CE container runtime with Compose and Buildx plugins"
 method = "apt-repo"
+platforms = ["linux"]
 tags = ["workstation"]
 omz_plugin = ["docker", "docker-compose"]
 packages = [
@@ -1848,6 +1966,7 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://download.docker.c
 [packages.docker-credential-secretservice]
 description = "Docker credential helper backed by the Secret Service — keeps registry passwords in the OS keyring instead of base64 in ~/.docker/config.json"
 method = "binary"
+platforms = ["linux"]
 tags = ["workstation"]
 check_cmd = "docker-credential-secretservice"
 # Upstream's own release binary, not noble's golang-docker-credential-helpers: that package is
@@ -1869,6 +1988,7 @@ verify_cmd = "docker-credential-secretservice version"
 [packages.terraform]
 description = "Hashicorp Terraform — infrastructure as code"
 method = "apt-repo"
+platforms = ["linux"]
 gpg_url = "https://apt.releases.hashicorp.com/gpg"
 gpg_path = "/usr/share/keyrings/hashicorp-archive-keyring.gpg"
 sources_path = "/etc/apt/sources.list.d/hashicorp.list"
@@ -1877,6 +1997,7 @@ sources_entry = "deb [signed-by={gpg_path}] https://apt.releases.hashicorp.com {
 [packages.edge]
 description = "Microsoft Edge browser (stable channel)"
 method = "apt-repo"
+platforms = ["linux"]
 tags = ["browser", "desktop", "gui", "windows-native"]
 packages = ["microsoft-edge-stable"]
 verify_cmd = "microsoft-edge --version" # real binary name, not "edge"
@@ -1888,6 +2009,7 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://packages.microsof
 [packages.vscode]
 description = "Visual Studio Code — Microsoft official apt repo; auto-updates via apt. Snap avoided: sandboxing breaks SSH Remote Dev and slows extension loading."
 method = "apt-repo"
+platforms = ["linux"]
 tags = ["dev", "editor", "ide", "gui"]
 packages = ["code"]
 verify_cmd = "code --version" # real binary name, not "vscode"
@@ -1899,6 +2021,7 @@ sources_entry = "deb [arch=amd64 signed-by={gpg_path}] https://packages.microsof
 [packages.jetbrains-toolbox]
 description = "JetBrains Toolbox App — manages all JetBrains IDEs (PyCharm, IntelliJ, etc.) with automatic updates. Run once to install; toolbox then self-manages."
 method = "archive"
+platforms = ["linux"]
 tags = ["dev", "ide", "gui"]
 check_path = "~/.local/share/jetbrains-toolbox/jetbrains-toolbox"
 version_cmd = "curl -fsSL 'https://data.services.jetbrains.com/products/releases?code=TBA&latest=true&type=release' | python3 -c \"import json,sys; lnk=json.load(sys.stdin)['TBA'][0]['downloads']['linux']['link']; print(lnk.rsplit('/',1)[1].replace('jetbrains-toolbox-','').replace('.tar.gz',''))\""
@@ -1912,6 +2035,7 @@ symlinks = [{ src = "jetbrains-toolbox", dst = "jetbrains-toolbox" }]
 [packages.wezterm]
 description = "WezTerm — GPU-accelerated terminal emulator with Lua config, split panes, tabs, and SSH multiplexing. Configured via config/wezterm.lua."
 method = "deb-github"
+platforms = ["linux"]
 tags = ["gui", "terminal", "dev", "windows-native"]
 repo = "wez/wezterm"
 tag = "nightly"
@@ -1931,6 +2055,7 @@ the sandbox enabled." Two profiles are needed: one for the IDE binary itself, on
 the cef_server subprocess it spawns.
 """
 method = "apparmor-profile"
+platforms = ["linux"]
 tags = ["system", "ide", "gui"]
 profile = "/etc/apparmor.d/jbr-cef"
 content = """
@@ -1953,6 +2078,7 @@ profile jbr_cef /home/*/.local/share/JetBrains/Toolbox/apps/*/jbr/lib/cef_server
 [packages.webex]
 description = "Webex video conferencing and messaging"
 method = "deb-url"
+platforms = ["linux"]
 tags = ["gui", "corporate"]
 enabled = false
 check_cmd = "webex"
@@ -1961,6 +2087,7 @@ url = "https://binaries.webex.com/WebexDesktop-Ubuntu-Official-Package/Webex.deb
 [packages.citrix-workspace-deps]
 description = "Runtime dependency for Citrix Workspace — provides libwoff2dec.so required by selfservice"
 method = "apt"
+platforms = ["linux"]
 tags = ["gui", "corporate"]
 packages = ["libwoff1"]
 verify = false # pure shared-library dependency, no binary of its own to invoke
@@ -1968,6 +2095,7 @@ verify = false # pure shared-library dependency, no binary of its own to invoke
 [packages.citrix-workspace]
 description = "Citrix Workspace — remote desktop and app access"
 method = "deb-url"
+platforms = ["linux"]
 tags = ["gui", "corporate"]
 enabled = false
 check_cmd = "selfservice"
@@ -1982,6 +2110,7 @@ cleanup_paths = ["/etc/dconf/db/local.d/locks/extensions-mandatory"]
 [packages.citrix-secure-access]
 description = "Citrix Secure Access — corporate VPN client for Citrix Gateway (nsgclient)"
 method = "deb-url"
+platforms = ["linux"]
 tags = ["gui", "corporate"]
 enabled = false
 check_cmd = "NSGClient"
@@ -2000,6 +2129,7 @@ cleanup_paths = [
 [packages.citrix-epa]
 description = "Citrix Endpoint Analysis — device posture checks required by Citrix Secure Access (nsepa)"
 method = "deb-url"
+platforms = ["linux"]
 tags = ["gui", "corporate"]
 enabled = false
 packages = ["nsepa"]
@@ -2009,6 +2139,7 @@ cleanup_paths = ["/usr/share/applications/nsgcepa.desktop"]
 [packages.hyperfine]
 description = "Command-line benchmarking tool with statistical analysis and warmup runs"
 method = "deb-github"
+platforms = ["linux"]
 tags = ["dev", "benchmark", "cli"]
 repo = "sharkdp/hyperfine"
 asset = "hyperfine_{version}_amd64.deb"
@@ -2017,6 +2148,7 @@ check_cmd = "hyperfine"
 [packages.dive]
 description = "Docker image layer inspector — visualise layer contents and size"
 method = "deb-github"
+platforms = ["linux"]
 repo = "wagoodman/dive"
 asset = "dive_{version}_linux_amd64.deb"
 checksum_url = "https://github.com/wagoodman/dive/releases/download/v{version}/dive_{version}_checksums.txt"
@@ -2025,6 +2157,7 @@ check_cmd = "dive"
 [packages.go]
 description = "Go programming language runtime — installs to ~/.local/share/go"
 method = "archive"
+platforms = ["linux"]
 tags = ["dev", "language"]
 check_cmd = "go"
 # Absolute path, not "go version": go's bin dir only reaches PATH via the zshenv snippet below,
@@ -2059,6 +2192,7 @@ export PATH="${PATH}:${GOROOT}/bin:${GOPATH}/bin"
 [packages.python-keyring]
 description = "Python keyring library — CLI and API for storing/retrieving secrets in the OS-native credential store (Secret Service/GNOME Keyring, macOS Keychain, ...)"
 method = "uv-tool"
+platforms = ["linux"]
 package = "keyring"
 check_cmd = "keyring"
 verify_cmd = "keyring --help" # no --version support
@@ -2071,11 +2205,13 @@ config_files = [{ src = "config/uv.toml", dst = "~/.config/uv/uv.toml" }]
 [packages.nox]
 description = "Python session-based test automation, similar to tox"
 method = "uv-tool"
+platforms = ["linux"]
 package = "nox"
 
 [packages.mkdocs-material]
 description = "Documentation site generator with Material Design theme and Mermaid diagram support"
 method = "uv-tool"
+platforms = ["linux"]
 package = "mkdocs"
 check_cmd = "mkdocs"
 extras = ["mkdocs-material"]
@@ -2083,21 +2219,25 @@ extras = ["mkdocs-material"]
 [packages.twine]
 description = "Utility for publishing Python packages to PyPI"
 method = "uv-tool"
+platforms = ["linux"]
 package = "twine"
 
 [packages.nuitka]
 description = "Python-to-C compiler — compiles Python scripts into standalone native executables"
 method = "uv-tool"
+platforms = ["linux"]
 package = "nuitka"
 
 [packages.glances]
 description = "Cross-platform system monitoring TUI — CPU, memory, disk, network at a glance"
 method = "uv-tool"
+platforms = ["linux"]
 package = "glances"
 
 [packages.px-proxy]
 description = "Px — local unauthenticated proxy daemon that authenticates to a corporate HTTP(S) proxy on the client's behalf (NTLM/Kerberos/Basic), so apps never see the real credential. Powers inv proxy.*. See docs/corporate-proxy.md."
 method = "uv-tool"
+platforms = ["linux"]
 package = "px-proxy"
 check_cmd = "px"
 tags = ["corporate"]
@@ -2117,6 +2257,7 @@ verify_cmd = "px --help"
 [packages.pulse-proxy-start]
 description = "Devcontainer/no-systemd fallback starter for the Px proxy daemon (inv proxy.fix/install use this when systemd --user isn't available)"
 method = "wrapper-script"
+platforms = ["linux"]
 tags = ["corporate"]
 dest = "~/.local/bin/pulse-proxy-start"
 content_file = "config/pulse-proxy-start.sh"
@@ -2124,11 +2265,13 @@ content_file = "config/pulse-proxy-start.sh"
 [packages.zensical]
 description = "Modern static site generator from the creators of Material for MkDocs — Rust core, Python API"
 method = "uv-tool"
+platforms = ["linux"]
 package = "zensical"
 
 [packages.uv-env]
 description = "uv shell completions — the machine's default Python is a uv global pin, see inv python.pin-default"
 method = "zsh"
+platforms = ["linux"]
 # `zshenv = 'export UV_PYTHON="3.14"'` lived here until 2026-09-18. uv reads that variable as an
 # explicit interpreter request, ranked above anything a project declares, so it silently overrode
 # every consumer's own floor — including on the `uv tool install` path, which warns about nothing.
@@ -2143,6 +2286,7 @@ eval "$(uvx --generate-shell-completion zsh)"
 [packages.dprint]
 description = "Fast pluggable code formatter for JSON, TOML, Markdown and YAML"
 method = "script"
+platforms = ["linux"]
 script_url = "https://dprint.dev/install.sh"
 check_cmd = "dprint"
 single_binary = true
@@ -2156,6 +2300,7 @@ DPRINT_INSTALL = "~/.local"
 [packages.node]
 description = "Node.js LTS via nvm — installs to ~/.local/share/nvm"
 method = "nvm"
+platforms = ["linux"]
 omz_plugin = "nvm"
 version = "lts"
 nvm_dir = "~/.local/share/nvm"
@@ -2178,6 +2323,7 @@ needed for non-JetBrains editors (VS Code, Neovim, etc.) — PyCharm's Rust plug
 analysis engine, see docs/ide.md.
 """
 method = "script"
+platforms = ["linux"]
 tags = ["dev", "language"]
 script_url = "https://sh.rustup.rs"
 shell = "sh -s -- -y --no-modify-path --profile default"
@@ -2209,6 +2355,7 @@ default. Deploys the RESEARCH_HOME env var and a research-update script that ref
 shallow clone under $RESEARCH_HOME/repos/.
 """
 method = "wrapper-script"
+platforms = ["linux"]
 tags = ["dev"]
 dest = "~/.local/bin/research-update"
 content_file = "config/research-update.sh"
@@ -2236,6 +2383,7 @@ Google Cloud project, a consent screen and a Desktop OAuth client, which is a se
 bootstrap, not this entry's job.
 """
 method = "archive"
+platforms = ["linux"]
 tags = ["cli", "google"]
 check_cmd = "gog"
 version_cmd = "curl -fsSL https://api.github.com/repos/openclaw/gogcli/releases/latest | python3 -c \"import json,sys; print(json.load(sys.stdin)['tag_name'].lstrip('v'))\""
@@ -2253,6 +2401,7 @@ Gmail filters as code: a Jsonnet config with diff, test and apply against the ac
 needs its own one-time OAuth authorization (`gmailctl init`), which installing it does not start.
 """
 method = "archive"
+platforms = ["linux"]
 tags = ["cli", "google"]
 check_cmd = "gmailctl"
 verify_cmd = "gmailctl version" # version is a subcommand
@@ -2272,6 +2421,7 @@ service `jira-cli` (api/client.go, in that order), all a per-account step rather
 job.
 """
 method = "archive"
+platforms = ["linux"]
 tags = ["cli", "atlassian"]
 check_cmd = "jira"
 verify_cmd = "jira version" # --version is not a recognized flag; version is a subcommand
@@ -2300,6 +2450,7 @@ internal architecture is the specific outcome that design avoids. Routing lives 
 ~/.config/plan-conveyor/config.toml, not here.
 """
 method = "zsh"
+platforms = ["linux"]
 tags = ["dev"]
 zshenv = 'export PLANS_HOME="${HOME}/plans"'
 # The skill's script creates plan files; an agent then fills the body in with its editing tools,
@@ -2334,6 +2485,7 @@ plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md and contribut
 Updating what is installed is `inv ai.update-skills` (`skills update -g`), run by `inv upgrade`.
 """
 method = "skill"
+platforms = ["linux", "windows"]
 tags = ["dev"]
 skills = [
   { source = "npx", repo = "TheodoreAD/agent-skills", description = "Every cross-project convention skill this machine uses: storage-tech defaults per use case, invoke task naming, MCP server shipping, authoring and redeploying a skill, plans/ lifecycle, the *-polite-mcp conventions, Python design defaults, the shared research library, the session Bash audit, and what to persist from a session and where." },

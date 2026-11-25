@@ -200,7 +200,7 @@ def deployed_digest(m: Managed) -> str | None:
 
 def fragments(field: str) -> tuple[str, ...]:
     """Every repo-relative fragment path declared under `field` on any enabled package, in
-    assembly order.
+    assembly order, keeping only the fragments whose own `platforms` include this machine.
 
     Any-section, like `zshrc`/`zshenv`/`zprofile` and `claude_permissions_allow`: the destination
     is declared once (by the package naming the field in `assembled_from`), while the content can
@@ -217,6 +217,8 @@ def fragments(field: str) -> tuple[str, ...]:
         for frag in entries:
             if "src" not in frag:
                 raise util.missing_fields(name, f"{field}[].src")
+            if not util.applies_here(f"{name}: {frag['src']}", frag.get("platforms")):
+                continue
             declared.append((frag.get("order", 50), name, frag["src"]))
     return tuple(src for _, _, src in sorted(declared))
 

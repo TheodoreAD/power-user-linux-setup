@@ -240,8 +240,15 @@ Currently declared: [`config/wezterm.lua`](terminal.md) → `~/.config/wezterm/w
 
 ## Tags, `enabled`, and which tasks actually respect either
 
-Every `[packages.*]` entry has three independent, unrelated ways to be skipped:
+Every `[packages.*]` entry has four independent ways to be skipped. The first is checked before the
+other three, and nothing overrides it:
 
+- **`platforms = [...]`** — required on every section, and on every `agents_md` fragment: `"linux"`
+  (including WSL and dev containers), `"windows"` (native Windows), or both. A section that does not
+  list this machine's platform is not seen at all, so no `overrides.toml` entry can bring an apt
+  package to Windows. A missing or unknown value is an error naming the section, not a default. Only
+  `agents-md` and `agent-skills` list `"windows"`: native Windows runs just the slice that deploys
+  agent instructions and skills.
 - **`enabled = false`** — the default for every machine that clones this repo, baked into
   `setup.toml`. Used for things that are evaluated-but-not-wanted (e.g. `freon`, superseded by
   `vitals`), opt-in extras (e.g. `glab`, `atuin`), machine-specific workarounds that would be wrong
@@ -276,9 +283,10 @@ every _generic_ install-method task loops over: `apt`, `apt-repo`, `deb-github`,
 `PULSE_EXCLUDE_TAGS`) to be picked up by any of these.
 
 **Several core tasks bypass `packages_by_method` entirely.** Most read one hardcoded
-`[packages.<name>]` section directly, and for those `enabled` and `tags` do nothing at all — the
-only way to skip them is to not invoke the `inv` task. Bypassing `packages_by_method` is not by
-itself the same as ignoring tags, though, so read the last column per row rather than the heading:
+`[packages.<name>]` section directly, and for those `platforms`, `enabled` and `tags` do nothing at
+all (`platforms` included: `inv node.install` on Windows would try to run nvm) — the only way to
+skip them is to not invoke the `inv` task. Bypassing `packages_by_method` is not by itself the same
+as ignoring tags, though, so read the last column per row rather than the heading:
 
 | Task                                | Reads directly                                                                   | Tag/enabled-aware?                                                                                                                                                                                                                                                                                                                                                    |
 | ----------------------------------- | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |

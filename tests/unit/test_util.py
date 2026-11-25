@@ -12,7 +12,7 @@ import pytest
 from invoke import Context, MockContext, Result, UnexpectedExit
 
 from tasks import util
-from tests.platforms import posix_only
+from tests.platforms import EVERYWHERE, posix_only
 
 # `pwd` is patched by dotted name rather than imported: importing it fails on native Windows, which
 # would take every test in this module down with it, not just the passwd ones.
@@ -236,9 +236,9 @@ def test_packages_by_method_filters_by_method_and_enabled(monkeypatch):
         "load_config",
         lambda: {
             "packages": {
-                "ripgrep": {"method": "apt"},
-                "fzf": {"method": "apt", "enabled": False},
-                "docker": {"method": "apt-repo"},
+                "ripgrep": {"platforms": EVERYWHERE, "method": "apt"},
+                "fzf": {"platforms": EVERYWHERE, "method": "apt", "enabled": False},
+                "docker": {"platforms": EVERYWHERE, "method": "apt-repo"},
             }
         },
     )
@@ -256,8 +256,8 @@ def test_packages_by_method_filters_by_excluded_tags(monkeypatch):
         "load_config",
         lambda: {
             "packages": {
-                "ripgrep": {"method": "apt", "tags": ["cli"]},
-                "steam": {"method": "apt", "tags": ["gui"]},
+                "ripgrep": {"platforms": EVERYWHERE, "method": "apt", "tags": ["cli"]},
+                "steam": {"platforms": EVERYWHERE, "method": "apt", "tags": ["gui"]},
             }
         },
     )
@@ -272,8 +272,8 @@ def test_packages_by_method_filters_by_excluded_tags(monkeypatch):
 def _config_with_disabled_workaround():
     return {
         "packages": {
-            "ripgrep": {"method": "apt", "tags": ["cli"]},
-            "chrome-x11": {"method": "wrapper-script", "enabled": False, "tags": ["gui"]},
+            "ripgrep": {"platforms": EVERYWHERE, "method": "apt", "tags": ["cli"]},
+            "chrome-x11": {"platforms": EVERYWHERE, "method": "wrapper-script", "enabled": False, "tags": ["gui"]},
         }
     }
 
@@ -302,6 +302,68 @@ def test_excluded_tags_beat_a_machine_local_override(monkeypatch):
     monkeypatch.setattr(util, "load_overrides", lambda: {"chrome-x11": True})
 
     assert set(util.enabled_packages()) == {"ripgrep"}
+
+
+def _two_platform_config():
+    return {
+        "packages": {
+            "apt-only": {"platforms": ["linux"], "method": "apt"},
+            "agents-md": {"platforms": ["linux", "windows"], "method": "wrapper-script"},
+        }
+    }
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected"),
+    [(util.Platform.LINUX, {"apt-only", "agents-md"}), (util.Platform.WINDOWS, {"agents-md"})],
+    ids=["linux", "windows"],
+)
+def test_a_package_is_visible_only_on_the_platforms_it_declares(monkeypatch, platform, expected):
+    monkeypatch.setattr(util, "load_config", _two_platform_config)
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "load_overrides", dict)
+    monkeypatch.setattr(util, "current_platform", lambda: platform)
+
+    assert set(util.enabled_packages()) == expected
+
+
+def test_no_override_can_bring_a_package_to_a_platform_it_does_not_declare(monkeypatch):
+    # An apt package cannot be installed on Windows however much a machine asks for it.
+    monkeypatch.setattr(util, "load_config", _two_platform_config)
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "load_overrides", lambda: {"apt-only": True})
+    monkeypatch.setattr(util, "current_platform", lambda: util.Platform.WINDOWS)
+
+    assert "apt-only" not in util.enabled_packages()
+
+
+def test_a_section_without_platforms_fails_by_name_rather_than_defaulting(monkeypatch):
+    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"forgot": {"method": "apt"}}})
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "load_overrides", dict)
+
+    with pytest.raises(RuntimeError, match=r"\[forgot\].*platforms"):
+        util.enabled_packages()
+
+
+def test_an_unknown_platform_is_an_error_not_a_silent_skip(monkeypatch):
+    # "win" or "macos" would otherwise read as "not this machine" everywhere, and the package would
+    # vanish without a word.
+    with pytest.raises(RuntimeError, match="unknown platform"):
+        util.applies_here("typo", ["win"])
+
+
+def test_every_real_section_and_fragment_declares_known_platforms():
+    packages = util.load_config()["packages"]
+    known = {p.value for p in util.Platform}
+    for name, cfg in packages.items():
+        declared = cfg.get("platforms", [])
+        assert declared, f"[packages.{name}] declares no platforms"
+        assert set(declared) <= known, f"[packages.{name}] declares {declared}"
+        for frag in cfg.get("agents_md", []):
+            frag_declared = frag.get("platforms", [])
+            assert frag_declared, f"[packages.{name}] fragment {frag.get('src')} declares no platforms"
+            assert set(frag_declared) <= known, f"[packages.{name}] fragment {frag.get('src')}: {frag_declared}"
 
 
 def test_load_overrides_reads_enabled_flips_and_skips_unknown_packages(monkeypatch, tmp_path, capsys):

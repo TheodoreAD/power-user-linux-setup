@@ -131,10 +131,14 @@ class AgentsMdFragment(TypedDict, total=False):
     curated ones rather than silently at the top. Ties break on the declaring package's name, so
     two fragments at the same order still assemble deterministically rather than in whatever
     sequence `setup.toml`'s keys happen to iterate.
+
+    `platforms` is required, as on a package: a fragment holding a Linux-only rule must not reach a
+    Windows machine's instructions, and only the fragment can say which it is.
     """
 
     src: str
     order: int
+    platforms: list[str]
 
 
 class PackageConfig(TypedDict, total=False):
@@ -143,6 +147,7 @@ class PackageConfig(TypedDict, total=False):
     # common
     description: str
     method: str
+    platforms: list[str]
     enabled: bool
     tags: list[str]
     config_files: list[PathMapping]
@@ -949,6 +954,35 @@ def write_claude_settings(settings: ClaudeSettings) -> None:
     CLAUDE_SETTINGS.write_text(text, encoding="utf-8", newline="\n")
 
 
+class Platform(StrEnum):
+    """The operating systems a `[packages.*]` section or an `agents_md` fragment can declare in its
+    required `platforms` list. Native Windows runs only the slice that deploys agent instructions
+    and skills; WSL and dev containers are Linux."""
+
+    LINUX = "linux"
+    WINDOWS = "windows"
+
+
+def current_platform() -> Platform:
+    return Platform.WINDOWS if sys.platform == "win32" else Platform.LINUX
+
+
+def applies_here(owner: str, declared: list[str] | None) -> bool:
+    """Whether a `platforms` declaration includes this machine.
+
+    Required rather than defaulted, which was the user's call (2026-11-25): with 140 sections, a
+    default of "linux" would make the Windows slice the only thing anyone has to think about, and a
+    forgotten declaration would silently decide where a package runs. A missing or unknown value is
+    an error that names the section instead.
+    """
+    if not declared:
+        raise missing_fields(owner, "platforms")
+    unknown = set(declared) - {p.value for p in Platform}
+    if unknown:
+        raise RuntimeError(f"[{owner}] unknown platform(s) {sorted(unknown)}; known: {[p.value for p in Platform]}")
+    return current_platform().value in declared
+
+
 def _excluded_tags() -> set[str]:
     val = os.environ.get("PULSE_EXCLUDE_TAGS", "")
     if not val:
@@ -976,21 +1010,26 @@ class PackageMethod(StrEnum):
 
 
 def enabled_packages() -> dict[str, PackageConfig]:
-    """Every [packages.*] section that isn't disabled or excluded by PULSE_EXCLUDE_TAGS, whatever
-    its method — the entry point for cross-method concerns like `config_files`, which any method
-    may declare. Method-specific install tasks want packages_by_method() instead.
+    """Every [packages.*] section that declares this platform and isn't disabled or excluded by
+    PULSE_EXCLUDE_TAGS, whatever its method — the entry point for cross-method concerns like
+    `config_files`, which any method may declare. Method-specific install tasks want
+    packages_by_method() instead.
 
-    Precedence is setup.toml → overrides.toml → PULSE_EXCLUDE_TAGS, environment last and absolute.
-    Tags describe *capability* (no display server means a gui package genuinely cannot work), while
-    an override describes *intent* — so an excluded tag wins over a machine that asked for the
-    package, and the container/WSL profiles stay authoritative about what they can run.
+    Precedence is platforms → setup.toml → overrides.toml → PULSE_EXCLUDE_TAGS. The platform comes
+    first and no override can bring a package back: an apt package cannot be installed on Windows
+    whatever a machine asks for. Tags describe *capability* (no display server means a gui package
+    genuinely cannot work), while an override describes *intent* — so an excluded tag wins over a
+    machine that asked for the package, and the container/WSL profiles stay authoritative about
+    what they can run.
     """
     excluded = _excluded_tags()
     overrides = load_overrides()
     return {
         name: cfg
         for name, cfg in load_config()["packages"].items()
-        if overrides.get(name, cfg.get("enabled", True)) and not (excluded & set(cfg.get("tags", [])))
+        if applies_here(name, cfg.get("platforms"))
+        and overrides.get(name, cfg.get("enabled", True))
+        and not (excluded & set(cfg.get("tags", [])))
     }
 
 

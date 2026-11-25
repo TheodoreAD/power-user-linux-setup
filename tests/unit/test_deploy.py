@@ -11,7 +11,7 @@ import pytest
 from invoke import Exit, MockContext
 
 from tasks import deploy, util
-from tests.platforms import needs_symlinks
+from tests.platforms import needs_symlinks, with_platforms
 
 
 @pytest.fixture(autouse=True)
@@ -298,6 +298,7 @@ def _stub_config(monkeypatch, packages: dict[str, util.PackageConfig]) -> None:
     Harmless only while nothing under test called it for a disabled package, and
     test_a_disabled_package_declares_no_skills started failing the moment `_skill_entries` did.
     """
+    packages = with_platforms(packages)
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
     monkeypatch.setattr(util, "enabled_packages", lambda: {n: c for n, c in packages.items() if c.get("enabled", True)})
     monkeypatch.setattr(
@@ -649,6 +650,32 @@ def test_fragments_sort_by_order_then_package(monkeypatch):
     )
 
     assert deploy.fragments("agents_md") == ("c.md", "b.md", "d.md")
+
+
+@pytest.mark.parametrize(
+    ("platform", "expected"),
+    [(util.Platform.LINUX, ("both.md", "linux.md")), (util.Platform.WINDOWS, ("both.md", "windows.md"))],
+    ids=["linux", "windows"],
+)
+def test_a_fragment_is_assembled_only_on_the_platforms_it_declares(monkeypatch, platform, expected):
+    # The point of the per-fragment field: a Linux-only rule (sudo, zsh, direnv) never reaches a
+    # Windows machine's instructions, while a rule for both is written once.
+    _stub_config(
+        monkeypatch,
+        {
+            "agents-md": {
+                "method": "wrapper-script",
+                "agents_md": [
+                    {"src": "both.md", "order": 10, "platforms": ["linux", "windows"]},
+                    {"src": "linux.md", "order": 20, "platforms": ["linux"]},
+                    {"src": "windows.md", "order": 30, "platforms": ["windows"]},
+                ],
+            },
+        },
+    )
+    monkeypatch.setattr(util, "current_platform", lambda: platform)
+
+    assert deploy.fragments("agents_md") == expected
 
 
 def test_a_fragment_with_no_order_lands_after_the_curated_ones(monkeypatch):

@@ -17,6 +17,7 @@ import pytest
 from invoke import Context, MockContext, Result
 
 from tasks import ai, deploy, ui, util
+from tests.platforms import EVERYWHERE
 
 
 @pytest.fixture(autouse=True)
@@ -417,10 +418,18 @@ def test_install_declared_skills_dispatches_both_sources_and_threads_yes(monkeyp
         "load_config",
         lambda: {
             "packages": {
-                "pkg-a": {"enabled": True, "skills": [{"source": "local", "path": "skills/a"}]},
-                "pkg-b": {"enabled": True, "skills": [{"source": "npx", "repo": "o/r"}]},
-                "pkg-disabled": {"enabled": False, "skills": [{"source": "local", "path": "skills/c"}]},
-                "pkg-no-skills": {"enabled": True},
+                "pkg-a": {
+                    "platforms": EVERYWHERE,
+                    "enabled": True,
+                    "skills": [{"source": "local", "path": "skills/a"}],
+                },
+                "pkg-b": {"platforms": EVERYWHERE, "enabled": True, "skills": [{"source": "npx", "repo": "o/r"}]},
+                "pkg-disabled": {
+                    "platforms": EVERYWHERE,
+                    "enabled": False,
+                    "skills": [{"source": "local", "path": "skills/c"}],
+                },
+                "pkg-no-skills": {"platforms": EVERYWHERE, "enabled": True},
             }
         },
     )
@@ -443,9 +452,21 @@ def _stub_two_skill_packages(monkeypatch, calls):
         "load_config",
         lambda: {
             "packages": {
-                "pkg-a": {"enabled": True, "skills": [{"source": "local", "path": "skills/plan-docs"}]},
-                "pkg-b": {"enabled": True, "skills": [{"source": "local", "path": "skills/db-defaults"}]},
-                "pkg-c": {"enabled": True, "skills": [{"source": "npx", "repo": "o/r", "names": ["a", "b"]}]},
+                "pkg-a": {
+                    "platforms": EVERYWHERE,
+                    "enabled": True,
+                    "skills": [{"source": "local", "path": "skills/plan-docs"}],
+                },
+                "pkg-b": {
+                    "platforms": EVERYWHERE,
+                    "enabled": True,
+                    "skills": [{"source": "local", "path": "skills/db-defaults"}],
+                },
+                "pkg-c": {
+                    "platforms": EVERYWHERE,
+                    "enabled": True,
+                    "skills": [{"source": "npx", "repo": "o/r", "names": ["a", "b"]}],
+                },
             }
         },
     )
@@ -494,7 +515,7 @@ def test_install_declared_skills_selection_reaches_a_whole_repo_entry(monkeypatc
     calls = []
     _stub_two_skill_packages(monkeypatch, calls)
     packages = util.load_config()["packages"]
-    packages["pkg-d"] = {"enabled": True, "skills": [{"source": "npx", "repo": "o/whole"}]}
+    packages["pkg-d"] = {"platforms": EVERYWHERE, "enabled": True, "skills": [{"source": "npx", "repo": "o/whole"}]}
     monkeypatch.setattr(util, "load_config", lambda: {"packages": packages})
 
     ai._install_declared_skills(MockContext(), Path("/base"), yes=True, selected={"plan-docs", "upstream-only"})
@@ -511,8 +532,8 @@ def test_install_declared_skills_refuses_an_undeclared_name_with_two_whole_repo_
         "load_config",
         lambda: {
             "packages": {
-                "pkg-a": {"enabled": True, "skills": [{"source": "npx", "repo": "o/one"}]},
-                "pkg-b": {"enabled": True, "skills": [{"source": "npx", "repo": "o/two"}]},
+                "pkg-a": {"platforms": EVERYWHERE, "enabled": True, "skills": [{"source": "npx", "repo": "o/one"}]},
+                "pkg-b": {"platforms": EVERYWHERE, "enabled": True, "skills": [{"source": "npx", "repo": "o/two"}]},
             }
         },
     )
@@ -526,7 +547,7 @@ def test_install_declared_skills_warns_on_unknown_source(monkeypatch, capsys):
     monkeypatch.setattr(
         util,
         "load_config",
-        lambda: {"packages": {"pkg": {"enabled": True, "skills": [{"source": "weird"}]}}},
+        lambda: {"packages": {"pkg": {"platforms": EVERYWHERE, "enabled": True, "skills": [{"source": "weird"}]}}},
     )
 
     ai._install_declared_skills(MockContext(), Path("/base"), yes=True)
@@ -612,7 +633,9 @@ def _stub_declared_statusline_package(monkeypatch, value=_DECLARED_STATUSLINE):
     monkeypatch.setattr(
         util,
         "load_config",
-        lambda: {"packages": {"claude-statusline": {"enabled": True, "claude_statusline": value}}},
+        lambda: {
+            "packages": {"claude-statusline": {"platforms": EVERYWHERE, "enabled": True, "claude_statusline": value}}
+        },
     )
 
 
@@ -696,7 +719,11 @@ def _stub_declared_dirs(monkeypatch, tmp_path, dirs):
     monkeypatch.setattr(
         util,
         "load_config",
-        lambda: {"packages": {"claude-code": {"enabled": True, "claude_additional_directories": dirs}}},
+        lambda: {
+            "packages": {
+                "claude-code": {"platforms": EVERYWHERE, "enabled": True, "claude_additional_directories": dirs}
+            }
+        },
     )
     monkeypatch.setattr(ai, "_STATIC_DIRS_MANIFEST", tmp_path / "dirs-manifest.json")
 
@@ -762,7 +789,7 @@ def _stub_declared_mode(monkeypatch, value="acceptEdits"):
     monkeypatch.setattr(
         util,
         "load_config",
-        lambda: {"packages": {"claude-code": {"enabled": True, "claude_default_mode": value}}},
+        lambda: {"packages": {"claude-code": {"platforms": EVERYWHERE, "enabled": True, "claude_default_mode": value}}},
     )
 
 
@@ -814,7 +841,9 @@ def test_apply_declared_default_mode_confirmed_overwrite_writes(monkeypatch):
 
 
 def test_apply_declared_default_mode_noop_when_nothing_declared(monkeypatch):
-    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"claude-code": {"enabled": True}}})
+    monkeypatch.setattr(
+        util, "load_config", lambda: {"packages": {"claude-code": {"platforms": EVERYWHERE, "enabled": True}}}
+    )
     monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
 
     ai._apply_declared_default_mode()
@@ -845,7 +874,7 @@ def _stub_declared_auto_mode(monkeypatch, value=_AUTO_MODE):
     monkeypatch.setattr(
         util,
         "load_config",
-        lambda: {"packages": {"claude-code": {"enabled": True, "claude_auto_mode": value}}},
+        lambda: {"packages": {"claude-code": {"platforms": EVERYWHERE, "enabled": True, "claude_auto_mode": value}}},
     )
 
 
@@ -904,7 +933,11 @@ def _stub_declared_budget(monkeypatch, value=0.03):
     monkeypatch.setattr(
         util,
         "load_config",
-        lambda: {"packages": {"claude-code": {"enabled": True, "claude_skill_listing_budget_fraction": value}}},
+        lambda: {
+            "packages": {
+                "claude-code": {"platforms": EVERYWHERE, "enabled": True, "claude_skill_listing_budget_fraction": value}
+            }
+        },
     )
 
 
@@ -956,7 +989,9 @@ def test_apply_declared_budget_confirmed_overwrite_keeps_other_keys(monkeypatch)
 
 
 def test_apply_declared_budget_noop_when_nothing_declared(monkeypatch):
-    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"claude-code": {"enabled": True}}})
+    monkeypatch.setattr(
+        util, "load_config", lambda: {"packages": {"claude-code": {"platforms": EVERYWHERE, "enabled": True}}}
+    )
     monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("nothing declared, must never read settings"))
 
     ai._apply_declared_skill_listing_budget()
@@ -986,7 +1021,9 @@ def test_apply_declared_budget_treats_a_declared_zero_as_declared(monkeypatch):
 
 
 def _stub_permission_packages(monkeypatch, **fields: list[str]) -> None:
-    monkeypatch.setattr(util, "load_config", lambda: {"packages": {"claude-code": {"enabled": True, **fields}}})
+    monkeypatch.setattr(
+        util, "load_config", lambda: {"packages": {"claude-code": {"platforms": EVERYWHERE, "enabled": True, **fields}}}
+    )
 
 
 def test_static_perm_merge_leaves_a_rule_this_mechanism_never_wrote(tmp_path):
