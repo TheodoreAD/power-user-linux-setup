@@ -49,8 +49,9 @@ select = [
 ignore = [
   "PLR", # see PL comment above — refactor-suggestion noise, not bug-catching
   "TRY003", # "raise vanilla exception with a long message" — deliberately minimal exception
-  # hierarchies across this family (skills/python-conventions/references/rationale.md §3); Home
-  # Assistant's own config drops this same code for being too opinionated for exactly this reason
+  # hierarchies across this family (agent-skills'
+  # skills/python-conventions-taudelta/references/rationale.md §3); Home Assistant's own config
+  # drops this same code for being too opinionated for exactly this reason
 ]
 
 [lint.flake8-tidy-imports.banned-api]
