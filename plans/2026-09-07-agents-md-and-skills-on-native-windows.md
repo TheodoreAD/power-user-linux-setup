@@ -119,8 +119,8 @@ skill stays silently ignored until its line is added. Rejected: a committed `ski
 `mklink /J` on Windows), which reimplements what the CLI already does. Rejected: `core.symlinks`
 with Developer Mode, which needs admin once and is unavailable on a work machine.
 
-**Verified 2026-11-25 on the Windows machine (Claude Code 2.1.332, no Developer Mode):** Claude
-Code follows a junction for a skill entry. In `nexus`,
+**Verified 2026-11-25 on the Windows machine (Claude Code 2.1.332, no Developer Mode):** Claude Code
+follows a junction for a skill entry. In `nexus`,
 `npx skills add ./skills -a universal claude-code -y` left a real copy in `.agents/skills/` and a
 junction in `.claude/skills/`, and a headless `claude -p` listed the project skill alongside the
 seven global ones, which were reinstalled the same way and are junctions too.
@@ -457,8 +457,8 @@ fold in as fragments.** Decided by the user 2026-11-25, over a rendered `dist/AG
 over keeping a separate Windows file. `win-configs/claude/CLAUDE.md` (PowerShell 7, the tool table,
 Bash tool denied, no-memory, Documents and Artifacts) becomes a Windows-only fragment here.
 `win-configs` stops deploying the instructions file once PULSE does, and keeps scoop, the terminal
-and the pwsh profile. On Windows the entry point is `spowse deploy.all` + `spowse ai.install-skills`,
-not `inv setup`.
+and the pwsh profile. On Windows the entry point is `spowse deploy.all` +
+`spowse ai.install-skills`, not `inv setup`.
 
 Interim state, 2026-11-25: `win-configs` 0292aba copies its file to `~/.agents/AGENTS.md` and
 `~/.claude/CLAUDE.md` (identical), and installs the global skills with
@@ -497,8 +497,28 @@ against. That is settled, which moves the work to the order below.
    that says the port works; content differences are the next problem, not this one.
 4. **Then the axis**, then the Windows-only rules it enables.
 
-The junction question this section used to end on is answered (yes, 2026-11-25). Step 1 is
-partly done: the tracked `CLAUDE.md` symlink is gone. `.gitattributes` and the encoding fix are
-still open, and so are all four blockers in step 2. Checked against master 76d1a84:
-`tasks/util.py:4`, `tasks/util.py:37`, about 20 bare `read_text()` calls across `tasks/`, and
-`tasks/verify.py:227`.
+**Steps 1–3 are done, 2026-11-25, on the Windows machine:**
+
+- `a504832`: `inv` imports on Windows (`pwd` imported locally, `util.is_root()` replaces the
+  `os.geteuid()` checks, `getpass.getuser()` for the user name).
+- `529bdb3`: every text read and write in `tasks/` and `tests/` passes `encoding="utf-8"`, and every
+  `write_text()` passes `newline="\n"`. That's 299 calls, not the "about 20" this plan counted.
+- `76798db`: three paths that came out wrong on Windows: `additionalDirectories` in Claude settings,
+  `home.list-claims` labels, and `session_bus_address()`.
+- `87b2836`: the unit suite runs on Windows: 898 passed, 41 skipped by `tests/platforms.py` marks
+  with stated reasons. `inv quality.precommit` passes there too, so Windows is now a machine the
+  repo can be developed on, not only deployed to.
+- `c709b6a`: `.gitattributes`.
+- Not needed: the `verify.py` symlink check had already become a content comparison, and
+  `PULSE_CONFIG_DIR`/`PULSE_STATE_DIR` already agree with the skills, which moved to
+  `~/.config`/`~/.local/state` on every OS on 2026-11-08 (the `%APPDATA%` advice in "What breaks" is
+  out of date).
+- Step 3 checkpoint: `deploy.status` runs on Windows, and `deploy.expected_bytes()` for
+  `~/.agents/AGENTS.md` renders 62,608 bytes, 971 lines, no CR, with `→`/`—` intact and no mojibake.
+  It's the same pure function over the same UTF-8 bytes as on Linux; no Linux machine was at hand to
+  compare digests directly.
+
+**Next is step 4, the axis**, and it is visible already: on Windows `deploy.status` also lists
+`askpass-zenity` and `cameractrls-launcher`, so the platform filter has to cover packages as well as
+fragments. Do not run `inv deploy.all` for `agents-md` on Windows before the Windows fragment
+exists: it would replace the Windows rules now in `~/.agents/AGENTS.md` with the Linux-only file.
