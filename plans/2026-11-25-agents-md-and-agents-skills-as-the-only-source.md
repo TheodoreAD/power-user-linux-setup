@@ -1,5 +1,5 @@
 ---
-status: idea
+status: in-progress
 updated: 2026-11-25
 ---
 
@@ -18,8 +18,8 @@ read the universal path needs.
 
 This plan supersedes the open half of `plans/2026-09-02-agent-harness-support-matrix.md` (its rungs
 and per-vendor table) with a re-measurement, and spans four repos: this one, `agent-skills`,
-`scaffoldapy` and `repo-tasks`. The other three get their own plans filed in their store folders,
-each pointing here; nothing in this plan is edited in their trees from a session here.
+`scaffoldapy` and `repo-tasks`, and the repos that carried a `CLAUDE.md`. The first draft proposed
+filing a plan per repo; the user then authorised the cross-repo edits directly, see "Done".
 
 ### How this was measured
 
@@ -217,11 +217,15 @@ zero maintenance and is what the CLI's own installer already expects to find
 there; a repo `.claude/skills` holds neither. Cost: on Windows without `core.symlinks`, git checks
 the link out as a one-line text file, the same limitation every committed symlink here has.]
 
-[DECISION: **the `skills` CLI is called with `--agent claude-code` and nothing else.** Measured in
-the 1.9.0 source: that writes the canonical copy plus Claude's per-skill links and no other agent's
-directory. `github-copilot` goes from the list, as does any idea of naming `universal`. Without an
-explicit agent the CLI would link every detected agent, which is the redundant shape the request
-ruled out.]
+[DECISION: **the `skills` CLI is called with `--agent universal --agent claude-code` and nothing
+else** (`_DEFAULT_AGENTS` in `tasks/ai.py`). Corrected the same day: the first draft said
+`claude-code` alone, from reading `getCanonicalSkillsDir`, and a throwaway-`HOME` run disproved it.
+1.9.0's `defaultInstallMode` copies straight into the one directory when every target shares it, so
+`claude-code` alone wrote a plain copy into `~/.claude/skills` and left `~/.agents/skills` empty.
+With `universal` beside it the targets span two directories, and the CLI writes the canonical copy
+plus one relative link per skill for Claude Code, and touches nothing else. `github-copilot` went
+from the list. Without an explicit agent the CLI would link every detected agent, which is the
+redundant shape the request ruled out.]
 
 ## The update chain
 
@@ -241,61 +245,60 @@ it.]
 `inv upgrade`, in order:
 
 1. `node.update-globals` — the `skills` CLI first, so step 2 runs on the current release.
-2. `ai.update-skills` (new) — `skills update -g -y` with the telemetry variables set, then
-   `skills ls -g --json` to report what moved. It replaces re-running `skills add` as the way skills
-   refresh; `ai.install-skills` keeps installing what is missing and stops asking about what is
-   present.
-3. Whether `apt.upgrade-debs` belongs in the same composite is left open below.
+2. `ai.update-skills` (new) — `skills update --global --yes` with the telemetry variables set. It
+   replaces re-running `skills add` as the way skills refresh. `ai.install-skills` still runs
+   `skills add` for the whole agent-skills repo, because that is how a skill added upstream arrives
+   and `add --list` cannot be combined with `--json` to diff against the lock.
 
-## Steps
+[DECISION: **`apt.upgrade-debs` stays out of `inv upgrade`** (user's choice, 2026-11-25: "Agent
+tooling only"), so the command needs no sudo.]
 
-**In this repo:**
+## Done, 2026-11-25
 
-1. `[packages.agent-skills]`: `agents = ["claude-code"]`, and rewrite its description to say what
-   the CLI does now (canonical copy, Claude's per-skill links, nothing else) instead of the
-   September symlink history. Remove the stale `deploy-to-vercel` lock entry through
-   `skills remove -g`.
-2. `tasks/ai.py`: `install_skills` installs only skills absent from `~/.agents/.skill-lock.json`;
-   new `update_skills` as above; `upgrade` composite in a new or existing module, shipped in
-   `spowse`; `self.update` offers it. Tests for the lock read and the absent-only selection.
-3. Verify the CLI claim on a throwaway `HOME` before relying on it:
-   `skills add <local path> -g
-   --agent claude-code --yes` produces `~/.agents/skills/<name>` and
-   one `~/.claude/skills/<name>` link and nothing else, and `skills update -g -y` on an unchanged
-   source reports nothing to do. Make it a real test in the slow tier if the CLI is present in CI.
-4. Delete this repo's `CLAUDE.md` symlink. Run one session here afterwards and confirm the
-   `AGENTS.md loaded` line, and that `/memory` lists it.
-5. Rewrite `config/agents-md/agent-knowledge.md`'s "Setting up a repo's agent instructions and
-   skills": `AGENTS.md` is the file, no `CLAUDE.md` at all, skills in `.agents/skills` with a
-   relative `.claude/skills` link only where the repo has skills; the home paragraph keeps the copy
-   rule. Then `inv deploy.all --name agents-md`.
-6. `docs/ai.md` and `docs/claude-code.md`: replace the matrix and every symlink sentence with this
-   plan's table and target; `contributing/ai-tooling.md` takes the per-vendor sources and the
-   registry-lags finding. Retire `plans/2026-09-02-agent-harness-support-matrix.md` once its
-   remaining content has a home there.
+The user asked for everything at once ("do absolutely everything from here, let's clean this mess
+up. you have permission to work across all other repos"), so the per-repo filings this plan first
+proposed were done directly instead, each repo pulled first.
 
-**Filed for the other repos, through `plans.py new --for`:**
+**This repo** (pushed, CI green on each):
 
-7. `agent-skills`: `skill-authoring-taudelta` re-install step uses `skills update -g` (or the
-   machine's declared mechanism), drops the `ln -s` advice and the no-lock-file claims;
-   `skill-fitness`' default scopes keep `~/.claude/skills` as a secondary root, since it is where
-   Claude-synced skills appear; repo `CLAUDE.md` symlink removed. Settles its own open plan on which
-   re-install command is canonical.
-8. `scaffoldapy`: template drops `CLAUDE.md`; `.claude/skills` link generated only when
-   `.agents/skills` has a skill (it now always does, with a README stub); README stub and its
-   `test_template.py` assertions rewritten; `~/AGENTS.md` pointers become `~/.agents/AGENTS.md`.
-   Generated repos reach this only through `copier update`, which its own open plan already covers.
-9. `repo-tasks`: fix its absolute `.claude/skills` link (or drop it, its `.agents/skills` is empty),
-   drop `CLAUDE.md`, fix the five `~/AGENTS.md` references.
-10. The remaining repos (`hekate`, `ingesta`, `invoke-stubs`, the polite-mcp repos): drop
-    `CLAUDE.md`; `olx-polite-mcp`'s absolute `.claude/skills` link becomes relative or goes. One
-    short plan each, or one line each in their next session — they are a minute's work apiece.
+- `85242fb` — `_DEFAULT_AGENTS = ("universal", "claude-code")`, `ai.update-skills`, the agent-skills
+  entry without its own `agents`. Then re-installed here: 16 skills, canonical copies plus Claude
+  links, and the stale `deploy-to-vercel` lock entry removed with `skills remove -g`.
+- `1b05783` — `inv upgrade` and the `self.update` offer. Run end to end: CLI unchanged at 1.9.0,
+  skills up to date. Later the same day `inv ai.update-skills` picked up exactly the two skills
+  agent-skills had just changed, and their Claude links survived the update — which settles the
+  UNVERIFIED this plan carried about lock entries written by 1.5.24.
+- `32b6632` — the global rule and this repo's `CLAUDE.md`. A headless session started afterwards
+  quoted this repo's `AGENTS.md` heading and named the file, with no `CLAUDE.md` present.
+- `5196841` — `docs/ai.md`, `docs/claude-code.md`, `docs/configuration.md`,
+  `contributing/ai-tooling.md`.
+
+**Elsewhere:**
+
+- `agent-skills` — `CLAUDE.md` was already gone, removed from the user's Windows machine the same
+  morning: a checkout without Developer Mode had materialised the symlink as a 9-byte text file, so
+  Claude Code there loaded the word `AGENTS.md` as its instructions. `83e1013` rewrote
+  `skill-authoring-taudelta`'s re-install and verify steps (`skills update`, both agent names, no
+  whole-directory link), the README's install block, two lock-file claims and a `skill-fitness`
+  docstring.
+- `scaffoldapy` `354d4ed` — template and repo without `CLAUDE.md`, the skills README stub rewritten,
+  `~/.agents/AGENTS.md` pointers, `test_template.py` asserting no `CLAUDE.md`. The template keeps
+  generating `.claude/skills` for every project, not only ones with a skill: `.agents/skills` always
+  exists with its README, and a link waiting for the first skill costs nothing.
+- `repo-tasks` `4f82b12`, `olx-polite-mcp` `eeaffcb` — `CLAUDE.md` and the absolute `.claude/skills`
+  links deleted (neither repo has a skill), `~/AGENTS.md` references fixed.
+- `ingesta` `015f144`, `invoke-stubs` `7406f1d`, `freshful-polite-mcp` `83dafbf`, `temu-polite-mcp`
+  `ceff62e` — `CLAUDE.md` deleted, `~/AGENTS.md` references fixed where present. `ingesta` and
+  `freshful-polite-mcp` keep their relative `.claude/skills` links.
+- `hekate` — through PR 19, since everything there lands by squash-merged pull request.
 
 ## Open questions
 
-[NEEDS CLARIFICATION: **does `apt.upgrade-debs` join `inv upgrade`?** It is the same kind of
-operation and already exists, and leaving it out makes `inv upgrade` mean "the agent tooling". In,
-it needs sudo, which the composite would then ask for up front.]
+**A committed `.claude/skills` symlink does not survive a Windows checkout without Developer Mode**
+— git writes it as a text file, so Claude Code there sees no repo skills. Found the same day from
+the agent-skills Windows commit, which hit exactly this with `CLAUDE.md`. It is an OS-axis question,
+so it is filed as a NEEDS CLARIFICATION in
+`plans/2026-09-07-agents-md-and-skills-on-native-windows.md` rather than here.
 
 [NEEDS CLARIFICATION: **should PULSE configure Gemini CLI to read `AGENTS.md`** in repos
 (`context.fileName: ["AGENTS.md", "GEMINI.md"]` in `~/.gemini/settings.json`) once Gemini is
@@ -307,12 +310,18 @@ and Amp, `~/.config/zed/AGENTS.md`, `~/.config/opencode/AGENTS.md`. The parent-e
 detects an installed agent does not work for `~/.config`, which always exists, so each needs its own
 detection. Add when one of them is actually used.]
 
-[UNVERIFIED: that `skills update -g` handles the `TheodoreAD/agent-skills` entries cleanly, since
-they were installed by 1.5.24 and its lock entries carry no `ref` field. Step 3's test answers it.]
+[NEEDS CLARIFICATION: carried from the retired `plans/2026-09-02-agent-harness-support-matrix.md` —
+should `inv verify.all` check that each instruction copy's _filename_ is still what its vendor
+documents? It proves the copy matches today, not that anything reads it, and a renamed vendor path
+is silent. It would mean a per-agent assertion maintained by hand.]
+
+[DEFERRED: a slow-tier test that runs the real `skills` CLI against a throwaway `HOME`, pinning the
+universal-plus-claude-code layout. The CLI changed its default install mode between 1.5.24 and 1.9.0
+without notice, and `inv upgrade` now takes every new release unreviewed. Worth adding once CI can
+reach npm without adding minutes to every run.]
 
 ## Recommended direction
 
-Do it in the order above: the home half first (steps 1–3), because it is one repo and makes the
-upgrade path real; then this repo's own `CLAUDE.md` and the global rule (4–5), because the rule is
-what every other repo's sessions read; then the docs (6); then file the three plans (7–9) in one
-pass and leave step 10 to whichever session next works in each repo.
+What is left is the open questions above, none of which blocks anything. The Windows
+`.claude/skills` question is the one with a real user behind it, and the first time a repo with
+skills is opened on the Windows machine is when to answer it.

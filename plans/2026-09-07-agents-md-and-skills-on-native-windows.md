@@ -27,9 +27,29 @@ The target and its constraints, from the same exchange:
 - Agents that must read the file there: **Claude Code, GitHub Copilot (VS Code), Codex CLI,
   Windsurf/Devin**.
 
-This plan is the OS axis. The agent axis is `plans/2026-09-02-agent-harness-support-matrix.md`,
-which is in progress and answers a different question — which harnesses read what — and its answers
-are used here rather than re-derived.
+This plan is the OS axis. The agent axis was `plans/2026-09-02-agent-harness-support-matrix.md`,
+retired 2026-11-25 and superseded by
+`plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`, which answers a different
+question — which harnesses read what — and its answers are used here rather than re-derived.
+
+**Settled 2026-11-25, from the agent axis:**
+
+- **The tracked `CLAUDE.md` symlink is gone**, here and in every personal repo. Claude Code reads
+  `AGENTS.md` itself since 2.1.277, so the breakage in "Three the survey found" item 1 no longer
+  exists. The user's Windows machine hit it that morning in `agent-skills` and removed it there
+  first.
+- **The skills-link question below is answered.** PULSE stopped making a `~/.claude/skills`
+  directory link on 2026-09-07, and the `skills` CLI writes one entry per skill itself — a junction
+  on Windows. Since 1.9.0 it does so only when the targets span two directories, so PULSE installs
+  with `--agent universal --agent claude-code`. The remaining UNVERIFIED, whether Claude Code
+  follows a junction, still stands.
+
+[NEEDS CLARIFICATION: **a repo's committed `.claude/skills -> ../.agents/skills` link has the same
+Windows problem `CLAUDE.md` had.** Git for Windows checks it out as a text file holding the target
+path, so Claude Code there sees no repo skills, silently. Affects `freshful-polite-mcp`, `ingesta`
+and every repo scaffoldapy generates. Options: a per-clone step (repo-tasks' `dev-env.setup`
+creating per-skill junctions into a gitignored `.claude/skills`), or `core.symlinks` with Developer
+Mode on that machine. Decide when a repo with skills is first worked on from Windows.]
 
 ## What breaks, measured rather than assumed
 
