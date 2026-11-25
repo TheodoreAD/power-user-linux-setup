@@ -189,6 +189,8 @@ class PackageConfig(TypedDict, total=False):
     # Hook event name (SessionStart, CwdChanged, ...) -> the command to run on it, merged into
     # ~/.claude/settings.json's `hooks` by ai.install-skills. See _apply_declared_hooks.
     claude_hooks: dict[str, str]
+    # Native Windows: directories `inv windows.configure-path` puts first on the user PATH.
+    windows_path: list[str]
     omz_plugin: str | list[str]
     cleanup_paths: list[str]
     check_cmd: str
