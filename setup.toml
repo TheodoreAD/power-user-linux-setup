@@ -1492,7 +1492,7 @@ claude_permissions_allow = [
   # holds only git repos (nothing downloaded — that lives in ~/research, which has the same grant),
   # and every cross-repo convergence task in this family reads sibling repos. Read-only: writes
   # there still prompt. User decision 2026-08-25.
-  "Read(//home/tdumitrescu/projects/**)",
+  "Read(~/projects/**)",
   # Probed 2026-08-25: an allow rule (`Bash(rg:*)`) does not exempt a read outside the working
   # dirs — every `rg`/`ls` prompt that day was one of these paths. Transcripts and the harness's
   # own overflow files ("Output too large … saved to ~/.claude/projects/…/tool-results/"), and
@@ -2385,7 +2385,7 @@ zshenv = 'export RESEARCH_HOME="${HOME}/research"'
 # deliberately separate from tasks/allowlist.py's CLI-classification pipeline, which this isn't
 # part of; see docs/claude-code.md.
 claude_permissions_allow = [
-  "Read(//home/tdumitrescu/research/**)",
+  "Read(~/research/**)",
 ]
 
 [packages.gog]
