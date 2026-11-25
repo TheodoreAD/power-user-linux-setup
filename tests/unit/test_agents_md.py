@@ -48,6 +48,17 @@ _EVIDENCE_FREE = frozenset(
         "Which sessions load this file",
         # A stated preference of the user, 2026-11-25: replaced "Caveman-style terse output".
         "Writing a reply",
+        # Stated preferences of the user, merged in from the Windows machine's global rules on
+        # 2026-11-25 (plans/2026-09-07-agents-md-and-skills-on-native-windows.md).
+        "Writing up research, notes, a plan or a design",
+        "Naming a file or directory",
+        "Formatting Markdown",
+        "Keeping personal details out of a repo",
+        "Setting up a new repo",
+        "Machine behavior belongs in global config, not in a repo",
+        "The shell on the Windows machine",
+        "Writing a script on the Windows machine",
+        "Running a Python project's tools on the Windows machine",
     }
 )
 

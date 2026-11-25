@@ -32,6 +32,24 @@ rather than accepting the behaviour because it shipped that way. Report publishi
 "share with the vendor" toggle. Local costs nothing and cannot be taken back later, which is the
 same reasoning that keeps the plans store's sensitive tier without a remote.
 
+### Keeping personal details out of a repo
+
+**Never write the user's name, email address, GitHub login or ID, OS username, computer name, key
+names, home path or hardware into code, config or docs.** Derive them where they are needed
+(`$HOME`, `$env:USERNAME`/`$USER`, `$env:COMPUTERNAME`, `gh api user`), use placeholders such as
+`__HOME__` in templates and fill them in at install, and give examples made-up values (`MY-PC`,
+`my-user`).
+
+**Commits must not expose a personal email address either.** Commit with GitHub's noreply address,
+`<id>+<login>@users.noreply.github.com`, derived from `gh api user`.
+
+### Setting up a new repo
+
+- **A `.gitattributes` that stores and checks out text as LF** (`* text=auto eol=lf`), keeps
+  `.bat`/`.cmd` as CRLF and marks binaries. Shell scripts that run in WSL or on Linux must be LF.
+  The template is `git/gitattributes` in the `win-configs` repo.
+- **Editor folders (`.vscode/`, `.idea/`) are personal** and never committed.
+
 ### Force-pushing, or asking what a remote actually has
 
 Every ref you hand git is one you read, never one you derived. `--force-with-lease` is only as good
@@ -78,6 +96,9 @@ skipping it schedules a red run that someone else reads.
 Parallel sessions share one working tree, so checking out an old commit moves a tree somebody else
 is working in. `git log` and `git show` are the only reads safe by construction, which makes the
 history the channel rather than the convenient record. Two things follow.
+
+**Commit as you go.** In a multi-step task, commit each step as soon as it is finished and passes
+the gate, without waiting to be asked, and never end a task with finished work left uncommitted.
 
 **Split it into small single-concern commits**, even when the request was a single ask. A doc update
 commits separately from the code implementing it. A bug fix found mid-implementation folds into the
@@ -201,4 +222,6 @@ Direct pushes to `main`/`master` are the norm on the user's own personal repos
 (`power-user-linux-setup`, `repo-tasks`, `scaffoldapy`, ...) — sole contributor and owner, so PR
 review gates nothing. A "bypassing branch protection" message on push is expected there, since the
 rule is a force-push guard rather than a review gate. Don't flag it and don't suggest a PR. None of
-this transfers to a shared/team repo with real other contributors.
+this transfers to a shared/team repo with real other contributors. Work on the default branch unless
+the user asks for another one, and `git fetch` before pushing to make sure it is not behind its
+remote.

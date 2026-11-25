@@ -9,8 +9,10 @@ one owns a single subject, and contributes exactly the `##` cluster named after 
 | **10**    | `agent-knowledge.md`    | Agent instructions & knowledge | linux, windows |
 | **20**    | `git.md`                | Git & commits                  | linux, windows |
 | **21**    | `git.linux.md`          | Git & commits (supplement)     | linux          |
+| **22**    | `git.windows.md`        | Git & commits (supplement)     | windows        |
 | **30**    | `bash.md`               | Bash & tool use                | linux, windows |
 | **31**    | `bash.linux.md`         | Bash & tool use (supplement)   | linux          |
+| **32**    | `bash.windows.md`       | Bash & tool use (supplement)   | windows        |
 | **40**    | `research.md`           | Research & design              | linux, windows |
 | **41**    | `research.linux.md`     | Research & design (supplement) | linux          |
 | **50**    | `verification.md`       | Verification                   | linux, windows |
@@ -22,11 +24,11 @@ cluster is split across two fragments. With one cluster per fragment that holds 
 
 **The one exception is a platform supplement**, `<parent>.<platform>.md`. It holds the rules of its
 parent's cluster that are true on one platform only (the ssh keyring, sudo, zsh and the Bash tool on
-Linux), as `###` rules with no `##` heading of its own. It sits at the order right after its parent,
-so its rules land under the parent's heading. Every fragment declares its `platforms` in
-`setup.toml` and the assembler drops the ones that leave out this machine, so a supplement is how
-one cluster says different things per platform without a rule living half in two places. A rule true
-on both platforms belongs in the parent, never in two supplements.
+Linux; PowerShell on Windows), as `###` rules with no `##` heading of its own. It sits at the order
+right after its parent, so its rules land under the parent's heading. Every fragment declares its
+`platforms` in `setup.toml` and the assembler drops the ones that leave out this machine, so a
+supplement is how one cluster says different things per platform without a rule living half in two
+places. A rule true on both platforms belongs in the parent, never in two supplements.
 
 Design, rationale, and the rule-by-rule triage behind the split:
 `plans/2026-08-26-agent-artifact-authoring-decoupling.md`, "Design — the assembled

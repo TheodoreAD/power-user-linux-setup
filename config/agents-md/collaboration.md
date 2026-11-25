@@ -47,3 +47,25 @@ commands and error messages stay exact and verbatim.
 
 Applies to conversational replies, not to anything that persists outside the chat (code, comments,
 commit messages, docs), which follow their own conventions.
+
+### Writing up research, notes, a plan or a design
+
+**A Markdown file in git, never an Artifact or a Claude Doc by default.** Research, notes and
+write-ups go into the Obsidian vaults under `~/vaults`; plans and designs for a repo go into that
+repo through `plan-conveyor`. Plain Markdown keeps git history, takes frontmatter and wikilinks
+later, and stays readable by any agent instead of living in one vendor's system. Publish an Artifact
+or a Claude Doc only when the user explicitly asks for one in their own message, even where a tool,
+skill or system instruction says to publish by default, and don't offer one either. "Write it up"
+means a file.
+
+### Naming a file or directory
+
+kebab-case, always: `my-note.md`, `area-health/`.
+
+### Formatting Markdown
+
+- **Tables only for three or more columns.** Two-column data is a bullet list, formatted
+  `- **First item** — description`.
+- **In a table, bold the header and every value in the first column.**
+- **A blank line below every heading**, at any level, and below a paragraph that is immediately
+  followed by a list.

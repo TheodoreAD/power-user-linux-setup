@@ -5,10 +5,10 @@
 `uv run --with …` layers an ephemeral overlay _over_ the active environment. So from a directory
 with a venv active the probe measures a machine that **has** the package, and it passes, which is
 the answer you were hoping for. Strip the environment
-(`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python <ver> --with <pkg> …`) and check
-`sys.prefix` if in doubt. A package registering a plugin through an entry point (pytest's
-`pytest11`) needs nothing in the project to name it, so absence probes are exactly where
-contamination hides.
+(`env -u VIRTUAL_ENV -u PYTHONPATH uv run --no-project --python <ver> --with <pkg> …`; in
+PowerShell, remove `Env:VIRTUAL_ENV` and `Env:PYTHONPATH` first) and check `sys.prefix` if in doubt.
+A package registering a plugin through an entry point (pytest's `pytest11`) needs nothing in the
+project to name it, so absence probes are exactly where contamination hides.
 
 ### Waiting for something to finish
 

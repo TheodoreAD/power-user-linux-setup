@@ -1459,8 +1459,10 @@ agents_md = [
   # one platform only, and sits at the next order so they land under the parent's heading.
   { src = "config/agents-md/git.md", order = 20, platforms = ["linux", "windows"] },
   { src = "config/agents-md/git.linux.md", order = 21, platforms = ["linux"] },
+  { src = "config/agents-md/git.windows.md", order = 22, platforms = ["windows"] },
   { src = "config/agents-md/bash.md", order = 30, platforms = ["linux", "windows"] },
   { src = "config/agents-md/bash.linux.md", order = 31, platforms = ["linux"] },
+  { src = "config/agents-md/bash.windows.md", order = 32, platforms = ["windows"] },
   { src = "config/agents-md/research.md", order = 40, platforms = ["linux", "windows"] },
   { src = "config/agents-md/research.linux.md", order = 41, platforms = ["linux"] },
   { src = "config/agents-md/verification.md", order = 50, platforms = ["linux", "windows"] },

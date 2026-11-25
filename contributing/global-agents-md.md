@@ -2221,6 +2221,19 @@ first thing to run, not the retry.
   truncated one is visible before anyone notices. Not observed, so it is reasoning rather than
   evidence; the rule already names both bodies.
 
+## Writing the commit command in PowerShell
+
+The Windows counterpart of the rule above, added 2026-11-25 when the Windows machine's global rules
+were merged into these fragments. The bash rule's whole quoting argument (backticks and `$`
+substituted, a `"` ending the argument) is about bash and does not transfer: in a single-quoted
+PowerShell here-string nothing is expanded, so a message can carry backticks as written.
+
+Observed the same day, in a session on the Windows machine: `git commit -q -F - @'...'@` failed with
+"error: pathspec '<the whole message>' did not match any file(s) known to git". `-F -` reads the
+message from stdin, and the here-string, passed as an argument, was taken as a pathspec. The same
+message passed as `-m @'...'@` committed. The column-0 rule for the closing `'@` is PowerShell's own
+parse rule.
+
 ## Committing multi-part work
 
 **The commit-message-body floor is deliberately unenforced, moved here 2026-09-12.** The rule states
