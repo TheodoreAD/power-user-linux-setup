@@ -60,8 +60,8 @@ writes `<directory>/.gitconfig`, which would land inside the store.]
 were hekate's, the last 4 minutes old; a rebase under a session committing every few minutes would
 put its next commit on a detached HEAD.]
 
-[NEEDS CLARIFICATION: whether to rewrite the already-pushed gmail commits in `TheodoreAD/plans`.
-Nothing requires it: GH007 checks only the commits a push adds.]
+[DECISION: the already-pushed gmail commits in `TheodoreAD/plans` stay as they are (user's choice,
+2026-11-25), as for hekate. The repo is private, and GH007 checks only the commits a push adds.]
 
 ## Remaining steps
 
@@ -83,7 +83,8 @@ fresh. Verified: `ssh -G github.com` resolves to the adopted key, `ssh -T git@gi
 authenticates, `git ls-remote origin` answers.
 
 1. Once hekate is idle: `git -C ~/plans log origin/master..HEAD`, confirm no commit there is still
-   being amended by a live session, rebase with
+   being amended by a live session (at 18:38 on 2026-11-25 there were 33 unpushed, the newest 6
+   already on the noreply address, hekate's last one minute old), rebase with
    `--exec 'git commit --amend --no-edit --reset-author'` onto `origin/master`, then
    `plans.py push`.
 
