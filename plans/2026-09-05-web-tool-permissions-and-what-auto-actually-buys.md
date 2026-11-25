@@ -426,6 +426,12 @@ In order, because each step makes the next one honest:
 4. **Only then revisit `claude_default_mode`.** The mode question is downstream of all of this and
    cannot be answered while the friction is what decides it.
 
+   [DECISION: **revisited first, ahead of the sandbox — user decision, 2026-11-25.** The mode is now
+   `auto`, declared in `setup.toml`, and `WebSearch` is allowed. The user judged the classifier good
+   enough for a threat model where a rebuild or a revert recovers the mess, which makes the sandbox
+   an improvement rather than a prerequisite. Steps 1 and 3 here stay open. The reasoning is
+   `plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`.]
+
 ## Attachments
 
 - `sandbox_probe.py` — committed, 5 KB, attached 2026-09-26. The script behind the 2026-09-26 probe

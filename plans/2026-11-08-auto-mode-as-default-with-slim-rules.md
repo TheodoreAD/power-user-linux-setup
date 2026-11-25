@@ -177,8 +177,13 @@ drift as the price, or resolve it there first.]
 `plans/2026-09-05-web-tool-permissions-and-what-auto-actually-buys.md` stays the only OS-enforced
 egress boundary and the honest fix for exfiltration. That plan ordered "revisit
 `claude_default_mode`" last, after the sandbox; this plan deliberately goes first, because the
-user's threat model makes the sandbox an improvement rather than a prerequisite. Update that plan's
-step 4 to point here when this lands.]
+user's threat model makes the sandbox an improvement rather than a prerequisite. That plan's step 4
+now points here (2026-11-25).]
+
+[UNVERIFIED: **the Own-Repo Merge exception has never run.** `claude auto-mode config` shows it in
+effect and the critique passes found no conflict, but no agent has merged a PR it opened under it.
+The first real merge either runs, or is blocked with a reason worth reading before rewording the
+entry.]
 
 ## Landed 2026-11-25
 

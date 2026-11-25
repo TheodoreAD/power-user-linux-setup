@@ -167,3 +167,7 @@ re-deciding something. Only then file the `plan-conveyor` and `scaffoldapy` chan
 - https://github.com/git-ai-project/git-ai
 - https://www.ronaldtebrake.nl/blog/git-blame-intent-aware-agents/
 - https://dev.to/hubtheocoelho/introducing-qac-a-commit-message-specification-for-ai-agents-4opd
+
+## Attachments
+
+- `commit_bodies.py` — committed, 2 KB, attached 2026-11-25

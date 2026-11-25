@@ -326,13 +326,13 @@ corrected; ignoring it means overriding a system turn. A one-line answer in
 `config/agents-md/bash.md` would settle it for every future session, next to the permission-model
 rule that already describes auto mode.]
 
-[NEEDS CLARIFICATION: what actually triggers the mode switch — the user toggling it, the harness
-escalating on its own, or something about the task? It arrived attached to a plan-mode exit the
-first time, which suggests harness-initiated, and the `repo-tasks` session is a second data point
-pointing the same way: its mode was never toggled by the user, the note arrived in the first system
-turn after a `/clear` and stayed for the whole session. Both are inference. The deliberate check is
-still owed — toggle auto mode on purpose and see whether the same note appears, before writing a
-rule about something that may be user-initiated and therefore intentional.]
+[DECISION: **the mode switch is now intentional, so this question no longer gates the rule.**
+Settled 2026-11-25: `auto` is the declared default in `setup.toml`
+(`plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`), so every session carries the note by
+design. What triggered the earlier unrequested switches no longer matters to what the rule should
+say. The question as it stood: what actually triggers the mode switch — the user toggling it, the
+harness escalating on its own, or something about the task? It arrived attached to a plan-mode exit
+the first time, and a `repo-tasks` session saw it after a `/clear` with no toggle.]
 
 [NEEDS CLARIFICATION: whether the residual `sed -n` rate on a session that refused the note is
 caused by the note at all. `sed -n '<a>,<b>p'` on a 100-line region is one call where
