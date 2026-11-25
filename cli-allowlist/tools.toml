@@ -75,6 +75,13 @@
 #                     per-flag ratings can't render but an ask pattern can — ask beats allow with no
 #                     specificity tiebreak, so the narrower ask wins. See contributing/
 #                     cli-allowlist.md "allow_overrides".
+#   defer_overrides  node paths whose write/dangerous verdict renders no rule at all, for the node
+#                     and everything under it; read-only children keep their allow. The call is
+#                     left to the harness's own default — Claude Code's auto-mode classifier, or a
+#                     prompt in any other mode — instead of being approved ahead of it. For verbs
+#                     the user wants unprompted but still judged (`git push`: an allow would pass
+#                     `push --force` unseen). Pair it with ask_overrides for the shapes that must
+#                     always prompt.
 #
 # Tree discovery can surface a node that isn't actually a real command — a discovery regex
 # matching a sample-output table row, a deprecated/plugin subcommand whose --help silently echoes
@@ -133,13 +140,33 @@ repo_dir_options = ["-C"]
 # 67% of all permission prompts were the commit flow — `git add` alone 35 of 148, plus rm/restore/
 # reset/fetch that weren't registered at all. ~/.agents/AGENTS.md mandates many small commits, staging
 # right before each and fetching before every push, so the allowlist charged 2–4 prompts per
-# commit. Index-only verbs that cannot lose code render allow; `commit`/`push`/`stash` stay ask
-# (user decision 2026-08-25: commit and stash need a human), and every flag shape below that CAN
-# discard uncommitted work gets its own ask rule. Residual holes, accepted: single-letter clusters
-# (`git rm -qf`), `-S` for `--staged`, `-W` before `--staged` — all fall through to a prompt
-# (unmatched), never to an allow.
+# commit. Index-only verbs that cannot lose code render allow; `stash` stays ask (user decision
+# 2026-08-25: stash hides work), and every flag shape below that CAN discard uncommitted work gets
+# its own ask rule. Residual holes, accepted: single-letter clusters (`git rm -qf`), `-S` for
+# `--staged`, `-W` before `--staged` — all fall through to a prompt (unmatched), never to an allow.
 allow_overrides = ["add", "rm", "reset", "restore --staged", "fetch"]
+# 2026-11-25, user decision (plans/2026-11-08-auto-mode-as-default-with-slim-rules.md): commit and
+# push go unprompted, and force pushes and history rewrites keep a deterministic prompt. Deferred
+# rather than allowed, so auto mode's classifier still judges each push; the asks below catch the
+# rewrite shapes before it does. Residual holes, accepted, both left to the classifier's Git
+# Destructive default: Claude renders no `-C` form, so `git -C <repo> push --force` is unmatched;
+# and the `:<branch>` delete-by-refspec has no safe spelling, because Claude reads a trailing `:*`
+# as its legacy prefix wildcard, so `push ... :*` renders as an ask on every push.
+defer_overrides = ["commit", "push"]
 ask_overrides = [
+  "push ... --force*",
+  "push ... -f",
+  "push ... +*",
+  "push ... --mirror",
+  "push ... --delete",
+  "push ... -d",
+  "push ... --prune",
+  "commit ... --amend",
+  "filter-branch",
+  "filter-repo",
+  "update-ref ... -d",
+  "reflog expire",
+  "gc ... --prune*",
   "reset ... --hard",
   "reset ... --merge",
   "reset ... --keep",
@@ -193,6 +220,10 @@ subcommands = [
 [gh]
 max_depth = 2 # pr create/merge, secret set/remove, release delete, etc. are the real distinctions
 max_nodes = 200 # real tree measured ~170+ nodes at depth 2; 150 truncated it
+# 2026-11-25, user decision: PR operations go unprompted and are left to auto mode's classifier,
+# with the user's own repositories declared trusted for merges in setup.toml's claude_auto_mode.
+# release, repo, secret and the rest keep their asks.
+defer_overrides = ["pr"]
 subcommands = [
   "auth",
   "pr",

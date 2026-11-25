@@ -496,6 +496,46 @@ def test_compute_claude_rules_allow_override_extending_a_node_suppresses_its_ask
     assert "Bash(git push *)" in ask
 
 
+def test_compute_claude_rules_defer_override_renders_no_rule_for_the_verb(stub_registry):
+    # Deferred, `git push` matches nothing, so auto mode's classifier judges it and any other mode
+    # prompts. An allow would have approved `git push --force` ahead of the classifier.
+    stub_registry({"git": {"defer_overrides": ["push"]}})
+    rules = {"git": _rule_entry({"push": _rule_node("write"), "rebase": _rule_node("write")})}
+    assert allowlist._compute_claude_rules(rules) == ([], ["Bash(git rebase *)"])
+    assert rules["git"]["nodes"]["push"]["classification"] == "write"
+
+
+def test_compute_claude_rules_defer_override_covers_children_but_keeps_read_only_allows(stub_registry):
+    stub_registry({"gh": {"defer_overrides": ["pr"]}})
+    rules = {
+        "gh": _rule_entry(
+            {
+                "pr merge": _rule_node("write"),
+                "pr view": _rule_node("read_only"),
+                "release delete": _rule_node("dangerous"),
+            }
+        )
+    }
+    assert allowlist._compute_claude_rules(rules) == (["Bash(gh pr view *)"], ["Bash(gh release delete *)"])
+
+
+def test_compute_claude_rules_defer_override_keeps_ask_overrides_for_its_flags(stub_registry):
+    # The verb is left to the classifier; the shapes that must always prompt still do.
+    stub_registry({"git": {"defer_overrides": ["push"], "ask_overrides": ["push ... --force*"]}})
+    rules = {"git": _rule_entry({"push": _rule_node("write")})}
+    assert allowlist._compute_claude_rules(rules) == (
+        [],
+        ["Bash(git push --force*)", "Bash(git push * --force*)"],
+    )
+
+
+def test_compute_claude_rules_defer_override_does_not_match_a_longer_verb(stub_registry):
+    # Word-wise prefix, not string prefix: deferring `pr` must not swallow a `prune` node.
+    stub_registry({"tool": {"defer_overrides": ["pr"]}})
+    rules = {"tool": _rule_entry({"prune": _rule_node("dangerous")})}
+    assert allowlist._compute_claude_rules(rules) == ([], ["Bash(tool prune *)"])
+
+
 def test_compute_claude_rules_allow_override_on_read_only_node_does_not_duplicate(stub_registry):
     stub_registry({"git": {"allow_overrides": ["fetch"]}})
     rules = {"git": _rule_entry({"fetch": _rule_node("read_only")})}

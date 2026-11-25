@@ -101,6 +101,7 @@ class ToolConfig(TypedDict, total=False):
     aliases: list[str]
     allow_overrides: list[str]
     ask_overrides: list[str]
+    defer_overrides: list[str]
 
 
 Registry = dict[str, ToolConfig]
@@ -1517,6 +1518,12 @@ def _build_rules(rules: dict[str, RuleEntry]) -> list[permission_rules.Rule]:
       `git add` *is* a write and stays one on disk, but an index-only write that can't lose code is
       not worth a prompt per commit, while a flag that can (`reset ... --hard`) gets its own ask,
       which beats the allow by the same no-tiebreak precedence.
+    - `defer_overrides` — node paths whose write/dangerous verdict renders no rule at all, for
+      that node and every node under it, so the call is left to the harness's own default: Claude
+      Code's auto-mode classifier, or a prompt in any other mode. Read-only nodes underneath keep
+      their allow. Unlike an allow override, nothing is approved ahead of the harness: `git push`
+      deferred still reaches a classifier that blocks a force push, where `Bash(git push *)` as an
+      allow would pass one unseen. The flag shapes that must always prompt get `ask_overrides`.
     """
     registry = _load_registry()
     hand_authored = {name for name, cfg in registry.items() if cfg.get("overrides_only")}
@@ -1547,6 +1554,7 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
     repo_opts = tuple(cfg.get("repo_dir_options", []))
     allow_overrides: list[str] = cfg.get("allow_overrides", [])
     extended = [body.split() for body in allow_overrides]
+    deferred = [body.split() for body in cfg.get("defer_overrides", [])]
     # cloud_cli tools (gcloud, aws) never recurse — every node is necessarily a bare
     # top-level service-group command, classified on what *that* does with no args (usually
     # "shows help/lists things"), never on what its real subcommands do. That's the wrong
@@ -1577,6 +1585,8 @@ def _tool_rules(name: str, entry: RuleEntry, cfg: ToolConfig) -> list[permission
         ):
             if any(o[: len(words)] == words for o in extended):
                 continue  # an allow override extends this node; its ask would shadow that allow
+            if any(words[: len(d)] == d for d in deferred):
+                continue  # left unmatched on purpose, for the harness's own default to decide
             out.append(permission_rules.Rule(name, ask, tokens, mode_covered=mode_covered))
     return out + _override_rules(name, cfg)
 
@@ -1877,11 +1887,18 @@ def check_coverage(c: Context):
 @dataclasses.dataclass(frozen=True)
 class _Probe:
     """One command and whether the rendered rules should let it run without a prompt. `{other}`
-    is a second throwaway repository beside the one the probe runs in."""
+    is a second throwaway repository beside the one the probe runs in, and the probe repository's
+    `origin` is a local bare one, so a push never leaves the temporary directory.
+
+    `mode` is the permission mode the probe runs under. In `manual` an unmatched command asks, so
+    a verb deliberately left unmatched (`defer_overrides`) and one with an ask rule look the same;
+    only `auto` separates them, because the classifier runs the first and the rule stops the
+    second before the classifier sees it."""
 
     command: str
     runs: bool
     why: str
+    mode: str = "manual"
 
 
 _CLAUDE_PROBES = (
@@ -1894,6 +1911,12 @@ _CLAUDE_PROBES = (
     _Probe("git -C {other} status", False, "no -C rule outside the sandbox"),
     _Probe("inv probe.status", True, "read-only-by-name convention"),
     _Probe("inv -c probe probe.status", False, "code-loading core option is guarded"),
+    # git commit and push are deferred to the classifier; their rewrite shapes must still ask.
+    _Probe("git push origin HEAD:refs/heads/probe-plain", True, "push is left to the classifier", "auto"),
+    _Probe("git push --force origin HEAD:refs/heads/probe-force", False, "force push asks first", "auto"),
+    _Probe("git push origin +HEAD:refs/heads/probe-plus", False, "a + refspec force push asks first", "auto"),
+    _Probe("git commit -q --allow-empty -m probe-commit", True, "commit is left to the classifier", "auto"),
+    _Probe("git commit --amend --no-edit", False, "amend asks first", "auto"),
 )
 # Every startup diagnostic Claude Code prints about a permission rule starts this way ("Permission
 # allow rule (<file>): ..."), whatever the complaint — so a new kind of warning fails the check too.
@@ -1901,7 +1924,7 @@ _RULE_WARNING = re.compile(r"Permission \w+ rule \(.*")
 _PROBE_BUDGET_USD = "0.10"
 
 
-def _probe_claude(probe_cmd: str, cwd: Path, settings: Path, debug: Path, model: str) -> bool | None:
+def _probe_claude(probe_cmd: str, cwd: Path, settings: Path, debug: Path, model: str, mode: str) -> bool | None:
     """Run one command through `claude -p` with only `settings` loaded. True if it ran, False if
     the harness would have asked, None if the model never attempted that exact command. Raises if
     `claude` itself fails, which is a finding about the rules, not an inconclusive probe."""
@@ -1910,11 +1933,11 @@ def _probe_claude(probe_cmd: str, cwd: Path, settings: Path, debug: Path, model:
         f"no changes, no other tool calls:\n\n{probe_cmd}\n\nThen reply with one word: DONE."
     )
     # --safe-mode and --setting-sources project (a throwaway cwd with none) load no settings but
-    # `settings`; manual mode with nobody to answer turns every would-be prompt into a denial.
+    # `settings`; with nobody to answer, every would-be prompt becomes a denial in either mode.
     result = subprocess.run(
         [
             *("claude", "-p", prompt, "--model", model, "--safe-mode", "--setting-sources", "project"),
-            *("--settings", str(settings), "--permission-mode", "manual", "--permission-prompts", "none"),
+            *("--settings", str(settings), "--permission-mode", mode, "--permission-prompts", "none"),
             *("--tools", "Bash", "--output-format", "stream-json", "--verbose", "--no-session-persistence"),
             *("--max-budget-usd", _PROBE_BUDGET_USD, "--debug-file", str(debug)),
         ],
@@ -1951,10 +1974,16 @@ def _probe_claude(probe_cmd: str, cwd: Path, settings: Path, debug: Path, model:
     return probe_cmd not in denied
 
 
-def _init_probe_repo(path: Path) -> None:
-    identity = ["-c", "user.name=probe", "-c", "user.email=probe@invalid"]
+def _init_probe_repo(path: Path, *, remote: Path | None = None) -> None:
+    """A throwaway repository with one commit and a local identity, so a probe's own `git commit`
+    needs no global option that would change its prefix. With `remote`, a bare `origin` there."""
     subprocess.run(["git", "init", "-q", str(path)], check=True)
-    subprocess.run(["git", "-C", str(path), *identity, "commit", "-q", "--allow-empty", "-m", "probe"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.name", "probe"], check=True)
+    subprocess.run(["git", "-C", str(path), "config", "user.email", "probe@invalid"], check=True)
+    subprocess.run(["git", "-C", str(path), "commit", "-q", "--allow-empty", "-m", "probe"], check=True)
+    if remote is not None:
+        subprocess.run(["git", "init", "-q", "--bare", str(remote)], check=True)
+        subprocess.run(["git", "-C", str(path), "remote", "add", "origin", str(remote)], check=True)
 
 
 @task
@@ -1972,7 +2001,7 @@ def check_claude(c: Context, model: str = "haiku"):
     with tempfile.TemporaryDirectory(prefix="pulse-check-claude-") as tmp:
         root = Path(tmp)
         work, other = root / "work", root / "other"
-        _init_probe_repo(work)
+        _init_probe_repo(work, remote=root / "origin.git")
         _init_probe_repo(other)
         allow, ask = _compute_claude_rules(_load_all_rules())
         settings = root / "settings.json"
@@ -1981,7 +2010,7 @@ def check_claude(c: Context, model: str = "haiku"):
 
         jobs = [(p, p.command.format(other=other), root / f"debug-{i}.log") for i, p in enumerate(_CLAUDE_PROBES)]
         with ThreadPoolExecutor(max_workers=6) as pool:
-            futures = [pool.submit(_probe_claude, cmd, work, settings, log, model) for _, cmd, log in jobs]
+            futures = [pool.submit(_probe_claude, cmd, work, settings, log, model, p.mode) for p, cmd, log in jobs]
             outcomes = [f.result() for f in futures]
 
         failures = 0
