@@ -2453,6 +2453,10 @@ with years of accumulated manual SSH config.</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519
 </span><span id="__span-3-2"><a id="__codelineno-3-2" name="__codelineno-3-2" href="#__codelineno-3-2"></a>~/.ssh/&lt;email&gt;__&lt;hostname&gt;_ed25519.pub
 </span></code></pre></div>
+<p>An existing key with the same name and another type (<code>_ecdsa</code>, <code>_rsa</code>) is adopted instead: no new
+key is created, and the config&rsquo;s <code>IdentityFile</code> points at the one you already have. That is how a
+machine whose keys predate PULSE, but follow its naming, moves onto <code>identity.toml</code> without
+registering anything new.</p>
 <p><strong>Config</strong> — <code>~/.ssh/config</code> gets a PULSE-managed block with one <code>Host</code> entry per <code>ssh_hosts</code> entry,
 plus a <code>Host *</code> default section:</p>
 <div class="language-text highlight"><pre><span></span><code><span id="__span-4-1"><a id="__codelineno-4-1" name="__codelineno-4-1" href="#__codelineno-4-1"></a>Host github.com
