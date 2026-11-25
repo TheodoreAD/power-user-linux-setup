@@ -467,16 +467,13 @@ Reconciling content is part of the fold-in. Several of the Windows file's rules 
 tables, commits, no personal details) are cross-platform and may duplicate or contradict fragments
 here. Diff them rule by rule instead of appending the file whole.]
 
-[NEEDS CLARIFICATION: **does Copilot get written to on Windows?** It is one of the four named
-agents, and PULSE deliberately writes nothing for Copilot today because no confirmed path-scoped
-setting was found. Its include also refuses `~/` and absolute paths and must stay within the
-instructions directory, so a copy is the only wiring available — which is a decision about writing
-into a vendor's directory, not a mechanism question.]
-
-[NEEDS CLARIFICATION: **Windsurf's global rules file has a 6,000 character limit** and the assembled
-file is 54,458 bytes — nine times over. So Windsurf cannot take this file whole on any platform, and
-"which rules does a Windsurf machine get" is a content question that the OS axis does not answer.
-Filed here because Windsurf was named as a target; it may deserve its own plan.]
+[DECISION: **Copilot and Windsurf are dropped for now**, by the user on 2026-11-25. Nothing is
+written for either on Windows: `also_deploy_to` declares Copilot's path `["linux"]` (`01728fb`),
+where it was already written before this plan, and nothing here has ever written for Windsurf. The
+two facts that made them open questions still hold if either comes back: Copilot's include refuses
+`~/` and absolute paths, so a copy into its own directory is the only wiring, and Windsurf's global
+rules file has a 6,000-character limit, which the assembled file exceeds about eight times over on
+either platform.]
 
 ## Recommended direction
 
@@ -527,12 +524,15 @@ conflicts: auto-push own repos on both platforms; writes to another repo allowed
 approval (`4c68269`); caveman replaced by a plain no-fluff reply rule (`c5a970f`); supplements
 rather than per-OS clusters. Rendered: Linux 1,043 lines, Windows 838.
 
+**Deployed on the Windows machine, 2026-11-25, at the user's go-ahead.** `~/.agents/AGENTS.md` and
+`~/.claude/CLAUDE.md` are identical, and a fresh headless session loads the Windows rules. The
+deploy refused at first to overwrite the `win-configs`-written `~/.claude/CLAUDE.md`, as designed;
+that file was moved aside and the deploy re-run. `win-configs` `d92600f` deleted its
+`claude/CLAUDE.md`, and its install snippet now runs this repo's `deploy.all` instead.
+
 **What is left:**
 
-- Deploy on the Windows machine: `inv deploy.all --name agents-md --yes`. It replaces the
-  `win-configs`-deployed file in `~/.agents/AGENTS.md` and `~/.claude/CLAUDE.md`, so it waits for
-  the user's go-ahead.
-- `win-configs` then stops deploying `claude/CLAUDE.md`. Its install snippet should point here
-  instead (`spowse deploy.all --name agents-md`), and the file should be deleted once nothing reads
-  it.
-- The Copilot and Windsurf questions above are still open; nothing here writes for either.
+- Copilot and Windsurf: dropped for now, see the decision under "Open questions".
+- `.claude/settings.json`, which repo-tasks' `agents.wire-claude-hook` writes, still names the Linux
+  home directory and installs a hook that the "Machine behavior belongs in global config" rule now
+  forbids. It's repo-tasks' decision, so this repo doesn't change the file.
