@@ -486,6 +486,28 @@ keyring and the ssh private keys are in `~/.ssh/`, both by construction rather t
 If something genuinely secret ever needs to follow the user between machines, the answer is a secret
 manager, not a layer with encryption bolted on.]
 
+## What one machine turned out to depend on (2026-11-25)
+
+The user restated the goal this plan serves, in their own words: _"let's make it so that this
+machine isn't 'special' at all, the overarching goal is for me to be able to change machines at any
+point in time given my data is backed up, or even better, to have all the data in git repos or
+reconstructible from git repos and other stores. I don't want to depend on one machine or another."_
+
+Found that day, while fixing the plans stores' commit email
+(`plans/2026-11-25-plans-store-git-email.md`): this machine had **no `identity.toml` at all**. Its
+nine global git `includeIf` entries and its whole `~/.ssh/config` were hand-made, from 2020, outside
+PULSE. Both are now generated from an `identity.toml` rebuilt from them, and PULSE gained what that
+needed: `extra_directories` on a git profile (4e5ac7f) and adoption of an existing key of any type
+(1d609e3).
+
+So the gap moved rather than closed. **`identity.toml` itself now exists only on this machine**, and
+it is the file every other step here reads first. That makes step 4's private repo, with this file
+in the machine directory, the next thing standing between this machine and "replaceable". What a
+move would still need by hand, as of that day: the SSH private key, which by this plan's admission
+rule never enters a repo, so a new machine mints and registers its own (`inv ssh.create-keys`, then
+`gh ssh-key add`); and a `[[ssh_hosts]]` entry for the user's Windows machine on the home network,
+whose own key `TD-WS-WIN-I5G14` is already registered on GitHub.
+
 ## Recommended direction
 
 Sequenced so each step is independently useful and nothing is built before the thing it depends on:

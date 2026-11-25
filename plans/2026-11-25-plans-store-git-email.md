@@ -72,16 +72,17 @@ per-directory `.gitconfig` files unchanged, with `extra_directories` for both st
 `user.email`, both were unset, and `git config --show-origin` in each store now resolves to the
 personal profile's `.gitconfig` and the noreply address.
 
-1. **`[[ssh_hosts]]` in that `identity.toml` stays empty, and cannot be filled by copying.** A
-   one-off script the user permitted read `~/.ssh/config` (agents' own reads there are denied by
-   `Read(~/.ssh/**)`) and printed only what it derived: the file has no PULSE block, and none of its
-   11 hosts uses a key named `<email>__<node>_ed25519`, the only path an `[[ssh_hosts]]` entry can
-   resolve to (`tasks/ssh.py`, `key_path`). So listing them is a migration: `inv ssh.create-keys`
-   would make new keys, which then need registering on every host. Whether to migrate, or leave SSH
-   hand-managed here, is the user's call, and it is not this plan's subject. Until then
-   `inv ssh.configure` must not run here: with an empty list it appends a block holding only PULSE's
-   `Host *` defaults.
-2. Once hekate is idle: `git -C ~/plans log origin/master..HEAD`, confirm no commit there is still
+SSH followed the same day, at the user's request to make this machine "not special": the
+hand-written `~/.ssh/config` (2020) held one live host, GitHub, and nine hosts of past employers and
+clients reachable only on their old networks; its `Host *` block was already PULSE's `HOST_STAR`
+word for word. The live key followed PULSE's naming but was RSA, so `key_path` learned to adopt an
+existing key of any type (1d609e3). `identity.toml` now declares the GitHub host. The user ran the
+archive step themselves, since agents' writes into `~/.ssh` are refused here: the old config and the
+11 unused key files are in `~/.ssh/archive-2026-11-25/`, and `inv ssh.configure` wrote the config
+fresh. Verified: `ssh -G github.com` resolves to the adopted key, `ssh -T git@github.com`
+authenticates, `git ls-remote origin` answers.
+
+1. Once hekate is idle: `git -C ~/plans log origin/master..HEAD`, confirm no commit there is still
    being amended by a live session, rebase with
    `--exec 'git commit --amend --no-edit --reset-author'` onto `origin/master`, then
    `plans.py push`.
