@@ -1,0 +1,12 @@
+{
+  "name": "power-user-linux-setup",
+  "description": "Claude Code plugins declared by power-user-linux-setup: harness plumbing only, never instructions or knowledge",
+  "owner": { "name": "power-user-linux-setup" },
+  "plugins": [
+    {
+      "name": "basedpyright-lsp",
+      "source": "./basedpyright-lsp",
+      "description": "Python code intelligence from the project's own basedpyright"
+    }
+  ]
+}

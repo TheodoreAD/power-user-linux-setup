@@ -163,6 +163,44 @@ launching shell comes earlier on PATH than the shims and wins.
 
 Hooks are read when a session starts, so an existing session needs a restart to pick them up.
 
+## Python code intelligence — `[packages.basedpyright-lsp]`
+
+Claude Code takes language servers from plugins, and with one enabled it gets two things: the
+server's diagnostics handed back after every edit of a file the server covers, and an `LSP` tool for
+definitions, references and call hierarchy in place of grep round trips. `basedpyright-lsp` is a
+plugin in this repo's own marketplace, `config/claude-plugins/`, that runs basedpyright's server:
+
+```text
+uv run --no-sync --color never --directory ${CLAUDE_PROJECT_DIR} --with basedpyright basedpyright-langserver --stdio
+```
+
+- **`--directory ${CLAUDE_PROJECT_DIR}`**: the session's project, so its `pyproject.toml` settings
+  apply. Claude Code does not document the server's working directory, so it is not relied on.
+- **`--with basedpyright`**: a project that already has basedpyright keeps its own version, because
+  uv adds the overlay only when the environment does not satisfy it. Anything else gets the latest
+  from uv's cache.
+- **`--no-sync`**: starting a language server never changes a project's `.venv`.
+- **`uv` as the command**: the same on Linux and Windows. No shim is involved, because Claude Code
+  starts a language server directly rather than through a shell.
+
+`inv ai.install-skills` registers the marketplace and installs every plugin a package declares in
+`claude_plugins`, through `claude plugin marketplace add` / `install`, at user scope. The CLI writes
+`enabledPlugins` and `extraKnownMarketplaces`; PULSE only decides which calls to make. A plugin the
+user disabled stays disabled. A clone that moved gets its marketplace re-registered. Only a plugin
+this mechanism installed is ever uninstalled (manifest:
+`~/.local/state/power-user-linux-setup/claude-plugins-applied.json`). The marketplace is a local
+directory, so the plugin loads in place from this checkout, and a pull is live at the next session.
+
+Measured 2026-11-26 on Windows, in headless sessions writing a file with a type error:
+
+- **In a project pinning basedpyright 1.30.0** (`uv run --with basedpyright basedpyright --version`
+  answers 1.30.0 there), the session got the `reportAssignmentType` diagnostic back, and the LSP
+  tool found both references, in 247 ms.
+- **In a directory with no project**, the session got the same result.
+
+`claude --debug-file <path>` logs every server start and protocol message, and `/plugin` → Errors
+shows a server that failed to start.
+
 ## Installing the CLI
 
 `[packages.claude-code]` installs the `claude` binary itself via `inv tools.install`, using

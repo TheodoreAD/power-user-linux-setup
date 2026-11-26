@@ -1,0 +1,25 @@
+{
+  "name": "basedpyright-lsp",
+  "description": "Python code intelligence from basedpyright-langserver, run through uv in the project so its own pinned basedpyright and its pyproject.toml settings answer",
+  "lspServers": {
+    "basedpyright": {
+      "command": "uv",
+      "args": [
+        "run",
+        "--no-sync",
+        "--color",
+        "never",
+        "--directory",
+        "${CLAUDE_PROJECT_DIR}",
+        "--with",
+        "basedpyright",
+        "basedpyright-langserver",
+        "--stdio"
+      ],
+      "extensionToLanguage": {
+        ".py": "python",
+        ".pyi": "python"
+      }
+    }
+  }
+}

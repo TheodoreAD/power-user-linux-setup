@@ -1553,6 +1553,21 @@ also_deploy_to = [
 # Put first on the user PATH by `inv windows.configure-path`.
 windows_path = ["~/.local/share/venv-shims"]
 
+[packages.basedpyright-lsp]
+description = """
+Python code intelligence for Claude Code from basedpyright's language server: diagnostics handed back
+after every edit of a .py file, and the LSP tool (definitions, references, call hierarchy) instead
+of grep round trips. A plugin in this repo's own marketplace, config/claude-plugins/, loaded in place
+from this checkout. The server runs as `uv run --no-sync --directory <project> --with basedpyright
+basedpyright-langserver --stdio`, so a project that pins basedpyright gets its own version and its
+pyproject.toml settings, and anything else gets the latest from uv's cache; nothing is synced or
+installed into a project. No `method`: the plugin is installed by `inv ai.install-skills`. Verified
+in headless sessions: docs/claude-code.md.
+"""
+platforms = ["linux", "windows"]
+tags = ["ai", "dev", "python"]
+claude_plugins = ["basedpyright-lsp"]
+
 [packages.zsh]
 description = "The zsh shell itself — Oh My Zsh and every zsh-method config entry need it installed first"
 method = "apt"
