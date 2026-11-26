@@ -58,6 +58,9 @@ _EVIDENCE_FREE = frozenset(
         "Machine behavior belongs in global config, not in a repo",
         "The shell on the Windows machine",
         "Writing a script on the Windows machine",
+        # A decision of the user, 2026-11-25: each client root is its own compartment. The
+        # mechanical half lives in agent-skills; this rule covers the agent's own reads.
+        "Working in a repo under a client's root",
     }
 )
 

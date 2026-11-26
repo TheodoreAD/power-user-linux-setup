@@ -43,6 +43,16 @@ names, home path or hardware into code, config or docs.** Derive them where they
 **Commits must not expose a personal email address either.** Commit with GitHub's noreply address,
 `<id>+<login>@users.noreply.github.com`, derived from `gh api user`.
 
+### Working in a repo under a client's root [needs agent-skills]
+
+**Read, quote and file nothing from outside that root**: no other client's repo, transcript or plan,
+and no private repo of the user's, its name included. Public sources and anything inside the same
+root are fine. A client root is one listed as `contractor` under `[activity]` in
+`~/.config/plan-conveyor/config.toml`. Each client root is insulated from every other.
+plan-conveyor, session-harvest, session-bash-audit and skill-fitness enforce that for what they
+write, but nothing sees what a session itself opens, and `~/.claude/projects/` holds every session's
+transcript in one tree.
+
 ### Setting up a new repo
 
 - **A `.gitattributes` that stores and checks out text as LF** (`* text=auto eol=lf`), keeps
