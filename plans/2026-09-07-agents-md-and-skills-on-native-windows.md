@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-11-25
+updated: 2026-11-26
 ---
 
 # `AGENTS.md` and skills on native Windows
@@ -533,6 +533,9 @@ that file was moved aside and the deploy re-run. `win-configs` `d92600f` deleted
 **What is left:**
 
 - Copilot and Windsurf: dropped for now, see the decision under "Open questions".
-- `.claude/settings.json`, which repo-tasks' `agents.wire-claude-hook` writes, still names the Linux
-  home directory and installs a hook that the "Machine behavior belongs in global config" rule now
-  forbids. It's repo-tasks' decision, so this repo doesn't change the file.
+- ~~`.claude/settings.json` from repo-tasks' `agents.wire-claude-hook`~~ — done 2026-11-26.
+  repo-tasks v0.8.0 removed the task, `[packages.claude-direnv-hook]` replaced it at user level, and
+  every repo that tracked the file deleted it: this one, repo-tasks and agent-skills on the Windows
+  machine; hekate in its PR 31; scaffoldapy, ingesta, invoke-stubs and olx-polite-mcp in the v0.8.0
+  sweep. The home path stays in those repos' published history; purging it would be a history
+  rewrite, left undone.
