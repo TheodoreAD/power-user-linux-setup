@@ -78,9 +78,9 @@ What does reach a Bash call is `CLAUDE_ENV_FILE`. Claude Code hands each `Sessio
 of them before every Bash command, **after** the snapshot. So a hook that writes the environment
 there wins over the snapshot's `PATH`, where an export in `~/.zshenv` loses to it.
 
-`[packages.claude-direnv-hook]` deploys `config/claude-direnv-hook.sh` to `~/.claude/direnv-hook.sh`
-and declares it for both events with the `claude_hooks` field, which `inv ai.install-skills` merges
-into user-level `~/.claude/settings.json`:
+`[packages.claude-direnv-hook]` deploys `config/claude-direnv-hook.zsh` to
+`~/.claude/direnv-hook.sh` and declares it for both events with the `claude_hooks` field, which
+`inv ai.install-skills` merges into user-level `~/.claude/settings.json`:
 
 ```json
 {

@@ -15,6 +15,10 @@
 # diff from a directory with no .envrc is empty and the session-start repo's venv stays in force.
 # Resetting first makes whichever file is sourced last decide.
 #
+# Why this source is .zsh while the deployed copy keeps its .sh name: the quality gate hands every
+# tracked *.sh to shellcheck and shfmt, and shellcheck refuses zsh outright (SC1071), which turned
+# master's CI red the day this landed. The script is zsh on purpose, for the PATH filter below.
+#
 # Why PATH entries ending in /.venv/bin are dropped: a venv active in the shell Claude Code was
 # launched from is never the current directory's, and without this a terminal that had another
 # repo's venv active leaks it into every directory with no .envrc. User decision 2026-11-25.

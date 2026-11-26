@@ -12,7 +12,7 @@
 #
 # Why venvs inherited from the launch environment are skipped in the fallback: a venv active in the
 # shell Claude Code was started from is never the current directory's (same decision as the Linux
-# hook, config/claude-direnv-hook.sh).
+# hook, config/claude-direnv-hook.zsh).
 
 $name = [IO.Path]::GetFileNameWithoutExtension($MyInvocation.MyCommand.Name)
 $here = $PSScriptRoot

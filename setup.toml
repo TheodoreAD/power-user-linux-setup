@@ -1526,7 +1526,7 @@ platforms = ["linux"]
 # direnv's own tags plus `ai`, so a profile that excludes direnv excludes the hook that runs it.
 tags = ["ai", "dev", "environment"]
 dest = "~/.claude/direnv-hook.sh"
-content_file = "config/claude-direnv-hook.sh"
+content_file = "config/claude-direnv-hook.zsh"
 # `~` is expanded by the shell Claude Code runs a hook command in, so no absolute path is written
 # into settings.json. One command per event; ai.install-skills merges them into `hooks`.
 claude_hooks = { SessionStart = "zsh ~/.claude/direnv-hook.sh", CwdChanged = "zsh ~/.claude/direnv-hook.sh" }
