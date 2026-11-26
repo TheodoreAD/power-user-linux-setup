@@ -1,5 +1,5 @@
 version = 1
-revision = 3
+revision = 5
 requires-python = ">=3.14"
 
 [[package]]
@@ -413,6 +413,7 @@ wheels = [
 name = "power-user-linux-setup"
 version = "0.1.0"
 source = { editable = "." }
+default-groups = ["dev", "docs"]
 dependencies = [
     { name = "invoke" },
 ]
@@ -454,7 +455,7 @@ dev = [
     { name = "pytest-cov" },
     { name = "pytest-socket" },
     { name = "pytest-timeout" },
-    { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.7.2" },
+    { name = "repo-tasks", git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.8.0" },
     { name = "ruff" },
     { name = "shellcheck-py" },
     { name = "shfmt-py" },
@@ -669,8 +670,8 @@ wheels = [
 
 [[package]]
 name = "repo-tasks"
-version = "0.7.2"
-source = { git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.7.2#67b75c99c94b13ba2858cdc3dddfc328e0b6ca47" }
+version = "0.8.0"
+source = { git = "https://github.com/TheodoreAD/repo-tasks?tag=v0.8.0#9096e685ffc6e079063e611eb521787adae97a89" }
 dependencies = [
     { name = "bump-my-version" },
     { name = "dunamai" },

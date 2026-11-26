@@ -159,9 +159,8 @@ if dev_env is not None:
 if agents is not None:
     # Wired explicitly: repo_tasks' dev_env.py imports agents' tasks for its pre= chain, and since
     # that leak was fixed upstream nothing else publishes the `agents` namespace here
-    # (`inv agents.install-skills`). Its other task, wire-claude-hook, is retired upstream as of
-    # 2026-11-25 in favour of [packages.claude-direnv-hook]; it leaves this repo at the next
-    # repo-tasks bump.
+    # (`inv agents.install-skills`). Its former wire-claude-hook was removed in repo-tasks v0.8.0
+    # in favour of [packages.claude-direnv-hook].
     _add_borrowed(agents)
 if docs is not None:
     _add_borrowed(docs)
