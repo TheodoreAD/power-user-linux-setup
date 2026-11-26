@@ -456,6 +456,20 @@ def _confirm_replace(question: str, *, yes: bool) -> bool:
     return yes or ui.ask(question, default=False)
 
 
+def _package_here(name: str) -> util.PackageConfig:
+    """One named package's config when it applies to this platform, else `{}`.
+
+    The four single-value settings below look one package up by name instead of scanning
+    `enabled_packages()` (see the PITFALL in `_apply_declared_skill_listing_budget`), and before this
+    they skipped its `platforms` too. On Windows, `inv ai.install-skills --yes` then replaced the
+    machine's own PowerShell statusLine with Linux's `bash ~/.claude/statusline-command.sh`, a
+    script that does not exist there. Only the platform is checked here; whether `enabled` or a
+    tag exclusion should also withdraw these settings is the separate, deferred decision.
+    """
+    cfg = util.load_config()["packages"].get(name)
+    return cfg if cfg is not None and util.applies_here(name, cfg.get("platforms")) else {}
+
+
 def _apply_declared_default_mode(*, yes: bool = False) -> None:
     """Sync `[packages.claude-code]`'s `claude_default_mode` into ~/.claude/settings.json's
     `permissions.defaultMode`. Same three-outcome shape as `_apply_declared_statusline` — one
@@ -468,7 +482,7 @@ def _apply_declared_default_mode(*, yes: bool = False) -> None:
     one. Why it is `auto` since 2026-11-25:
     `plans/2026-11-08-auto-mode-as-default-with-slim-rules.md`.
     """
-    declared = util.load_config()["packages"].get("claude-code", {}).get("claude_default_mode")
+    declared = _package_here("claude-code").get("claude_default_mode")
     if not declared:
         return
 
@@ -506,7 +520,7 @@ def _apply_declared_auto_mode(*, yes: bool = False) -> None:
     have to decide an order nobody declared. Only the user scope carries it: Claude Code ignores
     `autoMode` in a project's own settings files, so a checked-in repo cannot loosen it.
     """
-    declared = util.load_config()["packages"].get("claude-code", {}).get("claude_auto_mode")
+    declared = _package_here("claude-code").get("claude_auto_mode")
     if not declared:
         return
 
@@ -556,7 +570,7 @@ def _apply_declared_skill_listing_budget(*, yes: bool = False) -> None:
     `[packages.claude-code]` should withdraw the harness settings it declared. That is one decision
     for all three and a behaviour change, so it is not made here by adding a fourth shape.]
     """
-    declared = util.load_config()["packages"].get("claude-code", {}).get("claude_skill_listing_budget_fraction")
+    declared = _package_here("claude-code").get("claude_skill_listing_budget_fraction")
     if declared is None:
         return
 
@@ -593,7 +607,7 @@ def _apply_declared_statusline(*, yes: bool = False) -> None:
     outcomes only: absent -> set it; already matches -> no-op; set to something else -> ask before
     overwriting (default: leave it alone).
     """
-    declared = util.load_config()["packages"].get("claude-statusline", {}).get("claude_statusline")
+    declared = _package_here("claude-statusline").get("claude_statusline")
     if not declared:
         return
 

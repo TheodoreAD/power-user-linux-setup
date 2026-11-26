@@ -802,6 +802,31 @@ def _stub_declared_statusline_package(monkeypatch, value=_DECLARED_STATUSLINE):
     )
 
 
+@pytest.mark.parametrize(
+    ("package", "field", "apply"),
+    [
+        ("claude-statusline", "claude_statusline", lambda: ai._apply_declared_statusline(yes=True)),
+        ("claude-code", "claude_default_mode", lambda: ai._apply_declared_default_mode(yes=True)),
+        ("claude-code", "claude_auto_mode", lambda: ai._apply_declared_auto_mode(yes=True)),
+        (
+            "claude-code",
+            "claude_skill_listing_budget_fraction",
+            lambda: ai._apply_declared_skill_listing_budget(yes=True),
+        ),
+    ],
+    ids=["statusline", "default-mode", "auto-mode", "budget"],
+)
+def test_a_single_value_setting_from_another_platforms_package_is_never_applied(monkeypatch, package, field, apply):
+    # On Windows, `--yes` once replaced the machine's PowerShell statusLine with Linux's bash one.
+    other = next(p.value for p in util.Platform if p is not util.current_platform())
+    monkeypatch.setattr(
+        util, "load_config", lambda: {"packages": {package: {"platforms": [other], field: {"type": "command"}}}}
+    )
+    monkeypatch.setattr(util, "load_claude_settings", _fail_if_asked("other platform's package, must not apply"))
+
+    apply()
+
+
 def test_apply_declared_statusline_writes_when_absent(monkeypatch, capsys):
     _stub_declared_statusline_package(monkeypatch)
     monkeypatch.setattr(util, "load_claude_settings", lambda: {})
