@@ -1,6 +1,8 @@
 import json
 import re
 import shlex
+import shutil
+import subprocess
 from pathlib import Path
 from typing import cast
 
@@ -36,6 +38,11 @@ _STATIC_PERM_TIERS = (
 _STATIC_DIRS_MANIFEST = util.PULSE_STATE_DIR / "claude-additional-directories-applied.json"
 # The `claude_hooks` commands this mechanism wrote, by event, so only those are ever removed.
 _HOOKS_MANIFEST = util.PULSE_STATE_DIR / "claude-hooks-applied.json"
+# The `claude_plugins` this mechanism installed, so only those are ever uninstalled.
+_PLUGINS_MANIFEST = util.PULSE_STATE_DIR / "claude-plugins-applied.json"
+# This repo's own plugin marketplace: its name is the one in .claude-plugin/marketplace.json.
+_PLUGIN_MARKETPLACE = "power-user-linux-setup"
+_PLUGIN_MARKETPLACE_DIR = _REPO_ROOT.resolve() / "config" / "claude-plugins"
 
 
 def _parse_frontmatter_description(text: str) -> str | None:
@@ -684,6 +691,78 @@ def _apply_declared_hooks() -> None:
     print(f"[ai.install-skills] {util.CLAUDE_SETTINGS}: hooks updated ({', '.join(sorted(declared)) or 'none'})")
 
 
+def _plugin_commands(
+    enabled: dict[str, bool],
+    marketplaces: dict[str, dict[str, dict[str, str]]],
+    declared: list[str],
+    previous: list[str],
+) -> list[list[str]]:
+    """The `claude` arguments that bring the installed plugins in line with `declared`, in order.
+
+    The CLI stays the writer — it owns `enabledPlugins`, `extraKnownMarketplaces` and its own
+    install records — and this only decides which calls to make, so it is pure and unit-testable.
+    A plugin present in `enabledPlugins` at all counts as installed, so one the user disabled stays
+    disabled. A marketplace registered from another checkout (a moved clone) is re-registered, and
+    every declared plugin reinstalled from it. Only a plugin this mechanism installed (`previous`)
+    is ever uninstalled.
+    """
+    cmds: list[list[str]] = []
+    known = marketplaces.get(_PLUGIN_MARKETPLACE, {}).get("source", {}).get("path")
+    moved = bool(declared) and known != str(_PLUGIN_MARKETPLACE_DIR)
+    if moved:
+        if known is not None:
+            cmds.append(["plugin", "marketplace", "remove", _PLUGIN_MARKETPLACE])
+        cmds.append(["plugin", "marketplace", "add", str(_PLUGIN_MARKETPLACE_DIR)])
+    for name in declared:
+        plugin_id = f"{name}@{_PLUGIN_MARKETPLACE}"
+        if moved or plugin_id not in enabled:
+            cmds.append(["plugin", "install", plugin_id])
+    for name in sorted(set(previous) - set(declared)):
+        plugin_id = f"{name}@{_PLUGIN_MARKETPLACE}"
+        if plugin_id in enabled:
+            cmds.append(["plugin", "uninstall", plugin_id])
+    return cmds
+
+
+def _apply_declared_plugins() -> None:
+    """Install every enabled package's `claude_plugins` from this repo's marketplace,
+    config/claude-plugins/, at user scope, and uninstall the ones that stopped being declared.
+
+    Harness plumbing, not a carrier: a plugin here may only make Claude Code work better on this
+    machine (a language server), never hold instructions or skills, which go through AGENTS.md and
+    the `skills` CLI. The marketplace is a local directory, so Claude Code loads each plugin in place
+    from this checkout and a pull is live at the next session. The first user is
+    `[packages.basedpyright-lsp]`; docs/claude-code.md has what it does and how it was verified.
+    """
+    declared = sorted({p for cfg in util.enabled_packages().values() for p in cfg.get("claude_plugins", [])})
+    previous: list[str] = (
+        cast(list[str], json.loads(_PLUGINS_MANIFEST.read_text(encoding="utf-8"))) if _PLUGINS_MANIFEST.exists() else []
+    )
+    if not declared and not previous:
+        return
+    settings = util.load_claude_settings()
+    cmds = _plugin_commands(
+        settings.get("enabledPlugins", {}), settings.get("extraKnownMarketplaces", {}), declared, previous
+    )
+
+    if util.DRY_RUN:
+        print(f"[ai.install-skills] plugins: {'ok' if not cmds else f'{len(cmds)} change(s) pending'}")
+        return
+    if not cmds:
+        print(f"[ai.install-skills] plugins: already up to date ({', '.join(declared) or 'none'})")
+    elif (claude := shutil.which("claude")) is None:
+        print("[ai.install-skills] plugins: skipped, `claude` is not on PATH")
+        return
+    else:
+        for args in cmds:
+            print(f"[ai.install-skills] claude {' '.join(args)}")
+            _ = subprocess.run([claude, *args], check=True)
+    # Written even when nothing ran, so a plugin installed before this manifest existed is still
+    # recorded as this mechanism's to take back.
+    _PLUGINS_MANIFEST.parent.mkdir(parents=True, exist_ok=True)
+    _PLUGINS_MANIFEST.write_text(json.dumps(declared, indent=2) + "\n", encoding="utf-8", newline="\n")
+
+
 def _copilot_present() -> bool:
     ext_dir = Path.home() / ".vscode" / "extensions"
     return ext_dir.is_dir() and any(ext_dir.glob("github.copilot-*"))
@@ -761,7 +840,8 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
     `claude_default_mode`, `claude_auto_mode`, `claude_skill_listing_budget_fraction` and
     `claude_statusline` values into `permissions.defaultMode` / `autoMode` /
     `skillListingBudgetFraction` / `statusLine`, merges every declared `claude_hooks` command into
-    `hooks`, and checks for GitHub Copilot (see docs/claude-code.md).
+    `hooks`, installs every declared `claude_plugins` entry from config/claude-plugins/, and checks
+    for GitHub Copilot (see docs/claude-code.md).
 
     Before actually installing or updating a skill, shows its own description and asks — same
     `-y`/`--yes` convention as apt/the `skills` CLI itself (already used below for its own `skills
@@ -801,6 +881,7 @@ def install_skills(c: Context, dir: str | None = None, yes: bool = False, skill:
         _apply_declared_skill_listing_budget(yes=yes)
         _apply_declared_statusline(yes=yes)
         _apply_declared_hooks()
+        _apply_declared_plugins()
         _note_copilot_permissions()
 
 

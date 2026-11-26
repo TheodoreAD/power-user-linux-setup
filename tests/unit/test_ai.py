@@ -10,6 +10,8 @@ _install_skill and the only thing that differs is the argument.
 """
 
 import json
+import shutil
+import subprocess
 from pathlib import Path
 from typing import override
 
@@ -574,6 +576,7 @@ def _stub_skills_task_helpers(monkeypatch, calls):
     monkeypatch.setattr(ai, "_apply_declared_skill_listing_budget", lambda *, yes: calls.append(("budget", yes)))
     monkeypatch.setattr(ai, "_apply_declared_statusline", lambda *, yes: calls.append(("statusline", yes)))
     monkeypatch.setattr(ai, "_apply_declared_hooks", lambda: calls.append(("hooks",)))
+    monkeypatch.setattr(ai, "_apply_declared_plugins", lambda: calls.append(("plugins",)))
     monkeypatch.setattr(ai, "_note_copilot_permissions", lambda: calls.append(("copilot",)))
 
 
@@ -592,6 +595,7 @@ def test_skills_task_default_dir_applies_permissions_and_threads_yes(monkeypatch
     assert ("auto", True) in calls
     assert ("budget", True) in calls
     assert ("statusline", True) in calls
+    assert ("plugins",) in calls
     assert ("copilot",) in calls
     assert ("install", Path.home(), True, None) in calls
 
@@ -707,6 +711,78 @@ def test_apply_declared_hooks_writes_settings_and_manifest(monkeypatch, tmp_path
         }
     ]
     assert json.loads(manifest.read_text(encoding="utf-8")) == {"CwdChanged": [_HOOK], "SessionStart": [_HOOK]}
+
+
+# ---------------------------------------------------------------------------
+# _plugin_commands / _apply_declared_plugins — the `claude plugin` CLI stays the writer
+# ---------------------------------------------------------------------------
+
+_MKT = ai._PLUGIN_MARKETPLACE
+_LSP = f"basedpyright-lsp@{_MKT}"
+
+
+def _registered(path: Path = ai._PLUGIN_MARKETPLACE_DIR) -> dict[str, dict[str, dict[str, str]]]:
+    return {_MKT: {"source": {"source": "directory", "path": str(path)}}}
+
+
+def test_plugin_commands_register_the_marketplace_then_install():
+    cmds = ai._plugin_commands({}, {}, ["basedpyright-lsp"], [])
+
+    assert cmds == [
+        ["plugin", "marketplace", "add", str(ai._PLUGIN_MARKETPLACE_DIR)],
+        ["plugin", "install", _LSP],
+    ]
+
+
+def test_plugin_commands_are_empty_when_in_line():
+    assert ai._plugin_commands({_LSP: True}, _registered(), ["basedpyright-lsp"], ["basedpyright-lsp"]) == []
+
+
+def test_plugin_commands_leave_a_plugin_the_user_disabled_alone():
+    assert ai._plugin_commands({_LSP: False}, _registered(), ["basedpyright-lsp"], []) == []
+
+
+def test_plugin_commands_reregister_a_moved_checkout_and_reinstall():
+    cmds = ai._plugin_commands({_LSP: True}, _registered(Path("/old/clone")), ["basedpyright-lsp"], [])
+
+    assert cmds == [
+        ["plugin", "marketplace", "remove", _MKT],
+        ["plugin", "marketplace", "add", str(ai._PLUGIN_MARKETPLACE_DIR)],
+        ["plugin", "install", _LSP],
+    ]
+
+
+def test_plugin_commands_uninstall_only_what_this_installed_and_no_longer_declares():
+    enabled = {_LSP: True, f"mine@{_MKT}": True}
+
+    cmds = ai._plugin_commands(enabled, _registered(), [], ["basedpyright-lsp", "gone"])
+
+    assert cmds == [["plugin", "uninstall", _LSP]]
+
+
+def test_apply_declared_plugins_runs_the_cli_and_records_the_manifest(monkeypatch, tmp_path):
+    monkeypatch.setattr(
+        util,
+        "load_config",
+        lambda: {"packages": {"basedpyright-lsp": {"platforms": EVERYWHERE, "claude_plugins": ["basedpyright-lsp"]}}},
+    )
+    monkeypatch.setattr(util, "load_overrides", dict)
+    monkeypatch.setattr(util, "_excluded_tags", set)
+    monkeypatch.setattr(util, "DRY_RUN", False)
+    monkeypatch.setattr(util, "load_claude_settings", dict)
+    monkeypatch.setattr(shutil, "which", lambda _: "claude")
+    ran: list[list[str]] = []
+    monkeypatch.setattr(subprocess, "run", lambda argv, check: ran.append(argv))
+    manifest = tmp_path / "plugins-manifest.json"
+    monkeypatch.setattr(ai, "_PLUGINS_MANIFEST", manifest)
+
+    ai._apply_declared_plugins()
+
+    assert ran == [
+        ["claude", "plugin", "marketplace", "add", str(ai._PLUGIN_MARKETPLACE_DIR)],
+        ["claude", "plugin", "install", _LSP],
+    ]
+    assert json.loads(manifest.read_text(encoding="utf-8")) == ["basedpyright-lsp"]
 
 
 # ---------------------------------------------------------------------------

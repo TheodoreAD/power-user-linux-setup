@@ -189,6 +189,9 @@ class PackageConfig(TypedDict, total=False):
     # Hook event name (SessionStart, CwdChanged, ...) -> the command to run on it, merged into
     # ~/.claude/settings.json's `hooks` by ai.install-skills. See _apply_declared_hooks.
     claude_hooks: dict[str, str]
+    # Plugins from this repo's own marketplace, config/claude-plugins/, installed at user scope by
+    # ai.install-skills. See ai._apply_declared_plugins.
+    claude_plugins: list[str]
     # Native Windows: directories `inv windows.configure-path` puts first on the user PATH.
     windows_path: list[str]
     omz_plugin: str | list[str]
@@ -382,6 +385,9 @@ class ClaudeSettings(TypedDict, total=False):
     skillListingBudgetFraction: float
     autoMode: dict[str, list[str]]
     hooks: dict[str, list[HookGroup]]
+    # Written by `claude plugin marketplace add` / `install`; read here, never written directly.
+    enabledPlugins: dict[str, bool]
+    extraKnownMarketplaces: dict[str, dict[str, dict[str, str]]]
 
 
 def load_toml(path: Path) -> object:
