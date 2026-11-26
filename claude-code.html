@@ -1855,6 +1855,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#python-code-intelligence-packagesbasedpyright-lsp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Python code intelligence — <code>[packages.basedpyright-lsp]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#installing-the-cli" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2412,6 +2423,17 @@
 </li>
       
         <li class="md-nav__item">
+  <a href="#python-code-intelligence-packagesbasedpyright-lsp" class="md-nav__link">
+    <span class="md-ellipsis">
+      <span class="md-typeset">
+        Python code intelligence — <code>[packages.basedpyright-lsp]</code>
+      </span>
+    </span>
+  </a>
+  
+</li>
+      
+        <li class="md-nav__item">
   <a href="#installing-the-cli" class="md-nav__link">
     <span class="md-ellipsis">
       <span class="md-typeset">
@@ -2788,6 +2810,39 @@ Measured 2026-11-26 from a fresh registry PATH: PULSE and repo-tasks each got th
 <code>cmd.exe</code> and programs that spawn <code>python</code> directly bypass the shims, and a venv activated in the
 launching shell comes earlier on PATH than the shims and wins.</p>
 <p>Hooks are read when a session starts, so an existing session needs a restart to pick them up.</p>
+<h2 id="python-code-intelligence-packagesbasedpyright-lsp">Python code intelligence — <code>[packages.basedpyright-lsp]</code><a class="headerlink" href="#python-code-intelligence-packagesbasedpyright-lsp" title="Permanent link">&para;</a></h2>
+<p>Claude Code takes language servers from plugins, and with one enabled it gets two things: the
+server&rsquo;s diagnostics handed back after every edit of a file the server covers, and an <code>LSP</code> tool for
+definitions, references and call hierarchy in place of grep round trips. <code>basedpyright-lsp</code> is a
+plugin in this repo&rsquo;s own marketplace, <code>config/claude-plugins/</code>, that runs basedpyright&rsquo;s server:</p>
+<div class="language-text highlight"><pre><span></span><code><span id="__span-3-1"><a id="__codelineno-3-1" name="__codelineno-3-1" href="#__codelineno-3-1"></a>uv run --no-sync --color never --directory ${CLAUDE_PROJECT_DIR} --with basedpyright basedpyright-langserver --stdio
+</span></code></pre></div>
+<ul>
+<li><strong><code>--directory ${CLAUDE_PROJECT_DIR}</code></strong>: the session&rsquo;s project, so its <code>pyproject.toml</code> settings
+  apply. Claude Code does not document the server&rsquo;s working directory, so it is not relied on.</li>
+<li><strong><code>--with basedpyright</code></strong>: a project that already has basedpyright keeps its own version, because
+  uv adds the overlay only when the environment does not satisfy it. Anything else gets the latest
+  from uv&rsquo;s cache.</li>
+<li><strong><code>--no-sync</code></strong>: starting a language server never changes a project&rsquo;s <code>.venv</code>.</li>
+<li><strong><code>uv</code> as the command</strong>: the same on Linux and Windows. No shim is involved, because Claude Code
+  starts a language server directly rather than through a shell.</li>
+</ul>
+<p><code>inv ai.install-skills</code> registers the marketplace and installs every plugin a package declares in
+<code>claude_plugins</code>, through <code>claude plugin marketplace add</code> / <code>install</code>, at user scope. The CLI writes
+<code>enabledPlugins</code> and <code>extraKnownMarketplaces</code>; PULSE only decides which calls to make. A plugin the
+user disabled stays disabled. A clone that moved gets its marketplace re-registered. Only a plugin
+this mechanism installed is ever uninstalled (manifest:
+<code>~/.local/state/power-user-linux-setup/claude-plugins-applied.json</code>). The marketplace is a local
+directory, so the plugin loads in place from this checkout, and a pull is live at the next session.</p>
+<p>Measured 2026-11-26 on Windows, in headless sessions writing a file with a type error:</p>
+<ul>
+<li><strong>In a project pinning basedpyright 1.30.0</strong> (<code>uv run --with basedpyright basedpyright --version</code>
+  answers 1.30.0 there), the session got the <code>reportAssignmentType</code> diagnostic back, and the LSP
+  tool found both references, in 247 ms.</li>
+<li><strong>In a directory with no project</strong>, the session got the same result.</li>
+</ul>
+<p><code>claude --debug-file &lt;path&gt;</code> logs every server start and protocol message, and <code>/plugin</code> → Errors
+shows a server that failed to start.</p>
 <h2 id="installing-the-cli">Installing the CLI<a class="headerlink" href="#installing-the-cli" title="Permanent link">&para;</a></h2>
 <p><code>[packages.claude-code]</code> installs the <code>claude</code> binary itself via <code>inv tools.install</code>, using
 Anthropic&rsquo;s native installer (<code>curl -fsSL https://claude.ai/install.sh | bash</code>) — a <code>script</code>-method
