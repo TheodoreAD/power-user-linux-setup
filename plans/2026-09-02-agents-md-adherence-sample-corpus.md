@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-28
+updated: 2026-11-27
 ---
 
 # `~/AGENTS.md` adherence: the sample corpus
@@ -1669,18 +1669,23 @@ ref you hand git is one you read, never one you derived." `config/agents-md/veri
    and read, not invented, and it was the prefix the tool had just printed. `[]`, exit 0, then
    `git rev-parse HEAD` and a correct repeat. The global instructions were loaded the whole time,
    and they include `verification.md`'s sentence about this exact flag.
+7. **power-user-linux-setup session `8cc35a74-7667-47a4-92d5-5a1f26a0896e`, 2026-11-27 around 21:12
+   +02:00.** After a push printed `8d76d52..c1d88fd`, it ran
+   `gh run list --branch master --commit c1d88fd8`, eight characters taken from the push output.
+   `[]`, exit 0, then `git rev-parse HEAD` and a correct repeat. It noted the trap by name in the
+   same breath, and had run `gh run watch` correctly on four other pushes that day.
 
 **Cost:** one wasted call each time. Any of them would have been a false "no CI run yet" inside a
 wait loop, which is what sample 15 was.
 
-[PITFALL: **the six share one cause and differ in shape**: completed to 40 characters, left at 7,
-extended by one, completed to 40 twice more, and left at a tool's 12-character prefix. What they
-share is a SHA taken from a command's printed output rather than read from git. Instance 3 adds the
-case sample 15's pitfall said the corpus could not separate: a session that had **read** the
-description of this slip that day, in a plan it was handling, and made it anyway. Instance 4 goes
-one step further: the same session had just **written** the description. So neither reading nor
-writing about it is a defence, and the fix the rule offers, "read it, never derive it", is the only
-form that would have worked.]
+[PITFALL: **the first six share one cause and differ in shape** (the seventh is the second "left at
+a short prefix"): completed to 40 characters, left at 7, extended by one, completed to 40 twice
+more, and left at a tool's 12-character prefix. What they share is a SHA taken from a command's
+printed output rather than read from git. Instance 3 adds the case sample 15's pitfall said the
+corpus could not separate: a session that had **read** the description of this slip that day, in a
+plan it was handling, and made it anyway. Instance 4 goes one step further: the same session had
+just **written** the description. So neither reading nor writing about it is a defence, and the fix
+the rule offers, "read it, never derive it", is the only form that would have worked.]
 
 [NEEDS CLARIFICATION: **"every ref you hand git" or "every ref you hand a tool"?** The rule is
 scoped to git, and all six slips were in `gh`. Instance 5's pin-versus-query split points the same
