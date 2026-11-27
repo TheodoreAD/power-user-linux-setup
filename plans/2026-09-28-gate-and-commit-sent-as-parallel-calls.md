@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-09-28
+updated: 2026-11-27
 source_repo: github.com-personal/repo-tasks
 source_session: 44be2918-1669-4d16-9f77-56535cc6ddeb.jsonl
 source_moment: 2026-09-27T23:47:59Z
@@ -39,6 +39,16 @@ broken and one mechanism. That argues for stating the general rule once (a call 
 is another call's result is never its sibling), rather than a clause in "About to commit" alone.
 Separately, the adherence sample corpus holds a third candidate clause, a scan step in the commit
 recipe, which touches the same section. Decide them together.
+
+**A third instance, in a third repo, merged 2026-11-27 from a hekate filing.** hekate session
+`5f84bc91-7291-42b4-9474-846d42d45b23`, about 2026-11-27T18:41Z. One response held `dprint check`
+(run from a scratch worktree), `git add AGENTS.md`, `plans.py scan --mode staged` and
+`git commit … -- AGENTS.md` as siblings. dprint exited 20 because AGENTS.md needed reflowing, and
+the commit landed anyway as `9cb4ac6`. It carried `Verified: dprint check`, so the trailer was false
+the moment it was written, a cost beyond a red commit. The session saw the failure in the same batch
+and amended the unpushed commit to `d9b8424`. The full gate had passed earlier, before AGENTS.md was
+edited, which made the batched check feel like a formality. Three repos now (repo-tasks,
+power-user-linux-setup's harvest sample, hekate), one mechanism.
 
 ## Open questions
 
