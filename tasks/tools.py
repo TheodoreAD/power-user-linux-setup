@@ -32,7 +32,14 @@ def _install_script(c: Context, name: str, cfg: util.PackageConfig) -> None:
     env = {k: _expand(v) for k, v in cfg.get("env", {}).items()}
     shell = cfg.get("shell", "sh")
     print(f"[{name}] installing...")
-    c.run(f"curl -fsSL {cfg['script_url']} | {shell}", env=env)
+    # Downloaded to a file and then fed to the shell, never `curl … | sh`: in a pipeline a failed
+    # curl hands the shell an empty stdin, the shell exits 0, and this printed "installed" over a
+    # download that never happened. `shell` still reads the script from stdin (`sh -s -- …`), so
+    # every declared value behaves exactly as it did through the pipe.
+    with TemporaryDirectory(prefix="pulse-script-") as tmp:
+        script = Path(tmp) / "install.sh"
+        c.run(f'curl -fsSL "{cfg["script_url"]}" -o {script}')
+        c.run(f"{shell} < {script}", env=env)
 
     if (
         not cfg.get("single_binary")

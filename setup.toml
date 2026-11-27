@@ -130,10 +130,13 @@
 #   check_cmd     binary name to check/install as (default: section name)
 #
 # script sections:
-#   script_url    URL piped into a shell (curl -fsSL <script_url> | <shell>) — for installers that
-#                 only ship as a shell script (nvm-style; but see the nvm note below — node itself
-#                 is NOT a generic script-method entry, it's a dedicated task)
-#   shell         interpreter for the piped script (default: "sh")
+#   script_url    URL of an installer script, downloaded to a temp file and fed to <shell> on stdin
+#                 (curl -fsSL <script_url> -o <file>, then <shell> < <file>), never piped, so a
+#                 failed download fails the install — for installers that only ship as a shell
+#                 script (nvm-style; but see the nvm note below — node itself is NOT a generic
+#                 script-method entry, it's a dedicated task)
+#   shell         interpreter the script is fed to on stdin (default: "sh"); arguments go after
+#                 `-s --`
 #   env           dict of env vars passed to the install script; values starting with "~" are
 #                 expanded to the home directory first
 #   single_binary / symlink_from   if the installer doesn't already put its binary on PATH,

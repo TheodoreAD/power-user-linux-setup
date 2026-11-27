@@ -10,6 +10,9 @@ Also covers _install_archive's compression handling, which is the one part of th
 a format it cannot declare: the archive is fetched to a file and read with `tar -xf` so tar sniffs
 gzip/xz/bzip2 itself. These run the real shell against real tarballs over file:// URLs — the bug
 being guarded is a tar invocation, so mocking the run would test nothing.
+
+And _install_script's download, the same way and for the same reason: the bug was a pipeline whose
+exit code was its last stage's, which only a real shell exhibits.
 """
 
 import hashlib
@@ -491,3 +494,33 @@ def test_resolve_url_version_names_the_missing_field_for_the_method_that_asked()
     `download_url` for archive, and a reader with the wrong one looks in the wrong place."""
     with pytest.raises(RuntimeError, match=r"url has \{version\}"):
         tools._resolve_url_version(MockContext(), "t", "https://e/{version}", {}, "url")
+
+
+def _script_cfg(script_url: str, marker: Path) -> util.PackageConfig:
+    return {"script_url": script_url, "shell": f"sh -s -- written {marker}", "check_path": str(marker)}
+
+
+@posix_only("runs a POSIX sh script")
+def test_install_script_refuses_a_download_that_failed(tmp_path):
+    """`curl -fsSL <url> | sh` is the shape this repo forbids for its own installer: a failed curl
+    hands sh an empty stdin, sh exits 0, and the task printed "installed" over nothing. The download
+    now lands in a file first, so its failure is the command's failure."""
+    marker = tmp_path / "marker"
+
+    with pytest.raises(subprocess.CalledProcessError):
+        tools._install_script(_ShellContext(), "t", _script_cfg((tmp_path / "missing.sh").as_uri(), marker))
+
+    assert not marker.exists()
+
+
+@posix_only("runs a POSIX sh script")
+def test_install_script_runs_the_script_with_the_declared_shell_arguments(tmp_path):
+    """`shell` carries arguments after `-s --` (oh-my-zsh's --unattended, rustup's -y), so the
+    script must still arrive on stdin for the declared shell rather than as a path it is handed."""
+    script = tmp_path / "install.sh"
+    script.write_text('printf "%s" "$1" > "$2"\n', encoding="utf-8", newline="\n")
+    marker = tmp_path / "marker"
+
+    tools._install_script(_ShellContext(), "t", _script_cfg(script.as_uri(), marker))
+
+    assert marker.read_text(encoding="utf-8") == "written"
