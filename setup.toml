@@ -1799,12 +1799,18 @@ check_cmd = "herdr-app"
 # phoning home by default is a decision. HERDR_TELEMETRY=0 is read once at startup, and with it set
 # the app also deletes any id and unsent reports. Through ~/.zshenv it reaches a terminal launch at
 # once and a launcher or dock launch from the next login, the same chain contributing/
-# session-environment.md measures for every zshenv variable. The app's own `"telemetry": false` in
-# ~/.config/herdr-app/settings.json would be the other layer, and is not written here: that file is
-# the app's, rewritten whenever a setting changes, and PULSE has no declared writer for one key of an
-# app-owned JSON file. DO_NOT_TRACK would also work and is plans/2026-11-08-do-not-track.md's open
-# question, so the herdr-specific variable is used, as for Tilt.
+# session-environment.md measures for every zshenv variable. The second layer is the app's own
+# `"telemetry": false`, in the settings.json seeded below, which every launch reads, whatever its
+# environment. DO_NOT_TRACK would also work and is plans/2026-11-08-do-not-track.md's open question,
+# so the herdr-specific variable is used, as for Tilt.
 zshenv = "export HERDR_TELEMETRY=0"
+# Seeded once, before the app's first start, and the app's afterwards: Herdr rewrites the file
+# whenever a setting changes, which a seeded config_files destination expects (deploy.py's SEEDED
+# policy). The values are win-configs' herdr/settings.json without its `zoom`, which suits that
+# machine's display: CaskaydiaCove Nerd Font Mono, which [settings.fonts] installs, at its real
+# Light face (300), and telemetry off. Layout and mods are not deployed:
+# plans/2026-11-26-herdr-controller-skill-and-app.md.
+config_files = [{ src = "config/herdr-app/settings.json", dst = "~/.config/herdr-app/settings.json" }]
 
 [packages.telegram-desktop]
 description = """

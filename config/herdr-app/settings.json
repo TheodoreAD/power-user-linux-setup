@@ -1,0 +1,13 @@
+{
+  "sounds": {
+    "enabled": true
+  },
+  "font_ligatures": false,
+  "terminal_line_height": 1,
+  "terminal_cell_width": 1,
+  "terminal_scroll_speed": 1,
+  "minimum_contrast": 1,
+  "font": "CaskaydiaCove Nerd Font Mono",
+  "font_weight": 300,
+  "telemetry": false
+}
