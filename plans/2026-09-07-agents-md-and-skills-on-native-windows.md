@@ -11,27 +11,39 @@ Written 2026-11-27 from the Linux machine, after it caught up with the Windows w
 this repo, which the Windows machine pulls, so a Windows session told "do the Windows checklist"
 needs nothing pasted. Tick each item here as it is done, with what it printed.
 
-1. **Pull** `power-user-linux-setup`, `win-configs`, `agent-skills` and `freshful-polite-mcp`. Each
+1. **Pull** `power-user-linux-setup`, `win-configs` and `agent-skills`, and **clone**
+   `freshful-polite-mcp`, which is not on the Windows machine at all (only `projects\personal\`
+   exists there). As of 2026-11-27 the three are clean on Windows but behind GitHub
+   (power-user-linux-setup at `c42d5cc`, win-configs at `d39dbf9`, agent-skills at `0e948f2`). Each
    pull brings a new `.gitattributes` (`* text=auto eol=lf`). Afterwards `git status` should be
    clean in each. If files nobody edited show as modified, check
    `git diff --ignore-cr-at-eol --stat` first: empty means line endings only, which is the
-   attributes change and not anybody's work. Ask the user before touching it.
-2. **Reinstall the skills** the way `win-configs` installs them, so `plan-conveyor` is at
-   agent-skills `3106b68` or later. Before that commit, `where` reports this personal machine as a
-   work device and `join` crashes with a KeyError on a `personal` one.
-3. **Check the store.** `python3 ~/.agents/skills/plan-conveyor/scripts/plans.py where` must print
-   `device:  personal — only your own work`, and `plans.py doctor` must show `sync` as `auto`. **No
-   join is needed**: this machine's store already joined the shared remote on 2026-11-25 (store
-   merge `9dd4292`, with later syncs since). Then run `plans.py absorb` and `plans.py list` in
-   `win-configs`: three store-held plans for it are waiting (herdr session panel, herdr mods, WSL
-   disk and idle shutdown).
+   attributes change and not anybody's work. Ask the user before touching it. Pull from the desktop:
+   over SSH, `git fetch` to GitHub hangs, since the Windows key is not unlocked there.
+2. ~~**Reinstall the skills**~~ **Done 2026-11-27**, by the agent-skills session over the
+   herdr-remote SSH key from Linux. The seven agent-skills skills Windows already had were
+   reinstalled, none added, and the installed `plans.py` SHA256 matches agent-skills `122e17a`, past
+   the `3106b68` fix.
+3. ~~**Check the store.**~~ **Done 2026-11-27**, the same way. `where` printed
+   `device:  personal — only your own work`, and `doctor` showed the store with its `origin` remote
+   0 behind and 0 ahead, fetched within the hour, `sync auto`, and no stranded sensitive-store
+   plans. Still to do from a Windows win-configs session: `plans.py absorb` and `plans.py list`, for
+   the store-held win-configs plans waiting there (herdr session panel, herdr mods, WSL disk and
+   idle shutdown, and the SSH junction filing below).
 4. **The junction check**, the one open question in
-   `plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`. In `freshful-polite-mcp`,
-   run `npx skills add ./skills --agent universal claude-code --skill '*' --yes`, start a Claude
-   Code session there, and ask it to list its skills. Both of the repo's own skills must appear. If
-   they do not, Claude Code is not following the junction the `skills` CLI made.
-5. **Report back.** Record steps 3 and 4 here and commit. When the junction check passes, the
+   `plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`. **From the desktop, not
+   over SSH**: an SSH session cannot traverse a junction at all (below), so it would report a
+   failure that is not the one being tested. In `freshful-polite-mcp`, run
+   `npx skills add ./skills --agent universal claude-code --skill '*' --yes`, start a Claude Code
+   session there, and ask it to list its skills. Both of the repo's own skills must appear. If they
+   do not, Claude Code is not following the junction the `skills` CLI made.
+5. **Report back.** Record steps 1 and 4 here and commit. When the junction check passes, the
    matching open item in the only-source plan above closes with it.
+
+**Found over SSH, 2026-11-27: Windows refuses scoop's junctions in an SSH session**, with error 448,
+"untrusted mount point". So `python`, `uv` and the git shim all fail there, and only the real
+version directories work. It is why step 4 must run from the desktop. Filed for win-configs as
+`2026-11-27-ssh-sessions-cannot-traverse-scoop-junctions.md` in the plans store.
 
 ## Context
 
