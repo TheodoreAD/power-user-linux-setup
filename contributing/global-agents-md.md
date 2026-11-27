@@ -2307,6 +2307,22 @@ failure in full and then offered only "stage late" against it, which is a discip
 mechanism; `git commit -m "…" -- <path>` is the mechanism, and it had been sitting in a sibling rule
 under a heading a session splitting commits has no reason to consult.
 
+### The never-tracked-file clause, added 2026-11-27
+
+"Committing by pathspec removes the risk entirely" was true of what it was written against, another
+session's staged files, and silent about a path git does not know yet. Four occurrences, recorded in
+`plans/2026-09-02-agents-md-adherence-sample-corpus.md`: one cheap, three from a single hekate
+session on 2026-11-25. Two of those were costly. A failed commit naming a new file let the docs
+commit sent beside it land first. A `git add` that also named a path `git mv` had already removed
+staged nothing, and the directory pathspec commit after it succeeded without the three new files,
+two commits before anyone noticed.
+
+So the clause names both shapes, since they look nothing alike: loud for a file named directly,
+silent for one under a named directory. It also says a failed `git add` stops the commit, because
+the costly case was a commit sent in the same response as the add it depended on. The `git status`
+check after a file-creating commit is what caught the fourth occurrence. It is the only part that
+works whatever went wrong earlier.
+
 ### Every commit has a body
 
 Admitted 2026-09-02, from the now-retired `plans/2026-09-01-every-commit-carries-a-why.md`, after

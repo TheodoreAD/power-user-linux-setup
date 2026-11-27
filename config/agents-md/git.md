@@ -152,6 +152,13 @@ one that gets missed, because `rm` and `add` read as staging while a rename read
 Committing by pathspec removes the risk entirely: `git commit -m "…" -- <path> <path>` takes the
 named paths whatever else sits in the index.
 
+**Except a file git has never tracked**, which a pathspec commit cannot see. Named directly, it
+fails loudly with `did not match any file(s) known to git`. Under a named directory it is **dropped
+silently**: the commit succeeds without it. So `git add -- <new paths>` comes first, in its own
+call, and a failed `git add` stops the commit rather than being retried around. It fails, and stages
+nothing, if it also names a path a `git mv` has already removed. After a commit that created files,
+`git status --short` shows no `??` under the paths just committed.
+
 **When two concerns land in the _same file_**, staging by path cannot separate them and
 `git add -p`/`-i` is unavailable here. That is not a reason to ship one fat commit. Copy the
 finished file to the scratchpad, edit it back down to just the first concern, verify that state
