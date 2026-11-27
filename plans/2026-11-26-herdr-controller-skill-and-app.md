@@ -60,12 +60,15 @@ get the block. Whether that matters depends on whether a second Linux controller
 
 ## Still open
 
-- **Until the next login, a dock-launched Herdr does not see `HERDR_TELEMETRY`**, because the
-  session's environment predates the zshenv line. A launch from a terminal does. After the next
-  login, confirm it: Settings → Privacy should report telemetry off because of `HERDR_TELEMETRY`.
-- win-configs' `herdr/README.md` carries Herdr's settings, the Estro layout and the mods for Linux,
-  marked "Not tested on Linux yet". Whether PULSE or win-configs should own that block is the
-  README's own open point.
+- **Confirm telemetry is off on the first launch**: Settings → Privacy. The seeded `settings.json`
+  (`config/herdr-app/settings.json`, win-configs' file minus `zoom`) was in place before the app
+  ever started, so every launch reads `"telemetry": false`. A dock launch before the next login
+  lacks `HERDR_TELEMETRY` but not the setting.
+- **The Estro layout and the mods** in win-configs' `herdr/README.md` ("On Linux") are not deployed.
+  That is third-party JavaScript at two pinned commits, security-reviewed for Windows on 2026-11-23,
+  plus a Go build and a local patch, marked "Not tested on Linux yet". Better Files' open/reveal
+  actions call macOS commands. Whether PULSE or win-configs owns it, and whether it becomes a task
+  at all, is the README's own open point, waiting on the user.
 - Should `[[ssh_hosts]]` grow per-host options and an explicit key path, so herdr controller entries
   can be declared too? Probably YAGNI while there's one controller.
 - `[packages.herdr-app]` installs once and never updates the app, because the `script` method skips
