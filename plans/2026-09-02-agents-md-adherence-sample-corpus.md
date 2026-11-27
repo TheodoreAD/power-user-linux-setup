@@ -1612,8 +1612,10 @@ under a named directory is dropped silently. "Committing by pathspec removes the
 `config/agents-md/git.md` is right about other sessions' staged files and says nothing about either
 shape. The filing proposed one clause: a path git has never tracked needs `git add -- <path>` in its
 own call just before the commit, a failed `git add` stops the commit, and after any commit that
-created files, `git status --short` shows no `??` under the committed paths. Not yet written into
-the rule.
+created files, `git status --short` shows no `??` under the committed paths. Written into the rule
+2026-11-27, as the "Except a file git has never tracked" paragraph of `config/agents-md/git.md`'s
+"Committing multi-part work"; the evidence is under the same heading in
+`contributing/global-agents-md.md`.
 
 ### Outside the audit rows: a SHA not read from git, handed to `gh run list --commit`
 
