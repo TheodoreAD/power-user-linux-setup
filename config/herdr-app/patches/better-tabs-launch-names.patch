@@ -1,0 +1,71 @@
+diff --git a/actions/names.js b/actions/names.js
+--- a/actions/names.js
++++ b/actions/names.js
+@@ -3,7 +3,7 @@
+ // `shared("better-tabs.names")`, so a name that differs from them is the person's own and is
+ // left alone; renaming a tab to nothing hands it back. Logic only: the bar's copy runs
+ // `tab.rename` from its timer, never in render.
+-import { spaces, panes, run, shared, setShared, home } from "herdr";
++import { spaces, panes, run, shared, setShared, home, knownAgents } from "herdr";
+
+ export const NAMES_KEY = "better-tabs.names";
+
+@@ -92,7 +92,10 @@ function tabWants(tabPanes, homePath) {
+ // { manual: true }, with { pending, at } while a rename is on its way and { gone } once the tab
+ // has closed. They're shared, so every copy of the bar waits for the same request. Returns the
+ // renames and the records to keep, without changing what it was given.
+-export function planNames(allSpaces, allPanes, records, now, homePath = homeFolder()) {
++// launchNames: the agents' names, which the + menu gives a tab it starts one in. Herdr reports
++// the shell the agent runs in for a moment first, so such a name is Herdr's, not the person's.
++// (Local patch, not in munza/herdr-mods.)
++export function planNames(allSpaces, allPanes, records, now, homePath = homeFolder(), launchNames = new Set()) {
+   const tabs = allSpaces.flatMap((space) => space.tabs ?? []);
+   // Herdr lists no tabs only while it starts or restores, so nothing is decided then.
+   if (!tabs.length) return { renames: [], records };
+@@ -122,7 +125,8 @@ export function planNames(allSpaces, allPanes, records, now, homePath = homeFold
+     }
+     if (!tab.named) record = undefined;
+     else if (!record) {
+-      if (wants.known.size) record = wants.known.has(current) ? { auto: current } : { manual: true };
++      if (launchNames.has(current)) record = { auto: current };
++      else if (wants.known.size) record = wants.known.has(current) ? { auto: current } : { manual: true };
+     } else if (record.auto !== undefined && current !== record.auto) record = { manual: true };
+     if (record?.manual) {
+       next[tab.id] = record;
+@@ -150,11 +154,24 @@ function withoutKeys(record, keys) {
+ }
+
+ export const nameMethods = {
++  // Local patch: the names the + menu gives agent tabs (knownAgents() is cached by Herdr).
++  loadLaunchNames(cx) {
++    this.launchNames = new Set();
++    cx.spawn(async () => {
++      try {
++        const agents = await knownAgents();
++        this.launchNames = new Set(agents.map((agent) => cleanName(agent.name)).filter(Boolean));
++      } catch (error) {
++        console.warn(`better-tabs: couldn't list agents: ${error.message ?? error}`);
++      }
++    });
++  },
++
+   nameTabs(now = Date.now()) {
+     // Until the installed settings are read, auto_name may be off.
+     if (!this.settingsReady || !this.settings.tabs.auto_name) return;
+     const saved = shared(NAMES_KEY) ?? {};
+-    const { renames, records } = planNames(spaces(), panes(), saved, now);
++    const { renames, records } = planNames(spaces(), panes(), saved, now, undefined, this.launchNames);
+     for (const { id, name } of renames) {
+       try {
+         run("tab.rename", { id, name });
+diff --git a/main.js b/main.js
+--- a/main.js
++++ b/main.js
+@@ -69,6 +69,7 @@ class Tabs extends View {
+     if (this.config().mode !== "overflow") {
+       // Synchronization can issue layout commands, so it must not run in render.
+       this.syncPanel();
++      this.loadLaunchNames(cx);
+       cx.timer.every(300, () => {
+         this.syncPanel();
+         this.nameTabs();

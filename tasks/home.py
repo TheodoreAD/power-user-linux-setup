@@ -41,7 +41,7 @@ from pathlib import Path
 
 from invoke import Context, task
 
-from . import certs, chrome, deploy, docker, fonts, git, gnome, ide, proxy, python, screenshot, ssh, system, util
+from . import certs, chrome, deploy, docker, fonts, git, gnome, herdr, ide, proxy, python, screenshot, ssh, system, util
 
 _HOME = Path.home()
 
@@ -272,7 +272,7 @@ def runtime_managed() -> list[deploy.Managed]:
     nothing here, which is the right answer rather than rows reporting a file that was never going
     to exist.
     """
-    return [proxy.UNIT, proxy.ENV_MANAGED, *ide.managed_files()]
+    return [proxy.UNIT, proxy.ENV_MANAGED, *ide.managed_files(), *herdr.managed_files()]
 
 
 def _undeclared_whole_file_claims() -> Iterator[Claim]:
@@ -632,6 +632,10 @@ def _install_claims() -> Iterator[Claim]:
     coded = (
         (fonts.FONTS_DIR, "inv fonts.install", "setup.toml [settings.fonts] families"),
         (gnome.USER_EXT_DIR, "inv gnome.install-extensions", "setup.toml gnome-extension uuid/ego_id"),
+        *(
+            (herdr.MODS_DIR / name, "inv herdr.install-mods", "tasks/herdr.py pinned upstream commits")
+            for name in herdr.mod_names()
+        ),
         (util.PULSE_STATE_DIR, "deploy/ai/allowlist manifests", "generated per machine"),
         (util.OVERRIDES_PATH, "hand-written", "machine-local, deliberately out of git"),
     )
