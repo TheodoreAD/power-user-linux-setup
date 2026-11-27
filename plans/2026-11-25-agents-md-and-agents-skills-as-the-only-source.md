@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-11-25
+updated: 2026-11-27
 ---
 
 # `AGENTS.md` and `.agents/skills` as the only source, at home and in every repo
@@ -330,6 +330,13 @@ reach npm without adding minutes to every run.]
 
 ## Recommended direction
 
-What is left is the open questions above, none of which blocks anything. The one check with a real
-user behind it is on the Windows machine: whether Claude Code follows the junction the `skills` CLI
-makes for each skill, first in `freshful-polite-mcp`.
+What is left is the open questions above, none of which blocks anything.
+
+**The Windows junction check passed, 2026-11-27**, from a desktop session. In a fresh clone of
+`freshful-polite-mcp` at `3cb4188`,
+`npx skills add ./skills --agent universal claude-code
+--skill '*' --yes` (Claude Code 2.1.332)
+wrote real copies in `.agents/skills/` and one **junction** per skill in `.claude/skills/`, all
+gitignored, so `git status` stayed clean. A headless `claude -p` session started in the repo then
+listed both `browse-purchase-history` and `reorder-suggest` beside the home skills, so Claude Code
+follows the junctions in project scope too.

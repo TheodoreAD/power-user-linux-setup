@@ -11,7 +11,13 @@ Written 2026-11-27 from the Linux machine, after it caught up with the Windows w
 this repo, which the Windows machine pulls, so a Windows session told "do the Windows checklist"
 needs nothing pasted. Tick each item here as it is done, with what it printed.
 
-1. **Pull** `power-user-linux-setup`, `win-configs` and `agent-skills`, and **clone**
+1. **Done 2026-11-27, from the desktop.** `power-user-linux-setup` fast-forwarded `c42d5cc` to
+   `32965fa`, clean, no line-ending-only changes. `win-configs` (`b4f6064`, which contains
+   `32be3dc`) and `agent-skills` (`21a4ec0`, which contains `122e17a`) were already at their GitHub
+   tips, checked with `git ls-remote`. `agent-skills` holds uncommitted edits to `plans.py` and
+   `tests/unit/test_plan_store.py` that are real content and no part of this checklist, so they were
+   left alone. `freshful-polite-mcp` cloned into `projects\personal\` at `3cb4188`, clean. The
+   original step: **Pull** `power-user-linux-setup`, `win-configs` and `agent-skills`, and **clone**
    `freshful-polite-mcp`, which is not on the Windows machine at all (only `projects\personal\`
    exists there). As of 2026-11-27 the three are clean on Windows but behind GitHub
    (power-user-linux-setup at `c42d5cc`, win-configs at `d39dbf9`, agent-skills at `0e948f2`). Each
@@ -36,9 +42,12 @@ needs nothing pasted. Tick each item here as it is done, with what it printed.
    failure that is not the one being tested. In `freshful-polite-mcp`, run
    `npx skills add ./skills --agent universal claude-code --skill '*' --yes`, start a Claude Code
    session there, and ask it to list its skills. Both of the repo's own skills must appear. If they
-   do not, Claude Code is not following the junction the `skills` CLI made.
-5. **Report back.** Record steps 1 and 4 here and commit. When the junction check passes, the
-   matching open item in the only-source plan above closes with it.
+   do not, Claude Code is not following the junction the `skills` CLI made. **Passed 2026-11-27**:
+   the CLI made one junction per skill in `.claude\skills\`, and a headless `claude -p` session in
+   the repo listed both `browse-purchase-history` and `reorder-suggest`. Recorded in the only-source
+   plan, whose open item it closes.
+5. ~~**Report back.**~~ **Done 2026-11-27**, in this commit. What is left from the Windows side is
+   win-configs' `plans.py absorb`/`list`, for a win-configs session.
 
 **Found over SSH, 2026-11-27: Windows refuses scoop's junctions in an SSH session**, with error 448,
 "untrusted mount point". So `python`, `uv` and the git shim all fail there, and only the real
