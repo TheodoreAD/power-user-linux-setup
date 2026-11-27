@@ -69,7 +69,8 @@ get the block. Whether that matters depends on whether a second Linux controller
   Changes' file limit is 100, and `herdr-app status` reported no errors. Not yet checked by use:
   that Better Files' open, reveal and search actions fail on Linux as the README predicts, since
   they call macOS's `open` and `mdfind`. Win-configs' README still carries the same steps as a
-  pasted script; pointing its "On Linux" section at this task is a win-configs change.
+  pasted script; pointing its "On Linux" section at this task is a win-configs change, filed for it
+  as `2026-11-27-herdr-linux-steps-now-a-pulse-task.md` in the plans store.
 - Should `[[ssh_hosts]]` grow per-host options and an explicit key path, so herdr controller entries
   can be declared too? Probably YAGNI while there's one controller.
 - `[packages.herdr-app]` installs once and never updates the app, because the `script` method skips
