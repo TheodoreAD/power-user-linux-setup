@@ -1591,6 +1591,30 @@ with `pathspec … did not match any file(s) known to git` when a named path is 
 pathspec commit takes only tracked paths. It cost one `git add` and a retry. Nothing was committed
 by the failed call.
 
+**Three more in one hekate session, 2026-11-25, and two of them were not cheap.** Filed from hekate
+session `5f84bc91-7291-42b4-9474-846d42d45b23` and merged here 2026-11-27.
+
+1. **~11:20Z, loud, but the order went wrong.** A code commit naming a new `deploy/k8s/grafana.yaml`
+   failed with the error above. The docs commit sent in the same response, naming only a tracked
+   `AGENTS.md`, succeeded, so the branch recorded the docs before the code. A squash merge hid it; a
+   rebase merge would have kept it.
+2. **~13:50Z, silent and incomplete.** After a `git mv` plus three new files, the
+   `git add -- <new files> <old path>` failed on the old path, which `git mv` had already removed,
+   and staged nothing. The next `git commit -- packages/hekate-examples …` **succeeded**: a
+   directory pathspec takes only the tracked files under it, so the commit carried the move and
+   dropped the three new files without a word. Two commits went on top before `git status` showed
+   them, and the repair (`reset --keep`, `--amend`, `cherry-pick` ×2) happened before the push.
+3. **An hour later, same trigger.** `git add -A -- <new dir> <old dir>` failed on the old directory
+   after a `git mv`. This time a `git status --short` before the commit caught it.
+
+So the gap has two shapes: an untracked file named directly fails loudly, and an untracked file
+under a named directory is dropped silently. "Committing by pathspec removes the risk entirely" in
+`config/agents-md/git.md` is right about other sessions' staged files and says nothing about either
+shape. The filing proposed one clause: a path git has never tracked needs `git add -- <path>` in its
+own call just before the commit, a failed `git add` stops the commit, and after any commit that
+created files, `git status --short` shows no `??` under the committed paths. Not yet written into
+the rule.
+
 ### Outside the audit rows: a SHA not read from git, handed to `gh run list --commit`
 
 Six instances in four sessions on 2026-09-28. The first four were filed from scaffoldapy and merged
