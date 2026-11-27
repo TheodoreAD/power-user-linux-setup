@@ -2564,3 +2564,19 @@ tags = ["dev"]
 skills = [
   { source = "npx", repo = "TheodoreAD/agent-skills", description = "Every cross-project convention skill this machine uses: storage-tech defaults per use case, invoke task naming, MCP server shipping, authoring and redeploying a skill, plans/ lifecycle, the *-polite-mcp conventions, Python design defaults, the shared research library, the session Bash audit, and what to persist from a session and where." },
 ]
+
+[packages.herdr-remote]
+description = """
+Agent skill for enrolling a Windows PC and its WSL distro as Herdr machines over SSH.
+
+Authored in TheodoreAD/win-configs beside the Windows half of the setup it drives, with a doctor
+for either side. Linux only, because Linux is the controller; win-configs installs
+it on Windows itself. `names` pins it to this one skill, so anything else win-configs publishes
+later is not installed here unasked. plans/2026-11-26-herdr-controller-skill-and-app.md.
+"""
+method = "skill"
+platforms = ["linux"]
+tags = ["terminal", "ai"]
+skills = [
+  { source = "npx", repo = "TheodoreAD/win-configs", names = ["herdr-remote"], description = "Set up, check and repair Herdr on a Linux controller reaching a Windows machine and its WSL distro over SSH." },
+]
