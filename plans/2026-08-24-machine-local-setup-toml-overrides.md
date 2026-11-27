@@ -49,6 +49,20 @@ That is worse than a missing feature. It means "disabled" currently conflates tw
 
 Whatever shape the override takes, it has to fix (2), not just make the package installable.
 
+### The same question for single-value settings
+
+`ai.install-skills` writes four single values into `~/.claude/settings.json`: `statusLine`,
+`defaultMode`, `autoMode` and the skill-listing budget. Since `9f067fa` (2026-11-26) they apply only
+where their package's `platforms` match, through `_package_here`. Not applying is not withdrawing: a
+value an earlier run wrote stays in the file after the package stops applying, exactly as the
+deployed `.desktop` file above stays on disk.
+
+[NEEDS CLARIFICATION: should `enabled = false`, or a tag that excludes the package, **withdraw** a
+single-value setting an earlier run applied, or only stop applying it? Withdrawing means knowing
+which value PULSE wrote, which is the claims registry's job; leaving it is case (2) again, with no
+`deploy.status` row to show it. Raised 2026-11-27 from a nexus session's wrap-up of the PULSE and
+agent-skills sessions, alongside the Linux catch-up that has since run.]
+
 ## Open questions
 
 [NEEDS CLARIFICATION: What can an override change? The minimal version is `enabled` only — a
