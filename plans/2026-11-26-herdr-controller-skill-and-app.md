@@ -60,15 +60,16 @@ get the block. Whether that matters depends on whether a second Linux controller
 
 ## Still open
 
-- **Confirm telemetry is off on the first launch**: Settings → Privacy. The seeded `settings.json`
-  (`config/herdr-app/settings.json`, win-configs' file minus `zoom`) was in place before the app
-  ever started, so every launch reads `"telemetry": false`. A dock launch before the next login
-  lacks `HERDR_TELEMETRY` but not the setting.
-- **The Estro layout and the mods** in win-configs' `herdr/README.md` ("On Linux") are not deployed.
-  That is third-party JavaScript at two pinned commits, security-reviewed for Windows on 2026-11-23,
-  plus a Go build and a local patch, marked "Not tested on Linux yet". Better Files' open/reveal
-  actions call macOS commands. Whether PULSE or win-configs owns it, and whether it becomes a task
-  at all, is the README's own open point, waiting on the user.
+- **Telemetry, confirmed off on the first launch, 2026-11-27**: `settings.json` still reads
+  `"telemetry": false` after the app started, and no `telemetry/` folder (which holds the install
+  id) was created in `~/.config/herdr-app`.
+- **The Estro layout and mods, installed 2026-11-27** by `inv herdr.install-mods` (`tasks/herdr.py`)
+  at the pinned commits, the first Linux run of win-configs' "On Linux" steps. All eight mods passed
+  `herdr-app check`, Branch PR 2.4.0 built with the local Go, the Better Tabs patch applied, Better
+  Changes' file limit is 100, and `herdr-app status` reported no errors. Not yet checked by use:
+  that Better Files' open, reveal and search actions fail on Linux as the README predicts, since
+  they call macOS's `open` and `mdfind`. Win-configs' README still carries the same steps as a
+  pasted script; pointing its "On Linux" section at this task is a win-configs change.
 - Should `[[ssh_hosts]]` grow per-host options and an explicit key path, so herdr controller entries
   can be declared too? Probably YAGNI while there's one controller.
 - `[packages.herdr-app]` installs once and never updates the app, because the `script` method skips
