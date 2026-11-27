@@ -120,7 +120,8 @@ def test_install_mods_builds_branch_pr_with_the_local_go_toolchain_only(app_home
 
     builds = [i for i, c in enumerate(context.commands) if c.startswith("go -C")]
     assert len(builds) == 1
-    assert context.commands[builds[0]].endswith("branch-pr/helper run ./install")
+    # The command embeds a native path, so normalise the separator before matching.
+    assert context.commands[builds[0]].replace("\\", "/").endswith("branch-pr/helper run ./install")
     assert context.envs[builds[0]] == {"GOTOOLCHAIN": "local"}
 
 
