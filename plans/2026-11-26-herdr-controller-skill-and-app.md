@@ -71,6 +71,14 @@ get the block. Whether that matters depends on whether a second Linux controller
   they call macOS's `open` and `mdfind`. Win-configs' README still carries the same steps as a
   pasted script; pointing its "On Linux" section at this task is a win-configs change, filed for it
   as `2026-11-27-herdr-linux-steps-now-a-pulse-task.md` in the plans store.
+- **The Windows machine and its WSL distro, enrolled 2026-11-27**, following the `herdr-remote`
+  skill's phase 2 step 5 and phase 3 step 4. The skill's doctor had passed every SSH check: the host
+  reachable, the key login, hc 0.1.22 on Windows, port forwarding refused, and the WSL bridge
+  answering. Only the two `hc machine add` steps were left. Windows was added as `<windows-host>`,
+  and WSL as `<windows-host>--wsl` through `herdr-via-wsl`, with `--install` copying hc 0.1.22 into
+  WSL. Afterwards the doctor showed 12 OK and 0 failed, and `status` showed both connected, the
+  Windows core holding 11 live terminals. Both machines are Herdr state only; PULSE declares
+  neither, and the `Host` block they ride on is the hand-written one below.
 - Should `[[ssh_hosts]]` grow per-host options and an explicit key path, so herdr controller entries
   can be declared too? Probably YAGNI while there's one controller.
 - `[packages.herdr-app]` installs once and never updates the app, because the `script` method skips
