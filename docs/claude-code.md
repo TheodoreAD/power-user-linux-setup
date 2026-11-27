@@ -198,6 +198,15 @@ Measured 2026-11-26 on Windows, in headless sessions writing a file with a type 
   tool found both references, in 247 ms.
 - **In a directory with no project**, the session got the same result.
 
+**Diagnostics on a file in another repo are not evidence.** One server runs per session, rooted at
+the session's project, and a plugin's server config takes a single fixed `workspaceFolder` with
+nothing that picks a root per edited file. So when a session edits a file in a different repo, that
+file is resolved against this project's environment and settings: measured 2026-11-27, a scaffoldapy
+test came back with `Import "copier" could not be resolved` and a cascade of `reportUnknown*`
+warnings, while scaffoldapy's own gate ran basedpyright over the same file with 0 errors and 0
+warnings. A scratch script picks up this project's strict `reportAny` errors the same way. In
+another repo, its own `inv quality.precommit` is the type check to believe.
+
 `claude --debug-file <path>` logs every server start and protocol message, and `/plugin` → Errors
 shows a server that failed to start.
 
