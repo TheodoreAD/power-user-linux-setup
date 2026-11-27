@@ -1,6 +1,6 @@
 ---
 status: in-progress
-updated: 2026-09-19
+updated: 2026-11-27
 source_repo: github.com-personal/repo-tasks
 source_session: 14237e4b-3a66-4207-8a3a-882552c86680.jsonl
 source_moment: 2026-09-18T09:40:00Z
@@ -197,7 +197,7 @@ the environment of the terminal Claude Code was launched in, which no dotfile ed
 probe run from an existing session measures the state before the change unless it strips the
 variable (`env -u UV_PYTHON …`), and a session that skipped that step would conclude the swap had
 not worked. Same shape as the launch-directory `PATH` inheritance recorded in
-`2026-09-18-direnv-never-fires-in-an-agent-bash-call.md`.]
+`contributing/session-environment.md` and `docs/claude-code.md`.]
 
 [PITFALL: **the floor raise broke CI in a way nothing local could catch, and the fix was a one-line
 pin.** `ci.yml`'s `runtime-guardrail` job installed bare `invoke` with no `--python`, so uv took the
