@@ -1,6 +1,6 @@
 ---
 status: idea
-updated: 2026-11-08
+updated: 2026-11-27
 ---
 
 # Should this machine export DO_NOT_TRACK everywhere?
@@ -66,7 +66,51 @@ Worth an inventory across `setup.toml` before deciding, since the variable's val
 many tools read it. Left open deliberately by the user 2026-11-08, once the Tilt variable landed:
 "leave the DO_NOT_TRACK inventory an open question for now". Not scheduled.]
 
+## The inventory, 2026-11-27
+
+Asked for by the user ("DO_NOT_TRACK inventory") and run by a research subagent over every Linux
+package in `setup.toml`, from cloned sources where there is one (now in `$RESEARCH_HOME/repos/`) and
+vendor pages where not. A sweep of every binary in `~/.local/bin`, Go's and Cargo's bin directories
+and `/usr/bin/gh` found the string `DO_NOT_TRACK` in only four: gh, tilt, claude and herdr-app.
+
+**Send by default, and honour `DO_NOT_TRACK`:**
+
+- **gh** (2.101.0) — `gh config get telemetry` is `enabled` here, 1% sampled: a device id, OS,
+  version, the detected coding agent, CI flags and command events. `GH_TELEMETRY=0` outranks
+  `DO_NOT_TRACK`, so it is the firmer pin (cli/cli `internal/telemetry/telemetry.go`).
+- **Claude Code** (2.1.332) — nothing in `setup.toml` or `~/.claude/settings.json` turns any of it
+  off. Usage analytics, crash upload, Sentry error reports and feature-flag fetches. `DO_NOT_TRACK`
+  stops analytics and crash upload but **not Sentry**, which only `DISABLE_ERROR_REPORTING` or
+  `CLAUDE_CODE_DISABLE_NONESSENTIAL_TRAFFIC` stops. Read from the installed binary.
+- **tilt, herdr-app, the `skills` CLI** — already pinned off, each by its own switch.
+
+**Send by default, and ignore `DO_NOT_TRACK`, so each needs its own switch:**
+
+- **terraform** — HashiCorp Checkpoint on every run: version, OS and a persistent random UUID in
+  `~/.terraform.d/checkpoint_signature`. `CHECKPOINT_DISABLE=1` (go-checkpoint `check.go`).
+- **VS Code** — `telemetry.telemetryLevel` defaults on, and extensions have their own settings.
+- **Chrome and Edge** — both have `"reporting_enabled": true` in their `Local State` here. Chrome
+  has a managed policy, `MetricsReportingEnabled`; Edge on Linux has only its in-app setting.
+- **JetBrains IDEs** — error reports on; usage statistics off in release builds.
+- **glab, gcloud** (both disabled here) — glab defaults on (`GLAB_SEND_TELEMETRY=0`); gcloud is
+  opt-in and its installer already passes `--usage-reporting=false`.
+
+**Send nothing:** docker CE, go (counters stay local unless `go telemetry on`), k9s, wezterm,
+flameshot, dprint and atuin (update checks only), every uv tool, rust, npm, helm, kind, kubectl,
+act, dive, and the apt utilities. Claude Desktop's own Sentry and the JetBrains Toolbox app are
+unknown.
+
+[PITFALL: **`DO_NOT_TRACK` changes what Claude Code does, not only what it sends.** It turns off
+feature-flag evaluation, so staged features never arrive and Remote Control cannot take a session
+started remotely, and it is forwarded into every spawned and background session. Whether it can also
+make auto mode unavailable was not established; test `DO_NOT_TRACK=1 claude` in auto mode before any
+machine-wide export.]
+
 ## Recommended direction
 
-With the Tilt-specific minimum in place, inventory the other installed tools first and decide on
-`DO_NOT_TRACK` with that list in hand.
+Keep pinning per tool. A machine-wide `DO_NOT_TRACK` would newly silence only gh and part of Claude
+Code, would leave Claude Code's error reports on, and would cost Claude Code behaviour this machine
+uses. The gaps, each a tool-specific switch: `GH_TELEMETRY=0`, `CHECKPOINT_DISABLE=1`, and
+`DISABLE_ERROR_REPORTING=1` for Claude Code (plus `DISABLE_TELEMETRY` only if losing staged features
+is acceptable); then VS Code's `telemetry.telemetryLevel`, Chrome's policy, and the JetBrains
+checkbox, which no environment variable reaches.
