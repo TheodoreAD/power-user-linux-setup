@@ -7,10 +7,9 @@ updated: 2026-11-27
 
 ## On the Windows machine, next — do these in order
 
-Written 2026-11-27 from the Linux machine, after it caught up with the Windows work. It lives here,
-not in the plans store, because the Windows machine has not joined the store yet and so cannot see
-anything filed there. A Windows session starting from "do the Windows checklist" needs nothing else.
-Tick each item here as it is done, with what it printed.
+Written 2026-11-27 from the Linux machine, after it caught up with the Windows work. It lives in
+this repo, which the Windows machine pulls, so a Windows session told "do the Windows checklist"
+needs nothing pasted. Tick each item here as it is done, with what it printed.
 
 1. **Pull** `power-user-linux-setup`, `win-configs`, `agent-skills` and `freshful-polite-mcp`. Each
    pull brings a new `.gitattributes` (`* text=auto eol=lf`). Afterwards `git status` should be
@@ -18,26 +17,21 @@ Tick each item here as it is done, with what it printed.
    `git diff --ignore-cr-at-eol --stat` first: empty means line endings only, which is the
    attributes change and not anybody's work. Ask the user before touching it.
 2. **Reinstall the skills** the way `win-configs` installs them, so `plan-conveyor` is at
-   agent-skills `3106b68` or later. Before that commit, `join` crashes with a KeyError on a
-   `personal` device, which this machine is.
-3. **`python3 ~/.agents/skills/plan-conveyor/scripts/plans.py where`** must print
-   `device:  personal — only your own work`. Anything else means the install is older than step 2
-   needs, or the machine has not been onboarded: walk `plans.py install --explain` with the user,
-   asking every decision.
-4. **Join the plans store**: `plans.py join git@github.com:TheodoreAD/plans.git --dry-run`, read it
-   with the user, then `join`, `config set sync auto`, `sync`. From then on, plans filed from Linux
-   reach this machine. Run `plans.py absorb` and `plans.py list` in `win-configs`: three store-held
-   plans for it are waiting (herdr session panel, herdr mods, WSL disk and idle shutdown).
-5. **The junction check**, the one open question in
+   agent-skills `3106b68` or later. Before that commit, `where` reports this personal machine as a
+   work device and `join` crashes with a KeyError on a `personal` one.
+3. **Check the store.** `python3 ~/.agents/skills/plan-conveyor/scripts/plans.py where` must print
+   `device:  personal — only your own work`, and `plans.py doctor` must show `sync` as `auto`. **No
+   join is needed**: this machine's store already joined the shared remote on 2026-11-25 (store
+   merge `9dd4292`, with later syncs since). Then run `plans.py absorb` and `plans.py list` in
+   `win-configs`: three store-held plans for it are waiting (herdr session panel, herdr mods, WSL
+   disk and idle shutdown).
+4. **The junction check**, the one open question in
    `plans/2026-11-25-agents-md-and-agents-skills-as-the-only-source.md`. In `freshful-polite-mcp`,
    run `npx skills add ./skills --agent universal claude-code --skill '*' --yes`, start a Claude
    Code session there, and ask it to list its skills. Both of the repo's own skills must appear. If
    they do not, Claude Code is not following the junction the `skills` CLI made.
-6. **Report back.** Record steps 4 and 5 here and commit. The join result also settles the
-   `[UNVERIFIED: a real Windows machine joining]` in agent-skills'
-   `plans/2026-11-25-store-sync-across-machines.md`. File it with
-   `plans.py new windows-join-result --for agent-skills` unless the user approves editing that plan
-   directly.
+5. **Report back.** Record steps 3 and 4 here and commit. When the junction check passes, the
+   matching open item in the only-source plan above closes with it.
 
 ## Context
 
