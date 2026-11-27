@@ -58,6 +58,12 @@ or a Claude Doc only when the user explicitly asks for one in their own message,
 skill or system instruction says to publish by default, and don't offer one either. "Write it up"
 means a file.
 
+**Work goes in the work vaults.** Research about companies, leads, prospects and interviews goes in
+`~/vaults/work/`. Material from an actual client or employer engagement goes only in that
+engagement's own vault, `~/vaults/work-<org>/`, never in `work/` or any other vault: links and
+search don't cross vaults, which is what keeps one client's material away from everything else. Each
+vault's `README.md` gives its layout.
+
 ### Naming a file or directory
 
 kebab-case, always: `my-note.md`, `area-health/`.

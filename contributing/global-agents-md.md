@@ -369,6 +369,7 @@ than doing nothing.
 - [Invoking a venv tool in the session's own project](#invoking-a-venv-tool-in-the-sessions-own-project)
 - [Something the user wrote looks like a typo or mental slip](#something-the-user-wrote-looks-like-a-typo-or-mental-slip)
 - [Ending a turn with a next step](#ending-a-turn-with-a-next-step)
+- [Writing up research, notes, a plan or a design](#writing-up-research-notes-a-plan-or-a-design)
 
 ## Changing `~/.claude/settings.json`
 
@@ -2575,3 +2576,16 @@ directory, so a preference about how every session should end would never have r
 repo. Admitted as its own rule rather than a variant of "About to ask the user something factual":
 that rule is about _not_ asking when the answer is discoverable; this one is about asking, via the
 tool, when the answer is genuinely the user's.
+
+## Writing up research, notes, a plan or a design
+
+### Which vault work goes in, added 2026-11-27
+
+Stated 2026-11-27 in `nexus`, after research on two companies was asked for "in a work vault" and
+none existed: the user asked for leads, prospects and interviews to be kept apart from actual work,
+with each actual engagement in a vault of its own, and then for the rule to live user-wide rather
+than in `nexus`'s `AGENTS.md`, because work research starts from any repo. An omission and a
+discipline failure in one rule: without it an agent has no way to know the `work` vaults exist, and
+the engagement boundary is a prohibition because putting client material in a shared vault is the
+miss that can't be taken back. It extends the write-up rule rather than opening its own, since its
+trigger is the same: deciding where a write-up goes.
