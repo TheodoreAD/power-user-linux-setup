@@ -106,6 +106,11 @@ started remotely, and it is forwarded into every spawned and background session.
 make auto mode unavailable was not established; test `DO_NOT_TRACK=1 claude` in auto mode before any
 machine-wide export.]
 
+[DECISION 2026-11-27: **no further pins for now.** Offered gh and Terraform, Claude Code's error
+reports and analytics, and VS Code and Chrome, the user answered: _"none of these are problematic"_.
+So the tools above stay at their defaults by choice. The switches remain listed here for when that
+changes, and a new tool that phones home is still judged when it is added, as Tilt and Herdr were.]
+
 ## Recommended direction
 
 Keep pinning per tool. A machine-wide `DO_NOT_TRACK` would newly silence only gh and part of Claude
