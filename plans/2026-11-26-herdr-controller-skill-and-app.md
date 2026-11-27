@@ -1,6 +1,6 @@
 ---
-status: idea
-updated: 2026-11-26
+status: in-progress
+updated: 2026-11-27
 source_repo: github.com-personal/agent-skills
 source_session: 65662eda-633f-45c8-b021-13e6247e9fc4.jsonl
 source_moment: 2026-11-26
@@ -44,29 +44,30 @@ express it: it names keys per email (`<email>__<node>_ed25519`, where herdr need
 host. `ensure_block` leaves hand-written blocks alone, so nothing breaks, but a second machine won't
 get the block. Whether that matters depends on whether a second Linux controller is planned.
 
-## Open questions
+## Landed 2026-11-27
 
-- **Answered 2026-11-26** by win-configs `herdr/README.md` ("On Linux", commit 3b3ad60): the channel
-  is `curl -fsSL https://releases.herdr.dev/app/install.sh | sh` (x86_64 and arm64, needs curl and
-  tar, no root). It installs to `~/.local/share/herdr-app`, puts `herdr-app` in `~/.local/bin` plus
-  a launcher entry, installs `herdr-core` and `hc` to `~/.local/bin` if they are missing, and
-  updates the app when re-run. That is a `curl | sh`, which the house rule forbids as a one-off, so
-  the question is which PULSE `method` can wrap it: a pinned, reviewed copy of the script, or the
-  tarball the script downloads. Read the script before choosing.
-- The same README section carries Herdr's settings, the Estro layout and the mods for Linux, marked
-  "Not tested on Linux yet". It needs git, gh, Go, python3 and the Nerd Font from PULSE. Whether
-  PULSE or win-configs should own that block is the README's own open point.
-- The skill's install line changed in win-configs bfe6bf0 to `-a universal claude-code -g -y` (a hub
-  copy in `~/.agents/skills` plus a link in `~/.claude/skills`). The `-a claude-code` form used on
-  2026-11-26 predates it, which is why that install landed as a plain copy. **As of 2026-11-27 it
-  sits in the hub**: `~/.agents/skills/herdr-remote` is a real copy and
-  `~/.claude/skills/herdr-remote` links to it. It is still not in `setup.toml`
-  (`rg -i 'herdr|win-configs' setup.toml`: no hits), so the next machine does not get it.
+- **The app**: `[packages.herdr-app]`, method `script`, from herdr.dev's installer. Both it and the
+  herdr-core installer it chains were read first: no root, XDG paths, a sha256 from the release
+  manifest. `inv tools.install` put Herdr 0.1.18 and hc 0.1.22 here. The question this plan asked, a
+  pinned copy of the script or the tarball, came out as neither: the `script` method is the declared
+  wrapper the repo already uses for the same shape (Claude Code, dprint, rustup).
+- **Telemetry, pinned off at the user's request**: the app sends a daily usage report by default;
+  `zshenv = "export HERDR_TELEMETRY=0"` on the package. herdr-core sends none. The reasoning, and
+  why the app's own `settings.json` key is not written, is in the package's comment.
+- **The skill**: `[packages.herdr-remote]`, `names = ["herdr-remote"]` from
+  `TheodoreAD/win-configs`, installed through `inv ai.install-skills --skill=herdr-remote` as a hub
+  copy plus a Claude link.
+
+## Still open
+
+- **Until the next login, a dock-launched Herdr does not see `HERDR_TELEMETRY`**, because the
+  session's environment predates the zshenv line. A launch from a terminal does. After the next
+  login, confirm it: Settings → Privacy should report telemetry off because of `HERDR_TELEMETRY`.
+- win-configs' `herdr/README.md` carries Herdr's settings, the Estro layout and the mods for Linux,
+  marked "Not tested on Linux yet". Whether PULSE or win-configs should own that block is the
+  README's own open point.
 - Should `[[ssh_hosts]]` grow per-host options and an explicit key path, so herdr controller entries
   can be declared too? Probably YAGNI while there's one controller.
-
-## Recommended direction
-
-Add `herdr-remote` (source `TheodoreAD/win-configs`) to the skills `setup.toml` installs, then
-re-run `inv ai.install-skills` and remove the hand-installed copy if the installer puts it in the
-hub. Add a `[packages.herdr-app]` entry using whatever channel herdr.dev documents for Linux.
+- `[packages.herdr-app]` installs once and never updates the app, because the `script` method skips
+  a package whose `check_cmd` exists. The app updates itself in the background, so this matters only
+  if that updater is ever turned off.
